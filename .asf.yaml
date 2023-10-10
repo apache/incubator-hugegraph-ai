@@ -27,11 +27,12 @@ github:
   homepage: https://hugegraph.apache.org
   del_branch_on_merge: true
   labels:
-    - HugeGraph
-    - LLM
-    - Graph Machine Learning
-    - Graph Embedding
-    - GNN
+    - hugegraph
+    - large-language-model
+    - graph-machine-learning
+    - graph-neural-networks
+    - graph-embedding
+    - knowledge-graph
   enabled_merge_buttons:
     merge:  false
     rebase: true
