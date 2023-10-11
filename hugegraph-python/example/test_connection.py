@@ -13,7 +13,7 @@ class HugeGraphTest(unittest.TestCase):
         self.port = 1234
         self.session_pool_size = 10
 
-    @patch("src.connection.PyHugeGraph")
+    @patch("src.client.PyHugeGraph")
     def test_init(self, a: Any) -> None:
         a.return_value = MagicMock()
         client = HugeGraph(self.username, self.password,self.address, self.port, self.graph)

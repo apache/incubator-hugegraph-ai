@@ -11,7 +11,7 @@ class HugeGraph:
     ) -> None:
         """Create a new HugeGraph wrapper instance."""
         try:
-            from src.connection import PyHugeClient
+            from src.client import PyHugeClient
         except ImportError:
             raise ValueError(
                 "Please install HugeGraph Python client first: "

@@ -1,4 +1,4 @@
-from src.connection import PyHugeClient
+from src.client import PyHugeClient
 
 if __name__ == '__main__':
     client = PyHugeClient("127.0.0.1", "8080", user="admin", pwd="admin", graph="test")
