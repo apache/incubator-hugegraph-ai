@@ -1,7 +1,7 @@
 from src.connection import PyHugeClient
 
 if __name__ == '__main__':
-    client = PyHugeClient("10.22.32.25", "8080", user="admin", pwd="pe@2023", graph="physical_examination_test")
+    client = PyHugeClient("127.0.0.1", "8080", user="admin", pwd="admin", graph="test")
 
     """schema"""
     schema = client.schema()
@@ -18,20 +18,20 @@ if __name__ == '__main__':
 
     """graph"""
     g = client.graph()
-    # 增加点
+    # add Vertex
     p1 = g.addVertex("Person", {"name": "Al Pacino", "birthDate": "1940-04-25"})
     p2 = g.addVertex("Person", {"name": "Robert De Niro", "birthDate": "1943-08-17"})
     m1 = g.addVertex("Movie", {"name": "The Godfather"})
     m2 = g.addVertex("Movie", {"name": "The Godfather Part II"})
     m3 = g.addVertex("Movie", {"name": "The Godfather Coda The Death of Michael Corleone"})
 
-    # 增加边
+    # add Edge
     g.addEdge("ActedIn", p1.id, m1.id, {})
     g.addEdge("ActedIn", p1.id, m2.id, {})
     g.addEdge("ActedIn", p1.id, m3.id, {})
     g.addEdge("ActedIn", p2.id, m2.id, {})
 
-    # 更新点属性
+    # update property
     g.eliminateVertex("vertex_id", {"property_key": "property_value"})
 
 

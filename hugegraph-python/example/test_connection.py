@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from example.test_hugegraph import HugeGraph
 
-class TestHugeGraph(unittest.TestCase):
+class HugeGraphTest(unittest.TestCase):
     def setUp(self) -> None:
         self.username = "test_user"
         self.password = "test_password"
@@ -16,7 +16,7 @@ class TestHugeGraph(unittest.TestCase):
     @patch("src.connection.PyHugeGraph")
     def test_init(self, a: Any) -> None:
         a.return_value = MagicMock()
-        client = HugeGraph( self.username, self.password,self.address, self.port, self.graph)
+        client = HugeGraph(self.username, self.password,self.address, self.port, self.graph)
 
         result = client.exec("g.V().limit(10)")
         self.assertIsInstance(result, MagicMock)
