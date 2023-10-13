@@ -78,7 +78,7 @@ class SchemaManager(HugeParamsBase):
         return index_label
 
     """
-    get schemas info.
+    create schemas
     """
     def getSchema(self):
         url = f'{self._host}/graphs/{self._graph_name}/schema'

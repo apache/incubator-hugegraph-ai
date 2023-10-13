@@ -14,9 +14,9 @@ class HugeGraphTest(unittest.TestCase):
         self.session_pool_size = 10
 
     @patch("src.client.PyHugeGraph")
-    def test_init(self, a: Any) -> None:
-        a.return_value = MagicMock()
-        client = HugeGraph(self.username, self.password,self.address, self.port, self.graph)
+    def test_init(self, mock_graph: Any) -> None:
+        mock_graph.return_value = MagicMock()
+        client = HugeGraph(self.username, self.password, self.address, self.port, self.graph)
 
         result = client.exec("g.V().limit(10)")
         self.assertIsInstance(result, MagicMock)
