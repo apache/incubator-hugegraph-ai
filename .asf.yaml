@@ -28,7 +28,7 @@ github:
   del_branch_on_merge: true
   labels:
     - hugegraph
-    - LLM
+    - llm
     - graph-machine-learning
     - graph-neural-networks
     - graph-embedding
