@@ -20,9 +20,9 @@ from src.operators.llm.openai_llm import OpenAIChat
 
 if __name__ == "__main__":
     #  If you need a proxy to access OpenAI's API, please set your HTTP proxy here
-    os.environ["http_proxy"] = "http://113.54.178.43:7890"
-    os.environ["https_proxy"] = "http://113.54.178.43:7890"
-    api_key = "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"
+    os.environ["http_proxy"] = ""
+    os.environ["https_proxy"] = ""
+    api_key = ""
 
     default_llm = OpenAIChat(
         api_key=api_key, model_name="gpt-3.5-turbo-16k", max_tokens=4000
