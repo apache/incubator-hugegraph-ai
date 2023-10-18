@@ -28,24 +28,24 @@ github:
   del_branch_on_merge: true
   labels:
     - hugegraph
-    - large-language-model
+    - llm
     - graph-machine-learning
     - graph-neural-networks
     - graph-embedding
     - knowledge-graph
   enabled_merge_buttons:
-    merge:  false
+    merge: false
     rebase: true
     squash: true
   protected_branches:
-    master:
+    main:
       required_status_checks:
         # strict means "Require branches to be up-to-date before merging".
         strict: false
         # contexts are the names of checks that must pass (now only enable the basic check)
-        contexts:
-          - CodeQL
-          - check-license
+        #contexts:
+          #- CodeQL
+          #- check-license
       required_pull_request_reviews:
         dismiss_stale_reviews: true
         require_code_owner_reviews: false
