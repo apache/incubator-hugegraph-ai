@@ -5,6 +5,7 @@
       <option name="ignoredIdentifiers">
         <list>
           <option value="str.group" />
+          <option value="typing.Coroutine.__add__" />
         </list>
       </option>
     </inspection_tool>

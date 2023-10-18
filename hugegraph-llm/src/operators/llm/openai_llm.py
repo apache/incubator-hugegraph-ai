@@ -1,13 +1,25 @@
-from typing import (
-    Callable,
-    List,
-)
-
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+from typing import Callable, List, Optional
 import openai
 import tiktoken
 from retry import retry
 
-from api.src.llm.basellm import BaseLLM
+from src.operators.llm.base import BaseLLM
 
 
 class OpenAIChat(BaseLLM):
@@ -15,21 +27,21 @@ class OpenAIChat(BaseLLM):
 
     def __init__(
         self,
-        openai_api_key: str,
+        api_key: Optional[str] = None,
         model_name: str = "gpt-3.5-turbo",
         max_tokens: int = 1000,
         temperature: float = 0.0,
     ) -> None:
-        openai.api_key = openai_api_key
+        openai.api_key = api_key
         self.model = model_name
         self.max_tokens = max_tokens
         self.temperature = temperature
 
-    # 定义了一个generate方法，用于生成文本
     @retry(tries=3, delay=1)
     def generate(
         self,
-        messages: List[str],
+        messages: Optional[List[str]] = None,
+        prompt: Optional[str] = None,
     ) -> str:
         try:
             completions = openai.ChatCompletion.create(
@@ -49,12 +61,15 @@ class OpenAIChat(BaseLLM):
             print(f"Retrying LLM call {e}")
             raise Exception()
 
-    async def generateStreaming(
+    async def generate_streaming(
         self,
-        messages: List[str],
-        onTokenCallback=Callable[[str], None],
+        messages: Optional[List[str]] = None,
+        prompt: Optional[str] = None,
+        on_token_callback: Callable = None,
     ) -> str:
-        result = []
+        if messages is None:
+            assert prompt is not None, "Messages or prompt must be provided."
+            messages = [{"role": "user", "content": prompt}]
         completions = openai.ChatCompletion.create(
             model=self.model,
             temperature=self.temperature,
@@ -62,13 +77,13 @@ class OpenAIChat(BaseLLM):
             messages=messages,
             stream=True,
         )
-        result = []
+        result = ""
         for message in completions:
             # Process the streamed messages or perform any other desired action
             delta = message["choices"][0]["delta"]
             if "content" in delta:
-                result.append(delta["content"])
-            await onTokenCallback(message)
+                result += delta["content"]
+            await on_token_callback(message)
         return result
 
     def num_tokens_from_string(self, string: str) -> int:
