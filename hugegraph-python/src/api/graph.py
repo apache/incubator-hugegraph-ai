@@ -221,11 +221,10 @@ class GraphManager(HugeParamsBase):
             para = para + "&label=" + label
         if properties:
             para = para + "&properties=" + json.dumps(properties)
-        if page is not None:
-            if page:
-                para += '&page={}'.format(page)
-            else:
-                para += '&page'
+        if page:
+            para += '&page={}'.format(page)
+        else:
+            para += '&page'
         if limit > 0:
             para = para + "&limit=" + str(limit)
         url = url + para[1:]
