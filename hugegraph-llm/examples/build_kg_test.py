@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 import os
-from src.operators.build_kg_operator import BuildKgOperator
+from src.operators.build_kg_operator import KgBuilder
 from src.operators.llm.openai_llm import OpenAIChat
 
 if __name__ == "__main__":
@@ -35,38 +35,36 @@ if __name__ == "__main__":
         "also carved out their distinctive digital presence through their respective webpages, showcasing their "
         "varied interests and experiences."
     )
-    ops = BuildKgOperator(name="1")
+    builder = KgBuilder(default_llm)
     # build kg with only text
-    ops.parse_text_to_data(default_llm).disambiguate_data(
-        default_llm
-    ).commit_data_to_kg().run(text)
+    builder.parse_text_to_data(text).disambiguate_data().commit_data_to_kg().run()
     # build kg with text and schemas
-    # nodes_schemas = [
-    #     {
-    #         "label": "Person",
-    #         "primary_key": "name",
-    #         "properties": {"age": "int", "name": "text", "occupation": "text"},
-    #     },
-    #     {
-    #         "label": "Webpage",
-    #         "primary_key": "name",
-    #         "properties": {"name": "text", "url": "text"},
-    #     },
-    # ]
-    # relationships_schemas = [
-    #     {
-    #         "start": "Person",
-    #         "end": "Person",
-    #         "type": "roommate",
-    #         "properties": {"start": "int"},
-    #     },
-    #     {"start": "Person", "end": "Webpage", "type": "owns", "properties": {}},
-    # ]
-    # (
-    #     ops.parse_text_to_data_with_schemas(
-    #         default_llm, nodes_schemas, relationships_schemas
-    #     )
-    #     .disambiguate_data(default_llm)
-    #     .commit_data_to_kg()
-    #     .run(text)
-    # )
+    nodes_schemas = [
+        {
+            "label": "Person",
+            "primary_key": "name",
+            "properties": {"age": "int", "name": "text", "occupation": "text"},
+        },
+        {
+            "label": "Webpage",
+            "primary_key": "name",
+            "properties": {"name": "text", "url": "text"},
+        },
+    ]
+    relationships_schemas = [
+        {
+            "start": "Person",
+            "end": "Person",
+            "type": "roommate",
+            "properties": {"start": "int"},
+        },
+        {"start": "Person", "end": "Webpage", "type": "owns", "properties": {}},
+    ]
+    (
+        builder.parse_text_to_data_with_schemas(
+            text, nodes_schemas, relationships_schemas
+        )
+        .disambiguate_data_with_schemas()
+        .commit_data_to_kg()
+        .run()
+    )

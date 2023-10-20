@@ -24,9 +24,10 @@ from src.operators.build_kg.unstructured_data_utils import (
     relationships_schemas_text_to_list_of_dict,
     nodes_schemas_text_to_list_of_dict,
 )
+from src.operators.llm.base import BaseLLM
 
 
-def generate_system_message_for_nodes() -> str:
+def disambiguate_nodes() -> str:
     return """
 Your task is to identify if there are duplicated nodes and if so merge them into one nod. Only merge the nodes that refer to the same entity.
 You will be given different datasets of nodes and some of these nodes may be duplicated or refer to the same entity. 
@@ -41,7 +42,7 @@ The output you need to provide:
 """
 
 
-def generate_system_message_for_relationships() -> str:
+def disambiguate_relationships() -> str:
     return """
 Your task is to identify if a set of relationships make sense.
 If they do not make sense please remove them from the dataset.
@@ -61,7 +62,7 @@ The output you need to provide:
 """
 
 
-def generate_system_message_for_nodes_schemas() -> str:
+def disambiguate_nodes_schemas() -> str:
     return """
 Your task is to identify if there are duplicated nodes schemas and if so merge them into one nod. Only merge the nodes schemas that refer to the same entty_types.
 You will be given different node schemas, some of which may duplicate or reference the same entty_types. Note: For node schemas with the same entty_types, you need to merge them while merging all properties of the entty_types. 
@@ -76,7 +77,7 @@ The output you need to provide:
 """
 
 
-def generate_system_message_for_relationships_schemas() -> str:
+def disambiguate_relationships_schemas() -> str:
     return """
 Your task is to identify if a set of relationships schemas make sense.
 If they do not make sense please remove them from the dataset.
@@ -105,8 +106,9 @@ internalRegex = r"\[(.*?)\]"
 
 
 class DisambiguateData:
-    def __init__(self, llm) -> None:
+    def __init__(self, llm: BaseLLM, is_user_schema: bool) -> None:
         self.llm = llm
+        self.is_user_schema = is_user_schema
 
     def run(self, data: dict) -> dict[str, list[any]]:
         nodes = sorted(data["nodes"], key=lambda x: x.get("label", ""))
@@ -138,32 +140,12 @@ class DisambiguateData:
                 )
 
             messages = [
-                {"role": "system", "content": generate_system_message_for_nodes()},
+                {"role": "system", "content": disambiguate_nodes()},
                 {"role": "user", "content": generate_prompt(dis_string)},
             ]
             raw_nodes = self.llm.generate(messages)
             n = re.findall(internalRegex, raw_nodes)
             new_nodes.extend(nodes_text_to_list_of_dict(n))
-
-        nodes_schemas_data = ""
-        for node_schema in nodes_schemas:
-            nodes_schemas_data += (
-                '["'
-                + node_schema["label"]
-                + '", '
-                + node_schema["primary_key"]
-                + '", '
-                + json.dumps(node_schema["properties"])
-                + "]\n"
-            )
-
-        messages = [
-            {"role": "system", "content": generate_system_message_for_nodes_schemas()},
-            {"role": "user", "content": generate_prompt(nodes_schemas_data)},
-        ]
-        raw_nodes_schemas = self.llm.generate(messages)
-        n = re.findall(internalRegex, raw_nodes_schemas)
-        new_nodes_schemas.extend(nodes_schemas_text_to_list_of_dict(n))
 
         relationship_data = ""
         for relation in relationships:
@@ -185,7 +167,7 @@ class DisambiguateData:
         messages = [
             {
                 "role": "system",
-                "content": generate_system_message_for_relationships(),
+                "content": disambiguate_relationships(),
             },
             {"role": "user", "content": generate_prompt(relationship_data)},
         ]
@@ -193,44 +175,67 @@ class DisambiguateData:
         rels = re.findall(internalRegex, raw_relationships)
         new_relationships.extend(relationships_text_to_list_of_dict(rels))
 
-        relationships_schemas_data = ""
-        for relationships_schema in relationships_schemas:
-            relationships_schemas_data += (
-                '["'
-                + relationships_schema["start"]
-                + '", "'
-                + relationships_schema["type"]
-                + '", "'
-                + relationships_schema["end"]
-                + '", '
-                + json.dumps(relationships_schema["properties"])
-                + "]\n"
+        if not self.is_user_schema:
+            nodes_schemas_data = ""
+            for node_schema in nodes_schemas:
+                nodes_schemas_data += (
+                    '["'
+                    + node_schema["label"]
+                    + '", '
+                    + node_schema["primary_key"]
+                    + '", '
+                    + json.dumps(node_schema["properties"])
+                    + "]\n"
+                )
+
+            messages = [
+                {"role": "system", "content": disambiguate_nodes_schemas()},
+                {"role": "user", "content": generate_prompt(nodes_schemas_data)},
+            ]
+            raw_nodes_schemas = self.llm.generate(messages)
+            n = re.findall(internalRegex, raw_nodes_schemas)
+            new_nodes_schemas.extend(nodes_schemas_text_to_list_of_dict(n))
+
+            relationships_schemas_data = ""
+            for relationships_schema in relationships_schemas:
+                relationships_schemas_data += (
+                    '["'
+                    + relationships_schema["start"]
+                    + '", "'
+                    + relationships_schema["type"]
+                    + '", "'
+                    + relationships_schema["end"]
+                    + '", '
+                    + json.dumps(relationships_schema["properties"])
+                    + "]\n"
+                )
+
+            node_schemas_labels = [
+                nodes_schemas["label"] for nodes_schemas in new_nodes_schemas
+            ]
+            relationships_schemas_data += "Valid Labels:\n" + "\n".join(
+                node_schemas_labels
             )
 
-        node_schemas_labels = [
-            nodes_schemas["label"] for nodes_schemas in new_nodes_schemas
-        ]
-        relationships_schemas_data += "Valid Labels:\n" + "\n".join(node_schemas_labels)
+            messages = [
+                {
+                    "role": "system",
+                    "content": disambiguate_relationships_schemas(),
+                },
+                {
+                    "role": "user",
+                    "content": generate_prompt(relationships_schemas_data),
+                },
+            ]
+            raw_relationships_schemas = self.llm.generate(messages)
+            schemas_rels = re.findall(internalRegex, raw_relationships_schemas)
+            new_relationships_schemas.extend(
+                relationships_schemas_text_to_list_of_dict(schemas_rels)
+            )
+        else:
+            new_nodes_schemas = nodes_schemas
+            new_relationships_schemas = relationships_schemas
 
-        messages = [
-            {
-                "role": "system",
-                "content": generate_system_message_for_relationships_schemas(),
-            },
-            {"role": "user", "content": generate_prompt(relationships_schemas_data)},
-        ]
-        raw_relationships_schemas = self.llm.generate(messages)
-        schemas_rels = re.findall(internalRegex, raw_relationships_schemas)
-        new_relationships_schemas.extend(
-            relationships_schemas_text_to_list_of_dict(schemas_rels)
-        )
-
-        print(2)
-        print("data2data-result: ")
-        print(new_nodes)
-        print(new_relationships)
-        print(new_nodes_schemas)
-        print(new_relationships_schemas)
         return {
             "nodes": new_nodes,
             "relationships": new_relationships,

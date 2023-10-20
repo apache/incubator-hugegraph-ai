@@ -20,37 +20,50 @@ from src.operators.build_kg.parse_text_to_data import (
     ParseTextToData,
     ParseTextToDataWithSchemas,
 )
+from src.operators.llm.base import BaseLLM
 
 
-class BuildKgOperator:
-    def __init__(self, name):
-        self.name = name
+class KgBuilder:
+    def __init__(self, llm: BaseLLM):
         self.parse_text_to_kg = []
+        self.llm = llm
+        self.data = {}
 
-    def parse_text_to_data(self, llm):
-        self.parse_text_to_kg.append(ParseTextToData(llm=llm))
+    def parse_text_to_data(self, text: str):
+        self.parse_text_to_kg.append(ParseTextToData(llm=self.llm, text=text))
         return self
 
     def parse_text_to_data_with_schemas(
-        self, llm, nodes_schemas, relationships_schemas
+        self, text: str, nodes_schemas, relationships_schemas
     ):
         self.parse_text_to_kg.append(
             ParseTextToDataWithSchemas(
-                llm=llm,
+                llm=self.llm,
+                text=text,
                 nodes_schema=nodes_schemas,
                 relationships_schemas=relationships_schemas,
             )
         )
         return self
 
-    def disambiguate_data(self, llm):
-        self.parse_text_to_kg.append(DisambiguateData(llm=llm))
+    def disambiguate_data(self):
+        self.parse_text_to_kg.append(
+            DisambiguateData(llm=self.llm, is_user_schema=False)
+        )
+        return self
+
+    def disambiguate_data_with_schemas(self):
+        self.parse_text_to_kg.append(
+            DisambiguateData(llm=self.llm, is_user_schema=True)
+        )
         return self
 
     def commit_data_to_kg(self):
         self.parse_text_to_kg.append(CommitDataToKg())
         return self
 
-    def run(self, result):
+    def run(self):
+        result = ""
         for i in self.parse_text_to_kg:
             result = i.run(result)
+            print(result)

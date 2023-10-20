@@ -137,18 +137,15 @@ def get_nodes_and_relationships_from_result(result):
     result["relationships_schemas"].extend(
         relationships_schemas_text_to_list_of_dict(relationships_schemas)
     )
-    print(result["nodes"])
-    print(result["relationships"])
-    print(result["nodes_schemas"])
-    print(result["relationships_schemas"])
     return result
 
 
 class ParseTextToData:
     llm: BaseLLM
 
-    def __init__(self, llm: BaseLLM) -> None:
+    def __init__(self, llm: BaseLLM, text: str) -> None:
         self.llm = llm
+        self.text = text
 
     def process(self, chunk):
         messages = [
@@ -159,14 +156,14 @@ class ParseTextToData:
         output = self.llm.generate(messages)
         return output
 
-    def run(self, data: str) -> dict[str, list[any]]:
+    def run(self, data: dict) -> dict[str, list[any]]:
         system_message = generate_system_message()
         prompt_string = generate_prompt("")
         token_usage_per_prompt = self.llm.num_tokens_from_string(
             system_message + prompt_string
         )
         chunked_data = split_string_to_fit_token_space(
-            llm=self.llm, string=data, token_use_per_string=token_usage_per_prompt
+            llm=self.llm, string=self.text, token_use_per_string=token_usage_per_prompt
         )
 
         results = []
@@ -174,8 +171,6 @@ class ParseTextToData:
             proceeded_chunk = self.process(chunk)
             results.append(proceeded_chunk)
             results = get_nodes_and_relationships_from_result(results)
-            print("111111111")
-            print("text2data-result: ")
 
         return results
 
@@ -183,8 +178,12 @@ class ParseTextToData:
 class ParseTextToDataWithSchemas:
     llm: BaseLLM
 
-    def __init__(self, llm, nodes_schema, relationships_schemas) -> None:
+    def __init__(
+        self, llm: BaseLLM, text: str, nodes_schema, relationships_schemas
+    ) -> None:
         self.llm = llm
+        self.text = text
+        self.data = {}
         self.nodes_schemas = nodes_schema
         self.relationships_schemas = relationships_schemas
 
@@ -202,14 +201,14 @@ class ParseTextToDataWithSchemas:
         output = self.llm.generate(messages)
         return output
 
-    def run(self, data: str) -> dict[str, list[any]]:
+    def run(self) -> dict[str, list[any]]:
         system_message = generate_system_message_with_schemas()
         prompt_string = generate_prompt_with_schemas("", "", "")
         token_usage_per_prompt = self.llm.num_tokens_from_string(
             system_message + prompt_string
         )
         chunked_data = split_string_to_fit_token_space(
-            llm=self.llm, string=data, token_use_per_string=token_usage_per_prompt
+            llm=self.llm, string=self.text, token_use_per_string=token_usage_per_prompt
         )
 
         results = []
@@ -217,6 +216,4 @@ class ParseTextToDataWithSchemas:
             proceeded_chunk = self.process_with_schemas(chunk)
             results.append(proceeded_chunk)
             results = get_nodes_and_relationships_from_result(results)
-            print("111111111")
-            print("text2data-result: ")
         return results
