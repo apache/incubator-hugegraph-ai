@@ -1,4 +1,5 @@
 # hugegraph-python
+
 A Python SDK for Apache HugeGraph
 
 # Installation
@@ -8,6 +9,7 @@ pip3 install hugegraph-python
 ```
 
 ## Install from source
+
 release soon
 
 # Examples
@@ -28,8 +30,9 @@ schema = client.schema()
 schema.propertyKey("name").asText().ifNotExist().create()
 schema.propertyKey("birthDate").asText().ifNotExist().create()
 schema.vertexLabel("Person").properties("name", "birthDate").usePrimaryKeyId().primaryKeys(
-  "name").ifNotExist().create()
-schema.vertexLabel("Movie").properties("name").usePrimaryKeyId().primaryKeys("name").ifNotExist().create()
+    "name").ifNotExist().create()
+schema.vertexLabel("Movie").properties("name").usePrimaryKeyId().primaryKeys(
+    "name").ifNotExist().create()
 schema.edgeLabel("ActedIn").sourceLabel("Person").targetLabel("Movie").ifNotExist().create()
 
 print(schema.getVertexLabels())
@@ -58,5 +61,4 @@ g.close()
 g = client.gremlin()
 res = g.exec("g.V().limit(10)")
 print(res)
-
 ```
