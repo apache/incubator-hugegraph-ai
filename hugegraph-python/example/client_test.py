@@ -2,7 +2,8 @@ import unittest
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from example.test_hugegraph import HugeGraph
+from example.hugegraph_test import HugeGraph
+
 
 class HugeGraphTest(unittest.TestCase):
     def setUp(self) -> None:
