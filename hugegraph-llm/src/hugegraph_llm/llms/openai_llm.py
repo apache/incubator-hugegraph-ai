@@ -14,8 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
-
+import os
 from typing import Callable, List, Optional
 import openai
 import tiktoken
@@ -34,7 +33,7 @@ class OpenAIChat(BaseLLM):
         max_tokens: int = 1000,
         temperature: float = 0.0,
     ) -> None:
-        openai.api_key = api_key
+        openai.api_key = api_key or os.getenv("OPENAI_API_KEY")
         self.model = model_name
         self.max_tokens = max_tokens
         self.temperature = temperature
@@ -45,6 +44,9 @@ class OpenAIChat(BaseLLM):
         messages: Optional[List[str]] = None,
         prompt: Optional[str] = None,
     ) -> str:
+        if messages is None:
+            assert prompt is not None, "Messages or prompt must be provided."
+            messages = [{"role": "user", "content": prompt}]
         try:
             completions = openai.ChatCompletion.create(
                 model=self.model,
@@ -58,10 +60,10 @@ class OpenAIChat(BaseLLM):
             return str(f"Error: {e}")
         # catch authorization errors / do not retry
         except openai.error.AuthenticationError as e:
-            return f"Error: The provided OpenAI API key is invalid, {e}"
+            return "Error: The provided OpenAI API key is invalid"
         except Exception as e:
             print(f"Retrying LLM call {e}")
-            raise Exception() from e
+            raise Exception()
 
     async def generate_streaming(
         self,
@@ -88,11 +90,11 @@ class OpenAIChat(BaseLLM):
             await on_token_callback(message)
         return result
 
-    async def num_tokens_from_string(self, string: str) -> int:
+    def num_tokens_from_string(self, string: str) -> int:
         encoding = tiktoken.encoding_for_model(self.model)
         num_tokens = len(encoding.encode(string))
         return num_tokens
 
-    async def max_allowed_token_length(self) -> int:
+    def max_allowed_token_length(self) -> int:
         # TODO: list all models and their max tokens from api
         return 2049
