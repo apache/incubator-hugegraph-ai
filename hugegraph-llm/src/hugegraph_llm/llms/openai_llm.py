@@ -19,7 +19,7 @@ import openai
 import tiktoken
 from retry import retry
 
-from src.operators.llm.base import BaseLLM
+from hugegraph_llm.llms.base import BaseLLM
 
 
 class OpenAIChat(BaseLLM):

@@ -17,7 +17,7 @@
 
 from decorator import decorator
 
-from src.utils.exceptions import NotAuthorizedError
+from pyhugegraph.utils.exceptions import NotAuthorizedError
 
 
 @decorator

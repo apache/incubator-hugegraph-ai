@@ -18,18 +18,18 @@
 
 import json
 
-from src.api.common import HugeParamsBase
-from src.api.schema_manage.edge_label import EdgeLabel
-from src.api.schema_manage.index_label import IndexLabel
-from src.api.schema_manage.property_key import PropertyKey
-from src.api.schema_manage.vertex_label import VertexLabel
-from src.structure.edge_label_data import EdgeLabelData
-from src.structure.index_label_data import IndexLabelData
-from src.structure.property_key_data import PropertyKeyData
-from src.structure.vertex_label_data import VertexLabelData
-from src.utils.exceptions import NotFoundError
-from src.utils.huge_requests import HugeSession
-from src.utils.util import check_if_success
+from pyhugegraph.api.common import HugeParamsBase
+from pyhugegraph.api.schema_manage.edge_label import EdgeLabel
+from pyhugegraph.api.schema_manage.index_label import IndexLabel
+from pyhugegraph.api.schema_manage.property_key import PropertyKey
+from pyhugegraph.api.schema_manage.vertex_label import VertexLabel
+from pyhugegraph.structure.edge_label_data import EdgeLabelData
+from pyhugegraph.structure.index_label_data import IndexLabelData
+from pyhugegraph.structure.property_key_data import PropertyKeyData
+from pyhugegraph.structure.vertex_label_data import VertexLabelData
+from pyhugegraph.utils.exceptions import NotFoundError
+from pyhugegraph.utils.huge_requests import HugeSession
+from pyhugegraph.utils.util import check_if_success
 
 
 class SchemaManager(HugeParamsBase):

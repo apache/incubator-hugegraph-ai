@@ -13,7 +13,7 @@ release soon
 # Examples
 
 ```python
-from src.client import PyHugeClient
+from pyhugegraph.client import PyHugeClient
 
 client = PyHugeClient("127.0.0.1", "8080", user="admin", pwd="admin", graph="hugegraph")
 

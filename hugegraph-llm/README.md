@@ -16,7 +16,7 @@ With this project, we aim to reduce the cost of using graph systems, and decreas
 ## Examples（knowledge graph construction by llm）
 
 1. Start the HugeGraph database, you can do it via Docker. Refer to this [link](https://hub.docker.com/r/hugegraph/hugegraph) for guidance
-2. Run example like python hugegraph-llm/examples/build_kg_test.py
+2. Run example like `python hugegraph-llm/examples/build_kg_test.py`
 
 Note: If you need a proxy to access OpenAI's API, please set your HTTP proxy in `build_kg_test.py`.
 

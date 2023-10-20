@@ -17,12 +17,12 @@
 
 import json
 
-from src.utils.huge_requests import HugeSession
-from src.api.common import HugeParamsBase
-from src.structure.vertex_data import VertexData
-from src.structure.edge_data import EdgeData
-from src.utils.exceptions import NotFoundError, CreateError, RemoveError, UpdateError
-from src.utils.util import create_exception, check_if_authorized, check_if_success
+from pyhugegraph.utils.huge_requests import HugeSession
+from pyhugegraph.api.common import HugeParamsBase
+from pyhugegraph.structure.vertex_data import VertexData
+from pyhugegraph.structure.edge_data import EdgeData
+from pyhugegraph.utils.exceptions import NotFoundError, CreateError, RemoveError, UpdateError
+from pyhugegraph.utils.util import create_exception, check_if_authorized, check_if_success
 
 
 class GraphManager(HugeParamsBase):

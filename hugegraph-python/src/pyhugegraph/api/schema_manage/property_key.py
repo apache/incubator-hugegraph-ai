@@ -19,10 +19,10 @@ import json
 
 import requests
 
-from src.api.common import HugeParamsBase
-from src.utils.exceptions import CreateError, UpdateError, RemoveError
-from src.utils.huge_decorator import decorator_params, decorator_create
-from src.utils.util import check_if_success, check_if_authorized
+from pyhugegraph.api.common import HugeParamsBase
+from pyhugegraph.utils.exceptions import CreateError, UpdateError, RemoveError
+from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
+from pyhugegraph.utils.util import check_if_success, check_if_authorized
 
 
 class PropertyKey(HugeParamsBase):

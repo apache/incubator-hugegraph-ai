@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 import os
-from hugegraph.connection import PyHugeGraph
+from pyhugegraph.client import PyHugeClient
 
 
 def generate_new_relationships(nodes_schemas_data, relationships_data):
@@ -140,7 +140,7 @@ def generate_relationships(data):
 
 class CommitDataToKg:
     def __init__(self):
-        self.client = PyHugeGraph(
+        self.client = PyHugeClient(
             "127.0.0.1", "8080", user="admin", pwd="admin", graph="hugegraph"
         )
         self.schema = self.client.schema()

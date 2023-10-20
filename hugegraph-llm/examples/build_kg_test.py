@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 import os
-from src.operators.build_kg_operator import KgBuilder
-from src.operators.llm.openai_llm import OpenAIChat
+from hugegraph_llm.operators.build_kg_operator import KgBuilder
+from hugegraph_llm.llms.openai_llm import OpenAIChat
 
 if __name__ == "__main__":
     #  If you need a proxy to access OpenAI's API, please set your HTTP proxy here

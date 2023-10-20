@@ -14,13 +14,13 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from src.operators.build_kg.commit_data_to_kg import CommitDataToKg
-from src.operators.build_kg.disambiguate_data import DisambiguateData
-from src.operators.build_kg.parse_text_to_data import (
+from hugegraph_llm.operators.hugegraph_op.commit_data_to_kg import CommitDataToKg
+from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
+from hugegraph_llm.operators.llm_op.parse_text_to_data import (
     ParseTextToData,
     ParseTextToDataWithSchemas,
 )
-from src.operators.llm.base import BaseLLM
+from hugegraph_llm.llms.base import BaseLLM
 
 
 class KgBuilder:

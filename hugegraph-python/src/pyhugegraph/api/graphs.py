@@ -19,12 +19,12 @@ import re
 
 import requests
 
-from src.api.common import HugeParamsBase
+from pyhugegraph.api.common import HugeParamsBase
 
-from src.utils.constants import Constants
-from src.utils.exceptions import NotFoundError
-from src.utils.huge_requests import HugeSession
-from src.utils.util import check_if_success
+from pyhugegraph.utils.constants import Constants
+from pyhugegraph.utils.exceptions import NotFoundError
+from pyhugegraph.utils.huge_requests import HugeSession
+from pyhugegraph.utils.util import check_if_success
 
 
 class GraphsManager(HugeParamsBase):

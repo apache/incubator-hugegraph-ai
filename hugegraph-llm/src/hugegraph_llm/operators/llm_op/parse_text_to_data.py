@@ -17,13 +17,13 @@
 import re
 from typing import List
 
-from src.operators.build_kg.unstructured_data_utils import (
+from hugegraph_llm.operators.llm_op.unstructured_data_utils import (
     nodes_text_to_list_of_dict,
     nodes_schemas_text_to_list_of_dict,
     relationships_schemas_text_to_list_of_dict,
     relationships_text_to_list_of_dict,
 )
-from src.operators.llm.base import BaseLLM
+from hugegraph_llm.llms.base import BaseLLM
 
 
 def generate_system_message() -> str:

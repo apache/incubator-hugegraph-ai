@@ -15,12 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from src.api.common import HugeParamsBase
-from src.api.graph import GraphManager
-from src.api.graphs import GraphsManager
-from src.api.gremlin import GremlinManager
-from src.api.schema import SchemaManager
-from src.structure.graph_instance import GraphInstance
+from pyhugegraph.api.common import HugeParamsBase
+from pyhugegraph.api.graph import GraphManager
+from pyhugegraph.api.graphs import GraphsManager
+from pyhugegraph.api.gremlin import GremlinManager
+from pyhugegraph.api.schema import SchemaManager
+from pyhugegraph.structure.graph_instance import GraphInstance
 
 
 class PyHugeClient(HugeParamsBase):

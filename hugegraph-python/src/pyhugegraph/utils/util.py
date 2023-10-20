@@ -17,7 +17,7 @@
 
 import json
 
-from src.utils.exceptions import ServiceUnavailableException, NotAuthorizedError, NotFoundError
+from pyhugegraph.utils.exceptions import ServiceUnavailableException, NotAuthorizedError, NotFoundError
 
 
 def create_exception(response_content):
