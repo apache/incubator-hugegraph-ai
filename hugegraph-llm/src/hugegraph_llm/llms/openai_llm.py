@@ -14,8 +14,9 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+"""OpenAI LLM"""
 import os
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Dict, Any
 import openai
 import tiktoken
 from retry import retry
@@ -41,9 +42,10 @@ class OpenAIChat(BaseLLM):
     @retry(tries=3, delay=1)
     def generate(
         self,
-        messages: Optional[List[str]] = None,
+        messages: Optional[List[Dict[str, Any]]] = None,
         prompt: Optional[str] = None,
     ) -> str:
+        """Generate a response to the query messages/prompt."""
         if messages is None:
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
@@ -59,18 +61,19 @@ class OpenAIChat(BaseLLM):
         except openai.error.InvalidRequestError as e:
             return str(f"Error: {e}")
         # catch authorization errors / do not retry
-        except openai.error.AuthenticationError as e:
+        except openai.error.AuthenticationError:
             return "Error: The provided OpenAI API key is invalid"
         except Exception as e:
             print(f"Retrying LLM call {e}")
-            raise Exception()
+            raise e
 
     async def generate_streaming(
         self,
-        messages: Optional[List[str]] = None,
+        messages: Optional[List[Dict[str, Any]]] = None,
         prompt: Optional[str] = None,
         on_token_callback: Callable = None,
     ) -> str:
+        """Generate a response to the query messages/prompt in streaming mode."""
         if messages is None:
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
@@ -91,10 +94,12 @@ class OpenAIChat(BaseLLM):
         return result
 
     def num_tokens_from_string(self, string: str) -> int:
+        """Get token count from string."""
         encoding = tiktoken.encoding_for_model(self.model)
         num_tokens = len(encoding.encode(string))
         return num_tokens
 
     def max_allowed_token_length(self) -> int:
+        """Get max-allowed token length"""
         # TODO: list all models and their max tokens from api
         return 2049

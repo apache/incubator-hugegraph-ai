@@ -19,6 +19,9 @@ import sys
 from pathlib import Path
 from typing import List, Optional, Dict
 
+import nltk
+from nltk.corpus import stopwords
+
 
 class NLTKHelper:
 
@@ -30,14 +33,6 @@ class NLTKHelper:
     def stopwords(self, lang: str = "english") -> List[str]:
         """Get stopwords."""
         if self._stopwords.get(lang) is None:
-            try:
-                import nltk
-                from nltk.corpus import stopwords
-            except ImportError:
-                raise ImportError(
-                    "`nltk` package not found, please run `pip install nltk`"
-                )
-
             cache_dir = self.get_cache_dir()
             nltk_data_dir = os.environ.get("NLTK_DATA", cache_dir)
 

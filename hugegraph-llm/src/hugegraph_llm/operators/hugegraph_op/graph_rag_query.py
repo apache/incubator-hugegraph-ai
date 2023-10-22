@@ -99,7 +99,7 @@ class GraphRAGQuery:
         if isinstance(context.get("prop_to_match"), str):
             self._prop_to_match = context["prop_to_match"]
 
-        node_labels, edge_labels = self._extract_labels_from_schema()
+        _, edge_labels = self._extract_labels_from_schema()
         edge_labels_str = ",".join("'" + label + "'" for label in edge_labels)
 
         use_id_to_match = self._prop_to_match is None
@@ -144,7 +144,7 @@ class GraphRAGQuery:
 
         verbose = context.get("verbose") or False
         if verbose:
-            print(f"\033[93mKNOWLEDGE FROM GRAPH:")
+            print("\033[93mKNOWLEDGE FROM GRAPH:")
             print("\n".join(rel for rel in context["synthesize_context_body"]) + "\033[0m")
 
         return context
@@ -209,12 +209,12 @@ class GraphRAGQuery:
 
     @staticmethod
     def _extract_label_names(
-            s: str,
+            source: str,
             head: str = "name: ",
             tail: str = ", ",
     ) -> List[str]:
         result = []
-        for s in s.split(head):
+        for s in source.split(head):
             end = s.find(tail)
             label = s[:end]
             if label:
@@ -225,14 +225,13 @@ class GraphRAGQuery:
         sample = self._client.gremlin().exec("g.V().limit(1)")["data"]
         if len(sample) == 0:
             return "EMPTY"
-        else:
-            sample_id = sample[0]["id"]
-            if isinstance(sample_id, int):
-                return "INT"
-            if isinstance(sample_id, str):
-                if re.match(r"^\d+:.*", sample_id):
-                    return "INT:STRING"
-                return "STRING"
+        sample_id = sample[0]["id"]
+        if isinstance(sample_id, int):
+            return "INT"
+        if isinstance(sample_id, str):
+            if re.match(r"^\d+:.*", sample_id):
+                return "INT:STRING"
+            return "STRING"
         return "UNKNOWN"
 
     def _get_graph_schema(self, refresh: bool = False) -> str:
@@ -240,9 +239,9 @@ class GraphRAGQuery:
             return self._schema
 
         schema = self._client.schema()
-        vertex_schema = schema.getVertexLabels()
-        edge_schema = schema.getEdgeLabels()
-        relationships = schema.getRelations()
+        vertex_schema = schema.get_vertex_labels()
+        edge_schema = schema.get_edge_labels()
+        relationships = schema.get_relations()
 
         self._schema = (
             f"Node properties: {vertex_schema}\n"
