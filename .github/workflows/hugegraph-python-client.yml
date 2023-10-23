@@ -28,6 +28,12 @@ jobs:
       run: |
         docker run -d --name=graph -p 8080:8080 hugegraph/hugegraph
         sleep 20
+    - name: Test example
+      run: |
+        export PYTHONPATH=$(pwd)/hugegraph-python-client/src
+        echo ${PYTHONPATH}
+        python example/hugegraph_example.py
+      working-directory: hugegraph-python-client
     - name: Test with pytest
       run: |
         pytest
