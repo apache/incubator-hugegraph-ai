@@ -21,4 +21,3 @@ class HugeGraphTest(unittest.TestCase):
 
         result = client.exec("g.V().limit(10)")
         self.assertIsInstance(result, MagicMock)
-

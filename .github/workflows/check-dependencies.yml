@@ -1,0 +1,41 @@
+name: "3rd-party check"
+
+on:
+  push:
+    branches:
+      - main
+      - 'release-*'
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+      - name: 'Dependency Review'
+        uses: actions/dependency-review-action@v3
+        # Refer: https://github.com/actions/dependency-review-action
+        with:
+          fail-on-severity: low
+          comment-summary-in-pr: on-failure
+          # Action will fail if dependencies don't match the list
+          #allow-licenses: Apache-2.0, MIT
+          deny-licenses: GPL-3.0, AGPL-1.0, AGPL-3.0, LGPL-2.0, CC-BY-3.0
+
+  check-license:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check License Header
+        uses: apache/skywalking-eyes@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          log: info
+          token: ${{ github.token }}
+          config: .licenserc.yaml

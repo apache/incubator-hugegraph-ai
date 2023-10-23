@@ -26,7 +26,8 @@ if __name__ == '__main__':
     schema.propertyKey("birthDate").asText().ifNotExist().create()
     schema.vertexLabel("Person").properties("name", "birthDate").usePrimaryKeyId().primaryKeys(
         "name").ifNotExist().create()
-    schema.vertexLabel("Movie").properties("name").usePrimaryKeyId().primaryKeys("name").ifNotExist().create()
+    schema.vertexLabel("Movie").properties("name").usePrimaryKeyId().primaryKeys(
+        "name").ifNotExist().create()
     schema.edgeLabel("ActedIn").sourceLabel("Person").targetLabel("Movie").ifNotExist().create()
 
     print(schema.getVertexLabels())
@@ -50,7 +51,6 @@ if __name__ == '__main__':
 
     # update property
     g.eliminateVertex("vertex_id", {"property_key": "property_value"})
-
 
     print(g.getVertexById(p1.id).label)
     # g.removeVertexById("12:Al Pacino")
