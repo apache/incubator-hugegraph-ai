@@ -32,7 +32,7 @@ body:
     attributes:
       label: Before submit
       options:
-        - label: I had searched in the [issues](https://github.com/apache/hugegraph-toolchain/issues) and found no similar issues.
+        - label: I had searched in the [issues](https://github.com/apache/incubator-hugegraph-ai/issues) and found no similar issues.
           required: true
 
   - type: textarea
