@@ -24,9 +24,9 @@ jobs:
         pip install pylint
         pip install -r ./hugegraph-llm/requirements.txt 
         pip install -r ./hugegraph-python-client/requirements.txt
-        export PYTHONPATH=$(pwd)/hugegraph-llm/src:$(pwd)/hugegraph-python-client/src
-        echo ${PYTHONPATH}
     - name: Analysing the code with pylint
       run: |
+        export PYTHONPATH=$(pwd)/hugegraph-llm/src:$(pwd)/hugegraph-python-client/src
+        echo ${PYTHONPATH}
         pylint --rcfile=./pylint.conf hugegraph-llm
         pylint --rcfile=./pylint.conf hugegraph-python-client
