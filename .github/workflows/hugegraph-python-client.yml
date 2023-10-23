@@ -22,8 +22,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r ./hugegraph-python-client/requirements.txt
         pip install pytest
+        pip install -r ./hugegraph-python-client/requirements.txt
     - name: Prepare HugeGraph Server Environment
       run: |
         docker run -d --name=graph -p 8080:8080 hugegraph/hugegraph
