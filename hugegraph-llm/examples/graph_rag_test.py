@@ -29,7 +29,8 @@ def prepare_data():
     schema = client.schema()
     schema.propertyKey("name").asText().ifNotExist().create()
     schema.propertyKey("birthDate").asText().ifNotExist().create()
-    schema.vertexLabel("Person").properties("name", "birthDate").useCustomizeStringId().ifNotExist().create()
+    schema.vertexLabel("Person").properties("name", "birthDate") \
+        .useCustomizeStringId().ifNotExist().create()
     schema.vertexLabel("Movie").properties("name").useCustomizeStringId().ifNotExist().create()
     schema.indexLabel("PersonByName").onV("Person").by("name").secondary().ifNotExist().create()
     schema.indexLabel("MovieByName").onV("Movie").by("name").secondary().ifNotExist().create()
@@ -37,11 +38,12 @@ def prepare_data():
 
     graph = client.graph()
     graph.addVertex("Person", {"name": "Al Pacino", "birthDate": "1940-04-25"}, id="Al Pacino")
-    graph.addVertex("Person", {"name": "Robert De Niro", "birthDate": "1943-08-17"}, id="Robert De Niro")
+    graph.addVertex(
+        "Person", {"name": "Robert De Niro", "birthDate": "1943-08-17"}, id="Robert De Niro")
     graph.addVertex("Movie", {"name": "The Godfather"}, id="The Godfather")
     graph.addVertex("Movie", {"name": "The Godfather Part II"}, id="The Godfather Part II")
     graph.addVertex("Movie", {"name": "The Godfather Coda The Death of Michael Corleone"},
-                    id="The Godfather Coda The Death of Michael Corleone", )
+                    id="The Godfather Coda The Death of Michael Corleone")
 
     graph.addEdge("ActedIn", "Al Pacino", "The Godfather", {})
     graph.addEdge("ActedIn", "Al Pacino", "The Godfather Part II", {})
