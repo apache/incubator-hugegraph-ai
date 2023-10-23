@@ -67,12 +67,9 @@ class EdgeLabelData:
         return self.__user_data
 
     def relations(self):
-        res = "{}--{}-->{}".format(
-            self.__source_label, self.__name, self.__target_label)
+        res = f"{self.__source_label}--{self.__name}-->{self.__target_label}"
         return res
 
     def __repr__(self):
-        res = "name: {}, properties: {}".format(
-            self.__name
-            , self.__properties)
+        res = f"name: {self.__name}, properties: {self.__properties}"
         return res

@@ -17,7 +17,7 @@
 
 from pyhugegraph.client import PyHugeClient
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     client = PyHugeClient("127.0.0.1", "8080", user="admin", pwd="admin", graph="test")
 
     """schema"""
@@ -25,9 +25,11 @@ if __name__ == '__main__':
     schema.propertyKey("name").asText().ifNotExist().create()
     schema.propertyKey("birthDate").asText().ifNotExist().create()
     schema.vertexLabel("Person").properties("name", "birthDate").usePrimaryKeyId().primaryKeys(
-        "name").ifNotExist().create()
+        "name"
+    ).ifNotExist().create()
     schema.vertexLabel("Movie").properties("name").usePrimaryKeyId().primaryKeys(
-        "name").ifNotExist().create()
+        "name"
+    ).ifNotExist().create()
     schema.edgeLabel("ActedIn").sourceLabel("Person").targetLabel("Movie").ifNotExist().create()
 
     print(schema.getVertexLabels())

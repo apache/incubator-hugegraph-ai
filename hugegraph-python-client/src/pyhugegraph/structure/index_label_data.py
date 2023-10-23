@@ -50,7 +50,8 @@ class IndexLabelData:
         return self.__index_type
 
     def __repr__(self):
-        res = "index_name: {}, base_value: {}, base_type: {}, fields: [], index_type: {}"\
-            .format(self.__name, self.__base_value, self.__base_type, self.__fields,
-                    self.__index_type)
+        res = (
+            f"index_name: {self.__name}, base_value: {self.__base_value}, base_type:"
+            f" {self.__base_type}, fields: {self.__fields}, index_type: {self.__index_type}"
+        )
         return res

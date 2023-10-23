@@ -14,13 +14,20 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
+
 import json
 import re
 
-regex = r"Nodes:\s+(.*?)\s?\s?Relationships:\s?\s?NodesSchemas:\s+(.*?)\s?\s?RelationshipsSchemas:\s?\s?(.*)"
-internalRegex = r"\[(.*?)\]"
-jsonRegex = r"\{.*\}"
-jsonRegex_relationships = r"\{.*?\}"
+REGEX = (
+    r"Nodes:\s+(.*?)\s?\s?"
+    r"Relationships:\s?\s?"
+    r"NodesSchemas:\s+(.*?)\s?\s?"
+    r"RelationshipsSchemas:\s?\s?(.*)"
+)
+INTERNAL_REGEX = r"\[(.*?)\]"
+JSON_REGEX = r"\{.*\}"
+JSON_REGEX_RELATIONSHIPS = r"\{.*?\}"
 
 
 def nodes_text_to_list_of_dict(nodes):
@@ -32,7 +39,7 @@ def nodes_text_to_list_of_dict(nodes):
 
         name = node_list[0].strip().replace('"', "")
         label = node_list[1].strip().replace('"', "")
-        properties = re.search(jsonRegex, node)
+        properties = re.search(JSON_REGEX, node)
         if properties is None:
             properties = "{}"
         else:
@@ -56,7 +63,7 @@ def relationships_text_to_list_of_dict(relationships):
         end = {}
         properties = {}
         relationship_type = relationship_list[1].strip().replace('"', "")
-        matches = re.findall(jsonRegex_relationships, relationship)
+        matches = re.findall(JSON_REGEX_RELATIONSHIPS, relationship)
         i = 1
         for match in matches:
             if i == 1:
@@ -89,7 +96,7 @@ def nodes_schemas_text_to_list_of_dict(nodes_schemas):
 
         label = nodes_schema_list[0].strip().replace('"', "")
         primary_key = nodes_schema_list[1].strip().replace('"', "")
-        properties = re.search(jsonRegex, nodes_schema)
+        properties = re.search(JSON_REGEX, nodes_schema)
         if properties is None:
             properties = "{}"
         else:
@@ -99,9 +106,7 @@ def nodes_schemas_text_to_list_of_dict(nodes_schemas):
             properties = json.loads(properties)
         except json.decoder.JSONDecodeError:
             properties = {}
-        result.append(
-            {"label": label, "primary_key": primary_key, "properties": properties}
-        )
+        result.append({"label": label, "primary_key": primary_key, "properties": properties})
     return result
 
 
@@ -113,11 +118,9 @@ def relationships_schemas_text_to_list_of_dict(relationships_schemas):
             continue
         start = relationships_schema_list[0].strip().replace('"', "")
         end = relationships_schema_list[2].strip().replace('"', "")
-        relationships_schema_type = (
-            relationships_schema_list[1].strip().replace('"', "")
-        )
+        relationships_schema_type = relationships_schema_list[1].strip().replace('"', "")
 
-        properties = re.search(jsonRegex, relationships_schema)
+        properties = re.search(JSON_REGEX, relationships_schema)
         if properties is None:
             properties = "{}"
         else:

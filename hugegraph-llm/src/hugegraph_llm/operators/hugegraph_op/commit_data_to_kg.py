@@ -14,22 +14,23 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
+
 import os
 from pyhugegraph.client import PyHugeClient
 
 
 def generate_new_relationships(nodes_schemas_data, relationships_data):
-    label_id = dict()
+    label_id = {}
     i = 1
     old_label = []
     for item in nodes_schemas_data:
         label = item["label"]
         if label in old_label:
             continue
-        else:
-            label_id[label] = i
-            i += 1
-            old_label.append(label)
+        label_id[label] = i
+        i += 1
+        old_label.append(label)
     new_relationships_data = []
     for relationship in relationships_data:
         start = relationship["start"]
@@ -45,7 +46,7 @@ def generate_new_relationships(nodes_schemas_data, relationships_data):
             for key1, value1 in end.items():
                 if key1 == key:
                     new_end = f"{value}" + ":" + f"{value1}"
-        relationships_data = dict()
+        relationships_data = {}
         relationships_data["start"] = new_start
         relationships_data["end"] = new_end
         relationships_data["type"] = relationships_type
@@ -91,7 +92,7 @@ def generate_schema_nodes(data):
         properties = item["properties"]
         schema_statement = f"schema.vertexLabel('{label}').properties("
         schema_statement += ", ".join(f"'{prop}'" for prop in properties.keys())
-        schema_statement += f").nullableKeys("
+        schema_statement += ").nullableKeys("
         schema_statement += ", ".join(
             f"'{prop}'" for prop in properties.keys() if prop != primary_key
         )
@@ -109,11 +110,14 @@ def generate_schema_relationships(data):
         end = item["end"]
         schema_relationships_type = item["type"]
         properties = item["properties"]
-        schema_statement = f"schema.edgeLabel('{schema_relationships_type}').sourceLabel('{start}').targetLabel('{end}').properties("
+        schema_statement = (
+            f"schema.edgeLabel('{schema_relationships_type}')"
+            f".sourceLabel('{start}').targetLabel('{end}').properties("
+        )
         schema_statement += ", ".join(f"'{prop}'" for prop in properties.keys())
-        schema_statement += f").nullableKeys("
+        schema_statement += ").nullableKeys("
         schema_statement += ", ".join(f"'{prop}'" for prop in properties.keys())
-        schema_statement += f").ifNotExist().create()"
+        schema_statement += ").ifNotExist().create()"
         schema_relationships_statements.append(schema_statement)
     return schema_relationships_statements
 
@@ -153,12 +157,9 @@ class CommitDataToKg:
         relationships = data["relationships"]
         nodes_schemas = data["nodes_schemas"]
         relationships_schemas = data["relationships_schemas"]
-        schema = self.schema
         # properties schema
         schema_nodes_properties = generate_schema_properties(nodes_schemas)
-        schema_relationships_properties = generate_schema_properties(
-            relationships_schemas
-        )
+        schema_relationships_properties = generate_schema_properties(relationships_schemas)
         for schema_nodes_property in schema_nodes_properties:
             exec(schema_nodes_property)
 
@@ -175,7 +176,6 @@ class CommitDataToKg:
         for schema_relationship in schema_relationships:
             exec(schema_relationship)
 
-        g = self.client.graph()
         # nodes
         nodes = generate_nodes(nodes)
         for node in nodes:

@@ -27,8 +27,7 @@ class ParameterHolder:
     def get_value(self, key):
         if key not in self._dic:
             return None
-        else:
-            return self._dic[key]
+        return self._dic[key]
 
     def get_dic(self):
         return self._dic
@@ -44,18 +43,15 @@ class HugeParamsBase:
         self._port = graph_instance.port
         self._user = graph_instance.user_name
         self._pwd = graph_instance.passwd
-        self._host = "http://{}:{}".format(graph_instance.ip, graph_instance.port)
+        self._host = f"http://{graph_instance.ip}:{graph_instance.port}"
         self._auth = (graph_instance.user_name, graph_instance.passwd)
         self._graph_name = graph_instance.graph_name
         self._parameter_holder = None
-        self._headers = {
-            'Content-Type': Constants.HEADER_CONTENT_TYPE
-        }
+        self._headers = {"Content-Type": Constants.HEADER_CONTENT_TYPE}
         self._timeout = graph_instance.timeout
 
     def add_parameter(self, key, value):
         self._parameter_holder.set(key, value)
-        return
 
     def get_parameter_holder(self):
         return self._parameter_holder

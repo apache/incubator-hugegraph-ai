@@ -17,21 +17,26 @@
 
 import json
 
-from pyhugegraph.utils.exceptions import ServiceUnavailableException, NotAuthorizedError, NotFoundError
+from pyhugegraph.utils.exceptions import (
+    ServiceUnavailableException,
+    NotAuthorizedError,
+    NotFoundError,
+)
 
 
 def create_exception(response_content):
     data = json.loads(response_content)
     if "ServiceUnavailableException" in data["exception"]:
-        raise ServiceUnavailableException('ServiceUnavailableException, "message": "{}", "cause": "{}"'.
-                                          format(data["message"], data["cause"]))
-    else:
-        raise Exception(response_content)
+        raise ServiceUnavailableException(
+            f'ServiceUnavailableException, "message": "{data["message"]}",'
+            f' "cause": "{data["cause"]}"'
+        )
+    raise Exception(response_content)
 
 
 def check_if_authorized(response):
     if response.status_code == 401:
-        raise NotAuthorizedError("Please check your username and password. {}".format(response.content))
+        raise NotAuthorizedError(f"Please check your username and password. {response.content}")
     return True
 
 

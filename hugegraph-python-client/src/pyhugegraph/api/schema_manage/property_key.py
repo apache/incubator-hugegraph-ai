@@ -89,7 +89,7 @@ class PropertyKey(HugeParamsBase):
     def userdata(self, *args):
         user_data = self._parameter_holder.get_value("user_data")
         if not user_data:
-            self._parameter_holder.set("user_data", dict())
+            self._parameter_holder.set("user_data", {})
             user_data = self._parameter_holder.get_value("user_data")
         i = 0
         while i < len(args):
@@ -107,55 +107,59 @@ class PropertyKey(HugeParamsBase):
     @decorator_create
     def create(self):
         dic = self._parameter_holder.get_dic()
-        property_keys = {
-            "name": dic["name"]
-        }
+        property_keys = {"name": dic["name"]}
         if "data_type" in dic:
             property_keys["data_type"] = dic["data_type"]
         if "cardinality" in dic:
             property_keys["cardinality"] = dic["cardinality"]
-        url = f'{self._host}/graphs/{self._graph_name}/schema/propertykeys'
-        response = self.session.post(url, data=json.dumps(property_keys), auth=self._auth, headers=self._headers)
+        url = f"{self._host}/graphs/{self._graph_name}/schema/propertykeys"
+        response = self.session.post(
+            url, data=json.dumps(property_keys), auth=self._auth, headers=self._headers
+        )
         self.clean_parameter_holder()
-        if check_if_success(response, CreateError(
-                'CreateError: "create PropertyKey failed", Detail: {}'.format(response.content))):
-            return 'create PropertyKey success, Detail: {}'.format(response.content)
+        if check_if_success(
+            response,
+            CreateError(f'CreateError: "create PropertyKey failed", Detail: {response.content}'),
+        ):
+            return f"create PropertyKey success, Detail: {response.content}"
 
     @decorator_params
     def append(self):
         property_name = self._parameter_holder.get_value("name")
         user_data = self._parameter_holder.get_value("user_data")
         if not user_data:
-            user_data = dict()
-        data = {
-            "name": property_name,
-            "user_data": user_data
-        }
+            user_data = {}
+        data = {"name": property_name, "user_data": user_data}
 
-        url = f'{self._host}/graphs/{self._graph_name}/schema/propertykeys/{property_name}/?action=append'
-        response = self.session.put(url, data=json.dumps(data), auth=self._auth, headers=self._headers)
+        url = f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/{property_name}/?action=append"
+        response = self.session.put(
+            url, data=json.dumps(data), auth=self._auth, headers=self._headers
+        )
         self.clean_parameter_holder()
-        if check_if_success(response, UpdateError(
-                'UpdateError: "append PropertyKey failed", Detail: {}'.format(response.content))):
-            return 'append PropertyKey success, Detail: {}'.format(response.content)
+        if check_if_success(
+            response,
+            UpdateError(f'UpdateError: "append PropertyKey failed", Detail: {response.content}'),
+        ):
+            return f"append PropertyKey success, Detail: {response.content}"
 
     @decorator_params
     def eliminate(self):
         property_name = self._parameter_holder.get_value("name")
         user_data = self._parameter_holder.get_value("user_data")
         if not user_data:
-            user_data = dict()
-        data = {
-            "name": property_name,
-            "user_data": user_data
-        }
+            user_data = {}
+        data = {"name": property_name, "user_data": user_data}
 
-        url = f'{self._host}/graphs/{self._graph_name}/schema/propertykeys/{property_name}/?action=eliminate'
-        response = self.session.put(url, data=json.dumps(data), auth=self._auth, headers=self._headers)
+        url = f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/{property_name}/?action=eliminate"
+        response = self.session.put(
+            url, data=json.dumps(data), auth=self._auth, headers=self._headers
+        )
         self.clean_parameter_holder()
-        error = UpdateError(f'UpdateError: "eliminate PropertyKey failed", Detail: {str(response.content)}')
+        error = UpdateError(
+            f'UpdateError: "eliminate PropertyKey failed", Detail: {str(response.content)}'
+        )
         if check_if_success(response, error):
-            return 'eliminate PropertyKey success, Detail: {}'.format(str(response.content))
+            return f"eliminate PropertyKey success, Detail: {str(response.content)}"
 
     @decorator_params
     def remove(self):
@@ -163,6 +167,10 @@ class PropertyKey(HugeParamsBase):
         url = f'{self._host}/graphs/{self._graph_name}/schema/propertykeys/{dic["name"]}'
         response = self.session.delete(url)
         self.clean_parameter_holder()
-        if check_if_success(response, RemoveError(
-                'RemoveError: "delete PropertyKey failed", Detail: {}'.format(str(response.content)))):
-            return 'delete PropertyKey success, Detail: {}'.format(dic["name"])
+        if check_if_success(
+            response,
+            RemoveError(
+                f'RemoveError: "delete PropertyKey failed", Detail: {str(response.content)}'
+            ),
+        ):
+            return f'delete PropertyKey success, Detail: {dic["name"]}'

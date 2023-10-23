@@ -24,16 +24,16 @@ from pyhugegraph.utils.exceptions import NotAuthorizedError
 def decorator_params(func, *args, **kwargs):
     parameter_holder = args[0].get_parameter_holder()
     if parameter_holder is None or "name" not in parameter_holder.get_keys():
-        print('Parameters required, please set necessary parameters.')
-        raise
+        print("Parameters required, please set necessary parameters.")
+        raise Exception("Parameters required, please set necessary parameters.")
     return func(*args, **kwargs)
 
 
 @decorator
 def decorator_create(func, *args, **kwargs):
     parameter_holder = args[0].get_parameter_holder()
-    if parameter_holder.get_value('not_exist') is False:
-        return 'Create failed, "{}" already exists.'.format(parameter_holder.get_value('name'))
+    if parameter_holder.get_value("not_exist") is False:
+        return f'Create failed, "{parameter_holder.get_value("name")}" already exists.'
     return func(*args, **kwargs)
 
 
@@ -41,5 +41,5 @@ def decorator_create(func, *args, **kwargs):
 def decorator_auth(func, *args, **kwargs):
     response = args[0]
     if response.status_code == 401:
-        raise NotAuthorizedError("NotAuthorized: {}".format(response.content))
+        raise NotAuthorizedError(f"NotAuthorized: {response.content}")
     return func(*args, **kwargs)

@@ -17,8 +17,6 @@
 import json
 import re
 
-import requests
-
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.structure.respon_data import ResponseData
 from pyhugegraph.utils.exceptions import NotFoundError
@@ -41,8 +39,9 @@ class GremlinManager(HugeParamsBase):
 
     def exec(self, gremlin):
         gremlin = re.sub("^g", self._graph_name + ".traversal()", gremlin)
-        url = f'{self._host}/gremlin?gremlin={gremlin}'
+        url = f"{self._host}/gremlin?gremlin={gremlin}"
         response = self.session.get(url, auth=self._auth, headers=self._headers)
-        error = NotFoundError("Gremlin can't get results: {}".format(response.content))
+        error = NotFoundError(f"Gremlin can't get results: {response.content}")
         if check_if_success(response, error):
             return ResponseData(json.loads(response.content)).result
+        return ""

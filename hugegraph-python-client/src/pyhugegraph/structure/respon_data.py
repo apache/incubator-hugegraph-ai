@@ -35,5 +35,5 @@ class ResponseData:
         return self.__result
 
     def __repr__(self):
-        res = "id: {}, status: {}, result: {}".format(self.__id, self.__status, self.__result)
+        res = f"id: {self.__id}, status: {self.__status}, result: {self.__result}"
         return res

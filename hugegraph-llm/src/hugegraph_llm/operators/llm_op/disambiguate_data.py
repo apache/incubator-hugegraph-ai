@@ -14,6 +14,8 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
+
 import json
 import re
 from itertools import groupby
@@ -102,7 +104,7 @@ def generate_prompt(data) -> str:
 """
 
 
-internalRegex = r"\[(.*?)\]"
+INTERNAL_REGEX = r"\[(.*?)\]"
 
 
 class DisambiguateData:
@@ -144,7 +146,7 @@ class DisambiguateData:
                 {"role": "user", "content": generate_prompt(dis_string)},
             ]
             raw_nodes = self.llm.generate(messages)
-            n = re.findall(internalRegex, raw_nodes)
+            n = re.findall(INTERNAL_REGEX, raw_nodes)
             new_nodes.extend(nodes_text_to_list_of_dict(n))
 
         relationship_data = ""
@@ -172,7 +174,7 @@ class DisambiguateData:
             {"role": "user", "content": generate_prompt(relationship_data)},
         ]
         raw_relationships = self.llm.generate(messages)
-        rels = re.findall(internalRegex, raw_relationships)
+        rels = re.findall(INTERNAL_REGEX, raw_relationships)
         new_relationships.extend(relationships_text_to_list_of_dict(rels))
 
         if not self.is_user_schema:
@@ -193,7 +195,7 @@ class DisambiguateData:
                 {"role": "user", "content": generate_prompt(nodes_schemas_data)},
             ]
             raw_nodes_schemas = self.llm.generate(messages)
-            n = re.findall(internalRegex, raw_nodes_schemas)
+            n = re.findall(INTERNAL_REGEX, raw_nodes_schemas)
             new_nodes_schemas.extend(nodes_schemas_text_to_list_of_dict(n))
 
             relationships_schemas_data = ""
@@ -210,12 +212,8 @@ class DisambiguateData:
                     + "]\n"
                 )
 
-            node_schemas_labels = [
-                nodes_schemas["label"] for nodes_schemas in new_nodes_schemas
-            ]
-            relationships_schemas_data += "Valid Labels:\n" + "\n".join(
-                node_schemas_labels
-            )
+            node_schemas_labels = [nodes_schemas["label"] for nodes_schemas in new_nodes_schemas]
+            relationships_schemas_data += "Valid Labels:\n" + "\n".join(node_schemas_labels)
 
             messages = [
                 {
@@ -228,7 +226,7 @@ class DisambiguateData:
                 },
             ]
             raw_relationships_schemas = self.llm.generate(messages)
-            schemas_rels = re.findall(internalRegex, raw_relationships_schemas)
+            schemas_rels = re.findall(INTERNAL_REGEX, raw_relationships_schemas)
             new_relationships_schemas.extend(
                 relationships_schemas_text_to_list_of_dict(schemas_rels)
             )

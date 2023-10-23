@@ -18,45 +18,47 @@
 
 class NotAuthorizedError(Exception):
     """
-        Not Authorized
+    Not Authorized
     """
+
 
 class InvalidParameter(Exception):
     """
-        Parameter setting error
+    Parameter setting error
     """
+
 
 class NotFoundError(Exception):
     """
-        no content found
+    no content found
     """
 
 
 class CreateError(Exception):
     """
-        Failed to create vertex or edge
+    Failed to create vertex or edge
     """
 
 
 class RemoveError(Exception):
     """
-        Failed to delete vertex or edge
+    Failed to delete vertex or edge
     """
 
 
 class UpdateError(Exception):
     """
-        Failed to modify node
+    Failed to modify node
     """
 
 
 class DataFormatError(Exception):
     """
-        Input data format error
+    Input data format error
     """
 
 
 class ServiceUnavailableException(Exception):
     """
-        The server is too busy to be available
+    The server is too busy to be available
     """

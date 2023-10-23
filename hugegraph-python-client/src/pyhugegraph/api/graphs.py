@@ -14,10 +14,7 @@
 # KIND, either expresponses or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-import json
-import re
 
-import requests
 
 from pyhugegraph.api.common import HugeParamsBase
 
@@ -41,31 +38,37 @@ class GraphsManager(HugeParamsBase):
             self.session.close()
 
     def get_all_graphs(self):
-        url = f'{self._host}/graphs'
+        url = f"{self._host}/graphs"
         response = self.session.get(url, auth=self._auth, headers=self._headers)
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
+        return ""
 
     def get_version(self):
-        url = f'{self._host}/versions'
+        url = f"{self._host}/versions"
         response = self.session.get(url, auth=self._auth, headers=self._headers)
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
+        return ""
 
     def get_graph_info(self):
-        url = f'{self._host}/graphs/{self._graph_name}'
+        url = f"{self._host}/graphs/{self._graph_name}"
         response = self.session.get(url, auth=self._auth, headers=self._headers)
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
+        return ""
 
     def clear_graph_all_data(self):
-        url = f'{self._host}/graphs/{self._graph_name}/clear?confirm_message={Constants.CONFORM_MESSAGE}'
+        url = f"{self._host}/graphs/{self._graph_name}/clear?confirm_message=" \
+              f"{Constants.CONFORM_MESSAGE}"
         response = self.session.delete(url, auth=self._auth, headers=self._headers)
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
+        return ""
 
     def get_graph_config(self):
         url = self._host + "/graphs" + "/" + self._graph_name + "/conf"
         response = self.session.get(url, auth=self._auth, headers=self._headers)
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
+        return ""
