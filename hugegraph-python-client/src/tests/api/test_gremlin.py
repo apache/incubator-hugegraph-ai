@@ -31,6 +31,7 @@ class TestGremlin(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.client = ClientUtils()
+        cls.client.clear_graph_all_data()
         cls.gremlin = cls.client.gremlin
         cls.client.init_property_key()
         cls.client.init_vertex_label()
