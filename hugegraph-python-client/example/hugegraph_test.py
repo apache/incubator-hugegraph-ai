@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+
 class HugeGraph:
     """HugeGraph wrapper for graph operations"""
 
@@ -24,7 +25,7 @@ class HugeGraph:
         password: str = "default",
         address: str = "127.0.0.1",
         port: int = 8081,
-        graph: str = "hugegraph"
+        graph: str = "hugegraph",
     ) -> None:
         """Create a new HugeGraph wrapper instance."""
         try:
@@ -33,7 +34,7 @@ class HugeGraph:
             raise ValueError(
                 "Please install HugeGraph Python client first: "
                 "`pip3 install hugegraph-python-client`"
-            )
+            ) from ImportError
 
         self.username = username
         self.password = password

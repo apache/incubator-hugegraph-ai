@@ -11,7 +11,7 @@
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either expresponses or implied.  See the License for the
+# KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
 
@@ -47,7 +47,7 @@ class EdgeLabel(HugeParamsBase):
     @decorator_params
     def userdata(self, *args):
         if not self._parameter_holder.get_value("user_data"):
-            self._parameter_holder.set('user_data', dict())
+            self._parameter_holder.set("user_data", {})
         user_data = self._parameter_holder.get_value("user_data")
         i = 0
         while i < len(args):
@@ -93,58 +93,81 @@ class EdgeLabel(HugeParamsBase):
     @decorator_create
     def create(self):
         dic = self._parameter_holder.get_dic()
-        data = dict()
-        keys = ['name', 'source_label', 'target_label', 'nullable_keys', 'properties',
-                'enable_label_index', 'sort_keys', 'user_data', 'frequency']
+        data = {}
+        keys = [
+            "name",
+            "source_label",
+            "target_label",
+            "nullable_keys",
+            "properties",
+            "enable_label_index",
+            "sort_keys",
+            "user_data",
+            "frequency",
+        ]
         for key in keys:
             if key in dic:
                 data[key] = dic[key]
-        url = f'{self._host}/graphs/{self._graph_name}/schema/edgelabels'
-        response = self.session.post(url, data=json.dumps(data), auth=self._auth, headers=self._headers)
+        url = f"{self._host}/graphs/{self._graph_name}/schema/edgelabels"
+        response = self.session.post(
+            url, data=json.dumps(data), auth=self._auth, headers=self._headers
+        )
         self.clean_parameter_holder()
-        error = CreateError('CreateError: "create EdgeLabel failed", Detail:  "{}"'
-                            .format(str(response.content)))
+        error = CreateError(
+            f'CreateError: "create EdgeLabel failed", Detail:  "{str(response.content)}"'
+        )
         if check_if_success(response, error):
-            return 'create EdgeLabel success, Detail: "{}"'.format(str(response.content))
+            return f'create EdgeLabel success, Detail: "{str(response.content)}"'
 
     @decorator_params
     def remove(self):
         url = f'{self._host}/graphs/{self._graph_name}/schema/edgelabels/{self._parameter_holder.get_value("name")}'
         response = self.session.delete(url, auth=self._auth, headers=self._headers)
         self.clean_parameter_holder()
-        error = RemoveError('RemoveError: "remove EdgeLabel failed", Detail:  "{}"'
-                            .format(str(response.content)))
+        error = RemoveError(
+            f'RemoveError: "remove EdgeLabel failed", Detail:  "{str(response.content)}"'
+        )
         if check_if_success(response, error):
-            return 'remove EdgeLabel success, Detail: "{}"'.format(str(response.content))
+            return f'remove EdgeLabel success, Detail: "{str(response.content)}"'
 
     @decorator_params
     def append(self):
         dic = self._parameter_holder.get_dic()
-        data = dict()
-        keys = ['name', 'nullable_keys', 'properties', 'user_data']
+        data = {}
+        keys = ["name", "nullable_keys", "properties", "user_data"]
         for key in keys:
             if key in dic:
                 data[key] = dic[key]
 
-        url = f'{self._host}/graphs/{self._graph_name}/schema/edgelabels/{data["name"]}?action=append'
-        response = self.session.put(url, data=json.dumps(data), auth=self._auth, headers=self._headers)
+        url = (
+            f'{self._host}/graphs/{self._graph_name}/schema/edgelabels/{data["name"]}?action=append'
+        )
+        response = self.session.put(
+            url, data=json.dumps(data), auth=self._auth, headers=self._headers
+        )
         self.clean_parameter_holder()
-        error = UpdateError('UpdateError: "append EdgeLabel failed", Detail: "{}"'.format(str(response.content)))
+        error = UpdateError(
+            f'UpdateError: "append EdgeLabel failed", Detail: "{str(response.content)}"'
+        )
         if check_if_success(response, error):
-            return 'append EdgeLabel success, Detail: "{}"'.format(str(response.content))
+            return f'append EdgeLabel success, Detail: "{str(response.content)}"'
 
     @decorator_params
     def eliminate(self):
         name = self._parameter_holder.get_value("name")
-        user_data = self._parameter_holder.get_value("user_data") if \
-            self._parameter_holder.get_value("user_data") else {}
-        url = f'{self._host}/graphs/{self._graph_name}/schema/edgelabels/{name}?action=eliminate'
-        data = {
-            "name": name,
-            "user_data": user_data
-        }
-        response = self.session.put(url, data=json.dumps(data), auth=self._auth, headers=self._headers)
+        user_data = (
+            self._parameter_holder.get_value("user_data")
+            if self._parameter_holder.get_value("user_data")
+            else {}
+        )
+        url = f"{self._host}/graphs/{self._graph_name}/schema/edgelabels/{name}?action=eliminate"
+        data = {"name": name, "user_data": user_data}
+        response = self.session.put(
+            url, data=json.dumps(data), auth=self._auth, headers=self._headers
+        )
         self.clean_parameter_holder()
-        error = UpdateError('UpdateError: "eliminate EdgeLabel failed", Detail: "{}"'.format(str(response.content)))
+        error = UpdateError(
+            f'UpdateError: "eliminate EdgeLabel failed", Detail: "{str(response.content)}"'
+        )
         if check_if_success(response, error):
-            return 'eliminate EdgeLabel success, Detail: "{}"'.format(str(response.content))
+            return f'eliminate EdgeLabel success, Detail: "{str(response.content)}"'

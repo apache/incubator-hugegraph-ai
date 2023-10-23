@@ -14,6 +14,8 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
+
 import re
 from typing import List
 
@@ -89,8 +91,7 @@ def split_string_to_fit_token_space(
     current_chunk = ""
     for chunk in chunked_data:
         if (
-            llm.num_tokens_from_string(current_chunk)
-            + llm.num_tokens_from_string(chunk)
+            llm.num_tokens_from_string(current_chunk) + llm.num_tokens_from_string(chunk)
             < allowed_tokens
         ):
             current_chunk += chunk
@@ -123,10 +124,8 @@ def get_nodes_and_relationships_from_result(result):
         nodes.extend(re.findall(internal_regex, raw_nodes))
         relationships.extend(re.findall(internal_regex, raw_relationships))
         nodes_schemas.extend(re.findall(internal_regex, raw_nodes_schemas))
-        relationships_schemas.extend(
-            re.findall(internal_regex, raw_relationships_schemas)
-        )
-    result = dict()
+        relationships_schemas.extend(re.findall(internal_regex, raw_relationships_schemas))
+    result = {}
     result["nodes"] = []
     result["relationships"] = []
     result["nodes_schemas"] = []
@@ -159,9 +158,7 @@ class ParseTextToData:
     def run(self, data: dict) -> dict[str, list[any]]:
         system_message = generate_system_message()
         prompt_string = generate_prompt("")
-        token_usage_per_prompt = self.llm.num_tokens_from_string(
-            system_message + prompt_string
-        )
+        token_usage_per_prompt = self.llm.num_tokens_from_string(system_message + prompt_string)
         chunked_data = split_string_to_fit_token_space(
             llm=self.llm, string=self.text, token_use_per_string=token_usage_per_prompt
         )
@@ -178,9 +175,7 @@ class ParseTextToData:
 class ParseTextToDataWithSchemas:
     llm: BaseLLM
 
-    def __init__(
-        self, llm: BaseLLM, text: str, nodes_schema, relationships_schemas
-    ) -> None:
+    def __init__(self, llm: BaseLLM, text: str, nodes_schema, relationships_schemas) -> None:
         self.llm = llm
         self.text = text
         self.data = {}
@@ -204,9 +199,7 @@ class ParseTextToDataWithSchemas:
     def run(self) -> dict[str, list[any]]:
         system_message = generate_system_message_with_schemas()
         prompt_string = generate_prompt_with_schemas("", "", "")
-        token_usage_per_prompt = self.llm.num_tokens_from_string(
-            system_message + prompt_string
-        )
+        token_usage_per_prompt = self.llm.num_tokens_from_string(system_message + prompt_string)
         chunked_data = split_string_to_fit_token_space(
             llm=self.llm, string=self.text, token_use_per_string=token_usage_per_prompt
         )

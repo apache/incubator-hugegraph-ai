@@ -57,6 +57,8 @@ class VertexLabelData:
         return self.__user_data
 
     def __repr__(self):
-        res = "name: {}, primary_keys: {}, properties: {}".format(
-            self.__name, self.__primary_keys, self.__properties)
+        res = (
+            f"name: {self.__name}, primary_keys: {self.__primary_keys}, "
+            f"properties: {self.__properties}"
+        )
         return res

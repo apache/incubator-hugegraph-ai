@@ -14,6 +14,8 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
+
 from hugegraph_llm.operators.hugegraph_op.commit_data_to_kg import CommitDataToKg
 from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
 from hugegraph_llm.operators.llm_op.parse_text_to_data import (
@@ -33,9 +35,7 @@ class KgBuilder:
         self.parse_text_to_kg.append(ParseTextToData(llm=self.llm, text=text))
         return self
 
-    def parse_text_to_data_with_schemas(
-        self, text: str, nodes_schemas, relationships_schemas
-    ):
+    def parse_text_to_data_with_schemas(self, text: str, nodes_schemas, relationships_schemas):
         self.parse_text_to_kg.append(
             ParseTextToDataWithSchemas(
                 llm=self.llm,
@@ -47,15 +47,11 @@ class KgBuilder:
         return self
 
     def disambiguate_data(self):
-        self.parse_text_to_kg.append(
-            DisambiguateData(llm=self.llm, is_user_schema=False)
-        )
+        self.parse_text_to_kg.append(DisambiguateData(llm=self.llm, is_user_schema=False))
         return self
 
     def disambiguate_data_with_schemas(self):
-        self.parse_text_to_kg.append(
-            DisambiguateData(llm=self.llm, is_user_schema=True)
-        )
+        self.parse_text_to_kg.append(DisambiguateData(llm=self.llm, is_user_schema=True))
         return self
 
     def commit_data_to_kg(self):

@@ -77,27 +77,31 @@ class IndexLabel(HugeParamsBase):
     @decorator_create
     def create(self):
         dic = self._parameter_holder.get_dic()
-        data = dict()
+        data = {}
         data["name"] = dic["name"]
         data["base_type"] = dic["base_type"]
         data["base_value"] = dic["base_value"]
         data["index_type"] = dic["index_type"]
         data["fields"] = list(dic["fields"])
-        url = f'{self._host}/graphs/{self._graph_name}/schema/indexlabels'
-        response = self.session.post(url, data=json.dumps(data), auth=self._auth, headers=self._headers)
+        url = f"{self._host}/graphs/{self._graph_name}/schema/indexlabels"
+        response = self.session.post(
+            url, data=json.dumps(data), auth=self._auth, headers=self._headers
+        )
         self.clean_parameter_holder()
-        error = CreateError('CreateError: "create IndexLabel failed", '
-                            'Detail "{}"'.format(str(response.content)))
+        error = CreateError(
+            f'CreateError: "create IndexLabel failed", Detail "{str(response.content)}"'
+        )
         if check_if_success(response, error):
-            return 'create IndexLabel success, Deatil: "{}"'.format(str(response.content))
+            return f'create IndexLabel success, Deatil: "{str(response.content)}"'
 
     @decorator_params
     def remove(self):
         name = self._parameter_holder.get_value("name")
-        url = f'{self._host}/graphs/{self._graph_name}/schema/indexlabels/{name}'
+        url = f"{self._host}/graphs/{self._graph_name}/schema/indexlabels/{name}"
         response = self.session.delete(url, auth=self._auth, headers=self._headers)
         self.clean_parameter_holder()
-        error = RemoveError('RemoveError: "remove IndexLabel failed", '
-                            'Detail "{}"'.format(str(response.content)))
+        error = RemoveError(
+            f'RemoveError: "remove IndexLabel failed", Detail "{str(response.content)}"'
+        )
         if check_if_success(response, error):
-            return 'remove IndexLabel success, Deatil: "{}"'.format(str(response.content))
+            return f'remove IndexLabel success, Deatil: "{str(response.content)}"'

@@ -50,5 +50,8 @@ class GraphInstance:
         return self.__timeout
 
     def __repr__(self):
-        res = f"ip:{self.ip}, port:{self.port}, graph_name:{self.graph_name}, user_name:{self.user_name}, passwd:{self.passwd}, timeout:{self.timeout}"
+        res = (
+            f"ip:{self.ip}, port:{self.port}, graph_name:{self.graph_name},"
+            f" user_name:{self.user_name}, passwd:{self.passwd}, timeout:{self.timeout}"
+        )
         return res

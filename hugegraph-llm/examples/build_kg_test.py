@@ -14,6 +14,8 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
+
 import os
 from hugegraph_llm.operators.build_kg_operator import KgBuilder
 from hugegraph_llm.llms.openai_llm import OpenAIChat
@@ -22,28 +24,35 @@ if __name__ == "__main__":
     #  If you need a proxy to access OpenAI's API, please set your HTTP proxy here
     os.environ["http_proxy"] = ""
     os.environ["https_proxy"] = ""
-    api_key = ""
+    API_KEY = ""
 
     default_llm = OpenAIChat(
-        api_key=api_key, model_name="gpt-3.5-turbo-16k", max_tokens=4000
+        api_key=API_KEY,
+        model_name="gpt-3.5-turbo-16k",
+        max_tokens=4000,
     )
-    text = (
-        "Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with since 2010. James, "
-        "in his professional life, works as a journalist. Additionally, Sarah is the proud owner of the website "
-        "www.sarahsplace.com, while James manages his own webpage, though the specific URL is not mentioned here. "
-        "These two individuals, Sarah and James, have not only forged a strong personal bond as roommates but have "
-        "also carved out their distinctive digital presence through their respective webpages, showcasing their "
-        "varied interests and experiences."
+    TEXT = (
+        "Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with"
+        " since 2010. James, in his professional life, works as a journalist. Additionally, Sarah"
+        " is the proud owner of the website www.sarahsplace.com, while James manages his own"
+        " webpage, though the specific URL is not mentioned here. These two individuals, Sarah and"
+        " James, have not only forged a strong personal bond as roommates but have also carved out"
+        " their distinctive digital presence through their respective webpages, showcasing their"
+        " varied interests and experiences."
     )
     builder = KgBuilder(default_llm)
     # build kg with only text
-    builder.parse_text_to_data(text).disambiguate_data().commit_data_to_kg().run()
+    builder.parse_text_to_data(TEXT).disambiguate_data().commit_data_to_kg().run()
     # build kg with text and schemas
     nodes_schemas = [
         {
             "label": "Person",
             "primary_key": "name",
-            "properties": {"age": "int", "name": "text", "occupation": "text"},
+            "properties": {
+                "age": "int",
+                "name": "text",
+                "occupation": "text",
+            },
         },
         {
             "label": "Webpage",
@@ -58,12 +67,15 @@ if __name__ == "__main__":
             "type": "roommate",
             "properties": {"start": "int"},
         },
-        {"start": "Person", "end": "Webpage", "type": "owns", "properties": {}},
+        {
+            "start": "Person",
+            "end": "Webpage",
+            "type": "owns",
+            "properties": {},
+        },
     ]
     (
-        builder.parse_text_to_data_with_schemas(
-            text, nodes_schemas, relationships_schemas
-        )
+        builder.parse_text_to_data_with_schemas(TEXT, nodes_schemas, relationships_schemas)
         .disambiguate_data_with_schemas()
         .commit_data_to_kg()
         .run()

@@ -60,5 +60,5 @@ class EdgeData:
         return self.__properties
 
     def __repr__(self):
-        res = "{}--{}-->{}".format(self.__outV, self.__label, self.__inV)
+        res = f"{self.__outV}--{self.__label}-->{self.__inV}"
         return res

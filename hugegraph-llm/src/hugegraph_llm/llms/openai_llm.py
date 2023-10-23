@@ -14,6 +14,8 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
+
 from typing import Callable, List, Optional
 import openai
 import tiktoken
@@ -56,10 +58,10 @@ class OpenAIChat(BaseLLM):
             return str(f"Error: {e}")
         # catch authorization errors / do not retry
         except openai.error.AuthenticationError as e:
-            return "Error: The provided OpenAI API key is invalid"
+            return f"Error: The provided OpenAI API key is invalid, {e}"
         except Exception as e:
             print(f"Retrying LLM call {e}")
-            raise Exception()
+            raise Exception() from e
 
     async def generate_streaming(
         self,
@@ -86,11 +88,11 @@ class OpenAIChat(BaseLLM):
             await on_token_callback(message)
         return result
 
-    def num_tokens_from_string(self, string: str) -> int:
+    async def num_tokens_from_string(self, string: str) -> int:
         encoding = tiktoken.encoding_for_model(self.model)
         num_tokens = len(encoding.encode(string))
         return num_tokens
 
-    def max_allowed_token_length(self) -> int:
+    async def max_allowed_token_length(self) -> int:
         # TODO: list all models and their max tokens from api
         return 2049

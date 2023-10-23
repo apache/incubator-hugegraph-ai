@@ -40,5 +40,5 @@ class VertexData:
         return self.__properties
 
     def __repr__(self):
-        res = "id: {}, label: {}, type: {}".format(self.__id, self.__label, self.__type)
+        res = f"id: {self.__id}, label: {self.__label}, type: {self.__type}"
         return res
