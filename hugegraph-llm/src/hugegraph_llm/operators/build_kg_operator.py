@@ -16,13 +16,13 @@
 # under the License.
 
 
+from hugegraph_llm.llms.base import BaseLLM
 from hugegraph_llm.operators.hugegraph_op.commit_data_to_kg import CommitDataToKg
 from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
 from hugegraph_llm.operators.llm_op.parse_text_to_data import (
     ParseTextToData,
     ParseTextToDataWithSchemas,
 )
-from hugegraph_llm.llms.base import BaseLLM
 
 
 class KgBuilder:
