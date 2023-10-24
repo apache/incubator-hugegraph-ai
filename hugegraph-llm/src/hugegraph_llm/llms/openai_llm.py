@@ -94,13 +94,13 @@ class OpenAIChat(BaseLLM):
             await on_token_callback(message)
         return result
 
-    def num_tokens_from_string(self, string: str) -> int:
+    async def num_tokens_from_string(self, string: str) -> int:
         """Get token count from string."""
         encoding = tiktoken.encoding_for_model(self.model)
         num_tokens = len(encoding.encode(string))
         return num_tokens
 
-    def max_allowed_token_length(self) -> int:
+    async def max_allowed_token_length(self) -> int:
         """Get max-allowed token length"""
         # TODO: list all models and their max tokens from api
         return 2049
