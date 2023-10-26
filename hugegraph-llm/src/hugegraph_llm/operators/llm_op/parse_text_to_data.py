@@ -17,15 +17,15 @@
 
 
 import re
-from typing import List
+from typing import List, Any, Dict
 
+from hugegraph_llm.llms.base import BaseLLM
 from hugegraph_llm.operators.llm_op.unstructured_data_utils import (
     nodes_text_to_list_of_dict,
     nodes_schemas_text_to_list_of_dict,
     relationships_schemas_text_to_list_of_dict,
     relationships_text_to_list_of_dict,
 )
-from hugegraph_llm.llms.base import BaseLLM
 
 
 def generate_system_message() -> str:
@@ -79,11 +79,11 @@ RelationshipsSchemas: {relationships_schemas}"""
 
 
 def split_string(string, max_length) -> List[str]:
-    return [string[i : i + max_length] for i in range(0, len(string), max_length)]
+    return [string[i: i + max_length] for i in range(0, len(string), max_length)]
 
 
 def split_string_to_fit_token_space(
-    llm: BaseLLM, string: str, token_use_per_string: int
+        llm: BaseLLM, string: str, token_use_per_string: int
 ) -> List[str]:
     allowed_tokens = llm.max_allowed_token_length() - token_use_per_string
     chunked_data = split_string(string, 500)
@@ -91,8 +91,8 @@ def split_string_to_fit_token_space(
     current_chunk = ""
     for chunk in chunked_data:
         if (
-            llm.num_tokens_from_string(current_chunk) + llm.num_tokens_from_string(chunk)
-            < allowed_tokens
+                llm.num_tokens_from_string(current_chunk) + llm.num_tokens_from_string(chunk)
+                < allowed_tokens
         ):
             current_chunk += chunk
         else:
@@ -125,11 +125,7 @@ def get_nodes_and_relationships_from_result(result):
         relationships.extend(re.findall(internal_regex, raw_relationships))
         nodes_schemas.extend(re.findall(internal_regex, raw_nodes_schemas))
         relationships_schemas.extend(re.findall(internal_regex, raw_relationships_schemas))
-    result = {}
-    result["nodes"] = []
-    result["relationships"] = []
-    result["nodes_schemas"] = []
-    result["relationships_schemas"] = []
+    result = {"nodes": [], "relationships": [], "nodes_schemas": [], "relationships_schemas": []}
     result["nodes"].extend(nodes_text_to_list_of_dict(nodes))
     result["relationships"].extend(relationships_text_to_list_of_dict(relationships))
     result["nodes_schemas"].extend(nodes_schemas_text_to_list_of_dict(nodes_schemas))
@@ -155,7 +151,7 @@ class ParseTextToData:
         output = self.llm.generate(messages)
         return output
 
-    def run(self, data: dict) -> dict[str, list[any]]:
+    def run(self, data: Dict) -> Dict[str, List[Any]]:
         system_message = generate_system_message()
         prompt_string = generate_prompt("")
         token_usage_per_prompt = self.llm.num_tokens_from_string(system_message + prompt_string)
@@ -196,7 +192,7 @@ class ParseTextToDataWithSchemas:
         output = self.llm.generate(messages)
         return output
 
-    def run(self) -> dict[str, list[any]]:
+    def run(self) -> Dict[str, List[Any]]:
         system_message = generate_system_message_with_schemas()
         prompt_string = generate_prompt_with_schemas("", "", "")
         token_usage_per_prompt = self.llm.num_tokens_from_string(system_message + prompt_string)

@@ -19,6 +19,7 @@
 import json
 import re
 from itertools import groupby
+from typing import Dict, List, Any
 
 from hugegraph_llm.operators.llm_op.unstructured_data_utils import (
     nodes_text_to_list_of_dict,
@@ -112,7 +113,7 @@ class DisambiguateData:
         self.llm = llm
         self.is_user_schema = is_user_schema
 
-    def run(self, data: dict) -> dict[str, list[any]]:
+    def run(self, data: Dict) -> Dict[str, List[Any]]:
         nodes = sorted(data["nodes"], key=lambda x: x.get("label", ""))
         relationships = data["relationships"]
         nodes_schemas = data["nodes_schemas"]

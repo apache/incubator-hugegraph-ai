@@ -17,7 +17,7 @@
 
 
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, Callable
+from typing import Any, List, Optional, Callable, Dict
 
 
 class BaseLLM(ABC):
@@ -26,7 +26,7 @@ class BaseLLM(ABC):
     @abstractmethod
     def generate(
         self,
-        messages: Optional[List[str]] = None,
+        messages: Optional[List[Dict[str, Any]]] = None,
         prompt: Optional[str] = None,
     ) -> str:
         """Comment"""
@@ -34,7 +34,7 @@ class BaseLLM(ABC):
     @abstractmethod
     async def generate_streaming(
         self,
-        messages: Optional[List[str]] = None,
+        messages: Optional[List[Dict[str, Any]]] = None,
         prompt: Optional[str] = None,
         on_token_callback: Callable = None,
     ) -> List[Any]:

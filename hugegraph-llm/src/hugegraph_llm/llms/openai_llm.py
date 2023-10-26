@@ -16,7 +16,8 @@
 # under the License.
 
 
-from typing import Callable, List, Optional
+import os
+from typing import Callable, List, Optional, Dict, Any
 import openai
 import tiktoken
 from retry import retry
@@ -34,7 +35,7 @@ class OpenAIChat(BaseLLM):
         max_tokens: int = 1000,
         temperature: float = 0.0,
     ) -> None:
-        openai.api_key = api_key
+        openai.api_key = api_key or os.getenv("OPENAI_API_KEY")
         self.model = model_name
         self.max_tokens = max_tokens
         self.temperature = temperature
@@ -42,9 +43,13 @@ class OpenAIChat(BaseLLM):
     @retry(tries=3, delay=1)
     def generate(
         self,
-        messages: Optional[List[str]] = None,
+        messages: Optional[List[Dict[str, Any]]] = None,
         prompt: Optional[str] = None,
     ) -> str:
+        """Generate a response to the query messages/prompt."""
+        if messages is None:
+            assert prompt is not None, "Messages or prompt must be provided."
+            messages = [{"role": "user", "content": prompt}]
         try:
             completions = openai.ChatCompletion.create(
                 model=self.model,
@@ -57,18 +62,19 @@ class OpenAIChat(BaseLLM):
         except openai.error.InvalidRequestError as e:
             return str(f"Error: {e}")
         # catch authorization errors / do not retry
-        except openai.error.AuthenticationError as e:
-            return f"Error: The provided OpenAI API key is invalid, {e}"
+        except openai.error.AuthenticationError:
+            return "Error: The provided OpenAI API key is invalid"
         except Exception as e:
             print(f"Retrying LLM call {e}")
-            raise Exception() from e
+            raise e
 
     async def generate_streaming(
         self,
-        messages: Optional[List[str]] = None,
+        messages: Optional[List[Dict[str, Any]]] = None,
         prompt: Optional[str] = None,
         on_token_callback: Callable = None,
     ) -> str:
+        """Generate a response to the query messages/prompt in streaming mode."""
         if messages is None:
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
@@ -89,10 +95,12 @@ class OpenAIChat(BaseLLM):
         return result
 
     async def num_tokens_from_string(self, string: str) -> int:
+        """Get token count from string."""
         encoding = tiktoken.encoding_for_model(self.model)
         num_tokens = len(encoding.encode(string))
         return num_tokens
 
     async def max_allowed_token_length(self) -> int:
+        """Get max-allowed token length"""
         # TODO: list all models and their max tokens from api
         return 2049
