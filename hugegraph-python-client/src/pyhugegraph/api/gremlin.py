@@ -19,7 +19,7 @@ import json
 
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.structure.gremlin_data import GremlinData
-from pyhugegraph.structure.respon_data import ResponseData
+from pyhugegraph.structure.response_data import ResponseData
 from pyhugegraph.utils.exceptions import NotFoundError
 from pyhugegraph.utils.huge_requests import HugeSession
 from pyhugegraph.utils.util import check_if_success
