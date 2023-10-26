@@ -1,10 +1,6 @@
 name: "3rd-party check"
 
 on:
-  push:
-    branches:
-      - main
-      - 'release-*'
   pull_request:
 
 permissions:
