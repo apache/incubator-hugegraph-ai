@@ -14,10 +14,11 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
 import json
-import re
 
 from pyhugegraph.api.common import HugeParamsBase
+from pyhugegraph.structure.gremlin_data import GremlinData
 from pyhugegraph.structure.response_data import ResponseData
 from pyhugegraph.utils.exceptions import NotFoundError
 from pyhugegraph.utils.huge_requests import HugeSession
@@ -38,9 +39,19 @@ class GremlinManager(HugeParamsBase):
             self.session.close()
 
     def exec(self, gremlin):
-        gremlin = re.sub("^g", self._graph_name + ".traversal()", gremlin)
-        url = f"{self._host}/gremlin?gremlin={gremlin}"
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
+        url = f"{self._host}/gremlin"
+        gremlin_data = GremlinData(gremlin)
+        gremlin_data.aliases = {
+            'graph': self._graph_name,
+            'g': '__g_' + self._graph_name
+        }
+        response = self.session.post(
+            url,
+            data=gremlin_data.to_json(),
+            auth=self._auth,
+            headers=self._headers,
+            timeout=self._timeout
+        )
         error = NotFoundError(f"Gremlin can't get results: {response.content}")
         if check_if_success(response, error):
             return ResponseData(json.loads(response.content)).result

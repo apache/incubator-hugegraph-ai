@@ -20,6 +20,7 @@ from pyhugegraph.api.graph import GraphManager
 from pyhugegraph.api.graphs import GraphsManager
 from pyhugegraph.api.gremlin import GremlinManager
 from pyhugegraph.api.schema import SchemaManager
+from pyhugegraph.api.variable import VariableManager
 from pyhugegraph.structure.graph_instance import GraphInstance
 
 
@@ -31,6 +32,7 @@ class PyHugeClient(HugeParamsBase):
         self._graph = None
         self._graphs = None
         self._gremlin = None
+        self._variable = None
 
     def schema(self):
         if self._schema:
@@ -55,3 +57,9 @@ class PyHugeClient(HugeParamsBase):
             return self._graphs
         self._graphs = GraphsManager(self._graph_instance)
         return self._graphs
+
+    def variable(self):
+        if self._variable:
+            return self._variable
+        self._variable = VariableManager(self._graph_instance)
+        return self._variable
