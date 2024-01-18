@@ -19,7 +19,7 @@
 from typing import Any, Dict, Optional
 
 from hugegraph_llm.llms.base import BaseLLM
-from hugegraph_llm.llms.openai_llm import OpenAIChat
+from hugegraph_llm.llms.init_llm import LLMs
 
 DEFAULT_ANSWER_SYNTHESIZE_TEMPLATE_TMPL = (
     "Context information is below.\n"
@@ -53,7 +53,7 @@ class AnswerSynthesize:
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._llm is None:
-            self._llm = context.get("llm") or OpenAIChat()
+            self._llm = context.get("llm") or LLMs().get_llm()
         if context.get("llm") is None:
             context["llm"] = self._llm
 

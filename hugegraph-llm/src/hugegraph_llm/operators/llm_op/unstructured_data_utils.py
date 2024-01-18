@@ -45,6 +45,7 @@ def nodes_text_to_list_of_dict(nodes):
         else:
             properties = properties.group(0)
         properties = properties.replace("True", "true")
+        properties = properties.replace("\\", "")
         try:
             properties = json.loads(properties)
         except json.decoder.JSONDecodeError:

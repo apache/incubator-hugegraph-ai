@@ -20,8 +20,8 @@ import re
 from typing import Set, Dict, Any, Optional
 
 from hugegraph_llm.llms.base import BaseLLM
-from hugegraph_llm.llms.openai_llm import OpenAIChat
-from hugegraph_llm.operators.utils_op import nltk_helper
+from hugegraph_llm.llms.init_llm import LLMs
+from hugegraph_llm.operators.common_op import nltk_helper
 
 
 DEFAULT_KEYWORDS_EXTRACT_TEMPLATE_TMPL = (
@@ -74,7 +74,7 @@ class KeywordExtract:
             context["query"] = self._query
 
         if self._llm is None:
-            self._llm = context.get("llm") or OpenAIChat()
+            self._llm = context.get("llm") or LLMs().get_llm()
             assert isinstance(self._llm, BaseLLM), "Invalid LLM Object."
         if context.get("llm") is None:
             context["llm"] = self._llm

@@ -19,7 +19,7 @@
 from typing import Dict, Any, Optional, List
 
 from hugegraph_llm.llms.base import BaseLLM
-from hugegraph_llm.llms.openai_llm import OpenAIChat
+from hugegraph_llm.llms.init_llm import LLMs
 from hugegraph_llm.operators.hugegraph_op.graph_rag_query import GraphRAGQuery
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
@@ -28,7 +28,7 @@ from pyhugegraph.client import PyHugeClient
 
 class GraphRAG:
     def __init__(self, llm: Optional[BaseLLM] = None):
-        self._llm = llm or OpenAIChat()
+        self._llm = llm or LLMs().get_llm()
         self._operators: List[Any] = []
 
     def extract_keyword(

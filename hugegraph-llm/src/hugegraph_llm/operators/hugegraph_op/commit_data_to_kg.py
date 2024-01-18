@@ -17,6 +17,9 @@
 
 
 import os
+
+from hugegraph_llm.utils.config import Config
+from hugegraph_llm.utils.constants import Constants
 from pyhugegraph.client import PyHugeClient
 
 
@@ -144,15 +147,20 @@ def generate_relationships(data):
 
 class CommitDataToKg:
     def __init__(self):
+        config = Config(section=Constants.HUGEGRAPH_CONFIG)
         self.client = PyHugeClient(
-            "127.0.0.1", "8080", user="admin", pwd="admin", graph="hugegraph"
+            config.get_graph_ip(),
+            config.get_graph_port(),
+            config.get_graph_user(),
+            config.get_graph_pwd(),
+            config.get_graph_name(),
         )
         self.schema = self.client.schema()
 
     def run(self, data: dict):
-        # If you are using a http proxy, you can run the following code to unset http proxy
-        os.environ.pop("http_proxy")
-        os.environ.pop("https_proxy")
+        # # If you are using a http proxy, you can run the following code to unset http proxy
+        # os.environ.pop("http_proxy")
+        # os.environ.pop("https_proxy")
         nodes = data["nodes"]
         relationships = data["relationships"]
         nodes_schemas = data["nodes_schemas"]

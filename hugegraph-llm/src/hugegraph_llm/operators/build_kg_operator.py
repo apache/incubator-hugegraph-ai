@@ -27,16 +27,16 @@ from hugegraph_llm.operators.llm_op.parse_text_to_data import (
 
 class KgBuilder:
     def __init__(self, llm: BaseLLM):
-        self.parse_text_to_kg = []
+        self.operators = []
         self.llm = llm
         self.data = {}
 
     def parse_text_to_data(self, text: str):
-        self.parse_text_to_kg.append(ParseTextToData(llm=self.llm, text=text))
+        self.operators.append(ParseTextToData(llm=self.llm, text=text))
         return self
 
     def parse_text_to_data_with_schemas(self, text: str, nodes_schemas, relationships_schemas):
-        self.parse_text_to_kg.append(
+        self.operators.append(
             ParseTextToDataWithSchemas(
                 llm=self.llm,
                 text=text,
@@ -47,19 +47,19 @@ class KgBuilder:
         return self
 
     def disambiguate_data(self):
-        self.parse_text_to_kg.append(DisambiguateData(llm=self.llm, is_user_schema=False))
+        self.operators.append(DisambiguateData(llm=self.llm, is_user_schema=False))
         return self
 
     def disambiguate_data_with_schemas(self):
-        self.parse_text_to_kg.append(DisambiguateData(llm=self.llm, is_user_schema=True))
+        self.operators.append(DisambiguateData(llm=self.llm, is_user_schema=True))
         return self
 
     def commit_data_to_kg(self):
-        self.parse_text_to_kg.append(CommitDataToKg())
+        self.operators.append(CommitDataToKg())
         return self
 
     def run(self):
         result = ""
-        for i in self.parse_text_to_kg:
+        for i in self.operators:
             result = i.run(result)
             print(result)

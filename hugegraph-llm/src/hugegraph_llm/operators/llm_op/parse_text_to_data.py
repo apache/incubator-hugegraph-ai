@@ -46,6 +46,28 @@ RelationshipsSchemas :["Person", "roommate", "Person", {"start": "int"}], ["Pers
 """
 
 
+def generate_system_message_wenxin() -> str:
+    return """
+You are a data scientist working for a company that is building a graph database. Your task is to extract information from data and convert it into a graph database.
+Provide a set of Nodes in the form [ENTITY_ID, TYPE, PROPERTIES] and a set of relationships in the form [ENTITY_ID_1, RELATIONSHIP, ENTITY_ID_2, PROPERTIES] and a set of NodesSchemas in the form [ENTITY_TYPE, PRIMARY_KEY, PROPERTIES] and a set of RelationshipsSchemas in the form [ENTITY_TYPE_1, RELATIONSHIP, ENTITY_TYPE_2, PROPERTIES]
+It is important that the ENTITY_ID_1 and ENTITY_ID_2 exists as nodes with a matching ENTITY_ID. If you can't pair a relationship with a pair of nodes don't add it.
+When you find a node or relationship you want to add try to create a generic TYPE for it that  describes the entity you can also think of it as a label.
+
+Here is an example
+The input you will be given:
+Data: Alice lawyer and is 25 years old and Bob is her roommate since 2001. Bob works as a journalist. Alice owns a the webpage www.alice.com and Bob owns the webpage www.bob.com.
+
+"""
+
+
+def generate_system_message_wenxin_assistant() -> str:
+    return """The output you need to provide:
+Nodes: ["Alice", "Person", {"age": 25, "occupation": "lawyer", "name": "Alice"}], ["Bob", "Person", {"occupation": "journalist", "name": "Bob"}], ["alice.com", "Webpage", {"name": "alice.com", "url": "www.alice.com"}], ["bob.com", "Webpage", {"name": "bob.com", "url": "www.bob.com"}]
+Relationships: [{"Person": "Alice"}, "roommate", {"Person": "Bob"}, {"start": 2021}], [{"Person": "Alice"}, "owns", {"Webpage": "alice.com"}, {}], [{"Person": "Bob"}, "owns", {"Webpage": "bob.com"}, {}]
+NodesSchemas: ["Person", "name",  {"age": "int", "name": "text", "occupation": "text"}],  ["Webpage", "name", {"name": "text", "url": "text"}]
+RelationshipsSchemas :["Person", "roommate", "Person", {"start": "int"}], ["Person", "owns", "Webpage", {}]"""
+
+
 def generate_system_message_with_schemas() -> str:
     return """
 You are a data scientist working for a company that is building a graph database. Your task is to extract information from data and convert it into a graph database.
@@ -114,7 +136,8 @@ def get_nodes_and_relationships_from_result(result):
     nodes_schemas = []
     relationships_schemas = []
     for row in result:
-        parsing = re.match(regex, row, flags=re.S)
+        row = row.replace("\n", "")
+        parsing = re.search(regex, row, flags=re.S)
         if parsing is None:
             continue
         raw_nodes = str(parsing.group(1))
@@ -143,12 +166,19 @@ class ParseTextToData:
         self.text = text
 
     def process(self, chunk):
-        messages = [
-            {"role": "system", "content": generate_system_message()},
-            {"role": "user", "content": generate_prompt(chunk)},
-        ]
-
+        if self.llm.get_llm_type() == "openai":
+            messages = [
+                {"role": "system", "content": generate_system_message()},
+                {"role": "user", "content": generate_prompt(chunk)},
+            ]
+        else:
+            messages = [
+                {"role": "user", "content": generate_system_message_wenxin()},
+                {"role": "assistant", "content": generate_system_message_wenxin_assistant()},
+                {"role": "user", "content": generate_prompt(chunk)},
+            ]
         output = self.llm.generate(messages)
+
         return output
 
     def run(self, data: Dict) -> Dict[str, List[Any]]:
@@ -164,6 +194,7 @@ class ParseTextToData:
             proceeded_chunk = self.process(chunk)
             results.append(proceeded_chunk)
             results = get_nodes_and_relationships_from_result(results)
+            print(results)
 
         return results
 

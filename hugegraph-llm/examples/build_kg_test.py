@@ -16,21 +16,11 @@
 # under the License.
 
 
-import os
+from hugegraph_llm.llms.init_llm import LLMs
 from hugegraph_llm.operators.build_kg_operator import KgBuilder
-from hugegraph_llm.llms.openai_llm import OpenAIChat
 
 if __name__ == "__main__":
-    #  If you need a proxy to access OpenAI's API, please set your HTTP proxy here
-    os.environ["http_proxy"] = ""
-    os.environ["https_proxy"] = ""
-    API_KEY = ""
-
-    default_llm = OpenAIChat(
-        api_key=API_KEY,
-        model_name="gpt-3.5-turbo-16k",
-        max_tokens=4000,
-    )
+    default_llm = LLMs().get_llm()
     TEXT = (
         "Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with"
         " since 2010. James, in his professional life, works as a journalist. Additionally, Sarah"
@@ -43,7 +33,7 @@ if __name__ == "__main__":
     builder = KgBuilder(default_llm)
     # build kg with only text
     builder.parse_text_to_data(TEXT).disambiguate_data().commit_data_to_kg().run()
-    # build kg with text and schemas
+    # # build kg with text and schemas
     nodes_schemas = [
         {
             "label": "Person",
@@ -74,6 +64,7 @@ if __name__ == "__main__":
             "properties": {},
         },
     ]
+
     (
         builder.parse_text_to_data_with_schemas(TEXT, nodes_schemas, relationships_schemas)
         .disambiguate_data_with_schemas()
