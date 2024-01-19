@@ -21,8 +21,7 @@ from typing import Set, Dict, Any, Optional
 
 from hugegraph_llm.llms.base import BaseLLM
 from hugegraph_llm.llms.init_llm import LLMs
-from hugegraph_llm.operators.common_op import nltk_helper
-
+from hugegraph_llm.operators.common_op.nltk_helper import NLTKHelper
 
 DEFAULT_KEYWORDS_EXTRACT_TEMPLATE_TMPL = (
     "A question is provided below. Given the question, "
@@ -145,7 +144,7 @@ class KeywordExtract:
                     {
                         w
                         for w in sub_tokens
-                        if w not in nltk_helper.stopwords(lang=self._language)
+                        if w not in NLTKHelper().stopwords(lang=self._language)
                     }
                 )
 
