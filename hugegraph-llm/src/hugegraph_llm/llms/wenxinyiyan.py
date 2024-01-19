@@ -36,33 +36,37 @@ class WenXinYiYanClient(BaseLLM):
 
     def get_access_token(self):
         url = "https://aip.baidubce.com/oauth/2.0/token"
-        params = {"grant_type": "client_credentials", "client_id": self.api_key,
-                  "client_secret": self.secret_key}
-        return str(requests.post(url, params=params).json().get("access_token"))
+        params = {
+            "grant_type": "client_credentials",
+            "client_id": self.api_key,
+            "client_secret": self.secret_key,
+        }
+        return str(requests.post(url, params=params, timeout=2).json().get("access_token"))
 
     @retry(tries=3, delay=1)
     def generate(
-            self,
-            messages: Optional[List[Dict[str, Any]]] = None,
-            prompt: Optional[str] = None,
+        self,
+        messages: Optional[List[Dict[str, Any]]] = None,
+        prompt: Optional[str] = None,
     ) -> str:
         if messages is None:
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
         url = self.base_url + self.get_access_token()
         payload = json.dumps({"messages": messages})
-        headers = {'Content-Type': 'application/json'}
-        response = requests.request("POST", url, headers=headers, data=payload)
+        headers = {"Content-Type": "application/json"}
+        response = requests.request("POST", url, headers=headers, data=payload, timeout=2)
         if response.status_code != 200:
             raise Exception(
-                f"Request failed with code {response.status_code}, message: {response.text}")
+                f"Request failed with code {response.status_code}, message: {response.text}"
+            )
         return response.text
 
     def generate_streaming(
-            self,
-            messages: Optional[List[Dict[str, Any]]] = None,
-            prompt: Optional[str] = None,
-            on_token_callback: Callable = None,
+        self,
+        messages: Optional[List[Dict[str, Any]]] = None,
+        prompt: Optional[str] = None,
+        on_token_callback: Callable = None,
     ) -> str:
         return self.generate(messages, prompt)
 
@@ -76,7 +80,11 @@ class WenXinYiYanClient(BaseLLM):
         return "wenxinyiyan"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     client = WenXinYiYanClient()
     print(client.generate(prompt="What is the capital of China?"))
-    print(client.generate(messages=[{"role": "user", "content": "What is the capital of China?"}]))
+    print(
+        client.generate(
+            messages=[{"role": "user", "content": "What is the capital of China?"}]
+        )
+    )

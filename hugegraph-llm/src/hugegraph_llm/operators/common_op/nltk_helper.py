@@ -26,7 +26,6 @@ from nltk.corpus import stopwords
 
 
 class NLTKHelper:
-
     _stopwords: Dict[str, Optional[List[str]]] = {
         "english": None,
         "chinese": None,

@@ -35,7 +35,9 @@ class KgBuilder:
         self.operators.append(ParseTextToData(llm=self.llm, text=text))
         return self
 
-    def parse_text_to_data_with_schemas(self, text: str, nodes_schemas, relationships_schemas):
+    def parse_text_to_data_with_schemas(
+        self, text: str, nodes_schemas, relationships_schemas
+    ):
         self.operators.append(
             ParseTextToDataWithSchemas(
                 llm=self.llm,

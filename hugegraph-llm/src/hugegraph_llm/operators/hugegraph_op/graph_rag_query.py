@@ -64,11 +64,11 @@ class GraphRAGQuery:
     )
 
     def __init__(
-            self,
-            client: Optional[PyHugeClient] = None,
-            max_deep: int = 2,
-            max_items: int = 30,
-            prop_to_match: Optional[str] = None,
+        self,
+        client: Optional[PyHugeClient] = None,
+        max_deep: int = 2,
+        max_items: int = 30,
+        prop_to_match: Optional[str] = None,
     ):
         self._client = client
         self._max_deep = max_deep
@@ -131,7 +131,9 @@ class GraphRAGQuery:
                 edge_labels=edge_labels_str,
             )
 
-        result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
+        result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)[
+            "data"
+        ]
         knowledge: Set[str] = self._format_knowledge_from_query_result(
             query_result=result
         )
@@ -147,13 +149,15 @@ class GraphRAGQuery:
         verbose = context.get("verbose") or False
         if verbose:
             print("\033[93mKNOWLEDGE FROM GRAPH:")
-            print("\n".join(rel for rel in context["synthesize_context_body"]) + "\033[0m")
+            print(
+                "\n".join(rel for rel in context["synthesize_context_body"]) + "\033[0m"
+            )
 
         return context
 
     def _format_knowledge_from_query_result(
-            self,
-            query_result: List[Any],
+        self,
+        query_result: List[Any],
     ) -> Set[str]:
         use_id_to_match = self._prop_to_match is None
         knowledge = set()
@@ -200,10 +204,10 @@ class GraphRAGQuery:
         schema = self._get_graph_schema()
         node_props_str, edge_props_str = schema.split("\n")[:2]
         node_props_str = (
-            node_props_str[len("Node properties: "):].strip("[").strip("]")
+            node_props_str[len("Node properties: ") :].strip("[").strip("]")
         )
         edge_props_str = (
-            edge_props_str[len("Edge properties: "):].strip("[").strip("]")
+            edge_props_str[len("Edge properties: ") :].strip("[").strip("]")
         )
         node_labels = self._extract_label_names(node_props_str)
         edge_labels = self._extract_label_names(edge_props_str)
@@ -211,9 +215,9 @@ class GraphRAGQuery:
 
     @staticmethod
     def _extract_label_names(
-            source: str,
-            head: str = "name: ",
-            tail: str = ", ",
+        source: str,
+        head: str = "name: ",
+        tail: str = ", ",
     ) -> List[str]:
         result = []
         for s in source.split(head):

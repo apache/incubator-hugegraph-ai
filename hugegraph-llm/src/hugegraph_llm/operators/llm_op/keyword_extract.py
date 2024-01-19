@@ -55,7 +55,7 @@ class KeywordExtract:
         max_keywords: int = 5,
         extract_template: Optional[str] = None,
         expand_template: Optional[str] = None,
-        language: str = 'english',
+        language: str = "english",
     ):
         self._llm = llm
         self._query = text
@@ -79,8 +79,8 @@ class KeywordExtract:
         if context.get("llm") is None:
             context["llm"] = self._llm
 
-        if isinstance(context.get('language'), str):
-            self._language = context['language'].lower()
+        if isinstance(context.get("language"), str):
+            self._language = context["language"].lower()
         else:
             context["language"] = self._language
 
@@ -126,7 +126,7 @@ class KeywordExtract:
         response = response.strip()  # Strip newlines from responses.
 
         if response.startswith(start_token):
-            response = response[len(start_token):]
+            response = response[len(start_token) :]
 
         for k in response.split(","):
             rk = k
@@ -142,7 +142,11 @@ class KeywordExtract:
             sub_tokens = re.findall(r"\w+", token)
             if len(sub_tokens) > 1:
                 results.update(
-                    {w for w in sub_tokens if w not in nltk_helper.stopwords(lang=self._language)}
+                    {
+                        w
+                        for w in sub_tokens
+                        if w not in nltk_helper.stopwords(lang=self._language)
+                    }
                 )
 
         return results

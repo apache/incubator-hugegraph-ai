@@ -66,7 +66,9 @@ if __name__ == "__main__":
     ]
 
     (
-        builder.parse_text_to_data_with_schemas(TEXT, nodes_schemas, relationships_schemas)
+        builder.parse_text_to_data_with_schemas(
+            TEXT, nodes_schemas, relationships_schemas
+        )
         .disambiguate_data_with_schemas()
         .commit_data_to_kg()
         .run()

@@ -34,17 +34,17 @@ DEFAULT_ANSWER_SYNTHESIZE_TEMPLATE_TMPL = (
 
 class AnswerSynthesize:
     def __init__(
-            self,
-            llm: Optional[BaseLLM] = None,
-            prompt_template: Optional[str] = None,
-            question: Optional[str] = None,
-            context_body: Optional[str] = None,
-            context_head: Optional[str] = None,
-            context_tail: Optional[str] = None,
+        self,
+        llm: Optional[BaseLLM] = None,
+        prompt_template: Optional[str] = None,
+        question: Optional[str] = None,
+        context_body: Optional[str] = None,
+        context_head: Optional[str] = None,
+        context_tail: Optional[str] = None,
     ):
         self._llm = llm
         self._prompt_template = (
-                prompt_template or DEFAULT_ANSWER_SYNTHESIZE_TEMPLATE_TMPL
+            prompt_template or DEFAULT_ANSWER_SYNTHESIZE_TEMPLATE_TMPL
         )
         self._question = question
         self._context_body = context_body
@@ -71,17 +71,21 @@ class AnswerSynthesize:
         elif isinstance(self._context_body, (list, set)):
             context_body_str = "\n".join(line for line in self._context_body)
         elif isinstance(self._context_body, dict):
-            context_body_str = "\n".join(f"{k}: {v}" for k, v in self._context_body.items())
+            context_body_str = "\n".join(
+                f"{k}: {v}" for k, v in self._context_body.items()
+            )
         else:
             context_body_str = str(self._context_body)
 
-        context_head_str = context.get("synthesize_context_head") or self._context_head or ""
-        context_tail_str = context.get("synthesize_context_tail") or self._context_tail or ""
+        context_head_str = (
+            context.get("synthesize_context_head") or self._context_head or ""
+        )
+        context_tail_str = (
+            context.get("synthesize_context_tail") or self._context_tail or ""
+        )
 
         context_str = (
-            f"{context_head_str}\n"
-            f"{context_body_str}\n"
-            f"{context_tail_str}"
+            f"{context_head_str}\n" f"{context_body_str}\n" f"{context_tail_str}"
         ).strip("\n")
 
         prompt = self._prompt_template.format(

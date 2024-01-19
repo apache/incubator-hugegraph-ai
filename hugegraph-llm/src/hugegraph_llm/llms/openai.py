@@ -68,7 +68,7 @@ class OpenAIChat(BaseLLM):
             print(f"Retrying LLM call {e}")
             raise e
 
-    async def generate_streaming(
+    def generate_streaming(
         self,
         messages: Optional[List[Dict[str, Any]]] = None,
         prompt: Optional[str] = None,
@@ -91,7 +91,7 @@ class OpenAIChat(BaseLLM):
             delta = message["choices"][0]["delta"]
             if "content" in delta:
                 result += delta["content"]
-            await on_token_callback(message)
+            on_token_callback(message)
         return result
 
     def num_tokens_from_string(self, string: str) -> int:

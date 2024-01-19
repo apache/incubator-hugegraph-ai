@@ -29,15 +29,21 @@ class LLMs:
     def get_llm(self):
         if self.config.get_llm_type() == "wenxinyiyan":
             return WenXinYiYanClient()
-        elif self.config.get_llm_type() == "openai":
+        if self.config.get_llm_type() == "openai":
             return OpenAIChat(
                 api_key=self.config.get_llm_api_key(),
                 model_name="gpt-3.5-turbo-16k",
                 max_tokens=4000,
             )
+        raise Exception("llm type is not supported !")
 
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     client = LLMs().get_llm()
     print(client.generate(prompt="What is the capital of China?"))
-    print(client.generate(messages=[{"role": "user", "content": "What is the capital of China?"}]))
+    print(
+        client.generate(
+            messages=[{"role": "user", "content": "What is the capital of China?"}]
+        )
+    )

@@ -16,8 +16,6 @@
 # under the License.
 
 
-import os
-
 from hugegraph_llm.utils.config import Config
 from hugegraph_llm.utils.constants import Constants
 from pyhugegraph.client import PyHugeClient
@@ -167,7 +165,9 @@ class CommitDataToKg:
         relationships_schemas = data["relationships_schemas"]
         # properties schema
         schema_nodes_properties = generate_schema_properties(nodes_schemas)
-        schema_relationships_properties = generate_schema_properties(relationships_schemas)
+        schema_relationships_properties = generate_schema_properties(
+            relationships_schemas
+        )
         for schema_nodes_property in schema_nodes_properties:
             exec(schema_nodes_property)
 

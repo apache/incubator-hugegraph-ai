@@ -32,12 +32,12 @@ class GraphRAG:
         self._operators: List[Any] = []
 
     def extract_keyword(
-            self,
-            text: Optional[str] = None,
-            max_keywords: int = 5,
-            language: str = 'english',
-            extract_template: Optional[str] = None,
-            expand_template: Optional[str] = None,
+        self,
+        text: Optional[str] = None,
+        max_keywords: int = 5,
+        language: str = "english",
+        extract_template: Optional[str] = None,
+        expand_template: Optional[str] = None,
     ):
         self._operators.append(
             KeywordExtract(
@@ -51,11 +51,11 @@ class GraphRAG:
         return self
 
     def query_graph_for_rag(
-            self,
-            graph_client: Optional[PyHugeClient] = None,
-            max_deep: int = 2,
-            max_items: int = 30,
-            prop_to_match: Optional[str] = None,
+        self,
+        graph_client: Optional[PyHugeClient] = None,
+        max_deep: int = 2,
+        max_items: int = 30,
+        prop_to_match: Optional[str] = None,
     ):
         self._operators.append(
             GraphRAGQuery(
@@ -68,8 +68,8 @@ class GraphRAG:
         return self
 
     def synthesize_answer(
-            self,
-            prompt_template: Optional[str] = None,
+        self,
+        prompt_template: Optional[str] = None,
     ):
         self._operators.append(
             AnswerSynthesize(

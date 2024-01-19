@@ -33,23 +33,23 @@ class BaseLLM(ABC):
 
     @abstractmethod
     def generate_streaming(
-            self,
-            messages: Optional[List[Dict[str, Any]]] = None,
-            prompt: Optional[str] = None,
-            on_token_callback: Callable = None,
+        self,
+        messages: Optional[List[Dict[str, Any]]] = None,
+        prompt: Optional[str] = None,
+        on_token_callback: Callable = None,
     ) -> List[Any]:
         """Comment"""
 
     @abstractmethod
     def num_tokens_from_string(
-            self,
-            string: str,
+        self,
+        string: str,
     ) -> str:
         """Given a string returns the number of tokens the given string consists of"""
 
     @abstractmethod
     def max_allowed_token_length(
-            self,
+        self,
     ) -> int:
         """Returns the maximum number of tokens the LLM can handle"""
 
