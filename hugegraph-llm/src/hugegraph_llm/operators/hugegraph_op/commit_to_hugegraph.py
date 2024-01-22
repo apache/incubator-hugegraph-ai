@@ -156,9 +156,6 @@ class CommitDataToKg:
         self.schema = self.client.schema()
 
     def run(self, data: dict):
-        # # If you are using a http proxy, you can run the following code to unset http proxy
-        # os.environ.pop("http_proxy")
-        # os.environ.pop("https_proxy")
         nodes = data["nodes"]
         relationships = data["relationships"]
         nodes_schemas = data["nodes_schemas"]
@@ -194,3 +191,36 @@ class CommitDataToKg:
         relationships_schemas = generate_relationships(new_relationships)
         for relationship in relationships_schemas:
             exec(relationship)
+
+
+class CommitSPOToKg:
+    def __init__(self):
+        config = Config(section=Constants.HUGEGRAPH_CONFIG)
+        self.client = PyHugeClient(
+            config.get_graph_ip(),
+            config.get_graph_port(),
+            config.get_graph_name(),
+            config.get_graph_user(),
+            config.get_graph_pwd(),
+        )
+        self.schema = self.client.schema()
+
+    def run(self, data: dict):
+        self.schema.propertyKey("name").asText().ifNotExist().create()
+        self.schema.vertexLabel("vertex").useCustomizeStringId().properties("name") \
+            .ifNotExist().create()
+        self.schema.edgeLabel("edge").sourceLabel("vertex").targetLabel("vertex") \
+            .properties("name").ifNotExist().create()
+
+        self.schema.indexLabel("vertexByName").onV("vertex").by(
+            "name").secondary().ifNotExist().create()
+        self.schema.indexLabel("edgeByName").onE("edge").by(
+            "name").secondary().ifNotExist().create()
+
+        for item in data:
+            s = item[0]
+            p = item[1]
+            o = item[2]
+            s_id = self.client.graph().addVertex("vertex", {"name": s}, id=s).id
+            t_id = self.client.graph().addVertex("vertex", {"name": o}, id=o).id
+            self.client.graph().addEdge("edge", s_id, t_id, {"name": p})

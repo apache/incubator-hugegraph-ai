@@ -53,9 +53,10 @@ class WenXinYiYanClient(BaseLLM):
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
         url = self.base_url + self.get_access_token()
-        payload = json.dumps({"messages": messages})
+        # parameter check failed, temperature range is (0, 1.0]
+        payload = json.dumps({"messages": messages, "temperature": 0.00000000001})
         headers = {"Content-Type": "application/json"}
-        response = requests.request("POST", url, headers=headers, data=payload, timeout=2)
+        response = requests.request("POST", url, headers=headers, data=payload, timeout=10)
         if response.status_code != 200:
             raise Exception(
                 f"Request failed with code {response.status_code}, message: {response.text}"

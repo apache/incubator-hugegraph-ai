@@ -18,7 +18,7 @@
 
 import os
 
-from hugegraph_llm.operators.graph_rag_operator import GraphRAG
+from hugegraph_llm.operators.graph_rag_task import GraphRAG
 from pyhugegraph.client import PyHugeClient
 
 
