@@ -27,16 +27,16 @@ fi
 
 # Run BLACK if -b is specified
 if [ "$BLACK" = true ] ; then
-  echo "[BLACK] Start to check code style and auto format"
+  echo "[black] Start to check code style and auto format"
   # https://github.com/psf/BLACK/issues/1802
   black --line-length=100 ../
 fi
 
 # Run PYLINT if -p is specified
 if [ "$PYLINT" = true ] ; then
-  echo "[PYLINT] Start code analysis and check,
+  echo "[pylint] Start code analysis and check,
   we need to manually fix all the warnings mentioned below before commit! "
   export PYTHONPATH=${ROOT_DIR}/hugegraph-llm/src:${ROOT_DIR}/hugegraph-python-client/src
-  pylint --rcfile=${ROOT_DIR}/style/PYLINT.conf ${ROOT_DIR}/hugegraph-llm
-  #pylint --rcfile=${ROOT_DIR}/style/PYLINT.conf ${ROOT_DIR}/hugegraph-python-client
+  pylint --rcfile=${ROOT_DIR}/style/pylint.conf ${ROOT_DIR}/hugegraph-llm
+  #pylint --rcfile=${ROOT_DIR}/style/pylint.conf ${ROOT_DIR}/hugegraph-python-client
 fi
