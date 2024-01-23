@@ -191,7 +191,7 @@ class CommitDataToKg:
             exec(relationship)
 
 
-class CommitSPOToKg:
+class CommitSpoToKg:
     def __init__(self):
         config = Config(section=Constants.HUGEGRAPH_CONFIG)
         self.client = PyHugeClient(

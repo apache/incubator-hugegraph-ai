@@ -27,7 +27,3 @@ class PrintResult:
         self.result = data
         print(self.result)
         return self.result
-
-    def print_result(self):
-        print(self.result)
-        return self

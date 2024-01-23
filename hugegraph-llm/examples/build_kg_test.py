@@ -17,7 +17,7 @@
 
 
 from hugegraph_llm.llms.init_llm import LLMs
-from hugegraph_llm.operators.kg_construction_task import KgConstructionTask
+from hugegraph_llm.operators.kg_construction_task import KgBuilder
 
 
 if __name__ == "__main__":
@@ -31,12 +31,12 @@ if __name__ == "__main__":
         " their distinctive digital presence through their respective webpages, showcasing their"
         " varied interests and experiences."
     )
-    builder = KgConstructionTask(default_llm)
+    builder = KgBuilder(default_llm)
 
     # spo triple extract
-    builder.spo_triple_extract(TEXT).print_result().commit_to_hugegraph(spo=True).run()
+    builder.extract_spo_triple(TEXT).print_result().commit_to_hugegraph(spo=True).run()
     # build kg with only text
-    builder.info_extract(TEXT).word_sense_disambiguation().commit_to_hugegraph().run()
+    builder.extract_nodes_relationships(TEXT).disambiguate_word_sense().commit_to_hugegraph().run()
     # build kg with text and schemas
     nodes_schemas = [
         {
