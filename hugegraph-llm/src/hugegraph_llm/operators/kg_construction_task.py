@@ -32,7 +32,9 @@ class KgBuilder:
         self.llm = llm
         self.result = None
 
-    def extract_nodes_relationships(self, text: str, nodes_schemas=None, relationships_schemas=None):
+    def extract_nodes_relationships(
+        self, text: str, nodes_schemas=None, relationships_schemas=None
+    ):
         if nodes_schemas and relationships_schemas:
             self.operators.append(InfoExtract(self.llm, text, nodes_schemas, relationships_schemas))
         else:
