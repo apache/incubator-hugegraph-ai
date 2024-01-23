@@ -55,8 +55,8 @@ class Config:
     def get_llm_secret_key(self):
         return self.config.get(self.section, "secret_key")
 
-    def get_llm_wenxin_url(self):
-        return self.config.get(self.section, "wenxin_url")
+    def get_llm_ernie_url(self):
+        return self.config.get(self.section, "ernie_url")
 
     def get_llm_type(self):
         return self.config.get(self.section, "type")

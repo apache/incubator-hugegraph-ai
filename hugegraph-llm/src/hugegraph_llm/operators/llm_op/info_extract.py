@@ -52,7 +52,7 @@ def generate_system_message() -> str:
     "roommate", "Person", {"start": "int"}], ["Person", "owns", "Webpage", {}]"""
 
 
-def generate_wenxin_prompt_spo(data) -> str:
+def generate_ernie_prompt_spo(data) -> str:
     return f"""Extract subject-verb-object (SPO) triples from text strictly according to the
     following format, each structure has only three elements: ("vertex_1", "edge", "vertex_2").
     for example:
@@ -65,7 +65,7 @@ def generate_wenxin_prompt_spo(data) -> str:
     The extracted text is: {data}"""
 
 
-def generate_wenxin_message(data) -> str:
+def generate_ernie_message(data) -> str:
     return (
         """You are a data scientist working for a company that is building a graph database.
         Your task is to extract information from data and convert it into a graph database. Provide 
@@ -233,12 +233,13 @@ class InfoExtract:
                 {"role": "system", "content": self.generate_system_message()},
                 {"role": "user", "content": self.generate_prompt(chunk)},
             ]
-        else:
+        elif self.llm.get_llm_type() == "ernie":
             if self.spo:
-                messages = [{"role": "user", "content": generate_wenxin_prompt_spo(chunk)}]
+                messages = [{"role": "user", "content": generate_ernie_prompt_spo(chunk)}]
             else:
-                messages = [{"role": "user", "content": generate_wenxin_message(chunk)}]
-
+                messages = [{"role": "user", "content": generate_ernie_message(chunk)}]
+        else:
+            raise Exception("llm type is not supported !")
         output = self.llm.generate(messages)
         return output
 

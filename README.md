@@ -20,9 +20,9 @@ It is used to define graph structures and perform CRUD operations on graph data.
 modules will depend on this foundational library. 
 
 ## Contributing
-- Welcome to contribute to HugeGraph, please see [`How to Contribute`](CONTRIBUTING.md) & [Guidelines](https://hugegraph.apache.org/docs/contribution-guidelines/) for more information.  
+- Welcome to contribute to HugeGraph, please see [Guidelines](https://hugegraph.apache.org/docs/contribution-guidelines/) for more information.  
 - Note: It's recommended to use [GitHub Desktop](https://desktop.github.com/) to greatly simplify the PR and commit process.  
-- Code format: Please run [`./style/code_format_and_analysis.sh`](style/code_format_and_analysis.sh)` to format your code before submitting a PR.
+- Code format: Please run [`./style/code_format_and_analysis.sh`](style/code_format_and_analysis.sh) to format your code before submitting a PR.
 
 ## License
 

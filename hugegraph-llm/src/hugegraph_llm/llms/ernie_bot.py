@@ -31,7 +31,7 @@ class ErnieBotClient(BaseLLM):
         self.c = Config(section=Constants.LLM_CONFIG)
         self.api_key = self.c.get_llm_api_key()
         self.secret_key = self.c.get_llm_secret_key()
-        self.base_url = self.c.get_llm_wenxin_url()
+        self.base_url = self.c.get_llm_ernie_url()
         self.get_access_token()
 
     def get_access_token(self):
