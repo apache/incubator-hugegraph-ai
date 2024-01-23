@@ -26,7 +26,4 @@ jobs:
         pip install -r ./hugegraph-python-client/requirements.txt
     - name: Analysing the code with pylint
       run: |
-        export PYTHONPATH=$(pwd)/hugegraph-llm/src:$(pwd)/hugegraph-python-client/src
-        echo ${PYTHONPATH}
-        pylint --rcfile=./pylint.conf hugegraph-llm
-        pylint --rcfile=./pylint.conf hugegraph-python-client
+        bash ./style/code_format_and_analysis.sh -p

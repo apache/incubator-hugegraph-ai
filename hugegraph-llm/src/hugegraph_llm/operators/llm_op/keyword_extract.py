@@ -60,9 +60,7 @@ class KeywordExtract:
         self._query = text
         self._language = language.lower()
         self._max_keywords = max_keywords
-        self._extract_template = (
-            extract_template or DEFAULT_KEYWORDS_EXTRACT_TEMPLATE_TMPL
-        )
+        self._extract_template = extract_template or DEFAULT_KEYWORDS_EXTRACT_TEMPLATE_TMPL
         self._expand_template = expand_template or DEFAULT_KEYWORDS_EXPAND_TEMPLATE_TMPL
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -141,11 +139,7 @@ class KeywordExtract:
             sub_tokens = re.findall(r"\w+", token)
             if len(sub_tokens) > 1:
                 results.update(
-                    {
-                        w
-                        for w in sub_tokens
-                        if w not in NLTKHelper().stopwords(lang=self._language)
-                    }
+                    {w for w in sub_tokens if w not in NLTKHelper().stopwords(lang=self._language)}
                 )
 
         return results

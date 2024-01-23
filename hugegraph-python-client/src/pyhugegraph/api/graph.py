@@ -21,8 +21,17 @@ from pyhugegraph.utils.huge_requests import HugeSession
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.structure.vertex_data import VertexData
 from pyhugegraph.structure.edge_data import EdgeData
-from pyhugegraph.utils.exceptions import NotFoundError, CreateError, RemoveError, UpdateError
-from pyhugegraph.utils.util import create_exception, check_if_authorized, check_if_success
+from pyhugegraph.utils.exceptions import (
+    NotFoundError,
+    CreateError,
+    RemoveError,
+    UpdateError,
+)
+from pyhugegraph.utils.util import (
+    create_exception,
+    check_if_authorized,
+    check_if_success,
+)
 
 
 class GraphManager(HugeParamsBase):
@@ -175,7 +184,12 @@ class GraphManager(HugeParamsBase):
     def addEdge(self, edge_label, out_id, in_id, properties):
         url = f"{self._host}/graphs/{self._graph_name}/graph/edges"
 
-        data = {"label": edge_label, "outV": out_id, "inV": in_id, "properties": properties}
+        data = {
+            "label": edge_label,
+            "outV": out_id,
+            "inV": in_id,
+            "properties": properties,
+        }
         response = self.session.post(
             url,
             data=json.dumps(data),
@@ -256,7 +270,13 @@ class GraphManager(HugeParamsBase):
             return res
 
     def getEdgeByPage(
-        self, label=None, vertex_id=None, direction=None, limit=0, page=None, properties=None
+        self,
+        label=None,
+        vertex_id=None,
+        direction=None,
+        limit=0,
+        page=None,
+        properties=None,
     ):
         url = f"{self._host}/graphs/{self._graph_name}/graph/edges?"
 

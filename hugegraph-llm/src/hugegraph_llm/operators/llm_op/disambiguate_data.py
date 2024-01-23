@@ -213,12 +213,8 @@ class DisambiguateData:
                     + "]\n"
                 )
 
-            node_schemas_labels = [
-                nodes_schemas["label"] for nodes_schemas in new_nodes_schemas
-            ]
-            relationships_schemas_data += "Valid Labels:\n" + "\n".join(
-                node_schemas_labels
-            )
+            node_schemas_labels = [nodes_schemas["label"] for nodes_schemas in new_nodes_schemas]
+            relationships_schemas_data += "Valid Labels:\n" + "\n".join(node_schemas_labels)
 
             messages = [
                 {

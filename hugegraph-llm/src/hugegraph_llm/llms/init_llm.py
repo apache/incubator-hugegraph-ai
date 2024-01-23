@@ -16,7 +16,7 @@
 # under the License.
 
 from hugegraph_llm.llms.openai import OpenAIChat
-from hugegraph_llm.llms.wenxinyiyan import WenXinYiYanClient
+from hugegraph_llm.llms.ernie_bot import ErnieBotClient
 from hugegraph_llm.utils.config import Config
 from hugegraph_llm.utils.constants import Constants
 
@@ -27,23 +27,18 @@ class LLMs:
         self.config.get_llm_type()
 
     def get_llm(self):
-        if self.config.get_llm_type() == "wenxinyiyan":
-            return WenXinYiYanClient()
+        if self.config.get_llm_type() == "ernie":
+            return ErnieBotClient()
         if self.config.get_llm_type() == "openai":
             return OpenAIChat(
                 api_key=self.config.get_llm_api_key(),
-                model_name="gpt-3.5-turbo-16k",
-                max_tokens=4000,
+                model_name=self.config.get_llm_model_name(),
+                max_tokens=self.config.get_llm_max_token(),
             )
         raise Exception("llm type is not supported !")
-
 
 
 if __name__ == "__main__":
     client = LLMs().get_llm()
     print(client.generate(prompt="What is the capital of China?"))
-    print(
-        client.generate(
-            messages=[{"role": "user", "content": "What is the capital of China?"}]
-        )
-    )
+    print(client.generate(messages=[{"role": "user", "content": "What is the capital of China?"}]))

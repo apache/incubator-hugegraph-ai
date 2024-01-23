@@ -19,6 +19,11 @@ to seamlessly connect with third-party graph-related ML frameworks.
 It is used to define graph structures and perform CRUD operations on graph data. Both the `hugegraph-llm` and `hugegraph-ml` 
 modules will depend on this foundational library. 
 
+## Contributing
+- Welcome to contribute to HugeGraph, please see [`How to Contribute`](CONTRIBUTING.md) & [Guidelines](https://hugegraph.apache.org/docs/contribution-guidelines/) for more information.  
+- Note: It's recommended to use [GitHub Desktop](https://desktop.github.com/) to greatly simplify the PR and commit process.  
+- Code format: Please run [`./style/code_format_and_analysis.sh`](style/code_format_and_analysis.sh)` to format your code before submitting a PR.
+
 ## License
 
 hugegraph-ai is licensed under `Apache 2.0` License.

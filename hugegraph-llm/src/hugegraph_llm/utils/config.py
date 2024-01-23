@@ -22,9 +22,7 @@ import os
 class Config:
     def __init__(self, config_file=None, section=None):
         if config_file is None:
-            root_dir = os.path.dirname(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            )
+            root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             config_file = os.path.join(root_dir, "config", "config.ini")
         if section is None:
             raise Exception("config section cannot be none !")
@@ -62,3 +60,9 @@ class Config:
 
     def get_llm_type(self):
         return self.config.get(self.section, "type")
+
+    def get_llm_model_name(self):
+        return self.config.get(self.section, "model_name")
+
+    def get_llm_max_token(self):
+        return self.config.get(self.section, "max_token")

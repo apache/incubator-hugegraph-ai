@@ -38,15 +38,16 @@ def generate_system_message() -> str:
     with a pair of nodes don't add it. When you find a node or relationship you want to add try 
     to create a generic TYPE for it that  describes the entity you can also think of it as a label.
 
-    Here is an example The input you will be given: Data: Alice lawyer and is 25 years old and Bob is 
-    her roommate since 2001. Bob works as a journalist. Alice owns a the webpage www.alice.com and 
-    Bob owns the webpage www.bob.com. The output you need to provide: Nodes: ["Alice", "Person", 
+    Here is an example The input you will be given: Data: Alice lawyer and is 25 years old and Bob 
+    is her roommate since 2001. Bob works as a journalist. Alice owns a the webpage www.alice.com 
+    and Bob owns the webpage www.bob.com. The output you need to provide: Nodes: ["Alice", "Person", 
     {"age": 25, "occupation": "lawyer", "name": "Alice"}], ["Bob", "Person", {"occupation": 
     "journalist", "name": "Bob"}], ["alice.com", "Webpage", {"name": "alice.com", 
     "url": "www.alice.com"}], ["bob.com", "Webpage", {"name": "bob.com", "url": "www.bob.com"}] 
-    Relationships: [{"Person": "Alice"}, "roommate", {"Person": "Bob"}, {"start": 2021}], [{"Person": 
-    "Alice"}, "owns", {"Webpage": "alice.com"}, {}], [{"Person": "Bob"}, "owns", {"Webpage": 
-    "bob.com"}, {}] NodesSchemas: ["Person", "name",  {"age": "int", "name": "text", "occupation": 
+    Relationships: [{"Person": "Alice"}, "roommate", {"Person": "Bob"}, {"start": 2021}], 
+    [{"Person": "Alice"}, "owns", {"Webpage": "alice.com"}, {}], [{"Person": "Bob"}, "owns",
+     {"Webpage": "bob.com"}, {}] NodesSchemas: ["Person", "name",  {"age": "int", 
+     "name": "text", "occupation": 
     "text"}],  ["Webpage", "name", {"name": "text", "url": "text"}] RelationshipsSchemas :["Person", 
     "roommate", "Person", {"start": "int"}], ["Person", "owns", "Webpage", {}]"""
 
@@ -65,30 +66,36 @@ def generate_wenxin_prompt_spo(data) -> str:
 
 
 def generate_wenxin_message(data) -> str:
-    return """You are a data scientist working for a company that is building a graph database.
-    Your task is to extract information from data and convert it into a graph database. Provide a 
-    set of Nodes in the form [ENTITY_ID, TYPE, PROPERTIES] and a set of relationships in the form 
-    [ENTITY_ID_1, RELATIONSHIP, ENTITY_ID_2, PROPERTIES] and a set of NodesSchemas in the form [
-    ENTITY_TYPE, PRIMARY_KEY, PROPERTIES] and a set of RelationshipsSchemas in the form [
-    ENTITY_TYPE_1, RELATIONSHIP, ENTITY_TYPE_2, PROPERTIES] It is important that the ENTITY_ID_1 
-    and ENTITY_ID_2 exists as nodes with a matching ENTITY_ID. If you can't pair a relationship 
-    with a pair of nodes don't add it. When you find a node or relationship you want to add try 
-    to create a generic TYPE for it that  describes the entity you can also think of it as a label.
-
-    Here is an example The input you will be given: Data: Alice lawyer and is 25 years old and Bob is 
-    her roommate since 2001. Bob works as a journalist. Alice owns a the webpage www.alice.com and 
-    Bob owns the webpage www.bob.com. The output you need to provide: Nodes: ["Alice", "Person", 
-    {"age": 25, "occupation": "lawyer", "name": "Alice"}], ["Bob", "Person", {"occupation": 
-    "journalist", "name": "Bob"}], ["alice.com", "Webpage", {"name": "alice.com", 
-    "url": "www.alice.com"}], ["bob.com", "Webpage", {"name": "bob.com", "url": "www.bob.com"}] 
-    Relationships: [{"Person": "Alice"}, "roommate", {"Person": "Bob"}, {"start": 2021}], [{"Person": 
-    "Alice"}, "owns", {"Webpage": "alice.com"}, {}], [{"Person": "Bob"}, "owns", {"Webpage": 
-    "bob.com"}, {}] NodesSchemas: ["Person", "name",  {"age": "int", "name": "text", "occupation": 
-    "text"}],  ["Webpage", "name", {"name": "text", "url": "text"}] RelationshipsSchemas :["Person", 
-    "roommate", "Person", {"start": "int"}], ["Person", "owns", "Webpage", {}]
+    return (
+        """You are a data scientist working for a company that is building a graph database.
+        Your task is to extract information from data and convert it into a graph database. Provide 
+        a set of Nodes in the form [ENTITY_ID, TYPE, PROPERTIES] and a set of relationships in the 
+        form [ENTITY_ID_1, RELATIONSHIP, ENTITY_ID_2, PROPERTIES] and a set of NodesSchemas in the 
+        form [ENTITY_TYPE, PRIMARY_KEY, PROPERTIES] and a set of RelationshipsSchemas in the form [
+        ENTITY_TYPE_1, RELATIONSHIP, ENTITY_TYPE_2, PROPERTIES] It is important that the ENTITY_ID_1 
+        and ENTITY_ID_2 exists as nodes with a matching ENTITY_ID. If you can't pair a relationship 
+        with a pair of nodes don't add it. When you find a node or relationship you want to add try 
+        to create a generic TYPE for it that  describes the entity you can also think of it as a 
+        label.
     
-    Now extract information from  the following data: 
-    """ + data
+        Here is an example The input you will be given: Data: Alice lawyer and is 25 years old and 
+        Bob is her roommate since 2001. Bob works as a journalist. Alice owns a the webpage 
+        www.alice.com and Bob owns the webpage www.bob.com. The output you need to provide: 
+        Nodes: ["Alice", "Person", {"age": 25, "occupation": "lawyer", "name": "Alice"}], 
+        ["Bob", "Person", {"occupation": 
+        "journalist", "name": "Bob"}], ["alice.com", "Webpage", {"name": "alice.com", 
+        "url": "www.alice.com"}], ["bob.com", "Webpage", {"name": "bob.com", "url": "www.bob.com"}] 
+        Relationships: [{"Person": "Alice"}, "roommate", {"Person": "Bob"}, {"start": 2021}], 
+        [{"Person": "Alice"}, "owns", {"Webpage": "alice.com"}, {}], [{"Person": "Bob"}, "owns", 
+        {"Webpage": "bob.com"}, {}] NodesSchemas: ["Person", "name",  {"age": "int", "name": 
+        "text", "occupation": "text"}],  ["Webpage", "name", {"name": "text", "url": "text"}] 
+        RelationshipsSchemas :["Person", "roommate", "Person", {"start": "int"}], 
+        ["Person", "owns", "Webpage", {}]
+        
+        Now extract information from  the following data: 
+        """
+        + data
+    )
 
 
 def generate_system_message_with_schemas() -> str:
@@ -134,11 +141,11 @@ def generate_prompt_with_schemas(data, nodes_schemas, relationships_schemas) -> 
 
 
 def split_string(string, max_length) -> List[str]:
-    return [string[i: i + max_length] for i in range(0, len(string), max_length)]
+    return [string[i : i + max_length] for i in range(0, len(string), max_length)]
 
 
 def split_string_to_fit_token_space(
-        llm: BaseLLM, string: str, token_use_per_string: int
+    llm: BaseLLM, string: str, token_use_per_string: int
 ) -> List[str]:
     allowed_tokens = llm.max_allowed_token_length() - token_use_per_string
     chunked_data = split_string(string, 500)
@@ -146,9 +153,8 @@ def split_string_to_fit_token_space(
     current_chunk = ""
     for chunk in chunked_data:
         if (
-                llm.num_tokens_from_string(current_chunk)
-                + llm.num_tokens_from_string(chunk)
-                < allowed_tokens
+            llm.num_tokens_from_string(current_chunk) + llm.num_tokens_from_string(chunk)
+            < allowed_tokens
         ):
             current_chunk += chunk
         else:
@@ -166,6 +172,7 @@ def get_spo_from_result(result):
         pattern = r'\("(.*?)", "(.*?)", "(.*?)"\)'
         res += re.findall(pattern, row)
     return res
+
 
 def get_nodes_and_relationships_from_result(result):
     regex = (
@@ -189,9 +196,7 @@ def get_nodes_and_relationships_from_result(result):
         nodes.extend(re.findall(internal_regex, raw_nodes))
         relationships.extend(re.findall(internal_regex, raw_relationships))
         nodes_schemas.extend(re.findall(internal_regex, raw_nodes_schemas))
-        relationships_schemas.extend(
-            re.findall(internal_regex, raw_relationships_schemas)
-        )
+        relationships_schemas.extend(re.findall(internal_regex, raw_relationships_schemas))
     result = {
         "nodes": [],
         "relationships": [],
@@ -208,8 +213,14 @@ def get_nodes_and_relationships_from_result(result):
 
 
 class InfoExtract:
-    def __init__(self, llm: BaseLLM, text: str, nodes_schemas=None,
-                 relationships_schemas=None, spo=False) -> None:
+    def __init__(
+        self,
+        llm: BaseLLM,
+        text: str,
+        nodes_schemas=None,
+        relationships_schemas=None,
+        spo=False,
+    ) -> None:
         self.llm = llm
         self.text = text
         self.nodes_schemas = nodes_schemas
@@ -238,8 +249,9 @@ class InfoExtract:
 
     def generate_prompt(self, data) -> str:
         if self.nodes_schemas and self.relationships_schemas:
-            return generate_prompt_with_schemas(data, self.nodes_schemas,
-                                                self.relationships_schemas)
+            return generate_prompt_with_schemas(
+                data, self.nodes_schemas, self.relationships_schemas
+            )
         return generate_prompt(data)
 
     def run(self, data: Dict) -> Dict[str, List[Any]]:

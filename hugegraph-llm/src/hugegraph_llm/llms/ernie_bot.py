@@ -26,7 +26,7 @@ from hugegraph_llm.utils.config import Config
 from hugegraph_llm.utils.constants import Constants
 
 
-class WenXinYiYanClient(BaseLLM):
+class ErnieBotClient(BaseLLM):
     def __init__(self):
         self.c = Config(section=Constants.LLM_CONFIG)
         self.api_key = self.c.get_llm_api_key()
@@ -78,14 +78,10 @@ class WenXinYiYanClient(BaseLLM):
         return 6000
 
     def get_llm_type(self) -> str:
-        return "wenxinyiyan"
+        return "ernie"
 
 
 if __name__ == "__main__":
-    client = WenXinYiYanClient()
+    client = ErnieBotClient()
     print(client.generate(prompt="What is the capital of China?"))
-    print(
-        client.generate(
-            messages=[{"role": "user", "content": "What is the capital of China?"}]
-        )
-    )
+    print(client.generate(messages=[{"role": "user", "content": "What is the capital of China?"}]))

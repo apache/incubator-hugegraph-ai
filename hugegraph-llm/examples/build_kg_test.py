@@ -37,7 +37,7 @@ if __name__ == "__main__":
     builder.spo_triple_extract(TEXT).print_result().commit_to_hugegraph(spo=True).run()
     # build kg with only text
     builder.info_extract(TEXT).word_sense_disambiguation().commit_to_hugegraph().run()
-    # # build kg with text and schemas
+    # build kg with text and schemas
     nodes_schemas = [
         {
             "label": "Person",
@@ -70,9 +70,7 @@ if __name__ == "__main__":
     ]
 
     (
-        builder.parse_text_to_data_with_schemas(
-            TEXT, nodes_schemas, relationships_schemas
-        )
+        builder.parse_text_to_data_with_schemas(TEXT, nodes_schemas, relationships_schemas)
         .disambiguate_data_with_schemas()
         .commit_data_to_kg()
         .run()

@@ -18,11 +18,12 @@
 
 from hugegraph_llm.llms.base import BaseLLM
 from hugegraph_llm.operators.common_op.print_result import PrintResult
-from hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph import CommitDataToKg, CommitSPOToKg
-from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
-from hugegraph_llm.operators.llm_op.info_extract import (
-    InfoExtract,
+from hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph import (
+    CommitDataToKg,
+    CommitSPOToKg,
 )
+from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
+from hugegraph_llm.operators.llm_op.info_extract import InfoExtract
 
 
 class KgConstructionTask:
@@ -46,7 +47,7 @@ class KgConstructionTask:
         self.operators.append(DisambiguateData(self.llm, with_schemas))
         return self
 
-    def commit_to_hugegraph(self,spo=False):
+    def commit_to_hugegraph(self, spo=False):
         if spo:
             self.operators.append(CommitSPOToKg())
         else:

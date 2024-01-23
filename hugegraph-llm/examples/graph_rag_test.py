@@ -23,39 +23,27 @@ from pyhugegraph.client import PyHugeClient
 
 
 def prepare_data():
-    client = PyHugeClient("127.0.0.1", 18080, "hugegraph", "admin", "admin")
+    client = PyHugeClient("127.0.0.1", 8080, "hugegraph", "admin", "admin")
     schema = client.schema()
     schema.propertyKey("name").asText().ifNotExist().create()
     schema.propertyKey("birthDate").asText().ifNotExist().create()
     schema.vertexLabel("Person").properties(
         "name", "birthDate"
     ).useCustomizeStringId().ifNotExist().create()
-    schema.vertexLabel("Movie").properties(
-        "name"
-    ).useCustomizeStringId().ifNotExist().create()
-    schema.indexLabel("PersonByName").onV("Person").by(
-        "name"
-    ).secondary().ifNotExist().create()
-    schema.indexLabel("MovieByName").onV("Movie").by(
-        "name"
-    ).secondary().ifNotExist().create()
-    schema.edgeLabel("ActedIn").sourceLabel("Person").targetLabel(
-        "Movie"
-    ).ifNotExist().create()
+    schema.vertexLabel("Movie").properties("name").useCustomizeStringId().ifNotExist().create()
+    schema.indexLabel("PersonByName").onV("Person").by("name").secondary().ifNotExist().create()
+    schema.indexLabel("MovieByName").onV("Movie").by("name").secondary().ifNotExist().create()
+    schema.edgeLabel("ActedIn").sourceLabel("Person").targetLabel("Movie").ifNotExist().create()
 
     graph = client.graph()
-    graph.addVertex(
-        "Person", {"name": "Al Pacino", "birthDate": "1940-04-25"}, id="Al Pacino"
-    )
+    graph.addVertex("Person", {"name": "Al Pacino", "birthDate": "1940-04-25"}, id="Al Pacino")
     graph.addVertex(
         "Person",
         {"name": "Robert De Niro", "birthDate": "1943-08-17"},
         id="Robert De Niro",
     )
     graph.addVertex("Movie", {"name": "The Godfather"}, id="The Godfather")
-    graph.addVertex(
-        "Movie", {"name": "The Godfather Part II"}, id="The Godfather Part II"
-    )
+    graph.addVertex("Movie", {"name": "The Godfather Part II"}, id="The Godfather Part II")
     graph.addVertex(
         "Movie",
         {"name": "The Godfather Coda The Death of Michael Corleone"},
@@ -64,9 +52,7 @@ def prepare_data():
 
     graph.addEdge("ActedIn", "Al Pacino", "The Godfather", {})
     graph.addEdge("ActedIn", "Al Pacino", "The Godfather Part II", {})
-    graph.addEdge(
-        "ActedIn", "Al Pacino", "The Godfather Coda The Death of Michael Corleone", {}
-    )
+    graph.addEdge("ActedIn", "Al Pacino", "The Godfather Coda The Death of Michael Corleone", {})
     graph.addEdge("ActedIn", "Robert De Niro", "The Godfather Part II", {})
 
     graph.close()
@@ -101,12 +87,7 @@ if __name__ == "__main__":
         # print intermediate processes result
         "verbose": True,  # default to False if not set
     }
-    result = (
-        graph_rag.extract_keyword()
-        .query_graph_for_rag()
-        .synthesize_answer()
-        .run(**context)
-    )
+    result = graph_rag.extract_keyword().query_graph_for_rag().synthesize_answer().run(**context)
     print(f"Query:\n- {context['query']}")
     print(f"Answer:\n- {result['answer']}")
 

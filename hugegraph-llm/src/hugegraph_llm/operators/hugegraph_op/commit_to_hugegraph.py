@@ -162,9 +162,7 @@ class CommitDataToKg:
         relationships_schemas = data["relationships_schemas"]
         # properties schema
         schema_nodes_properties = generate_schema_properties(nodes_schemas)
-        schema_relationships_properties = generate_schema_properties(
-            relationships_schemas
-        )
+        schema_relationships_properties = generate_schema_properties(relationships_schemas)
         for schema_nodes_property in schema_nodes_properties:
             exec(schema_nodes_property)
 
@@ -207,15 +205,19 @@ class CommitSPOToKg:
 
     def run(self, data: dict):
         self.schema.propertyKey("name").asText().ifNotExist().create()
-        self.schema.vertexLabel("vertex").useCustomizeStringId().properties("name") \
-            .ifNotExist().create()
-        self.schema.edgeLabel("edge").sourceLabel("vertex").targetLabel("vertex") \
-            .properties("name").ifNotExist().create()
+        self.schema.vertexLabel("vertex").useCustomizeStringId().properties(
+            "name"
+        ).ifNotExist().create()
+        self.schema.edgeLabel("edge").sourceLabel("vertex").targetLabel("vertex").properties(
+            "name"
+        ).ifNotExist().create()
 
         self.schema.indexLabel("vertexByName").onV("vertex").by(
-            "name").secondary().ifNotExist().create()
+            "name"
+        ).secondary().ifNotExist().create()
         self.schema.indexLabel("edgeByName").onE("edge").by(
-            "name").secondary().ifNotExist().create()
+            "name"
+        ).secondary().ifNotExist().create()
 
         for item in data:
             s = item[0]

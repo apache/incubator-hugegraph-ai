@@ -68,9 +68,7 @@ class NLTKHelper:
 
         # Windows (hopefully)
         else:
-            local = os.environ.get("LOCALAPPDATA", None) or os.path.expanduser(
-                "~\\AppData\\Local"
-            )
+            local = os.environ.get("LOCALAPPDATA", None) or os.path.expanduser("~\\AppData\\Local")
             path = Path(local, "hugegraph_llm")
 
         if not os.path.exists(path):

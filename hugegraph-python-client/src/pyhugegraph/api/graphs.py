@@ -59,8 +59,10 @@ class GraphsManager(HugeParamsBase):
         return ""
 
     def clear_graph_all_data(self):
-        url = f"{self._host}/graphs/{self._graph_name}/clear?confirm_message=" \
-              f"{Constants.CONFORM_MESSAGE}"
+        url = (
+            f"{self._host}/graphs/{self._graph_name}/clear?confirm_message="
+            f"{Constants.CONFORM_MESSAGE}"
+        )
         response = self.session.delete(url, auth=self._auth, headers=self._headers)
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
