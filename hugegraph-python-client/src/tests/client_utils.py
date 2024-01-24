@@ -22,13 +22,14 @@ class ClientUtils:
     IP = "127.0.0.1"
     PORT = 8080
     GRAPH = "hugegraph"
-    USERNAME = 'admin'
-    PASSWORD = 'admin'
+    USERNAME = "admin"
+    PASSWORD = "admin"
     TIMEOUT = 10
 
     def __init__(self):
-        self.client = PyHugeClient(self.IP, self.PORT, user=self.USERNAME,
-                                   pwd=self.PASSWORD, graph=self.GRAPH)
+        self.client = PyHugeClient(
+            self.IP, self.PORT, user=self.USERNAME, pwd=self.PASSWORD, graph=self.GRAPH
+        )
         assert self.client is not None
 
         self.schema = self.client.schema()
@@ -49,20 +50,26 @@ class ClientUtils:
 
     def init_vertex_label(self):
         schema = self.schema
-        schema.vertexLabel("person").properties("name", "age", "city").primaryKeys("name") \
-            .nullableKeys("city").ifNotExist().create()
-        schema.vertexLabel("software").properties("name", "lang", "price").primaryKeys("name") \
-            .nullableKeys("price").ifNotExist().create()
-        schema.vertexLabel("book").useCustomizeStringId().properties("name", "price") \
-            .nullableKeys("price").ifNotExist().create()
+        schema.vertexLabel("person").properties("name", "age", "city").primaryKeys(
+            "name"
+        ).nullableKeys("city").ifNotExist().create()
+        schema.vertexLabel("software").properties("name", "lang", "price").primaryKeys(
+            "name"
+        ).nullableKeys("price").ifNotExist().create()
+        schema.vertexLabel("book").useCustomizeStringId().properties("name", "price").nullableKeys(
+            "price"
+        ).ifNotExist().create()
 
     def init_edge_label(self):
         schema = self.schema
-        schema.edgeLabel("knows").sourceLabel("person").targetLabel("person") \
-            .multiTimes().properties("date", "city").sortKeys("date") \
-            .nullableKeys("city").ifNotExist().create()
-        schema.edgeLabel("created").sourceLabel("person").targetLabel("software") \
-            .properties("date", "city").nullableKeys("city").ifNotExist().create()
+        schema.edgeLabel("knows").sourceLabel("person").targetLabel(
+            "person"
+        ).multiTimes().properties("date", "city").sortKeys("date").nullableKeys(
+            "city"
+        ).ifNotExist().create()
+        schema.edgeLabel("created").sourceLabel("person").targetLabel("software").properties(
+            "date", "city"
+        ).nullableKeys("city").ifNotExist().create()
 
     def init_vertices(self):
         graph = self.graph

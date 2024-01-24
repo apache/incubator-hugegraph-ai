@@ -64,11 +64,11 @@ class GraphRAGQuery:
     )
 
     def __init__(
-            self,
-            client: Optional[PyHugeClient] = None,
-            max_deep: int = 2,
-            max_items: int = 30,
-            prop_to_match: Optional[str] = None,
+        self,
+        client: Optional[PyHugeClient] = None,
+        max_deep: int = 2,
+        max_items: int = 30,
+        prop_to_match: Optional[str] = None,
     ):
         self._client = client
         self._max_deep = max_deep
@@ -86,9 +86,7 @@ class GraphRAGQuery:
                 graph = context.get("graph") or "hugegraph"
                 user = context.get("user") or "admin"
                 pwd = context.get("pwd") or "admin"
-                self._client = PyHugeClient(
-                    ip=ip, port=port, graph=graph, user=user, pwd=pwd
-                )
+                self._client = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd)
         assert self._client is not None, "No graph for query."
 
         keywords = context.get("keywords")
@@ -132,9 +130,7 @@ class GraphRAGQuery:
             )
 
         result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
-        knowledge: Set[str] = self._format_knowledge_from_query_result(
-            query_result=result
-        )
+        knowledge: Set[str] = self._format_knowledge_from_query_result(query_result=result)
 
         context["synthesize_context_body"] = list(knowledge)
         context["synthesize_context_head"] = (
@@ -152,8 +148,8 @@ class GraphRAGQuery:
         return context
 
     def _format_knowledge_from_query_result(
-            self,
-            query_result: List[Any],
+        self,
+        query_result: List[Any],
     ) -> Set[str]:
         use_id_to_match = self._prop_to_match is None
         knowledge = set()
@@ -166,9 +162,7 @@ class GraphRAGQuery:
             for i, item in enumerate(raw_flat_rel):
                 if i % 2 == 0:
                     matched_str = (
-                        item["id"]
-                        if use_id_to_match
-                        else item["props"][self._prop_to_match]
+                        item["id"] if use_id_to_match else item["props"][self._prop_to_match]
                     )
                     if matched_str in node_cache:
                         flat_rel = flat_rel[:-prior_edge_str_len]
@@ -199,21 +193,17 @@ class GraphRAGQuery:
     def _extract_labels_from_schema(self) -> Tuple[List[str], List[str]]:
         schema = self._get_graph_schema()
         node_props_str, edge_props_str = schema.split("\n")[:2]
-        node_props_str = (
-            node_props_str[len("Node properties: "):].strip("[").strip("]")
-        )
-        edge_props_str = (
-            edge_props_str[len("Edge properties: "):].strip("[").strip("]")
-        )
+        node_props_str = node_props_str[len("Node properties: ") :].strip("[").strip("]")
+        edge_props_str = edge_props_str[len("Edge properties: ") :].strip("[").strip("]")
         node_labels = self._extract_label_names(node_props_str)
         edge_labels = self._extract_label_names(edge_props_str)
         return node_labels, edge_labels
 
     @staticmethod
     def _extract_label_names(
-            source: str,
-            head: str = "name: ",
-            tail: str = ", ",
+        source: str,
+        head: str = "name: ",
+        tail: str = ", ",
     ) -> List[str]:
         result = []
         for s in source.split(head):

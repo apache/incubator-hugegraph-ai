@@ -19,7 +19,6 @@ import json
 
 
 class GremlinData:
-
     def __init__(self, gremlin):
         self.__gremlin = gremlin
         self.__bindings = {}
@@ -59,8 +58,10 @@ class GremlinData:
         self.__aliases = _aliases
 
     def __repr__(self):
-        res = f"gremlin: {self.__gremlin}, bindings: {self.__bindings}," \
-              f"language: {self.__language}, aliases: {self.__aliases}"
+        res = (
+            f"gremlin: {self.__gremlin}, bindings: {self.__bindings},"
+            f"language: {self.__language}, aliases: {self.__aliases}"
+        )
         return res
 
     def to_json(self):
@@ -68,6 +69,5 @@ class GremlinData:
 
 
 class GremlinDataEncoder(json.JSONEncoder):
-
     def default(self, o):
-        return {k.split('__')[1]: v for k, v in vars(o).items()}
+        return {k.split("__")[1]: v for k, v in vars(o).items()}

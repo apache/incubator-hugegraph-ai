@@ -42,15 +42,15 @@ class GremlinManager(HugeParamsBase):
         url = f"{self._host}/gremlin"
         gremlin_data = GremlinData(gremlin)
         gremlin_data.aliases = {
-            'graph': self._graph_name,
-            'g': '__g_' + self._graph_name
+            "graph": self._graph_name,
+            "g": "__g_" + self._graph_name,
         }
         response = self.session.post(
             url,
             data=gremlin_data.to_json(),
             auth=self._auth,
             headers=self._headers,
-            timeout=self._timeout
+            timeout=self._timeout,
         )
         error = NotFoundError(f"Gremlin can't get results: {response.content}")
         if check_if_success(response, error):

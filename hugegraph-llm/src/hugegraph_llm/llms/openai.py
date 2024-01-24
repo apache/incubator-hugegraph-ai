@@ -68,7 +68,7 @@ class OpenAIChat(BaseLLM):
             print(f"Retrying LLM call {e}")
             raise e
 
-    async def generate_streaming(
+    def generate_streaming(
         self,
         messages: Optional[List[Dict[str, Any]]] = None,
         prompt: Optional[str] = None,
@@ -91,16 +91,19 @@ class OpenAIChat(BaseLLM):
             delta = message["choices"][0]["delta"]
             if "content" in delta:
                 result += delta["content"]
-            await on_token_callback(message)
+            on_token_callback(message)
         return result
 
-    async def num_tokens_from_string(self, string: str) -> int:
+    def num_tokens_from_string(self, string: str) -> int:
         """Get token count from string."""
         encoding = tiktoken.encoding_for_model(self.model)
         num_tokens = len(encoding.encode(string))
         return num_tokens
 
-    async def max_allowed_token_length(self) -> int:
+    def max_allowed_token_length(self) -> int:
         """Get max-allowed token length"""
         # TODO: list all models and their max tokens from api
         return 2049
+
+    def get_llm_type(self) -> str:
+        return "openai"

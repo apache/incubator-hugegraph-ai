@@ -20,9 +20,8 @@ import re
 from typing import Set, Dict, Any, Optional
 
 from hugegraph_llm.llms.base import BaseLLM
-from hugegraph_llm.llms.openai_llm import OpenAIChat
-from hugegraph_llm.operators.utils_op import nltk_helper
-
+from hugegraph_llm.llms.init_llm import LLMs
+from hugegraph_llm.operators.common_op.nltk_helper import NLTKHelper
 
 DEFAULT_KEYWORDS_EXTRACT_TEMPLATE_TMPL = (
     "A question is provided below. Given the question, "
@@ -55,15 +54,13 @@ class KeywordExtract:
         max_keywords: int = 5,
         extract_template: Optional[str] = None,
         expand_template: Optional[str] = None,
-        language: str = 'english',
+        language: str = "english",
     ):
         self._llm = llm
         self._query = text
         self._language = language.lower()
         self._max_keywords = max_keywords
-        self._extract_template = (
-            extract_template or DEFAULT_KEYWORDS_EXTRACT_TEMPLATE_TMPL
-        )
+        self._extract_template = extract_template or DEFAULT_KEYWORDS_EXTRACT_TEMPLATE_TMPL
         self._expand_template = expand_template or DEFAULT_KEYWORDS_EXPAND_TEMPLATE_TMPL
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -74,13 +71,13 @@ class KeywordExtract:
             context["query"] = self._query
 
         if self._llm is None:
-            self._llm = context.get("llm") or OpenAIChat()
+            self._llm = context.get("llm") or LLMs().get_llm()
             assert isinstance(self._llm, BaseLLM), "Invalid LLM Object."
         if context.get("llm") is None:
             context["llm"] = self._llm
 
-        if isinstance(context.get('language'), str):
-            self._language = context['language'].lower()
+        if isinstance(context.get("language"), str):
+            self._language = context["language"].lower()
         else:
             context["language"] = self._language
 
@@ -126,7 +123,7 @@ class KeywordExtract:
         response = response.strip()  # Strip newlines from responses.
 
         if response.startswith(start_token):
-            response = response[len(start_token):]
+            response = response[len(start_token) :]
 
         for k in response.split(","):
             rk = k
@@ -142,7 +139,7 @@ class KeywordExtract:
             sub_tokens = re.findall(r"\w+", token)
             if len(sub_tokens) > 1:
                 results.update(
-                    {w for w in sub_tokens if w not in nltk_helper.stopwords(lang=self._language)}
+                    {w for w in sub_tokens if w not in NLTKHelper().stopwords(lang=self._language)}
                 )
 
         return results

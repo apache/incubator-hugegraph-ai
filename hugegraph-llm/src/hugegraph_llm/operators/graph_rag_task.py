@@ -19,7 +19,7 @@
 from typing import Dict, Any, Optional, List
 
 from hugegraph_llm.llms.base import BaseLLM
-from hugegraph_llm.llms.openai_llm import OpenAIChat
+from hugegraph_llm.llms.init_llm import LLMs
 from hugegraph_llm.operators.hugegraph_op.graph_rag_query import GraphRAGQuery
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
@@ -28,16 +28,16 @@ from pyhugegraph.client import PyHugeClient
 
 class GraphRAG:
     def __init__(self, llm: Optional[BaseLLM] = None):
-        self._llm = llm or OpenAIChat()
+        self._llm = llm or LLMs().get_llm()
         self._operators: List[Any] = []
 
     def extract_keyword(
-            self,
-            text: Optional[str] = None,
-            max_keywords: int = 5,
-            language: str = 'english',
-            extract_template: Optional[str] = None,
-            expand_template: Optional[str] = None,
+        self,
+        text: Optional[str] = None,
+        max_keywords: int = 5,
+        language: str = "english",
+        extract_template: Optional[str] = None,
+        expand_template: Optional[str] = None,
     ):
         self._operators.append(
             KeywordExtract(
@@ -51,11 +51,11 @@ class GraphRAG:
         return self
 
     def query_graph_for_rag(
-            self,
-            graph_client: Optional[PyHugeClient] = None,
-            max_deep: int = 2,
-            max_items: int = 30,
-            prop_to_match: Optional[str] = None,
+        self,
+        graph_client: Optional[PyHugeClient] = None,
+        max_deep: int = 2,
+        max_items: int = 30,
+        prop_to_match: Optional[str] = None,
     ):
         self._operators.append(
             GraphRAGQuery(
@@ -68,8 +68,8 @@ class GraphRAG:
         return self
 
     def synthesize_answer(
-            self,
-            prompt_template: Optional[str] = None,
+        self,
+        prompt_template: Optional[str] = None,
     ):
         self._operators.append(
             AnswerSynthesize(
