@@ -17,7 +17,6 @@
 
 import json
 
-import requests
 
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils.exceptions import CreateError, UpdateError, RemoveError
@@ -98,7 +97,10 @@ class PropertyKey(HugeParamsBase):
         return self
 
     def ifNotExist(self):
-        url = f'{self._host}/graphs/{self._graph_name}/schema/propertykeys/{self._parameter_holder.get_value("name")}'
+        url = (
+            f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/"
+            f'{self._parameter_holder.get_value("name")}'
+        )
         response = self.session.get(url, auth=self._auth, headers=self._headers)
         if response.status_code == 200 and check_if_authorized(response):
             self._parameter_holder.set("not_exist", False)
@@ -122,6 +124,7 @@ class PropertyKey(HugeParamsBase):
             CreateError(f'CreateError: "create PropertyKey failed", Detail: {response.content}'),
         ):
             return f"create PropertyKey success, Detail: {response.content}"
+        return f"create PropertyKey failed, Detail: {response.content}"
 
     @decorator_params
     def append(self):
@@ -131,7 +134,10 @@ class PropertyKey(HugeParamsBase):
             user_data = {}
         data = {"name": property_name, "user_data": user_data}
 
-        url = f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/{property_name}/?action=append"
+        url = (
+            f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/"
+            f"{property_name}/?action=append"
+        )
         response = self.session.put(
             url, data=json.dumps(data), auth=self._auth, headers=self._headers
         )
@@ -141,6 +147,7 @@ class PropertyKey(HugeParamsBase):
             UpdateError(f'UpdateError: "append PropertyKey failed", Detail: {response.content}'),
         ):
             return f"append PropertyKey success, Detail: {response.content}"
+        return f"append PropertyKey failed, Detail: {response.content}"
 
     @decorator_params
     def eliminate(self):
@@ -150,7 +157,10 @@ class PropertyKey(HugeParamsBase):
             user_data = {}
         data = {"name": property_name, "user_data": user_data}
 
-        url = f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/{property_name}/?action=eliminate"
+        url = (
+            f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/"
+            f"{property_name}/?action=eliminate"
+        )
         response = self.session.put(
             url, data=json.dumps(data), auth=self._auth, headers=self._headers
         )
@@ -160,6 +170,7 @@ class PropertyKey(HugeParamsBase):
         )
         if check_if_success(response, error):
             return f"eliminate PropertyKey success, Detail: {str(response.content)}"
+        return f"eliminate PropertyKey failed, Detail: {response.content}"
 
     @decorator_params
     def remove(self):
@@ -174,3 +185,4 @@ class PropertyKey(HugeParamsBase):
             ),
         ):
             return f'delete PropertyKey success, Detail: {dic["name"]}'
+        return f"delete PropertyKey failed, Detail: {response.content}"

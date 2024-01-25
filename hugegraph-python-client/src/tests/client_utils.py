@@ -71,6 +71,21 @@ class ClientUtils:
             "date", "city"
         ).nullableKeys("city").ifNotExist().create()
 
+    def init_index_label(self):
+        schema = self.schema
+        schema.indexLabel("personByCity").onV("person").by("city").secondary().ifNotExist().create()
+        schema.indexLabel("personByAge").onV("person").by("age").range().ifNotExist().create()
+        schema.indexLabel("softwareByPrice").onV("software").by(
+            "price"
+        ).range().ifNotExist().create()
+        schema.indexLabel("softwareByLang").onV("software").by(
+            "lang"
+        ).secondary().ifNotExist().create()
+        schema.indexLabel("knowsByDate").onE("knows").by("date").secondary().ifNotExist().create()
+        schema.indexLabel("createdByDate").onE("created").by(
+            "date"
+        ).secondary().ifNotExist().create()
+
     def init_vertices(self):
         graph = self.graph
         graph.addVertex("person", {"name": "marko", "age": 29, "city": "Beijing"})

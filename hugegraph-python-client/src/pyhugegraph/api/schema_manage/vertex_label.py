@@ -17,8 +17,6 @@
 
 import json
 
-import requests
-
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils.exceptions import CreateError, UpdateError, RemoveError
 from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
@@ -82,7 +80,10 @@ class VertexLabel(HugeParamsBase):
         return self
 
     def ifNotExist(self):
-        url = f'{self._host}/graphs/{self._graph_name}/schema/vertexlabels/{self._parameter_holder.get_value("name")}'
+        url = (
+            f"{self._host}/graphs/{self._graph_name}/schema/vertexlabels/"
+            f'{self._parameter_holder.get_value("name")}'
+        )
 
         response = self.session.get(url, auth=self._auth, headers=self._headers)
         if response.status_code == 200 and check_if_authorized(response):
@@ -116,6 +117,7 @@ class VertexLabel(HugeParamsBase):
         )
         if check_if_success(response, error):
             return f'create VertexLabel success, Detail: "{str(response.content)}"'
+        return f'create VertexLabel failed, Detail: "{str(response.content)}"'
 
     @decorator_params
     def append(self):
@@ -123,7 +125,10 @@ class VertexLabel(HugeParamsBase):
         properties = dic["properties"] if "properties" in dic else []
         nullable_keys = dic["nullable_keys"] if "nullable_keys" in dic else []
         user_data = dic["user_data"] if "user_data" in dic else {}
-        url = f'{self._host}/graphs/{self._graph_name}/schema/vertexlabels/{dic["name"]}?action=append'
+        url = (
+            f"{self._host}/graphs/{self._graph_name}"
+            f'/schema/vertexlabels/{dic["name"]}?action=append'
+        )
 
         data = {
             "name": dic["name"],
@@ -140,6 +145,7 @@ class VertexLabel(HugeParamsBase):
         )
         if check_if_success(response, error):
             return f'append VertexLabel success, Detail: "{str(response.content)}"'
+        return f'append VertexLabel failed, Detail: "{str(response.content)}"'
 
     @decorator_params
     def remove(self):
@@ -152,6 +158,7 @@ class VertexLabel(HugeParamsBase):
         )
         if check_if_success(response, error):
             return f'remove VertexLabel success, Detail: "{str(response.content)}"'
+        return f'remove VertexLabel failed, Detail: "{str(response.content)}"'
 
     @decorator_params
     def eliminate(self):
@@ -172,3 +179,4 @@ class VertexLabel(HugeParamsBase):
         )
         if check_if_success(response, error):
             return f'eliminate VertexLabel success, Detail: "{str(response.content)}"'
+        return f'eliminate VertexLabel failed, Detail: "{str(response.content)}"'

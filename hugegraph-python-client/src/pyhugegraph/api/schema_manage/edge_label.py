@@ -83,7 +83,10 @@ class EdgeLabel(HugeParamsBase):
 
     @decorator_params
     def ifNotExist(self):
-        url = f'{self._host}/graphs/{self._graph_name}/schema/edgelabels/{self._parameter_holder.get_value("name")}'
+        url = (
+            f"{self._host}/graphs/{self._graph_name}"
+            f'/schema/edgelabels/{self._parameter_holder.get_value("name")}'
+        )
 
         response = self.session.get(url, auth=self._auth, headers=self._headers)
         if response.status_code == 200 and check_if_authorized(response):
@@ -118,10 +121,14 @@ class EdgeLabel(HugeParamsBase):
         )
         if check_if_success(response, error):
             return f'create EdgeLabel success, Detail: "{str(response.content)}"'
+        return None
 
     @decorator_params
     def remove(self):
-        url = f'{self._host}/graphs/{self._graph_name}/schema/edgelabels/{self._parameter_holder.get_value("name")}'
+        url = (
+            f"{self._host}/graphs/{self._graph_name}/schema/edgelabels/"
+            f'{self._parameter_holder.get_value("name")}'
+        )
         response = self.session.delete(url, auth=self._auth, headers=self._headers)
         self.clean_parameter_holder()
         error = RemoveError(
@@ -129,6 +136,7 @@ class EdgeLabel(HugeParamsBase):
         )
         if check_if_success(response, error):
             return f'remove EdgeLabel success, Detail: "{str(response.content)}"'
+        return None
 
     @decorator_params
     def append(self):
@@ -151,6 +159,7 @@ class EdgeLabel(HugeParamsBase):
         )
         if check_if_success(response, error):
             return f'append EdgeLabel success, Detail: "{str(response.content)}"'
+        return None
 
     @decorator_params
     def eliminate(self):
@@ -171,3 +180,4 @@ class EdgeLabel(HugeParamsBase):
         )
         if check_if_success(response, error):
             return f'eliminate EdgeLabel success, Detail: "{str(response.content)}"'
+        return None

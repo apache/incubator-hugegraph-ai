@@ -77,10 +77,6 @@ class SchemaManager(HugeParamsBase):
         index_label.add_parameter("name", name)
         return index_label
 
-    """
-    create schemas
-    """
-
     def getSchema(self):
         url = f"{self._host}/graphs/{self._graph_name}/schema"
         response = self.session.get(url, auth=self._auth, headers=self._headers)
@@ -88,6 +84,7 @@ class SchemaManager(HugeParamsBase):
         if check_if_success(response, error):
             schema = json.loads(response.content)
             return schema
+        return None
 
     def getPropertyKey(self, property_name):
         url = f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/{property_name}"
@@ -96,6 +93,7 @@ class SchemaManager(HugeParamsBase):
         if check_if_success(response, error):
             property_keys_data = PropertyKeyData(json.loads(response.content))
             return property_keys_data
+        return None
 
     def getPropertyKeys(self):
         url = f"{self._host}/graphs/{self._graph_name}/schema/propertykeys"
@@ -105,6 +103,7 @@ class SchemaManager(HugeParamsBase):
             for item in json.loads(response.content)["propertykeys"]:
                 res.append(PropertyKeyData(item))
             return res
+        return None
 
     def getVertexLabel(self, name):
         url = f"{self._host}/graphs/{self._graph_name}/schema/vertexlabels/{name}"
@@ -113,6 +112,7 @@ class SchemaManager(HugeParamsBase):
         if check_if_success(response, error):
             res = VertexLabelData(json.loads(response.content))
             return res
+        return None
 
     def getVertexLabels(self):
         url = f"{self._host}/graphs/{self._graph_name}/schema/vertexlabels"
@@ -121,7 +121,7 @@ class SchemaManager(HugeParamsBase):
         if check_if_success(response):
             for item in json.loads(response.content)["vertexlabels"]:
                 res.append(VertexLabelData(item))
-            return res
+        return res
 
     def getEdgeLabel(self, label_name):
         url = f"{self._host}/graphs/{self._graph_name}/schema/edgelabels/{label_name}"
@@ -130,6 +130,7 @@ class SchemaManager(HugeParamsBase):
         if check_if_success(response, error):
             res = EdgeLabelData(json.loads(response.content))
             return res
+        return None
 
     def getEdgeLabels(self):
         url = f"{self._host}/graphs/{self._graph_name}/schema/edgelabels"
@@ -138,7 +139,7 @@ class SchemaManager(HugeParamsBase):
         if check_if_success(response):
             for item in json.loads(response.content)["edgelabels"]:
                 res.append(EdgeLabelData(item))
-            return res
+        return res
 
     def getRelations(self):
         url = f"{self._host}/graphs/{self._graph_name}/schema/edgelabels"
@@ -147,7 +148,7 @@ class SchemaManager(HugeParamsBase):
         if check_if_success(response):
             for item in json.loads(response.content)["edgelabels"]:
                 res.append(EdgeLabelData(item).relations())
-            return res
+        return res
 
     def getIndexLabel(self, name):
         url = f"{self._host}/graphs/{self._graph_name}/schema/indexlabels/{name}"
@@ -156,6 +157,7 @@ class SchemaManager(HugeParamsBase):
         if check_if_success(response, error):
             res = IndexLabelData(json.loads(response.content))
             return res
+        return None
 
     def getIndexLabels(self):
         url = f"{self._host}/graphs/{self._graph_name}/schema/indexlabels"

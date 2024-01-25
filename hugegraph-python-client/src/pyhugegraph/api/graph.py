@@ -64,6 +64,7 @@ class GraphManager(HugeParamsBase):
         if check_if_success(response, CreateError(f"create vertex failed: {response.content}")):
             res = VertexData(json.loads(response.content))
             return res
+        return None
 
     def addVertices(self, input_data):
         url = f"{self._host}/graphs/{self._graph_name}/graph/vertices/batch"
@@ -83,6 +84,7 @@ class GraphManager(HugeParamsBase):
             for item in json.loads(response.content):
                 res.append(VertexData({"id": item}))
             return res
+        return None
 
     def appendVertex(self, vertex_id, properties):
         url = f'{self._host}/graphs/{self._graph_name}/graph/vertices/"{vertex_id}"?action=append'
@@ -98,6 +100,7 @@ class GraphManager(HugeParamsBase):
         if check_if_success(response, UpdateError(f"append vertex failed: {response.content}")):
             res = VertexData(json.loads(response.content))
             return res
+        return None
 
     def eliminateVertex(self, vertex_id, properties):
         url = (
@@ -115,6 +118,7 @@ class GraphManager(HugeParamsBase):
         if check_if_success(response, UpdateError(f"eliminate vertex failed: {response.content}")):
             res = VertexData(json.loads(response.content))
             return res
+        return None
 
     def getVertexById(self, vertex_id):
         url = f'{self._host}/graphs/{self._graph_name}/graph/vertices/"{vertex_id}"'
@@ -125,8 +129,9 @@ class GraphManager(HugeParamsBase):
         if check_if_success(response, NotFoundError(f"Vertex not found: {response.content}")):
             res = VertexData(json.loads(response.content))
             return res
+        return None
 
-    def getVertexByPage(self, label, limit, page, properties=None):
+    def getVertexByPage(self, label, limit, page=None, properties=None):
         url = f"{self._host}/graphs/{self._graph_name}/graph/vertices?"
 
         para = ""
@@ -148,8 +153,9 @@ class GraphManager(HugeParamsBase):
                 res.append(VertexData(item))
             next_page = json.loads(response.content)["page"]
             return res, next_page
+        return None
 
-    def getVertexByCondition(self, label="", limit=0, page="", properties=None):
+    def getVertexByCondition(self, label="", limit=0, page=None, properties=None):
         url = f"{self._host}/graphs/{self._graph_name}/graph/vertices?"
 
         para = ""
@@ -172,6 +178,7 @@ class GraphManager(HugeParamsBase):
             for item in json.loads(response.content)["vertices"]:
                 res.append(VertexData(item))
             return res
+        return None
 
     def removeVertexById(self, vertex_id):
         url = f'{self._host}/graphs/{self._graph_name}/graph/vertices/"{vertex_id}"'
@@ -180,6 +187,7 @@ class GraphManager(HugeParamsBase):
         )
         if check_if_success(response, RemoveError(f"remove vertex failed: {response.content}")):
             return response.content
+        return None
 
     def addEdge(self, edge_label, out_id, in_id, properties):
         url = f"{self._host}/graphs/{self._graph_name}/graph/edges"
@@ -200,6 +208,7 @@ class GraphManager(HugeParamsBase):
         if check_if_success(response, CreateError(f"created edge failed: {response.content}")):
             res = EdgeData(json.loads(response.content))
             return res
+        return None
 
     def addEdges(self, input_data):
         url = f"{self._host}/graphs/{self._graph_name}/graph/edges/batch"
@@ -228,6 +237,7 @@ class GraphManager(HugeParamsBase):
             for item in json.loads(response.content):
                 res.append(EdgeData({"id": item}))
             return res
+        return None
 
     def appendEdge(self, edge_id, properties):
         url = f"{self._host}/graphs/{self._graph_name}/graph/edges/{edge_id}?action=append"
@@ -243,6 +253,7 @@ class GraphManager(HugeParamsBase):
         if check_if_success(response, UpdateError(f"append edge failed: {response.content}")):
             res = EdgeData(json.loads(response.content))
             return res
+        return None
 
     def eliminateEdge(self, edge_id, properties):
         url = f"{self._host}/graphs/{self._graph_name}/graph/edges/{edge_id}?action=eliminate"
@@ -258,6 +269,7 @@ class GraphManager(HugeParamsBase):
         if check_if_success(response, UpdateError(f"eliminate edge failed: {response.content}")):
             res = EdgeData(json.loads(response.content))
             return res
+        return None
 
     def getEdgeById(self, edge_id):
         url = f"{self._host}/graphs/{self._graph_name}/graph/edges/{edge_id}"
@@ -268,6 +280,7 @@ class GraphManager(HugeParamsBase):
         if check_if_success(response, NotFoundError(f"not found edge: {response.content}")):
             res = EdgeData(json.loads(response.content))
             return res
+        return None
 
     def getEdgeByPage(
         self,
@@ -305,6 +318,7 @@ class GraphManager(HugeParamsBase):
             for item in json.loads(response.content)["edges"]:
                 res.append(EdgeData(item))
             return res, json.loads(response.content)["page"]
+        return None
 
     def removeEdgeById(self, edge_id):
         url = f"{self._host}/graphs/{self._graph_name}/graph/edges/{edge_id}"
@@ -314,6 +328,7 @@ class GraphManager(HugeParamsBase):
         )
         if check_if_success(response, RemoveError(f"remove edge failed: {response.content}")):
             return response.content
+        return None
 
     def getVerticesById(self, vertex_ids):
         if not vertex_ids:
@@ -330,8 +345,8 @@ class GraphManager(HugeParamsBase):
             for item in json.loads(response.content)["vertices"]:
                 res.append(VertexData(item))
             return res
-        else:
-            create_exception(response.content)
+        create_exception(response.content)
+        return None
 
     def getEdgesById(self, edge_ids):
         if not edge_ids:
@@ -348,5 +363,5 @@ class GraphManager(HugeParamsBase):
             for item in json.loads(response.content)["edges"]:
                 res.append(EdgeData(item))
             return res
-        else:
-            create_exception(response.content)
+        create_exception(response.content)
+        return None

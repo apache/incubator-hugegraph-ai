@@ -17,7 +17,6 @@
 
 import json
 
-import requests
 
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
@@ -68,7 +67,10 @@ class IndexLabel(HugeParamsBase):
 
     @decorator_params
     def ifNotExist(self):
-        url = f'{self._host}/graphs/{self._graph_name}/schema/indexlabels/{self._parameter_holder.get_value("name")}'
+        url = (
+            f"{self._host}/graphs/{self._graph_name}/schema/indexlabels/"
+            f'{self._parameter_holder.get_value("name")}'
+        )
         response = self.session.get(url, auth=self._auth, headers=self._headers)
         if response.status_code == 200 and check_if_authorized(response):
             self._parameter_holder.set("not_exist", False)
@@ -93,6 +95,7 @@ class IndexLabel(HugeParamsBase):
         )
         if check_if_success(response, error):
             return f'create IndexLabel success, Deatil: "{str(response.content)}"'
+        return None
 
     @decorator_params
     def remove(self):
@@ -105,3 +108,4 @@ class IndexLabel(HugeParamsBase):
         )
         if check_if_success(response, error):
             return f'remove IndexLabel success, Deatil: "{str(response.content)}"'
+        return None
