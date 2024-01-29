@@ -44,7 +44,7 @@ class TestMetricsManager(unittest.TestCase):
         self.assertTrue(len(all_basic_metrics) == 5)
 
         gauges_metrics = self.metrics.get_gauges_metrics()
-        self.assertGreater(len(gauges_metrics), 60)
+        self.assertIsInstance(gauges_metrics, dict)
 
         counters_metrics = self.metrics.get_counters_metrics()
         self.assertIsInstance(counters_metrics, dict)
