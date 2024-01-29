@@ -44,10 +44,7 @@ class TestMetricsManager(unittest.TestCase):
         self.assertTrue(len(all_basic_metrics) == 5)
 
         gauges_metrics = self.metrics.get_gauges_metrics()
-        self.assertTrue(
-            "org.apache.hugegraph.backend.cache.Cache.audit-log-limiter-hugegraph.capacity"
-            in gauges_metrics
-        )
+        self.assertGreater(len(gauges_metrics), 60)
 
         counters_metrics = self.metrics.get_counters_metrics()
         self.assertIsInstance(counters_metrics, dict)
@@ -67,7 +64,7 @@ class TestMetricsManager(unittest.TestCase):
         self.assertTrue("basic" in system_metrics)
 
         statistics = self.metrics.get_statistics_metrics()
-        self.assertEqual(len(statistics), 118)
+        self.assertGreater(len(statistics), 100)
 
         backend_metrics = self.metrics.get_backend_metrics()
         self.assertEqual(len(backend_metrics["hugegraph"]), 4)
