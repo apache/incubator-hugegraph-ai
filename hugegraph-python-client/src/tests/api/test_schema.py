@@ -50,7 +50,6 @@ class TestSchemaManager(unittest.TestCase):
 
     def test_get_property_keys(self):
         property_keys = self.schema.getPropertyKeys()
-        print(property_keys)
         assert 7 == len(property_keys)
 
     def test_get_property_key(self):

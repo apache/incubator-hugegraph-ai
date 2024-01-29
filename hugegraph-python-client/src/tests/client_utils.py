@@ -37,6 +37,10 @@ class ClientUtils:
         self.graph = self.client.graph()
         self.graphs = self.client.graphs()
         self.variable = self.client.variable()
+        self.auth = self.client.auth()
+        self.task = self.client.task()
+        self.metrics = self.client.metrics()
+        self.traverser = self.client.traverser()
 
     def init_property_key(self):
         schema = self.schema

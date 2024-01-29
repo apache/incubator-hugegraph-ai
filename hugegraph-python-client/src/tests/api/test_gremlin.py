@@ -69,7 +69,6 @@ class TestGremlin(unittest.TestCase):
 
     def test_primitive_object(self):
         result = self.gremlin.exec("1 + 2")
-        print(result)
         result_set = result.get("data", [])
         assert 1 == len(result_set)
 

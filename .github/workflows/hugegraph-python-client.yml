@@ -26,7 +26,7 @@ jobs:
         pip install -r ./hugegraph-python-client/requirements.txt
     - name: Prepare HugeGraph Server Environment
       run: |
-        docker run -d --name=graph -p 8080:8080 hugegraph/hugegraph
+        docker run -d --name=graph -p 8080:8080 -e AUTH=true -e PASSWORD=admin hugegraph/hugegraph:1.2.0
         sleep 20
     - name: Test example
       run: |

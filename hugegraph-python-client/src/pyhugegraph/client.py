@@ -14,12 +14,15 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
+from pyhugegraph.api.auth import AuthManager
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.api.graph import GraphManager
 from pyhugegraph.api.graphs import GraphsManager
 from pyhugegraph.api.gremlin import GremlinManager
+from pyhugegraph.api.metric import MetricsManager
 from pyhugegraph.api.schema import SchemaManager
+from pyhugegraph.api.task import TaskManager
+from pyhugegraph.api.traverser import TraverserManager
 from pyhugegraph.api.variable import VariableManager
 from pyhugegraph.structure.graph_instance import GraphInstance
 
@@ -33,6 +36,10 @@ class PyHugeClient(HugeParamsBase):
         self._graphs = None
         self._gremlin = None
         self._variable = None
+        self._auth = None
+        self._task = None
+        self._metrics = None
+        self._traverser = None
 
     def schema(self):
         if self._schema:
@@ -63,3 +70,27 @@ class PyHugeClient(HugeParamsBase):
             return self._variable
         self._variable = VariableManager(self._graph_instance)
         return self._variable
+
+    def auth(self):
+        if self._auth:
+            return self._auth
+        self._auth = AuthManager(self._graph_instance)
+        return self._auth
+
+    def task(self):
+        if self._task:
+            return self._task
+        self._task = TaskManager(self._graph_instance)
+        return self._task
+
+    def metrics(self):
+        if self._metrics:
+            return self._metrics
+        self._metrics = MetricsManager(self._graph_instance)
+        return self._metrics
+
+    def traverser(self):
+        if self._traverser:
+            return self._traverser
+        self._traverser = TraverserManager(self._graph_instance)
+        return self._traverser
