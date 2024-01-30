@@ -17,11 +17,10 @@
 
 
 from hugegraph_llm.llms.base import BaseLLM
+from hugegraph_llm.operators.common_op.check_schema import CheckSchema
 from hugegraph_llm.operators.common_op.print_result import PrintResult
-from hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph import (
-    CommitDataToKg,
-    CommitSpoToKg,
-)
+from hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph import CommitToKg
+from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
 from hugegraph_llm.operators.llm_op.info_extract import InfoExtract
 
@@ -32,28 +31,27 @@ class KgBuilder:
         self.llm = llm
         self.result = None
 
-    def extract_nodes_relationships(
-        self, text: str, nodes_schemas=None, relationships_schemas=None
-    ):
-        if nodes_schemas and relationships_schemas:
-            self.operators.append(InfoExtract(self.llm, text, nodes_schemas, relationships_schemas))
+    def import_schema(self, from_hugegraph=None, from_extraction=None, from_user_defined=None):
+        if from_hugegraph:
+            self.operators.append(SchemaManager(from_hugegraph))
+        elif from_user_defined:
+            self.operators.append(CheckSchema(from_user_defined))
+        elif from_extraction:
+            raise Exception("Not implemented yet")
         else:
-            self.operators.append(InfoExtract(self.llm, text))
+            raise Exception("No input data")
         return self
 
-    def extract_spo_triple(self, text: str):
-        self.operators.append(InfoExtract(self.llm, text, spo=True))
+    def extract_triples(self, text: str):
+        self.operators.append(InfoExtract(self.llm, text))
         return self
 
-    def disambiguate_word_sense(self, with_schemas=False):
-        self.operators.append(DisambiguateData(self.llm, with_schemas))
+    def disambiguate_word_sense(self):
+        self.operators.append(DisambiguateData(self.llm))
         return self
 
-    def commit_to_hugegraph(self, spo=False):
-        if spo:
-            self.operators.append(CommitSpoToKg())
-        else:
-            self.operators.append(CommitDataToKg())
+    def commit_to_hugegraph(self):
+        self.operators.append(CommitToKg())
         return self
 
     def print_result(self):
