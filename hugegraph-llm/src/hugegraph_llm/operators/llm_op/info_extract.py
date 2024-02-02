@@ -65,13 +65,13 @@ def fit_token_space_by_split_text(llm: BaseLLM, text: str, prompt_token: int) ->
     return combined_chunks
 
 
-def extract_by_regex(text, triples):
+def extract_triples_by_regex(text, triples):
     text = text.replace("\\n", " ").replace("\\", " ").replace("\n", " ")
     pattern = r"\((.*?), (.*?), (.*?)\)"
     triples["triples"] += re.findall(pattern, text)
 
 
-def extract_by_regex_with_schema(schema, text, graph):
+def extract_triples_by_regex_with_schema(schema, text, graph):
     text = text.replace("\\n", " ").replace("\\", " ").replace("\n", " ")
     pattern = r"\((.*?), (.*?), (.*?)\) - ([^ ]*)"
     matches = re.findall(pattern, text)
@@ -113,14 +113,14 @@ class InfoExtract:
 
         result = {"vertices": [], "edges": [], "schema": schema} if schema else {"triples": []}
         for chunk in chunked_text:
-            proceeded_chunk = self.extract_by_llm(schema, chunk)
+            proceeded_chunk = self.extract_triples_by_llm(schema, chunk)
             print(f"[LLM] input: {chunk} \n output:{proceeded_chunk}")
             if schema:
-                extract_by_regex_with_schema(schema, proceeded_chunk, result)
+                extract_triples_by_regex_with_schema(schema, proceeded_chunk, result)
             else:
-                extract_by_regex(proceeded_chunk, result)
+                extract_triples_by_regex(proceeded_chunk, result)
         return result
 
-    def extract_by_llm(self, schema, chunk):
+    def extract_triples_by_llm(self, schema, chunk):
         prompt = generate_extract_triple_prompt(chunk, schema)
         return self.llm.generate(prompt=prompt)

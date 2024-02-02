@@ -44,10 +44,11 @@ builder = KgBuilder(LLMs().get_llm())
 )
 ```
 
-2. **Import Schema**: The `import_schema` method is used to import a schema from a source. The source can be a HugeGraph instance,a user-defined schema or an extraction result. The method `print_result` can be chained to print the result.
+2. **Import Schema**: The `import_schema` method is used to import a schema from a source. The source can be a HugeGraph instance, a user-defined schema or an extraction result. The method `print_result` can be chained to print the result.
+
 ```python
 # Import schema from a HugeGraph instance
-import_schema(from_hugegraph="talent_graph").print_result()
+import_schema(from_hugegraph="xxx").print_result()
 # Import schema from an extraction result
 import_schema(from_extraction="xxx").print_result()
 # Import schema from user-defined schema

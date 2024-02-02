@@ -19,7 +19,7 @@
 from typing import Dict, List, Any
 
 from hugegraph_llm.llms.base import BaseLLM
-from hugegraph_llm.operators.llm_op.info_extract import extract_by_regex
+from hugegraph_llm.operators.llm_op.info_extract import extract_triples_by_regex
 
 
 def generate_disambiguate_prompt(triples):
@@ -48,6 +48,6 @@ class DisambiguateData:
             prompt = generate_disambiguate_prompt(triples)
             llm_output = self.llm.generate(prompt=prompt)
             data = {"triples": []}
-            extract_by_regex(llm_output, data)
+            extract_triples_by_regex(llm_output, data)
             print(f"LLM input:{prompt} \n output: {llm_output} \n data: {data}")
         return data

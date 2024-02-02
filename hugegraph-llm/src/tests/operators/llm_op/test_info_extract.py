@@ -19,8 +19,8 @@ import unittest
 
 from hugegraph_llm.operators.llm_op.info_extract import (
     InfoExtract,
-    extract_by_regex_with_schema,
-    extract_by_regex,
+    extract_triples_by_regex_with_schema,
+    extract_triples_by_regex,
 )
 
 
@@ -40,7 +40,7 @@ class TestInfoExtract(unittest.TestCase):
                 }
             ],
         }
-        # self.llm = LLMs().get_llm()
+
         self.llm = None
         self.info_extract = InfoExtract(self.llm, "text")
 
@@ -74,7 +74,7 @@ class TestInfoExtract(unittest.TestCase):
 
     def test_extract_by_regex_with_schema(self):
         graph = {"vertices": [], "edges": [], "schema": self.schema}
-        extract_by_regex_with_schema(self.schema, self.llm_output, graph)
+        extract_triples_by_regex_with_schema(self.schema, self.llm_output, graph)
         self.assertEqual(
             graph,
             {
@@ -120,7 +120,7 @@ class TestInfoExtract(unittest.TestCase):
 
     def test_extract_by_regex(self):
         graph = {"triples": []}
-        extract_by_regex(self.llm_output, graph)
+        extract_triples_by_regex(self.llm_output, graph)
         self.assertEqual(
             graph,
             {

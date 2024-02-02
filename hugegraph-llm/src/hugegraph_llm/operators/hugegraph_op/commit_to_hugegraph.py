@@ -104,9 +104,7 @@ class CommitToKg:
         ).secondary().ifNotExist().create()
 
         for item in data:
-            s = item[0].strip()
-            p = item[1].strip()
-            o = item[2].strip()
+            s, p, o = (element.strip() for element in item)
             s_id = self.client.graph().addVertex("vertex", {"name": s}, id=s).id
             t_id = self.client.graph().addVertex("vertex", {"name": o}, id=o).id
             self.client.graph().addEdge("edge", s_id, t_id, {"name": p})

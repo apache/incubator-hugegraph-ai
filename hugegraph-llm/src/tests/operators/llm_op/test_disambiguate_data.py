@@ -74,8 +74,7 @@ class TestDisambiguateData(unittest.TestCase):
                 ],
             },
         }
-        self.llm = LLMs().get_llm()
-        # self.llm =  None
+        self.llm = None
         self.disambiguate_data = DisambiguateData(self.llm)
 
     def test_run(self):

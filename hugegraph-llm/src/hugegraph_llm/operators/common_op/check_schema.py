@@ -25,21 +25,21 @@ class CheckSchema:
         self.data = data
 
     def run(self, schema=None) -> Any:
-        data = self.data or schema
-        if not isinstance(data, dict):
+        schema = self.data or schema
+        if not isinstance(schema, dict):
             raise ValueError("Input data is not a dictionary.")
-        if "vertices" not in data or "edges" not in data:
+        if "vertices" not in schema or "edges" not in schema:
             raise ValueError("Input data does not contain 'vertices' or 'edges'.")
-        if not isinstance(data["vertices"], list) or not isinstance(data["edges"], list):
+        if not isinstance(schema["vertices"], list) or not isinstance(schema["edges"], list):
             raise ValueError("'vertices' or 'edges' in input data is not a list.")
-        for vertex in data["vertices"]:
+        for vertex in schema["vertices"]:
             if not isinstance(vertex, dict):
                 raise ValueError("Vertex in input data is not a dictionary.")
             if "vertex_label" not in vertex:
                 raise ValueError("Vertex in input data does not contain 'vertex_label'.")
             if not isinstance(vertex["vertex_label"], str):
                 raise ValueError("'vertex_label' in vertex is not of correct type.")
-        for edge in data["edges"]:
+        for edge in schema["edges"]:
             if not isinstance(edge, dict):
                 raise ValueError("Edge in input data is not a dictionary.")
             if (
@@ -60,4 +60,4 @@ class CheckSchema:
                     "'edge_label', 'source_vertex_label', 'target_vertex_label' "
                     "in edge is not of correct type."
                 )
-        return data
+        return schema

@@ -50,9 +50,9 @@ if __name__ == "__main__":
 
     (
         builder
-        .import_schema(from_hugegraph="talent_graph").print_result()
-        # .import_schema(from_extraction="fefe").print_result().run()
-        # .import_schema(from_input=schema).print_result()
+        .import_schema(from_hugegraph="xxx").print_result()
+        # .import_schema(from_extraction="xxx").print_result()
+        # .import_schema(from_user_defined=xxx).print_result()
         .extract_triples(TEXT).print_result()
         .disambiguate_word_sense()
         .commit_to_hugegraph()
