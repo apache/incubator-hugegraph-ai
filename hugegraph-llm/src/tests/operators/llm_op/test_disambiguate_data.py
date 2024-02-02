@@ -17,7 +17,6 @@
 
 import unittest
 
-from hugegraph_llm.llms.init_llm import LLMs
 from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
 
 
