@@ -78,4 +78,4 @@ class TestDisambiguateData(unittest.TestCase):
 
     def test_run(self):
         result = self.disambiguate_data.run(self.triples_with_schema)
-        self.assertEqual(result, self.triples_with_schema)
+        self.assertDictEqual(result, self.triples_with_schema)
