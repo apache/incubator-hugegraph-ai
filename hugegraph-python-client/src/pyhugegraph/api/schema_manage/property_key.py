@@ -121,7 +121,9 @@ class PropertyKey(HugeParamsBase):
         self.clean_parameter_holder()
         if check_if_success(
             response,
-            CreateError(f'CreateError: "create PropertyKey failed", Detail: {str(response.content)}'),
+            CreateError(
+                f'CreateError: "create PropertyKey failed", Detail: {str(response.content)}'
+            ),
         ):
             return f"create PropertyKey success, Detail: {str(response.content)}"
         return f"create PropertyKey failed, Detail: {str(response.content)}"
@@ -144,7 +146,9 @@ class PropertyKey(HugeParamsBase):
         self.clean_parameter_holder()
         if check_if_success(
             response,
-            UpdateError(f'UpdateError: "append PropertyKey failed", Detail: {str(response.content)}'),
+            UpdateError(
+                f'UpdateError: "append PropertyKey failed", Detail: {str(response.content)}'
+            ),
         ):
             return f"append PropertyKey success, Detail: {str(response.content)}"
         return f"append PropertyKey failed, Detail: {str(response.content)}"
