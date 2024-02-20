@@ -46,36 +46,36 @@ class TestSchemaManager(unittest.TestCase):
 
     def test_get_schema(self):
         schema = self.schema.getSchema()
-        assert 4 == len(schema)
+        self.assertEqual(4, len(schema))
 
     def test_get_property_keys(self):
         property_keys = self.schema.getPropertyKeys()
-        assert 7 == len(property_keys)
+        self.assertEqual(7, len(property_keys))
 
     def test_get_property_key(self):
         property_key = self.schema.getPropertyKey("name")
-        assert property_key.name == "name"
+        self.assertEqual(property_key.name, "name")
 
     def test_get_vertex_labels(self):
         vertex_labels = self.schema.getVertexLabels()
-        assert 3 == len(vertex_labels)
+        self.assertEqual(3, len(vertex_labels))
 
     def test_get_vertex_label(self):
         vertex_label = self.schema.getVertexLabel("person")
-        assert vertex_label.name == "person"
+        self.assertEqual(vertex_label.name, "person")
 
     def test_get_edge_labels(self):
         edge_labels = self.schema.getEdgeLabels()
-        assert 2 == len(edge_labels)
+        self.assertEqual(2, len(edge_labels))
 
     def test_get_edge_label(self):
         edge_label = self.schema.getEdgeLabel("knows")
-        assert edge_label.name == "knows"
+        self.assertEqual(edge_label.name, "knows")
 
     def test_get_index_labels(self):
         index_labels = self.schema.getIndexLabels()
-        assert 6 == len(index_labels)
+        self.assertEqual(6, len(index_labels))
 
     def test_get_index_label(self):
         index_label = self.schema.getIndexLabel("personByCity")
-        assert index_label.name == "personByCity"
+        self.assertEqual(index_label.name, "personByCity")

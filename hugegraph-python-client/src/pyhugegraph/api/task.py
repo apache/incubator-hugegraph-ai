@@ -24,15 +24,11 @@ from pyhugegraph.utils.util import check_if_success
 class TaskManager(HugeParamsBase):
     def __init__(self, graph_instance):
         super().__init__(graph_instance)
-        self.session = self.set_session(HugeSession.new_session())
-
-    def set_session(self, session):
-        self.session = session
-        return session
+        self.__session = HugeSession.new_session()
 
     def close(self):
-        if self.session:
-            self.session.close()
+        if self.__session:
+            self.__session.close()
 
     def list_tasks(self, status=None, limit=None):
         url = f"{self._host}/graphs/{self._graph_name}/tasks"
@@ -41,7 +37,7 @@ class TaskManager(HugeParamsBase):
             params["status"] = status
         if limit is not None:
             params["limit"] = limit
-        response = self.session.get(
+        response = self.__session.get(
             url,
             params=params,
             auth=self._auth,
@@ -53,7 +49,7 @@ class TaskManager(HugeParamsBase):
 
     def get_task(self, task_id):
         url = f"{self._host}/graphs/{self._graph_name}/tasks/{task_id}"
-        response = self.session.get(
+        response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         check_if_success(response, NotFoundError(response.content))
@@ -61,7 +57,7 @@ class TaskManager(HugeParamsBase):
 
     def delete_task(self, task_id):
         url = f"{self._host}/graphs/{self._graph_name}/tasks/{task_id}"
-        response = self.session.delete(
+        response = self.__session.delete(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         check_if_success(response, NotFoundError(response.content))
@@ -69,7 +65,7 @@ class TaskManager(HugeParamsBase):
 
     def cancel_task(self, task_id):
         url = f"{self._host}/graphs/{self._graph_name}/tasks/{task_id}?action=cancel"
-        response = self.session.put(
+        response = self.__session.put(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         check_if_success(response, NotFoundError(response.content))

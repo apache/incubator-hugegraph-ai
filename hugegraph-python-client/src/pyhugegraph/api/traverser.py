@@ -25,20 +25,16 @@ from pyhugegraph.utils.util import check_if_success
 class TraverserManager(HugeParamsBase):
     def __init__(self, graph_instance):
         super().__init__(graph_instance)
-        self.session = self.set_session(HugeSession.new_session())
         self.url = f"{self._host}/graphs/{self._graph_name}/traversers"
-
-    def set_session(self, session):
-        self.session = session
-        return session
+        self.__session = HugeSession.new_session()
 
     def close(self):
-        if self.session:
-            self.session.close()
+        if self.__session:
+            self.__session.close()
 
     def k_out(self, source_id, max_depth):
         url = f'{self.url}/kout?source="{source_id}"&max_depth={max_depth}'
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -50,7 +46,7 @@ class TraverserManager(HugeParamsBase):
 
     def k_neighbor(self, source_id, max_depth):
         url = f'{self.url}/kneighbor?source="{source_id}"&max_depth={max_depth}'
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -62,7 +58,7 @@ class TraverserManager(HugeParamsBase):
 
     def same_neighbors(self, vertex_id, other_id):
         url = f'{self.url}/sameneighbors?vertex="{vertex_id}"&other="{other_id}"'
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -74,7 +70,7 @@ class TraverserManager(HugeParamsBase):
 
     def jaccard_similarity(self, vertex_id, other_id):
         url = f'{self.url}/jaccardsimilarity?vertex="{vertex_id}"&other="{other_id}"'
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -89,7 +85,7 @@ class TraverserManager(HugeParamsBase):
             f"{self.url}/shortestpath?"
             f'source="{source_id}"&target="{target_id}"&max_depth={max_depth}'
         )
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -104,7 +100,7 @@ class TraverserManager(HugeParamsBase):
             f"{self.url}/allshortestpaths?"
             f'source="{source_id}"&target="{target_id}"&max_depth={max_depth}'
         )
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -119,7 +115,7 @@ class TraverserManager(HugeParamsBase):
             f"{self.url}/weightedshortestpath?"
             f'source="{source_id}"&target="{target_id}"&weight={weight}&max_depth={max_depth}'
         )
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -131,7 +127,7 @@ class TraverserManager(HugeParamsBase):
 
     def single_source_shortest_path(self, source_id, max_depth):
         url = f'{self.url}/singlesourceshortestpath?source="{source_id}"&max_depth={max_depth}'
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -160,7 +156,7 @@ class TraverserManager(HugeParamsBase):
             "capacity": capacity,
             "with_vertex": with_vertex,
         }
-        response = self.session.post(
+        response = self.__session.post(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -173,7 +169,7 @@ class TraverserManager(HugeParamsBase):
 
     def paths(self, source_id, target_id, max_depth):
         url = f'{self.url}/paths?source="{source_id}"&target="{target_id}"&max_depth={max_depth}'
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -196,7 +192,7 @@ class TraverserManager(HugeParamsBase):
             "capacity": capacity,
             "limit": limit,
         }
-        response = self.session.post(
+        response = self.__session.post(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -217,7 +213,7 @@ class TraverserManager(HugeParamsBase):
             "limit": limit,
             "with_vertex": with_vertex,
         }
-        response = self.session.post(
+        response = self.__session.post(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -233,7 +229,7 @@ class TraverserManager(HugeParamsBase):
             f"{self.url}/crosspoints?"
             f'source="{source_id}"&target="{target_id}"&max_depth={max_depth}'
         )
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -255,7 +251,7 @@ class TraverserManager(HugeParamsBase):
             "capacity": capacity,
             "limit": limit,
         }
-        response = self.session.post(
+        response = self.__session.post(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -268,7 +264,7 @@ class TraverserManager(HugeParamsBase):
 
     def rings(self, source_id, max_depth):
         url = f'{self.url}/rings?source="{source_id}"&max_depth={max_depth}'
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -280,7 +276,7 @@ class TraverserManager(HugeParamsBase):
 
     def rays(self, source_id, max_depth):
         url = f'{self.url}/rays?source="{source_id}"&max_depth={max_depth}'
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -324,7 +320,7 @@ class TraverserManager(HugeParamsBase):
             "with_intermediary": with_intermediary,
             "with_vertex": with_vertex,
         }
-        response = self.session.post(
+        response = self.__session.post(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -338,7 +334,7 @@ class TraverserManager(HugeParamsBase):
     def vertices(self, ids):
         url = f"{self.url}/vertices"
         params = {"ids": '"' + ids + '"'}
-        response = self.session.get(
+        response = self.__session.get(
             url,
             params=params,
             auth=self._auth,
@@ -352,7 +348,7 @@ class TraverserManager(HugeParamsBase):
     def edges(self, ids):
         url = f"{self.url}/edges"
         params = {"ids": ids}
-        response = self.session.get(
+        response = self.__session.get(
             url,
             params=params,
             auth=self._auth,

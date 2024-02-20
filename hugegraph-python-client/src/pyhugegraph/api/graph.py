@@ -37,15 +37,11 @@ from pyhugegraph.utils.util import (
 class GraphManager(HugeParamsBase):
     def __init__(self, graph_instance):
         super().__init__(graph_instance)
-        self.session = self.set_session(HugeSession.new_session())
-
-    def set_session(self, session):
-        self.session = session
-        return session
+        self.__session = HugeSession.new_session()
 
     def close(self):
-        if self.session:
-            self.session.close()
+        if self.__session:
+            self.__session.close()
 
     def addVertex(self, label, properties, id=None):
         data = {}
@@ -54,7 +50,7 @@ class GraphManager(HugeParamsBase):
         data["label"] = label
         data["properties"] = properties
         url = f"{self._host}/graphs/{self._graph_name}/graph/vertices"
-        response = self.session.post(
+        response = self.__session.post(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -72,7 +68,7 @@ class GraphManager(HugeParamsBase):
         data = []
         for item in input_data:
             data.append({"label": item[0], "properties": item[1]})
-        response = self.session.post(
+        response = self.__session.post(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -90,7 +86,7 @@ class GraphManager(HugeParamsBase):
         url = f'{self._host}/graphs/{self._graph_name}/graph/vertices/"{vertex_id}"?action=append'
 
         data = {"properties": properties}
-        response = self.session.put(
+        response = self.__session.put(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -108,7 +104,7 @@ class GraphManager(HugeParamsBase):
         )
 
         data = {"properties": properties}
-        response = self.session.put(
+        response = self.__session.put(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -123,7 +119,7 @@ class GraphManager(HugeParamsBase):
     def getVertexById(self, vertex_id):
         url = f'{self._host}/graphs/{self._graph_name}/graph/vertices/"{vertex_id}"'
 
-        response = self.session.get(
+        response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         if check_if_success(response, NotFoundError(f"Vertex not found: {response.content}")):
@@ -144,7 +140,7 @@ class GraphManager(HugeParamsBase):
             para += "&page"
         para = para + "&limit=" + str(limit)
         url = url + para[1:]
-        response = self.session.get(
+        response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         if check_if_success(response, NotFoundError(f"Vertex not found: {response.content}")):
@@ -170,7 +166,7 @@ class GraphManager(HugeParamsBase):
         else:
             para += "&page"
         url = url + para[1:]
-        response = self.session.get(
+        response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         if check_if_success(response, NotFoundError(f"Vertex not found: {response.content}")):
@@ -182,7 +178,7 @@ class GraphManager(HugeParamsBase):
 
     def removeVertexById(self, vertex_id):
         url = f'{self._host}/graphs/{self._graph_name}/graph/vertices/"{vertex_id}"'
-        response = self.session.delete(
+        response = self.__session.delete(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         if check_if_success(response, RemoveError(f"remove vertex failed: {response.content}")):
@@ -198,7 +194,7 @@ class GraphManager(HugeParamsBase):
             "inV": in_id,
             "properties": properties,
         }
-        response = self.session.post(
+        response = self.__session.post(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -225,7 +221,7 @@ class GraphManager(HugeParamsBase):
                     "properties": item[5],
                 }
             )
-        response = self.session.post(
+        response = self.__session.post(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -243,7 +239,7 @@ class GraphManager(HugeParamsBase):
         url = f"{self._host}/graphs/{self._graph_name}/graph/edges/{edge_id}?action=append"
 
         data = {"properties": properties}
-        response = self.session.put(
+        response = self.__session.put(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -259,7 +255,7 @@ class GraphManager(HugeParamsBase):
         url = f"{self._host}/graphs/{self._graph_name}/graph/edges/{edge_id}?action=eliminate"
 
         data = {"properties": properties}
-        response = self.session.put(
+        response = self.__session.put(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -274,7 +270,7 @@ class GraphManager(HugeParamsBase):
     def getEdgeById(self, edge_id):
         url = f"{self._host}/graphs/{self._graph_name}/graph/edges/{edge_id}"
 
-        response = self.session.get(
+        response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         if check_if_success(response, NotFoundError(f"not found edge: {response.content}")):
@@ -310,7 +306,7 @@ class GraphManager(HugeParamsBase):
         if limit > 0:
             para = para + "&limit=" + str(limit)
         url = url + para[1:]
-        response = self.session.get(
+        response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         if check_if_success(response, NotFoundError(f"not found edges: {response.content}")):
@@ -323,7 +319,7 @@ class GraphManager(HugeParamsBase):
     def removeEdgeById(self, edge_id):
         url = f"{self._host}/graphs/{self._graph_name}/graph/edges/{edge_id}"
 
-        response = self.session.delete(
+        response = self.__session.delete(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         if check_if_success(response, RemoveError(f"remove edge failed: {response.content}")):
@@ -337,7 +333,7 @@ class GraphManager(HugeParamsBase):
         for vertex_id in vertex_ids:
             url += f'ids="{vertex_id}"&'
         url = url.rstrip("&")
-        response = self.session.get(
+        response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         if response.status_code == 200 and check_if_authorized(response):
@@ -355,7 +351,7 @@ class GraphManager(HugeParamsBase):
         for vertex_id in edge_ids:
             url += f"ids={vertex_id}&"
         url = url.rstrip("&")
-        response = self.session.get(
+        response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         if response.status_code == 200 and check_if_authorized(response):

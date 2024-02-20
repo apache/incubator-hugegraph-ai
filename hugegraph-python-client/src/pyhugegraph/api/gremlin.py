@@ -28,15 +28,11 @@ from pyhugegraph.utils.util import check_if_success
 class GremlinManager(HugeParamsBase):
     def __init__(self, graph_instance):
         super().__init__(graph_instance)
-        self.session = self.set_session(HugeSession.new_session())
-
-    def set_session(self, session):
-        self.session = session
-        return session
+        self.__session = HugeSession.new_session()
 
     def close(self):
-        if self.session:
-            self.session.close()
+        if self.__session:
+            self.__session.close()
 
     def exec(self, gremlin):
         url = f"{self._host}/gremlin"
@@ -45,7 +41,7 @@ class GremlinManager(HugeParamsBase):
             "graph": self._graph_name,
             "g": "__g_" + self._graph_name,
         }
-        response = self.session.post(
+        response = self.__session.post(
             url,
             data=gremlin_data.to_json(),
             auth=self._auth,

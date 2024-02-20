@@ -27,22 +27,18 @@ from pyhugegraph.utils.util import check_if_success
 class AuthManager(HugeParamsBase):
     def __init__(self, graph_instance):
         super().__init__(graph_instance)
-        self.session = self.set_session(HugeSession.new_session())
-
-    def set_session(self, session):
-        self.session = session
-        return session
+        self.__session = HugeSession.new_session()
 
     def close(self):
-        if self.session:
-            self.session.close()
+        if self.__session:
+            self.__session.close()
 
     def list_users(self, limit=None):
         url = f"{self._host}/graphs/{self._graph_name}/auth/users"
         params = {}
         if limit is not None:
             params["limit"] = limit
-        response = self.session.get(
+        response = self.__session.get(
             url,
             params=params,
             auth=self._auth,
@@ -61,7 +57,7 @@ class AuthManager(HugeParamsBase):
             "user_phone": user_phone,
             "user_email": user_email,
         }
-        response = self.session.post(
+        response = self.__session.post(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -74,7 +70,7 @@ class AuthManager(HugeParamsBase):
 
     def delete_user(self, user_id):
         url = f"{self._host}/graphs/{self._graph_name}/auth/users/{user_id}"
-        response = self.session.delete(
+        response = self.__session.delete(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -100,7 +96,7 @@ class AuthManager(HugeParamsBase):
             "user_phone": user_phone,
             "user_email": user_email,
         }
-        response = self.session.put(
+        response = self.__session.put(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -113,7 +109,7 @@ class AuthManager(HugeParamsBase):
 
     def get_user(self, user_id):
         url = f"{self._host}/graphs/{self._graph_name}/auth/users/{user_id}"
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -128,7 +124,7 @@ class AuthManager(HugeParamsBase):
         params = {}
         if limit is not None:
             params["limit"] = limit
-        response = self.session.get(
+        response = self.__session.get(
             url,
             params=params,
             auth=self._auth,
@@ -142,7 +138,7 @@ class AuthManager(HugeParamsBase):
     def create_group(self, group_name, group_description=None):
         url = f"{self._host}/graphs/{self._graph_name}/auth/groups"
         data = {"group_name": group_name, "group_description": group_description}
-        response = self.session.post(
+        response = self.__session.post(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -155,7 +151,7 @@ class AuthManager(HugeParamsBase):
 
     def delete_group(self, group_id):
         url = f"{self._host}/graphs/{self._graph_name}/auth/groups/{group_id}"
-        response = self.session.delete(
+        response = self.__session.delete(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -169,7 +165,7 @@ class AuthManager(HugeParamsBase):
     def modify_group(self, group_id, group_name=None, group_description=None):
         url = f"{self._host}/graphs/{self._graph_name}/auth/groups/{group_id}"
         data = {"group_name": group_name, "group_description": group_description}
-        response = self.session.put(
+        response = self.__session.put(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -182,7 +178,7 @@ class AuthManager(HugeParamsBase):
 
     def get_group(self, group_id):
         url = f"{self._host}/graphs/{self._graph_name}/auth/groups/{group_id}"
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -199,7 +195,7 @@ class AuthManager(HugeParamsBase):
             "target": target_id,
             "access_permission": access_permission,
         }
-        response = self.session.post(
+        response = self.__session.post(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -212,7 +208,7 @@ class AuthManager(HugeParamsBase):
 
     def revoke_accesses(self, access_id):
         url = f"{self._host}/graphs/{self._graph_name}/auth/accesses/{access_id}"
-        response = self.session.delete(
+        response = self.__session.delete(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         check_if_success(response, NotFoundError(response.content))
@@ -221,7 +217,7 @@ class AuthManager(HugeParamsBase):
         url = f"{self._host}/graphs/{self._graph_name}/auth/accesses/{access_id}"
         # The permission of access can\'t be updated
         data = {"access_description": access_description}
-        response = self.session.put(
+        response = self.__session.put(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -234,7 +230,7 @@ class AuthManager(HugeParamsBase):
 
     def get_accesses(self, access_id):
         url = f"{self._host}/graphs/{self._graph_name}/auth/accesses/{access_id}"
-        response = self.session.get(
+        response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         if check_if_success(response, NotFoundError(response.content)):
@@ -243,7 +239,7 @@ class AuthManager(HugeParamsBase):
 
     def list_accesses(self):
         url = f"{self._host}/graphs/{self._graph_name}/auth/accesses"
-        response = self.session.get(
+        response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         if check_if_success(response, NotFoundError(response.content)):
@@ -258,7 +254,7 @@ class AuthManager(HugeParamsBase):
             "target_url": target_url,
             "target_resources": target_resources,
         }
-        response = self.session.post(
+        response = self.__session.post(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -271,7 +267,7 @@ class AuthManager(HugeParamsBase):
 
     def delete_target(self, target_id):
         url = f"{self._host}/graphs/{self._graph_name}/auth/targets/{target_id}"
-        response = self.session.delete(
+        response = self.__session.delete(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         check_if_success(response, NotFoundError(response.content))
@@ -284,7 +280,7 @@ class AuthManager(HugeParamsBase):
             "target_url": target_url,
             "target_resources": target_resources,
         }
-        response = self.session.put(
+        response = self.__session.put(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -297,7 +293,7 @@ class AuthManager(HugeParamsBase):
 
     def get_target(self, target_id):
         url = f"{self._host}/graphs/{self._graph_name}/auth/targets/{target_id}"
-        response = self.session.get(
+        response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         if check_if_success(response, NotFoundError(response.content)):
@@ -306,7 +302,7 @@ class AuthManager(HugeParamsBase):
 
     def list_targets(self):
         url = f"{self._host}/graphs/{self._graph_name}/auth/targets"
-        response = self.session.get(
+        response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         if check_if_success(response, NotFoundError(response.content)):
@@ -316,7 +312,7 @@ class AuthManager(HugeParamsBase):
     def create_belong(self, user_id, group_id):
         url = f"{self._host}/graphs/{self._graph_name}/auth/belongs"
         data = {"user": user_id, "group": group_id}
-        response = self.session.post(
+        response = self.__session.post(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -329,7 +325,7 @@ class AuthManager(HugeParamsBase):
 
     def delete_belong(self, belong_id):
         url = f"{self._host}/graphs/{self._graph_name}/auth/belongs/{belong_id}"
-        response = self.session.delete(
+        response = self.__session.delete(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         check_if_success(response, NotFoundError(response.content))
@@ -337,7 +333,7 @@ class AuthManager(HugeParamsBase):
     def update_belong(self, belong_id, description):
         url = f"{self._host}/graphs/{self._graph_name}/auth/belongs/{belong_id}"
         data = {"belong_description": description}
-        response = self.session.put(
+        response = self.__session.put(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -350,7 +346,7 @@ class AuthManager(HugeParamsBase):
 
     def get_belong(self, belong_id):
         url = f"{self._host}/graphs/{self._graph_name}/auth/belongs/{belong_id}"
-        response = self.session.get(
+        response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         if check_if_success(response, NotFoundError(response.content)):
@@ -359,7 +355,7 @@ class AuthManager(HugeParamsBase):
 
     def list_belongs(self):
         url = f"{self._host}/graphs/{self._graph_name}/auth/belongs"
-        response = self.session.get(
+        response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         if check_if_success(response, NotFoundError(response.content)):

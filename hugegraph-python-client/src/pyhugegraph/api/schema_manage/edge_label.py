@@ -26,7 +26,7 @@ from pyhugegraph.utils.util import check_if_success, check_if_authorized
 class EdgeLabel(HugeParamsBase):
     def __init__(self, graph_instance, session):
         super().__init__(graph_instance)
-        self.session = session
+        self.__session = session
 
     @decorator_params
     def link(self, source_label, target_label):
@@ -88,7 +88,7 @@ class EdgeLabel(HugeParamsBase):
             f'/schema/edgelabels/{self._parameter_holder.get_value("name")}'
         )
 
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
         if response.status_code == 200 and check_if_authorized(response):
             self._parameter_holder.set("not_exist", False)
         return self
@@ -112,7 +112,7 @@ class EdgeLabel(HugeParamsBase):
             if key in dic:
                 data[key] = dic[key]
         url = f"{self._host}/graphs/{self._graph_name}/schema/edgelabels"
-        response = self.session.post(
+        response = self.__session.post(
             url, data=json.dumps(data), auth=self._auth, headers=self._headers
         )
         self.clean_parameter_holder()
@@ -129,7 +129,7 @@ class EdgeLabel(HugeParamsBase):
             f"{self._host}/graphs/{self._graph_name}/schema/edgelabels/"
             f'{self._parameter_holder.get_value("name")}'
         )
-        response = self.session.delete(url, auth=self._auth, headers=self._headers)
+        response = self.__session.delete(url, auth=self._auth, headers=self._headers)
         self.clean_parameter_holder()
         error = RemoveError(
             f'RemoveError: "remove EdgeLabel failed", Detail:  "{str(response.content)}"'
@@ -150,7 +150,7 @@ class EdgeLabel(HugeParamsBase):
         url = (
             f'{self._host}/graphs/{self._graph_name}/schema/edgelabels/{data["name"]}?action=append'
         )
-        response = self.session.put(
+        response = self.__session.put(
             url, data=json.dumps(data), auth=self._auth, headers=self._headers
         )
         self.clean_parameter_holder()
@@ -171,7 +171,7 @@ class EdgeLabel(HugeParamsBase):
         )
         url = f"{self._host}/graphs/{self._graph_name}/schema/edgelabels/{name}?action=eliminate"
         data = {"name": name, "user_data": user_data}
-        response = self.session.put(
+        response = self.__session.put(
             url, data=json.dumps(data), auth=self._auth, headers=self._headers
         )
         self.clean_parameter_holder()

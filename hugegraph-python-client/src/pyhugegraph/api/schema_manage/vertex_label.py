@@ -26,7 +26,7 @@ from pyhugegraph.utils.util import check_if_success, check_if_authorized
 class VertexLabel(HugeParamsBase):
     def __init__(self, graph_instance, session):
         super().__init__(graph_instance)
-        self.session = session
+        self.__session = session
 
     @decorator_params
     def useAutomaticId(self):
@@ -85,7 +85,7 @@ class VertexLabel(HugeParamsBase):
             f'{self._parameter_holder.get_value("name")}'
         )
 
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
         if response.status_code == 200 and check_if_authorized(response):
             self._parameter_holder.set("not_exist", False)
         return self
@@ -108,7 +108,7 @@ class VertexLabel(HugeParamsBase):
             if key in dic:
                 data[key] = dic[key]
         url = f"{self._host}/graphs/{self._graph_name}/schema/vertexlabels"
-        response = self.session.post(
+        response = self.__session.post(
             url, data=json.dumps(data), auth=self._auth, headers=self._headers
         )
         self.clean_parameter_holder()
@@ -136,7 +136,7 @@ class VertexLabel(HugeParamsBase):
             "nullable_keys": nullable_keys,
             "user_data": user_data,
         }
-        response = self.session.put(
+        response = self.__session.put(
             url, data=json.dumps(data), auth=self._auth, headers=self._headers
         )
         self.clean_parameter_holder()
@@ -151,7 +151,7 @@ class VertexLabel(HugeParamsBase):
     def remove(self):
         name = self._parameter_holder.get_value("name")
         url = f"{self._host}/graphs/{self._graph_name}/schema/vertexlabels/{name}"
-        response = self.session.delete(url, auth=self._auth, headers=self._headers)
+        response = self.__session.delete(url, auth=self._auth, headers=self._headers)
         self.clean_parameter_holder()
         error = RemoveError(
             f'RemoveError: "remove VertexLabel failed", Detail: "{str(response.content)}"'
@@ -171,7 +171,7 @@ class VertexLabel(HugeParamsBase):
             "name": self._parameter_holder.get_value("name"),
             "user_data": user_data,
         }
-        response = self.session.put(
+        response = self.__session.put(
             url, data=json.dumps(data), auth=self._auth, headers=self._headers
         )
         error = UpdateError(

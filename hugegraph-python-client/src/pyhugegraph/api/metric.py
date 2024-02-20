@@ -24,19 +24,15 @@ from pyhugegraph.utils.util import check_if_success
 class MetricsManager(HugeParamsBase):
     def __init__(self, graph_instance):
         super().__init__(graph_instance)
-        self.session = self.set_session(HugeSession.new_session())
-
-    def set_session(self, session):
-        self.session = session
-        return session
+        self.__session = HugeSession.new_session()
 
     def close(self):
-        if self.session:
-            self.session.close()
+        if self.__session:
+            self.__session.close()
 
     def get_all_basic_metrics(self):
         url = f"{self._host}/metrics/?type=json"
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -48,7 +44,7 @@ class MetricsManager(HugeParamsBase):
 
     def get_gauges_metrics(self):
         url = f"{self._host}/metrics/gauges"
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -60,7 +56,7 @@ class MetricsManager(HugeParamsBase):
 
     def get_counters_metrics(self):
         url = f"{self._host}/metrics/counters"
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -72,7 +68,7 @@ class MetricsManager(HugeParamsBase):
 
     def get_histograms_metrics(self):
         url = f"{self._host}/metrics/histograms"
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -84,7 +80,7 @@ class MetricsManager(HugeParamsBase):
 
     def get_meters_metrics(self):
         url = f"{self._host}/metrics/meters"
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -96,7 +92,7 @@ class MetricsManager(HugeParamsBase):
 
     def get_timers_metrics(self):
         url = f"{self._host}/metrics/timers"
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -108,7 +104,7 @@ class MetricsManager(HugeParamsBase):
 
     def get_statistics_metrics(self):
         url = f"{self._host}/metrics/statistics/?type=json"
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -120,7 +116,7 @@ class MetricsManager(HugeParamsBase):
 
     def get_system_metrics(self):
         url = f"{self._host}/metrics/system"
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,
@@ -132,7 +128,7 @@ class MetricsManager(HugeParamsBase):
 
     def get_backend_metrics(self):
         url = f"{self._host}/metrics/backend"
-        response = self.session.get(
+        response = self.__session.get(
             url,
             auth=self._auth,
             headers=self._headers,

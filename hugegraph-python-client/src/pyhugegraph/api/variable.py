@@ -26,21 +26,17 @@ from pyhugegraph.utils.util import check_if_success
 class VariableManager(HugeParamsBase):
     def __init__(self, graph_instance):
         super().__init__(graph_instance)
-        self.session = self.set_session(HugeSession.new_session())
-
-    def set_session(self, session):
-        self.session = session
-        return session
+        self.__session = HugeSession.new_session()
 
     def close(self):
-        if self.session:
-            self.session.close()
+        if self.__session:
+            self.__session.close()
 
     def set(self, key, value):
         url = f"{self._host}/graphs/{self._graph_name}/variables/{key}"
         data = {"data": value}
 
-        response = self.session.put(
+        response = self.__session.put(
             url,
             data=json.dumps(data),
             auth=self._auth,
@@ -54,7 +50,7 @@ class VariableManager(HugeParamsBase):
     def get(self, key):
         url = f"{self._host}/graphs/{self._graph_name}/variables/{key}"
 
-        response = self.session.get(
+        response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         if check_if_success(response, NotFoundError(response.content)):
@@ -64,7 +60,7 @@ class VariableManager(HugeParamsBase):
     def all(self):
         url = f"{self._host}/graphs/{self._graph_name}/variables"
 
-        response = self.session.get(
+        response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         if check_if_success(response, NotFoundError(response.content)):
@@ -74,7 +70,7 @@ class VariableManager(HugeParamsBase):
     def remove(self, key):
         url = f"{self._host}/graphs/{self._graph_name}/variables/{key}"
 
-        response = self.session.delete(
+        response = self.__session.delete(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         check_if_success(response, NotFoundError(response.content))

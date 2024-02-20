@@ -42,55 +42,37 @@ class PyHugeClient(HugeParamsBase):
         self._traverser = None
 
     def schema(self):
-        if self._schema:
-            return self._schema
-        self._schema = SchemaManager(self._graph_instance)
+        self._schema = self._schema or SchemaManager(self._graph_instance)
         return self._schema
 
     def gremlin(self):
-        if self._gremlin:
-            return self._gremlin
-        self._gremlin = GremlinManager(self._graph_instance)
+        self._gremlin = self._gremlin or GremlinManager(self._graph_instance)
         return self._gremlin
 
     def graph(self):
-        if self._graph:
-            return self._graph
-        self._graph = GraphManager(self._graph_instance)
+        self._graph = self._graph or GraphManager(self._graph_instance)
         return self._graph
 
     def graphs(self):
-        if self._graphs:
-            return self._graphs
-        self._graphs = GraphsManager(self._graph_instance)
+        self._graphs = self._graphs or GraphsManager(self._graph_instance)
         return self._graphs
 
     def variable(self):
-        if self._variable:
-            return self._variable
-        self._variable = VariableManager(self._graph_instance)
+        self._variable = self._variable or VariableManager(self._graph_instance)
         return self._variable
 
     def auth(self):
-        if self._auth:
-            return self._auth
-        self._auth = AuthManager(self._graph_instance)
+        self._auth = self._auth or AuthManager(self._graph_instance)
         return self._auth
 
     def task(self):
-        if self._task:
-            return self._task
-        self._task = TaskManager(self._graph_instance)
+        self._task = self._task or TaskManager(self._graph_instance)
         return self._task
 
     def metrics(self):
-        if self._metrics:
-            return self._metrics
-        self._metrics = MetricsManager(self._graph_instance)
+        self._metrics = self._metrics or MetricsManager(self._graph_instance)
         return self._metrics
 
     def traverser(self):
-        if self._traverser:
-            return self._traverser
-        self._traverser = TraverserManager(self._graph_instance)
+        self._traverser = self._traverser or TraverserManager(self._graph_instance)
         return self._traverser

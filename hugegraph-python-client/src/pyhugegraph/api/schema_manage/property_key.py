@@ -27,7 +27,7 @@ from pyhugegraph.utils.util import check_if_success, check_if_authorized
 class PropertyKey(HugeParamsBase):
     def __init__(self, graph_instance, session):
         super().__init__(graph_instance)
-        self.session = session
+        self.__session = session
 
     @decorator_params
     def asInt(self):
@@ -101,7 +101,7 @@ class PropertyKey(HugeParamsBase):
             f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/"
             f'{self._parameter_holder.get_value("name")}'
         )
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
         if response.status_code == 200 and check_if_authorized(response):
             self._parameter_holder.set("not_exist", False)
         return self
@@ -115,7 +115,7 @@ class PropertyKey(HugeParamsBase):
         if "cardinality" in dic:
             property_keys["cardinality"] = dic["cardinality"]
         url = f"{self._host}/graphs/{self._graph_name}/schema/propertykeys"
-        response = self.session.post(
+        response = self.__session.post(
             url, data=json.dumps(property_keys), auth=self._auth, headers=self._headers
         )
         self.clean_parameter_holder()
@@ -138,7 +138,7 @@ class PropertyKey(HugeParamsBase):
             f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/"
             f"{property_name}/?action=append"
         )
-        response = self.session.put(
+        response = self.__session.put(
             url, data=json.dumps(data), auth=self._auth, headers=self._headers
         )
         self.clean_parameter_holder()
@@ -161,7 +161,7 @@ class PropertyKey(HugeParamsBase):
             f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/"
             f"{property_name}/?action=eliminate"
         )
-        response = self.session.put(
+        response = self.__session.put(
             url, data=json.dumps(data), auth=self._auth, headers=self._headers
         )
         self.clean_parameter_holder()
@@ -176,7 +176,7 @@ class PropertyKey(HugeParamsBase):
     def remove(self):
         dic = self._parameter_holder.get_dic()
         url = f'{self._host}/graphs/{self._graph_name}/schema/propertykeys/{dic["name"]}'
-        response = self.session.delete(url)
+        response = self.__session.delete(url)
         self.clean_parameter_holder()
         if check_if_success(
             response,
