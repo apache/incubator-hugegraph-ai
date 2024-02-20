@@ -48,7 +48,7 @@ class GremlinManager(HugeParamsBase):
             headers=self._headers,
             timeout=self._timeout,
         )
-        error = NotFoundError(f"Gremlin can't get results: {response.content}")
+        error = NotFoundError(f"Gremlin can't get results: {str(response.content)}")
         if check_if_success(response, error):
             return ResponseData(json.loads(response.content)).result
         return ""

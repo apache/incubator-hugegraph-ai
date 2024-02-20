@@ -57,7 +57,7 @@ class GraphManager(HugeParamsBase):
             headers=self._headers,
             timeout=self._timeout,
         )
-        if check_if_success(response, CreateError(f"create vertex failed: {response.content}")):
+        if check_if_success(response, CreateError(f"create vertex failed: {str(response.content)}")):
             res = VertexData(json.loads(response.content))
             return res
         return None
@@ -75,7 +75,7 @@ class GraphManager(HugeParamsBase):
             headers=self._headers,
             timeout=self._timeout,
         )
-        if check_if_success(response, CreateError(f"create vertexes failed: {response.content}")):
+        if check_if_success(response, CreateError(f"create vertexes failed: {str(response.content)}")):
             res = []
             for item in json.loads(response.content):
                 res.append(VertexData({"id": item}))
@@ -93,7 +93,7 @@ class GraphManager(HugeParamsBase):
             headers=self._headers,
             timeout=self._timeout,
         )
-        if check_if_success(response, UpdateError(f"append vertex failed: {response.content}")):
+        if check_if_success(response, UpdateError(f"append vertex failed: {str(response.content)}")):
             res = VertexData(json.loads(response.content))
             return res
         return None
@@ -111,7 +111,7 @@ class GraphManager(HugeParamsBase):
             headers=self._headers,
             timeout=self._timeout,
         )
-        if check_if_success(response, UpdateError(f"eliminate vertex failed: {response.content}")):
+        if check_if_success(response, UpdateError(f"eliminate vertex failed: {str(response.content)}")):
             res = VertexData(json.loads(response.content))
             return res
         return None
@@ -122,7 +122,7 @@ class GraphManager(HugeParamsBase):
         response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
-        if check_if_success(response, NotFoundError(f"Vertex not found: {response.content}")):
+        if check_if_success(response, NotFoundError(f"Vertex not found: {str(response.content)}")):
             res = VertexData(json.loads(response.content))
             return res
         return None
@@ -143,7 +143,7 @@ class GraphManager(HugeParamsBase):
         response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
-        if check_if_success(response, NotFoundError(f"Vertex not found: {response.content}")):
+        if check_if_success(response, NotFoundError(f"Vertex not found: {str(response.content)}")):
             res = []
             for item in json.loads(response.content)["vertices"]:
                 res.append(VertexData(item))
@@ -169,7 +169,7 @@ class GraphManager(HugeParamsBase):
         response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
-        if check_if_success(response, NotFoundError(f"Vertex not found: {response.content}")):
+        if check_if_success(response, NotFoundError(f"Vertex not found: {str(response.content)}")):
             res = []
             for item in json.loads(response.content)["vertices"]:
                 res.append(VertexData(item))
@@ -181,7 +181,7 @@ class GraphManager(HugeParamsBase):
         response = self.__session.delete(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
-        if check_if_success(response, RemoveError(f"remove vertex failed: {response.content}")):
+        if check_if_success(response, RemoveError(f"remove vertex failed: {str(response.content)}")):
             return response.content
         return None
 
@@ -201,7 +201,7 @@ class GraphManager(HugeParamsBase):
             headers=self._headers,
             timeout=self._timeout,
         )
-        if check_if_success(response, CreateError(f"created edge failed: {response.content}")):
+        if check_if_success(response, CreateError(f"created edge failed: {str(response.content)}")):
             res = EdgeData(json.loads(response.content))
             return res
         return None
@@ -228,7 +228,7 @@ class GraphManager(HugeParamsBase):
             headers=self._headers,
             timeout=self._timeout,
         )
-        if check_if_success(response, CreateError(f"created edges failed:  {response.content}")):
+        if check_if_success(response, CreateError(f"created edges failed:  {str(response.content)}")):
             res = []
             for item in json.loads(response.content):
                 res.append(EdgeData({"id": item}))
@@ -246,7 +246,7 @@ class GraphManager(HugeParamsBase):
             headers=self._headers,
             timeout=self._timeout,
         )
-        if check_if_success(response, UpdateError(f"append edge failed: {response.content}")):
+        if check_if_success(response, UpdateError(f"append edge failed: {str(response.content)}")):
             res = EdgeData(json.loads(response.content))
             return res
         return None
@@ -262,7 +262,7 @@ class GraphManager(HugeParamsBase):
             headers=self._headers,
             timeout=self._timeout,
         )
-        if check_if_success(response, UpdateError(f"eliminate edge failed: {response.content}")):
+        if check_if_success(response, UpdateError(f"eliminate edge failed: {str(response.content)}")):
             res = EdgeData(json.loads(response.content))
             return res
         return None
@@ -273,7 +273,7 @@ class GraphManager(HugeParamsBase):
         response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
-        if check_if_success(response, NotFoundError(f"not found edge: {response.content}")):
+        if check_if_success(response, NotFoundError(f"not found edge: {str(response.content)}")):
             res = EdgeData(json.loads(response.content))
             return res
         return None
@@ -309,7 +309,7 @@ class GraphManager(HugeParamsBase):
         response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
-        if check_if_success(response, NotFoundError(f"not found edges: {response.content}")):
+        if check_if_success(response, NotFoundError(f"not found edges: {str(response.content)}")):
             res = []
             for item in json.loads(response.content)["edges"]:
                 res.append(EdgeData(item))
@@ -322,7 +322,7 @@ class GraphManager(HugeParamsBase):
         response = self.__session.delete(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
-        if check_if_success(response, RemoveError(f"remove edge failed: {response.content}")):
+        if check_if_success(response, RemoveError(f"remove edge failed: {str(response.content)}")):
             return response.content
         return None
 

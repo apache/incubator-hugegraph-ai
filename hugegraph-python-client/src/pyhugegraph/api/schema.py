@@ -76,7 +76,7 @@ class SchemaManager(HugeParamsBase):
     def getSchema(self):
         url = f"{self._host}/graphs/{self._graph_name}/schema"
         response = self.__session.get(url, auth=self._auth, headers=self._headers)
-        error = NotFoundError(f"schema not found: {response.content}")
+        error = NotFoundError(f"schema not found: {str(response.content)}")
         if check_if_success(response, error):
             schema = json.loads(response.content)
             return schema
@@ -85,7 +85,7 @@ class SchemaManager(HugeParamsBase):
     def getPropertyKey(self, property_name):
         url = f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/{property_name}"
         response = self.__session.get(url, auth=self._auth, headers=self._headers)
-        error = NotFoundError(f"PropertyKey not found: {response.content}")
+        error = NotFoundError(f"PropertyKey not found: {str(response.content)}")
         if check_if_success(response, error):
             property_keys_data = PropertyKeyData(json.loads(response.content))
             return property_keys_data
@@ -104,7 +104,7 @@ class SchemaManager(HugeParamsBase):
     def getVertexLabel(self, name):
         url = f"{self._host}/graphs/{self._graph_name}/schema/vertexlabels/{name}"
         response = self.__session.get(url, auth=self._auth, headers=self._headers)
-        error = NotFoundError(f"VertexLabel not found: {response.content}")
+        error = NotFoundError(f"VertexLabel not found: {str(response.content)}")
         if check_if_success(response, error):
             res = VertexLabelData(json.loads(response.content))
             return res
@@ -122,7 +122,7 @@ class SchemaManager(HugeParamsBase):
     def getEdgeLabel(self, label_name):
         url = f"{self._host}/graphs/{self._graph_name}/schema/edgelabels/{label_name}"
         response = self.__session.get(url, auth=self._auth, headers=self._headers)
-        error = NotFoundError(f"EdgeLabel not found: {response.content}")
+        error = NotFoundError(f"EdgeLabel not found: {str(response.content)}")
         if check_if_success(response, error):
             res = EdgeLabelData(json.loads(response.content))
             return res
@@ -149,7 +149,7 @@ class SchemaManager(HugeParamsBase):
     def getIndexLabel(self, name):
         url = f"{self._host}/graphs/{self._graph_name}/schema/indexlabels/{name}"
         response = self.__session.get(url, auth=self._auth, headers=self._headers)
-        error = NotFoundError(f"EdgeLabel not found: {response.content}")
+        error = NotFoundError(f"EdgeLabel not found: {str(response.content)}")
         if check_if_success(response, error):
             res = IndexLabelData(json.loads(response.content))
             return res

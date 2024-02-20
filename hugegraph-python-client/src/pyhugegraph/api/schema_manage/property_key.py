@@ -121,10 +121,10 @@ class PropertyKey(HugeParamsBase):
         self.clean_parameter_holder()
         if check_if_success(
             response,
-            CreateError(f'CreateError: "create PropertyKey failed", Detail: {response.content}'),
+            CreateError(f'CreateError: "create PropertyKey failed", Detail: {str(response.content)}'),
         ):
-            return f"create PropertyKey success, Detail: {response.content}"
-        return f"create PropertyKey failed, Detail: {response.content}"
+            return f"create PropertyKey success, Detail: {str(response.content)}"
+        return f"create PropertyKey failed, Detail: {str(response.content)}"
 
     @decorator_params
     def append(self):
@@ -144,10 +144,10 @@ class PropertyKey(HugeParamsBase):
         self.clean_parameter_holder()
         if check_if_success(
             response,
-            UpdateError(f'UpdateError: "append PropertyKey failed", Detail: {response.content}'),
+            UpdateError(f'UpdateError: "append PropertyKey failed", Detail: {str(response.content)}'),
         ):
-            return f"append PropertyKey success, Detail: {response.content}"
-        return f"append PropertyKey failed, Detail: {response.content}"
+            return f"append PropertyKey success, Detail: {str(response.content)}"
+        return f"append PropertyKey failed, Detail: {str(response.content)}"
 
     @decorator_params
     def eliminate(self):
@@ -170,7 +170,7 @@ class PropertyKey(HugeParamsBase):
         )
         if check_if_success(response, error):
             return f"eliminate PropertyKey success, Detail: {str(response.content)}"
-        return f"eliminate PropertyKey failed, Detail: {response.content}"
+        return f"eliminate PropertyKey failed, Detail: {str(response.content)}"
 
     @decorator_params
     def remove(self):
@@ -185,4 +185,4 @@ class PropertyKey(HugeParamsBase):
             ),
         ):
             return f'delete PropertyKey success, Detail: {dic["name"]}'
-        return f"delete PropertyKey failed, Detail: {response.content}"
+        return f"delete PropertyKey failed, Detail: {str(response.content)}"
