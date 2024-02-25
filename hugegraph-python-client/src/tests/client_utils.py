@@ -37,6 +37,10 @@ class ClientUtils:
         self.graph = self.client.graph()
         self.graphs = self.client.graphs()
         self.variable = self.client.variable()
+        self.auth = self.client.auth()
+        self.task = self.client.task()
+        self.metrics = self.client.metrics()
+        self.traverser = self.client.traverser()
 
     def init_property_key(self):
         schema = self.schema
@@ -70,6 +74,21 @@ class ClientUtils:
         schema.edgeLabel("created").sourceLabel("person").targetLabel("software").properties(
             "date", "city"
         ).nullableKeys("city").ifNotExist().create()
+
+    def init_index_label(self):
+        schema = self.schema
+        schema.indexLabel("personByCity").onV("person").by("city").secondary().ifNotExist().create()
+        schema.indexLabel("personByAge").onV("person").by("age").range().ifNotExist().create()
+        schema.indexLabel("softwareByPrice").onV("software").by(
+            "price"
+        ).range().ifNotExist().create()
+        schema.indexLabel("softwareByLang").onV("software").by(
+            "lang"
+        ).secondary().ifNotExist().create()
+        schema.indexLabel("knowsByDate").onE("knows").by("date").secondary().ifNotExist().create()
+        schema.indexLabel("createdByDate").onE("created").by(
+            "date"
+        ).secondary().ifNotExist().create()
 
     def init_vertices(self):
         graph = self.graph

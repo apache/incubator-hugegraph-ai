@@ -15,15 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
-
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils.exceptions import NotFoundError
 from pyhugegraph.utils.huge_requests import HugeSession
 from pyhugegraph.utils.util import check_if_success
 
 
-class VariableManager(HugeParamsBase):
+class TaskManager(HugeParamsBase):
     def __init__(self, graph_instance):
         super().__init__(graph_instance)
         self.__session = HugeSession.new_session()
@@ -32,45 +30,43 @@ class VariableManager(HugeParamsBase):
         if self.__session:
             self.__session.close()
 
-    def set(self, key, value):
-        url = f"{self._host}/graphs/{self._graph_name}/variables/{key}"
-        data = {"data": value}
-
-        response = self.__session.put(
+    def list_tasks(self, status=None, limit=None):
+        url = f"{self._host}/graphs/{self._graph_name}/tasks"
+        params = {}
+        if status is not None:
+            params["status"] = status
+        if limit is not None:
+            params["limit"] = limit
+        response = self.__session.get(
             url,
-            data=json.dumps(data),
+            params=params,
             auth=self._auth,
             headers=self._headers,
             timeout=self._timeout,
         )
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+        check_if_success(response, NotFoundError(response.content))
+        return response.json()
 
-    def get(self, key):
-        url = f"{self._host}/graphs/{self._graph_name}/variables/{key}"
-
+    def get_task(self, task_id):
+        url = f"{self._host}/graphs/{self._graph_name}/tasks/{task_id}"
         response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+        check_if_success(response, NotFoundError(response.content))
+        return response.json()
 
-    def all(self):
-        url = f"{self._host}/graphs/{self._graph_name}/variables"
-
-        response = self.__session.get(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
-
-    def remove(self, key):
-        url = f"{self._host}/graphs/{self._graph_name}/variables/{key}"
-
+    def delete_task(self, task_id):
+        url = f"{self._host}/graphs/{self._graph_name}/tasks/{task_id}"
         response = self.__session.delete(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
         check_if_success(response, NotFoundError(response.content))
+        return response.status_code
+
+    def cancel_task(self, task_id):
+        url = f"{self._host}/graphs/{self._graph_name}/tasks/{task_id}?action=cancel"
+        response = self.__session.put(
+            url, auth=self._auth, headers=self._headers, timeout=self._timeout
+        )
+        check_if_success(response, NotFoundError(response.content))
+        return response.json()

@@ -50,42 +50,41 @@ class TestGremlin(unittest.TestCase):
     def test_query_all_vertices(self):
         vertices = self.gremlin.exec("g.V()")
         lst = vertices.get("data", [])
-        assert 6 == len(lst)
+        self.assertEqual(6, len(lst))
 
         self.gremlin.exec("g.V().drop()")
         vertices = self.gremlin.exec("g.V()")
         lst = vertices.get("data", [])
-        assert 0 == len(lst)
+        self.assertEqual(0, len(lst))
 
     def test_query_all_edges(self):
         edges = self.gremlin.exec("g.E()")
         lst = edges.get("data", [])
-        assert 6 == len(lst)
+        self.assertEqual(6, len(lst))
 
         self.gremlin.exec("g.E().drop()")
         edges = self.gremlin.exec("g.E()")
         lst = edges.get("data", [])
-        assert 0 == len(lst)
+        self.assertEqual(0, len(lst))
 
     def test_primitive_object(self):
         result = self.gremlin.exec("1 + 2")
-        print(result)
         result_set = result.get("data", [])
-        assert 1 == len(result_set)
+        self.assertEqual(1, len(result_set))
 
         data = result_set[0]
-        assert isinstance(data, int)
-        assert 3 == data
+        self.assertTrue(isinstance(data, int))
+        self.assertEqual(3, data)
 
     def test_empty_result_set(self):
         result = self.gremlin.exec("g.V().limit(0)")
         lst = result.get("data", [])
-        assert 0 == len(lst)
+        self.assertEqual(0, len(lst))
 
     def test_invalid_gremlin(self):
         with pytest.raises(NotFoundError):
-            assert self.gremlin.exec("g.V2()")
+            self.assertTrue(self.gremlin.exec("g.V2()"))
 
     def test_security_operation(self):
         with pytest.raises(NotFoundError):
-            assert self.gremlin.exec("System.exit(-1)")
+            self.assertTrue(self.gremlin.exec("System.exit(-1)"))

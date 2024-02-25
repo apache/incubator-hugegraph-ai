@@ -56,6 +56,14 @@ class VertexLabelData:
     def userdata(self):
         return self.__user_data
 
+    @property
+    def indexLabels(self):
+        return self.__index_labels
+
+    @property
+    def enableLabelIndex(self):
+        return self.__enable_label_index
+
     def __repr__(self):
         res = (
             f"name: {self.__name}, primary_keys: {self.__primary_keys}, "

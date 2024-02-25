@@ -27,33 +27,29 @@ from pyhugegraph.utils.util import check_if_success
 class GraphsManager(HugeParamsBase):
     def __init__(self, graph_instance):
         super().__init__(graph_instance)
-        self.session = self.set_session(HugeSession.new_session())
-
-    def set_session(self, session):
-        self.session = session
-        return session
+        self.__session = HugeSession.new_session()
 
     def close(self):
-        if self.session:
-            self.session.close()
+        if self.__session:
+            self.__session.close()
 
     def get_all_graphs(self):
         url = f"{self._host}/graphs"
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
         return ""
 
     def get_version(self):
         url = f"{self._host}/versions"
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
         return ""
 
     def get_graph_info(self):
         url = f"{self._host}/graphs/{self._graph_name}"
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
         return ""
@@ -63,14 +59,14 @@ class GraphsManager(HugeParamsBase):
             f"{self._host}/graphs/{self._graph_name}/clear?confirm_message="
             f"{Constants.CONFORM_MESSAGE}"
         )
-        response = self.session.delete(url, auth=self._auth, headers=self._headers)
+        response = self.__session.delete(url, auth=self._auth, headers=self._headers)
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
         return ""
 
     def get_graph_config(self):
         url = self._host + "/graphs" + "/" + self._graph_name + "/conf"
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
         return ""

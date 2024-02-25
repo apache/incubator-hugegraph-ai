@@ -41,5 +41,5 @@ def decorator_create(func, *args, **kwargs):
 def decorator_auth(func, *args, **kwargs):
     response = args[0]
     if response.status_code == 401:
-        raise NotAuthorizedError(f"NotAuthorized: {response.content}")
+        raise NotAuthorizedError(f"NotAuthorized: {str(response.content)}")
     return func(*args, **kwargs)

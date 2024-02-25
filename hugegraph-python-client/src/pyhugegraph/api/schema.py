@@ -35,29 +35,25 @@ from pyhugegraph.utils.util import check_if_success
 class SchemaManager(HugeParamsBase):
     def __init__(self, graph_instance):
         super().__init__(graph_instance)
-        self.session = self.set_session(HugeSession.new_session())
-
-    def set_session(self, session):
-        self.session = session
-        return session
+        self.__session = HugeSession.new_session()
 
     def close(self):
-        if self.session:
-            self.session.close()
+        if self.__session:
+            self.__session.close()
 
     """
     create schemas, including propertyKey/vertexLabel/edgeLabel/indexLabel
     """
 
     def propertyKey(self, property_name):
-        property_key = PropertyKey(self._graph_instance, self.session)
+        property_key = PropertyKey(self._graph_instance, self.__session)
         property_key.create_parameter_holder()
         property_key.add_parameter("name", property_name)
         property_key.add_parameter("not_exist", True)
         return property_key
 
     def vertexLabel(self, vertex_name):
-        vertex_label = VertexLabel(self._graph_instance, self.session)
+        vertex_label = VertexLabel(self._graph_instance, self.__session)
         vertex_label.create_parameter_holder()
         vertex_label.add_parameter("name", vertex_name)
         # vertex_label.add_parameter("id_strategy", "AUTOMATIC")
@@ -65,101 +61,103 @@ class SchemaManager(HugeParamsBase):
         return vertex_label
 
     def edgeLabel(self, name):
-        edge_label = EdgeLabel(self._graph_instance, self.session)
+        edge_label = EdgeLabel(self._graph_instance, self.__session)
         edge_label.create_parameter_holder()
         edge_label.add_parameter("name", name)
         edge_label.add_parameter("not_exist", True)
         return edge_label
 
     def indexLabel(self, name):
-        index_label = IndexLabel(self._graph_instance, self.session)
+        index_label = IndexLabel(self._graph_instance, self.__session)
         index_label.create_parameter_holder()
         index_label.add_parameter("name", name)
         return index_label
 
-    """
-    create schemas
-    """
-
     def getSchema(self):
         url = f"{self._host}/graphs/{self._graph_name}/schema"
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
-        error = NotFoundError(f"schema not found: {response.content}")
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
+        error = NotFoundError(f"schema not found: {str(response.content)}")
         if check_if_success(response, error):
             schema = json.loads(response.content)
             return schema
+        return None
 
     def getPropertyKey(self, property_name):
         url = f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/{property_name}"
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
-        error = NotFoundError(f"PropertyKey not found: {response.content}")
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
+        error = NotFoundError(f"PropertyKey not found: {str(response.content)}")
         if check_if_success(response, error):
             property_keys_data = PropertyKeyData(json.loads(response.content))
             return property_keys_data
+        return None
 
     def getPropertyKeys(self):
         url = f"{self._host}/graphs/{self._graph_name}/schema/propertykeys"
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
         res = []
         if check_if_success(response):
             for item in json.loads(response.content)["propertykeys"]:
                 res.append(PropertyKeyData(item))
             return res
+        return None
 
     def getVertexLabel(self, name):
         url = f"{self._host}/graphs/{self._graph_name}/schema/vertexlabels/{name}"
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
-        error = NotFoundError(f"VertexLabel not found: {response.content}")
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
+        error = NotFoundError(f"VertexLabel not found: {str(response.content)}")
         if check_if_success(response, error):
             res = VertexLabelData(json.loads(response.content))
             return res
+        return None
 
     def getVertexLabels(self):
         url = f"{self._host}/graphs/{self._graph_name}/schema/vertexlabels"
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
         res = []
         if check_if_success(response):
             for item in json.loads(response.content)["vertexlabels"]:
                 res.append(VertexLabelData(item))
-            return res
+        return res
 
     def getEdgeLabel(self, label_name):
         url = f"{self._host}/graphs/{self._graph_name}/schema/edgelabels/{label_name}"
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
-        error = NotFoundError(f"EdgeLabel not found: {response.content}")
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
+        error = NotFoundError(f"EdgeLabel not found: {str(response.content)}")
         if check_if_success(response, error):
             res = EdgeLabelData(json.loads(response.content))
             return res
+        return None
 
     def getEdgeLabels(self):
         url = f"{self._host}/graphs/{self._graph_name}/schema/edgelabels"
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
         res = []
         if check_if_success(response):
             for item in json.loads(response.content)["edgelabels"]:
                 res.append(EdgeLabelData(item))
-            return res
+        return res
 
     def getRelations(self):
         url = f"{self._host}/graphs/{self._graph_name}/schema/edgelabels"
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
         res = []
         if check_if_success(response):
             for item in json.loads(response.content)["edgelabels"]:
                 res.append(EdgeLabelData(item).relations())
-            return res
+        return res
 
     def getIndexLabel(self, name):
         url = f"{self._host}/graphs/{self._graph_name}/schema/indexlabels/{name}"
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
-        error = NotFoundError(f"EdgeLabel not found: {response.content}")
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
+        error = NotFoundError(f"EdgeLabel not found: {str(response.content)}")
         if check_if_success(response, error):
             res = IndexLabelData(json.loads(response.content))
             return res
+        return None
 
     def getIndexLabels(self):
         url = f"{self._host}/graphs/{self._graph_name}/schema/indexlabels"
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
         res = []
         if check_if_success(response):
             for item in json.loads(response.content)["indexlabels"]:

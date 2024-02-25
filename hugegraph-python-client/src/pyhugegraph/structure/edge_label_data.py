@@ -70,6 +70,14 @@ class EdgeLabelData:
         res = f"{self.__source_label}--{self.__name}-->{self.__target_label}"
         return res
 
+    @property
+    def indexLabels(self):
+        return self.__index_labels
+
+    @property
+    def enableLabelIndex(self):
+        return self.__enable_label_index
+
     def __repr__(self):
         res = f"name: {self.__name}, properties: {self.__properties}"
         return res

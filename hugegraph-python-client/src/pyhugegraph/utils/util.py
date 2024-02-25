@@ -36,7 +36,9 @@ def create_exception(response_content):
 
 def check_if_authorized(response):
     if response.status_code == 401:
-        raise NotAuthorizedError(f"Please check your username and password. {response.content}")
+        raise NotAuthorizedError(
+            f"Please check your username and password. {str(response.content)}"
+        )
     return True
 
 

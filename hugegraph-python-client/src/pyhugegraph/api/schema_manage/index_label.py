@@ -17,7 +17,6 @@
 
 import json
 
-import requests
 
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
@@ -28,7 +27,7 @@ from pyhugegraph.utils.util import check_if_authorized, check_if_success
 class IndexLabel(HugeParamsBase):
     def __init__(self, graph_instance, session):
         super().__init__(graph_instance)
-        self.session = session
+        self.__session = session
 
     @decorator_params
     def onV(self, vertex_label):
@@ -68,8 +67,11 @@ class IndexLabel(HugeParamsBase):
 
     @decorator_params
     def ifNotExist(self):
-        url = f'{self._host}/graphs/{self._graph_name}/schema/indexlabels/{self._parameter_holder.get_value("name")}'
-        response = self.session.get(url, auth=self._auth, headers=self._headers)
+        url = (
+            f"{self._host}/graphs/{self._graph_name}/schema/indexlabels/"
+            f'{self._parameter_holder.get_value("name")}'
+        )
+        response = self.__session.get(url, auth=self._auth, headers=self._headers)
         if response.status_code == 200 and check_if_authorized(response):
             self._parameter_holder.set("not_exist", False)
         return self
@@ -84,7 +86,7 @@ class IndexLabel(HugeParamsBase):
         data["index_type"] = dic["index_type"]
         data["fields"] = list(dic["fields"])
         url = f"{self._host}/graphs/{self._graph_name}/schema/indexlabels"
-        response = self.session.post(
+        response = self.__session.post(
             url, data=json.dumps(data), auth=self._auth, headers=self._headers
         )
         self.clean_parameter_holder()
@@ -93,15 +95,17 @@ class IndexLabel(HugeParamsBase):
         )
         if check_if_success(response, error):
             return f'create IndexLabel success, Deatil: "{str(response.content)}"'
+        return None
 
     @decorator_params
     def remove(self):
         name = self._parameter_holder.get_value("name")
         url = f"{self._host}/graphs/{self._graph_name}/schema/indexlabels/{name}"
-        response = self.session.delete(url, auth=self._auth, headers=self._headers)
+        response = self.__session.delete(url, auth=self._auth, headers=self._headers)
         self.clean_parameter_holder()
         error = RemoveError(
             f'RemoveError: "remove IndexLabel failed", Detail "{str(response.content)}"'
         )
         if check_if_success(response, error):
             return f'remove IndexLabel success, Deatil: "{str(response.content)}"'
+        return None
