@@ -21,7 +21,8 @@ from hugegraph_llm.operators.kg_construction_task import KgBuilder
 
 
 if __name__ == "__main__":
-    default_llm = LLMs().get_llm()
+    builder = KgBuilder(LLMs().get_llm())
+
     TEXT = (
         "Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with"
         " since 2010. James, in his professional life, works as a journalist. Additionally, Sarah"
@@ -31,47 +32,30 @@ if __name__ == "__main__":
         " their distinctive digital presence through their respective webpages, showcasing their"
         " varied interests and experiences."
     )
-    builder = KgBuilder(default_llm)
 
-    # spo triple extract
-    builder.extract_spo_triple(TEXT).print_result().commit_to_hugegraph(spo=True).run()
-    # build kg with only text
-    builder.extract_nodes_relationships(TEXT).disambiguate_word_sense().commit_to_hugegraph().run()
-    # build kg with text and schemas
-    nodes_schemas = [
-        {
-            "label": "Person",
-            "primary_key": "name",
-            "properties": {
-                "age": "int",
-                "name": "text",
-                "occupation": "text",
-            },
-        },
-        {
-            "label": "Webpage",
-            "primary_key": "name",
-            "properties": {"name": "text", "url": "text"},
-        },
-    ]
-    relationships_schemas = [
-        {
-            "start": "Person",
-            "end": "Person",
-            "type": "roommate",
-            "properties": {"start": "int"},
-        },
-        {
-            "start": "Person",
-            "end": "Webpage",
-            "type": "owns",
-            "properties": {},
-        },
-    ]
+    schema = {
+        "vertices": [
+            {"vertex_label": "person", "properties": ["name", "age", "occupation"]},
+            {"vertex_label": "webpage", "properties": ["name", "url"]},
+        ],
+        "edges": [
+            {
+                "edge_label": "roommate",
+                "source_vertex_label": "person",
+                "target_vertex_label": "person",
+                "properties": {},
+            }
+        ],
+    }
 
     (
-        builder.parse_text_to_data_with_schemas(TEXT, nodes_schemas, relationships_schemas)
-        .disambiguate_data_with_schemas()
-        .commit_data_to_kg()
+        builder.import_schema(from_hugegraph="xxx")
+        .print_result()
+        # .import_schema(from_extraction="xxx").print_result()
+        # .import_schema(from_user_defined=xxx).print_result()
+        .extract_triples(TEXT)
+        .print_result()
+        .disambiguate_word_sense()
+        .commit_to_hugegraph()
         .run()
     )
