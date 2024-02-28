@@ -16,6 +16,8 @@
 # under the License.
 
 
+from typing import Dict, Any
+
 from hugegraph_llm.llms.base import BaseLLM
 from hugegraph_llm.operators.common_op.check_schema import CheckSchema
 from hugegraph_llm.operators.common_op.print_result import PrintResult
@@ -58,7 +60,8 @@ class KgBuilder:
         self.operators.append(PrintResult())
         return self
 
-    def run(self):
-        result = ""
+    def run(self) -> Dict[str, Any]:
+        context = ""
         for operator in self.operators:
-            result = operator.run(result)
+            context = operator.run(context)
+        return context
