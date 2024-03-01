@@ -61,7 +61,7 @@ class KgBuilder:
         return self
 
     def run(self) -> Dict[str, Any]:
-        context = ""
+        context = None
         for operator in self.operators:
             context = operator.run(context)
         return context
