@@ -87,7 +87,6 @@ def graph_rag(text):
 
 def build_kg(text, schema, disambiguate_word_sense, commit_to_hugegraph):
     builder = KgBuilder(LLMs().get_llm())
-    # 判断 schema 是不是json结构
     if schema:
         try:
             schema = json.loads(schema.strip())

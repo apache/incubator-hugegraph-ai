@@ -51,8 +51,7 @@ if __name__ == "__main__":
     (
         builder
         # .import_schema(from_hugegraph="xxx")
-        .print_result()
-        # .import_schema(from_extraction="xxx").print_result()
+        # .import_schema(from_extraction="xxx")
         .import_schema(from_user_defined=schema)
         .print_result()
         .extract_triples(TEXT)
