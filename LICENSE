@@ -199,3 +199,41 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+============================================================================
+Apache HugeGraph-Ai(incubator) SUBCOMPONENTS:
+
+The Apache HugeGraph-Ai(incubator) project contains subcomponents
+with separate copyright notices and license terms. Your use of the source
+code for the these subcomponents is subject to the terms and conditions
+of the following licenses.
+
+========================================================================
+Apache-2.0 license
+========================================================================
+
+The following components are provided under a Apache-2.0 license. See project link for details.
+
+    requests v2.31.0 https://github.com/psf/requests
+    openai v0.28.1 https://github.com/openai/openai-python
+    retry v0.9.2 https://github.com/invl/retry
+    nltk v3.8.1 https://github.com/nltk/nltk
+    gradio v4.19.2 https://github.com/gradio-app/gradio
+
+========================================================================
+BSD licenses
+========================================================================
+
+The following components are provided under a BSD license. See project link for details.
+
+    decorator v5.1.1 https://github.com/micheles/decorator
+
+========================================================================
+MIT licenses
+========================================================================
+
+The following components are provided under the MIT License. See project link for details.
+
+    setuptools v67.6.1 https://github.com/pypa/setuptools
+    urllib3 v2.0.7 https://github.com/urllib3/urllib3
+    tiktoken v0.5.1 https://github.com/openai/tiktoken
