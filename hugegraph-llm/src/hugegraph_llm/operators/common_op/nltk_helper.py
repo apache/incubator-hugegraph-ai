@@ -77,4 +77,5 @@ class NLTKHelper:
         return str(path)
 
 
-nltk_helper = NLTKHelper()
+if __name__ == '__main__':
+    NLTKHelper().stopwords()

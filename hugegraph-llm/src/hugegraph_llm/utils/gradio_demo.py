@@ -248,6 +248,7 @@ with gr.Blocks() as hugegraph_llm:
     btn = gr.Button("Run gremlin query on HugeGraph")
     btn.click(fn=run_gremlin_query, inputs=inp, outputs=out)  # pylint: disable=no-member
 
-app = FastAPI()
-app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
-uvicorn.run(app, host="0.0.0.0", port=8001)
+if __name__ == '__main__':
+    app = FastAPI()
+    app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
+    uvicorn.run(app, host="0.0.0.0", port=8001)
