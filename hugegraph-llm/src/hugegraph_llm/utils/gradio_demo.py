@@ -33,6 +33,7 @@ from pyhugegraph.client import PyHugeClient
 
 def init_hg_test_data():
     client = get_hg_client()
+    client.graphs().clear_graph_all_data()
     schema = client.schema()
     schema.propertyKey("name").asText().ifNotExist().create()
     schema.propertyKey("birthDate").asText().ifNotExist().create()
