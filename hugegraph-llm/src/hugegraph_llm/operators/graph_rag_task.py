@@ -20,10 +20,10 @@ from typing import Dict, Any, Optional, List
 
 from hugegraph_llm.llms.base import BaseLLM
 from hugegraph_llm.llms.init_llm import LLMs
+from hugegraph_llm.operators.common_op.print_result import PrintResult
 from hugegraph_llm.operators.hugegraph_op.graph_rag_query import GraphRAGQuery
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
-from pyhugegraph.client import PyHugeClient
 
 
 class GraphRAG:
@@ -52,14 +52,12 @@ class GraphRAG:
 
     def query_graph_for_rag(
         self,
-        graph_client: Optional[PyHugeClient] = None,
         max_deep: int = 2,
         max_items: int = 30,
         prop_to_match: Optional[str] = None,
     ):
         self._operators.append(
             GraphRAGQuery(
-                client=graph_client,
                 max_deep=max_deep,
                 max_items=max_items,
                 prop_to_match=prop_to_match,
@@ -78,6 +76,10 @@ class GraphRAG:
         )
         return self
 
+    def print_result(self):
+        self._operators.append(PrintResult())
+        return self
+
     def run(self, **kwargs) -> Dict[str, Any]:
         if len(self._operators) == 0:
             self.extract_keyword().query_graph_for_rag().synthesize_answer()
@@ -85,5 +87,5 @@ class GraphRAG:
         context = kwargs
         context["llm"] = self._llm
         for op in self._operators:
-            context = op.run(context=context)
+            context = op.run(context)
         return context

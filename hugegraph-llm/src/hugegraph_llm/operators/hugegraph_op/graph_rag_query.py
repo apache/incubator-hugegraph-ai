@@ -19,6 +19,8 @@
 import re
 from typing import Any, Dict, Optional, List, Set, Tuple
 
+from hugegraph_llm.utils.config import Config
+from hugegraph_llm.utils.constants import Constants
 from pyhugegraph.client import PyHugeClient
 
 
@@ -65,12 +67,18 @@ class GraphRAGQuery:
 
     def __init__(
         self,
-        client: Optional[PyHugeClient] = None,
         max_deep: int = 2,
         max_items: int = 30,
         prop_to_match: Optional[str] = None,
     ):
-        self._client = client
+        config = Config(section=Constants.HUGEGRAPH_CONFIG)
+        self._client = PyHugeClient(
+            config.get_graph_ip(),
+            config.get_graph_port(),
+            config.get_graph_name(),
+            config.get_graph_user(),
+            config.get_graph_pwd(),
+        )
         self._max_deep = max_deep
         self._max_items = max_items
         self._prop_to_match = prop_to_match
@@ -231,9 +239,9 @@ class GraphRAGQuery:
             return self._schema
 
         schema = self._client.schema()
-        vertex_schema = schema.get_vertex_labels()
-        edge_schema = schema.get_edge_labels()
-        relationships = schema.get_relations()
+        vertex_schema = schema.getVertexLabels()
+        edge_schema = schema.getEdgeLabels()
+        relationships = schema.getRelations()
 
         self._schema = (
             f"Node properties: {vertex_schema}\n"

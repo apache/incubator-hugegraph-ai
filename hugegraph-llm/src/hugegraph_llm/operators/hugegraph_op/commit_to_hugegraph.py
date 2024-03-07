@@ -14,7 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
+from typing import Dict, Any
 
 from hugegraph_llm.utils.config import Config
 from hugegraph_llm.utils.constants import Constants
@@ -34,7 +34,7 @@ class CommitToKg:
         )
         self.schema = self.client.schema()
 
-    def run(self, data: dict):
+    def run(self, data: dict) -> Dict[str, Any]:
         if "schema" not in data:
             self.schema_free_mode(data["triples"])
         else:
@@ -43,6 +43,7 @@ class CommitToKg:
             edges = data["edges"]
             self.init_schema(schema)
             self.init_graph(vertices, edges)
+        return data
 
     def init_graph(self, vertices, edges):
         vids = {}

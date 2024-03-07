@@ -23,17 +23,10 @@ from hugegraph_llm.llms.base import BaseLLM
 from hugegraph_llm.llms.init_llm import LLMs
 from hugegraph_llm.operators.common_op.nltk_helper import NLTKHelper
 
-DEFAULT_KEYWORDS_EXTRACT_TEMPLATE_TMPL = (
-    "A question is provided below. Given the question, "
-    "extract up to {max_keywords} keywords from the text. "
-    "Focus on extracting the keywords that we can use "
-    "to best lookup answers to the question. "
-    "Avoid stopwords.\n"
-    "---------------------\n"
-    "{question}\n"
-    "---------------------\n"
-    "Provide keywords in the following comma-separated format: 'KEYWORDS: <keywords>'"
-)
+DEFAULT_KEYWORDS_EXTRACT_TEMPLATE_TMPL = """extract {max_keywords} keywords from the text:
+    {question}
+    Provide keywords in the following comma-separated format: 'KEYWORDS: <keywords>'
+    """
 
 DEFAULT_KEYWORDS_EXPAND_TEMPLATE_TMPL = (
     "Generate synonyms or possible form of keywords up to {max_keywords} in total,\n"

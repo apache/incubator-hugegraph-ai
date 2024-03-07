@@ -31,7 +31,7 @@ class ErnieBotClient(BaseLLM):
         self.c = Config(section=Constants.LLM_CONFIG)
         self.api_key = self.c.get_llm_api_key()
         self.secret_key = self.c.get_llm_secret_key()
-        self.base_url = self.c.get_llm_ernie_url()
+        self.base_url = self.c.get_llm_url()
         self.get_access_token()
 
     def get_access_token(self):
@@ -61,7 +61,12 @@ class ErnieBotClient(BaseLLM):
             raise Exception(
                 f"Request failed with code {response.status_code}, message: {response.text}"
             )
-        return response.text
+        response_json = json.loads(response.text)
+        if "error_code" in response_json:
+            raise Exception(
+                f"Error {response_json['error_code']}: {response_json['error_msg']}"
+            )
+        return response_json["result"]
 
     def generate_streaming(
         self,

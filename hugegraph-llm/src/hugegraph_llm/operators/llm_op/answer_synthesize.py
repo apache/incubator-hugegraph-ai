@@ -91,4 +91,4 @@ class AnswerSynthesize:
         if verbose:
             print(f"\033[91mANSWER: {response}\033[0m")
 
-        return context
+        return context["answer"]

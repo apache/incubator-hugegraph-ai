@@ -31,6 +31,12 @@ class Config:
         self.config.read(self.config_file)
         self.section = section
 
+    def update_config(self, updates):
+        for key, value in updates.items():
+            self.config.set(self.section, key, value)
+        with open(self.config_file, "w", encoding="utf-8") as configfile:
+            self.config.write(configfile)
+
     def get_config(self):
         return self.config
 
@@ -55,8 +61,8 @@ class Config:
     def get_llm_secret_key(self):
         return self.config.get(self.section, "secret_key")
 
-    def get_llm_ernie_url(self):
-        return self.config.get(self.section, "ernie_url")
+    def get_llm_url(self):
+        return self.config.get(self.section, "llm_url")
 
     def get_llm_type(self):
         return self.config.get(self.section, "type")
