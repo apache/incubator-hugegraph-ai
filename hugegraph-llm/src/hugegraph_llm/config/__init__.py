@@ -14,19 +14,3 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
-
-[hugegraph]
-ip = 127.0.0.1
-port = 8080
-user = admin
-pwd = admin
-graph = hugegraph
-
-[llm]
-type = openai
-api_key = xxx
-secret_key = xxx
-llm_url = https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro?access_token=
-model_name = gpt-3.5-turbo-16k
-max_token = 4000

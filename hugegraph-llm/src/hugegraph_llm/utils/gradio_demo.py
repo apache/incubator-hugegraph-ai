@@ -125,7 +125,7 @@ def init_config(
     ip, port, user, pwd, graph, type, api_key, secret_key, llm_url, model_name, max_token
 ):
     root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    config_file = os.path.join(root_dir, "config", "config.ini")
+    config_file = os.path.join(root_dir, "hugegraph_llm", "config", "config.ini")
 
     config = Config(config_file=config_file, section="hugegraph")
     config.update_config({"ip": ip, "port": port, "user": user, "pwd": pwd, "graph": graph})
@@ -249,7 +249,7 @@ with gr.Blocks() as hugegraph_llm:
     btn = gr.Button("Run gremlin query on HugeGraph")
     btn.click(fn=run_gremlin_query, inputs=inp, outputs=out)  # pylint: disable=no-member
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = FastAPI()
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
     uvicorn.run(app, host="0.0.0.0", port=8001)
