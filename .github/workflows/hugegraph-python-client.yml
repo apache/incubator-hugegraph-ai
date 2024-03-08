@@ -32,7 +32,7 @@ jobs:
       run: |
         export PYTHONPATH=$(pwd)/hugegraph-python-client/src
         echo ${PYTHONPATH}
-        python hugegraph-python-client/example/hugegraph_example.py
+        python hugegraph-python-client/src/pyhugegraph/example/hugegraph_example.py
     - name: Test with pytest
       run: |
         pytest
