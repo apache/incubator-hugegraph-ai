@@ -21,15 +21,25 @@ import os
 
 class Config:
     def __init__(self, config_file=None, section=None):
-        if config_file is None:
-            root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            config_file = os.path.join(root_dir, "config", "config.ini")
         if section is None:
             raise Exception("config section cannot be none !")
-        self.config_file = config_file
+        self.config_file = self.init_config_file(config_file)
         self.config = configparser.ConfigParser()
         self.config.read(self.config_file)
         self.section = section
+
+    def init_config_file(self, config_file):
+        if config_file is None:
+            root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            config_file = os.path.join(root_dir, "hugegraph_llm", "config", "config.ini")
+
+        if not os.path.exists(config_file):
+            config = configparser.ConfigParser()
+            config.add_section("llm")
+            config.add_section("hugegraph")
+            with open(config_file, "w", encoding="utf-8") as file:
+                config.write(file)
+        return config_file
 
     def update_config(self, updates):
         for key, value in updates.items():

@@ -63,9 +63,7 @@ class ErnieBotClient(BaseLLM):
             )
         response_json = json.loads(response.text)
         if "error_code" in response_json:
-            raise Exception(
-                f"Error {response_json['error_code']}: {response_json['error_msg']}"
-            )
+            raise Exception(f"Error {response_json['error_code']}: {response_json['error_msg']}")
         return response_json["result"]
 
     def generate_streaming(
