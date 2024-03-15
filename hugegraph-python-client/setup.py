@@ -26,14 +26,14 @@ with open("requirements.txt", encoding="utf-8") as fp:
 
 setuptools.setup(
     name="hugegraph-python",
-	version="1.3.0",
+    version="1.3.0",
     author="Apache HugeGraph Contributors",
     author_email="dev@hugegraph.apache.org",
     install_requires=install_requires,
     description="A Python SDK for Apache HugeGraph",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/incubator-hugegraph-ai",
+    url="https://github.com/apache/incubator-hugegraph-ai",
     packages=setuptools.find_packages(where="src", exclude=["tests"]),
     package_dir={"": "src"},
     classifiers=[
