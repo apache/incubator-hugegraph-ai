@@ -16,6 +16,9 @@
 # limitations under the License.
 #
 
+# if we don't want to exit after '|', remove "-o pipefail"
+set -exo pipefail
+
 GROUP="hugegraph"
 # current repository name
 REPO="${GROUP}-ai"
@@ -29,38 +32,38 @@ GIT_BRANCH="release-${RELEASE_VERSION}"
 RELEASE_VERSION=${RELEASE_VERSION:?"Please input the release version behind script"}
 
 WORK_DIR=$(
-  cd "$(dirname "$0")" || exit
+  cd "$(dirname "$0")"
   pwd
 )
-cd "${WORK_DIR}" || exit
+cd "${WORK_DIR}"
 echo "In the work dir: $(pwd)"
 
 # clean old dir then build a new one
 rm -rf dist && mkdir -p dist/apache-${REPO}
 
 # step1: package the source code
-cd ../../ || exit
+cd ../
 git archive --format=tar.gz \
-  --output="${GROUP}-dist/scripts/dist/apache-${REPO}/apache-${REPO}-incubating-${RELEASE_VERSION}-src.tar.gz" \
-  --prefix="apache-${REPO}-incubating-${RELEASE_VERSION}-src/" "${GIT_BRANCH}" || exit
+  --output="./scripts/dist/apache-${REPO}/apache-${REPO}-incubating-${RELEASE_VERSION}-src.tar.gz" \
+  --prefix="apache-${REPO}-incubating-${RELEASE_VERSION}-src/" "${GIT_BRANCH}"
 
-cd - || exit
+cd -
 
 # step2: copy the binary file (Optional)
 # Note: it's optional for project to generate binary package (skip this step if not need)
 #cp -v ../../target/apache-${REPO}-incubating-"${RELEASE_VERSION}".tar.gz \
-#  dist/apache-${REPO} || exit
+#  dist/apache-${REPO}
 
 # step3: sign + hash
 ##### 3.1 sign in source & binary package
-gpg --version 1>/dev/null || exit
-cd ./dist/apache-${REPO} || exit
+gpg --version 1>/dev/null
+cd ./dist/apache-${REPO}
 for i in *.tar.gz; do
   echo "$i" && gpg --armor --output "$i".asc --detach-sig "$i"
 done
 
 ##### 3.2 Generate SHA512 file
-shasum --version 1>/dev/null || exit
+shasum --version 1>/dev/null
 for i in *.tar.gz; do
   shasum -a 512 "$i" | tee "$i".sha512
 done
@@ -69,12 +72,12 @@ done
 echo "#### start to check signature & hashcode ####"
 for i in *.tar.gz; do
   echo "$i"
-  gpg --verify "$i".asc "$i" || exit
+  gpg --verify "$i".asc "$i"
 done
 
 for i in *.tar.gz; do
   echo "$i"
-  shasum -a 512 --check "$i".sha512 || exit
+  shasum -a 512 --check "$i".sha512
 done
 
 # step4: upload to Apache-SVN
@@ -86,7 +89,7 @@ rm -rfv ${SVN_DIR}
 svn co "https://dist.apache.org/repos/dist/dev/incubator/${GROUP}" ${SVN_DIR}
 mkdir -p ${SVN_DIR}/"${RELEASE_VERSION}"
 cp -v apache-${REPO}/*tar.gz* "${SVN_DIR}/${RELEASE_VERSION}"
-cd ${SVN_DIR} || exit
+cd ${SVN_DIR}
 
 ##### 4.2 check status first
 svn status
@@ -96,10 +99,10 @@ svn status
 
 ##### 4.3 commit & push files
 if [ "$USERNAME" = "" ]; then
-  svn commit -m "submit files for ${REPO} ${RELEASE_VERSION}" || exit
+  svn commit -m "submit files for ${REPO} ${RELEASE_VERSION}"
 else
   svn commit -m "submit files for ${REPO} ${RELEASE_VERSION}" \
-    --username "${USERNAME}" --password "${PASSWORD}" || exit
+    --username "${USERNAME}" --password "${PASSWORD}"
 fi
 
 echo "Finished all, please check all steps in script manually again!"
