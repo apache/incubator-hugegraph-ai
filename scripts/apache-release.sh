@@ -44,8 +44,8 @@ rm -rf dist && mkdir -p dist/apache-${REPO}
 # step1: package the source code
 cd ../
 git archive --format=tar.gz \
-  --output="./scripts/dist/apache-${REPO}/apache-${REPO}-incubating-${RELEASE_VERSION}-src.tar.gz" \
-  --prefix="apache-${REPO}-incubating-${RELEASE_VERSION}-src/" "${GIT_BRANCH}"
+  --output="scripts/dist/apache-${REPO}/apache-${REPO}-incubating-${RELEASE_VERSION}-src.tar.gz" \
+  --prefix="apache-${REPO}-incubating-${RELEASE_VERSION}-src/" "${GIT_BRANCH}" || exit
 
 cd -
 
