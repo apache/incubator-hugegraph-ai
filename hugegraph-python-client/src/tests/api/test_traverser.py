@@ -208,7 +208,7 @@ class TestTraverserManager(unittest.TestCase):
             ],
         )
 
-        sources = {"ids": [marko], "label": "person", "properties": {}}
+        sources = {"ids": [marko]}
         fusiform_similarity_result = self.traverser.fusiform_similarity(
             sources,
             label="knows",
