@@ -2,17 +2,17 @@
 
 A Python SDK for Apache HugeGraph
 
-# Installation
+## Installation
 
 ```shell
 pip3 install hugegraph-python
 ```
 
-## Install from source
+### Install from source
 
 release soon
 
-# Examples
+## Examples
 
 ```python
 from pyhugegraph.client import PyHugeClient
