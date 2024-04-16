@@ -71,7 +71,15 @@ class GraphRAGQuery:
         max_items: int = 30,
         prop_to_match: Optional[str] = None,
     ):
+        """
+        初始化函数
+        :param max_deep: 搜索的最大深度，默认为2
+        :param max_items: 在每个深度上最多搜索的项目数量，默认为30
+        :param prop_to_match: 用于匹配的属性名称，可选，默认为None
+        """
+        # 从配置文件中加载HugeGraph的配置信息
         config = Config(section=Constants.HUGEGRAPH_CONFIG)
+        # 使用配置信息创建HugeGraph客户端
         self._client = PyHugeClient(
             config.get_graph_ip(),
             config.get_graph_port(),
@@ -79,10 +87,11 @@ class GraphRAGQuery:
             config.get_graph_user(),
             config.get_graph_pwd(),
         )
-        self._max_deep = max_deep
-        self._max_items = max_items
-        self._prop_to_match = prop_to_match
-        self._schema = ""
+        self._max_deep = max_deep  # 设置最大深度
+        self._max_items = max_items  # 设置每个深度的最大项目数
+        self._prop_to_match = prop_to_match  # 设置匹配的属性
+        self._schema = ""  # 初始化schema为空字符串
+
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._client is None:
