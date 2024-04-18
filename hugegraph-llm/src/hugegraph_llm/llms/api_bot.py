@@ -19,10 +19,11 @@ import json
 from typing import Optional, List, Dict, Any, Callable
 
 import requests
+from retry import retry
+
 from hugegraph_llm.llms.base import BaseLLM
 from hugegraph_llm.utils.config import Config
 from hugegraph_llm.utils.constants import Constants
-from retry import retry
 
 
 class ApiBotClient(BaseLLM):

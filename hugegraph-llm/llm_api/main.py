@@ -27,9 +27,9 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from transformers import AutoModelForCausalLM, AutoTokenizer, Qwen2ForCausalLM, Qwen2Tokenizer, GenerationConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer, Qwen2ForCausalLM, \
+    Qwen2Tokenizer, GenerationConfig
 from typing_extensions import TypedDict
-
 
 
 class Message(TypedDict):
@@ -54,7 +54,8 @@ class Role(Enum):
 
 
 class QwenChatModel:
-    def __init__(self, model_name_or_path: str, device: str = "cuda", generation_config: GenerationConfig = None):
+    def __init__(self, model_name_or_path: str, device: str = "cuda",
+                 generation_config: GenerationConfig = None):
         self.model: Qwen2ForCausalLM = AutoModelForCausalLM.from_pretrained(
             model_name_or_path,
             torch_dtype="auto",
@@ -77,7 +78,8 @@ class QwenChatModel:
             max_new_tokens=512,
         )
         generated_ids = [
-            output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+            output_ids[len(input_ids):]
+            for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
         ]
         response = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
         return response
@@ -130,7 +132,8 @@ def create_app(chat_model: "QwenChatModel") -> "FastAPI":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid length")
 
         if len(request.messages) % 2 == 0:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only supports u/a/u/a/u...")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail="Only supports u/a/u/a/u...")
 
         print("* ============= [input] ============= *")
         print(request.messages[-1]["content"])

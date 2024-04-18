@@ -22,13 +22,13 @@ import os
 import gradio as gr
 import uvicorn
 from fastapi import FastAPI
+from pyhugegraph.client import PyHugeClient
 
 from hugegraph_llm.llms.init_llm import LLMs
 from hugegraph_llm.operators.graph_rag_task import GraphRAG
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.utils.config import Config
 from hugegraph_llm.utils.constants import Constants
-from pyhugegraph.client import PyHugeClient
 
 
 def init_hg_test_data():
@@ -122,7 +122,7 @@ def get_hg_client():
 
 
 def init_config(
-    ip, port, user, pwd, graph, type, api_key, secret_key, llm_url, model_name, max_token
+        ip, port, user, pwd, graph, type, api_key, secret_key, llm_url, model_name, max_token
 ):
     root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     config_file = os.path.join(root_dir, "hugegraph_llm", "config", "config.ini")
@@ -148,7 +148,7 @@ def init_config(
 
 if __name__ == "__main__":
     app = FastAPI()
-    config = Config(section=Constants.HUGEGRAPH_CONFIG)
+    initial_config = Config(section=Constants.HUGEGRAPH_CONFIG)
     with gr.Blocks() as hugegraph_llm:
         gr.Markdown(
             """# HugeGraph LLM Demo
@@ -156,11 +156,11 @@ if __name__ == "__main__":
         )
         with gr.Row():
             inp = [
-                gr.Textbox(value=config.get_graph_ip(), label="ip"),
-                gr.Textbox(value=config.get_graph_port(), label="port"),
-                gr.Textbox(value=config.get_graph_user(), label="user"),
-                gr.Textbox(value=config.get_graph_pwd(), label="pwd"),
-                gr.Textbox(value=config.get_graph_name(), label="graph"),
+                gr.Textbox(value=initial_config.get_graph_ip(), label="ip"),
+                gr.Textbox(value=initial_config.get_graph_port(), label="port"),
+                gr.Textbox(value=initial_config.get_graph_user(), label="user"),
+                gr.Textbox(value=initial_config.get_graph_pwd(), label="pwd"),
+                gr.Textbox(value=initial_config.get_graph_name(), label="graph"),
             ]
         gr.Markdown("2. Set up the LLM.")
         with gr.Row():
@@ -194,13 +194,16 @@ if __name__ == "__main__":
         """
         )
         TEXT = (
-            "Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with"
-            " since 2010. James, in his professional life, works as a journalist. Additionally, Sarah"
-            " is the proud owner of the website www.sarahsplace.com, while James manages his own"
-            " webpage, though the specific URL is not mentioned here. These two individuals, Sarah and"
-            " James, have not only forged a strong personal bond as roommates but have also carved out"
-            " their distinctive digital presence through their respective webpages, showcasing their"
-            " varied interests and experiences."
+            "Meet Sarah, a 30-year-old attorney, and her roommate,"
+            " James, whom she's shared a home with since 2010. James,"
+            " in his professional life, works as a journalist. Additionally,"
+            " Sarah is the proud owner of the website www.sarahsplace.com,"
+            " while James manages his own webpage, though the specific URL"
+            " is not mentioned here. These two individuals, Sarah and James,"
+            " have not only forged a strong personal bond as roommates but"
+            " have also carved out their distinctive digital presence through"
+            " their respective webpages, showcasing their varied interests and"
+            " experiences."
         )
 
         SCHEMA = """{
