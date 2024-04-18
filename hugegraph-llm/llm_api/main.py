@@ -152,9 +152,9 @@ def create_app(chat_model: "QwenChatModel") -> "FastAPI":
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Local LLM Api for Hugegraph LLM.")
-    parser.add_argument("--model_name_or_path", type=str, help="Device to use")
+    parser.add_argument("--model_name_or_path", type=str, required=True, help="Model name or path")
     parser.add_argument("--device", type=str, default="cpu", help="Device to use")
-    parser.add_argument("--port", type=int, default=7999, help="Device to use")
+    parser.add_argument("--port", type=int, default=7999, help="Port of the service")
 
     args = parser.parse_args()
 
