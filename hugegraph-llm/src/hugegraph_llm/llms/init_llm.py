@@ -33,6 +33,7 @@ class LLMs:
         if self.config.get_llm_type() == "openai":
             return OpenAIChat(
                 api_key=self.config.get_llm_api_key(),
+                api_base=self.config.get_llm_api_base(),
                 model_name=self.config.get_llm_model_name(),
                 max_tokens=self.config.get_llm_max_token(),
             )

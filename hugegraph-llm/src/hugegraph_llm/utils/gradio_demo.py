@@ -127,7 +127,7 @@ def init_config(
     root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     config_file = os.path.join(root_dir, "hugegraph_llm", "config", "config.ini")
 
-    config = Config(config_file=config_file, section="hugegraph")
+    config = Config(config_file=config_file, section=Constants.HUGEGRAPH_CONFIG)
     config.update_config({"ip": ip, "port": port, "user": user, "pwd": pwd, "graph": graph})
 
     config = Config(config_file=config_file, section="llm")
@@ -146,110 +146,110 @@ def init_config(
     return content
 
 
-with gr.Blocks() as hugegraph_llm:
-    gr.Markdown(
-        """# HugeGraph LLM Demo
-    1. Set up the HugeGraph server."""
-    )
-    with gr.Row():
-        inp = [
-            gr.Textbox(value="127.0.0.1", label="ip"),
-            gr.Textbox(value="8080", label="port"),
-            gr.Textbox(value="admin", label="user"),
-            gr.Textbox(value="admin", label="pwd"),
-            gr.Textbox(value="hugegraph", label="graph"),
-        ]
-    gr.Markdown("2. Set up the LLM.")
-    with gr.Row():
-        inp2 = [
-            gr.Textbox(value="ernie", label="type"),
-            gr.Textbox(value="", label="api_key"),
-            gr.Textbox(value="", label="secret_key"),
-            gr.Textbox(
-                value="https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/"
-                "chat/completions_pro?access_token=",
-                label="llm_url",
-            ),
-            gr.Textbox(value="wenxin", label="model_name"),
-            gr.Textbox(value="4000", label="max_token"),
-        ]
-    with gr.Row():
-        out = gr.Textbox(label="Output")
-    btn = gr.Button("Initialize configs")
-    btn.click(fn=init_config, inputs=inp + inp2, outputs=out)  # pylint: disable=no-member
-
-    gr.Markdown(
-        """## 1. build knowledge graph
-    - Text: The input text.
-    - Schema: Accepts two types of text as below:
-        - User-defined JSON format Schema. 
-        - Specify the name of the HugeGraph graph instance, and it will 
-        automatically extract the schema of the graph.
-    - Disambiguate word sense: Whether to perform word sense disambiguation.
-    - Commit to hugegraph: Whether to commit the constructed knowledge graph to the 
-    HugeGraph server.
-    """
-    )
-    TEXT = (
-        "Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with"
-        " since 2010. James, in his professional life, works as a journalist. Additionally, Sarah"
-        " is the proud owner of the website www.sarahsplace.com, while James manages his own"
-        " webpage, though the specific URL is not mentioned here. These two individuals, Sarah and"
-        " James, have not only forged a strong personal bond as roommates but have also carved out"
-        " their distinctive digital presence through their respective webpages, showcasing their"
-        " varied interests and experiences."
-    )
-
-    SCHEMA = """{
-        "vertices": [
-            {"vertex_label": "person", "properties": ["name", "age", "occupation"]},
-            {"vertex_label": "webpage", "properties": ["name", "url"]}
-        ],
-        "edges": [
-            {
-                "edge_label": "roommate",
-                "source_vertex_label": "person",
-                "target_vertex_label": "person",
-                "properties": {}
-            }
-        ]
-    }
-    """
-
-    with gr.Row():
-        inp = [
-            gr.Textbox(value=TEXT, label="Text"),
-            gr.Textbox(value=SCHEMA, label="Schema"),
-            gr.Textbox(value="false", label="Disambiguate word sense"),
-            gr.Textbox(value="false", label="Commit to hugegraph"),
-        ]
-    with gr.Row():
-        out = gr.Textbox(label="Output")
-    btn = gr.Button("Build knowledge graph")
-    btn.click(fn=build_kg, inputs=inp, outputs=out)  # pylint: disable=no-member
-
-    gr.Markdown("""## 2. Retrieval augmented generation by hugegraph""")
-    with gr.Row():
-        inp = gr.Textbox(value="Tell me about Al Pacino.", label="Question")
-    with gr.Row():
-        out = gr.Textbox(label="Answer")
-    btn = gr.Button("Retrieval augmented generation")
-    btn.click(fn=graph_rag, inputs=inp, outputs=out)  # pylint: disable=no-member
-
-    gr.Markdown("""## 3. Others """)
-    with gr.Row():
-        inp = []
-        out = gr.Textbox(label="Output")
-    btn = gr.Button("Initialize HugeGraph test data")
-    btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
-
-    with gr.Row():
-        inp = gr.Textbox(value="g.V().limit(10)", label="Gremlin query")
-        out = gr.Textbox(label="Output")
-    btn = gr.Button("Run gremlin query on HugeGraph")
-    btn.click(fn=run_gremlin_query, inputs=inp, outputs=out)  # pylint: disable=no-member
-
 if __name__ == "__main__":
     app = FastAPI()
+    config = Config(section=Constants.HUGEGRAPH_CONFIG)
+    with gr.Blocks() as hugegraph_llm:
+        gr.Markdown(
+            """# HugeGraph LLM Demo
+        1. Set up the HugeGraph server."""
+        )
+        with gr.Row():
+            inp = [
+                gr.Textbox(value=config.get_graph_ip(), label="ip"),
+                gr.Textbox(value=config.get_graph_port(), label="port"),
+                gr.Textbox(value=config.get_graph_user(), label="user"),
+                gr.Textbox(value=config.get_graph_pwd(), label="pwd"),
+                gr.Textbox(value=config.get_graph_name(), label="graph"),
+            ]
+        gr.Markdown("2. Set up the LLM.")
+        with gr.Row():
+            inp2 = [
+                gr.Textbox(value="ernie", label="type"),
+                gr.Textbox(value="", label="api_key"),
+                gr.Textbox(value="", label="secret_key"),
+                gr.Textbox(
+                    value="https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/"
+                          "chat/completions_pro?access_token=",
+                    label="llm_url",
+                ),
+                gr.Textbox(value="wenxin", label="model_name"),
+                gr.Textbox(value="4000", label="max_token"),
+            ]
+        with gr.Row():
+            out = gr.Textbox(label="Output")
+        btn = gr.Button("Initialize configs")
+        btn.click(fn=init_config, inputs=inp + inp2, outputs=out)  # pylint: disable=no-member
+
+        gr.Markdown(
+            """## 1. build knowledge graph
+        - Text: The input text.
+        - Schema: Accepts two types of text as below:
+            - User-defined JSON format Schema. 
+            - Specify the name of the HugeGraph graph instance, and it will 
+            automatically extract the schema of the graph.
+        - Disambiguate word sense: Whether to perform word sense disambiguation.
+        - Commit to hugegraph: Whether to commit the constructed knowledge graph to the 
+        HugeGraph server.
+        """
+        )
+        TEXT = (
+            "Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with"
+            " since 2010. James, in his professional life, works as a journalist. Additionally, Sarah"
+            " is the proud owner of the website www.sarahsplace.com, while James manages his own"
+            " webpage, though the specific URL is not mentioned here. These two individuals, Sarah and"
+            " James, have not only forged a strong personal bond as roommates but have also carved out"
+            " their distinctive digital presence through their respective webpages, showcasing their"
+            " varied interests and experiences."
+        )
+
+        SCHEMA = """{
+            "vertices": [
+                {"vertex_label": "person", "properties": ["name", "age", "occupation"]},
+                {"vertex_label": "webpage", "properties": ["name", "url"]}
+            ],
+            "edges": [
+                {
+                    "edge_label": "roommate",
+                    "source_vertex_label": "person",
+                    "target_vertex_label": "person",
+                    "properties": {}
+                }
+            ]
+        }
+        """
+
+        with gr.Row():
+            inp = [
+                gr.Textbox(value=TEXT, label="Text"),
+                gr.Textbox(value=SCHEMA, label="Schema"),
+                gr.Textbox(value="false", label="Disambiguate word sense"),
+                gr.Textbox(value="false", label="Commit to hugegraph"),
+            ]
+        with gr.Row():
+            out = gr.Textbox(label="Output")
+        btn = gr.Button("Build knowledge graph")
+        btn.click(fn=build_kg, inputs=inp, outputs=out)  # pylint: disable=no-member
+
+        gr.Markdown("""## 2. Retrieval augmented generation by hugegraph""")
+        with gr.Row():
+            inp = gr.Textbox(value="Tell me about Al Pacino.", label="Question")
+        with gr.Row():
+            out = gr.Textbox(label="Answer")
+        btn = gr.Button("Retrieval augmented generation")
+        btn.click(fn=graph_rag, inputs=inp, outputs=out)  # pylint: disable=no-member
+
+        gr.Markdown("""## 3. Others """)
+        with gr.Row():
+            inp = []
+            out = gr.Textbox(label="Output")
+        btn = gr.Button("Initialize HugeGraph test data")
+        btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
+
+        with gr.Row():
+            inp = gr.Textbox(value="g.V().limit(10)", label="Gremlin query")
+            out = gr.Textbox(label="Output")
+        btn = gr.Button("Run gremlin query on HugeGraph")
+        btn.click(fn=run_gremlin_query, inputs=inp, outputs=out)  # pylint: disable=no-member
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
     uvicorn.run(app, host="0.0.0.0", port=8001)

@@ -19,11 +19,10 @@ import json
 from typing import Optional, List, Dict, Any, Callable
 
 import requests
-from retry import retry
-
 from hugegraph_llm.llms.base import BaseLLM
 from hugegraph_llm.utils.config import Config
 from hugegraph_llm.utils.constants import Constants
+from retry import retry
 
 
 class ApiBotClient(BaseLLM):
@@ -42,18 +41,8 @@ class ApiBotClient(BaseLLM):
             messages = [{"role": "user", "content": prompt}]
         url = self.base_url
         # parameter check failed, temperature range is (0, 1.0]
-        for i in range(len(messages)):
-            messages[i]["tool_calls"] = []
         payload = json.dumps({
-            "model": "string",
             "messages": messages,
-            "tools": [],
-            "do_sample": True,
-            "temperature": 0,
-            "top_p": 0,
-            "n": 1,
-            "max_tokens": 0,
-            "stream": False
         })
         headers = {"Content-Type": "application/json"}
         response = requests.request("POST", url, headers=headers, data=payload, timeout=30)
@@ -62,7 +51,7 @@ class ApiBotClient(BaseLLM):
                 f"Request failed with code {response.status_code}, message: {response.text}"
             )
         response_json = json.loads(response.text)
-        return response_json["choices"][0]["message"]["content"]
+        return response_json["content"]
 
     def generate_streaming(
             self,

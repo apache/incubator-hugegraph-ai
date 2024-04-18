@@ -31,11 +31,14 @@ class OpenAIChat(BaseLLM):
     def __init__(
         self,
         api_key: Optional[str] = None,
+        api_base: Optional[str] = None,
         model_name: str = "gpt-3.5-turbo",
         max_tokens: int = 1000,
         temperature: float = 0.0,
     ) -> None:
         openai.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        if api_base is not None:
+            openai.api_base = api_base or os.getenv("OPENAI_API_BASE")
         self.model = model_name
         self.max_tokens = max_tokens
         self.temperature = temperature

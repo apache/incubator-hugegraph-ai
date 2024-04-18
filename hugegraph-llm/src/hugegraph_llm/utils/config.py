@@ -17,6 +17,7 @@
 
 import configparser
 import os
+from .constants import Constants
 
 
 class Config:
@@ -35,8 +36,8 @@ class Config:
 
         if not os.path.exists(config_file):
             config = configparser.ConfigParser()
-            config.add_section("llm")
-            config.add_section("hugegraph")
+            config.add_section(Constants.HUGEGRAPH_CONFIG)
+            config.add_section(Constants.LLM_CONFIG)
             with open(config_file, "w", encoding="utf-8") as file:
                 config.write(file)
         return config_file
@@ -67,6 +68,9 @@ class Config:
 
     def get_llm_api_key(self):
         return self.config.get(self.section, "api_key")
+
+    def get_llm_api_base(self):
+        return self.config.get(self.section, "api_base")
 
     def get_llm_secret_key(self):
         return self.config.get(self.section, "secret_key")
