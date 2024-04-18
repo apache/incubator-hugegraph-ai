@@ -150,11 +150,20 @@ def create_app(chat_model: "QwenChatModel") -> "FastAPI":
 
 
 def main():
-    model_path = "Qwen/Qwen1.5-0.5B-Chat"
-    device = "cuda"
+    import argparse
+    parser = argparse.ArgumentParser(description="Local LLM Api for Hugegraph LLM.")
+    parser.add_argument("--model_name_or_path", type=str, help="Device to use")
+    parser.add_argument("--device", type=str, default="cpu", help="Device to use")
+    parser.add_argument("--port", type=int, default=7999, help="Device to use")
+
+    args = parser.parse_args()
+
+    model_path = args.model_name_or_path
+    device = args.device
+    port = args.port
     chat_model = QwenChatModel(model_path, device)
     app = create_app(chat_model)
-    uvicorn.run(app, host="0.0.0.0", port=7999, workers=1)
+    uvicorn.run(app, host="0.0.0.0", port=port, workers=1)
 
 
 if __name__ == '__main__':

@@ -2,5 +2,5 @@ torch==2.1.2
 transformers==4.39.3
 fastapi==0.110.1
 accelerate==0.29.2
-chardet==5.2.0
+charset-normalizer==3.3.2
 uvicorn==0.29.0

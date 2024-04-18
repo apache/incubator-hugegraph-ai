@@ -41,7 +41,7 @@ class ApiBotClient(BaseLLM):
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
         url = self.base_url
-        # parameter check failed, temperature range is (0, 1.0]
+
         payload = json.dumps({
             "messages": messages,
         })
@@ -69,7 +69,7 @@ class ApiBotClient(BaseLLM):
         return 4096
 
     def get_llm_type(self) -> str:
-        return "api"
+        return "local_api"
 
 
 if __name__ == "__main__":
