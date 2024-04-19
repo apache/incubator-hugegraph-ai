@@ -17,6 +17,7 @@
 
 
 import gc
+import sys
 from contextlib import asynccontextmanager
 from enum import Enum
 from typing import Literal, List
@@ -28,7 +29,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from transformers import AutoModelForCausalLM, AutoTokenizer, Qwen2ForCausalLM, \
     Qwen2Tokenizer, GenerationConfig
-from typing_extensions import TypedDict
+if sys.version_info >= (3, 12):  # >=3.12
+    from typing import TypedDict
+else:  # <3.12
+    from typing_extensions import TypedDict
 
 
 class Message(TypedDict):
