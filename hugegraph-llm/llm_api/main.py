@@ -17,10 +17,9 @@
 
 
 import gc
-import json
 from contextlib import asynccontextmanager
 from enum import Enum
-from typing import Any, Literal, List, Dict
+from typing import Literal, List
 
 import torch
 import uvicorn
@@ -142,7 +141,8 @@ def main():
     parser.add_argument("--model_name_or_path", type=str, required=True, help="Model name or path")
     parser.add_argument("--device", type=str, default="cpu", help="Device to use")
     parser.add_argument("--port", type=int, default=7999, help="Port of the service")
-    parser.add_argument("--max_new_tokens", type=int, default=512, help="The max number of tokens to generate")
+    parser.add_argument("--max_new_tokens", type=int, default=512,
+                        help="The max number of tokens to generate")
 
     args = parser.parse_args()
 
