@@ -84,6 +84,7 @@ class GraphRAGQuery:
         self._prop_to_match = prop_to_match
         self._schema = ""
 
+
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._client is None:
             if isinstance(context.get("graph_client"), PyHugeClient):

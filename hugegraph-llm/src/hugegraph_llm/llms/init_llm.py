@@ -17,6 +17,7 @@
 
 from hugegraph_llm.llms.openai import OpenAIChat
 from hugegraph_llm.llms.ernie_bot import ErnieBotClient
+from hugegraph_llm.llms.api_bot import ApiBotClient
 from hugegraph_llm.utils.config import Config
 from hugegraph_llm.utils.constants import Constants
 
@@ -32,9 +33,12 @@ class LLMs:
         if self.config.get_llm_type() == "openai":
             return OpenAIChat(
                 api_key=self.config.get_llm_api_key(),
+                api_base=self.config.get_llm_api_base(),
                 model_name=self.config.get_llm_model_name(),
                 max_tokens=self.config.get_llm_max_token(),
             )
+        if self.config.get_llm_type() == "local_api":
+            return ApiBotClient()
         raise Exception("llm type is not supported !")
 
 
