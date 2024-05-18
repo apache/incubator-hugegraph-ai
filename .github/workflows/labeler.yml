@@ -28,7 +28,12 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/labeler@v5
+      - name: Clone repository
+        uses: actions/checkout@v4
+        with:
+          repository: "${{ github.repository }}"
+      - name: Add labels
+        uses: actions/labeler@v5
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           sync-labels: true
