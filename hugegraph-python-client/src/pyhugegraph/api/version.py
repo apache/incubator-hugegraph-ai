@@ -32,7 +32,6 @@ class VersionManager(HugeParamsBase):
 
     def version(self):
         url = f"{self._host}/versions"
-        print(url)
         response = self.__session.get(
             url, auth=self._auth, headers=self._headers, timeout=self._timeout
         )
