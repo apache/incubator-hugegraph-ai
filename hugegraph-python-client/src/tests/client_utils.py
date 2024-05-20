@@ -41,6 +41,7 @@ class ClientUtils:
         self.task = self.client.task()
         self.metrics = self.client.metrics()
         self.traverser = self.client.traverser()
+        self.version = self.client.version()
 
     def init_property_key(self):
         schema = self.schema

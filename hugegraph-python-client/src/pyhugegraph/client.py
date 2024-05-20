@@ -24,6 +24,7 @@ from pyhugegraph.api.schema import SchemaManager
 from pyhugegraph.api.task import TaskManager
 from pyhugegraph.api.traverser import TraverserManager
 from pyhugegraph.api.variable import VariableManager
+from pyhugegraph.api.version import VersionManager
 from pyhugegraph.structure.graph_instance import GraphInstance
 
 
@@ -40,6 +41,7 @@ class PyHugeClient(HugeParamsBase):
         self._task = None
         self._metrics = None
         self._traverser = None
+        self._version = None
 
     def schema(self):
         self._schema = self._schema or SchemaManager(self._graph_instance)
@@ -76,3 +78,7 @@ class PyHugeClient(HugeParamsBase):
     def traverser(self):
         self._traverser = self._traverser or TraverserManager(self._graph_instance)
         return self._traverser
+
+    def version(self):
+        self._version = self._version or VersionManager(self._graph_instance)
+        return self._version
