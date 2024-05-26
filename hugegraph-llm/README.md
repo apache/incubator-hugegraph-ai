@@ -32,11 +32,11 @@ graph systems and large language models.
 - Configure HugeGraph database connection information and LLM information, which can be configured in two ways:
   1. Configure the `./hugegraph-llm/src/config/config.ini` file
   2. In gradio, after completing the configurations for LLM and HugeGraph, click on `Initialize configs`, the complete and initialized configuration file will be outputted.
-
 - offline download NLTK stopwords
     ```bash
     python3 ./hugegraph_llm/operators/common_op/nltk_helper.py
     ```
+
 ## Examples
 
 ### 1.Build a knowledge graph in HugeGraph through LLM
@@ -112,6 +112,7 @@ The `GraphRAG` class is used to  integrate HugeGraph with large language models 
     ```python
     graph_rag.extract_keyword(text="Tell me about Al Pacino.").print_result()
     ```
+
 2. **Query Graph for Rag**: Retrieve the corresponding keywords and their multi-degree associated relationships from HugeGraph.
 
      ```python
@@ -125,6 +126,7 @@ The `GraphRAG` class is used to  integrate HugeGraph with large language models 
     ```python
     graph_rag.synthesize_answer().print_result()
     ```
+
 4. **Run**: The `run` method is used to execute the above operations.
 
     ```python
