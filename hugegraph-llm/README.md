@@ -16,11 +16,13 @@ graph systems and large language models.
 3.  Knowledge graph supplements answer context (RAG)
 
 ## Environment Requirements
+
 - python 3.8+ 
 - hugegraph 1.0.0+
 
 ## Preparation
-- Start the HugeGraph database, you can do it via Docker. Refer to this [link](https://hub.docker.com/r/hugegraph/hugegraph) for guidance
+
+- Start the HugeGraph database, you can do it via Docker. Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for guidance
 - Start the gradio interactive demo, you can start with the following command, and open http://127.0.0.1:8001 after starting
     ```bash
     # ${PROJECT_ROOT_DIR} is the root directory of hugegraph-ai, which needs to be configured by yourself
