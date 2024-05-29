@@ -12,3 +12,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: psf/black@stable
+        with:
+          src: "hugegraph-llm/src hugegraph-python-client/src"
