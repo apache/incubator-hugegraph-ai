@@ -13,5 +13,5 @@ jobs:
       - uses: actions/checkout@v4
       - uses: psf/black@stable
         with:
-          options: "--check --verbose --line-length 100"
+          options: "--check --diff --line-length 100"
           src: "hugegraph-llm/src hugegraph-python-client/src"
