@@ -180,7 +180,7 @@ class PropertyKey(HugeParamsBase):
     def remove(self):
         dic = self._parameter_holder.get_dic()
         url = f'{self._host}/graphs/{self._graph_name}/schema/propertykeys/{dic["name"]}'
-        response = self.__session.delete(url)
+        response = self.__session.delete(url, auth=self._auth, headers=self._headers)
         self.clean_parameter_holder()
         if check_if_success(
             response,
