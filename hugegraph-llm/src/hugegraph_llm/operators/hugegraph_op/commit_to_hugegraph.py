@@ -14,23 +14,23 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
+
 from typing import Dict, Any
 
-from hugegraph_llm.utils.config import Config
-from hugegraph_llm.utils.constants import Constants
+from hugegraph_llm.config import settings
 from pyhugegraph.client import PyHugeClient
 from pyhugegraph.utils.exceptions import NotFoundError
 
 
 class CommitToKg:
     def __init__(self):
-        config = Config(section=Constants.HUGEGRAPH_CONFIG)
         self.client = PyHugeClient(
-            config.get_graph_ip(),
-            config.get_graph_port(),
-            config.get_graph_name(),
-            config.get_graph_user(),
-            config.get_graph_pwd(),
+            settings.graph_ip,
+            settings.graph_port,
+            settings.graph_name,
+            settings.graph_user,
+            settings.graph_pwd,
         )
         self.schema = self.client.schema()
 

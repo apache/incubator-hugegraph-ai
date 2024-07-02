@@ -17,25 +17,31 @@ graph systems and large language models.
 
 ## Environment Requirements
 
-- python 3.8+ 
+- python 3.9+ 
 - hugegraph 1.0.0+
 
 ## Preparation
 
 - Start the HugeGraph database, you can do it via Docker. Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for guidance
-- Start the gradio interactive demo, you can start with the following command, and open http://127.0.0.1:8001 after starting
+- Clone this project
     ```bash
-    # ${PROJECT_ROOT_DIR} is the root directory of hugegraph-ai, which needs to be configured by yourself
-    export PYTHONPATH=${PROJECT_ROOT_DIR}/hugegraph-llm/src:${PROJECT_ROOT_DIR}/hugegraph-python-client/src
-    python3 ./hugegraph-llm/src/hugegraph_llm/utils/gradio_demo.py
-   ```
-- Configure HugeGraph database connection information and LLM information, which can be configured in two ways:
-  1. Configure the `./hugegraph-llm/src/config/config.ini` file
-  2. In gradio, after completing the configurations for LLM and HugeGraph, click on `Initialize configs`, the complete and initialized configuration file will be outputted.
-- offline download NLTK stopwords
-    ```bash
-    python3 ./hugegraph_llm/operators/common_op/nltk_helper.py
+    git clone https://github.com/apache/incubator-hugegraph-ai.git
     ```
+- Install [hugegraph-python-client](..%2Fhugegraph-python-client) and [hugegraph_llm](src%2Fhugegraph_llm)
+    ```bash
+    cd ./incubator-hugegraph-ai
+    pip install ./hugegraph-python-client
+    pip install ./hugegraph-llm
+    ```
+- Start the gradio interactive demo of **Graph RAG**, you can start with the following command, and open http://127.0.0.1:8001 after starting
+    ```bash
+    python3 -m hugegraph_llm.demo.rag_web_demo
+   ```
+
+- Or start the gradio interactive demo of **Text2Gremlin**, you can start with the following command, and open http://127.0.0.1:8002 after starting
+    ```bash
+    python3 -m hugegraph_llm.demo.gremlin_generate_web_demo
+   ```
 
 ## Examples
 
@@ -48,7 +54,7 @@ The `KgBuilder` class is used to construct a knowledge graph. Here is a brief us
 1. **Initialization**: The `KgBuilder` class is initialized with an instance of a language model. This can be obtained from the `LLMs` class.
 
     ```python
-    from hugegraph_llm.llms.init_llm import LLMs
+    from hugegraph_llm.models.llms.init_llm import LLMs
     from hugegraph_llm.operators.kg_construction_task import KgBuilder
     
     TEXT = ""

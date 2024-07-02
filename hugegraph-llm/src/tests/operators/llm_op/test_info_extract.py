@@ -73,8 +73,9 @@ class TestInfoExtract(unittest.TestCase):
     """
 
     def test_extract_by_regex_with_schema(self):
-        graph = {"vertices": [], "edges": [], "schema": self.schema}
+        graph = {"triples": [], "vertices": [], "edges": [], "schema": self.schema}
         extract_triples_by_regex_with_schema(self.schema, self.llm_output, graph)
+        graph.pop("triples")
         self.assertEqual(
             graph,
             {

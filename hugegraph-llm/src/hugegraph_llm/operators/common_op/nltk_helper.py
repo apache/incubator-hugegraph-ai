@@ -24,6 +24,8 @@ from typing import List, Optional, Dict
 import nltk
 from nltk.corpus import stopwords
 
+from hugegraph_llm.config import resource_path
+
 
 class NLTKHelper:
     _stopwords: Dict[str, Optional[List[str]]] = {
@@ -33,6 +35,7 @@ class NLTKHelper:
 
     def stopwords(self, lang: str = "english") -> List[str]:
         """Get stopwords."""
+        nltk.data.path.append(os.path.join(resource_path, "nltk_data"))
         if self._stopwords.get(lang) is None:
             cache_dir = self.get_cache_dir()
             nltk_data_dir = os.environ.get("NLTK_DATA", cache_dir)

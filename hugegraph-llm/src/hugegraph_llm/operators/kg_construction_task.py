@@ -16,11 +16,15 @@
 # under the License.
 
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
-from hugegraph_llm.llms.base import BaseLLM
+from hugegraph_llm.models.llms.base import BaseLLM
+from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.operators.common_op.check_schema import CheckSchema
 from hugegraph_llm.operators.common_op.print_result import PrintResult
+from hugegraph_llm.operators.index_op.build_vector_index import BuildVectorIndex
+from hugegraph_llm.operators.document_op.chunk_split import ChunkSplit
+from hugegraph_llm.operators.document_op.chunk_embedding import ChunkEmbedding
 from hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph import CommitToKg
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
@@ -28,9 +32,10 @@ from hugegraph_llm.operators.llm_op.info_extract import InfoExtract
 
 
 class KgBuilder:
-    def __init__(self, llm: BaseLLM):
+    def __init__(self, llm: BaseLLM, embedding: Optional[BaseEmbedding] = None):
         self.operators = []
         self.llm = llm
+        self.embedding = embedding
         self.result = None
 
     def import_schema(self, from_hugegraph=None, from_extraction=None, from_user_defined=None):
@@ -44,6 +49,10 @@ class KgBuilder:
             raise Exception("No input data")
         return self
 
+    def chunk_split(self):
+        self.operators.append(ChunkSplit(split_type="sentence", language="zh"))
+        return self
+
     def extract_triples(self, text: str):
         self.operators.append(InfoExtract(self.llm, text))
         return self
@@ -54,6 +63,16 @@ class KgBuilder:
 
     def commit_to_hugegraph(self):
         self.operators.append(CommitToKg())
+        return self
+
+    def do_triples_embedding(self):
+        self.operators.append(ChunkEmbedding(embedding=self.embedding, context_key="triples",
+                                             result_key="triples_embedding"))
+        return self
+
+    def build_vector_index(self):
+        self.operators.append(BuildVectorIndex(context_key="triples",
+                                               embedding_key="triples_embedding"))
         return self
 
     def print_result(self):

@@ -15,4 +15,4 @@
 # specific language governing permissions and limitations
 # under the License.
 
-recursive-include src/hugegraph_llm/config *
+recursive-include src/hugegraph_llm/resources *
