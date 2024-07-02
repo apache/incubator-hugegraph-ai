@@ -18,17 +18,22 @@
 
 from typing import Dict, Any, Optional, List
 
-from hugegraph_llm.llms.base import BaseLLM
-from hugegraph_llm.llms.init_llm import LLMs
+from hugegraph_llm.models.llms.base import BaseLLM
+from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from hugegraph_llm.models.llms.init_llm import LLMs
+from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.operators.common_op.print_result import PrintResult
+from hugegraph_llm.operators.common_op.merge_dedup_rerank import MergeDedupRerank
 from hugegraph_llm.operators.hugegraph_op.graph_rag_query import GraphRAGQuery
+from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
 
 
 class GraphRAG:
-    def __init__(self, llm: Optional[BaseLLM] = None):
+    def __init__(self, llm: Optional[BaseLLM] = None, embedding: Optional[BaseEmbedding] = None):
         self._llm = llm or LLMs().get_llm()
+        self._embedding = embedding or Embeddings().get_embedding()
         self._operators: List[Any] = []
 
     def extract_keyword(
@@ -65,6 +70,26 @@ class GraphRAG:
         )
         return self
 
+    def query_vector_index_for_rag(
+        self,
+        max_items: int = 30
+    ):
+        self._operators.append(
+            VectorIndexQuery(
+                embedding=self._embedding,
+                topk=max_items,
+            )
+        )
+        return self
+
+    def merge_dedup_rerank(self):
+        self._operators.append(
+            MergeDedupRerank(
+                embedding=self._embedding,
+            )
+        )
+        return self
+
     def synthesize_answer(
         self,
         prompt_template: Optional[str] = None,
@@ -86,6 +111,6 @@ class GraphRAG:
 
         context = kwargs
         context["llm"] = self._llm
-        for op in self._operators:
-            context = op.run(context)
+        for operator in self._operators:
+            context = operator.run(context)
         return context

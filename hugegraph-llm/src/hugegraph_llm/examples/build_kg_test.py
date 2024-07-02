@@ -16,7 +16,7 @@
 # under the License.
 
 
-from hugegraph_llm.llms.init_llm import LLMs
+from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 
 

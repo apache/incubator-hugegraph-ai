@@ -18,8 +18,9 @@
 
 from typing import Any, Dict, Optional
 
-from hugegraph_llm.llms.base import BaseLLM
-from hugegraph_llm.llms.init_llm import LLMs
+from hugegraph_llm.models.llms.base import BaseLLM
+from hugegraph_llm.models.llms.init_llm import LLMs
+
 
 DEFAULT_ANSWER_SYNTHESIZE_TEMPLATE_TMPL = (
     "Context information is below.\n"

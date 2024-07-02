@@ -19,7 +19,7 @@
 import os
 
 from hugegraph_llm.operators.graph_rag_task import GraphRAG
-from hugegraph_llm.utils.gradio_demo import init_hg_test_data
+from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data
 
 if __name__ == "__main__":
     init_hg_test_data()

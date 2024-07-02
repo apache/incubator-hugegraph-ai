@@ -19,8 +19,7 @@
 import re
 from typing import Any, Dict, Optional, List, Set, Tuple
 
-from hugegraph_llm.utils.config import Config
-from hugegraph_llm.utils.constants import Constants
+from hugegraph_llm.config import settings
 from pyhugegraph.client import PyHugeClient
 
 
@@ -71,13 +70,12 @@ class GraphRAGQuery:
         max_items: int = 30,
         prop_to_match: Optional[str] = None,
     ):
-        config = Config(section=Constants.HUGEGRAPH_CONFIG)
         self._client = PyHugeClient(
-            config.get_graph_ip(),
-            config.get_graph_port(),
-            config.get_graph_name(),
-            config.get_graph_user(),
-            config.get_graph_pwd(),
+            settings.graph_ip,
+            settings.graph_port,
+            settings.graph_name,
+            settings.graph_user,
+            settings.graph_pwd,
         )
         self._max_deep = max_deep
         self._max_items = max_items
@@ -141,7 +139,7 @@ class GraphRAGQuery:
         result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
         knowledge: Set[str] = self._format_knowledge_from_query_result(query_result=result)
 
-        context["synthesize_context_body"] = list(knowledge)
+        context["graph_result"] = list(knowledge)
         context["synthesize_context_head"] = (
             f"The following are knowledge sequence in max depth {self._max_deep} "
             f"in the form of directed graph like:\n"
@@ -152,7 +150,7 @@ class GraphRAGQuery:
         verbose = context.get("verbose") or False
         if verbose:
             print("\033[93mKNOWLEDGE FROM GRAPH:")
-            print("\n".join(rel for rel in context["synthesize_context_body"]) + "\033[0m")
+            print("\n".join(rel for rel in context["graph_result"]) + "\033[0m")
 
         return context
 

@@ -19,8 +19,8 @@
 import re
 from typing import Set, Dict, Any, Optional
 
-from hugegraph_llm.llms.base import BaseLLM
-from hugegraph_llm.llms.init_llm import LLMs
+from hugegraph_llm.models.llms.base import BaseLLM
+from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.common_op.nltk_helper import NLTKHelper
 
 DEFAULT_KEYWORDS_EXTRACT_TEMPLATE_TMPL = """extract {max_keywords} keywords from the text:
@@ -113,16 +113,13 @@ class KeywordExtract:
         start_token: str = "",
     ) -> Set[str]:
         keywords = []
-        response = response.strip()  # Strip newlines from responses.
-
-        if response.startswith(start_token):
-            response = response[len(start_token) :]
-
-        for k in response.split(","):
-            rk = k
-            if lowercase:
-                rk = rk.lower()
-            keywords.append(rk.strip())
+        matches = re.findall(rf'{start_token}[^\n]+\n?', response)
+        for match in matches:
+            match = match[len(start_token):]
+            for k in re.split(r"[,，]+", match):
+                k = k.strip()
+                if len(k) > 0:
+                    keywords.append(k.lower())
 
         # if keyword consists of multiple words, split into sub-words
         # (removing stopwords)

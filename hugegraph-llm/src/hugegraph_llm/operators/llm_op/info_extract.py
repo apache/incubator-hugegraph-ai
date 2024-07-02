@@ -18,7 +18,8 @@
 import re
 from typing import List, Any, Dict
 
-from hugegraph_llm.llms.base import BaseLLM
+from hugegraph_llm.models.llms.base import BaseLLM
+from hugegraph_llm.document.chunk_split import ChunkSplitter
 
 
 def generate_extract_triple_prompt(text, schema=None) -> str:
@@ -45,24 +46,10 @@ def generate_extract_triple_prompt(text, schema=None) -> str:
         The extracted text is: {text}"""
 
 
-def fit_token_space_by_split_text(llm: BaseLLM, text: str, prompt_token: int) -> List[str]:
-    max_length = 500
-    allowed_tokens = llm.max_allowed_token_length() - prompt_token
-    chunked_data = [text[i : i + max_length] for i in range(0, len(text), max_length)]
-    combined_chunks = []
-    current_chunk = ""
-    for chunk in chunked_data:
-        if (
-            int(llm.num_tokens_from_string(current_chunk)) + int(llm.num_tokens_from_string(chunk))
-            < allowed_tokens
-        ):
-            current_chunk += chunk
-        else:
-            combined_chunks.append(current_chunk)
-            current_chunk = chunk
-    combined_chunks.append(current_chunk)
-
-    return combined_chunks
+def split_text(text: str) -> List[str]:
+    chunk_splitter = ChunkSplitter(split_type="paragraph", language="en")
+    chunks = chunk_splitter.split(text)
+    return chunks
 
 
 def extract_triples_by_regex(text, triples):
@@ -91,6 +78,7 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
         for edge in schema["edges"]:
             if edge["edge_label"] == label:
                 graph["edges"].append({"start": s, "end": o, "type": label, "properties": {}})
+                graph["triples"].append(({s}, {p}, {o}))
                 break
     graph["vertices"] = list(vertices_dict.values())
 
@@ -105,13 +93,10 @@ class InfoExtract:
         self.text = text
 
     def run(self, schema=None) -> Dict[str, List[Any]]:
-        prompt_token = self.llm.num_tokens_from_string(generate_extract_triple_prompt("", schema))
+        chunked_text = split_text(self.text)
 
-        chunked_text = fit_token_space_by_split_text(
-            llm=self.llm, text=self.text, prompt_token=int(prompt_token)
-        )
-
-        result = {"vertices": [], "edges": [], "schema": schema} if schema else {"triples": []}
+        result = ({"triples": [], "vertices": [], "edges": [], "schema": schema}
+                  if schema else {"triples": []})
         for chunk in chunked_text:
             proceeded_chunk = self.extract_triples_by_llm(schema, chunk)
             print(f"[LLM] input: {chunk} \n output:{proceeded_chunk}")
