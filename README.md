@@ -12,7 +12,7 @@ in their projects.
 - [hugegraph-llm](./hugegraph-llm):The `hugegraph-llm` will house the implementation and research related to large language models.
 It will include runnable demos and can also be used as a third-party library, reducing the cost of using graph systems 
 and the complexity of building knowledge graphs. Graph systems can help large models address challenges like timeliness 
-and hallucination, while large models can assist graph systems with cost-related issues. Therefore, this module will 
+and hallucination, while large models can help graph systems with cost-related issues. Therefore, this module will 
 explore more applications and integration solutions for graph systems and large language models. 
 - [hugegraph-ml](./hugegraph-ml): The `hugegraph-ml` will focus on integrating HugeGraph with graph machine learning, 
 graph neural networks, and graph embeddings libraries. It will build an efficient and versatile intermediate layer 

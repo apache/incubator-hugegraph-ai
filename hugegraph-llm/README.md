@@ -6,7 +6,7 @@ The `hugegraph-llm` is a tool for the implementation and research related to lar
 This project includes runnable demos, it can also be used as a third-party library.
 
 As we know, graph systems can help large models address challenges like timeliness and hallucination,
-while large models can assist graph systems with cost-related issues.
+while large models can help graph systems with cost-related issues.
 
 With this project, we aim to reduce the cost of using graph systems, and decrease the complexity of 
 building knowledge graphs. This project will offer more applications and integration solutions for 
@@ -25,16 +25,24 @@ graph systems and large language models.
 - Start the HugeGraph database, you can do it via Docker. Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for guidance
 - Start the gradio interactive demo, you can start with the following command, and open http://127.0.0.1:8001 after starting
     ```bash
-    # ${PROJECT_ROOT_DIR} is the root directory of hugegraph-ai, which needs to be configured by yourself
+    # 0. clone the hugegraph-ai project & enter the root dir
+    # 1. configure the environment path
+    PROJECT_ROOT_DIR = "/path/to/hugegraph-ai" # root directory of hugegraph-ai
     export PYTHONPATH=${PROJECT_ROOT_DIR}/hugegraph-llm/src:${PROJECT_ROOT_DIR}/hugegraph-python-client/src
-    python3 ./hugegraph-llm/src/hugegraph_llm/utils/gradio_demo.py
+    
+    # 2. install the required packages/deps (better to use virtualenv(venv) to manage the environment)
+    cd hugegraph-llm 
+    pip install -r requirements.txt # ensure the python/pip version is satisfied
+    # 2.1 set basic configs in the hugegraph-llm/config/config.ini (Optional, you can also set it in gradio) 
+  
+    # 3. start the gradio server, wait for some time to initialize 
+    python3 ./src/hugegraph_llm/utils/gradio_demo.py
    ```
-- Configure HugeGraph database connection information and LLM information, which can be configured in two ways:
-  1. Configure the `./hugegraph-llm/src/config/config.ini` file
-  2. In gradio, after completing the configurations for LLM and HugeGraph, click on `Initialize configs`, the complete and initialized configuration file will be outputted.
+- Configure HugeGraph database connection information & LLM information in the gradio interface, 
+  click on `Initialize configs`, the complete and initialized configuration file will be overwritten.
 - offline download NLTK stopwords
     ```bash
-    python3 ./hugegraph_llm/operators/common_op/nltk_helper.py
+    python3 ./src/hugegraph_llm/operators/common_op/nltk_helper.py
     ```
 
 ## Examples
@@ -105,7 +113,8 @@ The methods of the `KgBuilder` class can be chained together to perform a sequen
 
 Run example like `python3 ./hugegraph-llm/examples/graph_rag_test.py`
 
-The `GraphRAG` class is used to  integrate HugeGraph with large language models to provide retrieval-augmented generation capabilities. Here is a brief usage guide:
+The `GraphRAG` class is used to integrate HugeGraph with large language models to provide retrieval-augmented generation capabilities.
+Here is a brief usage guide:
 
 1. **Extract Keyword:**: Extract keywords and expand synonyms.
     
