@@ -6,7 +6,7 @@ The `hugegraph-llm` is a tool for the implementation and research related to lar
 This project includes runnable demos, it can also be used as a third-party library.
 
 As we know, graph systems can help large models address challenges like timeliness and hallucination,
-while large models can assist graph systems with cost-related issues.
+while large models can help graph systems with cost-related issues.
 
 With this project, we aim to reduce the cost of using graph systems, and decrease the complexity of 
 building knowledge graphs. This project will offer more applications and integration solutions for 
@@ -111,7 +111,8 @@ The methods of the `KgBuilder` class can be chained together to perform a sequen
 
 Run example like `python3 ./hugegraph-llm/examples/graph_rag_test.py`
 
-The `GraphRAG` class is used to  integrate HugeGraph with large language models to provide retrieval-augmented generation capabilities. Here is a brief usage guide:
+The `GraphRAG` class is used to integrate HugeGraph with large language models to provide retrieval-augmented generation capabilities.
+Here is a brief usage guide:
 
 1. **Extract Keyword:**: Extract keywords and expand synonyms.
     
