@@ -99,7 +99,7 @@ if __name__ == '__main__':
                     settings.openai_api_key = arg1
                     settings.openai_api_base = arg2
                     settings.openai_language_model = arg3
-                    settings.openai_max_tokens = arg4
+                    settings.openai_max_tokens = int(arg4)
                 elif llm_type == "qianfan_wenxin":
                     settings.qianfan_api_key = arg1
                     settings.qianfan_secret_key = arg2
