@@ -34,13 +34,7 @@ class OpenAIEmbedding:
         self.embedding_model_name = model_name
         self.client = openai.Embedding()
 
-    def get_text_embedding(
-            self,
-            text: str
-    ) -> List[float]:
+    def get_text_embedding(self, text: str) -> List[float]:
         """Comment"""
-        response = self.client.create({
-            "input": text,
-            "model": self.embedding_model_name
-        })
+        response = self.client.create(input=text, model=self.embedding_model_name)
         return response.data[0].embedding

@@ -188,7 +188,6 @@ if __name__ == "__main__":
                     settings.qianfan_secret_key = arg2
                     settings.qianfan_chat_url = arg3
                     settings.qianfan_chat_name = arg4
-                    log.debug("####")
                     log.debug(LLMs().get_llm().base_url)
                     #test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
                 elif llm_type == "ollama":
