@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
         gr.Markdown("2. Set up the LLM.")
         llm_dropdown = gr.Dropdown(
-            choices=["openai", "ernie", "ollama"],
+            choices=["openai", "qianfan_wenxin", "ollama"],
             value=settings.llm_type,
             label="LLM"
         )
@@ -149,14 +149,15 @@ if __name__ == "__main__":
                         gr.Textbox(value=settings.openai_language_model, label="model_name"),
                         gr.Textbox(value=str(settings.openai_max_tokens), label="max_token"),
                     ]
-            elif llm_type == "ernie":
+            elif llm_type == "qianfan_wenxin":
                 with gr.Row():
                     llm_config_input = [
-                        gr.Textbox(value=settings.ernie_api_key, label="api_key"),
-                        gr.Textbox(value=settings.ernie_secret_key, label="secret_key"),
-                        gr.Textbox(value=settings.ernie_url, label="llm_url"),
-                        gr.Textbox(value=settings.ernie_model_name, label="model_name")
+                        gr.Textbox(value=settings.qianfan_api_key, label="api_key"),
+                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key"),
+                        gr.Textbox(value=settings.qianfan_chat_url, label="chat_url"),
+                        gr.Textbox(value=settings.qianfan_chat_name, label="model_name")
                     ]
+                log.debug(llm_config_input)
             elif llm_type == "ollama":
                 with gr.Row():
                     llm_config_input = [
@@ -180,12 +181,13 @@ if __name__ == "__main__":
                     test_url = "https://api.openai.com/v1/models"
                     headers = {"Authorization": f"Bearer {arg1}"}
                     test_api_connection(test_url, headers=headers, ak=arg1)
-                elif llm_type == "ernie":
-                    settings.ernie_api_key = arg1
-                    settings.ernie_secret_key = arg2
-                    settings.ernie_url = arg3
-                    settings.ernie_model_name = arg4
-                    log.debug(LLMs().get_llm().get_access_token())
+                elif llm_type == "qianfan_wenxin":
+                    settings.qianfan_api_key = arg1
+                    settings.qianfan_secret_key = arg2
+                    settings.qianfan_chat_url = arg3
+                    settings.qianfan_chat_name = arg4
+                    log.debug("####")
+                    log.debug(LLMs().get_llm().base_url)
                     #test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
                 elif llm_type == "ollama":
                     settings.ollama_host = arg1
@@ -198,7 +200,7 @@ if __name__ == "__main__":
 
         gr.Markdown("3. Set up the Embedding.")
         embedding_dropdown = gr.Dropdown(
-            choices=["openai", "ollama"],
+            choices=["openai", "ollama", "qianfan_wenxin"],
             value=settings.embedding_type,
             label="Embedding"
         )
@@ -221,6 +223,13 @@ if __name__ == "__main__":
                         gr.Textbox(value=str(settings.ollama_port), label="port"),
                         gr.Textbox(value=settings.ollama_embedding_model, label="model_name"),
                     ]
+            elif embedding_type == "qianfan_wenxin":
+                with gr.Row():
+                    embedding_config_input = [
+                        gr.Textbox(value=settings.qianfan_access_token, label="access_token (from AK+SK)"),
+                        gr.Textbox(value=settings.qianfan_embed_url, label="api_base"),
+                        gr.Textbox(value=settings.qianfan_embedding_name, label="embed_name")
+                    ]
             else:
                 embedding_config_input = []
             embedding_config_button = gr.Button("apply configuration")
@@ -238,6 +247,10 @@ if __name__ == "__main__":
                     settings.ollama_host = arg1
                     settings.ollama_port = int(arg2)
                     settings.ollama_embedding_model = arg3
+                elif embedding_type == "qianfan_wenxin":
+                    settings.qianfan_access_token = arg1
+                    settings.qianfan_embed_url = arg2
+
                 gr.Info("configured!")
 
             embedding_config_button.click(apply_embedding_configuration,  # pylint: disable=no-member

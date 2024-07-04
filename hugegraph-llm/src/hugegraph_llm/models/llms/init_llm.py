@@ -27,7 +27,7 @@ class LLMs:
         self.llm_type = settings.llm_type
 
     def get_llm(self):
-        if self.llm_type == "ernie":
+        if self.llm_type == "qianfan_wenxin":
             return ErnieBotClient()
         if self.llm_type == "openai":
             return OpenAIChat(

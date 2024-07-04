@@ -16,9 +16,9 @@
 # under the License.
 
 
-
 from hugegraph_llm.models.embeddings.openai import OpenAIEmbedding
 from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
+from hugegraph_llm.models.embeddings.qianfan import QianFanEmbedding
 from hugegraph_llm.config import settings
 
 
@@ -33,10 +33,17 @@ class Embeddings:
                 api_key=settings.openai_api_key,
                 api_base=settings.openai_api_base,
             )
-        if self.embedding_type == "ollama":
+        elif self.embedding_type == "ollama":
             return OllamaEmbedding(
                 model=settings.ollama_embedding_model,
                 host=settings.ollama_host,
                 port=settings.ollama_port
             )
+        elif self.embedding_type == "qianfan_wenxin":
+            return QianFanEmbedding(
+                model_name=settings.qianfan_embedding_name,
+                api_key=settings.qianfan_api_key,
+                secret_key=settings.qianfan_secret_key
+            )
+
         raise Exception("embedding type is not supported !")

@@ -22,23 +22,31 @@ from typing import Literal, Optional
 
 @dataclass
 class Config:
-    """Model settings"""
-    llm_type: Literal["openai", "ollama", "ernie", "zhipu"] = "openai"
-    embedding_type: Optional[Literal["openai", "ollama", "ernie", "zhipu"]] = "openai"
+    """LLM settings"""
+    llm_type: Literal["openai", "ollama", "qianfan_wenxin", "zhipu"] = "openai"
+    embedding_type: Optional[Literal["openai", "ollama", "qianfan_wenxin", "zhipu"]] = "openai"
+    # OpenAI settings
     openai_api_base: Optional[str] = "https://api.openai.com/v1"
     openai_api_key: Optional[str] = None
     openai_language_model: Optional[str] = "gpt-3.5-turbo"
     openai_embedding_model: Optional[str] = "text-embedding-3-small"
     openai_max_tokens: int = 4096
+    # Ollama settings
     ollama_host: Optional[str] = "127.0.0.1"
     ollama_port: Optional[int] = 11434
     ollama_language_model: Optional[str] = None
     ollama_embedding_model: Optional[str] = None
-    ernie_url: Optional[str] = ("https://aip.baidubce.com/rpc/2.0/ai_custom/"
-                                "v1/wenxinworkshop/chat/completions_pro?access_token=")
-    ernie_api_key: Optional[str] = None
-    ernie_secret_key: Optional[str] = None
-    ernie_model_name: Optional[str] = "wenxin"
+    # QianFan/WenXin settings
+    qianfan_api_key: Optional[str] = None
+    qianfan_secret_key: Optional[str] = None
+    qianfan_access_token: Optional[str] = None
+    ## url settings
+    qianfan_url_prefix = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
+    qianfan_chat_url: Optional[str] = (qianfan_url_prefix + "/chat/")
+    qianfan_chat_name: Optional[str] = "completions_pro"
+    qianfan_embed_url: Optional[str] = (qianfan_url_prefix + "/embeddings/")
+    qianfan_embedding_name: Optional[str] = "embedding-v1"  # https://cloud.baidu.com/doc/WENXINWORKSHOP/s/alj562vvu
+    # Zhipu settings
     zhipu_api_key: Optional[str] = None
     zhipu_language_model: Optional[str] = "glm-4"
     zhipu_embedding_model: Optional[str] = "embedding-2"
@@ -47,4 +55,4 @@ class Config:
     graph_port: Optional[int] = 8080
     graph_name: Optional[str] = "hugegraph"
     graph_user: Optional[str] = "admin"
-    graph_pwd: Optional[str] = "admin"
+    graph_pwd: Optional[str] = "xxx"

@@ -27,9 +27,9 @@ from hugegraph_llm.config import settings
 
 class ErnieBotClient(BaseLLM):
     def __init__(self):
-        self.api_key = settings.ernie_api_key
-        self.secret_key = settings.ernie_secret_key
-        self.base_url = settings.ernie_url
+        self.api_key = settings.qianfan_api_key
+        self.secret_key = settings.qianfan_secret_key
+        self.base_url = settings.qianfan_chat_url + settings.qianfan_chat_name
         self.get_access_token()
 
     def get_access_token(self):
@@ -50,7 +50,8 @@ class ErnieBotClient(BaseLLM):
         if messages is None:
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
-        url = self.base_url + self.get_access_token()
+        url = self.base_url + "?access_token=" + self.get_access_token()
+
         # parameter check failed, temperature range is (0, 1.0]
         payload = json.dumps({"messages": messages, "temperature": 0.1})
         headers = {"Content-Type": "application/json"}
@@ -76,10 +77,11 @@ class ErnieBotClient(BaseLLM):
         return len(string)
 
     def max_allowed_token_length(self) -> int:
+        # TODO: replace with config way
         return 6000
 
     def get_llm_type(self) -> str:
-        return "ernie"
+        return "qianfan_wenxin"
 
 
 if __name__ == "__main__":

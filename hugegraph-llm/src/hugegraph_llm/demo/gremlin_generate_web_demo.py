@@ -57,7 +57,7 @@ if __name__ == '__main__':
             """# HugeGraph LLM Text2Gremlin Demo"""
         )
         gr.Markdown("## Set up the LLM")
-        llm_dropdown = gr.Dropdown(["openai", "ernie", "ollama"], value=settings.llm_type,
+        llm_dropdown = gr.Dropdown(["openai", "qianfan_wenxin", "ollama"], value=settings.llm_type,
                                    label="LLM")
 
 
@@ -72,13 +72,13 @@ if __name__ == '__main__':
                         gr.Textbox(value=settings.openai_language_model, label="model_name"),
                         gr.Textbox(value=str(settings.openai_max_tokens), label="max_token"),
                     ]
-            elif llm_type == "ernie":
+            elif llm_type == "qianfan_wenxin":
                 with gr.Row():
                     llm_config_input = [
-                        gr.Textbox(value=settings.ernie_api_key, label="api_key"),
-                        gr.Textbox(value=settings.ernie_secret_key, label="secret_key"),
-                        gr.Textbox(value=settings.ernie_url, label="llm_url"),
-                        gr.Textbox(value=settings.ernie_model_name, label="model_name")
+                        gr.Textbox(value=settings.qianfan_api_key, label="api_key"),
+                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key"),
+                        gr.Textbox(value=settings.qianfan_chat_url, label="chat_url"),
+                        gr.Textbox(value=settings.qianfan_chat_name, label="model_name")
                     ]
             elif llm_type == "ollama":
                 with gr.Row():
@@ -99,11 +99,11 @@ if __name__ == '__main__':
                     settings.openai_api_base = arg2
                     settings.openai_language_model = arg3
                     settings.openai_max_tokens = arg4
-                elif llm_type == "ernie":
-                    settings.ernie_api_key = arg1
-                    settings.ernie_secret_key = arg2
-                    settings.ernie_url = arg3
-                    settings.ernie_model_name = arg4
+                elif llm_type == "qianfan_wenxin":
+                    settings.qianfan_api_key = arg1
+                    settings.qianfan_secret_key = arg2
+                    settings.qianfan_chat_url = arg3
+                    settings.qianfan_chat_name = arg4
                 elif llm_type == "ollama":
                     settings.ollama_host = arg1
                     settings.ollama_port = int(arg2)
