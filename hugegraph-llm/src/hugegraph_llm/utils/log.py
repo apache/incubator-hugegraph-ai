@@ -32,7 +32,8 @@ log = logging.getLogger("llm_app")
 log.setLevel(logging.DEBUG)
 
 # Create a handler for writing to log file
-file_handler = TimedRotatingFileHandler(LOG_FILE, when='midnight', interval=1, backupCount=7, encoding='utf-8')
+file_handler = TimedRotatingFileHandler(LOG_FILE, when='midnight', interval=1,
+                                        backupCount=7, encoding='utf-8')
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT))
 # Add the handler, and we could use 'log.Info(xxx)' in other files

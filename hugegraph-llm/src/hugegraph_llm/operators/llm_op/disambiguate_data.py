@@ -47,7 +47,7 @@ class DisambiguateData:
             triples = data["triples"]
             prompt = generate_disambiguate_prompt(triples)
             llm_output = self.llm.generate(prompt=prompt)
-            data = {"triples": []}
+            data["triples"] = []
             extract_triples_by_regex(llm_output, data)
             print(f"LLM input:{prompt} \n output: {llm_output} \n data: {data}")
         return data

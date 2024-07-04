@@ -125,7 +125,8 @@ if __name__ == "__main__":
             settings.graph_user = user
             settings.graph_pwd = pwd
             settings.graph_name = name
-            test_url = f"http://{settings.graph_ip}:{settings.graph_port}/graphs/{settings.graph_name}/schema"
+            test_url = (f"http://{settings.graph_ip}:{settings.graph_port}/graphs/"
+                        f"{settings.graph_name}/schema")
             test_api_connection(test_url)
 
 
@@ -217,19 +218,20 @@ if __name__ == "__main__":
                         gr.Textbox(value=settings.openai_api_base, label="api_base"),
                         gr.Textbox(value=settings.openai_embedding_model, label="model_name")
                     ]
+            elif embedding_type == "qianfan_wenxin":
+                with gr.Row():
+                    embedding_config_input = [
+                        gr.Textbox(value=settings.qianfan_access_token,
+                                   label="access_token (from AK+SK)"),
+                        gr.Textbox(value=settings.qianfan_embed_url, label="api_base"),
+                        gr.Textbox(value=settings.qianfan_embedding_name, label="embed_name")
+                    ]
             elif embedding_type == "ollama":
                 with gr.Row():
                     embedding_config_input = [
                         gr.Textbox(value=settings.ollama_host, label="host"),
                         gr.Textbox(value=str(settings.ollama_port), label="port"),
                         gr.Textbox(value=settings.ollama_embedding_model, label="model_name"),
-                    ]
-            elif embedding_type == "qianfan_wenxin":
-                with gr.Row():
-                    embedding_config_input = [
-                        gr.Textbox(value=settings.qianfan_access_token, label="access_token (from AK+SK)"),
-                        gr.Textbox(value=settings.qianfan_embed_url, label="api_base"),
-                        gr.Textbox(value=settings.qianfan_embedding_name, label="embed_name")
                     ]
             else:
                 embedding_config_input = []
