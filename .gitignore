@@ -1,3 +1,8 @@
+# User-specific files
+logs/*.log
+*.faiss
+*.pkl
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

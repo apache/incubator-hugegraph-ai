@@ -93,15 +93,16 @@ if __name__ == "__main__":
             graph_config_input = [
                 gr.Textbox(value=settings.graph_ip, label="ip"),
                 gr.Textbox(value=str(settings.graph_port), label="port"),
+                gr.Textbox(value=settings.graph_name, label="graph"),
                 gr.Textbox(value=settings.graph_user, label="user"),
-                gr.Textbox(value=settings.graph_pwd, label="pwd"),
-                gr.Textbox(value=settings.graph_name, label="graph")
+                gr.Textbox(value=settings.graph_pwd, label="pwd")
             ]
         graph_config_button = gr.Button("apply configuration")
 
 
         def test_api_connection(url, method="GET", ak=None, sk=None, headers=None, body=None):
             # TODO: use fastapi.request / starlette instead? (Also add a try-catch here)
+            log.debug(f"Request URL: {url}")
             if method.upper() == "GET":
                 response = requests.get(url, headers=headers, timeout=5)
             elif method.upper() == "POST":
@@ -119,14 +120,13 @@ if __name__ == "__main__":
                 gr.Error(f"Connection failed with status code: {response.status_code}")
 
 
-        def apply_graph_configuration(ip, port, user, pwd, name):
+        def apply_graph_configuration(ip, port, name, user, pwd):
             settings.graph_ip = ip
             settings.graph_port = int(port)
+            settings.graph_name = name
             settings.graph_user = user
             settings.graph_pwd = pwd
-            settings.graph_name = name
-            test_url = (f"http://{settings.graph_ip}:{settings.graph_port}/graphs/"
-                        f"{settings.graph_name}/schema")
+            test_url = f"http://{ip}:{port}/graphs/{name}/schema"
             test_api_connection(test_url)
 
 
@@ -149,7 +149,7 @@ if __name__ == "__main__":
                         gr.Textbox(value=settings.openai_api_key, label="api_key"),
                         gr.Textbox(value=settings.openai_api_base, label="api_base"),
                         gr.Textbox(value=settings.openai_language_model, label="model_name"),
-                        gr.Textbox(value=str(settings.openai_max_tokens), label="max_token"),
+                        gr.Textbox(value=settings.openai_max_tokens, label="max_token"),
                     ]
             elif llm_type == "qianfan_wenxin":
                 with gr.Row():
