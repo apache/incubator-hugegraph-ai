@@ -45,16 +45,17 @@ def graph_rag(text, vector_search: str):
 
 
 def build_kg(file, schema, disambiguate_word_sense, commit_to_hugegraph, build_vector_index):
-    if str(file).endswith(".txt"):
-        with open(str(file), "r", encoding="utf-8") as f:
+    full_path = file.name
+    if full_path.endswith(".txt"):
+        with open(full_path, "r", encoding="utf-8") as f:
             text = f.read()
-    elif str(file).endswith(".docx"):
+    elif full_path.endswith(".docx"):
         text = ""
-        doc = docx.Document(file)
+        doc = docx.Document(full_path)
         for para in doc.paragraphs:
             text += para.text
             text += "\n"
-    elif str(file).endswith(".pdf"):
+    elif full_path.endswith(".pdf"):
         raise Exception("ERROR: PDF will be supported later!")
     else:
         return "ERROR: please input txt or docx file."

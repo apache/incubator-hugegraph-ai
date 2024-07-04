@@ -27,8 +27,9 @@ from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 
 
 def build_example_vector_index(temp_file):
-    if str(temp_file).endswith(".json"):
-        with open(str(temp_file), "r", encoding="utf-8") as f:
+    full_path = temp_file.name
+    if full_path.endswith(".json"):
+        with open(full_path, "r", encoding="utf-8") as f:
             examples = json.load(f)
     else:
         return "ERROR: please input json file."

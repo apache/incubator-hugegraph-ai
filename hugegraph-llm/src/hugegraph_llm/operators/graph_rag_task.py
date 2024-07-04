@@ -16,6 +16,7 @@
 # under the License.
 
 
+import time
 from typing import Dict, Any, Optional, List
 
 from hugegraph_llm.models.llms.base import BaseLLM
@@ -28,6 +29,7 @@ from hugegraph_llm.operators.hugegraph_op.graph_rag_query import GraphRAGQuery
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
+from hugegraph_llm.utils.log import log
 
 
 class GraphRAG:
@@ -112,5 +114,9 @@ class GraphRAG:
         context = kwargs
         context["llm"] = self._llm
         for operator in self._operators:
+            log.debug(f"Running operator: {operator.__class__.__name__}")
+            start = time.time()
             context = operator.run(context)
+            log.debug(f"Operator {operator.__class__.__name__} finished in {time.time() - start} seconds")
+            log.debug(f"Context:\n{context}")
         return context

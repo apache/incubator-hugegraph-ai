@@ -16,6 +16,7 @@
 # under the License.
 
 
+import time
 from typing import Dict, Any, Optional
 
 from hugegraph_llm.models.llms.base import BaseLLM
@@ -29,6 +30,7 @@ from hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph import CommitToKg
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
 from hugegraph_llm.operators.llm_op.info_extract import InfoExtract
+from hugegraph_llm.utils.log import log
 
 
 class KgBuilder:
@@ -82,5 +84,9 @@ class KgBuilder:
     def run(self) -> Dict[str, Any]:
         context = None
         for operator in self.operators:
+            log.debug(f"Running operator: {operator.__class__.__name__}")
+            start = time.time()
             context = operator.run(context)
+            log.debug(f"Operator {operator.__class__.__name__} finished in {time.time() - start} seconds")
+            log.debug(f"Context:\n{context}")
         return context

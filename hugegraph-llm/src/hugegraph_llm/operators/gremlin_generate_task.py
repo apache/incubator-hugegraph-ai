@@ -16,12 +16,15 @@
 # under the License.
 
 
+import time
+
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.common_op.print_result import PrintResult
 from hugegraph_llm.operators.index_op.build_gremlin_example_index import BuildGremlinExampleIndex
 from hugegraph_llm.operators.index_op.gremlin_example_index_query import GremlinExampleIndexQuery
 from hugegraph_llm.operators.llm_op.gremlin_generate import GremlinGenerate
+from hugegraph_llm.utils.log import log
 
 
 class GremlinGenerator:
@@ -51,5 +54,9 @@ class GremlinGenerator:
     def run(self):
         context = {}
         for operator in self.operators:
+            log.debug(f"Running operator: {operator.__class__.__name__}")
+            start = time.time()
             context = operator.run(context)
+            log.debug(f"Operator {operator.__class__.__name__} finished in {time.time() - start} seconds")
+            log.debug(f"Context:\n{context}")
         return context

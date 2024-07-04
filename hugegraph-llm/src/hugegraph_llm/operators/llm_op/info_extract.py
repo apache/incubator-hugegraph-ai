@@ -79,8 +79,14 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
             if edge["edge_label"] == label:
                 graph["edges"].append({"start": s, "end": o, "type": label, "properties": {}})
                 graph["triples"].append(({s}, {p}, {o}))
+                source_label = edge["source_vertex_label"]
+                if (s, label) not in vertices_dict:
+                    vertices_dict[(s, label)] = {"name": s, "label": label, "properties": {"name": s}}
+                target_label = edge["target_vertex_label"]
+                if (o, target_label) not in vertices_dict:
+                    vertices_dict[(o, target_label)] = {"name": o, "label": target_label, "properties": {"name": o}}
                 break
-    graph["vertices"] = list(vertices_dict.values())
+    graph["vertices"].extend(vertices_dict.values())
 
 
 class InfoExtract:

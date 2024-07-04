@@ -51,7 +51,7 @@ class CommitToKg:
             label = vertex["label"]
             properties = vertex["properties"]
             try:
-                vid = self.client.graph().addVertex(label, properties).id
+                vid = self.client.graph().addVertex(label, properties, id=vertex["name"]).id
                 vids[vertex["name"]] = vid
             except NotFoundError as e:
                 print(e)
@@ -75,8 +75,8 @@ class CommitToKg:
             for prop in properties:
                 self.schema.propertyKey(prop).asText().ifNotExist().create()
             self.schema.vertexLabel(vertex_label).properties(*properties).nullableKeys(
-                *properties[1:]
-            ).usePrimaryKeyId().primaryKeys(properties[0]).ifNotExist().create()
+                *properties
+            ).useCustomizeStringId().ifNotExist().create()
         for edge in edges:
             edge_label = edge["edge_label"]
             source_vertex_label = edge["source_vertex_label"]
