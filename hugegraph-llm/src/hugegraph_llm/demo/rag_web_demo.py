@@ -34,6 +34,7 @@ from hugegraph_llm.utils.hugegraph_utils import (
     get_hg_client,
     run_gremlin_query
 )
+from hugegraph_llm.utils.log import log
 
 
 def graph_rag(text, vector_search: str):
@@ -99,13 +100,21 @@ if __name__ == "__main__":
 
 
         def test_api_connection(url, method="GET", ak=None, sk=None, headers=None, body=None):
-
-            # TODO: use fastapi.request / starlette instead?
-            response = requests.get(url)
-            if response.status_code == 200:
-                print("Connection successful. Graph schema configured.") # TODO: use log instead
-                gr.Info("Connection successful. Graph schema configured.")
+            # TODO: use fastapi.request / starlette instead? (Also add a try-catch here)
+            if method.upper() == "GET":
+                response = requests.get(url, headers=headers, timeout=5)
+            elif method.upper() == "POST":
+                response = requests.post(url, headers=headers, json=body, timeout=5)
             else:
+                log.error(f"Unsupported method: {method}")
+                return
+
+
+            if response.status_code >= 200 and response.status_code < 300:
+                log.info("Connection successful. Configured finished.")
+                gr.Info("Connection successful. Configured finished.")
+            else:
+                log.error(f"Connection failed with status code: {response.status_code}")
                 gr.Error(f"Connection failed with status code: {response.status_code}")
 
 
@@ -162,8 +171,6 @@ if __name__ == "__main__":
 
             def apply_llm_configuration(arg1, arg2, arg3, arg4):
                 llm_type = settings.llm_type
-                test_url = ''
-                headers = []
 
                 if llm_type == "openai":
                     settings.openai_api_key = arg1
@@ -178,8 +185,8 @@ if __name__ == "__main__":
                     settings.ernie_secret_key = arg2
                     settings.ernie_url = arg3
                     settings.ernie_model_name = arg4
-                    print(LLMs().get_llm().get_access_token())
-                    test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
+                    log.debug(LLMs().get_llm().get_access_token())
+                    #test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
                 elif llm_type == "ollama":
                     settings.ollama_host = arg1
                     settings.ollama_port = int(arg2)
