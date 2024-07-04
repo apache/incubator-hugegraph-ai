@@ -22,14 +22,15 @@ graph systems and large language models.
 
 ## Preparation
 
-- Start the HugeGraph database, you can do it via Docker. Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for guidance
+- Start the HugeGraph database, you can do it via Docker. Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) 
+& [deploy-doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for guidance
 - Clone this project
     ```bash
     git clone https://github.com/apache/incubator-hugegraph-ai.git
     ```
-- Install [hugegraph-python-client](..%2Fhugegraph-python-client) and [hugegraph_llm](src%2Fhugegraph_llm)
+- Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph_llm](src/hugegraph_llm)
     ```bash
-    cd ./incubator-hugegraph-ai
+    cd ./incubator-hugegraph-ai # better to use virtualenv (source venv/bin/activate) 
     pip install ./hugegraph-python-client
     pip install ./hugegraph-llm
     ```
@@ -51,7 +52,8 @@ Run example like `python3 ./hugegraph-llm/examples/build_kg_test.py`
 
 The `KgBuilder` class is used to construct a knowledge graph. Here is a brief usage guide:
 
-1. **Initialization**: The `KgBuilder` class is initialized with an instance of a language model. This can be obtained from the `LLMs` class.
+1. **Initialization**: The `KgBuilder` class is initialized with an instance of a language model. 
+This can be obtained from the `LLMs` class.
 
     ```python
     from hugegraph_llm.models.llms.init_llm import LLMs

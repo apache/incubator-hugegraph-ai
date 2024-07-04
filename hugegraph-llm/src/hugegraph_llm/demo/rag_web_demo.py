@@ -17,6 +17,8 @@
 
 
 import json
+
+import requests
 import uvicorn
 import docx
 import gradio as gr
@@ -95,13 +97,27 @@ if __name__ == "__main__":
             ]
         graph_config_button = gr.Button("apply configuration")
 
+
+        def test_api_connection(url, method="GET", ak=None, sk=None, headers=None, body=None):
+
+            # TODO: use fastapi.request / starlette instead?
+            response = requests.get(url)
+            if response.status_code == 200:
+                print("Connection successful. Graph schema configured.") # TODO: use log instead
+                gr.Info("Connection successful. Graph schema configured.")
+            else:
+                gr.Error(f"Connection failed with status code: {response.status_code}")
+
+
         def apply_graph_configuration(ip, port, user, pwd, name):
             settings.graph_ip = ip
             settings.graph_port = int(port)
             settings.graph_user = user
             settings.graph_pwd = pwd
             settings.graph_name = name
-            gr.Info("configured!")
+            test_url = f"http://{settings.graph_ip}:{settings.graph_port}/graphs/{settings.graph_name}/schema"
+            test_api_connection(test_url)
+
 
         graph_config_button.click(apply_graph_configuration, inputs=graph_config_input)  # pylint: disable=no-member
 
@@ -111,6 +127,7 @@ if __name__ == "__main__":
             value=settings.llm_type,
             label="LLM"
         )
+
 
         @gr.render(inputs=[llm_dropdown])
         def llm_settings(llm_type):
@@ -142,18 +159,27 @@ if __name__ == "__main__":
             else:
                 llm_config_input = []
             llm_config_button = gr.Button("apply configuration")
+
             def apply_llm_configuration(arg1, arg2, arg3, arg4):
                 llm_type = settings.llm_type
+                test_url = ''
+                headers = []
+
                 if llm_type == "openai":
                     settings.openai_api_key = arg1
                     settings.openai_api_base = arg2
                     settings.openai_language_model = arg3
                     settings.openai_max_tokens = arg4
+                    test_url = "https://api.openai.com/v1/models"
+                    headers = {"Authorization": f"Bearer {arg1}"}
+                    test_api_connection(test_url, headers=headers, ak=arg1)
                 elif llm_type == "ernie":
                     settings.ernie_api_key = arg1
                     settings.ernie_secret_key = arg2
                     settings.ernie_url = arg3
                     settings.ernie_model_name = arg4
+                    print(LLMs().get_llm().get_access_token())
+                    test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
                 elif llm_type == "ollama":
                     settings.ollama_host = arg1
                     settings.ollama_port = int(arg2)
@@ -169,6 +195,7 @@ if __name__ == "__main__":
             value=settings.embedding_type,
             label="Embedding"
         )
+
 
         @gr.render(inputs=[embedding_dropdown])
         def embedding_settings(embedding_type):
@@ -197,6 +224,9 @@ if __name__ == "__main__":
                     settings.openai_api_key = arg1
                     settings.openai_api_base = arg2
                     settings.openai_embedding_model = arg3
+                    test_url = "https://api.openai.com/v1/models"
+                    headers = {"Authorization": f"Bearer {arg1}"}
+                    test_api_connection(test_url, headers=headers, ak=arg1)
                 elif embedding_type == "ollama":
                     settings.ollama_host = arg1
                     settings.ollama_port = int(arg2)
@@ -205,6 +235,7 @@ if __name__ == "__main__":
 
             embedding_config_button.click(apply_embedding_configuration,  # pylint: disable=no-member
                                           inputs=embedding_config_input)
+
 
         gr.Markdown(
             """## 1. build knowledge graph
@@ -260,7 +291,7 @@ if __name__ == "__main__":
                 out = gr.Textbox(label="Answer")
             with gr.Column(scale=1):
                 vector_search_radio = gr.Radio(choices=["true", "false"], value="false",
-                                         label="Vector search")
+                                               label="Vector search")
                 btn = gr.Button("Retrieval augmented generation")
         btn.click(fn=graph_rag, inputs=[inp, vector_search_radio], outputs=out)  # pylint: disable=no-member
 
@@ -277,4 +308,7 @@ if __name__ == "__main__":
         btn = gr.Button("Run gremlin query on HugeGraph")
         btn.click(fn=run_gremlin_query, inputs=inp, outputs=out)  # pylint: disable=no-member
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
+    # Note: set reload to False in production environment
     uvicorn.run(app, host="0.0.0.0", port=8001)
+    # TODO: we can't use reload now due to the config 'app' of uvicorn.run
+    # uvicorn.run("rag_web_demo:app", host="0.0.0.0", port=8001, reload=True)
