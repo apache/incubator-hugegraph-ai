@@ -65,10 +65,10 @@ class GraphRAGQuery:
     )
 
     def __init__(
-        self,
-        max_deep: int = 2,
-        max_items: int = 30,
-        prop_to_match: Optional[str] = None,
+            self,
+            max_deep: int = 2,
+            max_items: int = 30,
+            prop_to_match: Optional[str] = None,
     ):
         self._client = PyHugeClient(
             settings.graph_ip,
@@ -81,7 +81,6 @@ class GraphRAGQuery:
         self._max_items = max_items
         self._prop_to_match = prop_to_match
         self._schema = ""
-
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._client is None:
@@ -155,8 +154,8 @@ class GraphRAGQuery:
         return context
 
     def _format_knowledge_from_query_result(
-        self,
-        query_result: List[Any],
+            self,
+            query_result: List[Any],
     ) -> Set[str]:
         use_id_to_match = self._prop_to_match is None
         knowledge = set()
@@ -200,17 +199,17 @@ class GraphRAGQuery:
     def _extract_labels_from_schema(self) -> Tuple[List[str], List[str]]:
         schema = self._get_graph_schema()
         node_props_str, edge_props_str = schema.split("\n")[:2]
-        node_props_str = node_props_str[len("Node properties: ") :].strip("[").strip("]")
-        edge_props_str = edge_props_str[len("Edge properties: ") :].strip("[").strip("]")
+        node_props_str = node_props_str[len("Node properties: "):].strip("[").strip("]")
+        edge_props_str = edge_props_str[len("Edge properties: "):].strip("[").strip("]")
         node_labels = self._extract_label_names(node_props_str)
         edge_labels = self._extract_label_names(edge_props_str)
         return node_labels, edge_labels
 
     @staticmethod
     def _extract_label_names(
-        source: str,
-        head: str = "name: ",
-        tail: str = ", ",
+            source: str,
+            head: str = "name: ",
+            tail: str = ", ",
     ) -> List[str]:
         result = []
         for s in source.split(head):
