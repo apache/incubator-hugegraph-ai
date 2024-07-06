@@ -94,18 +94,18 @@ if __name__ == '__main__':
             llm_config_button = gr.Button("apply configuration")
 
             def apply_configuration(arg1, arg2, arg3, arg4):
-                llm_type = settings.llm_type
-                if llm_type == "openai":
+                llm_option = settings.llm_type
+                if llm_option == "openai":
                     settings.openai_api_key = arg1
                     settings.openai_api_base = arg2
                     settings.openai_language_model = arg3
                     settings.openai_max_tokens = int(arg4)
-                elif llm_type == "qianfan_wenxin":
+                elif llm_option == "qianfan_wenxin":
                     settings.qianfan_api_key = arg1
                     settings.qianfan_secret_key = arg2
                     settings.qianfan_chat_url = arg3
                     settings.qianfan_language_model = arg4
-                elif llm_type == "ollama":
+                elif llm_option == "ollama":
                     settings.ollama_host = arg1
                     settings.ollama_port = int(arg2)
                     settings.ollama_language_model = arg3
@@ -142,18 +142,18 @@ if __name__ == '__main__':
             embedding_config_button = gr.Button("apply configuration")
 
             def apply_configuration(arg1, arg2, arg3):
-                embedding_type = settings.embedding_type
-                if embedding_type == "openai":
+                embedding_option = settings.embedding_type
+                if embedding_option == "openai":
                     settings.openai_api_key = arg1
                     settings.openai_api_base = arg2
                     settings.openai_embedding_model = arg3
-                elif embedding_type == "ollama":
+                elif embedding_option == "ollama":
                     settings.ollama_host = arg1
                     settings.ollama_port = int(arg2)
                     settings.ollama_embedding_model = arg3
                 gr.Info("configured!")
-
-            embedding_config_button.click(apply_configuration, inputs=embedding_config_input)  # pylint: disable=no-member
+            # pylint: disable=no-member
+            embedding_config_button.click(apply_configuration, inputs=embedding_config_input)
 
         gr.Markdown("## Build Example Vector Index")
         gr.Markdown("Uploaded json file should be in format below:\n\n"

@@ -29,6 +29,7 @@ from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.operators.graph_rag_task import GraphRAG
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.config import settings
+from hugegraph_llm.operators.llm_op.info_extract import SCHEMA_EXAMPLE_PROMPT
 from hugegraph_llm.utils.hugegraph_utils import (
     init_hg_test_data,
     get_hg_client,
@@ -111,8 +112,7 @@ if __name__ == "__main__":
                 log.error(f"Unsupported method: {method}")
                 return
 
-
-            if response.status_code >= 200 and response.status_code < 300:
+            if 200 <= response.status_code < 300:
                 log.info("Connection successful. Configured finished.")
                 gr.Info("Connection successful. Configured finished.")
             else:
@@ -173,9 +173,9 @@ if __name__ == "__main__":
             llm_config_button = gr.Button("apply configuration")
 
             def apply_llm_configuration(arg1, arg2, arg3, arg4):
-                llm_type = settings.llm_type
+                llm_option = settings.llm_type
 
-                if llm_type == "openai":
+                if llm_option == "openai":
                     settings.openai_api_key = arg1
                     settings.openai_api_base = arg2
                     settings.openai_language_model = arg3
@@ -183,13 +183,13 @@ if __name__ == "__main__":
                     test_url = "https://api.openai.com/v1/models"
                     headers = {"Authorization": f"Bearer {arg1}"}
                     test_api_connection(test_url, headers=headers, ak=arg1)
-                elif llm_type == "qianfan_wenxin":
+                elif llm_option == "qianfan_wenxin":
                     settings.qianfan_api_key = arg1
                     settings.qianfan_secret_key = arg2
                     settings.qianfan_language_model = arg3
-                    log.debug(LLMs().get_llm().base_url)
-                    #test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
-                elif llm_type == "ollama":
+                    # TODO: test the connection
+                    # test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
+                elif llm_option == "ollama":
                     settings.ollama_host = arg1
                     settings.ollama_port = int(arg2)
                     settings.ollama_language_model = arg3
@@ -235,19 +235,19 @@ if __name__ == "__main__":
             embedding_config_button = gr.Button("apply configuration")
 
             def apply_embedding_configuration(arg1, arg2, arg3):
-                embedding_type = settings.embedding_type
-                if embedding_type == "openai":
+                embedding_option = settings.embedding_type
+                if embedding_option == "openai":
                     settings.openai_api_key = arg1
                     settings.openai_api_base = arg2
                     settings.openai_embedding_model = arg3
                     test_url = "https://api.openai.com/v1/models"
                     headers = {"Authorization": f"Bearer {arg1}"}
                     test_api_connection(test_url, headers=headers, ak=arg1)
-                elif embedding_type == "ollama":
+                elif embedding_option == "ollama":
                     settings.ollama_host = arg1
                     settings.ollama_port = int(arg2)
                     settings.ollama_embedding_model = arg3
-                elif embedding_type == "qianfan_wenxin":
+                elif embedding_option == "qianfan_wenxin":
                     settings.qianfan_access_token = arg1
                     settings.qianfan_embed_url = arg2
 
@@ -283,20 +283,11 @@ if __name__ == "__main__":
         }
     ]
 }"""
-        INFO_EXTRACT_TEMPLATE = (
-"""Given the graph schema: {schema}
-
-Based on the above schema, extract triples from the following text.
-The output format must be: (X,Y,Z) - LABEL
-In this format, Y must be a value from "properties" or "edge_label", 
-and LABEL must be X's vertex_label or Y's edge_label.
-
-The extracted text is: {text}""")
 
         with gr.Row():
             input_file = gr.File(value=None, label="Document")
             input_schema = gr.Textbox(value=SCHEMA, label="Schema")
-            info_extract_template = gr.Textbox(value=INFO_EXTRACT_TEMPLATE, label="Info extract template")
+            info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract template")
             with gr.Column():
                 disambiguate_word_sense_radio = gr.Radio(choices=["true", "false"], value="false",
                                                          label="Disambiguate word sense")

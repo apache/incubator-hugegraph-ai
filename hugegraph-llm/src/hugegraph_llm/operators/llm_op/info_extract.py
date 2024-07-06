@@ -20,28 +20,57 @@ from typing import List, Any, Dict, Optional
 
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.document.chunk_split import ChunkSplitter
+from hugegraph_llm.utils.log import log
 
+SCHEMA_EXAMPLE_PROMPT = """## Main Task
+Extract Triples from the given text and graph schema
 
-def generate_extract_triple_prompt(text, schema=None) -> str:
-    if schema:
-        return f"""Given the graph schema: {schema}
-
-Based on the above schema, extract triples from the following text.
+## Basic Rules
 The output format must be: (X,Y,Z) - LABEL
 In this format, Y must be a value from "properties" or "edge_label", 
 and LABEL must be X's vertex_label or Y's edge_label.
 
-The extracted text is: {text}"""
-    return f"""Extract subject-verb-object (SPO) triples from text strictly according to the
+## Example
+### Input example:
+Graph schema:
+"vertices":[{"vertex_label":"person","properties":["name","age","occupation"]}],
+"edges":[{"edge_label":"roommate","source_vertex_label":"person","target_vertex_label":"person","properties":{}}]}
+Text:
+Meet Sarah, a 30-year-old attorney, and her roommate,
+James, whom she's shared a home with since 2010. James,
+in his professional life, works as a journalist.
+
+### Output example:
+
+(Sarah, Age, 30) - person
+(Sarah, Occupation, attorney) - person
+(James, Occupation, journalist) - person
+(Sarah, Roommate, James) - roommate
+"""
+
+
+def generate_extract_triple_prompt(text, schema=None) -> str:
+    text_based_prompt = f"""
+Extract subject-verb-object (SPO) triples from text strictly according to the
 following format, each structure has only three elements: ("vertex_1", "edge", "vertex_2").
-for example:
-Alice lawyer and is 25 years old and Bob is her roommate since 2001. Bob works as a journalist. 
-Alice owns a the webpage www.alice.com and Bob owns the webpage www.bob.com
-output:[("Alice", "Age", "25"),("Alice", "Profession", "lawyer"),("Bob", "Job", "journalist"),
+For example:
+Alice lawyer and is 25 years old and Bob is her roommate since 2001. Bob works as a journalist.
+Alice owns the webpage www.alice.com and Bob owns the webpage www.bob.com
+Output: [("Alice", "Age", "25"),("Alice", "Profession", "lawyer"),("Bob", "Job", "journalist"),
 ("Alice", "Roommate of", "Bob"),("Alice", "Owns", "http://www.alice.com"),
 ("Bob", "Owns", "http://www.bob.com")]
 
 The extracted text is: {text}"""
+
+    schema_real_prompt = f"""## Real result
+1. The extracted text is: {text}
+2. The graph schema is: {schema}
+"""
+
+    if schema:
+        return SCHEMA_EXAMPLE_PROMPT + schema_real_prompt
+    else:
+        return text_based_prompt
 
 
 def split_text(text: str) -> List[str]:
@@ -80,13 +109,11 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
                 source_label = edge["source_vertex_label"]
                 source_id = f"{source_label}-{s}"
                 if source_id not in vertices_dict:
-                    vertices_dict[source_id] = {"id": source_id, "name": s, "label": source_label,
-                                                        "properties": {}}
+                    vertices_dict[source_id] = {"id": source_id, "name": s, "label": source_label, "properties": {}}
                 target_label = edge["target_vertex_label"]
                 target_id = f"{target_label}-{o}"
                 if target_id not in vertices_dict:
-                    vertices_dict[target_id] = {"id": target_id, "name": o, "label": target_label,
-                                                        "properties": {}}
+                    vertices_dict[target_id] = {"id": target_id, "name": o, "label": target_label, "properties": {}}
                 graph["edges"].append({"start": source_id, "end": target_id, "type": label, "properties": {}})
                 break
     graph["vertices"] = vertices_dict.values()
@@ -110,12 +137,12 @@ class InfoExtract:
                   if schema else {"triples": []})
         for chunk in chunked_text:
             proceeded_chunk = self.extract_triples_by_llm(schema, chunk)
-            print(f"[LLM] input: {chunk} \n output:{proceeded_chunk}")
+            log.debug(f"[LLM] input: {chunk} \n output:{proceeded_chunk}")
             if schema:
                 extract_triples_by_regex_with_schema(schema, proceeded_chunk, result)
             else:
                 extract_triples_by_regex(proceeded_chunk, result)
-        return self._filter_long_name(result)
+        return self._filter_long_id(result)
 
     def extract_triples_by_llm(self, schema, chunk):
         if self.template:
@@ -124,15 +151,13 @@ class InfoExtract:
             prompt = generate_extract_triple_prompt(chunk, schema)
         return self.llm.generate(prompt=prompt)
 
-    def _filter_long_name(self, graph):
-        vertices = []
-        for vertex in graph["vertices"]:
-            if len(vertex["id"]) < 120:
-                vertices.append(vertex)
-        graph["vertices"] = vertices
-        edges = []
-        for edge in graph["edges"]:
-            if len(edge["start"]) < 120 and len(edge["end"]) < 120:
-                edges.append(edge)
-        graph["edges"] = edges
+    def valid(self, element_id, max_length=128):
+        if len(element_id) >= max_length:
+            log.warn(f"Filter out GraphElementID too long: {element_id}")
+            return False
+        return True
+
+    def _filter_long_id(self, graph):
+        graph["vertices"] = [vertex for vertex in graph["vertices"] if self.valid(vertex["id"])]
+        graph["edges"] = [edge for edge in graph["edges"] if self.valid(edge["start"]) and self.valid(edge["end"])]
         return graph

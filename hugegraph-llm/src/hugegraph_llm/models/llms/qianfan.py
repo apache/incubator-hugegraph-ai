@@ -16,15 +16,12 @@
 # under the License.
 
 import os
-import json
 from typing import Optional, List, Dict, Any, Callable
 
 import qianfan
-import requests
 from retry import retry
 
 from hugegraph_llm.models.llms.base import BaseLLM
-from hugegraph_llm.config import settings
 
 
 class QianfanClient(BaseLLM):
@@ -37,15 +34,15 @@ class QianfanClient(BaseLLM):
 
     @retry(tries=3, delay=1)
     def generate(
-        self,
-        messages: Optional[List[Dict[str, Any]]] = None,
-        prompt: Optional[str] = None,
+            self,
+            messages: Optional[List[Dict[str, Any]]] = None,
+            prompt: Optional[str] = None,
     ) -> str:
         if messages is None:
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
-        response = self.chat_comp.do(model=self.chat_model, messages=messages)
 
+        response = self.chat_comp.do(model=self.chat_model, messages=messages)
         if response.code != 200:
             raise Exception(
                 f"Request failed with code {response.code}, message: {response.body['error_msg']}"
@@ -53,10 +50,10 @@ class QianfanClient(BaseLLM):
         return response.body["result"]
 
     def generate_streaming(
-        self,
-        messages: Optional[List[Dict[str, Any]]] = None,
-        prompt: Optional[str] = None,
-        on_token_callback: Callable = None,
+            self,
+            messages: Optional[List[Dict[str, Any]]] = None,
+            prompt: Optional[str] = None,
+            on_token_callback: Callable = None,
     ) -> str:
         return self.generate(messages, prompt)
 
