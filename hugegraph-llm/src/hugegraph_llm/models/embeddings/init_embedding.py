@@ -41,7 +41,7 @@ class Embeddings:
             )
         elif self.embedding_type == "qianfan_wenxin":
             return QianFanEmbedding(
-                model_name=settings.qianfan_embedding_name,
+                model_name=settings.qianfan_embedding_model,
                 api_key=settings.qianfan_api_key,
                 secret_key=settings.qianfan_secret_key
             )

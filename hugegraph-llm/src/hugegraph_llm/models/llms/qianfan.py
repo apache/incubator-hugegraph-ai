@@ -15,9 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import os
 import json
 from typing import Optional, List, Dict, Any, Callable
 
+import qianfan
 import requests
 from retry import retry
 
@@ -25,21 +27,13 @@ from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.config import settings
 
 
-class ErnieBotClient(BaseLLM):
-    def __init__(self):
-        self.api_key = settings.qianfan_api_key
-        self.secret_key = settings.qianfan_secret_key
-        self.base_url = settings.qianfan_chat_url + settings.qianfan_chat_name
-        self.get_access_token()
-
-    def get_access_token(self):
-        url = "https://aip.baidubce.com/oauth/2.0/token"
-        params = {
-            "grant_type": "client_credentials",
-            "client_id": self.api_key,
-            "client_secret": self.secret_key,
-        }
-        return str(requests.post(url, params=params, timeout=2).json().get("access_token"))
+class QianfanClient(BaseLLM):
+    def __init__(self, model_name: Optional[str] = "ERNIE-4.0-Turbo-8K",
+                 api_key: Optional[str] = None, secret_key: Optional[str] = None):
+        qianfan.get_config().AK = api_key or os.getenv("QIANFAN_ACCESS_KEY")
+        qianfan.get_config().SK = secret_key or os.getenv("QIANFAN_SECRET_KEY")
+        self.chat_model = model_name
+        self.chat_comp = qianfan.ChatCompletion()
 
     @retry(tries=3, delay=1)
     def generate(
@@ -50,20 +44,13 @@ class ErnieBotClient(BaseLLM):
         if messages is None:
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
-        url = self.base_url + "?access_token=" + self.get_access_token()
+        response = self.chat_comp.do(model=self.chat_model, messages=messages)
 
-        # parameter check failed, temperature range is (0, 1.0]
-        payload = json.dumps({"messages": messages, "temperature": 0.1})
-        headers = {"Content-Type": "application/json"}
-        response = requests.request("POST", url, headers=headers, data=payload, timeout=30)
-        if response.status_code != 200:
+        if response.code != 200:
             raise Exception(
-                f"Request failed with code {response.status_code}, message: {response.text}"
+                f"Request failed with code {response.code}, message: {response.body['error_msg']}"
             )
-        response_json = json.loads(response.text)
-        if "error_code" in response_json:
-            raise Exception(f"Error {response_json['error_code']}: {response_json['error_msg']}")
-        return response_json["result"]
+        return response.body["result"]
 
     def generate_streaming(
         self,
@@ -85,6 +72,6 @@ class ErnieBotClient(BaseLLM):
 
 
 if __name__ == "__main__":
-    client = ErnieBotClient()
+    client = QianfanClient()
     print(client.generate(prompt="What is the capital of China?"))
     print(client.generate(messages=[{"role": "user", "content": "What is the capital of China?"}]))

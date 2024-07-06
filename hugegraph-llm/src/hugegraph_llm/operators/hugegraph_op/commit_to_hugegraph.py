@@ -51,8 +51,8 @@ class CommitToKg:
             label = vertex["label"]
             properties = vertex["properties"]
             try:
-                vid = self.client.graph().addVertex(label, properties, id=vertex["name"]).id
-                vids[vertex["name"]] = vid
+                vid = self.client.graph().addVertex(label, properties, id=vertex["id"]).id
+                vids[vertex["id"]] = vid
             except NotFoundError as e:
                 print(e)
         for edge in edges:

@@ -55,8 +55,8 @@ class KgBuilder:
         self.operators.append(ChunkSplit(split_type="sentence", language="zh"))
         return self
 
-    def extract_triples(self, text: str):
-        self.operators.append(InfoExtract(self.llm, text))
+    def extract_triples(self, text: str, template: Optional[str] = None):
+        self.operators.append(InfoExtract(self.llm, text, template))
         return self
 
     def disambiguate_word_sense(self):

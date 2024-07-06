@@ -43,9 +43,9 @@ class Config:
     ## url settings
     qianfan_url_prefix = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
     qianfan_chat_url: Optional[str] = (qianfan_url_prefix + "/chat/")
-    qianfan_chat_name: Optional[str] = "completions_pro"
+    qianfan_language_model: Optional[str] = "completions_pro"
     qianfan_embed_url: Optional[str] = (qianfan_url_prefix + "/embeddings/")
-    qianfan_embedding_name: Optional[str] = "embedding-v1"  # https://cloud.baidu.com/doc/WENXINWORKSHOP/s/alj562vvu
+    qianfan_embedding_model: Optional[str] = "embedding-v1"  # https://cloud.baidu.com/doc/WENXINWORKSHOP/s/alj562vvu
     # Zhipu settings
     zhipu_api_key: Optional[str] = None
     zhipu_language_model: Optional[str] = "glm-4"

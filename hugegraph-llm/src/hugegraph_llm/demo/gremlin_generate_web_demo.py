@@ -79,7 +79,7 @@ if __name__ == '__main__':
                         gr.Textbox(value=settings.qianfan_api_key, label="api_key"),
                         gr.Textbox(value=settings.qianfan_secret_key, label="secret_key"),
                         gr.Textbox(value=settings.qianfan_chat_url, label="chat_url"),
-                        gr.Textbox(value=settings.qianfan_chat_name, label="model_name")
+                        gr.Textbox(value=settings.qianfan_language_model, label="model_name")
                     ]
             elif llm_type == "ollama":
                 with gr.Row():
@@ -104,7 +104,7 @@ if __name__ == '__main__':
                     settings.qianfan_api_key = arg1
                     settings.qianfan_secret_key = arg2
                     settings.qianfan_chat_url = arg3
-                    settings.qianfan_chat_name = arg4
+                    settings.qianfan_language_model = arg4
                 elif llm_type == "ollama":
                     settings.ollama_host = arg1
                     settings.ollama_port = int(arg2)

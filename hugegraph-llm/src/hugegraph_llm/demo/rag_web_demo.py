@@ -44,7 +44,7 @@ def graph_rag(text, vector_search: str):
     return searcher.merge_dedup_rerank().synthesize_answer().run(verbose=True)
 
 
-def build_kg(file, schema, disambiguate_word_sense, commit_to_hugegraph, build_vector_index):
+def build_kg(file, schema, template, disambiguate_word_sense, commit_to_hugegraph, build_vector_index):
     full_path = file.name
     if full_path.endswith(".txt"):
         with open(full_path, "r", encoding="utf-8") as f:
@@ -69,7 +69,7 @@ def build_kg(file, schema, disambiguate_word_sense, commit_to_hugegraph, build_v
             builder.import_schema(from_hugegraph=schema)
     else:
         return "ERROR: please input schema."
-    builder.extract_triples(text)
+    builder.extract_triples(text, template)
     if disambiguate_word_sense == "true":
         builder.disambiguate_word_sense()
     if commit_to_hugegraph == "true":
@@ -151,15 +151,6 @@ if __name__ == "__main__":
                         gr.Textbox(value=settings.openai_language_model, label="model_name"),
                         gr.Textbox(value=settings.openai_max_tokens, label="max_token"),
                     ]
-            elif llm_type == "qianfan_wenxin":
-                with gr.Row():
-                    llm_config_input = [
-                        gr.Textbox(value=settings.qianfan_api_key, label="api_key"),
-                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key"),
-                        gr.Textbox(value=settings.qianfan_chat_url, label="chat_url"),
-                        gr.Textbox(value=settings.qianfan_chat_name, label="model_name")
-                    ]
-                log.debug(llm_config_input)
             elif llm_type == "ollama":
                 with gr.Row():
                     llm_config_input = [
@@ -168,6 +159,15 @@ if __name__ == "__main__":
                         gr.Textbox(value=settings.ollama_language_model, label="model_name"),
                         gr.Textbox(value="", visible=False)
                     ]
+            elif llm_type == "qianfan_wenxin":
+                with gr.Row():
+                    llm_config_input = [
+                        gr.Textbox(value=settings.qianfan_api_key, label="api_key"),
+                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key"),
+                        gr.Textbox(value=settings.qianfan_language_model, label="model_name"),
+                        gr.Textbox(value="", visible=False)
+                    ]
+                log.debug(llm_config_input)
             else:
                 llm_config_input = []
             llm_config_button = gr.Button("apply configuration")
@@ -186,8 +186,7 @@ if __name__ == "__main__":
                 elif llm_type == "qianfan_wenxin":
                     settings.qianfan_api_key = arg1
                     settings.qianfan_secret_key = arg2
-                    settings.qianfan_chat_url = arg3
-                    settings.qianfan_chat_name = arg4
+                    settings.qianfan_language_model = arg3
                     log.debug(LLMs().get_llm().base_url)
                     #test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
                 elif llm_type == "ollama":
@@ -220,10 +219,9 @@ if __name__ == "__main__":
             elif embedding_type == "qianfan_wenxin":
                 with gr.Row():
                     embedding_config_input = [
-                        gr.Textbox(value=settings.qianfan_access_token,
-                                   label="access_token (from AK+SK)"),
-                        gr.Textbox(value=settings.qianfan_embed_url, label="api_base"),
-                        gr.Textbox(value=settings.qianfan_embedding_name, label="embed_name")
+                        gr.Textbox(value=settings.qianfan_api_key, label="api_key"),
+                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key"),
+                        gr.Textbox(value=settings.qianfan_embedding_model, label="model_name"),
                     ]
             elif embedding_type == "ollama":
                 with gr.Row():
@@ -285,10 +283,20 @@ if __name__ == "__main__":
         }
     ]
 }"""
+        INFO_EXTRACT_TEMPLATE = (
+"""Given the graph schema: {schema}
+
+Based on the above schema, extract triples from the following text.
+The output format must be: (X,Y,Z) - LABEL
+In this format, Y must be a value from "properties" or "edge_label", 
+and LABEL must be X's vertex_label or Y's edge_label.
+
+The extracted text is: {text}""")
 
         with gr.Row():
             input_file = gr.File(value=None, label="Document")
             input_schema = gr.Textbox(value=SCHEMA, label="Schema")
+            info_extract_template = gr.Textbox(value=INFO_EXTRACT_TEMPLATE, label="Info extract template")
             with gr.Column():
                 disambiguate_word_sense_radio = gr.Radio(choices=["true", "false"], value="false",
                                                          label="Disambiguate word sense")
@@ -301,10 +309,11 @@ if __name__ == "__main__":
         btn = gr.Button("Build knowledge graph")
         btn.click(  # pylint: disable=no-member
             fn=build_kg,
-            inputs=[input_file, input_schema, disambiguate_word_sense_radio,
-                    commit_to_hugegraph_radio, build_vector_index_radio],
+            inputs=[input_file, input_schema, info_extract_template,
+                    disambiguate_word_sense_radio, commit_to_hugegraph_radio,
+                    build_vector_index_radio],
             outputs=out
-        )  # pylint: disable=no-member
+        )
 
         gr.Markdown("""## 2. Retrieval augmented generation by hugegraph""")
         with gr.Row():

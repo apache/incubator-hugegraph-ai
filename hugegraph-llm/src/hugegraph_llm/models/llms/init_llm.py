@@ -18,7 +18,7 @@
 
 from hugegraph_llm.models.llms.ollama import OllamaClient
 from hugegraph_llm.models.llms.openai import OpenAIChat
-from hugegraph_llm.models.llms.ernie import ErnieBotClient
+from hugegraph_llm.models.llms.qianfan import QianfanClient
 from hugegraph_llm.config import settings
 
 
@@ -28,7 +28,11 @@ class LLMs:
 
     def get_llm(self):
         if self.llm_type == "qianfan_wenxin":
-            return ErnieBotClient()
+            return QianfanClient(
+                model_name=settings.qianfan_language_model,
+                api_key=settings.qianfan_api_key,
+                secret_key=settings.qianfan_secret_key
+            )
         if self.llm_type == "openai":
             return OpenAIChat(
                 api_key=settings.openai_api_key,
