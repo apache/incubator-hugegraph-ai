@@ -52,6 +52,7 @@ def check_if_success(response, error=None):
         response_body = response.text if response.text else "Empty body"
         # Log the detailed information
         print(f"\033[93mError-Client:\n"
-              f"Request URL: {req.url}, Request Body: {req_body}\nResponse Body: {response_body}\033[0m")
+              f"Request URL: {req.url}, Request Body: {req_body}\nResponse Body: "
+              f"{response_body}\033[0m")
         raise error
     return True

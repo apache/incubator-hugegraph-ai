@@ -23,6 +23,7 @@ from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.operators.common_op.check_schema import CheckSchema
 from hugegraph_llm.operators.common_op.print_result import PrintResult
+from hugegraph_llm.operators.index_op.build_semantic_index import BuildSemanticIndex
 from hugegraph_llm.operators.index_op.build_vector_index import BuildVectorIndex
 from hugegraph_llm.operators.document_op.chunk_split import ChunkSplit
 from hugegraph_llm.operators.document_op.chunk_embedding import ChunkEmbedding
@@ -55,8 +56,8 @@ class KgBuilder:
         self.operators.append(ChunkSplit(split_type="sentence", language="zh"))
         return self
 
-    def extract_triples(self, text: str, template: Optional[str] = None):
-        self.operators.append(InfoExtract(self.llm, text, template))
+    def extract_triples(self, text: str, example_prompt: Optional[str] = None):
+        self.operators.append(InfoExtract(self.llm, text, example_prompt))
         return self
 
     def disambiguate_word_sense(self):
@@ -65,6 +66,10 @@ class KgBuilder:
 
     def commit_to_hugegraph(self):
         self.operators.append(CommitToKg())
+        return self
+
+    def build_vertex_id_semantic_index(self):
+        self.operators.append(BuildSemanticIndex(self.embedding))
         return self
 
     def do_triples_embedding(self):
@@ -84,9 +89,10 @@ class KgBuilder:
     def run(self) -> Dict[str, Any]:
         context = None
         for operator in self.operators:
-            log.debug(f"Running operator: {operator.__class__.__name__}")
+            log.debug("Running operator: %s", operator.__class__.__name__)
             start = time.time()
             context = operator.run(context)
-            log.debug(f"Operator {operator.__class__.__name__} finished in {time.time() - start} seconds")
-            log.debug(f"Context:\n{context}")
+            log.debug("Operator %s finished in %s seconds", operator.__class__.__name__,
+                      time.time() - start)
+            log.debug("Context:\n%s", context)
         return context

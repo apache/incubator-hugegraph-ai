@@ -25,8 +25,8 @@ from hugegraph_llm.indices.vector_index import VectorIndex
 
 class BuildVectorIndex:
     def __init__(self, context_key: str = "chunks", embedding_key: str = "chunks_embedding"):
-        self.index_file = os.path.join(resource_path, settings.graph_name, "index.faiss")
-        self.content_file = os.path.join(resource_path, settings.graph_name, "properties.pkl")
+        self.index_file = os.path.join(resource_path, settings.graph_name, "vidx.faiss")
+        self.content_file = os.path.join(resource_path, settings.graph_name, "vidx.pkl")
         if not os.path.exists(os.path.join(resource_path, settings.graph_name)):
             os.mkdir(os.path.join(resource_path, settings.graph_name))
         self.context_key = context_key

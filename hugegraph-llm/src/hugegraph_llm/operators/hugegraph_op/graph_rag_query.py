@@ -95,7 +95,7 @@ class GraphRAGQuery:
                 self._client = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd)
         assert self._client is not None, "No graph for query."
 
-        keywords = context.get("keywords")
+        keywords = context.get("entrance_vids")
         assert keywords is not None, "No keywords for query."
 
         if isinstance(context.get("max_deep"), int):

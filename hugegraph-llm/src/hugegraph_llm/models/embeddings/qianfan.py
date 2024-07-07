@@ -22,7 +22,8 @@ import os
 import qianfan
 
 """
-"QianFan" platform can be understood as a unified LLM platform that encompasses the WenXin large model along with other 
+"QianFan" platform can be understood as a unified LLM platform that encompasses the 
+WenXin large model along with other 
 common open-source models. 
 
 It enables the invocation and switching between WenXin and these open-source models.

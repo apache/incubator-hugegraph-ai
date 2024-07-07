@@ -54,9 +54,10 @@ class GremlinGenerator:
     def run(self):
         context = {}
         for operator in self.operators:
-            log.debug(f"Running operator: {operator.__class__.__name__}")
+            log.debug("Running operator: %s", operator.__class__.__name__)
             start = time.time()
             context = operator.run(context)
-            log.debug(f"Operator {operator.__class__.__name__} finished in {time.time() - start} seconds")
-            log.debug(f"Context:\n{context}")
+            log.debug("Operator %s finished in %s seconds", operator.__class__.__name__,
+                      time.time() - start)
+            log.debug("Context:\n%s", context)
         return context

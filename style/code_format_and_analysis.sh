@@ -29,7 +29,7 @@ fi
 if [ "$BLACK" = true ] ; then
   echo "[black] Start to check code style and auto format"
   # https://github.com/psf/BLACK/issues/1802
-  black --line-length=100 ${ROOT_DIR}
+  black --line-length=120 ${ROOT_DIR}
 fi
 
 # Run PYLINT if -p is specified

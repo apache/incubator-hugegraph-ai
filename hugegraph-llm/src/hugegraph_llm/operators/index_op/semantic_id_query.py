@@ -17,33 +17,27 @@
 
 
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any
+
 from hugegraph_llm.config import resource_path, settings
-from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.indices.vector_index import VectorIndex
+from hugegraph_llm.models.embeddings.base import BaseEmbedding
 
 
-class VectorIndexQuery:
-    def __init__(self, embedding: BaseEmbedding, topk: int = 10):
-        self.embedding = embedding
-        self.topk = topk
-        index_file = str(os.path.join(resource_path, settings.graph_name, "vidx.faiss"))
-        content_file = str(os.path.join(resource_path, settings.graph_name, "vidx.pkl"))
+class SemanticIdQuery:
+    def __init__(self, embedding: BaseEmbedding):
+        index_file = str(os.path.join(resource_path, settings.graph_name, "vid.faiss"))
+        content_file = str(os.path.join(resource_path, settings.graph_name, "vid.pkl"))
         self.vector_index = VectorIndex.from_index_file(index_file, content_file)
+        self.embedding = embedding
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        query = context.get("query")
-        query_embedding = self.embedding.get_text_embedding(query)
-        results = self.vector_index.search(query_embedding, self.topk)
-        # TODO: check format results
-        context["vector_result"] = self._format_results(results)
+        keywords = context["keywords"]
+        graph_query_entrance = []
+        for keyword in keywords:
+            query_vector = self.embedding.get_text_embedding(keyword)
+            results = self.vector_index.search(query_vector, top_k=1)
+            if results:
+                graph_query_entrance.append(results[0])
+        context["entrance_vids"] = graph_query_entrance
         return context
-
-    def _format_results(self, results: List[Any]) -> List[Any]:
-        formatted_results = []
-        for result in results:
-            sub = result[0]
-            pred = result[1]
-            obj = result[2]
-            formatted_results.append(f"{sub} -[{pred}]-> {obj}")
-        return formatted_results

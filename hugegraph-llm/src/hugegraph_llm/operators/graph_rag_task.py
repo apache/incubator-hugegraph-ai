@@ -26,6 +26,7 @@ from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.operators.common_op.print_result import PrintResult
 from hugegraph_llm.operators.common_op.merge_dedup_rerank import MergeDedupRerank
 from hugegraph_llm.operators.hugegraph_op.graph_rag_query import GraphRAGQuery
+from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
@@ -53,6 +54,14 @@ class GraphRAG:
                 language=language,
                 extract_template=extract_template,
                 expand_template=expand_template,
+            )
+        )
+        return self
+
+    def match_keyword_to_id(self):
+        self._operators.append(
+            SemanticIdQuery(
+                embedding=self._embedding,
             )
         )
         return self
@@ -114,9 +123,10 @@ class GraphRAG:
         context = kwargs
         context["llm"] = self._llm
         for operator in self._operators:
-            log.debug(f"Running operator: {operator.__class__.__name__}")
+            log.debug("Running operator: %s", operator.__class__.__name__)
             start = time.time()
             context = operator.run(context)
-            log.debug(f"Operator {operator.__class__.__name__} finished in {time.time() - start} seconds")
-            log.debug(f"Context:\n{context}")
+            log.debug("Operator %s finished in %s seconds", operator.__class__.__name__,
+                      time.time() - start)
+            log.debug("Context:\n%s", context)
         return context

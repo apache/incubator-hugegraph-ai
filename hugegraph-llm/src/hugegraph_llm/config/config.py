@@ -16,6 +16,8 @@
 # under the License.
 
 
+import json
+
 from dataclasses import dataclass
 from typing import Literal, Optional
 
@@ -42,10 +44,11 @@ class Config:
     qianfan_access_token: Optional[str] = None
     ## url settings
     qianfan_url_prefix = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
-    qianfan_chat_url: Optional[str] = (qianfan_url_prefix + "/chat/")
+    qianfan_chat_url: Optional[str] = qianfan_url_prefix + "/chat/"
     qianfan_language_model: Optional[str] = "completions_pro"
-    qianfan_embed_url: Optional[str] = (qianfan_url_prefix + "/embeddings/")
-    qianfan_embedding_model: Optional[str] = "embedding-v1"  # https://cloud.baidu.com/doc/WENXINWORKSHOP/s/alj562vvu
+    qianfan_embed_url: Optional[str] = qianfan_url_prefix + "/embeddings/"
+    # https://cloud.baidu.com/doc/WENXINWORKSHOP/s/alj562vvu
+    qianfan_embedding_model: Optional[str] = "embedding-v1"
     # Zhipu settings
     zhipu_api_key: Optional[str] = None
     zhipu_language_model: Optional[str] = "glm-4"
@@ -56,3 +59,9 @@ class Config:
     graph_name: Optional[str] = "hugegraph"
     graph_user: Optional[str] = "admin"
     graph_pwd: Optional[str] = "xxx"
+
+    def from_json(self, file_path: str):
+        with open(file_path, "r", encoding="utf-8") as f:
+            d = json.load(f)
+        for k, v in d.items():
+            setattr(self, k, v)

@@ -17,33 +17,29 @@
 
 
 import os
-from typing import Dict, Any, List
+from typing import Any, Dict
+
 from hugegraph_llm.config import resource_path, settings
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.indices.vector_index import VectorIndex
+from hugegraph_llm.utils.log import log
 
 
-class VectorIndexQuery:
-    def __init__(self, embedding: BaseEmbedding, topk: int = 10):
+class BuildSemanticIndex:
+    def __init__(self, embedding: BaseEmbedding):
+        self.content_file = os.path.join(resource_path, settings.graph_name, "vid.pkl")
+        self.index_file = os.path.join(resource_path, settings.graph_name, "vid.faiss")
         self.embedding = embedding
-        self.topk = topk
-        index_file = str(os.path.join(resource_path, settings.graph_name, "vidx.faiss"))
-        content_file = str(os.path.join(resource_path, settings.graph_name, "vidx.pkl"))
-        self.vector_index = VectorIndex.from_index_file(index_file, content_file)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        query = context.get("query")
-        query_embedding = self.embedding.get_text_embedding(query)
-        results = self.vector_index.search(query_embedding, self.topk)
-        # TODO: check format results
-        context["vector_result"] = self._format_results(results)
+        vids = [vertex["id"] for vertex in context["vertices"]]
+        if len(vids) > 0:
+            log.debug("Building vector index for %s vertices...", len(vids))
+            vids_embedding = [self.embedding.get_text_embedding(vid) for vid in vids]
+            log.debug("Vector index built for %s vertices.", len(vids))
+            vector_index = VectorIndex(len(vids_embedding[0]))
+            vector_index.add(vids_embedding, vids)
+            vector_index.to_index_file(str(self.index_file), str(self.content_file))
+        else:
+            log.debug("No vertices to build vector index.")
         return context
-
-    def _format_results(self, results: List[Any]) -> List[Any]:
-        formatted_results = []
-        for result in results:
-            sub = result[0]
-            pred = result[1]
-            obj = result[2]
-            formatted_results.append(f"{sub} -[{pred}]-> {obj}")
-        return formatted_results

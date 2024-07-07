@@ -17,6 +17,7 @@
 
 
 import json
+import argparse
 
 import requests
 import uvicorn
@@ -39,13 +40,14 @@ from hugegraph_llm.utils.log import log
 
 
 def graph_rag(text, vector_search: str):
-    searcher = GraphRAG().extract_keyword(text=text).query_graph_for_rag()
+    searcher = GraphRAG().extract_keyword(text=text).match_keyword_to_id().query_graph_for_rag()
     if vector_search == "true":
         searcher.query_vector_index_for_rag()
     return searcher.merge_dedup_rerank().synthesize_answer().run(verbose=True)
 
 
-def build_kg(file, schema, template, disambiguate_word_sense, commit_to_hugegraph, build_vector_index):
+def build_kg(file, schema, example_prompt, disambiguate_word_sense, commit_to_hugegraph,
+             build_vector_index):
     full_path = file.name
     if full_path.endswith(".txt"):
         with open(full_path, "r", encoding="utf-8") as f:
@@ -70,13 +72,14 @@ def build_kg(file, schema, template, disambiguate_word_sense, commit_to_hugegrap
             builder.import_schema(from_hugegraph=schema)
     else:
         return "ERROR: please input schema."
-    builder.extract_triples(text, template)
+    builder.extract_triples(text, example_prompt)
     if disambiguate_word_sense == "true":
         builder.disambiguate_word_sense()
     if commit_to_hugegraph == "true":
         client = get_hg_client()
         client.graphs().clear_graph_all_data()
         builder.commit_to_hugegraph()
+        builder.build_vertex_id_semantic_index()
     if build_vector_index == "true":
         builder.do_triples_embedding()
         builder.build_vector_index()
@@ -84,7 +87,15 @@ def build_kg(file, schema, template, disambiguate_word_sense, commit_to_hugegrap
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="host")
+    parser.add_argument("--port", type=int, default=8001, help="port")
+    parser.add_argument("--config_file", type=str, default=None, help="config file")
+    args = parser.parse_args()
+    if args.config_file is not None:
+        settings.from_json(args.config_file)
     app = FastAPI()
+
     with gr.Blocks() as hugegraph_llm:
         gr.Markdown(
             """# HugeGraph LLM RAG Demo
@@ -103,21 +114,21 @@ if __name__ == "__main__":
 
         def test_api_connection(url, method="GET", ak=None, sk=None, headers=None, body=None):
             # TODO: use fastapi.request / starlette instead? (Also add a try-catch here)
-            log.debug(f"Request URL: {url}")
+            log.debug("Request URL: %s", url)
             if method.upper() == "GET":
                 response = requests.get(url, headers=headers, timeout=5)
             elif method.upper() == "POST":
                 response = requests.post(url, headers=headers, json=body, timeout=5)
             else:
-                log.error(f"Unsupported method: {method}")
+                log.error("Unsupported method: %s", method)
                 return
 
             if 200 <= response.status_code < 300:
                 log.info("Connection successful. Configured finished.")
                 gr.Info("Connection successful. Configured finished.")
             else:
-                log.error(f"Connection failed with status code: {response.status_code}")
-                gr.Error(f"Connection failed with status code: {response.status_code}")
+                log.error("Connection failed with status code: %s", response.status_code)
+                gr.Error(f"Connection failed with status code: {response.status_code}")  # pylint: disable=pointless-exception-statement
 
 
         def apply_graph_configuration(ip, port, name, user, pwd):
@@ -146,7 +157,7 @@ if __name__ == "__main__":
             if llm_type == "openai":
                 with gr.Row():
                     llm_config_input = [
-                        gr.Textbox(value=settings.openai_api_key, label="api_key"),
+                        gr.Textbox(value=settings.openai_api_key, label="api_key", type="password"),
                         gr.Textbox(value=settings.openai_api_base, label="api_base"),
                         gr.Textbox(value=settings.openai_language_model, label="model_name"),
                         gr.Textbox(value=settings.openai_max_tokens, label="max_token"),
@@ -162,8 +173,10 @@ if __name__ == "__main__":
             elif llm_type == "qianfan_wenxin":
                 with gr.Row():
                     llm_config_input = [
-                        gr.Textbox(value=settings.qianfan_api_key, label="api_key"),
-                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key"),
+                        gr.Textbox(value=settings.qianfan_api_key, label="api_key",
+                                   type="password"),
+                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key",
+                                   type="password"),
                         gr.Textbox(value=settings.qianfan_language_model, label="model_name"),
                         gr.Textbox(value="", visible=False)
                     ]
@@ -212,15 +225,17 @@ if __name__ == "__main__":
             if embedding_type == "openai":
                 with gr.Row():
                     embedding_config_input = [
-                        gr.Textbox(value=settings.openai_api_key, label="api_key"),
+                        gr.Textbox(value=settings.openai_api_key, label="api_key", type="password"),
                         gr.Textbox(value=settings.openai_api_base, label="api_base"),
                         gr.Textbox(value=settings.openai_embedding_model, label="model_name")
                     ]
             elif embedding_type == "qianfan_wenxin":
                 with gr.Row():
                     embedding_config_input = [
-                        gr.Textbox(value=settings.qianfan_api_key, label="api_key"),
-                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key"),
+                        gr.Textbox(value=settings.qianfan_api_key, label="api_key",
+                                   type="password"),
+                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key",
+                                   type="password"),
                         gr.Textbox(value=settings.qianfan_embedding_model, label="model_name"),
                     ]
             elif embedding_type == "ollama":
@@ -287,7 +302,8 @@ if __name__ == "__main__":
         with gr.Row():
             input_file = gr.File(value=None, label="Document")
             input_schema = gr.Textbox(value=SCHEMA, label="Schema")
-            info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract template")
+            info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT,
+                                               label="Info extract template")
             with gr.Column():
                 disambiguate_word_sense_radio = gr.Radio(choices=["true", "false"], value="false",
                                                          label="Disambiguate word sense")
@@ -331,6 +347,6 @@ if __name__ == "__main__":
         btn.click(fn=run_gremlin_query, inputs=inp, outputs=out)  # pylint: disable=no-member
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
     # Note: set reload to False in production environment
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host=args.host, port=args.port)
     # TODO: we can't use reload now due to the config 'app' of uvicorn.run
     # uvicorn.run("rag_web_demo:app", host="0.0.0.0", port=8001, reload=True)

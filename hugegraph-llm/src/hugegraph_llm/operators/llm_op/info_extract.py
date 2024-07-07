@@ -68,9 +68,8 @@ The extracted text is: {text}"""
 """
 
     if schema:
-        return SCHEMA_EXAMPLE_PROMPT + schema_real_prompt
-    else:
-        return text_based_prompt
+        return schema_real_prompt
+    return text_based_prompt
 
 
 def split_text(text: str) -> List[str]:
@@ -109,12 +108,15 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
                 source_label = edge["source_vertex_label"]
                 source_id = f"{source_label}-{s}"
                 if source_id not in vertices_dict:
-                    vertices_dict[source_id] = {"id": source_id, "name": s, "label": source_label, "properties": {}}
+                    vertices_dict[source_id] = {"id": source_id, "name": s, "label": source_label,
+                                                "properties": {}}
                 target_label = edge["target_vertex_label"]
                 target_id = f"{target_label}-{o}"
                 if target_id not in vertices_dict:
-                    vertices_dict[target_id] = {"id": target_id, "name": o, "label": target_label, "properties": {}}
-                graph["edges"].append({"start": source_id, "end": target_id, "type": label, "properties": {}})
+                    vertices_dict[target_id] = {"id": target_id, "name": o, "label": target_label,
+                                                "properties": {}}
+                graph["edges"].append({"start": source_id, "end": target_id, "type": label,
+                                       "properties": {}})
                 break
     graph["vertices"] = vertices_dict.values()
 
@@ -124,11 +126,11 @@ class InfoExtract:
             self,
             llm: BaseLLM,
             text: str,
-            template: Optional[str] = None
+            example_prompt: Optional[str] = None
     ) -> None:
         self.llm = llm
         self.text = text
-        self.template = template
+        self.example_prompt = example_prompt
 
     def run(self, schema=None) -> Dict[str, List[Any]]:
         chunked_text = split_text(self.text)
@@ -137,7 +139,7 @@ class InfoExtract:
                   if schema else {"triples": []})
         for chunk in chunked_text:
             proceeded_chunk = self.extract_triples_by_llm(schema, chunk)
-            log.debug(f"[LLM] input: {chunk} \n output:{proceeded_chunk}")
+            log.debug("[LLM] input: %s \n output:%s", chunk, proceeded_chunk)
             if schema:
                 extract_triples_by_regex_with_schema(schema, proceeded_chunk, result)
             else:
@@ -145,19 +147,19 @@ class InfoExtract:
         return self._filter_long_id(result)
 
     def extract_triples_by_llm(self, schema, chunk):
-        if self.template:
-            prompt = self.template.format(schema=schema, text=chunk)
-        else:
-            prompt = generate_extract_triple_prompt(chunk, schema)
+        prompt = generate_extract_triple_prompt(chunk, schema)
+        if self.example_prompt is not None:
+            prompt = self.example_prompt + prompt
         return self.llm.generate(prompt=prompt)
 
-    def valid(self, element_id, max_length=128):
-        if len(element_id) >= max_length:
-            log.warn(f"Filter out GraphElementID too long: {element_id}")
+    def valid(self, element_id: str, max_length: int = 128):
+        if len(element_id.encode()) >= max_length:
+            log.warning("Filter out GraphElementID too long: %s", element_id)
             return False
         return True
 
     def _filter_long_id(self, graph):
         graph["vertices"] = [vertex for vertex in graph["vertices"] if self.valid(vertex["id"])]
-        graph["edges"] = [edge for edge in graph["edges"] if self.valid(edge["start"]) and self.valid(edge["end"])]
+        graph["edges"] = [edge for edge in graph["edges"]
+                          if self.valid(edge["start"]) and self.valid(edge["end"])]
         return graph
