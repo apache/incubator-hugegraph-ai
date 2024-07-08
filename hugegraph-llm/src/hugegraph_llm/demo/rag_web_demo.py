@@ -18,6 +18,7 @@
 
 import json
 import argparse
+import os
 
 import requests
 import uvicorn
@@ -29,7 +30,7 @@ from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.operators.graph_rag_task import GraphRAG
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
-from hugegraph_llm.config import settings
+from hugegraph_llm.config import settings, resource_path
 from hugegraph_llm.operators.llm_op.info_extract import SCHEMA_EXAMPLE_PROMPT
 from hugegraph_llm.utils.hugegraph_utils import (
     init_hg_test_data,
@@ -76,14 +77,26 @@ def build_kg(file, schema, example_prompt, disambiguate_word_sense, commit_to_hu
     if disambiguate_word_sense == "true":
         builder.disambiguate_word_sense()
     if commit_to_hugegraph == "true":
-        client = get_hg_client()
-        client.graphs().clear_graph_all_data()
         builder.commit_to_hugegraph()
         builder.build_vertex_id_semantic_index()
     if build_vector_index == "true":
         builder.do_triples_embedding()
         builder.build_vector_index()
     return builder.run()
+
+
+def clean_kg():
+    client = get_hg_client()
+    client.graphs().clear_graph_all_data()
+    if os.path.exists(os.path.join(resource_path, settings.graph_name, "vidx.faiss")):
+        os.remove(os.path.join(resource_path, settings.graph_name, "vidx.faiss"))
+    if os.path.exists(os.path.join(resource_path, settings.graph_name, "vidx.pkl")):
+        os.remove(os.path.join(resource_path, settings.graph_name, "vidx.pkl"))
+    if os.path.exists(os.path.join(resource_path, settings.graph_name, "vid.faiss")):
+        os.remove(os.path.join(resource_path, settings.graph_name, "vid.faiss"))
+    if os.path.exists(os.path.join(resource_path, settings.graph_name, "vid.pkl")):
+        os.remove(os.path.join(resource_path, settings.graph_name, "vid.pkl"))
+    return "Knowledge Graph has been cleaned!"
 
 
 if __name__ == "__main__":
@@ -129,7 +142,6 @@ if __name__ == "__main__":
             else:
                 log.error("Connection failed with status code: %s", response.status_code)
                 gr.Error(f"Connection failed with status code: {response.status_code}")  # pylint: disable=pointless-exception-statement
-
 
         def apply_graph_configuration(ip, port, name, user, pwd):
             settings.graph_ip = ip
@@ -286,21 +298,40 @@ if __name__ == "__main__":
         )
 
         SCHEMA = """{
-    "vertices": [
-        {"vertex_label": "entity", "properties": []}
-    ],
-    "edges": [
-        {
-            "edge_label": "relation",
-            "source_vertex_label": "entity",
-            "target_vertex_label": "entity",
-            "properties": {}
-        }
-    ]
+  "vertices": [
+    {
+      "vertex_label": "person",
+      "properties": [
+        "name",
+        "age",
+        "occupation"]
+    },
+    {
+      "vertex_label": "webpage",
+      "properties": [
+        "name",
+        "url"]
+    }
+  ],
+  "edges": [
+    {
+      "edge_label": "roommate",
+      "source_vertex_label": "person",
+      "target_vertex_label": "person",
+      "properties": {}
+    },
+    {
+      "edge_label": "link",
+      "source_vertex_label": "webpage",
+      "target_vertex_label": "person",
+      "properties": {}
+    }
+  ]
 }"""
 
         with gr.Row():
-            input_file = gr.File(value=None, label="Document")
+            input_file = gr.File(value=os.path.join(resource_path, "demo", "test.txt"),
+                                 label="Document")
             input_schema = gr.Textbox(value=SCHEMA, label="Schema")
             info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT,
                                                label="Info extract template")
@@ -311,9 +342,15 @@ if __name__ == "__main__":
                                                      label="Commit to hugegraph")
                 build_vector_index_radio = gr.Radio(choices=["true", "false"], value="false",
                                                     label="Build vector index")
+                clean_btn = gr.Button("Clean knowledge graph")
+                btn = gr.Button("Build knowledge graph")
         with gr.Row():
             out = gr.Textbox(label="Output")
-        btn = gr.Button("Build knowledge graph")
+        clean_btn.click(  # pylint: disable=no-member
+            fn=clean_kg,
+            inputs=[],
+            outputs=out
+        )
         btn.click(  # pylint: disable=no-member
             fn=build_kg,
             inputs=[input_file, input_schema, info_extract_template,
@@ -325,7 +362,7 @@ if __name__ == "__main__":
         gr.Markdown("""## 2. Retrieval augmented generation by hugegraph""")
         with gr.Row():
             with gr.Column(scale=2):
-                inp = gr.Textbox(value="Tell me about Al Pacino.", label="Question")
+                inp = gr.Textbox(value="Tell me about Sarah.", label="Question")
                 out = gr.Textbox(label="Answer")
             with gr.Column(scale=1):
                 vector_search_radio = gr.Radio(choices=["true", "false"], value="false",

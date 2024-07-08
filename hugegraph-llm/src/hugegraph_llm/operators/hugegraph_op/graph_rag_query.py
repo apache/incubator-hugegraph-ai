@@ -175,7 +175,7 @@ class GraphRAGQuery:
                         break
                     node_cache.add(matched_str)
                     props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items())
-                    node_str = f"{item['label']}{{{props_str}}}"
+                    node_str = f"{item['id']}{{{props_str}}}"
                     flat_rel += node_str
                     if flat_rel in knowledge:
                         knowledge.remove(flat_rel)

@@ -153,7 +153,7 @@ class InfoExtract:
         return self.llm.generate(prompt=prompt)
 
     def valid(self, element_id: str, max_length: int = 128):
-        if len(element_id.encode()) >= max_length:
+        if len(element_id.encode("utf-8")) >= max_length:
             log.warning("Filter out GraphElementID too long: %s", element_id)
             return False
         return True

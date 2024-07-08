@@ -27,8 +27,8 @@ from hugegraph_llm.utils.log import log
 
 class BuildSemanticIndex:
     def __init__(self, embedding: BaseEmbedding):
-        self.content_file = os.path.join(resource_path, settings.graph_name, "vid.pkl")
-        self.index_file = os.path.join(resource_path, settings.graph_name, "vid.faiss")
+        self.content_file = str(os.path.join(resource_path, settings.graph_name, "vid.pkl"))
+        self.index_file = str(os.path.join(resource_path, settings.graph_name, "vid.faiss"))
         self.embedding = embedding
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -37,9 +37,12 @@ class BuildSemanticIndex:
             log.debug("Building vector index for %s vertices...", len(vids))
             vids_embedding = [self.embedding.get_text_embedding(vid) for vid in vids]
             log.debug("Vector index built for %s vertices.", len(vids))
-            vector_index = VectorIndex(len(vids_embedding[0]))
+            if os.path.exists(self.index_file) and os.path.exists(self.content_file):
+                vector_index = VectorIndex.from_index_file(self.index_file, self.content_file)
+            else:
+                vector_index = VectorIndex(len(vids_embedding[0]))
             vector_index.add(vids_embedding, vids)
-            vector_index.to_index_file(str(self.index_file), str(self.content_file))
+            vector_index.to_index_file(self.index_file, self.content_file)
         else:
             log.debug("No vertices to build vector index.")
         return context
