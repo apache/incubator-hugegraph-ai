@@ -105,6 +105,7 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
         p_lower = p.lower()
         for vertex in schema["vertices"]:
             if vertex["vertex_label"] == label and any(pp.lower() == p_lower for pp in vertex["properties"]):
+                graph["triples"].append((s, p, o))
                 id = f"{label}-{s}"
                 if id not in vertices_dict:
                     vertices_dict[id] = {"id": id, "name": s, "label": label, "properties": {p: o}}
@@ -113,7 +114,7 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
                 break
         for edge in schema["edges"]:
             if edge["edge_label"] == label:
-                graph["triples"].append(({s}, {p}, {o}))
+                graph["triples"].append((s, p, o))
                 source_label = edge["source_vertex_label"]
                 source_id = f"{source_label}-{s}"
                 if source_id not in vertices_dict:
