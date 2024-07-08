@@ -34,9 +34,13 @@ graph systems and large language models.
     pip install ./hugegraph-python-client
     pip install ./hugegraph-llm
     ```
+- Generate the config file
+    ```bash
+    python -m hugegraph_llm.config.generate --file_path=./hgconfig.json
+    ```
 - Start the gradio interactive demo of **Graph RAG**, you can start with the following command, and open http://127.0.0.1:8001 after starting
     ```bash
-    python3 -m hugegraph_llm.demo.rag_web_demo
+    python3 -m hugegraph_llm.demo.rag_web_demo --config_file=./hgconfig.json
    ```
 
 - Or start the gradio interactive demo of **Text2Gremlin**, you can start with the following command, and open http://127.0.0.1:8002 after starting
