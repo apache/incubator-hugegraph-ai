@@ -20,6 +20,7 @@ from typing import Dict, List, Any
 
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.llm_op.info_extract import extract_triples_by_regex
+from hugegraph_llm.utils.log import log
 
 
 def generate_disambiguate_prompt(triples):
@@ -44,6 +45,8 @@ class DisambiguateData:
     def run(self, data: Dict) -> Dict[str, List[Any]]:
         # only disambiguate triples
         if "triples" in data:
+            # TODO: ensure the logic here
+            log.debug(data)
             triples = data["triples"]
             prompt = generate_disambiguate_prompt(triples)
             llm_output = self.llm.generate(prompt=prompt)

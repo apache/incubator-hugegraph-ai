@@ -26,26 +26,32 @@ SCHEMA_EXAMPLE_PROMPT = """## Main Task
 Extract Triples from the given text and graph schema
 
 ## Basic Rules
-The output format must be: (X,Y,Z) - LABEL
+1. The output format must be: (X,Y,Z) - LABEL
 In this format, Y must be a value from "properties" or "edge_label", 
 and LABEL must be X's vertex_label or Y's edge_label.
+2. Don't extract attribute/property fields that do not exist in the given schema
+3. Ensure the extract property is in the same type as the schema (like 'age' should be a number)
+4. Translate the given schema filed into Chinese if the given text is Chinese but the schema is in English (Optional) 
 
-## Example
+## Example (Note: Update the example to correspond to the given text and schema)
 ### Input example:
 Graph schema:
-"vertices":[{"vertex_label":"person","properties":["name","age","occupation"]}],
-"edges":[{"edge_label":"roommate","source_vertex_label":"person","target_vertex_label":"person","properties":{}}]}
+{"vertices":[{"vertex_label":"person","properties":["name","age","occupation"]}], "edges":[{"edge_label":"roommate",
+"source_vertex_label":"person","target_vertex_label":"person","properties":["date"]]}
 Text:
 Meet Sarah, a 30-year-old attorney, and her roommate,
 James, whom she's shared a home with since 2010. James,
 in his professional life, works as a journalist.
 
 ### Output example:
-
-(Sarah, Age, 30) - person
-(Sarah, Occupation, attorney) - person
-(James, Occupation, journalist) - person
-(Sarah, Roommate, James) - roommate
+(Sarah, name, Sarah) - person
+(Sarah, age, 30) - person
+(Sarah, occupation, attorney) - person
+(James, name, James) - person
+(James, occupation, journalist) - person
+(Sarah, roommate, James) - roommate
+(James, roommate, Sarah) - roommate
+(Sarah, date, 2010) - roommate
 """
 
 
@@ -57,8 +63,8 @@ For example:
 Alice lawyer and is 25 years old and Bob is her roommate since 2001. Bob works as a journalist.
 Alice owns the webpage www.alice.com and Bob owns the webpage www.bob.com
 Output: [("Alice", "Age", "25"),("Alice", "Profession", "lawyer"),("Bob", "Job", "journalist"),
-("Alice", "Roommate of", "Bob"),("Alice", "Owns", "http://www.alice.com"),
-("Bob", "Owns", "http://www.bob.com")]
+("Alice", "Roommate of", "Bob"),("Alice", "Owns", "https://www.alice.com"),
+("Bob", "Owns", "https://www.bob.com")]
 
 The extracted text is: {text}"""
 
@@ -69,6 +75,7 @@ The extracted text is: {text}"""
 
     if schema:
         return schema_real_prompt
+    log.warn("Recommend to provide a graph schema to improve the extraction accuracy. Now using the default schema.")
     return text_based_prompt
 
 
@@ -94,8 +101,10 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
         s, p, o, label = [item.strip() for item in match]
         if None in [label, s, p, o]:
             continue
+        # TODO: use a more efficient way to compare the extract & input property
+        p_lower = p.lower()
         for vertex in schema["vertices"]:
-            if vertex["vertex_label"] == label and p in vertex["properties"]:
+            if vertex["vertex_label"] == label and any(pp.lower() == p_lower for pp in vertex["properties"]):
                 id = f"{label}-{s}"
                 if id not in vertices_dict:
                     vertices_dict[id] = {"id": id, "name": s, "label": label, "properties": {p: o}}
