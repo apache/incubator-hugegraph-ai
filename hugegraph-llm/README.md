@@ -52,7 +52,7 @@ graph systems and large language models.
 
 ### 1.Build a knowledge graph in HugeGraph through LLM
 
-Run example like `python3 ./hugegraph-llm/examples/build_kg_test.py`
+Run example like `python3 ./hugegraph_llm/examples/build_kg_test.py`
 
 The `KgBuilder` class is used to construct a knowledge graph. Here is a brief usage guide:
 
@@ -115,7 +115,7 @@ The methods of the `KgBuilder` class can be chained together to perform a sequen
 
 ### 2. Retrieval augmented generation (RAG) based on HugeGraph
 
-Run example like `python3 ./hugegraph-llm/examples/graph_rag_test.py`
+Run example like `python3 ./hugegraph_llm/examples/graph_rag_test.py`
 
 The `GraphRAG` class is used to integrate HugeGraph with large language models to provide retrieval-augmented generation capabilities.
 Here is a brief usage guide:
