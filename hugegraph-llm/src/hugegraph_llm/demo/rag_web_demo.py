@@ -149,8 +149,9 @@ if __name__ == "__main__":
             settings.graph_name = name
             settings.graph_user = user
             settings.graph_pwd = pwd
-            test_url = f"http://{ip}:{port}/graphs/{name}/schema"
-            test_api_connection(test_url)
+            if ip is not None and port is not None and name is not None:
+                test_url = f"http://{ip}:{port}/graphs/{name}/schema"
+                test_api_connection(test_url)
 
 
         graph_config_button.click(apply_graph_configuration, inputs=graph_config_input)  # pylint: disable=no-member
