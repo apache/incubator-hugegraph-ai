@@ -32,7 +32,7 @@ graph systems and large language models.
     ```bash
     cd ./incubator-hugegraph-ai # better to use virtualenv (source venv/bin/activate) 
     pip install ./hugegraph-python-client
-    pip install ./hugegraph-llm
+    pip install -r ./hugegraph-llm/requirements.txt
     ```
 - Generate the config file
     ```bash
