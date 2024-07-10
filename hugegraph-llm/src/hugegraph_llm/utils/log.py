@@ -39,8 +39,32 @@ file_handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT))
 # Add the handler, and we could use 'log.Info(xxx)' in other files
 log.addHandler(file_handler)
 
+
+# ANSI escape sequences for colors
+class CustomConsoleHandler(logging.StreamHandler):
+    COLORS = {
+        "DEBUG": "\033[0;37m",  # White
+        "INFO": "\033[0;32m",  # Green
+        "WARNING": "\033[0;33m",  # Yellow
+        "ERROR": "\033[0;31m",  # Red
+        "CRITICAL": "\033[0;41m"  # Red background
+    }
+
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            level = record.levelname
+            color_prefix = self.COLORS.get(level, "\033[0;37m")  # Default to white
+            color_suffix = "\033[0m"  # Reset to default
+            stream = self.stream
+            stream.write(color_prefix + msg + color_suffix + self.terminator)
+            self.flush()
+        except Exception:
+            self.handleError(record)
+
+
 # Also output logs to the console, we could add a StreamHandler here (Optional)
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.DEBUG)
-console_handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT))
-log.addHandler(console_handler)
+custom_handler = CustomConsoleHandler()  # console_handler = logging.StreamHandler()
+custom_handler.setLevel(logging.DEBUG)
+custom_handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT))
+log.addHandler(custom_handler)
