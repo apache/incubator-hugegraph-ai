@@ -17,14 +17,18 @@
 
 
 import json
+import os
 
 from dataclasses import dataclass
 from typing import Literal, Optional
+from pathlib import Path
+from dotenv import dotenv_values
 
 
 @dataclass
 class Config:
     """LLM settings"""
+    # env_path: Optional[str] = ".env"
     llm_type: Literal["openai", "ollama", "qianfan_wenxin", "zhipu"] = "openai"
     embedding_type: Optional[Literal["openai", "ollama", "qianfan_wenxin", "zhipu"]] = "openai"
     # OpenAI settings
@@ -60,8 +64,33 @@ class Config:
     graph_user: Optional[str] = "admin"
     graph_pwd: Optional[str] = "xxx"
 
-    def from_json(self, file_path: str):
-        with open(file_path, "r", encoding="utf-8") as f:
-            d = json.load(f)
-        for k, v in d.items():
-            setattr(self, k, v)
+    def from_env(self, config_dir: str):
+        env_config = read_dotenv(config_dir)
+        for key, value in env_config.items():
+            if key in self.__annotations__:
+                setattr(self, key, value)
+
+    def generate_env(self, config_dir: str):
+        env_path = Path(config_dir) / ".env"
+        config_dict = {}
+        for k, v in self.__dict__.items():
+            config_dict[k] = v
+        with open(env_path, "w", encoding="utf-8") as f:
+            for k, v in config_dict.items():
+                if v is None:
+                    f.write(f"{k}=\n")
+                else:
+                    f.write(f"{k}={v}\n")
+        print(f"Generate {env_path} successfully!")
+
+
+def read_dotenv(root: str) -> dict[str, Optional[str]]:
+    """Read a .env file in the given root path."""
+    env_path = Path(root) / ".env"
+    if env_path.exists():
+        env_config = dotenv_values(f"{env_path}")
+        print(f"Read {env_path} successfully!")
+        for key, value in env_config.items():
+            if key not in os.environ:
+                os.environ[key] = value or ""
+        return env_config

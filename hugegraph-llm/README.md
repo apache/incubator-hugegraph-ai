@@ -36,11 +36,11 @@ graph systems and large language models.
     ```
 - Generate the config file
     ```bash
-    python -m hugegraph_llm.config.generate --file_path=./hgconfig.json
+    python -m hugegraph_llm.config.generate --dir_path=./
     ```
 - Start the gradio interactive demo of **Graph RAG**, you can start with the following command, and open http://127.0.0.1:8001 after starting
     ```bash
-    python3 -m hugegraph_llm.demo.rag_web_demo --config_file=./hgconfig.json
+    python3 -m hugegraph_llm.demo.rag_web_demo --dir_path=./
    ```
 
 - Or start the gradio interactive demo of **Text2Gremlin**, you can start with the following command, and open http://127.0.0.1:8002 after starting

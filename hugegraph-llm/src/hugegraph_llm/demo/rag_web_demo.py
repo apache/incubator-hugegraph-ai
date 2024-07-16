@@ -103,10 +103,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="0.0.0.0", help="host")
     parser.add_argument("--port", type=int, default=8001, help="port")
-    parser.add_argument("--config_file", type=str, default=None, help="config file")
+    parser.add_argument("--dir_path", type=str, default=None, help="config file")
     args = parser.parse_args()
-    if args.config_file is not None:
-        settings.from_json(args.config_file)
+    if args.dir_path is not None:
+        settings.from_env(args.dir_path)
     app = FastAPI()
 
     with gr.Blocks() as hugegraph_llm:
@@ -149,9 +149,9 @@ if __name__ == "__main__":
             settings.graph_name = name
             settings.graph_user = user
             settings.graph_pwd = pwd
-            if ip is not None and port is not None and name is not None:
-                test_url = f"http://{ip}:{port}/graphs/{name}/schema"
-                test_api_connection(test_url)
+            test_url = f"http://{ip}:{port}/graphs/{name}/schema"
+            test_api_connection(test_url)
+            settings.generate_env(args.dir_path)
 
 
         graph_config_button.click(apply_graph_configuration, inputs=graph_config_input)  # pylint: disable=no-member
@@ -220,6 +220,7 @@ if __name__ == "__main__":
                     settings.ollama_port = int(arg2)
                     settings.ollama_language_model = arg3
                 gr.Info("configured!")
+                settings.generate_env(args.dir_path)
 
             llm_config_button.click(apply_llm_configuration, inputs=llm_config_input)  # pylint: disable=no-member
 
@@ -278,6 +279,7 @@ if __name__ == "__main__":
                 elif embedding_option == "qianfan_wenxin":
                     settings.qianfan_access_token = arg1
                     settings.qianfan_embed_url = arg2
+                settings.generate_env(args.dir_path)
 
                 gr.Info("configured!")
 

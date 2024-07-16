@@ -18,29 +18,27 @@
 
 import os
 import sys
-import json
 import argparse
 
+from pathlib import Path
 from hugegraph_llm.config import settings
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate hugegraph_llm config file')
-    parser.add_argument('--file_path', type=str, default='./config.json',
+    parser.add_argument('--dir_path', type=str, default='.',
                         help='The generated config file path')
 
     args = parser.parse_args()
 
-    file_path = args.file_path
-    if os.path.exists(file_path):
-        print(f"{file_path} already exists, please delete it first!")
-        sys.exit(1)
-    if not os.path.exists(os.path.dirname(file_path)):
-        os.makedirs(os.path.dirname(file_path))
+    dir_path = args.dir_path
+    env_path = Path(dir_path) / ".env"
 
-    config_dict = {}
-    for k, v in settings.__dict__.items():
-        config_dict[k] = v
-    with open(args.file_path, "w", encoding="utf-8") as f:
-        json.dump(config_dict, f, ensure_ascii=False, indent=2)
-    print(f"Generate {file_path} successfully!")
+    if os.path.exists(env_path):
+        print(f"{env_path} already exists, please delete it first!")
+        sys.exit(1)
+
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
+    settings.generate_env(dir_path)
