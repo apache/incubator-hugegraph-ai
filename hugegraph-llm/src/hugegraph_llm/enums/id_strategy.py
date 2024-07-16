@@ -16,26 +16,11 @@
 # under the License.
 
 
-from typing import Any, Dict
-
-from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from enum import Enum
 
 
-class ChunkEmbedding:
-    def __init__(
-            self,
-            embedding: BaseEmbedding,
-            context_key: str = "chunks",
-            result_key: str = "chunks_embedding"
-    ):
-        self.embedding = embedding
-        self.context_key = context_key
-        self.result_key = result_key
-
-    def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        chunks = context[self.context_key]
-        chunks_embedding = []
-        for chunk in chunks:
-            chunks_embedding.append(self.embedding.get_text_embedding(str(chunk)))
-        context[self.result_key] = chunks_embedding
-        return context
+class IdStrategy(Enum):
+    AUTOMATIC = "AUTOMATIC"
+    CUSTOMIZE_NUMBER = "CUSTOMIZE_NUMBER"
+    CUSTOMIZE_STRING = "CUSTOMIZE_STRING"
+    PRIMARY_KEY = "PRIMARY_KEY"

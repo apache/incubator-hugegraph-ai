@@ -105,7 +105,6 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
         p_lower = p.lower()
         for vertex in schema["vertices"]:
             if vertex["vertex_label"] == label and any(pp.lower() == p_lower for pp in vertex["properties"]):
-                graph["triples"].append((s, p, o))
                 id = f"{label}-{s}"
                 if id not in vertices_dict:
                     vertices_dict[id] = {"id": id, "name": s, "label": label, "properties": {p: o}}
@@ -114,7 +113,6 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
                 break
         for edge in schema["edges"]:
             if edge["edge_label"] == label:
-                graph["triples"].append((s, p, o))
                 source_label = edge["source_vertex_label"]
                 source_id = f"{source_label}-{s}"
                 if source_id not in vertices_dict:
@@ -135,21 +133,20 @@ class InfoExtract:
     def __init__(
             self,
             llm: BaseLLM,
-            text: str,
             example_prompt: Optional[str] = None
     ) -> None:
         self.llm = llm
-        self.text = text
         self.example_prompt = example_prompt
 
-    def run(self, schema=None) -> Dict[str, List[Any]]:
-        chunked_text = split_text(self.text)
+    def run(self, context: Dict[str, Any]) -> Dict[str, List[Any]]:
+        chunks = context["chunks"]
+        schema = context["schema"]
 
-        result = ({"triples": [], "vertices": [], "edges": [], "schema": schema}
+        result = ({"vertices": [], "edges": [], "schema": schema}
                   if schema else {"triples": []})
-        for chunk in chunked_text:
-            proceeded_chunk = self.extract_triples_by_llm(schema, chunk)
-            log.debug("[LLM] input: %s \n output:%s", chunk, proceeded_chunk)
+        for sentence in chunks:
+            proceeded_chunk = self.extract_triples_by_llm(schema, sentence)
+            log.debug("[LLM] input: %s \n output:%s", sentence, proceeded_chunk)
             if schema:
                 extract_triples_by_regex_with_schema(schema, proceeded_chunk, result)
             else:

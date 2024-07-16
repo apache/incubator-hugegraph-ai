@@ -17,28 +17,33 @@
 
 
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Literal
+
+from pyhugegraph.client import PyHugeClient
 
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.operators.common_op.check_schema import CheckSchema
 from hugegraph_llm.operators.common_op.print_result import PrintResult
+from hugegraph_llm.operators.hugegraph_op.fetch_graph_data import FetchGraphData
 from hugegraph_llm.operators.index_op.build_semantic_index import BuildSemanticIndex
 from hugegraph_llm.operators.index_op.build_vector_index import BuildVectorIndex
 from hugegraph_llm.operators.document_op.chunk_split import ChunkSplit
-from hugegraph_llm.operators.document_op.chunk_embedding import ChunkEmbedding
 from hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph import CommitToKg
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
 from hugegraph_llm.operators.llm_op.info_extract import InfoExtract
+from hugegraph_llm.operators.llm_op.property_graph_extract import PropertyGraphExtract
 from hugegraph_llm.utils.log import log
 
 
 class KgBuilder:
-    def __init__(self, llm: BaseLLM, embedding: Optional[BaseEmbedding] = None):
+    def __init__(self, llm: BaseLLM, embedding: Optional[BaseEmbedding] = None,
+                 graph: Optional[PyHugeClient] = None):
         self.operators = []
         self.llm = llm
         self.embedding = embedding
+        self.graph = graph
         self.result = None
 
     def import_schema(self, from_hugegraph=None, from_extraction=None, from_user_defined=None):
@@ -52,12 +57,25 @@ class KgBuilder:
             raise Exception("No input data")
         return self
 
-    def chunk_split(self):
-        self.operators.append(ChunkSplit(split_type="sentence", language="zh"))
+    def fetch_graph_data(self):
+        self.operators.append(FetchGraphData(self.graph))
         return self
 
-    def extract_triples(self, text: str, example_prompt: Optional[str] = None):
-        self.operators.append(InfoExtract(self.llm, text, example_prompt))
+    def chunk_split(
+            self,
+            text: str,  # text to be split
+            split_type: Literal["paragraph", "sentence"] = "paragraph",
+            language: Literal["zh", "en"] = "zh"
+    ):
+        self.operators.append(ChunkSplit(text, split_type, language))
+        return self
+
+    def extract_info(self, example_prompt: Optional[str] = None,
+                     extract_type: Literal["triples", "property_graph"] = "triples"):
+        if extract_type == "triples":
+            self.operators.append(InfoExtract(self.llm, example_prompt))
+        elif extract_type == "property_graph":
+            self.operators.append(PropertyGraphExtract(self.llm, example_prompt))
         return self
 
     def disambiguate_word_sense(self):
@@ -72,14 +90,8 @@ class KgBuilder:
         self.operators.append(BuildSemanticIndex(self.embedding))
         return self
 
-    def do_triples_embedding(self):
-        self.operators.append(ChunkEmbedding(embedding=self.embedding, context_key="triples",
-                                             result_key="triples_embedding"))
-        return self
-
     def build_vector_index(self):
-        self.operators.append(BuildVectorIndex(context_key="triples",
-                                               embedding_key="triples_embedding"))
+        self.operators.append(BuildVectorIndex(self.embedding))
         return self
 
     def print_result(self):

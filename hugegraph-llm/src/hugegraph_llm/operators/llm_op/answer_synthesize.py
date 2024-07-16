@@ -50,7 +50,7 @@ class AnswerSynthesize:
         self._context_head = context_head
         self._context_tail = context_tail
 
-    def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def run(self, context: Dict[str, Any]) -> str:
         if self._llm is None:
             self._llm = context.get("llm") or LLMs().get_llm()
         if context.get("llm") is None:
@@ -58,12 +58,12 @@ class AnswerSynthesize:
 
         if self._question is None:
             self._question = context.get("query") or None
+        assert self._question is not None, "No question for synthesizing."
 
         if self._context_body is None:
-            self._context_body = context.get("synthesize_context_body") or None
-
-        assert self._context_body is not None, "No context for synthesizing."
-        assert self._question is not None, "No question for synthesizing."
+            if context.get("synthesize_context_body", None) is None:
+                return "There is no knowledge relevant to your question."
+            self._context_body = context.get("synthesize_context_body")
 
         if isinstance(self._context_body, str):
             context_body_str = self._context_body

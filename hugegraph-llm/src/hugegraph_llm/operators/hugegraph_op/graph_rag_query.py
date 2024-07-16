@@ -95,8 +95,10 @@ class GraphRAGQuery:
                 self._client = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd)
         assert self._client is not None, "No graph for query."
 
-        keywords = context.get("entrance_vids")
+        keywords = context.get("keywords")
         assert keywords is not None, "No keywords for query."
+        entrance_vids = context.get("entrance_vids")
+        assert entrance_vids is not None, "No entrance vertices for query."
 
         if isinstance(context.get("max_deep"), int):
             self._max_deep = context["max_deep"]
@@ -121,15 +123,9 @@ class GraphRAGQuery:
                 edge_labels=edge_labels_str,
             )
         else:
-            id_format = self._get_graph_id_format()
-            if id_format == "STRING":
-                keywords_str = ",".join("'" + kw + "'" for kw in keywords)
-            else:
-                raise RuntimeError("Unsupported ID format for Graph RAG.")
-
             rag_gremlin_query_template = self.ID_RAG_GREMLIN_QUERY_TEMPL
             rag_gremlin_query = rag_gremlin_query_template.format(
-                keywords=keywords_str,
+                keywords=entrance_vids,
                 max_deep=self._max_deep,
                 max_items=self._max_items,
                 edge_labels=edge_labels_str,

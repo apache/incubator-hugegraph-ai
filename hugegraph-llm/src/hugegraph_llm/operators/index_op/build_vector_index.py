@@ -21,20 +21,25 @@ from typing import Dict, Any
 
 from hugegraph_llm.config import settings, resource_path
 from hugegraph_llm.indices.vector_index import VectorIndex
+from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from hugegraph_llm.utils.log import log
 
 
 class BuildVectorIndex:
-    def __init__(self, context_key: str = "chunks", embedding_key: str = "chunks_embedding"):
+    def __init__(self, embedding: BaseEmbedding):
+        self.embedding = embedding
         self.index_file = str(os.path.join(resource_path, settings.graph_name, "vidx.faiss"))
         self.content_file = str(os.path.join(resource_path, settings.graph_name, "vidx.pkl"))
         if not os.path.exists(os.path.join(resource_path, settings.graph_name)):
             os.mkdir(os.path.join(resource_path, settings.graph_name))
-        self.context_key = context_key
-        self.embedding_key = embedding_key
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        chunks = context[self.context_key]
-        chunks_embedding = context[self.embedding_key]
+        if "chunks" not in context:
+            raise ValueError("chunks not found in context.")
+        chunks = context["chunks"]
+        chunks_embedding = []
+        for chunk in chunks:
+            chunks_embedding.append(self.embedding.get_text_embedding(chunk))
         if len(chunks_embedding) > 0:
             if os.path.exists(self.index_file) and os.path.exists(self.content_file):
                 vector_index = VectorIndex.from_index_file(self.index_file, self.content_file)

@@ -77,3 +77,8 @@ def init_hg_test_data():
         "property": ["name", "birthDate"],
         "index": ["PersonByName", "MovieByName"],
     }
+
+
+def clean_hg_data():
+    client = get_hg_client()
+    client.graphs().clear_graph_all_data()

@@ -16,7 +16,7 @@
 # under the License.
 
 
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 import jieba
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
@@ -39,10 +39,26 @@ class MergeDedupRerank:
         merged_result = (context.get("graph_result", [])
                          + context.get("vector_result", [])
                          + context.get("keyword_result", []))
-        merged_result = list(set(merged_result))
-        result_score_list = [[res, get_score(query, res)] for res in merged_result]
-        result_score_list.sort(key=lambda x: x[1], reverse=True)
-        rerank_result = [res[0] for res in result_score_list]
-        context["rerank_result"] = rerank_result
-        context["synthesize_context_body"] = "\n".join(rerank_result[:self.topk])
+        synthesize_context_body = ""
+        vector_result = context.get("vector_result", [])
+        keyword_result = context.get("keyword_result", [])
+        merge_result = vector_result + keyword_result
+        if len(merge_result) > 0:
+            rerank_result = self._dedup_and_rerank(query, merge_result)[:self.topk]
+            synthesize_context_body += "The following are paragraphs related to the query:\n"
+            synthesize_context_body += "\n".join([f"{i+1}. {res}" for i, res in enumerate(rerank_result)])
+            synthesize_context_body += "\n"
+        graph_result = context.get("graph_result", [])
+        if len(graph_result) > 0:
+            graph_result = self._dedup_and_rerank(query, graph_result)[:self.topk]
+            synthesize_context_body += "The following are subgraph related to the query:\n"
+            synthesize_context_body += "\n".join([f"{i}. {res}" for i, res in enumerate(graph_result)])
+            synthesize_context_body += "\n"
+        context["synthesize_context_body"] = synthesize_context_body
         return context
+
+    def _dedup_and_rerank(self, query: str, results: List[str]):
+        results = list(set(results))
+        result_score_list = [[res, get_score(query, res)] for res in results]
+        result_score_list.sort(key=lambda x: x[1], reverse=True)
+        return [res[0] for res in result_score_list]

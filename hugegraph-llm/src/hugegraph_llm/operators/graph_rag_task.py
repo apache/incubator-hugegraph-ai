@@ -82,8 +82,8 @@ class GraphRAG:
         return self
 
     def query_vector_index_for_rag(
-        self,
-        max_items: int = 30
+            self,
+            max_items: int = 3
     ):
         self._operators.append(
             VectorIndexQuery(

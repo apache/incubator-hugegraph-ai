@@ -24,7 +24,7 @@ from hugegraph_llm.indices.vector_index import VectorIndex
 
 
 class VectorIndexQuery:
-    def __init__(self, embedding: BaseEmbedding, topk: int = 10):
+    def __init__(self, embedding: BaseEmbedding, topk: int = 3):
         self.embedding = embedding
         self.topk = topk
         index_file = str(os.path.join(resource_path, settings.graph_name, "vidx.faiss"))
@@ -36,14 +36,5 @@ class VectorIndexQuery:
         query_embedding = self.embedding.get_text_embedding(query)
         results = self.vector_index.search(query_embedding, self.topk)
         # TODO: check format results
-        context["vector_result"] = self._format_results(results)
+        context["vector_result"] = results
         return context
-
-    def _format_results(self, results: List[Any]) -> List[Any]:
-        formatted_results = []
-        for result in results:
-            sub = result[0]
-            pred = result[1]
-            obj = result[2]
-            formatted_results.append(f"{sub} -[{pred}]-> {obj}")
-        return formatted_results

@@ -31,24 +31,25 @@ from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.operators.graph_rag_task import GraphRAG
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.config import settings, resource_path
-from hugegraph_llm.operators.llm_op.info_extract import SCHEMA_EXAMPLE_PROMPT
+from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
 from hugegraph_llm.utils.hugegraph_utils import (
     init_hg_test_data,
-    get_hg_client,
-    run_gremlin_query
+    run_gremlin_query,
+    clean_hg_data
 )
 from hugegraph_llm.utils.log import log
+from hugegraph_llm.utils.hugegraph_utils import get_hg_client
+from hugegraph_llm.utils.vector_index_utils import clean_vector_index
 
 
-def graph_rag(text, vector_search: str):
-    searcher = GraphRAG().extract_keyword(text=text).match_keyword_to_id().query_graph_for_rag()
-    if vector_search == "true":
-        searcher.query_vector_index_for_rag()
-    return searcher.merge_dedup_rerank().synthesize_answer().run(verbose=True)
+def graph_rag(text, graph_search: str):
+    searcher = GraphRAG().query_vector_index_for_rag()
+    if graph_search == "true":
+        searcher.extract_keyword().match_keyword_to_id().query_graph_for_rag()
+    return searcher.merge_dedup_rerank().synthesize_answer().run(verbose=True, query=text)
 
 
-def build_kg(file, schema, example_prompt, disambiguate_word_sense, commit_to_hugegraph,
-             build_vector_index):
+def build_kg(file, schema, example_prompt, build_mode):
     full_path = file.name
     if full_path.endswith(".txt"):
         with open(full_path, "r", encoding="utf-8") as f:
@@ -63,39 +64,39 @@ def build_kg(file, schema, example_prompt, disambiguate_word_sense, commit_to_hu
         raise Exception("ERROR: PDF will be supported later!")
     else:
         return "ERROR: please input txt or docx file."
-    builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding())
-    if schema:
-        try:
-            schema = json.loads(schema.strip())
-            builder.import_schema(from_user_defined=schema)
-        except json.JSONDecodeError as e:
-            print(e)
-            builder.import_schema(from_hugegraph=schema)
+    builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
+    if build_mode != "Rebuild vertex index":
+        if schema:
+            try:
+                schema = json.loads(schema.strip())
+                builder.import_schema(from_user_defined=schema)
+            except json.JSONDecodeError as e:
+                print(e)
+                builder.import_schema(from_hugegraph=schema)
+        else:
+            return "ERROR: please input schema."
+    builder.chunk_split(text, "paragraph", "zh")
+    if build_mode == "Rebuild vertex index":
+        builder.fetch_graph_data()
     else:
-        return "ERROR: please input schema."
-    builder.extract_triples(text, example_prompt)
-    if disambiguate_word_sense == "true":
-        builder.disambiguate_word_sense()
-    if commit_to_hugegraph == "true":
-        builder.commit_to_hugegraph()
-        builder.build_vertex_id_semantic_index()
-    if build_vector_index == "true":
-        builder.do_triples_embedding()
+        builder.extract_info(example_prompt, "property_graph")
+    if build_mode != "Test":
+        if build_mode == "Clear and import" or build_mode == "Rebuild vertex index":
+            clean_vector_index()
         builder.build_vector_index()
+    if build_mode == "Clear and import":
+        clean_hg_data()
+    if build_mode == "Clear and import" or build_mode == "Import":
+        builder.commit_to_hugegraph()
+    if build_mode != "Test":
+        builder.build_vertex_id_semantic_index()
+    log.debug(builder.operators)
     return builder.run()
 
 
 def clean_kg():
-    client = get_hg_client()
-    client.graphs().clear_graph_all_data()
-    if os.path.exists(os.path.join(resource_path, settings.graph_name, "vidx.faiss")):
-        os.remove(os.path.join(resource_path, settings.graph_name, "vidx.faiss"))
-    if os.path.exists(os.path.join(resource_path, settings.graph_name, "vidx.pkl")):
-        os.remove(os.path.join(resource_path, settings.graph_name, "vidx.pkl"))
-    if os.path.exists(os.path.join(resource_path, settings.graph_name, "vid.faiss")):
-        os.remove(os.path.join(resource_path, settings.graph_name, "vid.faiss"))
-    if os.path.exists(os.path.join(resource_path, settings.graph_name, "vid.pkl")):
-        os.remove(os.path.join(resource_path, settings.graph_name, "vid.pkl"))
+    clean_hg_data()
+    clean_vector_index()
     return "Knowledge Graph has been cleaned!"
 
 
@@ -294,9 +295,12 @@ if __name__ == "__main__":
     - User-defined JSON format Schema.
     - Specify the name of the HugeGraph graph instance, and it will
     automatically extract the schema of the graph.
-- Disambiguate word sense: Whether to perform word sense disambiguation.
-- Commit to hugegraph: Whether to commit the constructed knowledge graph to the HugeGraph server.
-- Build vector index: Whether to build vector index to help retrieving.
+- Info extract head: The head of prompt of info extracting.
+- Build mode: 
+    - Test: Only extract vertices and edges from file without building vector index or importing into HugeGraph.
+    - Clear and Import: Clear the vector index and data of HugeGraph and then extract and import new data.
+    - Import: Extract the data and append it to HugeGraph and vector index without clearing anything.
+    - Rebuild vertex index: Do not clear the HugeGraph data, but only clear vector index and build new one.
 """
         )
 
@@ -337,28 +341,16 @@ if __name__ == "__main__":
                                  label="Document")
             input_schema = gr.Textbox(value=SCHEMA, label="Schema")
             info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT,
-                                               label="Info extract template")
+                                               label="Info extract head")
             with gr.Column():
-                disambiguate_word_sense_radio = gr.Radio(choices=["true", "false"], value="false",
-                                                         label="Disambiguate word sense")
-                commit_to_hugegraph_radio = gr.Radio(choices=["true", "false"], value="false",
-                                                     label="Commit to hugegraph")
-                build_vector_index_radio = gr.Radio(choices=["true", "false"], value="false",
-                                                    label="Build vector index")
-                clean_btn = gr.Button("Clean knowledge graph")
+                mode = gr.Radio(choices=["Test", "Clear and import", "Import", "Rebuild vertex index"],
+                                value="Test", label="Build mode")
                 btn = gr.Button("Build knowledge graph")
         with gr.Row():
             out = gr.Textbox(label="Output")
-        clean_btn.click(  # pylint: disable=no-member
-            fn=clean_kg,
-            inputs=[],
-            outputs=out
-        )
         btn.click(  # pylint: disable=no-member
             fn=build_kg,
-            inputs=[input_file, input_schema, info_extract_template,
-                    disambiguate_word_sense_radio, commit_to_hugegraph_radio,
-                    build_vector_index_radio],
+            inputs=[input_file, input_schema, info_extract_template, mode],
             outputs=out
         )
 
@@ -368,10 +360,10 @@ if __name__ == "__main__":
                 inp = gr.Textbox(value="Tell me about Sarah.", label="Question")
                 out = gr.Textbox(label="Answer")
             with gr.Column(scale=1):
-                vector_search_radio = gr.Radio(choices=["true", "false"], value="false",
-                                               label="Vector search")
+                graph_search_radio = gr.Radio(choices=["true", "false"], value="false",
+                                               label="Graph search")
                 btn = gr.Button("Retrieval augmented generation")
-        btn.click(fn=graph_rag, inputs=[inp, vector_search_radio], outputs=out)  # pylint: disable=no-member
+        btn.click(fn=graph_rag, inputs=[inp, graph_search_radio], outputs=out)  # pylint: disable=no-member
 
         gr.Markdown("""## 3. Others """)
         with gr.Row():

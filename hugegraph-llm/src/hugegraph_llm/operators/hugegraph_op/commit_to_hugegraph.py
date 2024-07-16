@@ -19,8 +19,9 @@
 from typing import Dict, Any
 
 from hugegraph_llm.config import settings
+from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
-from pyhugegraph.utils.exceptions import NotFoundError
+from pyhugegraph.utils.exceptions import NotFoundError, CreateError
 
 
 class CommitToKg:
@@ -42,27 +43,38 @@ class CommitToKg:
             vertices = data["vertices"]
             edges = data["edges"]
             self.init_schema(schema)
-            self.init_graph(vertices, edges)
+            self.init_graph(vertices, edges, schema)
         return data
 
-    def init_graph(self, vertices, edges):
-        vids = {}
+    def init_graph(self, vertices, edges, schema):
+        key_map = {}
+        for vertex in schema["vertices"]:
+            key_map[vertex["vertex_label"]] = vertex
         for vertex in vertices:
             label = vertex["label"]
             properties = vertex["properties"]
+            for pk in key_map[label]["primary_keys"]:
+                if pk not in properties:
+                    properties[pk] = "NULL"
+            for uk in key_map[label]["nullable_keys"]:
+                if uk not in properties:
+                    properties[uk] = "NULL"
             try:
-                vid = self.client.graph().addVertex(label, properties, id=vertex["id"]).id
-                vids[vertex["id"]] = vid
+                vid = self.client.graph().addVertex(label, properties).id
+                vertex["id"] = vid
             except NotFoundError as e:
                 print(e)
         for edge in edges:
-            start = vids[edge["start"]]
-            end = vids[edge["end"]]
-            types = edge["type"]
+            start = edge["outV"]
+            end = edge["inV"]
+            label = edge["label"]
             properties = edge["properties"]
             try:
-                self.client.graph().addEdge(types, start, end, properties)
+                self.client.graph().addEdge(label, start, end, properties)
             except NotFoundError as e:
+                print(e)
+            except CreateError as e:
+                log.error("Error on creating edge: %s", str(edge))
                 print(e)
 
     def init_schema(self, schema):
@@ -72,11 +84,13 @@ class CommitToKg:
         for vertex in vertices:
             vertex_label = vertex["vertex_label"]
             properties = vertex["properties"]
+            nullable_keys = vertex["nullable_keys"]
+            primary_keys = vertex["primary_keys"]
             for prop in properties:
                 self.schema.propertyKey(prop).asText().ifNotExist().create()
             self.schema.vertexLabel(vertex_label).properties(*properties).nullableKeys(
-                *properties
-            ).useCustomizeStringId().ifNotExist().create()
+                *nullable_keys
+            ).usePrimaryKeyId().primaryKeys(*primary_keys).ifNotExist().create()
         for edge in edges:
             edge_label = edge["edge_label"]
             source_vertex_label = edge["source_vertex_label"]
