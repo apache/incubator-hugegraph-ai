@@ -21,7 +21,7 @@ from typing import Any, Dict, Optional
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
 
-
+# TODO: we need enhance the template to answer the question
 DEFAULT_ANSWER_SYNTHESIZE_TEMPLATE_TMPL = (
     "Context information is below.\n"
     "---------------------\n"
@@ -77,9 +77,7 @@ class AnswerSynthesize:
         context_head_str = context.get("synthesize_context_head") or self._context_head or ""
         context_tail_str = context.get("synthesize_context_tail") or self._context_tail or ""
 
-        context_str = (f"{context_head_str}\n" f"{context_body_str}\n" f"{context_tail_str}").strip(
-            "\n"
-        )
+        context_str = f"{context_head_str}\n" f"{context_body_str}\n" f"{context_tail_str}".strip("\n")
 
         prompt = self._prompt_template.format(
             context_str=context_str,

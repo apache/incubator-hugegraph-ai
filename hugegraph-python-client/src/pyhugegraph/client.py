@@ -29,8 +29,8 @@ from pyhugegraph.structure.graph_instance import GraphInstance
 
 
 class PyHugeClient(HugeParamsBase):
-    def __init__(self, ip, port, graph, user, pwd, timeout=10):
-        self._graph_instance = GraphInstance(ip, port, graph, user, pwd, timeout)
+    def __init__(self, ip, port, graph, user, pwd, timeout=10, graphspace=None):
+        self._graph_instance = GraphInstance(ip, port, graph, user, pwd, timeout, graphspace)
         super().__init__(self._graph_instance)
         self._schema = None
         self._graph = None

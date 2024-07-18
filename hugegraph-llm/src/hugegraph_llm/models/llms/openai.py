@@ -23,6 +23,7 @@ import tiktoken
 from retry import retry
 
 from hugegraph_llm.models.llms.base import BaseLLM
+from hugegraph_llm.utils.log import log
 
 
 class OpenAIChat(BaseLLM):
@@ -33,7 +34,7 @@ class OpenAIChat(BaseLLM):
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
         model_name: str = "gpt-3.5-turbo",
-        max_tokens: int = 1000,
+        max_tokens: int = 4096,
         temperature: float = 0.0,
     ) -> None:
         openai.api_key = api_key or os.getenv("OPENAI_API_KEY")
@@ -62,12 +63,14 @@ class OpenAIChat(BaseLLM):
             return completions.choices[0].message.content
         # catch context length / do not retry
         except openai.error.InvalidRequestError as e:
+            log.critical(f"Fatal: {e}")
             return str(f"Error: {e}")
         # catch authorization errors / do not retry
         except openai.error.AuthenticationError:
+            log.critical("The provided OpenAI API key is invalid")
             return "Error: The provided OpenAI API key is invalid"
         except Exception as e:
-            print(f"Retrying LLM call {e}")
+            log.error(f"Retrying LLM call {e}")
             raise e
 
     def generate_streaming(
