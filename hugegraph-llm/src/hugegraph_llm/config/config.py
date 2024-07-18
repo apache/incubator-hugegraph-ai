@@ -16,7 +16,6 @@
 # under the License.
 
 
-import json
 import os
 
 from dataclasses import dataclass
@@ -47,7 +46,7 @@ class Config:
     qianfan_secret_key: Optional[str] = None
     qianfan_access_token: Optional[str] = None
     ## url settings
-    qianfan_url_prefix = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
+    qianfan_url_prefix: Optional[str] = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
     qianfan_chat_url: Optional[str] = qianfan_url_prefix + "/chat/"
     qianfan_language_model: Optional[str] = "ERNIE-4.0-Turbo-8K"
     qianfan_embed_url: Optional[str] = qianfan_url_prefix + "/embeddings/"
@@ -68,7 +67,9 @@ class Config:
     def from_env(self, config_dir: str):
         env_config = read_dotenv(config_dir)
         for key, value in env_config.items():
-            if key in self.__annotations__:
+            if key in self.__annotations__ and value:
+                if self.__annotations__[key] in [int, Optional[int]]:
+                    value = int(value)
                 setattr(self, key, value)
 
     def generate_env(self, config_dir: str):
@@ -95,3 +96,6 @@ def read_dotenv(root: str) -> dict[str, Optional[str]]:
             if key not in os.environ:
                 os.environ[key] = value or ""
         return env_config
+    else:
+        # TODO: generate a .env file
+        pass

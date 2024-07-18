@@ -38,7 +38,7 @@ class LLMs:
                 api_key=settings.openai_api_key,
                 api_base=settings.openai_api_base,
                 model_name=settings.openai_language_model,
-                max_tokens=int(settings.openai_max_tokens),
+                max_tokens=settings.openai_max_tokens,
             )
         if self.llm_type == "ollama":
             return OllamaClient(model=settings.ollama_language_model)
