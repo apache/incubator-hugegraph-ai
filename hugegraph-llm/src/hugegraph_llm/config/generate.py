@@ -20,25 +20,9 @@ import os
 import sys
 import argparse
 
-from pathlib import Path
 from hugegraph_llm.config import settings
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Generate hugegraph_llm config file')
-    parser.add_argument('--dir_path', type=str, default='.',
-                        help='The generated config file path')
-
-    args = parser.parse_args()
-
-    dir_path = args.dir_path
-    env_path = Path(dir_path) / ".env"
-
-    if os.path.exists(env_path):
-        print(f"{env_path} already exists, please delete it first!")
-        sys.exit(1)
-
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-
-    settings.generate_env(dir_path)
+    parser = argparse.ArgumentParser(description='Generate hugegraph-llm config file')
+    settings.generate_env()

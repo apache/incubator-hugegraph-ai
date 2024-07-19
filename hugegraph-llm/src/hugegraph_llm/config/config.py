@@ -20,8 +20,11 @@ import os
 
 from dataclasses import dataclass
 from typing import Literal, Optional
-from pathlib import Path
-from dotenv import dotenv_values
+from dotenv import dotenv_values, set_key
+
+dirname = os.path.dirname
+package_path = dirname(dirname(dirname(dirname(os.path.abspath(__file__)))))
+env_path = os.path.join(package_path, ".env")
 
 
 @dataclass
@@ -64,38 +67,53 @@ class Config:
     graph_user: Optional[str] = "admin"
     graph_pwd: Optional[str] = "xxx"
 
-    def from_env(self, config_dir: str):
-        env_config = read_dotenv(config_dir)
-        for key, value in env_config.items():
-            if key in self.__annotations__ and value:
-                if self.__annotations__[key] in [int, Optional[int]]:
-                    value = int(value)
-                setattr(self, key, value)
+    def from_env(self):
+        if os.path.exists(env_path):
+            env_config = read_dotenv()
+            for key, value in env_config.items():
+                if key in self.__annotations__ and value:
+                    if self.__annotations__[key] in [int, Optional[int]]:
+                        value = int(value)
+                    setattr(self, key, value)
+        else:
+            self.generate_env()
 
-    def generate_env(self, config_dir: str):
-        env_path = Path(config_dir) / ".env"
+    def generate_env(self):
+        if os.path.exists(env_path):
+            print(f"{env_path} already exists, do you want to update it? (y/n)")
+            update = input()
+            if update.lower() != "y":
+                return
+            self.update_env()
+        else:
+            config_dict = {}
+            for k, v in self.__dict__.items():
+                config_dict[k] = v
+            with open(env_path, "w", encoding="utf-8") as f:
+                for k, v in config_dict.items():
+                    if v is None:
+                        f.write(f"{k}=\n")
+                    else:
+                        f.write(f"{k}={v}\n")
+            print(f"Generate {env_path} successfully!")
+
+    def update_env(self):
         config_dict = {}
         for k, v in self.__dict__.items():
-            config_dict[k] = v
-        with open(env_path, "w", encoding="utf-8") as f:
-            for k, v in config_dict.items():
-                if v is None:
-                    f.write(f"{k}=\n")
-                else:
-                    f.write(f"{k}={v}\n")
-        print(f"Generate {env_path} successfully!")
-
-
-def read_dotenv(root: str) -> dict[str, Optional[str]]:
-    """Read a .env file in the given root path."""
-    env_path = Path(root) / ".env"
-    if env_path.exists():
+            config_dict[k] = str(v) if v else ""
         env_config = dotenv_values(f"{env_path}")
-        print(f"Read {env_path} successfully!")
-        for key, value in env_config.items():
-            if key not in os.environ:
-                os.environ[key] = value or ""
-        return env_config
-    else:
-        # TODO: generate a .env file
-        pass
+        for k, v in config_dict.items():
+            if k in env_config and env_config[k] == v:
+                continue
+            print(f"Update {env_path}: {k}={v}")
+            set_key(env_path, k, v, quote_mode="never")
+
+
+def read_dotenv() -> dict[str, Optional[str]]:
+    """Read a .env file in the given root path."""
+    env_config = dotenv_values(f"{env_path}")
+    print(f"Read {env_path} successfully!")
+    for key, value in env_config.items():
+        if key not in os.environ:
+            os.environ[key] = value or ""
+    return env_config
