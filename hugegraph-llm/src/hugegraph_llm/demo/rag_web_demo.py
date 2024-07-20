@@ -346,7 +346,7 @@ if __name__ == "__main__":
                                 value="Test", label="Build mode")
                 btn = gr.Button("Build knowledge graph")
         with gr.Row():
-            out = gr.Textbox(label="Output")
+            out = gr.Textbox(label="Output", show_copy_button=True)
         btn.click(  # pylint: disable=no-member
             fn=build_kg,
             inputs=[input_file, input_schema, info_extract_template, mode],
@@ -357,7 +357,7 @@ if __name__ == "__main__":
         with gr.Row():
             with gr.Column(scale=2):
                 inp = gr.Textbox(value="Tell me about Sarah.", label="Question")
-                out = gr.Textbox(label="Answer")
+                out = gr.Textbox(label="Answer", show_copy_button=True)
             with gr.Column(scale=1):
                 graph_search_radio = gr.Radio(choices=["true", "false"], value="false",
                                               label="Graph search")
@@ -367,13 +367,13 @@ if __name__ == "__main__":
         gr.Markdown("""## 3. Others """)
         with gr.Row():
             inp = []
-            out = gr.Textbox(label="Output")
+            out = gr.Textbox(label="Output", show_copy_button=True)
         btn = gr.Button("Initialize HugeGraph test data")
         btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
 
         with gr.Row():
             inp = gr.Textbox(value="g.V().limit(10)", label="Gremlin query")
-            out = gr.Textbox(label="Output")
+            out = gr.Textbox(label="Output", show_copy_button=True)
         btn = gr.Button("Run gremlin query on HugeGraph")
         btn.click(fn=run_gremlin_query, inputs=inp, outputs=out)  # pylint: disable=no-member
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
