@@ -41,7 +41,7 @@ def similarity(
     if isinstance(embedding2, list):
         embedding2 = np.array(embedding2)
     if mode == SimilarityMode.EUCLIDEAN:
-        # Using -euclidean distance as similarity to achieve same ranking order
+        # Using - Euclidean distance as similarity to achieve the same ranking order
         return -float(np.linalg.norm(embedding1 - embedding2))
     if mode == SimilarityMode.DOT_PRODUCT:
         return np.dot(embedding1, embedding2)
@@ -72,7 +72,7 @@ class BaseEmbedding(ABC):
         if isinstance(embedding2, list):
             embedding2 = np.array(embedding2)
         if mode == SimilarityMode.EUCLIDEAN:
-            # Using -euclidean distance as similarity to achieve same ranking order
+            # Using - Euclidean distance as similarity to achieve the same ranking order
             return -float(np.linalg.norm(embedding1 - embedding2))
         if mode == SimilarityMode.DOT_PRODUCT:
             return np.dot(embedding1, embedding2)

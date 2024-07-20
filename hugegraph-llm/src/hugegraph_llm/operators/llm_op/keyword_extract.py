@@ -121,7 +121,7 @@ class KeywordExtract:
                 if len(k) > 0:
                     keywords.append(k.lower())
 
-        # if keyword consists of multiple words, split into sub-words
+        # if the keyword consists of multiple words, split into sub-words
         # (removing stopwords)
         results = set()
         for token in keywords:

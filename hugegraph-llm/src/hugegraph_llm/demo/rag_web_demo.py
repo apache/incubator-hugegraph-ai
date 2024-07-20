@@ -71,7 +71,7 @@ def build_kg(file, schema, example_prompt, build_mode):
                 schema = json.loads(schema.strip())
                 builder.import_schema(from_user_defined=schema)
             except json.JSONDecodeError as e:
-                print(e)
+                log.error(e)
                 builder.import_schema(from_hugegraph=schema)
         else:
             return "ERROR: please input schema."
@@ -139,7 +139,9 @@ if __name__ == "__main__":
                 gr.Info("Connection successful. Configured finished.")
             else:
                 log.error("Connection failed with status code: %s", response.status_code)
-                gr.Error(f"Connection failed with status code: {response.status_code}")  # pylint: disable=pointless-exception-statement
+                # pylint: disable=pointless-exception-statement
+                gr.Error(f"Connection failed with status code: {response.status_code}")
+
 
         def apply_graph_configuration(ip, port, name, user, pwd):
             settings.graph_ip = ip
@@ -358,7 +360,7 @@ if __name__ == "__main__":
                 out = gr.Textbox(label="Answer")
             with gr.Column(scale=1):
                 graph_search_radio = gr.Radio(choices=["true", "false"], value="false",
-                                               label="Graph search")
+                                              label="Graph search")
                 btn = gr.Button("Retrieval augmented generation")
         btn.click(fn=graph_rag, inputs=[inp, graph_search_radio], outputs=out)  # pylint: disable=no-member
 

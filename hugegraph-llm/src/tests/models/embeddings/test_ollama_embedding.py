@@ -21,6 +21,7 @@ import unittest
 from hugegraph_llm.models.embeddings.base import SimilarityMode
 from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
 
+
 class TestOllamaEmbedding(unittest.TestCase):
     def test_get_text_embedding(self):
         ollama_embedding = OllamaEmbedding(model="quentinz/bge-large-zh-v1.5")
