@@ -42,11 +42,29 @@ from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index
 
 
-def graph_rag(text, graph_search: str):
-    searcher = GraphRAG().query_vector_index_for_rag()
-    if graph_search == "true":
+def graph_rag(text: str, raw_answer: str, vector_only_answer: str, graph_only_answer: str, graph_vector_answer):
+    vector_search = True if vector_only_answer == "true" or graph_vector_answer == "true" else False
+    graph_search = True if graph_only_answer == "true" or graph_vector_answer == "true" else False
+    if raw_answer == "false" and not vector_search and not graph_search:
+        gr.Warning("Please select at least one generate mode.")
+        return "", "", "", ""
+    searcher = GraphRAG()
+    if vector_search:
+        searcher.query_vector_index_for_rag()
+    if graph_search:
         searcher.extract_keyword().match_keyword_to_id().query_graph_for_rag()
-    return searcher.merge_dedup_rerank().synthesize_answer().run(verbose=True, query=text)
+    context = searcher.merge_dedup_rerank().synthesize_answer(
+        raw_answer=True if raw_answer == "true" else False,
+        vector_only_answer=True if vector_only_answer == "true" else False,
+        graph_only_answer=True if graph_only_answer == "true" else False,
+        graph_vector_answer=True if graph_vector_answer == "true" else False
+    ).run(verbose=True, query=text)
+    return (
+        context.get("raw_answer", ""),
+        context.get("vector_only_answer", ""),
+        context.get("graph_only_answer", ""),
+        context.get("graph_vector_answer", "")
+    )
 
 
 def build_kg(file, schema, example_prompt, build_mode):
@@ -355,12 +373,23 @@ if __name__ == "__main__":
         with gr.Row():
             with gr.Column(scale=2):
                 inp = gr.Textbox(value="Tell me about Sarah.", label="Question")
-                out = gr.Textbox(label="Answer", show_copy_button=True)
+                raw_out = gr.Textbox(label="Raw LLM Answer", show_copy_button=True)
+                vector_only_out = gr.Textbox(label="Vector-only answer", show_copy_button=True)
+                graph_only_out = gr.Textbox(label="Graph-only answer", show_copy_button=True)
+                graph_vector_out = gr.Textbox(label="Graph-Vector answer", show_copy_button=True)
             with gr.Column(scale=1):
-                graph_search_radio = gr.Radio(choices=["true", "false"], value="false",
-                                               label="Graph search")
+                raw_radio = gr.Radio(choices=["true", "false"], value="false",
+                                     label="Raw LLM answer")
+                vector_only_radio = gr.Radio(choices=["true", "false"], value="true",
+                                             label="Vector-only answer")
+                graph_only_radio = gr.Radio(choices=["true", "false"], value="false",
+                                            label="Graph-only answer")
+                graph_vector_radio = gr.Radio(choices=["true", "false"], value="false",
+                                              label="Graph-Vector answer")
                 btn = gr.Button("Retrieval augmented generation")
-        btn.click(fn=graph_rag, inputs=[inp, graph_search_radio], outputs=out)  # pylint: disable=no-member
+        btn.click(fn=graph_rag, inputs=[inp, raw_radio, vector_only_radio, graph_only_radio,
+                                        graph_vector_radio],
+                  outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out])  # pylint: disable=no-member
 
         gr.Markdown("""## 3. Others """)
         with gr.Row():

@@ -36,25 +36,16 @@ class MergeDedupRerank:
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context.get("query")
-        merged_result = (context.get("graph_result", [])
-                         + context.get("vector_result", [])
-                         + context.get("keyword_result", []))
-        synthesize_context_body = ""
+
         vector_result = context.get("vector_result", [])
-        keyword_result = context.get("keyword_result", [])
-        merge_result = vector_result + keyword_result
-        if len(merge_result) > 0:
-            rerank_result = self._dedup_and_rerank(query, merge_result)[:self.topk]
-            synthesize_context_body += "The following are paragraphs related to the query:\n"
-            synthesize_context_body += "\n".join([f"{i+1}. {res}" for i, res in enumerate(rerank_result)])
-            synthesize_context_body += "\n"
+        vector_result = self._dedup_and_rerank(query, vector_result)[:self.topk]
+
         graph_result = context.get("graph_result", [])
-        if len(graph_result) > 0:
-            graph_result = self._dedup_and_rerank(query, graph_result)[:self.topk]
-            synthesize_context_body += "The following are subgraph related to the query:\n"
-            synthesize_context_body += "\n".join([f"{i}. {res}" for i, res in enumerate(graph_result)])
-            synthesize_context_body += "\n"
-        context["synthesize_context_body"] = synthesize_context_body
+        graph_result = self._dedup_and_rerank(query, graph_result)[:self.topk]
+
+        context["vector_result"] = vector_result
+        context["graph_result"] = graph_result
+
         return context
 
     def _dedup_and_rerank(self, query: str, results: List[str]):

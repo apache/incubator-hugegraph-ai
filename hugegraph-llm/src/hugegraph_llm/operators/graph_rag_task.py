@@ -103,10 +103,18 @@ class GraphRAG:
 
     def synthesize_answer(
         self,
+        raw_answer: bool = False,
+        vector_only_answer: bool = True,
+        graph_only_answer: bool = False,
+        graph_vector_answer: bool = False,
         prompt_template: Optional[str] = None,
     ):
         self._operators.append(
             AnswerSynthesize(
+                raw_answer = raw_answer,
+                vector_only_answer = vector_only_answer,
+                graph_only_answer = graph_only_answer,
+                graph_vector_answer = graph_vector_answer,
                 prompt_template=prompt_template,
             )
         )
