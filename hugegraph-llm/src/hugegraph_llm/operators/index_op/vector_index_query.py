@@ -37,4 +37,9 @@ class VectorIndexQuery:
         results = self.vector_index.search(query_embedding, self.topk)
         # TODO: check format results
         context["vector_result"] = results
+
+        verbose = context.get("verbose") or False
+        if verbose:
+            print("\033[93mKNOWLEDGE FROM VECTOR:")
+            print("\n".join(rel for rel in context["vector_result"]) + "\033[0m")
         return context
