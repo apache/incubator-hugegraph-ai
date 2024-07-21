@@ -22,7 +22,6 @@ from typing import Dict, Any
 from hugegraph_llm.config import settings, resource_path
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.utils.log import log
 
 
 class BuildVectorIndex:

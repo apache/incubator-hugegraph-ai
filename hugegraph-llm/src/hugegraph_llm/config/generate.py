@@ -16,12 +16,9 @@
 # under the License.
 
 
-import os
-import sys
 import argparse
 
 from hugegraph_llm.config import settings
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate hugegraph-llm config file')

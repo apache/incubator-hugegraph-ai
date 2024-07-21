@@ -33,7 +33,7 @@ class OpenAIChat(BaseLLM):
         self,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
-        model_name: str = "gpt-3.5-turbo",
+        model_name: str = "gpt-4o-mini",
         max_tokens: int = 4096,
         temperature: float = 0.0,
     ) -> None:

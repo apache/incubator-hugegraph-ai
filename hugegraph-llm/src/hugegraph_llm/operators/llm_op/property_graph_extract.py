@@ -141,7 +141,7 @@ class PropertyGraphExtract:
         return self.llm.generate(prompt=prompt)
 
     def _extract_and_filter_label(self, schema, text):
-        # analyze llm generated text to json
+        # analyze llm generated text to JSON
         json_strings = re.findall(r'(\[.*?])', text, re.DOTALL)
         longest_json = max(json_strings, key=lambda x: len(''.join(x)), default=('', ''))
 
@@ -167,7 +167,7 @@ class PropertyGraphExtract:
                 else:
                     log.warning("Invalid item type %s has been ignored.", item["type"])
         except json.JSONDecodeError:
-            log.error("Invalid property graph!")
+            log.critical("Invalid property graph! Please check the extracted JSON data carefully")
 
         return items
 
@@ -190,7 +190,8 @@ class PropertyGraphExtract:
             item_type = item["type"]
             if item_type == "vertex":
                 label = item["label"]
-                non_nullable_keys = set(properties_map[item_type][label]["properties"]).difference(set(properties_map[item_type][label]["nullable_keys"]))
+                non_nullable_keys = (set(properties_map[item_type][label]["properties"])
+                                     .difference(set(properties_map[item_type][label]["nullable_keys"])))
                 for key in non_nullable_keys:
                     if key not in item["properties"]:
                         item["properties"][key] = "NULL"
@@ -211,7 +212,7 @@ class PropertyGraphExtract:
         #             log.warning("Duplicate vertex id %s has been ignored.", item["id"])
         #             continue
         #         vertex_ids.add(item["id"])
-        #         primary_key_tuple = (label,)
+        #         primary_key_tuple = (label)
         #         for key in properties_map["vertex"][label]["primary_keys"]:
         #             value = item["properties"][key]
         #             primary_key_tuple += (key, value)

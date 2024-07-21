@@ -22,6 +22,8 @@ from dataclasses import dataclass
 from typing import Literal, Optional
 from dotenv import dotenv_values, set_key
 
+from hugegraph_llm.utils.log import log
+
 dirname = os.path.dirname
 package_path = dirname(dirname(dirname(dirname(os.path.abspath(__file__)))))
 env_path = os.path.join(package_path, ".env")
@@ -36,7 +38,7 @@ class Config:
     # OpenAI settings
     openai_api_base: Optional[str] = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
     openai_api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
-    openai_language_model: Optional[str] = "gpt-3.5-turbo"
+    openai_language_model: Optional[str] = "gpt-4o-mini"
     openai_embedding_model: Optional[str] = "text-embedding-3-small"
     openai_max_tokens: int = 4096
     # Ollama settings
@@ -80,7 +82,7 @@ class Config:
 
     def generate_env(self):
         if os.path.exists(env_path):
-            print(f"{env_path} already exists, do you want to update it? (y/n)")
+            log.info(f"{env_path} already exists, do you want to update it? (y/n)")
             update = input()
             if update.lower() != "y":
                 return
@@ -95,7 +97,7 @@ class Config:
                         f.write(f"{k}=\n")
                     else:
                         f.write(f"{k}={v}\n")
-            print(f"Generate {env_path} successfully!")
+            log.info(f"Generate {env_path} successfully!")
 
     def update_env(self):
         config_dict = {}
@@ -105,14 +107,14 @@ class Config:
         for k, v in config_dict.items():
             if k in env_config and env_config[k] == v:
                 continue
-            print(f"Update {env_path}: {k}={v}")
+            log.info(f"Update {env_path}: {k}={v}")
             set_key(env_path, k, v, quote_mode="never")
 
 
 def read_dotenv() -> dict[str, Optional[str]]:
     """Read a .env file in the given root path."""
     env_config = dotenv_values(f"{env_path}")
-    print(f"Read {env_path} successfully!")
+    log.info(f"Loading {env_path} successfully!")
     for key, value in env_config.items():
         if key not in os.environ:
             os.environ[key] = value or ""

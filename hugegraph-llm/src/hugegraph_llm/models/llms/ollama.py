@@ -16,7 +16,6 @@
 # under the License.
 
 
-
 from typing import Any, List, Optional, Callable, Dict
 
 import ollama

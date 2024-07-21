@@ -48,5 +48,4 @@ class QianFanEmbedding:
             model=self.embedding_model_name,
             texts=[text]
         )
-        print(response["body"]["data"])
         return response["body"]["data"][0]["embedding"]

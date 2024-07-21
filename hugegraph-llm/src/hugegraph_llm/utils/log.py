@@ -17,6 +17,8 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
 
+# TODO: unify the log format in the project (include gradle(fastapi) frame)
+
 # Set log format
 LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S %p"
