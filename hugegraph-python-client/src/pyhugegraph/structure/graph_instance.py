@@ -17,7 +17,7 @@
 
 
 class GraphInstance:
-    def __init__(self, ip, port, graph_name, user_name, passwd, timeout, graphspace = None):
+    def __init__(self, ip, port, graph_name, user_name, passwd, timeout, graphspace=None):
         self.__ip = ip
         self.__port = port
         self.__graphspace = graphspace

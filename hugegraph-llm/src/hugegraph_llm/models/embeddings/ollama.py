@@ -21,6 +21,7 @@ from typing import List
 import ollama
 from .base import BaseEmbedding
 
+
 class OllamaEmbedding(BaseEmbedding):
     def __init__(
             self,

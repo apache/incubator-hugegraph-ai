@@ -24,7 +24,6 @@ from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.document.chunk_split import ChunkSplitter
 from hugegraph_llm.utils.log import log
 
-
 SCHEMA_EXAMPLE_PROMPT = """Main Task
 Given the following graph schema and a piece of text, your task is to analyze the text and extract information that fits into the schema’s structure, formatting the information into vertices and edges as specified.
 
@@ -112,7 +111,7 @@ class PropertyGraphExtract:
     ) -> None:
         self.llm = llm
         self.example_prompt = example_prompt
-        self.NECESSARY_ITEM_KEYS = {"label", "type", "properties"}
+        self.NECESSARY_ITEM_KEYS = {"label", "type", "properties"}  # pylint: disable=invalid-name
 
     def run(self, context: Dict[str, Any]) -> Dict[str, List[Any]]:
         schema = context["schema"]
@@ -150,8 +149,8 @@ class PropertyGraphExtract:
         items = []
         try:
             property_graph = json.loads(longest_json_str)
-            vertex_label_set = set([vertex["vertex_label"] for vertex in schema["vertices"]])
-            edge_label_set = set([edge["edge_label"] for edge in schema["edges"]])
+            vertex_label_set = {vertex["vertex_label"] for vertex in schema["vertices"]}
+            edge_label_set = {edge["edge_label"] for edge in schema["edges"]}
             for item in property_graph:
                 if not isinstance(item, dict):
                     log.warning("Invalid property graph item type %s.", type(item))
@@ -160,7 +159,8 @@ class PropertyGraphExtract:
                     log.warning("Invalid item keys %s.", item.keys())
                     continue
                 if item["type"] == "vertex" or item["type"] == "edge":
-                    if item["label"] not in vertex_label_set and item["label"] not in edge_label_set:
+                    if (item["label"] not in vertex_label_set
+                            and item["label"] not in edge_label_set):
                         log.warning("Invalid item label %s has been ignored.", item["label"])
                     else:
                         items.append(item)
@@ -190,8 +190,9 @@ class PropertyGraphExtract:
             item_type = item["type"]
             if item_type == "vertex":
                 label = item["label"]
-                non_nullable_keys = (set(properties_map[item_type][label]["properties"])
-                                     .difference(set(properties_map[item_type][label]["nullable_keys"])))
+                non_nullable_keys = (
+                    set(properties_map[item_type][label]["properties"])
+                    .difference(set(properties_map[item_type][label]["nullable_keys"])))
                 for key in non_nullable_keys:
                     if key not in item["properties"]:
                         item["properties"][key] = "NULL"
@@ -200,38 +201,4 @@ class PropertyGraphExtract:
                     item["properties"][key] = str(value)
             filtered_items.append(item)
 
-        # filter vertex with the same id or primary keys
-        # items = filtered_items
-        # filtered_items = []
-        # vertex_ids = set()
-        # vertex_primary_key_set = set()
-        # for item in items:
-        #     if item["type"] == "vertex":
-        #         label = item["label"]
-        #         if item["id"] in vertex_ids:
-        #             log.warning("Duplicate vertex id %s has been ignored.", item["id"])
-        #             continue
-        #         vertex_ids.add(item["id"])
-        #         primary_key_tuple = (label)
-        #         for key in properties_map["vertex"][label]["primary_keys"]:
-        #             value = item["properties"][key]
-        #             primary_key_tuple += (key, value)
-        #         if primary_key_tuple in vertex_primary_key_set:
-        #             log.warning("Duplicate vertex primary key %s has been ignored.", primary_key_tuple)
-        #             continue
-        #         vertex_primary_key_set.add(primary_key_tuple)
-        #         filtered_items.append(item)
-        #     else:
-        #         filtered_items.append(item)
-
-        # filter edge with invalid source or target
-        # items = filtered_items
-        # filtered_items = []
-        # vertex_ids = set([item["id"] for item in items if item["type"] == "vertex"])
-        # for item in items:
-        #     if item["type"] == "edge":
-        #         if item["source"] not in vertex_ids or item["target"] not in vertex_ids:
-        #             log.warning("Invalid edge source or target %s has been ignored.", item)
-        #             continue
-        #         filtered_items.append(item)
         return filtered_items

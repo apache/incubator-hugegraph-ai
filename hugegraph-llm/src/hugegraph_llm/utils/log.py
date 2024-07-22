@@ -61,7 +61,7 @@ class CustomConsoleHandler(logging.StreamHandler):
             stream = self.stream
             stream.write(color_prefix + msg + color_suffix + self.terminator)
             self.flush()
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             self.handleError(record)
 
 

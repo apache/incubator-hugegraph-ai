@@ -17,7 +17,7 @@
 
 
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any
 from hugegraph_llm.config import resource_path, settings
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.indices.vector_index import VectorIndex

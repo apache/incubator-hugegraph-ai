@@ -19,29 +19,6 @@
 import os
 
 from hugegraph_llm.config import resource_path, settings
-from hugegraph_llm.models.embeddings.init_embedding import Embeddings
-from hugegraph_llm.operators.index_op.build_semantic_index import BuildSemanticIndex
-from hugegraph_llm.utils.hugegraph_utils import get_hg_client
-from hugegraph_llm.utils.log import log
-
-
-def build_index():
-    client = get_hg_client()
-    context = {"vertices": []}
-    vertices = client.gremlin().exec("g.V()")
-    for vertex in vertices:
-        context["vertices"].append({
-            "id": id
-        })
-    if os.path.exists(os.path.join(resource_path, settings.graph_name, "vid.faiss")):
-        log.info("Removing existing semantic id index...")
-        os.remove(os.path.join(resource_path, settings.graph_name, "vid.faiss"))
-    if os.path.exists(os.path.join(resource_path, settings.graph_name, "vid.pkl")):
-        log.info("Removing existing semantic id map...")
-        os.remove(os.path.join(resource_path, settings.graph_name, "vid.pkl"))
-    build_semantic_index = BuildSemanticIndex(Embeddings().get_embedding())
-    context = build_semantic_index.run(context)
-    return context
 
 
 def clean_vector_index():

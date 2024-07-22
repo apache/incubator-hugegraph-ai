@@ -51,7 +51,9 @@ class Config:
     qianfan_secret_key: Optional[str] = None
     qianfan_access_token: Optional[str] = None
     ## url settings
-    qianfan_url_prefix: Optional[str] = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
+    qianfan_url_prefix: Optional[str] = (
+        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
+    )
     qianfan_chat_url: Optional[str] = qianfan_url_prefix + "/chat/"
     qianfan_language_model: Optional[str] = "ERNIE-4.0-Turbo-8K"
     qianfan_embed_url: Optional[str] = qianfan_url_prefix + "/embeddings/"
@@ -82,7 +84,7 @@ class Config:
 
     def generate_env(self):
         if os.path.exists(env_path):
-            log.info(f"{env_path} already exists, do you want to update it? (y/n)")
+            log.info("%s already exists, do you want to update it? (y/n)", env_path)
             update = input()
             if update.lower() != "y":
                 return
@@ -97,7 +99,7 @@ class Config:
                         f.write(f"{k}=\n")
                     else:
                         f.write(f"{k}={v}\n")
-            log.info(f"Generate {env_path} successfully!")
+            log.info("Generate %s successfully!", env_path)
 
     def update_env(self):
         config_dict = {}
@@ -107,14 +109,14 @@ class Config:
         for k, v in config_dict.items():
             if k in env_config and env_config[k] == v:
                 continue
-            log.info(f"Update {env_path}: {k}={v}")
+            log.info("Update %s: %s=%s", env_path, k, v)
             set_key(env_path, k, v, quote_mode="never")
 
 
 def read_dotenv() -> dict[str, Optional[str]]:
     """Read a .env file in the given root path."""
     env_config = dotenv_values(f"{env_path}")
-    log.info(f"Loading {env_path} successfully!")
+    log.info("Loading %s successfully!", env_path)
     for key, value in env_config.items():
         if key not in os.environ:
             os.environ[key] = value or ""

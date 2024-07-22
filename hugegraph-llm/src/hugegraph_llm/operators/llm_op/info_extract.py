@@ -75,7 +75,8 @@ The extracted text is: {text}"""
 
     if schema:
         return schema_real_prompt
-    log.warn("Recommend to provide a graph schema to improve the extraction accuracy. Now using the default schema.")
+    log.warning("Recommend to provide a graph schema to improve the extraction accuracy. "
+                "Now using the default schema.")
     return text_based_prompt
 
 
@@ -104,7 +105,8 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
         # TODO: use a more efficient way to compare the extract & input property
         p_lower = p.lower()
         for vertex in schema["vertices"]:
-            if vertex["vertex_label"] == label and any(pp.lower() == p_lower for pp in vertex["properties"]):
+            if vertex["vertex_label"] == label and any(pp.lower() == p_lower
+                                                       for pp in vertex["properties"]):
                 id = f"{label}-{s}"
                 if id not in vertices_dict:
                     vertices_dict[id] = {"id": id, "name": s, "label": label, "properties": {p: o}}
@@ -142,16 +144,20 @@ class InfoExtract:
         chunks = context["chunks"]
         schema = context["schema"]
 
-        result = ({"vertices": [], "edges": [], "schema": schema}
-                  if schema else {"triples": []})
+        if schema:
+            context["vertices"] = []
+            context["edges"] = []
+        else:
+            context["triples"] = []
+
         for sentence in chunks:
             proceeded_chunk = self.extract_triples_by_llm(schema, sentence)
             log.debug("[LLM] input: %s \n output:%s", sentence, proceeded_chunk)
             if schema:
-                extract_triples_by_regex_with_schema(schema, proceeded_chunk, result)
+                extract_triples_by_regex_with_schema(schema, proceeded_chunk, context)
             else:
-                extract_triples_by_regex(proceeded_chunk, result)
-        return self._filter_long_id(result)
+                extract_triples_by_regex(proceeded_chunk, context)
+        return self._filter_long_id(context)
 
     def extract_triples_by_llm(self, schema, chunk):
         prompt = generate_extract_triple_prompt(chunk, schema)

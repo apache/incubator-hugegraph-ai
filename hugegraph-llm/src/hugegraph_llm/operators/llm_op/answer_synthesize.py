@@ -72,7 +72,9 @@ class AnswerSynthesize:
         context_tail_str = context.get("synthesize_context_tail") or self._context_tail or ""
 
         if self._context_body is not None:
-            context_str = f"{context_head_str}\n" f"{self._context_body}\n" f"{context_tail_str}".strip("\n")
+            context_str = (f"{context_head_str}\n"
+                           f"{self._context_body}\n"
+                           f"{context_tail_str}".strip("\n"))
 
             prompt = self._prompt_template.format(
                 context_str=context_str,
@@ -99,7 +101,9 @@ class AnswerSynthesize:
             if verbose:
                 print(f"\033[91mANSWER: {response}\033[0m")
         if self._vector_only_answer:
-            context_str = f"{context_head_str}\n" f"{vector_result_context}\n" f"{context_tail_str}".strip("\n")
+            context_str = (f"{context_head_str}\n"
+                           f"{vector_result_context}\n"
+                           f"{context_tail_str}".strip("\n"))
 
             prompt = self._prompt_template.format(
                 context_str=context_str,
@@ -110,7 +114,9 @@ class AnswerSynthesize:
             if verbose:
                 print(f"\033[91mANSWER: {response}\033[0m")
         if self._graph_only_answer:
-            context_str = f"{context_head_str}\n" f"{graph_result_context}\n" f"{context_tail_str}".strip("\n")
+            context_str = (f"{context_head_str}\n"
+                           f"{graph_result_context}\n"
+                           f"{context_tail_str}".strip("\n"))
 
             prompt = self._prompt_template.format(
                 context_str=context_str,
@@ -122,7 +128,9 @@ class AnswerSynthesize:
                 print(f"\033[91mANSWER: {response}\033[0m")
         if self._graph_vector_answer:
             context_body_str = f"{vector_result_context}\n{graph_result_context}"
-            context_str = f"{context_head_str}\n" f"{context_body_str}\n" f"{context_tail_str}".strip("\n")
+            context_str = (f"{context_head_str}\n"
+                           f"{context_body_str}\n"
+                           f"{context_tail_str}".strip("\n"))
 
             prompt = self._prompt_template.format(
                 context_str=context_str,

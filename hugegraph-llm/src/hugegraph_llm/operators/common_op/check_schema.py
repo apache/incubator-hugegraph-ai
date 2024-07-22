@@ -25,7 +25,7 @@ class CheckSchema:
         self.result = None
         self.data = data
 
-    def run(self, schema=None) -> Any:
+    def run(self, schema=None) -> Any:  # pylint: disable=too-many-branches
         schema = self.data or schema
         if not isinstance(schema, dict):
             raise ValueError("Input data is not a dictionary.")
@@ -53,11 +53,12 @@ class CheckSchema:
             new_primary_keys = []
             for key in primary_keys:
                 if key not in properties:
-                    log.warn("Primary key '{}' not found in properties has been auto removed.".format(key))
+                    log.waring("Primary key '%s' not found in properties has been auto removed.",
+                               key)
                 else:
                     new_primary_keys.append(key)
             if len(new_primary_keys) == 0:
-                raise ValueError("primary keys of vertexLabel {} is empty.".format(vertex["vertex_label"]))
+                raise ValueError(f"primary keys of vertexLabel {vertex['vertex_label']} is empty.")
             vertex["primary_keys"] = new_primary_keys
             nullable_keys = vertex.get("nullable_keys", properties[1:])
             if not isinstance(nullable_keys, list):
@@ -65,7 +66,8 @@ class CheckSchema:
             new_nullable_keys = []
             for key in nullable_keys:
                 if key not in properties:
-                    log.warn("Nullable key '{}' not found in properties has been auto removed.".format(key))
+                    log.warning("Nullable key '%s' not found in properties has been auto removed.",
+                                key)
                 else:
                     new_nullable_keys.append(key)
             vertex["nullable_keys"] = new_nullable_keys

@@ -42,9 +42,18 @@ from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index
 
 
-def graph_rag(text: str, raw_answer: str, vector_only_answer: str, graph_only_answer: str, graph_vector_answer):
-    vector_search = True if vector_only_answer == "true" or graph_vector_answer == "true" else False
-    graph_search = True if graph_only_answer == "true" or graph_vector_answer == "true" else False
+def convert_bool_str(string):
+    if string == "true":
+        return True
+    if string == "false":
+        return False
+    raise gr.Error(f"Invalid boolean string: {string}")
+
+
+def graph_rag(text: str, raw_answer: str, vector_only_answer: str,
+              graph_only_answer: str, graph_vector_answer):
+    vector_search = convert_bool_str(vector_only_answer) or convert_bool_str(graph_vector_answer)
+    graph_search = convert_bool_str(graph_only_answer) or convert_bool_str(graph_vector_answer)
     if raw_answer == "false" and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
         return "", "", "", ""
@@ -53,21 +62,26 @@ def graph_rag(text: str, raw_answer: str, vector_only_answer: str, graph_only_an
         searcher.query_vector_index_for_rag()
     if graph_search:
         searcher.extract_keyword().match_keyword_to_id().query_graph_for_rag()
-    context = searcher.merge_dedup_rerank().synthesize_answer(
-        raw_answer=True if raw_answer == "true" else False,
-        vector_only_answer=True if vector_only_answer == "true" else False,
-        graph_only_answer=True if graph_only_answer == "true" else False,
-        graph_vector_answer=True if graph_vector_answer == "true" else False
+    searcher.merge_dedup_rerank().synthesize_answer(
+        raw_answer=convert_bool_str(raw_answer),
+        vector_only_answer=convert_bool_str(vector_only_answer),
+        graph_only_answer=convert_bool_str(graph_only_answer),
+        graph_vector_answer=convert_bool_str(graph_vector_answer)
     ).run(verbose=True, query=text)
-    return (
-        context.get("raw_answer", ""),
-        context.get("vector_only_answer", ""),
-        context.get("graph_only_answer", ""),
-        context.get("graph_vector_answer", "")
-    )
+    try:
+        context = searcher.run(verbose=True, query=text)
+        return (
+            context.get("raw_answer", ""),
+            context.get("vector_only_answer", ""),
+            context.get("graph_only_answer", ""),
+            context.get("graph_vector_answer", "")
+        )
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        log.error(e)
+        raise gr.Error(str(e))
 
 
-def build_kg(file, schema, example_prompt, build_mode):
+def build_kg(file, schema, example_prompt, build_mode):  # pylint: disable=too-many-branches
     full_path = file.name
     if full_path.endswith(".txt"):
         with open(full_path, "r", encoding="utf-8") as f:
@@ -79,9 +93,9 @@ def build_kg(file, schema, example_prompt, build_mode):
             text += para.text
             text += "\n"
     elif full_path.endswith(".pdf"):
-        raise Exception("ERROR: PDF will be supported later!")
+        raise gr.Error("PDF will be supported later!")
     else:
-        return "ERROR: please input txt or docx file."
+        raise gr.Error("Please input txt or docx file.")
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
     if build_mode != "Rebuild vertex index":
         if schema:
@@ -99,23 +113,22 @@ def build_kg(file, schema, example_prompt, build_mode):
     else:
         builder.extract_info(example_prompt, "property_graph")
     if build_mode != "Test":
-        if build_mode == "Clear and import" or build_mode == "Rebuild vertex index":
+        if build_mode in ("Clear and import", "Rebuild vertex index"):
             clean_vector_index()
         builder.build_vector_index()
     if build_mode == "Clear and import":
         clean_hg_data()
-    if build_mode == "Clear and import" or build_mode == "Import":
+    if build_mode in ("Clear and import", "Import"):
         builder.commit_to_hugegraph()
     if build_mode != "Test":
         builder.build_vertex_id_semantic_index()
     log.debug(builder.operators)
-    return builder.run()
-
-
-def clean_kg():
-    clean_hg_data()
-    clean_vector_index()
-    return "Knowledge Graph has been cleaned!"
+    try:
+        context = builder.run()
+        return context
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        log.error(e)
+        raise gr.Error(str(e))
 
 
 if __name__ == "__main__":
@@ -314,10 +327,14 @@ if __name__ == "__main__":
     automatically extract the schema of the graph.
 - Info extract head: The head of prompt of info extracting.
 - Build mode: 
-    - Test: Only extract vertices and edges from file without building vector index or importing into HugeGraph.
-    - Clear and Import: Clear the vector index and data of HugeGraph and then extract and import new data.
-    - Import: Extract the data and append it to HugeGraph and vector index without clearing anything.
-    - Rebuild vertex index: Do not clear the HugeGraph data, but only clear vector index and build new one.
+    - Test: Only extract vertices and edges from file without building vector index or 
+    importing into HugeGraph.
+    - Clear and Import: Clear the vector index and data of HugeGraph and then extract and 
+    import new data.
+    - Import: Extract the data and append it to HugeGraph and vector index without clearing 
+    anything.
+    - Rebuild vertex index: Do not clear the HugeGraph data, but only clear vector index 
+    and build new one.
 """
         )
 
@@ -360,7 +377,8 @@ if __name__ == "__main__":
             info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT,
                                                label="Info extract head")
             with gr.Column():
-                mode = gr.Radio(choices=["Test", "Clear and import", "Import", "Rebuild vertex index"],
+                mode = gr.Radio(choices=["Test", "Clear and import", "Import",
+                                         "Rebuild vertex index"],
                                 value="Test", label="Build mode")
                 btn = gr.Button("Build knowledge graph")
         with gr.Row():
@@ -389,9 +407,9 @@ if __name__ == "__main__":
                 graph_vector_radio = gr.Radio(choices=["true", "false"], value="false",
                                               label="Graph-Vector answer")
                 btn = gr.Button("Retrieval augmented generation")
-        btn.click(fn=graph_rag, inputs=[inp, raw_radio, vector_only_radio, graph_only_radio,
+        btn.click(fn=graph_rag, inputs=[inp, raw_radio, vector_only_radio, graph_only_radio,  # pylint: disable=no-member
                                         graph_vector_radio],
-                  outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out])  # pylint: disable=no-member
+                  outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out])
 
         gr.Markdown("""## 3. Others """)
         with gr.Row():

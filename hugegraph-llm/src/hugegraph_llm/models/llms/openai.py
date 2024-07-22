@@ -63,14 +63,14 @@ class OpenAIChat(BaseLLM):
             return completions.choices[0].message.content
         # catch context length / do not retry
         except openai.error.InvalidRequestError as e:
-            log.critical(f"Fatal: {e}")
+            log.critical("Fatal: %s", e)
             return str(f"Error: {e}")
         # catch authorization errors / do not retry
         except openai.error.AuthenticationError:
             log.critical("The provided OpenAI API key is invalid")
             return "Error: The provided OpenAI API key is invalid"
         except Exception as e:
-            log.error(f"Retrying LLM call {e}")
+            log.error("Retrying LLM call %s", e)
             raise e
 
     def generate_streaming(
