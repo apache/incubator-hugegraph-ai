@@ -17,6 +17,7 @@
 
 
 from typing import Any
+from hugegraph_llm.utils.log import log
 
 
 class CheckSchema:
@@ -24,7 +25,7 @@ class CheckSchema:
         self.result = None
         self.data = data
 
-    def run(self, schema=None) -> Any:
+    def run(self, schema=None) -> Any:  # pylint: disable=too-many-branches
         schema = self.data or schema
         if not isinstance(schema, dict):
             raise ValueError("Input data is not a dictionary.")
@@ -39,6 +40,37 @@ class CheckSchema:
                 raise ValueError("Vertex in input data does not contain 'vertex_label'.")
             if not isinstance(vertex["vertex_label"], str):
                 raise ValueError("'vertex_label' in vertex is not of correct type.")
+            if "properties" not in vertex:
+                raise ValueError("Vertex in input data does not contain 'properties'.")
+            properties = vertex["properties"]
+            if not isinstance(properties, list):
+                raise ValueError("'properties' in vertex is not of correct type.")
+            if len(properties) == 0:
+                raise ValueError("'properties' in vertex is empty.")
+            primary_keys = vertex.get("primary_keys", properties[:1])
+            if not isinstance(primary_keys, list):
+                raise ValueError("'primary_keys' in vertex is not of correct type.")
+            new_primary_keys = []
+            for key in primary_keys:
+                if key not in properties:
+                    log.waring("Primary key '%s' not found in properties has been auto removed.",
+                               key)
+                else:
+                    new_primary_keys.append(key)
+            if len(new_primary_keys) == 0:
+                raise ValueError(f"primary keys of vertexLabel {vertex['vertex_label']} is empty.")
+            vertex["primary_keys"] = new_primary_keys
+            nullable_keys = vertex.get("nullable_keys", properties[1:])
+            if not isinstance(nullable_keys, list):
+                raise ValueError("'nullable_keys' in vertex is not of correct type.")
+            new_nullable_keys = []
+            for key in nullable_keys:
+                if key not in properties:
+                    log.warning("Nullable key '%s' not found in properties has been auto removed.",
+                                key)
+                else:
+                    new_nullable_keys.append(key)
+            vertex["nullable_keys"] = new_nullable_keys
         for edge in schema["edges"]:
             if not isinstance(edge, dict):
                 raise ValueError("Edge in input data is not a dictionary.")
@@ -60,4 +92,4 @@ class CheckSchema:
                     "'edge_label', 'source_vertex_label', 'target_vertex_label' "
                     "in edge is not of correct type."
                 )
-        return schema
+        return {"schema": schema}

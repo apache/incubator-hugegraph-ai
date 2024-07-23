@@ -17,46 +17,54 @@ graph systems and large language models.
 
 ## Environment Requirements
 
-- python 3.8+ 
+- python 3.9+ 
 - hugegraph 1.0.0+
 
 ## Preparation
 
-- Start the HugeGraph database, you can do it via Docker. Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for guidance
-- Start the gradio interactive demo, you can start with the following command, and open http://127.0.0.1:8001 after starting
+- Start the HugeGraph database, you can do it via Docker/[Binary packages](https://hugegraph.apache.org/docs/download/download/). 
+Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for guidance
+- Clone this project
     ```bash
-    # 0. clone the hugegraph-ai project & enter the root dir
-    # 1. configure the environment path
-    PROJECT_ROOT_DIR = "/path/to/hugegraph-ai" # root directory of hugegraph-ai
-    export PYTHONPATH=${PROJECT_ROOT_DIR}/hugegraph-llm/src:${PROJECT_ROOT_DIR}/hugegraph-python-client/src
-    
-    # 2. install the required packages/deps (better to use virtualenv(venv) to manage the environment)
-    cd hugegraph-llm 
-    pip install -r requirements.txt # ensure the python/pip version is satisfied
-    # 2.1 set basic configs in the hugegraph-llm/config/config.ini (Optional, you can also set it in gradio) 
-  
-    # 3. start the gradio server, wait for some time to initialize 
-    python3 ./src/hugegraph_llm/utils/gradio_demo.py
-   ```
-- Configure HugeGraph database connection information & LLM information in the gradio interface, 
-  click on `Initialize configs`, the complete and initialized configuration file will be overwritten.
-- offline download NLTK stopwords
-    ```bash
-    python3 ./src/hugegraph_llm/operators/common_op/nltk_helper.py
+    git clone https://github.com/apache/incubator-hugegraph-ai.git
     ```
+- Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph_llm](src/hugegraph_llm)
+    ```bash
+    cd ./incubator-hugegraph-ai # better to use virtualenv (source venv/bin/activate) 
+    pip install ./hugegraph-python-client
+    pip install -r ./hugegraph-llm/requirements.txt
+    ```
+- Enter the project directory
+    ```bash
+    cd ./hugegraph-llm/src
+    ```
+- Generate the config file
+    ```bash
+    python3 -m hugegraph_llm.config.generate
+    ```
+- Start the gradio interactive demo of **Graph RAG**, you can start with the following command, and open http://127.0.0.1:8001 after starting
+    ```bash
+    python3 -m hugegraph_llm.demo.rag_web_demo
+   ```
+
+- Or start the gradio interactive demo of **Text2Gremlin**, you can start with the following command, and open http://127.0.0.1:8002 after starting
+    ```bash
+    python3 -m hugegraph_llm.demo.gremlin_generate_web_demo
+   ```
 
 ## Examples
 
 ### 1.Build a knowledge graph in HugeGraph through LLM
 
-Run example like `python3 ./hugegraph-llm/examples/build_kg_test.py`
+Run example like `python3 ./hugegraph_llm/examples/build_kg_test.py`
 
 The `KgBuilder` class is used to construct a knowledge graph. Here is a brief usage guide:
 
-1. **Initialization**: The `KgBuilder` class is initialized with an instance of a language model. This can be obtained from the `LLMs` class.
+1. **Initialization**: The `KgBuilder` class is initialized with an instance of a language model. 
+This can be obtained from the `LLMs` class.
 
     ```python
-    from hugegraph_llm.llms.init_llm import LLMs
+    from hugegraph_llm.models.llms.init_llm import LLMs
     from hugegraph_llm.operators.kg_construction_task import KgBuilder
     
     TEXT = ""
@@ -111,7 +119,7 @@ The methods of the `KgBuilder` class can be chained together to perform a sequen
 
 ### 2. Retrieval augmented generation (RAG) based on HugeGraph
 
-Run example like `python3 ./hugegraph-llm/examples/graph_rag_test.py`
+Run example like `python3 ./hugegraph_llm/examples/graph_rag_test.py`
 
 The `GraphRAG` class is used to integrate HugeGraph with large language models to provide retrieval-augmented generation capabilities.
 Here is a brief usage guide:

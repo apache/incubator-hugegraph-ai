@@ -16,19 +16,27 @@
 # under the License.
 
 
+import time
 from typing import Dict, Any, Optional, List
 
-from hugegraph_llm.llms.base import BaseLLM
-from hugegraph_llm.llms.init_llm import LLMs
+from hugegraph_llm.models.llms.base import BaseLLM
+from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from hugegraph_llm.models.llms.init_llm import LLMs
+from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.operators.common_op.print_result import PrintResult
+from hugegraph_llm.operators.common_op.merge_dedup_rerank import MergeDedupRerank
 from hugegraph_llm.operators.hugegraph_op.graph_rag_query import GraphRAGQuery
+from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
+from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
+from hugegraph_llm.utils.log import log
 
 
 class GraphRAG:
-    def __init__(self, llm: Optional[BaseLLM] = None):
+    def __init__(self, llm: Optional[BaseLLM] = None, embedding: Optional[BaseEmbedding] = None):
         self._llm = llm or LLMs().get_llm()
+        self._embedding = embedding or Embeddings().get_embedding()
         self._operators: List[Any] = []
 
     def extract_keyword(
@@ -50,6 +58,14 @@ class GraphRAG:
         )
         return self
 
+    def match_keyword_to_id(self):
+        self._operators.append(
+            SemanticIdQuery(
+                embedding=self._embedding,
+            )
+        )
+        return self
+
     def query_graph_for_rag(
         self,
         max_deep: int = 2,
@@ -65,12 +81,40 @@ class GraphRAG:
         )
         return self
 
+    def query_vector_index_for_rag(
+            self,
+            max_items: int = 3
+    ):
+        self._operators.append(
+            VectorIndexQuery(
+                embedding=self._embedding,
+                topk=max_items,
+            )
+        )
+        return self
+
+    def merge_dedup_rerank(self):
+        self._operators.append(
+            MergeDedupRerank(
+                embedding=self._embedding,
+            )
+        )
+        return self
+
     def synthesize_answer(
         self,
+        raw_answer: bool = False,
+        vector_only_answer: bool = True,
+        graph_only_answer: bool = False,
+        graph_vector_answer: bool = False,
         prompt_template: Optional[str] = None,
     ):
         self._operators.append(
             AnswerSynthesize(
+                raw_answer = raw_answer,
+                vector_only_answer = vector_only_answer,
+                graph_only_answer = graph_only_answer,
+                graph_vector_answer = graph_vector_answer,
                 prompt_template=prompt_template,
             )
         )
@@ -86,6 +130,11 @@ class GraphRAG:
 
         context = kwargs
         context["llm"] = self._llm
-        for op in self._operators:
-            context = op.run(context)
+        for operator in self._operators:
+            log.debug("Running operator: %s", operator.__class__.__name__)
+            start = time.time()
+            context = operator.run(context)
+            log.debug("Operator %s finished in %s seconds", operator.__class__.__name__,
+                      time.time() - start)
+            log.debug("Context:\n%s", context)
         return context

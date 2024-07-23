@@ -16,21 +16,19 @@
 # under the License.
 
 
-from hugegraph_llm.utils.config import Config
-from hugegraph_llm.utils.constants import Constants
+from hugegraph_llm.config import settings
 from pyhugegraph.client import PyHugeClient
 
 
 class SchemaManager:
     def __init__(self, graph_name: str):
-        config = Config(section=Constants.HUGEGRAPH_CONFIG)
         self.graph_name = graph_name
         self.client = PyHugeClient(
-            config.get_graph_ip(),
-            config.get_graph_port(),
-            graph_name,
-            config.get_graph_user(),
-            config.get_graph_pwd(),
+            settings.graph_ip,
+            settings.graph_port,
+            self.graph_name,
+            settings.graph_user,
+            settings.graph_pwd,
         )
         self.schema = self.client.schema()
 

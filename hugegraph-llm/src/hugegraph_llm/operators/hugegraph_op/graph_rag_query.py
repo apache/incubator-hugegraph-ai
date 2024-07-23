@@ -19,8 +19,7 @@
 import re
 from typing import Any, Dict, Optional, List, Set, Tuple
 
-from hugegraph_llm.utils.config import Config
-from hugegraph_llm.utils.constants import Constants
+from hugegraph_llm.config import settings
 from pyhugegraph.client import PyHugeClient
 
 
@@ -66,24 +65,22 @@ class GraphRAGQuery:
     )
 
     def __init__(
-        self,
-        max_deep: int = 2,
-        max_items: int = 30,
-        prop_to_match: Optional[str] = None,
+            self,
+            max_deep: int = 2,
+            max_items: int = 30,
+            prop_to_match: Optional[str] = None,
     ):
-        config = Config(section=Constants.HUGEGRAPH_CONFIG)
         self._client = PyHugeClient(
-            config.get_graph_ip(),
-            config.get_graph_port(),
-            config.get_graph_name(),
-            config.get_graph_user(),
-            config.get_graph_pwd(),
+            settings.graph_ip,
+            settings.graph_port,
+            settings.graph_name,
+            settings.graph_user,
+            settings.graph_pwd,
         )
         self._max_deep = max_deep
         self._max_items = max_items
         self._prop_to_match = prop_to_match
         self._schema = ""
-
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._client is None:
@@ -100,6 +97,8 @@ class GraphRAGQuery:
 
         keywords = context.get("keywords")
         assert keywords is not None, "No keywords for query."
+        entrance_vids = context.get("entrance_vids")
+        assert entrance_vids is not None, "No entrance vertices for query."
 
         if isinstance(context.get("max_deep"), int):
             self._max_deep = context["max_deep"]
@@ -124,15 +123,9 @@ class GraphRAGQuery:
                 edge_labels=edge_labels_str,
             )
         else:
-            id_format = self._get_graph_id_format()
-            if id_format == "STRING":
-                keywords_str = ",".join("'" + kw + "'" for kw in keywords)
-            else:
-                raise RuntimeError("Unsupported ID format for Graph RAG.")
-
             rag_gremlin_query_template = self.ID_RAG_GREMLIN_QUERY_TEMPL
             rag_gremlin_query = rag_gremlin_query_template.format(
-                keywords=keywords_str,
+                keywords=entrance_vids,
                 max_deep=self._max_deep,
                 max_items=self._max_items,
                 edge_labels=edge_labels_str,
@@ -141,7 +134,7 @@ class GraphRAGQuery:
         result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
         knowledge: Set[str] = self._format_knowledge_from_query_result(query_result=result)
 
-        context["synthesize_context_body"] = list(knowledge)
+        context["graph_result"] = list(knowledge)
         context["synthesize_context_head"] = (
             f"The following are knowledge sequence in max depth {self._max_deep} "
             f"in the form of directed graph like:\n"
@@ -152,13 +145,13 @@ class GraphRAGQuery:
         verbose = context.get("verbose") or False
         if verbose:
             print("\033[93mKNOWLEDGE FROM GRAPH:")
-            print("\n".join(rel for rel in context["synthesize_context_body"]) + "\033[0m")
+            print("\n".join(rel for rel in context["graph_result"]) + "\033[0m")
 
         return context
 
     def _format_knowledge_from_query_result(
-        self,
-        query_result: List[Any],
+            self,
+            query_result: List[Any],
     ) -> Set[str]:
         use_id_to_match = self._prop_to_match is None
         knowledge = set()
@@ -178,7 +171,7 @@ class GraphRAGQuery:
                         break
                     node_cache.add(matched_str)
                     props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items())
-                    node_str = f"{item['label']}{{{props_str}}}"
+                    node_str = f"{item['id']}{{{props_str}}}"
                     flat_rel += node_str
                     if flat_rel in knowledge:
                         knowledge.remove(flat_rel)
@@ -202,17 +195,17 @@ class GraphRAGQuery:
     def _extract_labels_from_schema(self) -> Tuple[List[str], List[str]]:
         schema = self._get_graph_schema()
         node_props_str, edge_props_str = schema.split("\n")[:2]
-        node_props_str = node_props_str[len("Node properties: ") :].strip("[").strip("]")
-        edge_props_str = edge_props_str[len("Edge properties: ") :].strip("[").strip("]")
+        node_props_str = node_props_str[len("Node properties: "):].strip("[").strip("]")
+        edge_props_str = edge_props_str[len("Edge properties: "):].strip("[").strip("]")
         node_labels = self._extract_label_names(node_props_str)
         edge_labels = self._extract_label_names(edge_props_str)
         return node_labels, edge_labels
 
     @staticmethod
     def _extract_label_names(
-        source: str,
-        head: str = "name: ",
-        tail: str = ", ",
+            source: str,
+            head: str = "name: ",
+            tail: str = ", ",
     ) -> List[str]:
         result = []
         for s in source.split(head):
