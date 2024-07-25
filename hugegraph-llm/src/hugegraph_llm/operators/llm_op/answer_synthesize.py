@@ -84,13 +84,19 @@ class AnswerSynthesize:
             return {"answer": response}
 
         vector_result = context.get("vector_result", [])
-        vector_result_context = ("The following are paragraphs related to the query:\n"
-                                 + "\n".join([f"{i + 1}. {res}"
-                                              for i, res in enumerate(vector_result)]))
+        if len(vector_result) == 0:
+            vector_result_context = "There are no paragraphs related to the query."
+        else:
+            vector_result_context = ("The following are paragraphs related to the query:\n"
+                                     + "\n".join([f"{i + 1}. {res}"
+                                                  for i, res in enumerate(vector_result)]))
         graph_result = context.get("graph_result", [])
-        graph_result_context = ("The following are subgraph related to the query:\n"
-                                + "\n".join([f"{i + 1}. {res}"
-                                             for i, res in enumerate(graph_result)]))
+        if len(graph_result) == 0:
+            graph_result_context = "There are no subgraph related to the query."
+        else:
+            graph_result_context = ("The following are subgraph related to the query:\n"
+                                    + "\n".join([f"{i + 1}. {res}"
+                                                 for i, res in enumerate(graph_result)]))
 
         verbose = context.get("verbose") or False
 
