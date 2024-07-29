@@ -338,20 +338,22 @@ if __name__ == "__main__":
 """
         )
 
+        # TODO: we need refactor the schema to a common way (keep same format with Graph REST-API)
         SCHEMA = """{
   "vertices": [
     {
+      "id":1,
       "vertex_label": "person",
-      "properties": [
-        "name",
-        "age",
-        "occupation"]
+      "id_strategy":"PRIMARY_KEY",
+      "primary_keys":["name"],
+      "properties": ["name","age","occupation"]
     },
     {
+      "id":2,
       "vertex_label": "webpage",
-      "properties": [
-        "name",
-        "url"]
+      "id_strategy":"PRIMARY_KEY",
+      "primary_keys":["name"],
+      "properties": ["name","url"]
     }
   ],
   "edges": [
@@ -359,13 +361,13 @@ if __name__ == "__main__":
       "edge_label": "roommate",
       "source_vertex_label": "person",
       "target_vertex_label": "person",
-      "properties": {}
+      "properties": ["date"]
     },
     {
       "edge_label": "link",
       "source_vertex_label": "webpage",
       "target_vertex_label": "person",
-      "properties": {}
+      "properties": []
     }
   ]
 }"""
