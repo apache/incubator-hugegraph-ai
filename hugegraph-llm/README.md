@@ -42,6 +42,11 @@ Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-d
     ```bash
     python3 -m hugegraph_llm.config.generate
     ```
+    To update the config file, use `-U` or `--update`.
+    ```bash
+    python3 -m hugegraph_llm.config.generate --update
+    ```
+
 - Start the gradio interactive demo of **Graph RAG**, you can start with the following command, and open http://127.0.0.1:8001 after starting
     ```bash
     python3 -m hugegraph_llm.demo.rag_web_demo
