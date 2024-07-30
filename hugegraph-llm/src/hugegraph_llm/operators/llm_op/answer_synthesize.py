@@ -88,7 +88,7 @@ class AnswerSynthesize:
                                  + "\n".join([f"{i + 1}. {res}"
                                               for i, res in enumerate(vector_result)]))
         graph_result = context.get("graph_result", [])
-        graph_result_context = ("The following are subgraph related to the query:\n"
+        graph_result_context = ("The following are knowledge from HugeGraph related to the query:\n"
                                 + "\n".join([f"{i + 1}. {res}"
                                              for i, res in enumerate(graph_result)]))
 

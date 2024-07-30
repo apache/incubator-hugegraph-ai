@@ -39,5 +39,5 @@ class SemanticIdQuery:
             results = self.vector_index.search(query_vector, top_k=1)
             if results:
                 graph_query_entrance.append(results[0])
-        context["entrance_vids"] = graph_query_entrance
+        context["entrance_vids"] = list(set(graph_query_entrance))
         return context

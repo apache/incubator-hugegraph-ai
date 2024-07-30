@@ -53,8 +53,8 @@ PrimaryKey ID Generate Rule
 vertexLabel的id生成策略为：id:primaryKey1!primaryKey2
 
 Example
-Input example:
-text
+# Input
+## Text
 道路交通事故认定书
 鱼公交认字[2013]第00478号
 天气：小雨
@@ -79,10 +79,10 @@ text
 二0一四年一月二日
 
 
-graph schema
+## Graph schema
 {"vertexLabels":[{"id":3,"name":"法条","id_strategy":"PRIMARY_KEY","primary_keys":["法典名","法条索引"],"nullable_keys":["法章名","法条内容"],"properties":["法典名","法章名","法条索引","法条内容"]},{"id":7,"name":"事故","id_strategy":"PRIMARY_KEY","primary_keys":["事故认定书编号","事故认定书单位"],"nullable_keys":[],"properties":["事故发生时间","事故认定书编号","事故认定书单位"]},{"id":11,"name":"发生地点","id_strategy":"PRIMARY_KEY","primary_keys":["城市","所属路段"],"nullable_keys":["走向","材质","路面情况","道路状况"],"properties":["城市","走向","材质","路面情况","道路状况","所属路段"]},{"id":12,"name":"当事人","id_strategy":"PRIMARY_KEY","primary_keys":["身份证号"],"nullable_keys":["姓名","性别","年龄","民族","驾照"],"properties":["身份证号","姓名","性别","年龄","民族","驾照"]},{"id":13,"name":"车辆","id_strategy":"PRIMARY_KEY","primary_keys":["车辆牌照"],"nullable_keys":["行驶证所属人","保险公司","保险情况","车辆类型"],"properties":["车辆牌照","行驶证所属人","保险公司","保险情况","车辆类型"]},{"id":14,"name":"行为","id_strategy":"PRIMARY_KEY","primary_keys":["行为名称"],"nullable_keys":[],"properties":["行为名称"]}],"edgeLabels":[{"id":7,"name":"事故相关法条","source_label":"事故","target_label":"法条","sort_keys":[],"nullable_keys":[],"properties":[]},{"id":8,"name":"事故相关当事人","source_label":"事故","target_label":"当事人","sort_keys":[],"nullable_keys":["责任认定"],"properties":["责任认定"]},{"id":9,"name":"事故相关行为","source_label":"事故","target_label":"行为","sort_keys":[],"nullable_keys":[],"properties":[]},{"id":10,"name":"当事人相关行为","source_label":"当事人","target_label":"行为","sort_keys":[],"nullable_keys":[],"properties":[]},{"id":11,"name":"当事人相关车辆","source_label":"当事人","target_label":"车辆","sort_keys":[],"nullable_keys":[],"properties":[]},{"id":12,"name":"事故发生地点","source_label":"事故","target_label":"发生地点","sort_keys":[],"nullable_keys":[],"properties":[]}]}
 
-Output example:
+# Output
 [{"label":"事故","type":"vertex","properties":{"事故发生时间":"2013-11-24 18:09:00.000","事故认定书编号":"鱼公交认字[2013]第00478号","事故认定书单位":"道路交通事故认定书"}},{"label":"发生地点","type":"vertex","properties":{"城市":"山东省鱼台县","所属路段":"251省道清河菜市场路口","走向":"南北","材质":"沥青","路面情况":"平坦","道路状况":"视线一般"}},{"label":"当事人","type":"vertex","properties":{"身份证号":"370827197201032316","姓名":"张小虎","性别":"男","年龄":"1972-01-03","驾照":"C1E"}},{"label":"当事人","type":"vertex","properties":{"身份证号":"370827195203122316","姓名":"于海洋","性别":"男","年龄":"1952-03-12"}},{"label":"车辆","type":"vertex","properties":{"车辆牌照":"鲁H7Z886","行驶证所属人":"谢彪","保险公司":"中国人民产保险股份有限公司济宁市分公司","保险情况":"交通事故责任强制保险","车辆类型":"小型轿车"}},{"label":"行为","type":"vertex","properties":{"行为名称":"逃逸"}},{"label":"行为","type":"vertex","properties":{"行为名称":"酒后驾车"}},{"label":"行为","type":"vertex","properties":{"行为名称":"观察不够"}},{"label":"法条","type":"vertex","properties":{"法典名":"中华人民共和国道路交通安全法","法条索引":"第三十八条","法条内容":"车辆、行人应当按照交通信号通行；遇有交通警察现场指挥时，应当按照交通警察的指挥通行；在没有交通信号的道路上，应当在确保安全、畅通的原则下通行。"}},{"label":"法条","type":"vertex","properties":{"法典名":"中华人民共和国道路交通安全法","法条索引":"第二十二条","法条内容":"饮酒，服用国家管制的精神药品或者醉药品，或者患有妨碍安全驾驶杭动车的疾病，或者过度劳影响安全驾驶的，不得买驶机动车。"}},{"label":"事故相关法条","type":"edge","outV":"7:鱼公交认字[2013]第00478号!道路交通事故认定书","outVLabel":"事故","inV":"3:中华人民共和国道路交通安全法!第三十八条","inVLabel":"法条","properties":{}},{"label":"事故相关法条","type":"edge","outV":"7:鱼公交认字[2013]第00478号!道路交通事故认定书","outVLabel":"事故","inV":"3:中华人民共和国道路交通安全法!第二十二条","inVLabel":"法条","properties":{}},{"label":"事故相关当事人","type":"edge","outV":"7:鱼公交认字[2013]第00478号!道路交通事故认定书","outVLabel":"事故","inV":"12: 370827197201032316","inVLabel":"当事人","properties":{"责任认定":"全部责任"}},{"label":"事故相关当事人","type":"edge","outV":"7:鱼公交认字[2013]第00478号!道路交通事故认定书","outVLabel":"事故","inV":"12: 370827195203122316","inVLabel":"当事人","properties":{"责任认定":"无责任"}},{"label":"事故相关行为","type":"edge","outV":"7:鱼公交认字[2013]第00478号!道路交通事故认定书","outVLabel":"当事人","inV":"14:逃逸","inVLabel":"行为","properties":{}},{"label":"事故相关行为","type":"edge","outV":"7:鱼公交认字[2013]第00478号!道路交通事故认定书","outVLabel":"当事人","inV":"14:酒后驾车","inVLabel":"行为","properties":{}},{"label":"事故相关行为","type":"edge","outV":"7:鱼公交认字[2013]第00478号!道路交通事故认定书","outVLabel":"当事人","inV":"14:观察不够","inVLabel":"行为","properties":{}},{"label":"当事人相关行为","type":"edge","outV":"12:370827197201032316","outVLabel":"当事人","inV":"14:逃逸","inVLabel":"行为","properties":{}},{"label":"当事人相关行为","type":"edge","outV":"12:370827197201032316","outVLabel":"当事人","inV":"14:酒后驾车","inVLabel":"行为","properties":{}},{"label":"当事人相关行为","type":"edge","outV":"12:370827197201032316","outVLabel":"当事人","inV":"14:观察不够","inVLabel":"行为","properties":{}},{"label":"当事人相关车辆","type":"edge","outV":"12:370827197201032316","outVLabel":"当事人","inV":"13:鲁H7Z886","inVLabel":"车辆","properties":{}},{"label":"事故发生地点","type":"edge","outV":"7:鱼公交认字[2013]第00478号!道路交通事故认定书","outVLabel":"事故","inV":"11:山东省鱼台县!251省道清河菜市场路口","inVLabel":"发生地点","properties":{}}]
 """
 
@@ -91,10 +91,13 @@ def generate_extract_property_graph_prompt(text, schema=None) -> str:
     return f"""---
 
 请根据上面的完整指令, 尝试根据下面给定的 schema, 提取下面的文本, 只需要输出 json 结果:
-## Text:
+# Input
+## Text
 {text}
-## Graph schema:
-{schema}"""
+## Graph schema
+{schema}
+
+# Output"""
 
 
 def split_text(text: str) -> List[str]:
