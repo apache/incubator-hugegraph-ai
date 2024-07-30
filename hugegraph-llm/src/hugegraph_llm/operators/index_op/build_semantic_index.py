@@ -17,6 +17,7 @@
 
 
 import os
+import json
 from typing import Any, Dict
 
 from hugegraph_llm.config import resource_path, settings
@@ -32,9 +33,14 @@ class BuildSemanticIndex:
         self.embedding = embedding
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        vids = [vertex["id"] for vertex in context["vertices"]]
-        if len(vids) > 0:
-            log.debug("Building vector index for %s vertices...", len(vids))
+        if len(context["vertices"]) > 0:
+            log.debug("Building vector index for %s vertices...", len(context["vertices"]))
+            vids = []
+            vids_embedding = []
+            for vertex in context["vertices"]:
+                vertex_text = f"{vertex['label']}\n{vertex['properties']}"
+                vids_embedding.append(self.embedding.get_text_embedding(vertex_text))
+                vids.append(vertex["id"])
             vids_embedding = [self.embedding.get_text_embedding(vid) for vid in vids]
             log.debug("Vector index built for %s vertices.", len(vids))
             if os.path.exists(self.index_file) and os.path.exists(self.content_file):
