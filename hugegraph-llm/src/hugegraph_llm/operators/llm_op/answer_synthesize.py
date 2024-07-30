@@ -94,7 +94,7 @@ class AnswerSynthesize:
         if len(graph_result) == 0:
             graph_result_context = "There are no knowledge from HugeGraph related to the query."
         else:
-            graph_result_context = ("The following are subgraph related to the query:\n"
+            graph_result_context = ("The following are knowledge from HugeGraph related to the query:\n"
                                     + "\n".join([f"{i + 1}. {res}"
                                                  for i, res in enumerate(graph_result)]))
 

@@ -17,7 +17,6 @@
 
 
 import os
-import json
 from typing import Any, Dict
 
 from hugegraph_llm.config import resource_path, settings
