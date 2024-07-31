@@ -237,7 +237,7 @@ if __name__ == "__main__":
                     settings.openai_api_base = arg2
                     settings.openai_language_model = arg3
                     settings.openai_max_tokens = int(arg4)
-                    test_url = "https://api.openai.com/v1/models"
+                    test_url = settings.openai_api_base + "/models"
                     headers = {"Authorization": f"Bearer {arg1}"}
                     test_api_connection(test_url, headers=headers, ak=arg1)
                 elif llm_option == "qianfan_wenxin":
@@ -300,7 +300,7 @@ if __name__ == "__main__":
                     settings.openai_api_key = arg1
                     settings.openai_api_base = arg2
                     settings.openai_embedding_model = arg3
-                    test_url = "https://api.openai.com/v1/models"
+                    test_url = settings.openai_api_base + "/models"
                     headers = {"Authorization": f"Bearer {arg1}"}
                     test_api_connection(test_url, headers=headers, ak=arg1)
                 elif embedding_option == "ollama":
