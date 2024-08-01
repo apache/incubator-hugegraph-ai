@@ -36,7 +36,8 @@ Graph Schema:
 ### Content Rule
 Please read the provided text carefully and identify any information that corresponds to the vertices and edges defined in the schema. For each piece of information that matches a vertex or edge, format it according to the following JSON structures:
 #### Vertex Format:
-{"id":"vertexLabel-entityName","label":"vertexLabel","type":"vertex","properties":{"propertyName":"propertyValue",...}}
+{"id":"vertexLabelID:entityName","label":"vertexLabel","type":"vertex","properties":{"propertyName":"propertyValue",
+...}}
 
 #### Edge Format:
 {"label":"edgeLabel","type":"edge","outV":"sourceVertexId","outVLabel":"sourceVertexLabel","inV":"targetVertexId","inVLabel":"targetVertexLabel","properties":{"propertyName":"propertyValue",...}}
@@ -46,6 +47,7 @@ Also follow the rules:
 2. Ensure the extract property is in the same type as the schema (like 'age' should be a number)
 3. Translate the given schema filed into Chinese if the given text is Chinese but the schema is in English (Optional) 
 4. Your output should be a list of such JSON objects, each representing either a vertex or an edge, extracted and formatted based on the text and the provided schema.
+5. If primarykeys are not provided, find one possible unique property for it  
 
 ## Example
 ### Input example:
