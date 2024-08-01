@@ -43,11 +43,12 @@ Please read the provided text carefully and identify any information that corres
 {"label":"edgeLabel","type":"edge","outV":"sourceVertexId","outVLabel":"sourceVertexLabel","inV":"targetVertexId","inVLabel":"targetVertexLabel","properties":{"propertyName":"propertyValue",...}}
 
 Also follow the rules: 
-1. Don't extract attribute/property fields that do not exist in the given schema
+1. Don't extract property fields that do not exist in the given schema
 2. Ensure the extract property is in the same type as the schema (like 'age' should be a number)
-3. Translate the given schema filed into Chinese if the given text is Chinese but the schema is in English (Optional) 
+3. If there are multiple primarykeys provided, then the generating strategy of VID is: vertexlabelID:pk1!pk2!pk3 (pk means primary key, and '!' is the separator, no extra space between them)
 4. Your output should be a list of such JSON objects, each representing either a vertex or an edge, extracted and formatted based on the text and the provided schema.
-5. If primarykeys are not provided, find one possible unique property for it  
+5. Translate the given schema filed into Chinese if the given text is Chinese but the schema is in English (Optional) 
+
 
 ## Example
 ### Input example:
@@ -64,7 +65,7 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
 def generate_extract_property_graph_prompt(text, schema=None) -> str:
     return f"""---
 
-请根据上面的完整指令，尝试根据下面给定的 schema, 提取下面的文本，只需要输出 json 结果：
+Following the full instructions above, try to extract the following text from the given schema, output the JSON result:
 ## Text:
 {text}
 ## Graph schema:
