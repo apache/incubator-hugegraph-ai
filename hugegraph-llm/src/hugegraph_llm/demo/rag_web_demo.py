@@ -339,33 +339,36 @@ if __name__ == "__main__":
         )
 
         SCHEMA = """{
-  "vertices": [
+  "vertexlabels": [
     {
-      "vertex_label": "person",
-      "properties": [
-        "name",
-        "age",
-        "occupation"]
+      "id":1,
+      "name": "person",
+      "id_strategy": "PRIMARY_KEY",
+      "primary_keys":["name"],
+      "properties": ["name","age","occupation"]
     },
     {
-      "vertex_label": "webpage",
-      "properties": [
-        "name",
-        "url"]
+      "id":2,
+      "name": "webpage",
+      "id_strategy":"PRIMARY_KEY",
+      "primary_keys":["name"],
+      "properties": ["name","url"]
     }
   ],
-  "edges": [
+  "edgelabels": [
     {
-      "edge_label": "roommate",
-      "source_vertex_label": "person",
-      "target_vertex_label": "person",
-      "properties": {}
+      "id": 1,
+      "name": "roommate",
+      "source_label": "person",
+      "target_label": "person",
+      "properties": ["date"]
     },
     {
-      "edge_label": "link",
-      "source_vertex_label": "webpage",
-      "target_vertex_label": "person",
-      "properties": {}
+      "id": 2,
+      "name": "link",
+      "source_label": "webpage",
+      "target_label": "person",
+      "properties": []
     }
   ]
 }"""

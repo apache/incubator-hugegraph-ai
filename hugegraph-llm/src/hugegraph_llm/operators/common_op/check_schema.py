@@ -29,17 +29,17 @@ class CheckSchema:
         schema = self.data or schema
         if not isinstance(schema, dict):
             raise ValueError("Input data is not a dictionary.")
-        if "vertices" not in schema or "edges" not in schema:
-            raise ValueError("Input data does not contain 'vertices' or 'edges'.")
-        if not isinstance(schema["vertices"], list) or not isinstance(schema["edges"], list):
-            raise ValueError("'vertices' or 'edges' in input data is not a list.")
-        for vertex in schema["vertices"]:
+        if "vertexlabels" not in schema or "edgelabels" not in schema:
+            raise ValueError("Input data does not contain 'vertexlabels' or 'edgelabels'.")
+        if not isinstance(schema["vertexlabels"], list) or not isinstance(schema["edgelabels"], list):
+            raise ValueError("'vertexlabels' or 'edgelabels' in input data is not a list.")
+        for vertex in schema["vertexlabels"]:
             if not isinstance(vertex, dict):
                 raise ValueError("Vertex in input data is not a dictionary.")
-            if "vertex_label" not in vertex:
-                raise ValueError("Vertex in input data does not contain 'vertex_label'.")
-            if not isinstance(vertex["vertex_label"], str):
-                raise ValueError("'vertex_label' in vertex is not of correct type.")
+            if "name" not in vertex:
+                raise ValueError("Vertex in input data does not contain 'name'.")
+            if not isinstance(vertex["name"], str):
+                raise ValueError("'name' in vertex is not of correct type.")
             if "properties" not in vertex:
                 raise ValueError("Vertex in input data does not contain 'properties'.")
             properties = vertex["properties"]
@@ -71,25 +71,25 @@ class CheckSchema:
                 else:
                     new_nullable_keys.append(key)
             vertex["nullable_keys"] = new_nullable_keys
-        for edge in schema["edges"]:
+        for edge in schema["edgelabels"]:
             if not isinstance(edge, dict):
                 raise ValueError("Edge in input data is not a dictionary.")
             if (
-                "edge_label" not in edge
-                or "source_vertex_label" not in edge
-                or "target_vertex_label" not in edge
+                "name" not in edge
+                or "source_label" not in edge
+                or "target_label" not in edge
             ):
                 raise ValueError(
                     "Edge in input data does not contain "
-                    "'edge_label', 'source_vertex_label', 'target_vertex_label'."
+                    "'name', 'source_label', 'target_label'."
                 )
             if (
-                not isinstance(edge["edge_label"], str)
-                or not isinstance(edge["source_vertex_label"], str)
-                or not isinstance(edge["target_vertex_label"], str)
+                not isinstance(edge["name"], str)
+                or not isinstance(edge["source_label"], str)
+                or not isinstance(edge["target_label"], str)
             ):
                 raise ValueError(
-                    "'edge_label', 'source_vertex_label', 'target_vertex_label' "
+                    "'name', 'source_label', 'target_label' "
                     "in edge is not of correct type."
                 )
         return {"schema": schema}
