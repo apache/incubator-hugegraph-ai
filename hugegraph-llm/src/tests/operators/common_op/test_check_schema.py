@@ -26,17 +26,22 @@ class TestCheckSchema(unittest.TestCase):
 
     def test_schema_check_with_valid_input(self):
         data = {
-            "vertices": [{"vertex_label": "person"}],
-            "edges": [
+            "vertexlabels": [
                 {
-                    "edge_label": "knows",
-                    "source_vertex_label": "person",
-                    "target_vertex_label": "person",
+                    "name": "person",
+                    "properties": ["name", "age", "occupation"]
+                }
+            ],
+            "edgelabels": [
+                {
+                    "name": "knows",
+                    "source_label": "person",
+                    "target_label": "person",
                 }
             ],
         }
         check_schema = CheckSchema(data)
-        self.assertEqual(check_schema.run(), data)
+        self.assertEqual(check_schema.run(), {'schema': data})
 
     def test_schema_check_with_invalid_input(self):
         data = "invalid input"
@@ -46,11 +51,11 @@ class TestCheckSchema(unittest.TestCase):
 
     def test_schema_check_with_missing_vertices(self):
         data = {
-            "edges": [
+            "edgelabels": [
                 {
-                    "edge_label": "knows",
-                    "source_vertex_label": "person",
-                    "target_vertex_label": "person",
+                    "name": "knows",
+                    "source_label": "person",
+                    "target_label": "person",
                 }
             ]
         }
@@ -59,19 +64,19 @@ class TestCheckSchema(unittest.TestCase):
             check_schema.run()
 
     def test_schema_check_with_missing_edges(self):
-        data = {"vertices": [{"vertex_label": "person"}]}
+        data = {"vertexlabels": [{"name": "person"}]}
         check_schema = CheckSchema(data)
         with self.assertRaises(ValueError):
             check_schema.run()
 
     def test_schema_check_with_invalid_vertices(self):
         data = {
-            "vertices": "invalid vertices",
-            "edges": [
+            "vertexlabels": "invalid vertices",
+            "edgelabels": [
                 {
-                    "edge_label": "knows",
-                    "source_vertex_label": "person",
-                    "target_vertex_label": "person",
+                    "name": "knows",
+                    "source_label": "person",
+                    "target_label": "person",
                 }
             ],
         }
@@ -80,7 +85,7 @@ class TestCheckSchema(unittest.TestCase):
             check_schema.run()
 
     def test_schema_check_with_invalid_edges(self):
-        data = {"vertices": [{"vertex_label": "person"}], "edges": "invalid edges"}
+        data = {"vertexlabels": [{"name": "person"}], "edgelabels": "invalid edges"}
         check_schema = CheckSchema(data)
         with self.assertRaises(ValueError):
             check_schema.run()

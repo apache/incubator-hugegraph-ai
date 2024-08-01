@@ -48,8 +48,8 @@ class CommitToKg:
 
     def init_graph(self, vertices, edges, schema):
         key_map = {}
-        for vertex in schema["vertices"]:
-            key_map[vertex["vertex_label"]] = vertex
+        for vertex in schema["vertexlabels"]:
+            key_map[vertex["name"]] = vertex
         for vertex in vertices:
             label = vertex["label"]
             properties = vertex["properties"]
@@ -78,11 +78,11 @@ class CommitToKg:
                 print(e)
 
     def init_schema(self, schema):
-        vertices = schema["vertices"]
-        edges = schema["edges"]
+        vertices = schema["vertexlabels"]
+        edges = schema["edgelabels"]
 
         for vertex in vertices:
-            vertex_label = vertex["vertex_label"]
+            vertex_label = vertex["name"]
             properties = vertex["properties"]
             nullable_keys = vertex["nullable_keys"]
             primary_keys = vertex["primary_keys"]
@@ -92,9 +92,9 @@ class CommitToKg:
                 *nullable_keys
             ).usePrimaryKeyId().primaryKeys(*primary_keys).ifNotExist().create()
         for edge in edges:
-            edge_label = edge["edge_label"]
-            source_vertex_label = edge["source_vertex_label"]
-            target_vertex_label = edge["target_vertex_label"]
+            edge_label = edge["name"]
+            source_vertex_label = edge["source_label"]
+            target_vertex_label = edge["target_label"]
             properties = edge["properties"]
             for prop in properties:
                 self.schema.propertyKey(prop).asText().ifNotExist().create()
