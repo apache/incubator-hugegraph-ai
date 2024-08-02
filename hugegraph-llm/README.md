@@ -38,19 +38,28 @@ Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-d
     ```bash
     cd ./hugegraph-llm/src
     ```
-- Generate the config file
-    ```bash
-    python3 -m hugegraph_llm.config.generate
-    ```
+
 - Start the gradio interactive demo of **Graph RAG**, you can start with the following command, and open http://127.0.0.1:8001 after starting
     ```bash
     python3 -m hugegraph_llm.demo.rag_web_demo
-   ```
+    ```
+    The default host is `0.0.0.0` and the port is `8001`. You can change them by passing command line arguments`--host` and `--port`.  
+    ```bash
+    python3 -m hugegraph_llm.demo.rag_web_demo --host 127.0.0.1 --port 18001
+    ```
 
-- Or start the gradio interactive demo of **Text2Gremlin**, you can start with the following command, and open http://127.0.0.1:8002 after starting
+- Or start the gradio interactive demo of **Text2Gremlin**, you can start with the following command, and open http://127.0.0.1:8002 after starting. You can also change the default host `0.0.0.0` and port `8002` as above.
     ```bash
     python3 -m hugegraph_llm.demo.gremlin_generate_web_demo
    ```
+
+- After starting the web demo, the config file `.env` will be automatically generated. You can modify its content in the web page. Or modify the file directly and restart the web application.
+
+    (Optional)To regenerate the config file, you can use `config.generate` with `-u` or `--update`.
+    ```bash
+    python3 -m hugegraph_llm.config.generate --update
+    ```
+
 
 ## Examples
 

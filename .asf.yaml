@@ -41,7 +41,7 @@ github:
     main:
       required_status_checks:
         # strict means "Require branches to be up-to-date before merging".
-        strict: false
+        strict: true
         # contexts are the names of checks that must pass (now only enable the basic check)
         #contexts:
           #- CodeQL
