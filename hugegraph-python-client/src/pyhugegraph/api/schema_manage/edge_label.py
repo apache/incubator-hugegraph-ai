@@ -17,16 +17,13 @@
 
 import json
 
-from pyhugegraph.api.common import HugeParamsBase
+from pyhugegraph.utils.huge_component import HugeComponent
 from pyhugegraph.utils.exceptions import CreateError, UpdateError, RemoveError
 from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
 from pyhugegraph.utils.util import check_if_success, check_if_authorized
 
 
-class EdgeLabel(HugeParamsBase):
-    def __init__(self, graph_instance, session):
-        super().__init__(graph_instance)
-        self.__session = session
+class EdgeLabel(HugeComponent):
 
     @decorator_params
     def link(self, source_label, target_label):
@@ -147,9 +144,7 @@ class EdgeLabel(HugeParamsBase):
             if key in dic:
                 data[key] = dic[key]
 
-        url = (
-            f'{self._host}/graphs/{self._graph_name}/schema/edgelabels/{data["name"]}?action=append'
-        )
+        url = f'{self._host}/graphs/{self._graph_name}/schema/edgelabels/{data["name"]}?action=append'
         response = self.__session.put(
             url, data=json.dumps(data), auth=self._auth, headers=self._headers
         )

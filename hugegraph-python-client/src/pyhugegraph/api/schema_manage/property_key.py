@@ -18,16 +18,13 @@
 import json
 
 
-from pyhugegraph.api.common import HugeParamsBase
+from pyhugegraph.utils.huge_component import HugeComponent
 from pyhugegraph.utils.exceptions import CreateError, UpdateError, RemoveError
 from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
 from pyhugegraph.utils.util import check_if_success, check_if_authorized
 
 
-class PropertyKey(HugeParamsBase):
-    def __init__(self, graph_instance, session):
-        super().__init__(graph_instance)
-        self.__session = session
+class PropertyKey(HugeComponent):
 
     @decorator_params
     def asInt(self):
@@ -179,7 +176,9 @@ class PropertyKey(HugeParamsBase):
     @decorator_params
     def remove(self):
         dic = self._parameter_holder.get_dic()
-        url = f'{self._host}/graphs/{self._graph_name}/schema/propertykeys/{dic["name"]}'
+        url = (
+            f'{self._host}/graphs/{self._graph_name}/schema/propertykeys/{dic["name"]}'
+        )
         response = self.__session.delete(url, auth=self._auth, headers=self._headers)
         self.clean_parameter_holder()
         if check_if_success(

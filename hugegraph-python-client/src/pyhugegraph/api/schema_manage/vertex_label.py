@@ -17,16 +17,13 @@
 
 import json
 
-from pyhugegraph.api.common import HugeParamsBase
+from pyhugegraph.utils.huge_component import HugeComponent
 from pyhugegraph.utils.exceptions import CreateError, UpdateError, RemoveError
 from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
 from pyhugegraph.utils.util import check_if_success, check_if_authorized
 
 
-class VertexLabel(HugeParamsBase):
-    def __init__(self, graph_instance, session):
-        super().__init__(graph_instance)
-        self.__session = session
+class VertexLabel(HugeComponent):
 
     @decorator_params
     def useAutomaticId(self):

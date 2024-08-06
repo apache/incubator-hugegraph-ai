@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import functools
+
 from decorator import decorator
 
 from pyhugegraph.utils.exceptions import NotAuthorizedError
@@ -43,3 +45,19 @@ def decorator_auth(func, *args, **kwargs):
     if response.status_code == 401:
         raise NotAuthorizedError(f"NotAuthorized: {str(response.content)}")
     return func(*args, **kwargs)
+
+
+def sess_get(uri_template):
+
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(self, *args, **kwargs):
+            func_params = func.__code__.co_varnames[: func.__code__.co_argcount]
+            func_args = dict(zip(func_params[1:], args))
+            all_kwargs = {**kwargs, **func_args}
+            url = uri_template.format(**all_kwargs)
+            print(url)
+
+        return wrapper
+
+    return decorator

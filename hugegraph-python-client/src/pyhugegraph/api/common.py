@@ -14,7 +14,9 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
 from pyhugegraph.utils.constants import Constants
+from pyhugegraph.structure.huge_context import HugeContext
 
 
 class ParameterHolder:
@@ -49,6 +51,24 @@ class HugeParamsBase:
         self._parameter_holder = None
         self._headers = {"Content-Type": Constants.HEADER_CONTENT_TYPE}
         self._timeout = graph_instance.timeout
+
+    def add_parameter(self, key, value):
+        self._parameter_holder.set(key, value)
+
+    def get_parameter_holder(self):
+        return self._parameter_holder
+
+    def create_parameter_holder(self):
+        self._parameter_holder = ParameterHolder()
+
+    def clean_parameter_holder(self):
+        self._parameter_holder = None
+
+
+class HugeModule:
+    def __init__(self, ctx: HugeContext):
+        self._ctx = ctx
+        self._parameter_holder = None
 
     def add_parameter(self, key, value):
         self._parameter_holder.set(key, value)

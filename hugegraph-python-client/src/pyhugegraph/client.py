@@ -14,8 +14,11 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
+from typing import Optional
+
 from pyhugegraph.api.auth import AuthManager
-from pyhugegraph.api.common import HugeParamsBase
+from pyhugegraph.api.common import HugeModule
 from pyhugegraph.api.graph import GraphManager
 from pyhugegraph.api.graphs import GraphsManager
 from pyhugegraph.api.gremlin import GremlinManager
@@ -25,60 +28,69 @@ from pyhugegraph.api.task import TaskManager
 from pyhugegraph.api.traverser import TraverserManager
 from pyhugegraph.api.variable import VariableManager
 from pyhugegraph.api.version import VersionManager
-from pyhugegraph.structure.graph_instance import GraphInstance
+from pyhugegraph.structure.huge_context import HugeContext
 
 
-class PyHugeClient(HugeParamsBase):
-    def __init__(self, ip, port, graph, user, pwd, timeout=10):
-        self._graph_instance = GraphInstance(ip, port, graph, user, pwd, timeout)
-        super().__init__(self._graph_instance)
-        self._schema = None
-        self._graph = None
-        self._graphs = None
-        self._gremlin = None
-        self._variable = None
-        self._auth = None
-        self._task = None
-        self._metrics = None
-        self._traverser = None
-        self._version = None
+def mount(fn):
+    attr_name = "_lazy_" + fn.__name__
 
+    def wrapper(self):
+        if not hasattr(self, attr_name):
+            setattr(self, attr_name, fn(self))
+        return getattr(self, attr_name)
+
+    return wrapper
+
+
+class PyHugeClient(HugeModule):
+    def __init__(
+        self,
+        ip: str,
+        port: str,
+        graph: str,
+        user: str,
+        pwd: str,
+        timeout: int = 10,
+        gs: Optional[str] = None,
+    ):
+        super().__init__(HugeContext(ip, port, user, pwd, graph, gs, timeout))
+
+    @mount
     def schema(self):
-        self._schema = self._schema or SchemaManager(self._graph_instance)
-        return self._schema
+        return SchemaManager(self._ctx)
 
+    @mount
     def gremlin(self):
-        self._gremlin = self._gremlin or GremlinManager(self._graph_instance)
-        return self._gremlin
+        return GremlinManager(self._ctx)
 
+    @mount
     def graph(self):
-        self._graph = self._graph or GraphManager(self._graph_instance)
-        return self._graph
+        return GraphManager(self._ctx)
 
+    @mount
     def graphs(self):
-        self._graphs = self._graphs or GraphsManager(self._graph_instance)
-        return self._graphs
+        return GraphsManager(self._ctx)
 
+    @mount
     def variable(self):
-        self._variable = self._variable or VariableManager(self._graph_instance)
-        return self._variable
+        return VariableManager(self._ctx)
 
+    @mount
     def auth(self):
-        self._auth = self._auth or AuthManager(self._graph_instance)
-        return self._auth
+        return AuthManager(self._ctx)
 
+    @mount
     def task(self):
-        self._task = self._task or TaskManager(self._graph_instance)
-        return self._task
+        return TaskManager(self._ctx)
 
+    @mount
     def metrics(self):
-        self._metrics = self._metrics or MetricsManager(self._graph_instance)
-        return self._metrics
+        return MetricsManager(self._ctx)
 
+    @mount
     def traverser(self):
-        self._traverser = self._traverser or TraverserManager(self._graph_instance)
-        return self._traverser
+        return TraverserManager(self._ctx)
 
+    @mount
     def version(self):
-        self._version = self._version or VersionManager(self._graph_instance)
-        return self._version
+        return VersionManager(self._ctx)
