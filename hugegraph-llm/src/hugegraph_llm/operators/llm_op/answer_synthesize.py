@@ -95,16 +95,18 @@ class AnswerSynthesize:
         if len(graph_result) == 0:
             graph_result_context = "There are no knowledge from HugeGraph related to the query."
         else:
-            graph_result_context = ("The following are knowledge from HugeGraph related to the query:\n"
-                                    + "\n".join([f"{i + 1}. {res}"
-                                                 for i, res in enumerate(graph_result)]))
+            graph_result_context = (
+                    "The following are knowledge from HugeGraph related to the query:\n"
+                    + "\n".join([f"{i + 1}. {res}"
+                                 for i, res in enumerate(graph_result)]))
         context = asyncio.run(self.async_generate(context, context_head_str, context_tail_str,
                                                   vector_result_context, graph_result_context))
 
         return context
 
-    async def async_generate(self, context: Dict[str, Any], context_head_str: str, context_tail_str: str,
-                             vector_result_context: str, graph_result_context: str):
+    async def async_generate(self, context: Dict[str, Any], context_head_str: str,
+                             context_tail_str: str, vector_result_context: str,
+                             graph_result_context: str):
         verbose = context.get("verbose") or False
         task_cache = {}
         if self._raw_answer:
@@ -140,7 +142,9 @@ class AnswerSynthesize:
                 context_str=context_str,
                 query_str=self._question,
             )
-            task_cache["graph_vector_task"] = asyncio.create_task(self._llm.agenerate(prompt=prompt))
+            task_cache["graph_vector_task"] = asyncio.create_task(
+                self._llm.agenerate(prompt=prompt)
+            )
         if task_cache.get("raw_task"):
             response = await task_cache["raw_task"]
             context["raw_answer"] = response
