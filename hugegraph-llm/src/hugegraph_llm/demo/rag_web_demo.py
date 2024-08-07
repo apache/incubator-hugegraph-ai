@@ -50,6 +50,7 @@ def convert_bool_str(string):
     raise gr.Error(f"Invalid boolean string: {string}")
 
 
+# TODO: support rest api for the functions below (Later -> function_call)
 def graph_rag(text: str, raw_answer: str, vector_only_answer: str,
               graph_only_answer: str, graph_vector_answer):
     vector_search = convert_bool_str(vector_only_answer) or convert_bool_str(graph_vector_answer)
@@ -319,7 +320,7 @@ if __name__ == "__main__":
 
 
         gr.Markdown(
-            """## 1. build knowledge graph
+            """## 1. Build KG(graph) & vector/index
 - Document: Input document file which should be TXT or DOCX.
 - Schema: Accepts two types of text as below:
     - User-defined JSON format Schema.
@@ -392,7 +393,7 @@ if __name__ == "__main__":
             outputs=out
         )
 
-        gr.Markdown("""## 2. Retrieval augmented generation by hugegraph""")
+        gr.Markdown("""## 2. RAG Answer by HugeGraph""")
         with gr.Row():
             with gr.Column(scale=2):
                 inp = gr.Textbox(value="Tell me about Sarah.", label="Question")
@@ -410,11 +411,12 @@ if __name__ == "__main__":
                 graph_vector_radio = gr.Radio(choices=["true", "false"], value="false",
                                               label="Graph-Vector answer")
                 btn = gr.Button("Retrieval augmented generation")
-        btn.click(fn=graph_rag, inputs=[inp, raw_radio, vector_only_radio, graph_only_radio,  # pylint: disable=no-member
+        btn.click(fn=graph_rag, inputs=[inp, raw_radio,
+                                        vector_only_radio, graph_only_radio,  # pylint: disable=no-member
                                         graph_vector_radio],
                   outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out])
 
-        gr.Markdown("""## 3. Others """)
+        gr.Markdown("""## 3. Other function """)
         with gr.Row():
             inp = []
             out = gr.Textbox(label="Output", show_copy_button=True)
