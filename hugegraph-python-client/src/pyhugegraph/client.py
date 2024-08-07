@@ -45,7 +45,7 @@ class PyHugeClient:
         self._cfg = HGraphConfig(ip, port, user, pwd, graph, gs, timeout)
 
     @staticmethod
-    def __router(fn):
+    def _builder(fn):
         attr_name = "_lazy_" + fn.__name__
 
         def wrapper(self: "PyHugeClient"):
@@ -56,43 +56,43 @@ class PyHugeClient:
 
         return wrapper
 
-    @__router
+    @_builder
     def schema(self) -> SchemaManager:
         return SchemaManager
 
-    @__router
+    @_builder
     def gremlin(self) -> GremlinManager:
         return GremlinManager
 
-    @__router
+    @_builder
     def graph(self) -> GraphManager:
         return GraphManager
 
-    @__router
+    @_builder
     def graphs(self) -> GraphsManager:
         return GraphsManager
 
-    @__router
+    @_builder
     def variable(self) -> VariableManager:
         return VariableManager
 
-    @__router
+    @_builder
     def auth(self) -> AuthManager:
         return AuthManager
 
-    @__router
+    @_builder
     def task(self) -> TaskManager:
         return TaskManager
 
-    @__router
+    @_builder
     def metrics(self) -> MetricsManager:
         return MetricsManager
 
-    @__router
+    @_builder
     def traverser(self) -> TraverserManager:
         return TraverserManager
 
-    @__router
+    @_builder
     def version(self) -> VersionManager:
         return VersionManager
 

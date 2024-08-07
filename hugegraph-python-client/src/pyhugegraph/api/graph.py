@@ -20,6 +20,7 @@ import json
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.structure.vertex_data import VertexData
 from pyhugegraph.structure.edge_data import EdgeData
+from pyhugegraph.utils import huge_router as router
 from pyhugegraph.utils.exceptions import (
     NotFoundError,
     CreateError,
@@ -35,14 +36,14 @@ from pyhugegraph.utils.util import (
 
 class GraphManager(HugeParamsBase):
 
+    @router.http("POST", "graph/vertices")
     def addVertex(self, label, properties, id=None):
         data = {}
         if id is not None:
             data["id"] = id
         data["label"] = label
         data["properties"] = properties
-        uri = "graph/vertices"
-        response = self._sess.post(uri, data=json.dumps(data))
+        response = self._invoke_request(data=json.dumps(data))
         if check_if_success(
             response, CreateError(f"create vertex failed: {str(response.content)}")
         ):
@@ -50,16 +51,12 @@ class GraphManager(HugeParamsBase):
             return res
         return None
 
+    @router.http("POST", "graph/vertices/batch")
     def addVertices(self, input_data):
-        uri = "graph/vertices/batch"
-
         data = []
         for item in input_data:
             data.append({"label": item[0], "properties": item[1]})
-        response = self._sess.post(
-            uri,
-            data=json.dumps(data),
-        )
+        response = self._invoke_request(data=json.dumps(data))
         if check_if_success(
             response, CreateError(f"create vertexes failed: {str(response.content)}")
         ):
@@ -69,14 +66,10 @@ class GraphManager(HugeParamsBase):
             return res
         return None
 
+    @router.http("PUT", "graph/vertices/{vertex_id}?action=append")
     def appendVertex(self, vertex_id, properties):
-        uri = f'graph/vertices/"{vertex_id}"?action=append'
-
         data = {"properties": properties}
-        response = self._sess.put(
-            uri,
-            data=json.dumps(data),
-        )
+        response = self._invoke_request(data=json.dumps(data))
         if check_if_success(
             response, UpdateError(f"append vertex failed: {str(response.content)}")
         ):
@@ -84,14 +77,10 @@ class GraphManager(HugeParamsBase):
             return res
         return None
 
+    @router.http("PUT", "graph/vertices/{vertex_id}?action=eliminate")
     def eliminateVertex(self, vertex_id, properties):
-        uri = f'graph/vertices/"{vertex_id}"?action=eliminate'
-
         data = {"properties": properties}
-        response = self._sess.put(
-            uri,
-            data=json.dumps(data),
-        )
+        response = self._invoke_request(data=json.dumps(data))
         if check_if_success(
             response, UpdateError(f"eliminate vertex failed: {str(response.content)}")
         ):
@@ -99,10 +88,9 @@ class GraphManager(HugeParamsBase):
             return res
         return None
 
+    @router.http("GET", "graph/vertices/{vertex_id}")
     def getVertexById(self, vertex_id):
-        uri = f'graph/vertices/"{vertex_id}"'
-
-        response = self._sess.get(uri)
+        response = self._invoke_request()
         if check_if_success(
             response, NotFoundError(f"Vertex not found: {str(response.content)}")
         ):
@@ -111,8 +99,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     def getVertexByPage(self, label, limit, page=None, properties=None):
-        uri = "graph/vertices?"
-
+        path = "graph/vertices?"
         para = ""
         para = para + "&label=" + label
         if properties:
@@ -122,8 +109,8 @@ class GraphManager(HugeParamsBase):
         else:
             para += "&page"
         para = para + "&limit=" + str(limit)
-        uri = uri + para[1:]
-        response = self._sess.get(uri)
+        path = path + para[1:]
+        response = self._sess.request(path)
         if check_if_success(
             response, NotFoundError(f"Vertex not found: {str(response.content)}")
         ):
@@ -135,8 +122,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     def getVertexByCondition(self, label="", limit=0, page=None, properties=None):
-        uri = "graph/vertices?"
-
+        path = "graph/vertices?"
         para = ""
         if label:
             para = para + "&label=" + label
@@ -148,8 +134,8 @@ class GraphManager(HugeParamsBase):
             para += f"&page={page}"
         else:
             para += "&page"
-        uri = uri + para[1:]
-        response = self._sess.get(uri)
+        path = path + para[1:]
+        response = self._sess.request(path)
         if check_if_success(
             response, NotFoundError(f"Vertex not found: {str(response.content)}")
         ):
@@ -159,28 +145,24 @@ class GraphManager(HugeParamsBase):
             return res
         return None
 
+    @router.http("DELETE", "graph/vertices/{vertex_id}")
     def removeVertexById(self, vertex_id):
-        uri = f'graph/vertices/"{vertex_id}"'
-        response = self._sess.delete(uri)
+        response = self._invoke_request()
         if check_if_success(
             response, RemoveError(f"remove vertex failed: {str(response.content)}")
         ):
             return response.content
         return None
 
+    @router.http("POST", "graph/edges")
     def addEdge(self, edge_label, out_id, in_id, properties):
-        uri = f"graph/edges"
-
         data = {
             "label": edge_label,
             "outV": out_id,
             "inV": in_id,
             "properties": properties,
         }
-        response = self._sess.post(
-            uri,
-            data=json.dumps(data),
-        )
+        response = self._invoke_request(data=json.dumps(data))
         if check_if_success(
             response, CreateError(f"created edge failed: {str(response.content)}")
         ):
@@ -188,9 +170,8 @@ class GraphManager(HugeParamsBase):
             return res
         return None
 
+    @router.http("POST", "graph/edges/batch")
     def addEdges(self, input_data):
-        uri = "graph/edges/batch"
-
         data = []
         for item in input_data:
             data.append(
@@ -203,10 +184,7 @@ class GraphManager(HugeParamsBase):
                     "properties": item[5],
                 }
             )
-        response = self._sess.post(
-            uri,
-            data=json.dumps(data),
-        )
+        response = self._invoke_request(data=json.dumps(data))
         if check_if_success(
             response, CreateError(f"created edges failed:  {str(response.content)}")
         ):
@@ -216,14 +194,9 @@ class GraphManager(HugeParamsBase):
             return res
         return None
 
+    @router.http("PUT", "graph/edges/{edge_id}?action=append")
     def appendEdge(self, edge_id, properties):
-        uri = f"graph/edges/{edge_id}?action=append"
-
-        data = {"properties": properties}
-        response = self._sess.put(
-            uri,
-            data=json.dumps(data),
-        )
+        response = self._invoke_request(data=json.dumps({"properties": properties}))
         if check_if_success(
             response, UpdateError(f"append edge failed: {str(response.content)}")
         ):
@@ -231,14 +204,9 @@ class GraphManager(HugeParamsBase):
             return res
         return None
 
+    @router.http("PUT", "graph/edges/{edge_id}?action=eliminate")
     def eliminateEdge(self, edge_id, properties):
-        uri = f"graph/edges/{edge_id}?action=eliminate"
-
-        data = {"properties": properties}
-        response = self._sess.put(
-            uri,
-            data=json.dumps(data),
-        )
+        response = self._invoke_request(data=json.dumps({"properties": properties}))
         if check_if_success(
             response, UpdateError(f"eliminate edge failed: {str(response.content)}")
         ):
@@ -246,10 +214,9 @@ class GraphManager(HugeParamsBase):
             return res
         return None
 
+    @router.http("GET", "graph/edges/{edge_id}")
     def getEdgeById(self, edge_id):
-        uri = f"graph/edges/{edge_id}"
-
-        response = self._sess.get(uri)
+        response = self._invoke_request()
         if check_if_success(
             response, NotFoundError(f"not found edge: {str(response.content)}")
         ):
@@ -266,8 +233,7 @@ class GraphManager(HugeParamsBase):
         page=None,
         properties=None,
     ):
-        uri = f"graph/edges?"
-
+        path = f"graph/edges?"
         para = ""
         if vertex_id:
             if direction:
@@ -284,8 +250,8 @@ class GraphManager(HugeParamsBase):
             para += "&page"
         if limit > 0:
             para = para + "&limit=" + str(limit)
-        uri = uri + para[1:]
-        response = self._sess.get(uri)
+        path = path + para[1:]
+        response = self._sess.request(path)
         if check_if_success(
             response, NotFoundError(f"not found edges: {str(response.content)}")
         ):
@@ -295,10 +261,9 @@ class GraphManager(HugeParamsBase):
             return res, json.loads(response.content)["page"]
         return None
 
+    @router.http("DELETE", "graph/edges/{edge_id}")
     def removeEdgeById(self, edge_id):
-        uri = f"graph/edges/{edge_id}"
-
-        response = self._sess.delete(uri)
+        response = self._invoke_request()
         if check_if_success(
             response, RemoveError(f"remove edge failed: {str(response.content)}")
         ):
@@ -308,11 +273,11 @@ class GraphManager(HugeParamsBase):
     def getVerticesById(self, vertex_ids):
         if not vertex_ids:
             return []
-        uri = f"traversers/vertices?"
+        path = "traversers/vertices?"
         for vertex_id in vertex_ids:
             uri += f'ids="{vertex_id}"&'
-        uri = uri.rstrip("&")
-        response = self._sess.get(uri)
+        path = path.rstrip("&")
+        response = self._sess.request(path)
         if response.status_code == 200 and check_if_authorized(response):
             res = []
             for item in json.loads(response.content)["vertices"]:
@@ -324,11 +289,11 @@ class GraphManager(HugeParamsBase):
     def getEdgesById(self, edge_ids):
         if not edge_ids:
             return []
-        uri = "traversers/edges?"
+        path = "traversers/edges?"
         for vertex_id in edge_ids:
-            uri += f"ids={vertex_id}&"
-        uri = uri.rstrip("&")
-        response = self._sess.get(uri)
+            path += f"ids={vertex_id}&"
+        path = path.rstrip("&")
+        response = self._sess.request(path)
         if response.status_code == 200 and check_if_authorized(response):
             res = []
             for item in json.loads(response.content)["edges"]:

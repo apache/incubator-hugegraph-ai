@@ -68,7 +68,7 @@ class SchemaManager(HugeParamsBase):
 
     @router.http("GET", "schema?format={format}")
     def getSchema(self, format: str = "json") -> Optional[Dict]:
-        response = self._http_request("getSchema")
+        response = self._invoke_request()
         error = NotFoundError(f"schema not found: {str(response.content)}")
         if check_if_success(response, error):
             schema = json.loads(response.content)
@@ -77,7 +77,7 @@ class SchemaManager(HugeParamsBase):
 
     @router.http("GET", "schema/propertykeys/{property_name}")
     def getPropertyKey(self, property_name):
-        response = self._http_request("getPropertyKey")
+        response = self._invoke_request()
         error = NotFoundError(f"PropertyKey not found: {str(response.content)}")
         if check_if_success(response, error):
             property_keys_data = PropertyKeyData.from_dict(json.loads(response.content))
@@ -86,7 +86,7 @@ class SchemaManager(HugeParamsBase):
 
     @router.http("GET", "schema/propertykeys")
     def getPropertyKeys(self):
-        response = self._http_request("getPropertyKeys")
+        response = self._invoke_request()
         res = []
         if check_if_success(response):
             for item in json.loads(response.content)["propertykeys"]:
@@ -96,7 +96,7 @@ class SchemaManager(HugeParamsBase):
 
     @router.http("GET", "schema/vertexlabels/{name}")
     def getVertexLabel(self, name):
-        response = self._http_request("getVertexLabel")
+        response = self._invoke_request()
         error = NotFoundError(f"VertexLabel not found: {str(response.content)}")
         if check_if_success(response, error):
             res = VertexLabelData(json.loads(response.content))
@@ -105,7 +105,7 @@ class SchemaManager(HugeParamsBase):
 
     @router.http("GET", "schema/vertexlabels")
     def getVertexLabels(self):
-        response = self._http_request("getVertexLabels")
+        response = self._invoke_request()
         res = []
         if check_if_success(response):
             for item in json.loads(response.content)["vertexlabels"]:
@@ -114,7 +114,7 @@ class SchemaManager(HugeParamsBase):
 
     @router.http("GET", "schema/vertexlabels/{label_name}")
     def getEdgeLabel(self, label_name: str):
-        response = self._http_request("getEdgeLabel")
+        response = self._invoke_request()
         error = NotFoundError(f"EdgeLabel not found: {str(response.content)}")
         if check_if_success(response, error):
             res = EdgeLabelData(json.loads(response.content))
@@ -123,7 +123,7 @@ class SchemaManager(HugeParamsBase):
 
     @router.http("GET", "schema/edgelabels")
     def getEdgeLabels(self):
-        response = self._http_request("getEdgeLabels")
+        response = self._invoke_request()
         res = []
         if check_if_success(response):
             for item in json.loads(response.content)["edgelabels"]:
@@ -132,7 +132,7 @@ class SchemaManager(HugeParamsBase):
 
     @router.http("GET", "schema/edgelabels")
     def getRelations(self):
-        response = self._http_request("getEdgeLabels")
+        response = self._invoke_request()
         res = []
         if check_if_success(response):
             for item in json.loads(response.content)["edgelabels"]:
@@ -141,7 +141,7 @@ class SchemaManager(HugeParamsBase):
 
     @router.http("GET", "schema/indexlabels/{name}")
     def getIndexLabel(self, name):
-        response = self._http_request("getEdgeLabels")
+        response = self._invoke_request()
         error = NotFoundError(f"EdgeLabel not found: {str(response.content)}")
         if check_if_success(response, error):
             res = IndexLabelData(json.loads(response.content))
@@ -150,7 +150,7 @@ class SchemaManager(HugeParamsBase):
 
     @router.http("GET", "schema/indexlabels")
     def getIndexLabels(self):
-        response = self._http_request("getEdgeLabels")
+        response = self._invoke_request()
         res = []
         if check_if_success(response):
             for item in json.loads(response.content)["indexlabels"]:

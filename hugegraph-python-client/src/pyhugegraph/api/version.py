@@ -17,14 +17,15 @@
 
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils.exceptions import NotFoundError
+from pyhugegraph.utils import huge_router as router
 from pyhugegraph.utils.util import check_if_success
 
 
 class VersionManager(HugeParamsBase):
 
+    @router.http("GET", "/versions")
     def version(self):
-        uri = "/versions"
-        response = self._sess.get(uri)
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}

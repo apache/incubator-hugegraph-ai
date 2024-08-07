@@ -17,46 +17,44 @@
 
 
 from pyhugegraph.api.common import HugeParamsBase
-
-from pyhugegraph.utils.constants import Constants
+from pyhugegraph.utils import huge_router as router
 from pyhugegraph.utils.exceptions import NotFoundError
 from pyhugegraph.utils.util import check_if_success
 
 
 class GraphsManager(HugeParamsBase):
 
+    @router.http("GET", "/graphs")
     def get_all_graphs(self):
-        uri = '/graphs'
-
-        response = self._sess.get(uri)
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
         return ""
 
+    @router.http("GET", "/versions")
     def get_version(self):
-        uri = f"/versions"
-        response = self._sess.get(uri)
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
         return ""
 
+    @router.http("GET", "")
     def get_graph_info(self):
-        uri = ""
-        response = self._sess.get(uri)
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
         return ""
 
+    @router.http("DELETE", f"clear?confirm_message=I%27m+sure+to+delete+all+data")
     def clear_graph_all_data(self):
-        uri = f"clear?confirm_message={Constants.CONFORM_MESSAGE}"
-        response = self._sess.delete(uri)
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
         return ""
 
+    @router.http("GET", "conf")
     def get_graph_config(self):
-        uri = "conf"
-        response = self._sess.get(uri)
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
         return ""

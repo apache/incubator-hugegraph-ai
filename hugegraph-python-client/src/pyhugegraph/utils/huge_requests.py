@@ -72,11 +72,11 @@ class HGraphSession:
         #     self.backoff_factor,
         # )
 
-    def resolve(self, uri):
+    def resolve(self, path):
         """
-        Constructs the full URL for the given URI based on the session context and API version.
+        Constructs the full URL for the given PATH based on the session context and API version.
 
-        :param uri: The URI to be appended to the base URL.
+        :param path: The PATH to be appended to the base URL.
         :return: The fully resolved URL as a string.
         """
         url = f"http://{self._cfg.ip}:{self._cfg.port}/"
@@ -87,73 +87,17 @@ class HGraphSession:
             )
         else:
             url = urljoin(url, f"graphs/{self._cfg.graph_name}/")
-        return urljoin(url, uri)
+        return urljoin(url, path)
 
     def close(self):
         self._session.close()
         # self.logger.debug("Session closed")
 
-    def request(self, uri, method: str = "GET", **kwargs):
+    def request(self, path, method: str = "GET", **kwargs):
         try:
-            print("DEBUG:", method, self.resolve(uri))
+            print("DEBUG:", method, self.resolve(path))
             response = getattr(self._session, method.lower())(
-                self.resolve(uri),
-                auth=self._auth,
-                headers=self._headers,
-                timeout=self._timeout,
-                **kwargs,
-            )
-            return response
-        except requests.RequestException as e:
-            # self.logger.error("HTTP Request failed: %s", e)
-            raise
-
-    def get(self, uri, **kwargs):
-        try:
-            response = self._session.get(
-                self.resolve(uri),
-                auth=self._auth,
-                headers=self._headers,
-                timeout=self._timeout,
-                **kwargs,
-            )
-            return response
-        except requests.RequestException as e:
-            # self.logger.error("HTTP Request failed: %s", e)
-            raise
-
-    def put(self, uri, **kwargs):
-        try:
-            response = self._session.put(
-                self.resolve(uri),
-                auth=self._auth,
-                headers=self._headers,
-                timeout=self._timeout,
-                **kwargs,
-            )
-            return response
-        except requests.RequestException as e:
-            # self.logger.error("HTTP Request failed: %s", e)
-            raise
-
-    def post(self, uri, **kwargs):
-        try:
-            response = self._session.post(
-                self.resolve(uri),
-                auth=self._auth,
-                headers=self._headers,
-                timeout=self._timeout,
-                **kwargs,
-            )
-            return response
-        except requests.RequestException as e:
-            # self.logger.error("HTTP Request failed: %s", e)
-            raise
-
-    def delete(self, uri, **kwargs):
-        try:
-            response = self._session.delete(
-                self.resolve(uri),
+                self.resolve(path),
                 auth=self._auth,
                 headers=self._headers,
                 timeout=self._timeout,
