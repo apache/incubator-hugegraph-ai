@@ -27,62 +27,62 @@ from pyhugegraph.utils.util import check_if_success, check_if_authorized
 class PropertyKey(HugeParamsBase):
 
     @decorator_params
-    def asInt(self):
+    def asInt(self) -> "PropertyKey":
         self._parameter_holder.set("data_type", "INT")
         return self
 
     @decorator_params
-    def asText(self):
+    def asText(self) -> "PropertyKey":
         self._parameter_holder.set("data_type", "TEXT")
         return self
 
     @decorator_params
-    def asDouble(self):
+    def asDouble(self) -> "PropertyKey":
         self._parameter_holder.set("data_type", "DOUBLE")
         return self
 
     @decorator_params
-    def asDate(self):
+    def asDate(self) -> "PropertyKey":
         self._parameter_holder.set("data_type", "DATE")
         return self
 
     @decorator_params
-    def valueSingle(self):
+    def valueSingle(self) -> "PropertyKey":
         self._parameter_holder.set("cardinality", "SINGLE")
         return self
 
     @decorator_params
-    def valueList(self):
+    def valueList(self) -> "PropertyKey":
         self._parameter_holder.set("cardinality", "LIST")
         return self
 
     @decorator_params
-    def valueSet(self):
+    def valueSet(self) -> "PropertyKey":
         self._parameter_holder.set("cardinality", "SET")
         return self
 
     @decorator_params
-    def calcMax(self):
+    def calcMax(self) -> "PropertyKey":
         self._parameter_holder.set("aggregate_type", "MAX")
         return self
 
     @decorator_params
-    def calcMin(self):
+    def calcMin(self) -> "PropertyKey":
         self._parameter_holder.set("aggregate_type", "MIN")
         return self
 
     @decorator_params
-    def calcSum(self):
+    def calcSum(self) -> "PropertyKey":
         self._parameter_holder.set("aggregate_type", "SUM")
         return self
 
     @decorator_params
-    def calcOld(self):
+    def calcOld(self) -> "PropertyKey":
         self._parameter_holder.set("aggregate_type", "OLD")
         return self
 
     @decorator_params
-    def userdata(self, *args):
+    def userdata(self, *args) -> "PropertyKey":
         user_data = self._parameter_holder.get_value("user_data")
         if not user_data:
             self._parameter_holder.set("user_data", {})
@@ -93,7 +93,7 @@ class PropertyKey(HugeParamsBase):
             i += 2
         return self
 
-    def ifNotExist(self):
+    def ifNotExist(self) -> "PropertyKey":
         uri = f'schema/propertykeys/{self._parameter_holder.get_value("name")}'
         response = self._sess.get(uri)
         if response.status_code == 200 and check_if_authorized(response):

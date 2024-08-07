@@ -18,13 +18,12 @@
 import requests
 import traceback
 
-from abc import ABC
 from dataclasses import dataclass, field
 from typing import Optional
 
 
 @dataclass
-class HGraphContext:
+class HGraphConfig:
     ip: str
     port: str
     username: str
@@ -32,12 +31,12 @@ class HGraphContext:
     graph_name: str
     graphspace: Optional[str] = None
     timeout: int = 10
-    api_version: str = field(default="v1", init=False)
+    version: str = field(default="v1", init=False)
 
     def __post_init__(self):
 
         if self.graphspace is not None:
-            self.api_version = "v3"
+            self.version = "v3"
 
         else:
             try:
@@ -53,16 +52,11 @@ class HGraphContext:
                         f"graph space is not set, default value 'DEFAULT' will be used."
                     )
 
-                self.api_version = version
+                self.version = version
 
             except Exception as e:
                 traceback.print_exception(e)
-                self.api_version = "v1"
+                self.version = "v1"
                 print(
                     "Failed to retrieve API version information from the server, reverting to default v1."
                 )
-
-
-class HGraphBaseModel(ABC):
-    def __init__(self, ctx: HGraphContext):
-        self._ctx = ctx

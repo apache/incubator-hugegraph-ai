@@ -26,23 +26,23 @@ from pyhugegraph.utils.util import check_if_success, check_if_authorized
 class EdgeLabel(HugeParamsBase):
 
     @decorator_params
-    def link(self, source_label, target_label):
+    def link(self, source_label, target_label) -> "EdgeLabel":
         self._parameter_holder.set("source_label", source_label)
         self._parameter_holder.set("target_label", target_label)
         return self
 
     @decorator_params
-    def sourceLabel(self, source_label):
+    def sourceLabel(self, source_label) -> "EdgeLabel":
         self._parameter_holder.set("source_label", source_label)
         return self
 
     @decorator_params
-    def targetLabel(self, target_label):
+    def targetLabel(self, target_label) -> "EdgeLabel":
         self._parameter_holder.set("target_label", target_label)
         return self
 
     @decorator_params
-    def userdata(self, *args):
+    def userdata(self, *args) -> "EdgeLabel":
         if not self._parameter_holder.get_value("user_data"):
             self._parameter_holder.set("user_data", {})
         user_data = self._parameter_holder.get_value("user_data")
@@ -53,33 +53,33 @@ class EdgeLabel(HugeParamsBase):
         return self
 
     @decorator_params
-    def properties(self, *args):
+    def properties(self, *args) -> "EdgeLabel":
         self._parameter_holder.set("properties", list(args))
         return self
 
     @decorator_params
-    def singleTime(self):
+    def singleTime(self) -> "EdgeLabel":
         self._parameter_holder.set("frequency", "SINGLE")
         return self
 
     @decorator_params
-    def multiTimes(self):
+    def multiTimes(self) -> "EdgeLabel":
         self._parameter_holder.set("frequency", "MULTIPLE")
         return self
 
     @decorator_params
-    def sortKeys(self, *args):
+    def sortKeys(self, *args) -> "EdgeLabel":
         self._parameter_holder.set("sort_keys", list(args))
         return self
 
     @decorator_params
-    def nullableKeys(self, *args):
+    def nullableKeys(self, *args) -> "EdgeLabel":
         nullable_keys = set(args)
         self._parameter_holder.set("nullable_keys", list(nullable_keys))
         return self
 
     @decorator_params
-    def ifNotExist(self):
+    def ifNotExist(self) -> "EdgeLabel":
         uri = f'schema/edgelabels/{self._parameter_holder.get_value("name")}'
         response = self._sess.get(uri)
         if response.status_code == 200 and check_if_authorized(response):

@@ -26,47 +26,47 @@ from pyhugegraph.utils.util import check_if_success, check_if_authorized
 class VertexLabel(HugeParamsBase):
 
     @decorator_params
-    def useAutomaticId(self):
+    def useAutomaticId(self) -> "VertexLabel":
         self._parameter_holder.set("id_strategy", "AUTOMATIC")
         return self
 
     @decorator_params
-    def useCustomizeStringId(self):
+    def useCustomizeStringId(self) -> "VertexLabel":
         self._parameter_holder.set("id_strategy", "CUSTOMIZE_STRING")
         return self
 
     @decorator_params
-    def useCustomizeNumberId(self):
+    def useCustomizeNumberId(self) -> "VertexLabel":
         self._parameter_holder.set("id_strategy", "CUSTOMIZE_NUMBER")
         return self
 
     @decorator_params
-    def usePrimaryKeyId(self):
+    def usePrimaryKeyId(self) -> "VertexLabel":
         self._parameter_holder.set("id_strategy", "PRIMARY_KEY")
         return self
 
     @decorator_params
-    def properties(self, *args):
+    def properties(self, *args) -> "VertexLabel":
         self._parameter_holder.set("properties", list(args))
         return self
 
     @decorator_params
-    def primaryKeys(self, *args):
+    def primaryKeys(self, *args) -> "VertexLabel":
         self._parameter_holder.set("primary_keys", list(args))
         return self
 
     @decorator_params
-    def nullableKeys(self, *args):
+    def nullableKeys(self, *args) -> "VertexLabel":
         self._parameter_holder.set("nullable_keys", list(args))
         return self
 
     @decorator_params
-    def enableLabelIndex(self, flag):
+    def enableLabelIndex(self, flag) -> "VertexLabel":
         self._parameter_holder.set("enable_label_index", flag)
         return self
 
     @decorator_params
-    def userdata(self, *args):
+    def userdata(self, *args) -> "VertexLabel":
         if "user_data" not in self._parameter_holder.get_keys():
             self._parameter_holder.set("user_data", {})
         user_data = self._parameter_holder.get_value("user_data")
@@ -76,7 +76,7 @@ class VertexLabel(HugeParamsBase):
             i += 2
         return self
 
-    def ifNotExist(self):
+    def ifNotExist(self) -> "VertexLabel":
         uri = f'schema/vertexlabels/{self._parameter_holder.get_value("name")}'
         response = self._sess.get(uri)
         if response.status_code == 200 and check_if_authorized(response):

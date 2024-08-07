@@ -15,6 +15,23 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# from dataclasses import dataclass, field
+
+
+# @dataclass
+# class PropertyKeyData:
+#     id: int
+#     name: str
+#     cardinality: str
+#     data_type: str
+#     properties: list = field(default_factory=list)
+#     user_data: dict = field(default_factory=dict)
+
+#     @classmethod
+#     def from_dict(cls, data: dict):
+#         filtered_data = {k: v for k, v in data.items() if k in cls.__annotations__}
+#         return cls(**filtered_data)
+
 
 class PropertyKeyData:
     def __init__(self, dic):
@@ -45,7 +62,5 @@ class PropertyKeyData:
         return self.__user_data
 
     def __repr__(self):
-        res = (
-            f"name: {self.__name}, cardinality: {self.__cardinality}, data_type: {self.__data_type}"
-        )
+        res = f"name: {self.__name}, cardinality: {self.__cardinality}, data_type: {self.__data_type}"
         return res

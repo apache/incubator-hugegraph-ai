@@ -27,16 +27,21 @@ from pyhugegraph.utils.util import check_if_success
 class GremlinManager(HugeParamsBase):
 
     def exec(self, gremlin):
-        uri = f'/gremlin'
+        uri = f"/gremlin"
         gremlin_data = GremlinData(gremlin)
-        gremlin_data.aliases = {
-            "graph": f"{self._ctx.graphspace}-{self._ctx.graph_name}",
-            "g": f"__g_{self._ctx.graphspace}-{self._ctx.graph_name}",
-        }
+        if self._sess._cfg.version == "v3":
+            gremlin_data.aliases = {
+                "graph": f"{self._sess._cfg.graphspace}-{self._sess._cfg.graph_name}",
+                "g": f"__g_{self._sess._cfg.graphspace}-{self._sess._cfg.graph_name}",
+            }
+        else:
+            gremlin_data.aliases = {
+                "graph": f"{self._sess._cfg.graph_name}",
+                "g": f"__g_{self._sess._cfg.graph_name}",
+            }
         response = self._sess.post(
             uri,
             data=gremlin_data.to_json(),
-            timeout=self._ctx.timeout,
         )
         error = NotFoundError(f"Gremlin can't get results: {str(response.content)}")
         if check_if_success(response, error):

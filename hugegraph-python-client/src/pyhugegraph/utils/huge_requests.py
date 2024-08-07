@@ -22,13 +22,13 @@ from urllib.parse import urljoin
 
 from typing import Optional
 from pyhugegraph.utils.constants import Constants
-from pyhugegraph.structure.base_model import HGraphContext, HGraphBaseModel
+from pyhugegraph.utils.huge_config import HGraphConfig
 
 
-class HGraphSession(HGraphBaseModel):
+class HGraphSession:
     def __init__(
         self,
-        ctx: HGraphContext,
+        cfg: HGraphConfig,
         retries: int = 5,
         backoff_factor: int = 1,
         status_forcelist=(500, 502, 504),
@@ -41,13 +41,13 @@ class HGraphSession(HGraphBaseModel):
         :param status_forcelist: A list of status codes that trigger a retry.
         :param session: An optional requests.Session instance, for testing or advanced use cases.
         """
-        super().__init__(ctx)
+        self._cfg = cfg
         self._retries = retries
         self._backoff_factor = backoff_factor
         self._status_forcelist = status_forcelist
-        self._auth = (ctx.username, ctx.password)
+        self._auth = (cfg.username, cfg.password)
         self._headers = {"Content-Type": Constants.HEADER_CONTENT_TYPE}
-        self._timeout = ctx.timeout
+        self._timeout = cfg.timeout
         self._session = session if session else requests.Session()
         self.__configure_session()
 
@@ -79,26 +79,44 @@ class HGraphSession(HGraphBaseModel):
         :param uri: The URI to be appended to the base URL.
         :return: The fully resolved URL as a string.
         """
-        url = f"http://{self._ctx.ip}:{self._ctx.port}/"
-        if self._ctx.api_version == "v3":
+        url = f"http://{self._cfg.ip}:{self._cfg.port}/"
+        if self._cfg.version == "v3":
             url = urljoin(
                 url,
-                f"graphspaces/{self._ctx.graphspace}/graphs/{self._ctx.graph_name}/",
+                f"graphspaces/{self._cfg.graphspace}/graphs/{self._cfg.graph_name}/",
             )
         else:
-            url = urljoin(url, f"graphs/{self._ctx.graph_name}/")
+            url = urljoin(url, f"graphs/{self._cfg.graph_name}/")
         return urljoin(url, uri)
 
     def close(self):
         self._session.close()
         # self.logger.debug("Session closed")
 
+    def request(self, uri, method: str = "GET", **kwargs):
+        try:
+            print("DEBUG:", method, self.resolve(uri))
+            response = getattr(self._session, method.lower())(
+                self.resolve(uri),
+                auth=self._auth,
+                headers=self._headers,
+                timeout=self._timeout,
+                **kwargs,
+            )
+            return response
+        except requests.RequestException as e:
+            # self.logger.error("HTTP Request failed: %s", e)
+            raise
+
     def get(self, uri, **kwargs):
         try:
             response = self._session.get(
-                self.resolve(uri), auth=self._auth, headers=self._headers, timeout=self._timeout, **kwargs
+                self.resolve(uri),
+                auth=self._auth,
+                headers=self._headers,
+                timeout=self._timeout,
+                **kwargs,
             )
-            response.raise_for_status()
             return response
         except requests.RequestException as e:
             # self.logger.error("HTTP Request failed: %s", e)
@@ -107,9 +125,12 @@ class HGraphSession(HGraphBaseModel):
     def put(self, uri, **kwargs):
         try:
             response = self._session.put(
-                self.resolve(uri), auth=self._auth, headers=self._headers, timeout=self._timeout, **kwargs
+                self.resolve(uri),
+                auth=self._auth,
+                headers=self._headers,
+                timeout=self._timeout,
+                **kwargs,
             )
-            response.raise_for_status()
             return response
         except requests.RequestException as e:
             # self.logger.error("HTTP Request failed: %s", e)
@@ -118,20 +139,26 @@ class HGraphSession(HGraphBaseModel):
     def post(self, uri, **kwargs):
         try:
             response = self._session.post(
-                self.resolve(uri), auth=self._auth, headers=self._headers, timeout=self._timeout, **kwargs
+                self.resolve(uri),
+                auth=self._auth,
+                headers=self._headers,
+                timeout=self._timeout,
+                **kwargs,
             )
-            response.raise_for_status()
             return response
         except requests.RequestException as e:
             # self.logger.error("HTTP Request failed: %s", e)
             raise
-    
+
     def delete(self, uri, **kwargs):
         try:
             response = self._session.delete(
-                self.resolve(uri), auth=self._auth, headers=self._headers, timeout=self._timeout, **kwargs
+                self.resolve(uri),
+                auth=self._auth,
+                headers=self._headers,
+                timeout=self._timeout,
+                **kwargs,
             )
-            response.raise_for_status()
             return response
         except requests.RequestException as e:
             # self.logger.error("HTTP Request failed: %s", e)

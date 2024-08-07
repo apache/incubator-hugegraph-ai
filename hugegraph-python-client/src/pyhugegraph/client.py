@@ -27,21 +27,11 @@ from pyhugegraph.api.task import TaskManager
 from pyhugegraph.api.traverser import TraverserManager
 from pyhugegraph.api.variable import VariableManager
 from pyhugegraph.api.version import VersionManager
-from pyhugegraph.structure.base_model import HGraphContext, HGraphBaseModel
+from pyhugegraph.utils.huge_config import HGraphConfig
+from pyhugegraph.utils.huge_requests import HGraphSession
 
 
-def add_router(fn):
-    attr_name = "_lazy_" + fn.__name__
-
-    def wrapper(self):
-        if not hasattr(self, attr_name):
-            setattr(self, attr_name, fn(self))
-        return getattr(self, attr_name)
-
-    return wrapper
-
-
-class PyHugeClient(HGraphBaseModel):
+class PyHugeClient:
     def __init__(
         self,
         ip: str,
@@ -52,44 +42,59 @@ class PyHugeClient(HGraphBaseModel):
         timeout: int = 10,
         gs: Optional[str] = None,
     ):
-        super().__init__(HGraphContext(ip, port, user, pwd, graph, gs, timeout))
+        self._cfg = HGraphConfig(ip, port, user, pwd, graph, gs, timeout)
 
-    @add_router
-    def schema(self):
-        return SchemaManager(self._ctx)
+    @staticmethod
+    def __router(fn):
+        attr_name = "_lazy_" + fn.__name__
 
-    @add_router
-    def gremlin(self):
-        return GremlinManager(self._ctx)
+        def wrapper(self: "PyHugeClient"):
+            if not hasattr(self, attr_name):
+                session = HGraphSession(self._cfg)
+                setattr(self, attr_name, fn(self)(session))
+            return getattr(self, attr_name)
 
-    @add_router
-    def graph(self):
-        return GraphManager(self._ctx)
+        return wrapper
 
-    @add_router
-    def graphs(self):
-        return GraphsManager(self._ctx)
+    @__router
+    def schema(self) -> SchemaManager:
+        return SchemaManager
 
-    @add_router
-    def variable(self):
-        return VariableManager(self._ctx)
+    @__router
+    def gremlin(self) -> GremlinManager:
+        return GremlinManager
 
-    @add_router
-    def auth(self):
-        return AuthManager(self._ctx)
+    @__router
+    def graph(self) -> GraphManager:
+        return GraphManager
 
-    @add_router
-    def task(self):
-        return TaskManager(self._ctx)
+    @__router
+    def graphs(self) -> GraphsManager:
+        return GraphsManager
 
-    @add_router
-    def metrics(self):
-        return MetricsManager(self._ctx)
+    @__router
+    def variable(self) -> VariableManager:
+        return VariableManager
 
-    @add_router
-    def traverser(self):
-        return TraverserManager(self._ctx)
+    @__router
+    def auth(self) -> AuthManager:
+        return AuthManager
 
-    @add_router
-    def version(self):
-        return VersionManager(self._ctx)
+    @__router
+    def task(self) -> TaskManager:
+        return TaskManager
+
+    @__router
+    def metrics(self) -> MetricsManager:
+        return MetricsManager
+
+    @__router
+    def traverser(self) -> TraverserManager:
+        return TraverserManager
+
+    @__router
+    def version(self) -> VersionManager:
+        return VersionManager
+
+    def __repr__(self) -> str:
+        return f"{self._cfg}"

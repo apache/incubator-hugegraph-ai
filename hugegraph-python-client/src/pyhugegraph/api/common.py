@@ -16,11 +16,11 @@
 # under the License.
 
 
-from typing import Optional
+from pyhugegraph.utils.huge_router import HGraphRouter
 from pyhugegraph.utils.huge_requests import HGraphSession
-from pyhugegraph.structure.base_model import HGraphContext, HGraphBaseModel
 
 
+# todo: rename -> HGraphMetaData or delete
 class ParameterHolder:
     def __init__(self):
         self._dic = {}
@@ -40,14 +40,20 @@ class ParameterHolder:
         return self._dic.keys()
 
 
-class HugeParamsBase(HGraphBaseModel):
-    def __init__(self, ctx: HGraphContext, sess: Optional[HGraphSession] = None):
-        super().__init__(ctx)
-        self._sess = sess or HGraphSession(ctx)
-        self._parameter_holder = None
+class HGraphContext:
+    def __init__(self, sess: HGraphSession) -> None:
+        self._sess = sess
+        self._cache = {}  # todo: move parameter_holder to cache
 
     def close(self):
         self._sess.close()
+
+
+# todo: rename -> HGraphModule | HGraphRouterable | HGraphModel
+class HugeParamsBase(HGraphContext, HGraphRouter):
+    def __init__(self, sess: HGraphSession) -> None:
+        super().__init__(sess)
+        self._parameter_holder = None
 
     def add_parameter(self, key, value):
         self._parameter_holder.set(key, value)

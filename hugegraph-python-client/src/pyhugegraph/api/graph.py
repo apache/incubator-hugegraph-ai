@@ -35,10 +35,6 @@ from pyhugegraph.utils.util import (
 
 class GraphManager(HugeParamsBase):
 
-    # @sss('GET', 'graph/vertices')
-    # def ASF(self, label, request_callback=None):
-    #     response = reqfn(label)
-
     def addVertex(self, label, properties, id=None):
         data = {}
         if id is not None:

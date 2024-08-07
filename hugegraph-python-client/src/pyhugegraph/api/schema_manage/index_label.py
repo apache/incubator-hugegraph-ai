@@ -27,19 +27,19 @@ from pyhugegraph.utils.util import check_if_authorized, check_if_success
 class IndexLabel(HugeParamsBase):
 
     @decorator_params
-    def onV(self, vertex_label):
+    def onV(self, vertex_label) -> "IndexLabel":
         self._parameter_holder.set("base_value", vertex_label)
         self._parameter_holder.set("base_type", "VERTEX_LABEL")
         return self
 
     @decorator_params
-    def onE(self, edge_label):
+    def onE(self, edge_label) -> "IndexLabel":
         self._parameter_holder.set("base_value", edge_label)
         self._parameter_holder.set("base_type", "EDGE_LABEL")
         return self
 
     @decorator_params
-    def by(self, *args):
+    def by(self, *args) -> "IndexLabel":
         if "fields" not in self._parameter_holder.get_keys():
             self._parameter_holder.set("fields", set())
         s = self._parameter_holder.get_value("fields")
@@ -48,22 +48,22 @@ class IndexLabel(HugeParamsBase):
         return self
 
     @decorator_params
-    def secondary(self):
+    def secondary(self) -> "IndexLabel":
         self._parameter_holder.set("index_type", "SECONDARY")
         return self
 
     @decorator_params
-    def range(self):
+    def range(self) -> "IndexLabel":
         self._parameter_holder.set("index_type", "RANGE")
         return self
 
     @decorator_params
-    def Search(self):
+    def Search(self) -> "IndexLabel":
         self._parameter_holder.set("index_type", "SEARCH")
         return self
 
     @decorator_params
-    def ifNotExist(self):
+    def ifNotExist(self) -> "IndexLabel":
         uri = f'schema/indexlabels/{self._parameter_holder.get_value("name")}'
         response = self._sess.get(uri)
         if response.status_code == 200 and check_if_authorized(response):

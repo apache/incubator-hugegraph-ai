@@ -1,7 +1,31 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+import re
+import json
+import inspect
 import functools
 import threading
 
-from pyhugegraph.api.common import HugeParamsBase
+
+from typing import Any, Callable, Dict, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyhugegraph.api.common import HGraphContext
 
 
 class SingletonBase(type):
@@ -17,42 +41,56 @@ class SingletonBase(type):
 
 class HGraphRouterManager(metaclass=SingletonBase):
     def __init__(self):
-        self._routers = []
+        self._routers = {}
 
-    def add_router(self, uri):
-        self._routers.append(uri)
+    def add_router(self, key, uri):
+        self._routers.update({key: uri})
+
+    def get_routers(self):
+        return self._routers
+
+    def __repr__(self) -> str:
+        return json.dumps(self._routers, indent=4)
+
+
+def http(method: str, uri: str) -> Callable:
+    """
+    A decorator to format the URI and inject a request function into the decorated method.
+
+    Args:
+        uri (str): The URI template to be formatted with function arguments.
+
+    Returns:
+        Callable: The decorator function.
+    """
+
+    def decorator(func: Callable) -> Callable:
+        HGraphRouterManager().add_router(func.__qualname__, uri)
+
+        @functools.wraps(func)
+        def wrapper(self: "HGraphContext", *args: Any, **kwargs: Any) -> Any:
+            if re.search(r"{\w+}", uri):
+                sig = inspect.signature(func)
+                bound_args = sig.bind(self, *args, **kwargs)
+                bound_args.apply_defaults()
+                all_kwargs = dict(bound_args.arguments)
+                all_kwargs.pop("self", None)
+                formatted_uri = uri.format(**all_kwargs)
+            else:
+                formatted_uri = uri
+
+            # Use functools.partial to create a partial function for making requests
+            make_request = functools.partial(self._sess.request, formatted_uri, method)
+            # Store the partial function on the instance
+            setattr(self, f"_{func.__name__}_request", make_request)
+
+            return func(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 class HGraphRouter:
-
-    @staticmethod
-    def get(uri):
-        HGraphRouterManager().add_router(uri)
-
-        def decorator(func):
-            @functools.wraps(func)
-            def wrapper(self: HugeParamsBase, *args, **kwargs):
-                func_params = func.__code__.co_varnames[: func.__code__.co_argcount]
-                func_args = dict(zip(func_params[1:], args))
-                all_kwargs = {**kwargs, **func_args}
-                formatted_uri = uri.format(**all_kwargs)
-                callback = lambda *inner_args, **inner_kwargs: self._sess.get(
-                    formatted_uri, *inner_args, **inner_kwargs
-                )
-                return func(self, *args, __callback__=callback, **kwargs)
-
-            return decorator
-
-        return decorator
-
-    @staticmethod
-    def put(uri):
-        pass
-
-    @staticmethod
-    def post(uri):
-        pass
-
-    @staticmethod
-    def delete(uri):
-        pass
+    def _http_request(self, name):
+        return getattr(self, f"_{name}_request")()
