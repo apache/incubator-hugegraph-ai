@@ -43,7 +43,7 @@ class ParameterHolder:
 class HugeParamsBase(HGraphBaseModel):
     def __init__(self, ctx: HGraphContext, sess: Optional[HGraphSession] = None):
         super().__init__(ctx)
-        self._sess = sess if sess else HGraphSession(ctx)
+        self._sess = sess or HGraphSession(ctx)
         self._parameter_holder = None
 
     def close(self):

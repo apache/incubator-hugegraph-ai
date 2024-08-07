@@ -17,13 +17,13 @@
 
 import json
 
-from pyhugegraph.utils.huge_component import HugeComponent
+from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils.exceptions import CreateError, UpdateError, RemoveError
 from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
 from pyhugegraph.utils.util import check_if_success, check_if_authorized
 
 
-class VertexLabel(HugeComponent):
+class VertexLabel(HugeParamsBase):
 
     @decorator_params
     def useAutomaticId(self):
@@ -77,12 +77,8 @@ class VertexLabel(HugeComponent):
         return self
 
     def ifNotExist(self):
-        url = (
-            f"{self._host}/graphs/{self._graph_name}/schema/vertexlabels/"
-            f'{self._parameter_holder.get_value("name")}'
-        )
-
-        response = self.__session.get(url, auth=self._auth, headers=self._headers)
+        uri = f'schema/vertexlabels/{self._parameter_holder.get_value("name")}'
+        response = self._sess.get(uri)
         if response.status_code == 200 and check_if_authorized(response):
             self._parameter_holder.set("not_exist", False)
         return self
@@ -104,10 +100,8 @@ class VertexLabel(HugeComponent):
         for key in key_list:
             if key in dic:
                 data[key] = dic[key]
-        url = f"{self._host}/graphs/{self._graph_name}/schema/vertexlabels"
-        response = self.__session.post(
-            url, data=json.dumps(data), auth=self._auth, headers=self._headers
-        )
+        uri = f"schema/vertexlabels"
+        response = self._sess.post(uri, data=json.dumps(data))
         self.clean_parameter_holder()
         error = CreateError(
             f'CreateError: "create VertexLabel failed", Detail: "{str(response.content)}"'
@@ -122,20 +116,14 @@ class VertexLabel(HugeComponent):
         properties = dic["properties"] if "properties" in dic else []
         nullable_keys = dic["nullable_keys"] if "nullable_keys" in dic else []
         user_data = dic["user_data"] if "user_data" in dic else {}
-        url = (
-            f"{self._host}/graphs/{self._graph_name}"
-            f'/schema/vertexlabels/{dic["name"]}?action=append'
-        )
-
+        uri = f'schema/vertexlabels/{dic["name"]}?action=append'
         data = {
             "name": dic["name"],
             "properties": properties,
             "nullable_keys": nullable_keys,
             "user_data": user_data,
         }
-        response = self.__session.put(
-            url, data=json.dumps(data), auth=self._auth, headers=self._headers
-        )
+        response = self._sess.put(uri, data=json.dumps(data))
         self.clean_parameter_holder()
         error = UpdateError(
             f'UpdateError: "append VertexLabel failed", Detail: "{str(response.content)}"'
@@ -147,8 +135,8 @@ class VertexLabel(HugeComponent):
     @decorator_params
     def remove(self):
         name = self._parameter_holder.get_value("name")
-        url = f"{self._host}/graphs/{self._graph_name}/schema/vertexlabels/{name}"
-        response = self.__session.delete(url, auth=self._auth, headers=self._headers)
+        uri = f"schema/vertexlabels/{name}"
+        response = self._sess.delete(uri)
         self.clean_parameter_holder()
         error = RemoveError(
             f'RemoveError: "remove VertexLabel failed", Detail: "{str(response.content)}"'
@@ -160,7 +148,7 @@ class VertexLabel(HugeComponent):
     @decorator_params
     def eliminate(self):
         name = self._parameter_holder.get_value("name")
-        url = f"{self._host}/graphs/{self._graph_name}/schema/vertexlabels/{name}/?action=eliminate"
+        uri = f"schema/vertexlabels/{name}/?action=eliminate"
 
         dic = self._parameter_holder.get_dic()
         user_data = dic["user_data"] if "user_data" in dic else {}
@@ -168,9 +156,7 @@ class VertexLabel(HugeComponent):
             "name": self._parameter_holder.get_value("name"),
             "user_data": user_data,
         }
-        response = self.__session.put(
-            url, data=json.dumps(data), auth=self._auth, headers=self._headers
-        )
+        response = self._sess.put(uri, data=json.dumps(data))
         error = UpdateError(
             f'UpdateError: "eliminate VertexLabel failed", Detail: "{str(response.content)}"'
         )

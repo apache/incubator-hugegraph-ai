@@ -18,13 +18,13 @@
 import json
 
 
-from pyhugegraph.utils.huge_component import HugeComponent
+from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils.exceptions import CreateError, UpdateError, RemoveError
 from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
 from pyhugegraph.utils.util import check_if_success, check_if_authorized
 
 
-class PropertyKey(HugeComponent):
+class PropertyKey(HugeParamsBase):
 
     @decorator_params
     def asInt(self):
@@ -94,11 +94,8 @@ class PropertyKey(HugeComponent):
         return self
 
     def ifNotExist(self):
-        url = (
-            f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/"
-            f'{self._parameter_holder.get_value("name")}'
-        )
-        response = self.__session.get(url, auth=self._auth, headers=self._headers)
+        uri = f'schema/propertykeys/{self._parameter_holder.get_value("name")}'
+        response = self._sess.get(uri)
         if response.status_code == 200 and check_if_authorized(response):
             self._parameter_holder.set("not_exist", False)
         return self
@@ -111,10 +108,8 @@ class PropertyKey(HugeComponent):
             property_keys["data_type"] = dic["data_type"]
         if "cardinality" in dic:
             property_keys["cardinality"] = dic["cardinality"]
-        url = f"{self._host}/graphs/{self._graph_name}/schema/propertykeys"
-        response = self.__session.post(
-            url, data=json.dumps(property_keys), auth=self._auth, headers=self._headers
-        )
+        uri = "schema/propertykeys"
+        response = self._sess.post(uri, data=json.dumps(property_keys))
         self.clean_parameter_holder()
         if check_if_success(
             response,
@@ -133,13 +128,8 @@ class PropertyKey(HugeComponent):
             user_data = {}
         data = {"name": property_name, "user_data": user_data}
 
-        url = (
-            f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/"
-            f"{property_name}/?action=append"
-        )
-        response = self.__session.put(
-            url, data=json.dumps(data), auth=self._auth, headers=self._headers
-        )
+        uri = f"schema/propertykeys/{property_name}/?action=append"
+        response = self._sess.put(uri, data=json.dumps(data))
         self.clean_parameter_holder()
         if check_if_success(
             response,
@@ -158,13 +148,8 @@ class PropertyKey(HugeComponent):
             user_data = {}
         data = {"name": property_name, "user_data": user_data}
 
-        url = (
-            f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/"
-            f"{property_name}/?action=eliminate"
-        )
-        response = self.__session.put(
-            url, data=json.dumps(data), auth=self._auth, headers=self._headers
-        )
+        uri = f"schema/propertykeys/{property_name}/?action=eliminate"
+        response = self._sess.put(uri, data=json.dumps(data))
         self.clean_parameter_holder()
         error = UpdateError(
             f'UpdateError: "eliminate PropertyKey failed", Detail: {str(response.content)}'
@@ -176,10 +161,8 @@ class PropertyKey(HugeComponent):
     @decorator_params
     def remove(self):
         dic = self._parameter_holder.get_dic()
-        url = (
-            f'{self._host}/graphs/{self._graph_name}/schema/propertykeys/{dic["name"]}'
-        )
-        response = self.__session.delete(url, auth=self._auth, headers=self._headers)
+        uri = f'schema/propertykeys/{dic["name"]}'
+        response = self._sess.delete(uri)
         self.clean_parameter_holder()
         if check_if_success(
             response,

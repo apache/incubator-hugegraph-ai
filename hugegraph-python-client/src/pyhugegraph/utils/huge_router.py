@@ -1,6 +1,8 @@
 import functools
 import threading
 
+from pyhugegraph.api.common import HugeParamsBase
+
 
 class SingletonBase(type):
     _instances = {}
@@ -13,36 +15,44 @@ class SingletonBase(type):
         return cls._instances[cls]
 
 
-class HGraphRouter(metaclass=SingletonBase):
+class HGraphRouterManager(metaclass=SingletonBase):
     def __init__(self):
-        self._routers = {}
+        self._routers = []
+
+    def add_router(self, uri):
+        self._routers.append(uri)
+
+
+class HGraphRouter:
 
     @staticmethod
-    def get(method, uri):
+    def get(uri):
+        HGraphRouterManager().add_router(uri)
 
         def decorator(func):
-
             @functools.wraps(func)
-            def wrapper(cls, *args, **kwargs):
+            def wrapper(self: HugeParamsBase, *args, **kwargs):
                 func_params = func.__code__.co_varnames[: func.__code__.co_argcount]
                 func_args = dict(zip(func_params[1:], args))
                 all_kwargs = {**kwargs, **func_args}
-                uri = uri.format(**all_kwargs)
-                response = cls._sess.get(uri, **kwargs)
-                func(cls, *args, **kwargs, __callback__=response)
+                formatted_uri = uri.format(**all_kwargs)
+                callback = lambda *inner_args, **inner_kwargs: self._sess.get(
+                    formatted_uri, *inner_args, **inner_kwargs
+                )
+                return func(self, *args, __callback__=callback, **kwargs)
 
-            return wrapper
+            return decorator
 
         return decorator
 
-    def put(self):
+    @staticmethod
+    def put(uri):
         pass
 
-    def post(self):
+    @staticmethod
+    def post(uri):
         pass
 
-    def delete(self):
+    @staticmethod
+    def delete(uri):
         pass
-
-
-router = HGraphRouter()

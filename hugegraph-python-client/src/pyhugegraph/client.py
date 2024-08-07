@@ -18,7 +18,6 @@
 from typing import Optional
 
 from pyhugegraph.api.auth import AuthManager
-from pyhugegraph.api.common import HugeModule
 from pyhugegraph.api.graph import GraphManager
 from pyhugegraph.api.graphs import GraphsManager
 from pyhugegraph.api.gremlin import GremlinManager

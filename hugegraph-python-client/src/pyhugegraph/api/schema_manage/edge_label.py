@@ -17,13 +17,13 @@
 
 import json
 
-from pyhugegraph.utils.huge_component import HugeComponent
+from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils.exceptions import CreateError, UpdateError, RemoveError
 from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
 from pyhugegraph.utils.util import check_if_success, check_if_authorized
 
 
-class EdgeLabel(HugeComponent):
+class EdgeLabel(HugeParamsBase):
 
     @decorator_params
     def link(self, source_label, target_label):
@@ -80,12 +80,8 @@ class EdgeLabel(HugeComponent):
 
     @decorator_params
     def ifNotExist(self):
-        url = (
-            f"{self._host}/graphs/{self._graph_name}"
-            f'/schema/edgelabels/{self._parameter_holder.get_value("name")}'
-        )
-
-        response = self.__session.get(url, auth=self._auth, headers=self._headers)
+        uri = f'schema/edgelabels/{self._parameter_holder.get_value("name")}'
+        response = self._sess.get(uri)
         if response.status_code == 200 and check_if_authorized(response):
             self._parameter_holder.set("not_exist", False)
         return self
@@ -108,10 +104,8 @@ class EdgeLabel(HugeComponent):
         for key in keys:
             if key in dic:
                 data[key] = dic[key]
-        url = f"{self._host}/graphs/{self._graph_name}/schema/edgelabels"
-        response = self.__session.post(
-            url, data=json.dumps(data), auth=self._auth, headers=self._headers
-        )
+        uri = "schema/edgelabels"
+        response = self._sess.post(uri, data=json.dumps(data))
         self.clean_parameter_holder()
         error = CreateError(
             f'CreateError: "create EdgeLabel failed", Detail:  "{str(response.content)}"'
@@ -122,11 +116,8 @@ class EdgeLabel(HugeComponent):
 
     @decorator_params
     def remove(self):
-        url = (
-            f"{self._host}/graphs/{self._graph_name}/schema/edgelabels/"
-            f'{self._parameter_holder.get_value("name")}'
-        )
-        response = self.__session.delete(url, auth=self._auth, headers=self._headers)
+        uri = f'schema/edgelabels/{self._parameter_holder.get_value("name")}'
+        response = self._sess.delete(uri)
         self.clean_parameter_holder()
         error = RemoveError(
             f'RemoveError: "remove EdgeLabel failed", Detail:  "{str(response.content)}"'
@@ -144,10 +135,8 @@ class EdgeLabel(HugeComponent):
             if key in dic:
                 data[key] = dic[key]
 
-        url = f'{self._host}/graphs/{self._graph_name}/schema/edgelabels/{data["name"]}?action=append'
-        response = self.__session.put(
-            url, data=json.dumps(data), auth=self._auth, headers=self._headers
-        )
+        uri = f'schema/edgelabels/{data["name"]}?action=append'
+        response = self._sess.put(uri, data=json.dumps(data))
         self.clean_parameter_holder()
         error = UpdateError(
             f'UpdateError: "append EdgeLabel failed", Detail: "{str(response.content)}"'
@@ -164,11 +153,9 @@ class EdgeLabel(HugeComponent):
             if self._parameter_holder.get_value("user_data")
             else {}
         )
-        url = f"{self._host}/graphs/{self._graph_name}/schema/edgelabels/{name}?action=eliminate"
+        uri = f"schema/edgelabels/{name}?action=eliminate"
         data = {"name": name, "user_data": user_data}
-        response = self.__session.put(
-            url, data=json.dumps(data), auth=self._auth, headers=self._headers
-        )
+        response = self._sess.put(uri, data=json.dumps(data))
         self.clean_parameter_holder()
         error = UpdateError(
             f'UpdateError: "eliminate EdgeLabel failed", Detail: "{str(response.content)}"'

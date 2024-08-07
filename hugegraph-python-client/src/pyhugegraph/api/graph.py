@@ -115,7 +115,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     def getVertexByPage(self, label, limit, page=None, properties=None):
-        uri = 'graph/vertices?'
+        uri = "graph/vertices?"
 
         para = ""
         para = para + "&label=" + label
@@ -139,7 +139,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     def getVertexByCondition(self, label="", limit=0, page=None, properties=None):
-        uri = 'graph/vertices?'
+        uri = "graph/vertices?"
 
         para = ""
         if label:
@@ -173,7 +173,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     def addEdge(self, edge_label, out_id, in_id, properties):
-        uri = f'graph/edges'
+        uri = f"graph/edges"
 
         data = {
             "label": edge_label,
@@ -193,7 +193,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     def addEdges(self, input_data):
-        uri = 'graph/edges/batch'
+        uri = "graph/edges/batch"
 
         data = []
         for item in input_data:
@@ -221,7 +221,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     def appendEdge(self, edge_id, properties):
-        uri = f'graph/edges/{edge_id}?action=append'
+        uri = f"graph/edges/{edge_id}?action=append"
 
         data = {"properties": properties}
         response = self._sess.put(
@@ -236,7 +236,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     def eliminateEdge(self, edge_id, properties):
-        uri = f'graph/edges/{edge_id}?action=eliminate'
+        uri = f"graph/edges/{edge_id}?action=eliminate"
 
         data = {"properties": properties}
         response = self._sess.put(
@@ -251,7 +251,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     def getEdgeById(self, edge_id):
-        uri = f'graph/edges/{edge_id}'
+        uri = f"graph/edges/{edge_id}"
 
         response = self._sess.get(uri)
         if check_if_success(
@@ -270,7 +270,7 @@ class GraphManager(HugeParamsBase):
         page=None,
         properties=None,
     ):
-        uri = f'graph/edges?'
+        uri = f"graph/edges?"
 
         para = ""
         if vertex_id:
@@ -300,7 +300,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     def removeEdgeById(self, edge_id):
-        uri = f'graph/edges/{edge_id}'
+        uri = f"graph/edges/{edge_id}"
 
         response = self._sess.delete(uri)
         if check_if_success(
@@ -312,7 +312,7 @@ class GraphManager(HugeParamsBase):
     def getVerticesById(self, vertex_ids):
         if not vertex_ids:
             return []
-        uri = f'traversers/vertices?'
+        uri = f"traversers/vertices?"
         for vertex_id in vertex_ids:
             uri += f'ids="{vertex_id}"&'
         uri = uri.rstrip("&")
@@ -328,7 +328,7 @@ class GraphManager(HugeParamsBase):
     def getEdgesById(self, edge_ids):
         if not edge_ids:
             return []
-        uri = 'traversers/edges?'
+        uri = "traversers/edges?"
         for vertex_id in edge_ids:
             uri += f"ids={vertex_id}&"
         uri = uri.rstrip("&")
