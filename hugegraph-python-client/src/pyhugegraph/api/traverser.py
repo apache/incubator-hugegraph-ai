@@ -18,121 +18,72 @@ import json
 
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils.exceptions import NotFoundError
-from pyhugegraph.utils.huge_requests import HugeSession
 from pyhugegraph.utils.util import check_if_success
 
 
 class TraverserManager(HugeParamsBase):
-    def __init__(self, graph_instance):
-        super().__init__(graph_instance)
-        self.url = f"{self._host}/graphs/{self._graph_name}/traversers"
-        self.__session = HugeSession.new_session()
-
-    def close(self):
-        if self.__session:
-            self.__session.close()
 
     def k_out(self, source_id, max_depth):
-        url = f'{self.url}/kout?source="{source_id}"&max_depth={max_depth}'
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        uri = f'traversers/kout?source="{source_id}"&max_depth={max_depth}'
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def k_neighbor(self, source_id, max_depth):
-        url = f'{self.url}/kneighbor?source="{source_id}"&max_depth={max_depth}'
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        uri = f'traversers/kneighbor?source="{source_id}"&max_depth={max_depth}'
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def same_neighbors(self, vertex_id, other_id):
-        url = f'{self.url}/sameneighbors?vertex="{vertex_id}"&other="{other_id}"'
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        uri = f'traversers/sameneighbors?vertex="{vertex_id}"&other="{other_id}"'
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def jaccard_similarity(self, vertex_id, other_id):
-        url = f'{self.url}/jaccardsimilarity?vertex="{vertex_id}"&other="{other_id}"'
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        uri = f'traversers/jaccardsimilarity?vertex="{vertex_id}"&other="{other_id}"'
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def shortest_path(self, source_id, target_id, max_depth):
-        url = (
-            f"{self.url}/shortestpath?"
+        uri = (
+            "traversers/shortestpath?"
             f'source="{source_id}"&target="{target_id}"&max_depth={max_depth}'
         )
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def all_shortest_paths(self, source_id, target_id, max_depth):
-        url = (
-            f"{self.url}/allshortestpaths?"
+        uri = (
+            "traversers/allshortestpaths?"
             f'source="{source_id}"&target="{target_id}"&max_depth={max_depth}'
         )
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def weighted_shortest_path(self, source_id, target_id, weight, max_depth):
-        url = (
-            f"{self.url}/weightedshortestpath?"
+        uri = (
+            "traversers/weightedshortestpath?"
             f'source="{source_id}"&target="{target_id}"&weight={weight}&max_depth={max_depth}'
         )
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def single_source_shortest_path(self, source_id, max_depth):
-        url = f'{self.url}/singlesourceshortestpath?source="{source_id}"&max_depth={max_depth}'
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        uri = f'traversers/singlesourceshortestpath?source="{source_id}"&max_depth={max_depth}'
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
@@ -148,7 +99,7 @@ class TraverserManager(HugeParamsBase):
     ):
         if properties is None:
             properties = {}
-        url = f"{self.url}/multinodeshortestpath"
+        uri = "traversers/multinodeshortestpath"
         data = {
             "vertices": {"ids": vertices},
             "step": {"direction": direction, "properties": properties},
@@ -156,25 +107,17 @@ class TraverserManager(HugeParamsBase):
             "capacity": capacity,
             "with_vertex": with_vertex,
         }
-        response = self.__session.post(
-            url,
+        response = self._sess.post(
+            uri,
             data=json.dumps(data),
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
         )
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def paths(self, source_id, target_id, max_depth):
-        url = f'{self.url}/paths?source="{source_id}"&target="{target_id}"&max_depth={max_depth}'
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        uri = f'traversers/paths?source="{source_id}"&target="{target_id}"&max_depth={max_depth}'
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
@@ -182,7 +125,7 @@ class TraverserManager(HugeParamsBase):
     def customized_paths(
         self, sources, steps, sort_by="INCR", with_vertex=True, capacity=-1, limit=-1
     ):
-        url = f"{self.url}/customizedpaths"
+        uri = f"traversers/customizedpaths"
 
         data = {
             "sources": sources,
@@ -192,19 +135,18 @@ class TraverserManager(HugeParamsBase):
             "capacity": capacity,
             "limit": limit,
         }
-        response = self.__session.post(
-            url,
+        response = self._sess.post(
+            uri,
             data=json.dumps(data),
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
         )
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
-    def template_paths(self, sources, targets, steps, capacity=10000, limit=10, with_vertex=True):
-        url = f"{self.url}/templatepaths"
+    def template_paths(
+        self, sources, targets, steps, capacity=10000, limit=10, with_vertex=True
+    ):
+        uri = f"traversers/templatepaths"
         data = {
             "sources": sources,
             "targets": targets,
@@ -213,36 +155,34 @@ class TraverserManager(HugeParamsBase):
             "limit": limit,
             "with_vertex": with_vertex,
         }
-        response = self.__session.post(
-            url,
+        response = self._sess.post(
+            uri,
             data=json.dumps(data),
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
         )
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def crosspoints(self, source_id, target_id, max_depth):
-        url = (
-            f"{self.url}/crosspoints?"
+        uri = (
+            f"traversers/crosspoints?"
             f'source="{source_id}"&target="{target_id}"&max_depth={max_depth}'
         )
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def customized_crosspoints(
-        self, sources, path_patterns, with_path=True, with_vertex=True, capacity=-1, limit=-1
+        self,
+        sources,
+        path_patterns,
+        with_path=True,
+        with_vertex=True,
+        capacity=-1,
+        limit=-1,
     ):
-        url = f"{self.url}/customizedcrosspoints"
+        uri = f"traversers/customizedcrosspoints"
         data = {
             "sources": sources,
             "path_patterns": path_patterns,
@@ -251,37 +191,24 @@ class TraverserManager(HugeParamsBase):
             "capacity": capacity,
             "limit": limit,
         }
-        response = self.__session.post(
-            url,
+        response = self._sess.post(
+            uri,
             data=json.dumps(data),
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
         )
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def rings(self, source_id, max_depth):
-        url = f'{self.url}/rings?source="{source_id}"&max_depth={max_depth}'
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        uri = f'traversers/rings?source="{source_id}"&max_depth={max_depth}'
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def rays(self, source_id, max_depth):
-        url = f'{self.url}/rays?source="{source_id}"&max_depth={max_depth}'
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        uri = f'traversers/rays?source="{source_id}"&max_depth={max_depth}'
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
@@ -303,7 +230,7 @@ class TraverserManager(HugeParamsBase):
         with_intermediary=False,
         with_vertex=True,
     ):
-        url = f"{self.url}/fusiformsimilarity"
+        uri = "traversers/fusiformsimilarity"
         data = {
             "sources": sources,
             "label": label,
@@ -320,40 +247,31 @@ class TraverserManager(HugeParamsBase):
             "with_intermediary": with_intermediary,
             "with_vertex": with_vertex,
         }
-        response = self.__session.post(
-            url,
+        response = self._sess.post(
+            uri,
             data=json.dumps(data),
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
         )
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def vertices(self, ids):
-        url = f"{self.url}/vertices"
+        uri = "traversers/vertices"
         params = {"ids": '"' + ids + '"'}
-        response = self.__session.get(
-            url,
+        response = self._sess.get(
+            uri,
             params=params,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
         )
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def edges(self, ids):
-        url = f"{self.url}/edges"
+        uri = "traversers/edges"
         params = {"ids": ids}
-        response = self.__session.get(
-            url,
+        response = self._sess.get(
+            uri,
             params=params,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
         )
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()

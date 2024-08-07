@@ -28,10 +28,10 @@ from pyhugegraph.api.task import TaskManager
 from pyhugegraph.api.traverser import TraverserManager
 from pyhugegraph.api.variable import VariableManager
 from pyhugegraph.api.version import VersionManager
-from pyhugegraph.structure.huge_context import HugeContext
+from pyhugegraph.structure.base_model import HGraphContext, HGraphBaseModel
 
 
-def mount(fn):
+def add_router(fn):
     attr_name = "_lazy_" + fn.__name__
 
     def wrapper(self):
@@ -42,7 +42,7 @@ def mount(fn):
     return wrapper
 
 
-class PyHugeClient(HugeModule):
+class PyHugeClient(HGraphBaseModel):
     def __init__(
         self,
         ip: str,
@@ -53,44 +53,44 @@ class PyHugeClient(HugeModule):
         timeout: int = 10,
         gs: Optional[str] = None,
     ):
-        super().__init__(HugeContext(ip, port, user, pwd, graph, gs, timeout))
+        super().__init__(HGraphContext(ip, port, user, pwd, graph, gs, timeout))
 
-    @mount
+    @add_router
     def schema(self):
         return SchemaManager(self._ctx)
 
-    @mount
+    @add_router
     def gremlin(self):
         return GremlinManager(self._ctx)
 
-    @mount
+    @add_router
     def graph(self):
         return GraphManager(self._ctx)
 
-    @mount
+    @add_router
     def graphs(self):
         return GraphsManager(self._ctx)
 
-    @mount
+    @add_router
     def variable(self):
         return VariableManager(self._ctx)
 
-    @mount
+    @add_router
     def auth(self):
         return AuthManager(self._ctx)
 
-    @mount
+    @add_router
     def task(self):
         return TaskManager(self._ctx)
 
-    @mount
+    @add_router
     def metrics(self):
         return MetricsManager(self._ctx)
 
-    @mount
+    @add_router
     def traverser(self):
         return TraverserManager(self._ctx)
 
-    @mount
+    @add_router
     def version(self):
         return VersionManager(self._ctx)

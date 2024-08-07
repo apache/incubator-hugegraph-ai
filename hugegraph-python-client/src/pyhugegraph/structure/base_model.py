@@ -18,12 +18,13 @@
 import requests
 import traceback
 
+from abc import ABC
 from dataclasses import dataclass, field
 from typing import Optional
 
 
 @dataclass
-class HugeContext:
+class HGraphContext:
     ip: str
     port: str
     username: str
@@ -60,3 +61,8 @@ class HugeContext:
                 print(
                     "Failed to retrieve API version information from the server, reverting to default v1."
                 )
+
+
+class HGraphBaseModel(ABC):
+    def __init__(self, ctx: HGraphContext):
+        self._ctx = ctx

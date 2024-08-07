@@ -19,58 +19,38 @@ import json
 
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils.exceptions import NotFoundError
-from pyhugegraph.utils.huge_requests import HugeSession
 from pyhugegraph.utils.util import check_if_success
 
 
 class VariableManager(HugeParamsBase):
-    def __init__(self, graph_instance):
-        super().__init__(graph_instance)
-        self.__session = HugeSession.new_session()
-
-    def close(self):
-        if self.__session:
-            self.__session.close()
 
     def set(self, key, value):
-        url = f"{self._host}/graphs/{self._graph_name}/variables/{key}"
+        uri = f"variables/{key}"
         data = {"data": value}
 
-        response = self.__session.put(
-            url,
-            data=json.dumps(data),
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._sess.put(uri, data=json.dumps(data))
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def get(self, key):
-        url = f"{self._host}/graphs/{self._graph_name}/variables/{key}"
+        uri = f"variables/{key}"
 
-        response = self.__session.get(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def all(self):
-        url = f"{self._host}/graphs/{self._graph_name}/variables"
+        uri = "variables"
 
-        response = self.__session.get(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def remove(self, key):
-        url = f"{self._host}/graphs/{self._graph_name}/variables/{key}"
+        uri = f"variables/{key}"
 
-        response = self.__session.delete(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+        response = self._sess.delete(uri)
         check_if_success(response, NotFoundError(response.content))

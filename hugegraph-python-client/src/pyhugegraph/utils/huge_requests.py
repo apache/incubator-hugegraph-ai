@@ -22,21 +22,20 @@ from urllib.parse import urljoin
 
 from typing import Optional
 from pyhugegraph.utils.constants import Constants
-from pyhugegraph.structure.huge_context import HugeContext
-from pyhugegraph.api.common import HugeModule
+from pyhugegraph.structure.base_model import HGraphContext, HGraphBaseModel
 
 
-class HugeSession(HugeModule):
+class HGraphSession(HGraphBaseModel):
     def __init__(
         self,
-        ctx: HugeContext,
+        ctx: HGraphContext,
         retries: int = 5,
         backoff_factor: int = 1,
         status_forcelist=(500, 502, 504),
         session: Optional[requests.Session] = None,
     ):
         """
-        Initialize the HugeSession object.
+        Initialize the HGraphSession object.
         :param retries: The maximum number of retries.
         :param backoff_factor: The backoff factor, used to calculate the interval between retries.
         :param status_forcelist: A list of status codes that trigger a retry.
@@ -97,7 +96,18 @@ class HugeSession(HugeModule):
     def get(self, uri, **kwargs):
         try:
             response = self._session.get(
-                self.resolve(uri), auth=self._auth, headers=self._headers, **kwargs
+                self.resolve(uri), auth=self._auth, headers=self._headers, timeout=self._timeout, **kwargs
+            )
+            response.raise_for_status()
+            return response
+        except requests.RequestException as e:
+            # self.logger.error("HTTP Request failed: %s", e)
+            raise
+
+    def put(self, uri, **kwargs):
+        try:
+            response = self._session.put(
+                self.resolve(uri), auth=self._auth, headers=self._headers, timeout=self._timeout, **kwargs
             )
             response.raise_for_status()
             return response
@@ -108,7 +118,18 @@ class HugeSession(HugeModule):
     def post(self, uri, **kwargs):
         try:
             response = self._session.post(
-                self.resolve(uri), auth=self._auth, headers=self._headers, **kwargs
+                self.resolve(uri), auth=self._auth, headers=self._headers, timeout=self._timeout, **kwargs
+            )
+            response.raise_for_status()
+            return response
+        except requests.RequestException as e:
+            # self.logger.error("HTTP Request failed: %s", e)
+            raise
+    
+    def delete(self, uri, **kwargs):
+        try:
+            response = self._session.delete(
+                self.resolve(uri), auth=self._auth, headers=self._headers, timeout=self._timeout, **kwargs
             )
             response.raise_for_status()
             return response

@@ -15,8 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from pyhugegraph.utils.constants import Constants
-from pyhugegraph.structure.huge_context import HugeContext
+
+from typing import Optional
+from pyhugegraph.utils.huge_requests import HGraphSession
+from pyhugegraph.structure.base_model import HGraphContext, HGraphBaseModel
 
 
 class ParameterHolder:
@@ -38,37 +40,14 @@ class ParameterHolder:
         return self._dic.keys()
 
 
-class HugeParamsBase:
-    def __init__(self, graph_instance):
-        self._graph_instance = graph_instance
-        self._ip = graph_instance.ip
-        self._port = graph_instance.port
-        self._user = graph_instance.user_name
-        self._pwd = graph_instance.passwd
-        self._host = f"http://{graph_instance.ip}:{graph_instance.port}"
-        self._auth = (graph_instance.user_name, graph_instance.passwd)
-        self._graph_name = graph_instance.graph_name
-        self._parameter_holder = None
-        self._headers = {"Content-Type": Constants.HEADER_CONTENT_TYPE}
-        self._timeout = graph_instance.timeout
-
-    def add_parameter(self, key, value):
-        self._parameter_holder.set(key, value)
-
-    def get_parameter_holder(self):
-        return self._parameter_holder
-
-    def create_parameter_holder(self):
-        self._parameter_holder = ParameterHolder()
-
-    def clean_parameter_holder(self):
+class HugeParamsBase(HGraphBaseModel):
+    def __init__(self, ctx: HGraphContext, sess: Optional[HGraphSession] = None):
+        super().__init__(ctx)
+        self._sess = sess if sess else HGraphSession(ctx)
         self._parameter_holder = None
 
-
-class HugeModule:
-    def __init__(self, ctx: HugeContext):
-        self._ctx = ctx
-        self._parameter_holder = None
+    def close(self):
+        self._sess.close()
 
     def add_parameter(self, key, value):
         self._parameter_holder.set(key, value)

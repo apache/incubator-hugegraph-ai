@@ -17,123 +17,70 @@
 
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils.exceptions import NotFoundError
-from pyhugegraph.utils.huge_requests import HugeSession
 from pyhugegraph.utils.util import check_if_success
 
 
 class MetricsManager(HugeParamsBase):
-    def __init__(self, graph_instance):
-        super().__init__(graph_instance)
-        self.__session = HugeSession.new_session()
-
-    def close(self):
-        if self.__session:
-            self.__session.close()
 
     def get_all_basic_metrics(self):
-        url = f"{self._host}/metrics/?type=json"
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        uri = "/metrics/?type=json"
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def get_gauges_metrics(self):
-        url = f"{self._host}/metrics/gauges"
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        uri = "/metrics/gauges"
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def get_counters_metrics(self):
-        url = f"{self._host}/metrics/counters"
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        uri = "/metrics/counters"
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def get_histograms_metrics(self):
-        url = f"{self._host}/metrics/histograms"
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        uri = "metrics/histograms"
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def get_meters_metrics(self):
-        url = f"{self._host}/metrics/meters"
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        uri = "/metrics/meters"
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def get_timers_metrics(self):
-        url = f"{self._host}/metrics/timers"
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        uri = "/metrics/timers"
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def get_statistics_metrics(self):
-        url = f"{self._host}/metrics/statistics/?type=json"
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        uri = '/metrics/statistics/?type=json'
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def get_system_metrics(self):
-        url = f"{self._host}/metrics/system"
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        uri = '/metrics/system'
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     def get_backend_metrics(self):
-        url = f"{self._host}/metrics/backend"
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        uri = '/metrics/backend'
+        response = self._sess.get(uri)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}

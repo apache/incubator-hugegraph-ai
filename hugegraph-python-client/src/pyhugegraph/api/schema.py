@@ -28,11 +28,10 @@ from pyhugegraph.structure.index_label_data import IndexLabelData
 from pyhugegraph.structure.property_key_data import PropertyKeyData
 from pyhugegraph.structure.vertex_label_data import VertexLabelData
 from pyhugegraph.utils.exceptions import NotFoundError
-from pyhugegraph.utils.huge_component import HugeComponent
 from pyhugegraph.utils.util import check_if_success
 
 
-class SchemaManager(HugeComponent):
+class SchemaManager(HugeParamsBase):
     """
     create schemas, including propertyKey/vertexLabel/edgeLabel/indexLabel
     """
