@@ -17,56 +17,37 @@
 
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils.exceptions import NotFoundError
-from pyhugegraph.utils.huge_requests import HugeSession
+from pyhugegraph.utils import huge_router as router
 from pyhugegraph.utils.util import check_if_success
 
 
 class TaskManager(HugeParamsBase):
-    def __init__(self, graph_instance):
-        super().__init__(graph_instance)
-        self.__session = HugeSession.new_session()
 
-    def close(self):
-        if self.__session:
-            self.__session.close()
-
+    @router.http("GET", "tasks")
     def list_tasks(self, status=None, limit=None):
-        url = f"{self._host}/graphs/{self._graph_name}/tasks"
         params = {}
         if status is not None:
             params["status"] = status
         if limit is not None:
             params["limit"] = limit
-        response = self.__session.get(
-            url,
-            params=params,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._invoke_request(params=params)
         check_if_success(response, NotFoundError(response.content))
         return response.json()
 
+    @router.http("GET", "tasks/{task_id}")
     def get_task(self, task_id):
-        url = f"{self._host}/graphs/{self._graph_name}/tasks/{task_id}"
-        response = self.__session.get(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+        response = self._invoke_request()
         check_if_success(response, NotFoundError(response.content))
         return response.json()
 
+    @router.http("DELETE", "tasks/{task_id}")
     def delete_task(self, task_id):
-        url = f"{self._host}/graphs/{self._graph_name}/tasks/{task_id}"
-        response = self.__session.delete(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+        response = self._invoke_request()
         check_if_success(response, NotFoundError(response.content))
         return response.status_code
 
+    @router.http("PUT", "tasks/{task_id}?action=cancel")
     def cancel_task(self, task_id):
-        url = f"{self._host}/graphs/{self._graph_name}/tasks/{task_id}?action=cancel"
-        response = self.__session.put(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+        response = self._invoke_request()
         check_if_success(response, NotFoundError(response.content))
         return response.json()

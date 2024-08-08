@@ -41,7 +41,9 @@ class HugeGraph:
         self.address = address
         self.port = port
         self.graph = graph
-        self.client = PyHugeClient(address, port, user=username, pwd=password, graph=graph)
+        self.client = PyHugeClient(
+            address, port, user=username, pwd=password, graph=graph
+        )
         self.schema = ""
 
     def exec(self, query) -> str:

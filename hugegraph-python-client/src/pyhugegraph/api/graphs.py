@@ -15,58 +15,53 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import json
 
 from pyhugegraph.api.common import HugeParamsBase
-
-from pyhugegraph.utils.constants import Constants
+from pyhugegraph.utils import huge_router as router
 from pyhugegraph.utils.exceptions import NotFoundError
-from pyhugegraph.utils.huge_requests import HugeSession
 from pyhugegraph.utils.util import check_if_success
 
 
 class GraphsManager(HugeParamsBase):
-    def __init__(self, graph_instance):
-        super().__init__(graph_instance)
-        self.__session = HugeSession.new_session()
 
-    def close(self):
-        if self.__session:
-            self.__session.close()
-
+    @router.http("GET", "/graphs")
     def get_all_graphs(self):
-        url = f"{self._host}/graphs"
-        response = self.__session.get(url, auth=self._auth, headers=self._headers)
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
         return ""
 
+    @router.http("GET", "/versions")
     def get_version(self):
-        url = f"{self._host}/versions"
-        response = self.__session.get(url, auth=self._auth, headers=self._headers)
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
         return ""
 
+    @router.http("GET", "")
     def get_graph_info(self):
-        url = f"{self._host}/graphs/{self._graph_name}"
-        response = self.__session.get(url, auth=self._auth, headers=self._headers)
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
         return ""
 
     def clear_graph_all_data(self):
-        url = (
-            f"{self._host}/graphs/{self._graph_name}/clear?confirm_message="
-            f"{Constants.CONFORM_MESSAGE}"
-        )
-        response = self.__session.delete(url, auth=self._auth, headers=self._headers)
+        if self._sess._cfg.gs_supported:
+            response = self._sess.request(
+                "", "PUT", data=json.dumps({"action": "clear", "clear_schema": True})
+            )
+        else:
+            response = self._sess.request(
+                "clear?confirm_message=I%27m+sure+to+delete+all+data", "DELETE"
+            )
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
         return ""
 
+    @router.http("GET", "conf")
     def get_graph_config(self):
-        url = self._host + "/graphs" + "/" + self._graph_name + "/conf"
-        response = self.__session.get(url, auth=self._auth, headers=self._headers)
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
         return ""

@@ -25,67 +25,69 @@ from pyhugegraph.utils.util import check_if_success, check_if_authorized
 
 
 class PropertyKey(HugeParamsBase):
-    def __init__(self, graph_instance, session):
-        super().__init__(graph_instance)
-        self.__session = session
 
     @decorator_params
-    def asInt(self):
+    def asInt(self) -> "PropertyKey":
         self._parameter_holder.set("data_type", "INT")
         return self
 
     @decorator_params
-    def asText(self):
+    def asLong(self) -> "PropertyKey":
+        self._parameter_holder.set("data_type", "LONG")
+        return self
+
+    @decorator_params
+    def asText(self) -> "PropertyKey":
         self._parameter_holder.set("data_type", "TEXT")
         return self
 
     @decorator_params
-    def asDouble(self):
+    def asDouble(self) -> "PropertyKey":
         self._parameter_holder.set("data_type", "DOUBLE")
         return self
 
     @decorator_params
-    def asDate(self):
+    def asDate(self) -> "PropertyKey":
         self._parameter_holder.set("data_type", "DATE")
         return self
 
     @decorator_params
-    def valueSingle(self):
+    def valueSingle(self) -> "PropertyKey":
         self._parameter_holder.set("cardinality", "SINGLE")
         return self
 
     @decorator_params
-    def valueList(self):
+    def valueList(self) -> "PropertyKey":
         self._parameter_holder.set("cardinality", "LIST")
         return self
 
     @decorator_params
-    def valueSet(self):
+    def valueSet(self) -> "PropertyKey":
         self._parameter_holder.set("cardinality", "SET")
         return self
 
     @decorator_params
-    def calcMax(self):
+    def calcMax(self) -> "PropertyKey":
         self._parameter_holder.set("aggregate_type", "MAX")
         return self
 
     @decorator_params
-    def calcMin(self):
+    def calcMin(self) -> "PropertyKey":
         self._parameter_holder.set("aggregate_type", "MIN")
         return self
 
     @decorator_params
-    def calcSum(self):
+    def calcSum(self) -> "PropertyKey":
         self._parameter_holder.set("aggregate_type", "SUM")
         return self
 
     @decorator_params
-    def calcOld(self):
+    def calcOld(self) -> "PropertyKey":
         self._parameter_holder.set("aggregate_type", "OLD")
         return self
 
     @decorator_params
-    def userdata(self, *args):
+    def userdata(self, *args) -> "PropertyKey":
         user_data = self._parameter_holder.get_value("user_data")
         if not user_data:
             self._parameter_holder.set("user_data", {})
@@ -96,12 +98,9 @@ class PropertyKey(HugeParamsBase):
             i += 2
         return self
 
-    def ifNotExist(self):
-        url = (
-            f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/"
-            f'{self._parameter_holder.get_value("name")}'
-        )
-        response = self.__session.get(url, auth=self._auth, headers=self._headers)
+    def ifNotExist(self) -> "PropertyKey":
+        path = f'schema/propertykeys/{self._parameter_holder.get_value("name")}'
+        response = self._sess.request(path)
         if response.status_code == 200 and check_if_authorized(response):
             self._parameter_holder.set("not_exist", False)
         return self
@@ -114,10 +113,8 @@ class PropertyKey(HugeParamsBase):
             property_keys["data_type"] = dic["data_type"]
         if "cardinality" in dic:
             property_keys["cardinality"] = dic["cardinality"]
-        url = f"{self._host}/graphs/{self._graph_name}/schema/propertykeys"
-        response = self.__session.post(
-            url, data=json.dumps(property_keys), auth=self._auth, headers=self._headers
-        )
+        path = "schema/propertykeys"
+        response = self._sess.request(path, "POST", data=json.dumps(property_keys))
         self.clean_parameter_holder()
         if check_if_success(
             response,
@@ -136,13 +133,8 @@ class PropertyKey(HugeParamsBase):
             user_data = {}
         data = {"name": property_name, "user_data": user_data}
 
-        url = (
-            f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/"
-            f"{property_name}/?action=append"
-        )
-        response = self.__session.put(
-            url, data=json.dumps(data), auth=self._auth, headers=self._headers
-        )
+        path = f"schema/propertykeys/{property_name}/?action=append"
+        response = self._sess.request(path, "PUT", data=json.dumps(data))
         self.clean_parameter_holder()
         if check_if_success(
             response,
@@ -161,13 +153,8 @@ class PropertyKey(HugeParamsBase):
             user_data = {}
         data = {"name": property_name, "user_data": user_data}
 
-        url = (
-            f"{self._host}/graphs/{self._graph_name}/schema/propertykeys/"
-            f"{property_name}/?action=eliminate"
-        )
-        response = self.__session.put(
-            url, data=json.dumps(data), auth=self._auth, headers=self._headers
-        )
+        path = f"schema/propertykeys/{property_name}/?action=eliminate"
+        response = self._sess.request(path, "PUT", data=json.dumps(data))
         self.clean_parameter_holder()
         error = UpdateError(
             f'UpdateError: "eliminate PropertyKey failed", Detail: {str(response.content)}'
@@ -179,8 +166,8 @@ class PropertyKey(HugeParamsBase):
     @decorator_params
     def remove(self):
         dic = self._parameter_holder.get_dic()
-        url = f'{self._host}/graphs/{self._graph_name}/schema/propertykeys/{dic["name"]}'
-        response = self.__session.delete(url, auth=self._auth, headers=self._headers)
+        path = f'schema/propertykeys/{dic["name"]}'
+        response = self._sess.request(path, "DELETE")
         self.clean_parameter_holder()
         if check_if_success(
             response,
