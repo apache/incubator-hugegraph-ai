@@ -15,11 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import re
 import requests
 import traceback
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, List
 
 
 @dataclass
@@ -31,32 +32,36 @@ class HGraphConfig:
     graph_name: str
     graphspace: Optional[str] = None
     timeout: int = 10
-    version: str = field(default="v1", init=False)
+    gs_supported: bool = field(default=False, init=False)
+    version: List[int] = field(default_factory=list)
 
     def __post_init__(self):
 
         if self.graphspace is not None:
-            self.version = "v3"
+            self.gs_supported = True
 
         else:
             try:
                 response = requests.get(
                     f"http://{self.ip}:{self.port}/versions", timeout=1
                 )
-                version = response.json()["versions"]["version"]
-                print(f"Retrieved API version information from the server: {version}.")
+                core = response.json()["versions"]["core"]
+                print(f"Retrieved API version information from the server: {core}.")
 
-                if version == "v3":
+                match = re.search("(\d+)\.(\d+)(?:\.(\d+))?(?:\.\d+)?", core)
+                major, minor, patch = map(int, match.groups())
+                self.version.extend([major, minor, patch])
+
+                if major >= 3:
                     self.graphspace = "DEFAULT"
+                    self.gs_supported = True
                     print(
                         f"graph space is not set, default value 'DEFAULT' will be used."
                     )
 
-                self.version = version
-
             except Exception as e:
                 traceback.print_exception(e)
-                self.version = "v1"
+                self.gs_supported = False
                 print(
                     "Failed to retrieve API version information from the server, reverting to default v1."
                 )

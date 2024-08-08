@@ -20,7 +20,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from urllib.parse import urljoin
 
-from typing import Optional
+from typing import Any, Optional
 from pyhugegraph.utils.constants import Constants
 from pyhugegraph.utils.huge_config import HGraphConfig
 
@@ -66,21 +66,32 @@ class HGraphSession:
         self._session.mount("http://", adapter)
         self._session.mount("https://", adapter)
         self._session.keep_alive = False
-        # self.logger.debug(
+        # logger.debug(
         #     "Session configured with retries=%s and backoff_factor=%s",
         #     self.retries,
         #     self.backoff_factor,
         # )
 
-    def resolve(self, path):
+    def resolve(self, path: str):
         """
-        Constructs the full URL for the given PATH based on the session context and API version.
+        Constructs the full URL for the given pathinfo based on the session context and API version.
 
-        :param path: The PATH to be appended to the base URL.
+        :param path: The pathinfo to be appended to the base URL.
         :return: The fully resolved URL as a string.
+
+        When path is "/some/things":
+        - Since path starts with "/", it is considered an absolute path, and urljoin will replace the path part of the base URL.
+        - Assuming the base URL is "http://127.0.0.1:8000/graphspaces/default/graphs/test_graph/"
+        - The result will be "http://127.0.0.1:8000/some/things"
+
+        When path is "some/things":
+        - Since path is a relative path, urljoin will append it to the path part of the base URL.
+        - Assuming the base URL is "http://127.0.0.1:8000/graphspaces/default/graphs/test_graph/"
+        - The result will be "http://127.0.0.1:8000/graphspaces/default/graphs/test_graph/some/things"
         """
+
         url = f"http://{self._cfg.ip}:{self._cfg.port}/"
-        if self._cfg.version == "v3":
+        if self._cfg.gs_supported:
             url = urljoin(
                 url,
                 f"graphspaces/{self._cfg.graphspace}/graphs/{self._cfg.graph_name}/",
@@ -91,11 +102,10 @@ class HGraphSession:
 
     def close(self):
         self._session.close()
-        # self.logger.debug("Session closed")
 
-    def request(self, path, method: str = "GET", **kwargs):
+    def request(self, path: str, method: str = "GET", **kwargs: Any):
         try:
-            print("DEBUG:", method, self.resolve(path))
+            # print(method, self.resolve(path))
             response = getattr(self._session, method.lower())(
                 self.resolve(path),
                 auth=self._auth,
@@ -105,5 +115,4 @@ class HGraphSession:
             )
             return response
         except requests.RequestException as e:
-            # self.logger.error("HTTP Request failed: %s", e)
             raise

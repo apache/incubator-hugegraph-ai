@@ -94,8 +94,8 @@ class PropertyKey(HugeParamsBase):
         return self
 
     def ifNotExist(self) -> "PropertyKey":
-        uri = f'schema/propertykeys/{self._parameter_holder.get_value("name")}'
-        response = self._sess.get(uri)
+        path = f'schema/propertykeys/{self._parameter_holder.get_value("name")}'
+        response = self._sess.request(path)
         if response.status_code == 200 and check_if_authorized(response):
             self._parameter_holder.set("not_exist", False)
         return self
@@ -108,8 +108,8 @@ class PropertyKey(HugeParamsBase):
             property_keys["data_type"] = dic["data_type"]
         if "cardinality" in dic:
             property_keys["cardinality"] = dic["cardinality"]
-        uri = "schema/propertykeys"
-        response = self._sess.post(uri, data=json.dumps(property_keys))
+        path = "schema/propertykeys"
+        response = self._sess.request(path, "POST", data=json.dumps(property_keys))
         self.clean_parameter_holder()
         if check_if_success(
             response,
@@ -128,8 +128,8 @@ class PropertyKey(HugeParamsBase):
             user_data = {}
         data = {"name": property_name, "user_data": user_data}
 
-        uri = f"schema/propertykeys/{property_name}/?action=append"
-        response = self._sess.put(uri, data=json.dumps(data))
+        path = f"schema/propertykeys/{property_name}/?action=append"
+        response = self._sess.request(path, "PUT", data=json.dumps(data))
         self.clean_parameter_holder()
         if check_if_success(
             response,
@@ -148,8 +148,8 @@ class PropertyKey(HugeParamsBase):
             user_data = {}
         data = {"name": property_name, "user_data": user_data}
 
-        uri = f"schema/propertykeys/{property_name}/?action=eliminate"
-        response = self._sess.put(uri, data=json.dumps(data))
+        path = f"schema/propertykeys/{property_name}/?action=eliminate"
+        response = self._sess.request(path, "PUT", data=json.dumps(data))
         self.clean_parameter_holder()
         error = UpdateError(
             f'UpdateError: "eliminate PropertyKey failed", Detail: {str(response.content)}'
@@ -161,8 +161,8 @@ class PropertyKey(HugeParamsBase):
     @decorator_params
     def remove(self):
         dic = self._parameter_holder.get_dic()
-        uri = f'schema/propertykeys/{dic["name"]}'
-        response = self._sess.delete(uri)
+        path = f'schema/propertykeys/{dic["name"]}'
+        response = self._sess.request(path, "DELETE")
         self.clean_parameter_holder()
         if check_if_success(
             response,

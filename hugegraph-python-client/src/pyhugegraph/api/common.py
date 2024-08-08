@@ -16,6 +16,7 @@
 # under the License.
 
 
+from abc import ABC
 from pyhugegraph.utils.huge_router import HGraphRouter
 from pyhugegraph.utils.huge_requests import HGraphSession
 
@@ -40,7 +41,7 @@ class ParameterHolder:
         return self._dic.keys()
 
 
-class HGraphContext:
+class HGraphContext(ABC):
     def __init__(self, sess: HGraphSession) -> None:
         self._sess = sess
         self._cache = {}  # todo: move parameter_holder to cache

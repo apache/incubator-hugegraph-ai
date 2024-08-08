@@ -77,8 +77,8 @@ class VertexLabel(HugeParamsBase):
         return self
 
     def ifNotExist(self) -> "VertexLabel":
-        uri = f'schema/vertexlabels/{self._parameter_holder.get_value("name")}'
-        response = self._sess.get(uri)
+        path = f'schema/vertexlabels/{self._parameter_holder.get_value("name")}'
+        response = self._sess.request(path)
         if response.status_code == 200 and check_if_authorized(response):
             self._parameter_holder.set("not_exist", False)
         return self
@@ -100,8 +100,8 @@ class VertexLabel(HugeParamsBase):
         for key in key_list:
             if key in dic:
                 data[key] = dic[key]
-        uri = f"schema/vertexlabels"
-        response = self._sess.post(uri, data=json.dumps(data))
+        path = f"schema/vertexlabels"
+        response = self._sess.request(path, "POST", data=json.dumps(data))
         self.clean_parameter_holder()
         error = CreateError(
             f'CreateError: "create VertexLabel failed", Detail: "{str(response.content)}"'
@@ -116,14 +116,14 @@ class VertexLabel(HugeParamsBase):
         properties = dic["properties"] if "properties" in dic else []
         nullable_keys = dic["nullable_keys"] if "nullable_keys" in dic else []
         user_data = dic["user_data"] if "user_data" in dic else {}
-        uri = f'schema/vertexlabels/{dic["name"]}?action=append'
+        path = f'schema/vertexlabels/{dic["name"]}?action=append'
         data = {
             "name": dic["name"],
             "properties": properties,
             "nullable_keys": nullable_keys,
             "user_data": user_data,
         }
-        response = self._sess.put(uri, data=json.dumps(data))
+        response = self._sess.request(path, "PUT", data=json.dumps(data))
         self.clean_parameter_holder()
         error = UpdateError(
             f'UpdateError: "append VertexLabel failed", Detail: "{str(response.content)}"'
@@ -135,8 +135,8 @@ class VertexLabel(HugeParamsBase):
     @decorator_params
     def remove(self):
         name = self._parameter_holder.get_value("name")
-        uri = f"schema/vertexlabels/{name}"
-        response = self._sess.delete(uri)
+        path = f"schema/vertexlabels/{name}"
+        response = self._sess.request(path, "DELETE")
         self.clean_parameter_holder()
         error = RemoveError(
             f'RemoveError: "remove VertexLabel failed", Detail: "{str(response.content)}"'
@@ -148,7 +148,7 @@ class VertexLabel(HugeParamsBase):
     @decorator_params
     def eliminate(self):
         name = self._parameter_holder.get_value("name")
-        uri = f"schema/vertexlabels/{name}/?action=eliminate"
+        path = f"schema/vertexlabels/{name}/?action=eliminate"
 
         dic = self._parameter_holder.get_dic()
         user_data = dic["user_data"] if "user_data" in dic else {}
@@ -156,7 +156,7 @@ class VertexLabel(HugeParamsBase):
             "name": self._parameter_holder.get_value("name"),
             "user_data": user_data,
         }
-        response = self._sess.put(uri, data=json.dumps(data))
+        response = self._sess.request(path, "PUT", data=json.dumps(data))
         error = UpdateError(
             f'UpdateError: "eliminate VertexLabel failed", Detail: "{str(response.content)}"'
         )

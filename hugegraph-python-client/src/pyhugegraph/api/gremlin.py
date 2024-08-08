@@ -30,7 +30,7 @@ class GremlinManager(HugeParamsBase):
     @router.http("POST", "/gremlin")
     def exec(self, gremlin):
         gremlin_data = GremlinData(gremlin)
-        if self._sess._cfg.version == "v3":
+        if self._sess._cfg.gs_supported:
             gremlin_data.aliases = {
                 "graph": f"{self._sess._cfg.graphspace}-{self._sess._cfg.graph_name}",
                 "g": f"__g_{self._sess._cfg.graphspace}-{self._sess._cfg.graph_name}",

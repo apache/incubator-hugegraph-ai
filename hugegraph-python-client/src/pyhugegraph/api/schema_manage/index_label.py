@@ -64,8 +64,8 @@ class IndexLabel(HugeParamsBase):
 
     @decorator_params
     def ifNotExist(self) -> "IndexLabel":
-        uri = f'schema/indexlabels/{self._parameter_holder.get_value("name")}'
-        response = self._sess.get(uri)
+        path = f'schema/indexlabels/{self._parameter_holder.get_value("name")}'
+        response = self._sess.request(path)
         if response.status_code == 200 and check_if_authorized(response):
             self._parameter_holder.set("not_exist", False)
         return self
@@ -79,8 +79,8 @@ class IndexLabel(HugeParamsBase):
         data["base_value"] = dic["base_value"]
         data["index_type"] = dic["index_type"]
         data["fields"] = list(dic["fields"])
-        uri = f"schema/indexlabels"
-        response = self._sess.post(uri, data=json.dumps(data))
+        path = f"schema/indexlabels"
+        response = self._sess.request(path, "POST", data=json.dumps(data))
         self.clean_parameter_holder()
         error = CreateError(
             f'CreateError: "create IndexLabel failed", Detail "{str(response.content)}"'
@@ -92,8 +92,8 @@ class IndexLabel(HugeParamsBase):
     @decorator_params
     def remove(self):
         name = self._parameter_holder.get_value("name")
-        uri = f"schema/indexlabels/{name}"
-        response = self._sess.delete(uri)
+        path = f"schema/indexlabels/{name}"
+        response = self._sess.request(path, "DELETE")
         self.clean_parameter_holder()
         error = RemoveError(
             f'RemoveError: "remove IndexLabel failed", Detail "{str(response.content)}"'

@@ -66,7 +66,7 @@ class GraphManager(HugeParamsBase):
             return res
         return None
 
-    @router.http("PUT", "graph/vertices/{vertex_id}?action=append")
+    @router.http("PUT", 'graph/vertices/"{vertex_id}"?action=append')
     def appendVertex(self, vertex_id, properties):
         data = {"properties": properties}
         response = self._invoke_request(data=json.dumps(data))
@@ -77,7 +77,7 @@ class GraphManager(HugeParamsBase):
             return res
         return None
 
-    @router.http("PUT", "graph/vertices/{vertex_id}?action=eliminate")
+    @router.http("PUT", 'graph/vertices/"{vertex_id}"?action=eliminate')
     def eliminateVertex(self, vertex_id, properties):
         data = {"properties": properties}
         response = self._invoke_request(data=json.dumps(data))
@@ -88,7 +88,7 @@ class GraphManager(HugeParamsBase):
             return res
         return None
 
-    @router.http("GET", "graph/vertices/{vertex_id}")
+    @router.http("GET", 'graph/vertices/"{vertex_id}"')
     def getVertexById(self, vertex_id):
         response = self._invoke_request()
         if check_if_success(
@@ -145,7 +145,7 @@ class GraphManager(HugeParamsBase):
             return res
         return None
 
-    @router.http("DELETE", "graph/vertices/{vertex_id}")
+    @router.http("DELETE", 'graph/vertices/"{vertex_id}"')
     def removeVertexById(self, vertex_id):
         response = self._invoke_request()
         if check_if_success(
@@ -275,7 +275,7 @@ class GraphManager(HugeParamsBase):
             return []
         path = "traversers/vertices?"
         for vertex_id in vertex_ids:
-            uri += f'ids="{vertex_id}"&'
+            path += f'ids="{vertex_id}"&'
         path = path.rstrip("&")
         response = self._sess.request(path)
         if response.status_code == 200 and check_if_authorized(response):

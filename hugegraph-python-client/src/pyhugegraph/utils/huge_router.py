@@ -21,7 +21,7 @@ import inspect
 import functools
 import threading
 
-
+from abc import ABC
 from typing import Any, Callable, Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -48,8 +48,8 @@ class HGraphRouterManager(metaclass=SingletonBase):
     def __init__(self):
         self._routers = {}
 
-    def add_router(self, key, uri):
-        self._routers.update({key: uri})
+    def register(self, key, path):
+        self._routers.update({key: path})
 
     def get_routers(self):
         return self._routers
@@ -60,11 +60,11 @@ class HGraphRouterManager(metaclass=SingletonBase):
 
 def http(method: str, path: str) -> Callable:
     """
-    A decorator to format the path and inject a request function into the decorated method.
+    A decorator to format the pathinfo and inject a request function into the decorated method.
 
     Args:
         method (str): The HTTP method to be used (e.g., 'GET', 'POST').
-        path (str): The path template to be formatted with function arguments.
+        path (str): The pathinfo template to be formatted with function arguments.
 
     Returns:
         Callable: The decorator function.
@@ -72,12 +72,12 @@ def http(method: str, path: str) -> Callable:
 
     def decorator(func: Callable) -> Callable:
         """Decorator function that modifies the original function."""
-        HGraphRouterManager().add_router(func.__qualname__, (method, path))
+        HGraphRouterManager().register(func.__qualname__, (method, path))
 
         @functools.wraps(func)
         def wrapper(self: "HGraphContext", *args: Any, **kwargs: Any) -> Any:
             """
-            Wrapper function to format the URI and create a partial request function.
+            Wrapper function to format the pathinfo and create a partial request function.
 
             Args:
                 self (HGraphContext): The instance of the class.
@@ -87,18 +87,20 @@ def http(method: str, path: str) -> Callable:
             Returns:
                 Any: The result of the decorated function.
             """
-            # If the path contains placeholders, format it with the actual arguments
+            # If the pathinfo contains placeholders, format it with the actual arguments
             if re.search(r"{\w+}", path):
                 sig = inspect.signature(func)
                 bound_args = sig.bind(self, *args, **kwargs)
                 bound_args.apply_defaults()
                 all_kwargs = dict(bound_args.arguments)
-                # Remove 'self' from the arguments used to format the URI
+                # Remove 'self' from the arguments used to format the pathinfo
                 all_kwargs.pop("self")
                 formatted_path = path.format(**all_kwargs)
             else:
                 formatted_path = path
 
+            # todo: If possible, reduce unnecessary multiple creations.
+            cache_key = (func.__qualname__, method, formatted_path)
             # Use functools.partial to create a partial function for making requests
             make_request = functools.partial(self._sess.request, formatted_path, method)
             # Store the partial function on the instance
@@ -111,7 +113,8 @@ def http(method: str, path: str) -> Callable:
     return decorator
 
 
-class HGraphRouter:
+class HGraphRouter(ABC):
+
     def _invoke_request(self, **kwargs: Any):
         """
         Make an HTTP request using the stored partial request function.

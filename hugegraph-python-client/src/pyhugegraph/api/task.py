@@ -17,36 +17,37 @@
 
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils.exceptions import NotFoundError
+from pyhugegraph.utils import huge_router as router
 from pyhugegraph.utils.util import check_if_success
 
 
 class TaskManager(HugeParamsBase):
 
+    @router.http("GET", "tasks")
     def list_tasks(self, status=None, limit=None):
-        uri = 'tasks'
         params = {}
         if status is not None:
             params["status"] = status
         if limit is not None:
             params["limit"] = limit
-        response = self._sess.get(uri, params=params)
+        response = self._invoke_request(params=params)
         check_if_success(response, NotFoundError(response.content))
         return response.json()
 
+    @router.http("GET", "tasks/{task_id}")
     def get_task(self, task_id):
-        uri = f"tasks/{task_id}"
-        response = self._sess.get(uri)
+        response = self._invoke_request()
         check_if_success(response, NotFoundError(response.content))
         return response.json()
 
+    @router.http("DELETE", "tasks/{task_id}")
     def delete_task(self, task_id):
-        uri = f"tasks/{task_id}"
-        response = self._sess.delete(uri)
+        response = self._invoke_request()
         check_if_success(response, NotFoundError(response.content))
         return response.status_code
 
+    @router.http("PUT", "tasks/{task_id}?action=cancel")
     def cancel_task(self, task_id):
-        uri = f"tasks/{task_id}?action=cancel"
-        response = self._sess.put(uri)
+        response = self._invoke_request()
         check_if_success(response, NotFoundError(response.content))
         return response.json()
