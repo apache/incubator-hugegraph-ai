@@ -32,6 +32,11 @@ class PropertyKey(HugeParamsBase):
         return self
 
     @decorator_params
+    def asLong(self) -> "PropertyKey":
+        self._parameter_holder.set("data_type", "LONG")
+        return self
+
+    @decorator_params
     def asText(self) -> "PropertyKey":
         self._parameter_holder.set("data_type", "TEXT")
         return self
