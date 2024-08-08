@@ -98,7 +98,7 @@ class HGraphSession:
             )
         else:
             url = urljoin(url, f"graphs/{self._cfg.graph_name}/")
-        return urljoin(url, path)
+        return urljoin(url, path).strip("/")
 
     def close(self):
         self._session.close()

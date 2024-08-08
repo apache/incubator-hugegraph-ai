@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import json
 
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils import huge_router as router
@@ -45,9 +46,15 @@ class GraphsManager(HugeParamsBase):
             return str(response.content)
         return ""
 
-    @router.http("DELETE", f"clear?confirm_message=I%27m+sure+to+delete+all+data")
     def clear_graph_all_data(self):
-        response = self._invoke_request()
+        if self._sess._cfg.gs_supported:
+            response = self._sess.request(
+                "", "PUT", data=json.dumps({"action": "clear", "clear_schema": True})
+            )
+        else:
+            response = self._sess.request(
+                "clear?confirm_message=I%27m+sure+to+delete+all+data", "DELETE"
+            )
         if check_if_success(response, NotFoundError(response.content)):
             return str(response.content)
         return ""
