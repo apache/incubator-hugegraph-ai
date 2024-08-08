@@ -80,7 +80,7 @@ class SchemaManager(HugeParamsBase):
         response = self._invoke_request()
         error = NotFoundError(f"PropertyKey not found: {str(response.content)}")
         if check_if_success(response, error):
-            property_keys_data = PropertyKeyData.from_dict(json.loads(response.content))
+            property_keys_data = PropertyKeyData(json.loads(response.content))
             return property_keys_data
         return None
 
@@ -90,7 +90,7 @@ class SchemaManager(HugeParamsBase):
         res = []
         if check_if_success(response):
             for item in json.loads(response.content)["propertykeys"]:
-                res.append(PropertyKeyData.from_dict(item))
+                res.append(PropertyKeyData(item))
             return res
         return None
 
@@ -112,7 +112,7 @@ class SchemaManager(HugeParamsBase):
                 res.append(VertexLabelData(item))
         return res
 
-    @router.http("GET", "schema/vertexlabels/{label_name}")
+    @router.http("GET", "schema/edgelabels/{label_name}")
     def getEdgeLabel(self, label_name: str):
         response = self._invoke_request()
         error = NotFoundError(f"EdgeLabel not found: {str(response.content)}")
