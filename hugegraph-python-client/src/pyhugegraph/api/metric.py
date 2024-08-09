@@ -44,14 +44,14 @@ class MetricsManager(HugeParamsBase):
             return response.json()
         return {}
 
-    @router.http("GET", "metrics/histograms")
+    @router.http("GET", "/metrics/gauges")
     def get_histograms_metrics(self):
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
-    @router.http("GET", "metrics/meters")
+    @router.http("GET", "/metrics/meters")
     def get_meters_metrics(self):
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
