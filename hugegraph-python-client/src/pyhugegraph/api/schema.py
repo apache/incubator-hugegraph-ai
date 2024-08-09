@@ -66,17 +66,18 @@ class SchemaManager(HugeParamsBase):
         index_label.add_parameter("name", name)
         return index_label
 
-    @router.http("GET", "schema?format={format}")
-    def getSchema(self, format: str = "json") -> Optional[Dict]:
+    @router.http("GET", "schema?format={_format}")
+    def getSchema(self, _format: str = "json") -> Optional[Dict]:
         response = self._invoke_request()
-        error = NotFoundError(f"schema not found: {str(response.content)}")
-        if check_if_success(response, error):
-            schema = json.loads(response.content)
-            return schema
-        return None
+        return {}
+        # error = NotFoundError(f"schema not found: {str(response.content)}")
+        # if check_if_success(response, error):
+        #     schema = json.loads(response.content)
+        #     return schema
+        # return None
 
     @router.http("GET", "schema/propertykeys/{property_name}")
-    def getPropertyKey(self, property_name):
+    def getPropertyKey(self, property_name):  # pylint: disable=unused-argument
         response = self._invoke_request()
         error = NotFoundError(f"PropertyKey not found: {str(response.content)}")
         if check_if_success(response, error):
@@ -95,7 +96,7 @@ class SchemaManager(HugeParamsBase):
         return None
 
     @router.http("GET", "schema/vertexlabels/{name}")
-    def getVertexLabel(self, name):
+    def getVertexLabel(self, name):  # pylint: disable=unused-argument
         response = self._invoke_request()
         error = NotFoundError(f"VertexLabel not found: {str(response.content)}")
         if check_if_success(response, error):
@@ -113,7 +114,7 @@ class SchemaManager(HugeParamsBase):
         return res
 
     @router.http("GET", "schema/edgelabels/{label_name}")
-    def getEdgeLabel(self, label_name: str):
+    def getEdgeLabel(self, label_name: str):  # pylint: disable=unused-argument
         response = self._invoke_request()
         error = NotFoundError(f"EdgeLabel not found: {str(response.content)}")
         if check_if_success(response, error):
@@ -140,7 +141,7 @@ class SchemaManager(HugeParamsBase):
         return res
 
     @router.http("GET", "schema/indexlabels/{name}")
-    def getIndexLabel(self, name):
+    def getIndexLabel(self, name):  # pylint: disable=unused-argument
         response = self._invoke_request()
         error = NotFoundError(f"EdgeLabel not found: {str(response.content)}")
         if check_if_success(response, error):

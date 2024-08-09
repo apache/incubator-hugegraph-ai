@@ -67,7 +67,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     @router.http("PUT", 'graph/vertices/"{vertex_id}"?action=append')
-    def appendVertex(self, vertex_id, properties):
+    def appendVertex(self, vertex_id, properties):  # pylint: disable=unused-argument
         data = {"properties": properties}
         response = self._invoke_request(data=json.dumps(data))
         if check_if_success(
@@ -78,7 +78,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     @router.http("PUT", 'graph/vertices/"{vertex_id}"?action=eliminate')
-    def eliminateVertex(self, vertex_id, properties):
+    def eliminateVertex(self, vertex_id, properties):  # pylint: disable=unused-argument
         data = {"properties": properties}
         response = self._invoke_request(data=json.dumps(data))
         if check_if_success(
@@ -89,7 +89,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     @router.http("GET", 'graph/vertices/"{vertex_id}"')
-    def getVertexById(self, vertex_id):
+    def getVertexById(self, vertex_id):  # pylint: disable=unused-argument
         response = self._invoke_request()
         if check_if_success(
             response, NotFoundError(f"Vertex not found: {str(response.content)}")
@@ -146,7 +146,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     @router.http("DELETE", 'graph/vertices/"{vertex_id}"')
-    def removeVertexById(self, vertex_id):
+    def removeVertexById(self, vertex_id):  # pylint: disable=unused-argument
         response = self._invoke_request()
         if check_if_success(
             response, RemoveError(f"remove vertex failed: {str(response.content)}")
@@ -195,7 +195,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     @router.http("PUT", "graph/edges/{edge_id}?action=append")
-    def appendEdge(self, edge_id, properties):
+    def appendEdge(self, edge_id, properties):  # pylint: disable=unused-argument
         response = self._invoke_request(data=json.dumps({"properties": properties}))
         if check_if_success(
             response, UpdateError(f"append edge failed: {str(response.content)}")
@@ -205,7 +205,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     @router.http("PUT", "graph/edges/{edge_id}?action=eliminate")
-    def eliminateEdge(self, edge_id, properties):
+    def eliminateEdge(self, edge_id, properties):  # pylint: disable=unused-argument
         response = self._invoke_request(data=json.dumps({"properties": properties}))
         if check_if_success(
             response, UpdateError(f"eliminate edge failed: {str(response.content)}")
@@ -215,7 +215,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     @router.http("GET", "graph/edges/{edge_id}")
-    def getEdgeById(self, edge_id):
+    def getEdgeById(self, edge_id):  # pylint: disable=unused-argument
         response = self._invoke_request()
         if check_if_success(
             response, NotFoundError(f"not found edge: {str(response.content)}")
@@ -262,7 +262,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     @router.http("DELETE", "graph/edges/{edge_id}")
-    def removeEdgeById(self, edge_id):
+    def removeEdgeById(self, edge_id):  # pylint: disable=unused-argument
         response = self._invoke_request()
         if check_if_success(
             response, RemoveError(f"remove edge failed: {str(response.content)}")

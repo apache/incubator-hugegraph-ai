@@ -34,7 +34,9 @@ def init_log(log_file="logs/output.log"):
     log.setLevel(logging.DEBUG)
 
     # Create a handler for writing to log file
-    file_handler = TimedRotatingFileHandler(log_file, when='midnight', interval=1, backupCount=3, encoding='utf-8')
+    file_handler = TimedRotatingFileHandler(
+        log_file, when="midnight", interval=1, backupCount=3, encoding="utf-8"
+    )
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT))
     log.addHandler(file_handler)
@@ -46,7 +48,7 @@ def init_log(log_file="logs/output.log"):
             "INFO": "\033[0;32m",  # Green
             "WARNING": "\033[0;33m",  # Yellow
             "ERROR": "\033[0;31m",  # Red
-            "CRITICAL": "\033[0;41m"  # Red background
+            "CRITICAL": "\033[0;41m",  # Red background
         }
 
         def emit(self, record):
@@ -72,4 +74,4 @@ def init_log(log_file="logs/output.log"):
 
 
 # Default logger configuration
-log = init_log()
+logger = init_log()

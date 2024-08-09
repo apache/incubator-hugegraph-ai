@@ -25,7 +25,7 @@ from pyhugegraph.utils.util import check_if_success
 class TraverserManager(HugeParamsBase):
 
     @router.http("GET", 'traversers/kout?source="{source_id}"&max_depth={max_depth}')
-    def k_out(self, source_id, max_depth):
+    def k_out(self, source_id, max_depth):  # pylint: disable=unused-argument
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
@@ -34,7 +34,7 @@ class TraverserManager(HugeParamsBase):
     @router.http(
         "GET", 'traversers/kneighbor?source="{source_id}"&max_depth={max_depth}'
     )
-    def k_neighbor(self, source_id, max_depth):
+    def k_neighbor(self, source_id, max_depth):  # pylint: disable=unused-argument
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
@@ -43,7 +43,7 @@ class TraverserManager(HugeParamsBase):
     @router.http(
         "GET", 'traversers/sameneighbors?vertex="{vertex_id}"&other="{other_id}"'
     )
-    def same_neighbors(self, vertex_id, other_id):
+    def same_neighbors(self, vertex_id, other_id):  # pylint: disable=unused-argument
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
@@ -52,7 +52,9 @@ class TraverserManager(HugeParamsBase):
     @router.http(
         "GET", 'traversers/jaccardsimilarity?vertex="{vertex_id}"&other="{other_id}"'
     )
-    def jaccard_similarity(self, vertex_id, other_id):
+    def jaccard_similarity(
+        self, vertex_id, other_id  # pylint: disable=unused-argument
+    ):
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
@@ -62,7 +64,9 @@ class TraverserManager(HugeParamsBase):
         "GET",
         'traversers/shortestpath?source="{source_id}"&target="{target_id}"&max_depth={max_depth}',
     )
-    def shortest_path(self, source_id, target_id, max_depth):
+    def shortest_path(
+        self, source_id, target_id, max_depth  # pylint: disable=unused-argument
+    ):
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
@@ -72,7 +76,9 @@ class TraverserManager(HugeParamsBase):
         "GET",
         'traversers/allshortestpaths?source="{source_id}"&target="{target_id}"&max_depth={max_depth}',
     )
-    def all_shortest_paths(self, source_id, target_id, max_depth):
+    def all_shortest_paths(
+        self, source_id, target_id, max_depth  # pylint: disable=unused-argument
+    ):
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
@@ -82,7 +88,9 @@ class TraverserManager(HugeParamsBase):
         "GET",
         'traversers/weightedshortestpath?source="{source_id}"&target="{target_id}"&weight={weight}&max_depth={max_depth}',
     )
-    def weighted_shortest_path(self, source_id, target_id, weight, max_depth):
+    def weighted_shortest_path(
+        self, source_id, target_id, weight, max_depth  # pylint: disable=unused-argument
+    ):
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
@@ -92,7 +100,9 @@ class TraverserManager(HugeParamsBase):
         "GET",
         'traversers/singlesourceshortestpath?source="{source_id}"&max_depth={max_depth}',
     )
-    def single_source_shortest_path(self, source_id, max_depth):
+    def single_source_shortest_path(
+        self, source_id, max_depth  # pylint: disable=unused-argument
+    ):
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
@@ -126,7 +136,7 @@ class TraverserManager(HugeParamsBase):
         "GET",
         'traversers/paths?source="{source_id}"&target="{target_id}"&max_depth={max_depth}',
     )
-    def paths(self, source_id, target_id, max_depth):
+    def paths(self, source_id, target_id, max_depth):  # pylint: disable=unused-argument
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
@@ -170,7 +180,9 @@ class TraverserManager(HugeParamsBase):
         "GET",
         'traversers/crosspoints?source="{source_id}"&target="{target_id}"&max_depth={max_depth}',
     )
-    def crosspoints(self, source_id, target_id, max_depth):
+    def crosspoints(
+        self, source_id, target_id, max_depth  # pylint: disable=unused-argument
+    ):
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
@@ -200,14 +212,14 @@ class TraverserManager(HugeParamsBase):
         return {}
 
     @router.http("GET", 'traversers/rings?source="{source_id}"&max_depth={max_depth}')
-    def rings(self, source_id, max_depth):
+    def rings(self, source_id, max_depth):  # pylint: disable=unused-argument
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     @router.http("GET", 'traversers/rays?source="{source_id}"&max_depth={max_depth}')
-    def rays(self, source_id, max_depth):
+    def rays(self, source_id, max_depth):  # pylint: disable=unused-argument
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()

@@ -23,6 +23,7 @@ import threading
 
 from abc import ABC
 from typing import Any, Callable, Dict, TYPE_CHECKING
+from pyhugegraph.utils.log import logger
 
 if TYPE_CHECKING:
     from pyhugegraph.api.common import HGraphContext
@@ -115,7 +116,7 @@ def http(method: str, path: str) -> Callable:
 
 class HGraphRouter(ABC):
 
-    def _invoke_request(self, **kwargs: Any):
+    def _invoke_request(self, _template: dict = None, **kwargs: Any):
         """
         Make an HTTP request using the stored partial request function.
 
@@ -127,4 +128,7 @@ class HGraphRouter(ABC):
         """
         frame = inspect.currentframe().f_back
         fname = frame.f_code.co_name
+        logger.debug(
+            f"Invoke request: {str(self)}.{fname}"  # pylint: disable=logging-fstring-interpolation
+        )
         return getattr(self, f"_{fname}_request")(**kwargs)

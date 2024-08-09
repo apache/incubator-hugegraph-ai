@@ -16,13 +16,15 @@
 # under the License.
 
 import requests
+import traceback
+
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from urllib.parse import urljoin
-
 from typing import Any, Optional
 from pyhugegraph.utils.constants import Constants
 from pyhugegraph.utils.huge_config import HGraphConfig
+from pyhugegraph.utils.log import logger
 
 
 class HGraphSession:
@@ -66,11 +68,11 @@ class HGraphSession:
         self._session.mount("http://", adapter)
         self._session.mount("https://", adapter)
         self._session.keep_alive = False
-        # logger.debug(
-        #     "Session configured with retries=%s and backoff_factor=%s",
-        #     self.retries,
-        #     self.backoff_factor,
-        # )
+        logger.debug(
+            "Session configured with retries=%s and backoff_factor=%s",
+            self._retries,
+            self._backoff_factor,
+        )
 
     def resolve(self, path: str):
         """
@@ -101,18 +103,35 @@ class HGraphSession:
         return urljoin(url, path).strip("/")
 
     def close(self):
+        """
+        closes the session.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        """
         self._session.close()
 
     def request(self, path: str, method: str = "GET", **kwargs: Any):
         try:
-            # print(method, self.resolve(path))
+            url = self.resolve(path)
             response = getattr(self._session, method.lower())(
-                self.resolve(path),
+                url,
                 auth=self._auth,
                 headers=self._headers,
                 timeout=self._timeout,
                 **kwargs,
             )
+            # print(response.json())
+            response.raise_for_status()
             return response
-        except requests.RequestException as e:
-            raise
+
+        except requests.exceptions.HTTPError as e:
+            details = response.json()["exception"]
+            logger.error(f"{e}\nServer Exception: {details}")
+
+        except Exception as e:
+            logger.error(traceback.format_exc())

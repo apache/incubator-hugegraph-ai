@@ -18,6 +18,7 @@
 
 import json
 
+from typing import Optional, Dict
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils.exceptions import NotFoundError
 from pyhugegraph.utils import huge_router as router
@@ -35,7 +36,9 @@ class AuthManager(HugeParamsBase):
         return []
 
     @router.http("POST", "auth/users")
-    def create_user(self, user_name, user_password, user_phone=None, user_email=None):
+    def create_user(
+        self, user_name, user_password, user_phone=None, user_email=None
+    ) -> Optional[Dict]:
         data = {
             "user_name": user_name,
             "user_password": user_password,
@@ -48,7 +51,7 @@ class AuthManager(HugeParamsBase):
         return {}
 
     @router.http("DELETE", "auth/users/{user_id}")
-    def delete_user(self, user_id):
+    def delete_user(self, user_id) -> Optional[Dict]:  # pylint: disable=unused-argument
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             if response.status_code != 204:
@@ -58,12 +61,12 @@ class AuthManager(HugeParamsBase):
     @router.http("PUT", "auth/users/{user_id}")
     def modify_user(
         self,
-        user_id,
+        user_id,  # pylint: disable=unused-argument
         user_name=None,
         user_password=None,
         user_phone=None,
         user_email=None,
-    ):
+    ) -> Optional[Dict]:
         data = {
             "user_name": user_name,
             "user_password": user_password,
@@ -76,14 +79,14 @@ class AuthManager(HugeParamsBase):
         return {}
 
     @router.http("GET", "auth/users/{user_id}")
-    def get_user(self, user_id):
+    def get_user(self, user_id) -> Optional[Dict]:  # pylint: disable=unused-argument
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     @router.http("GET", "auth/groups")
-    def list_groups(self, limit=None):
+    def list_groups(self, limit=None) -> Optional[Dict]:
         params = {"limit": limit} if limit is not None else {}
         response = self._invoke_request(params=params)
         if check_if_success(response, NotFoundError(response.content)):
@@ -91,7 +94,7 @@ class AuthManager(HugeParamsBase):
         return []
 
     @router.http("POST", "auth/groups")
-    def create_group(self, group_name, group_description=None):
+    def create_group(self, group_name, group_description=None) -> Optional[Dict]:
         data = {"group_name": group_name, "group_description": group_description}
         response = self._invoke_request(data=json.dumps(data))
         if check_if_success(response, NotFoundError(response.content)):
@@ -99,7 +102,9 @@ class AuthManager(HugeParamsBase):
         return {}
 
     @router.http("DELETE", "auth/groups/{group_id}")
-    def delete_group(self, group_id):
+    def delete_group(
+        self, group_id  # pylint: disable=unused-argument
+    ) -> Optional[Dict]:
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             if response.status_code != 204:
@@ -107,7 +112,12 @@ class AuthManager(HugeParamsBase):
         return {}
 
     @router.http("PUT", "auth/groups/{group_id}")
-    def modify_group(self, group_id, group_name=None, group_description=None):
+    def modify_group(
+        self,
+        group_id,  # pylint: disable=unused-argument
+        group_name=None,
+        group_description=None,
+    ) -> Optional[Dict]:
         data = {"group_name": group_name, "group_description": group_description}
         response = self._invoke_request(data=json.dumps(data))
         if check_if_success(response, NotFoundError(response.content)):
@@ -115,14 +125,14 @@ class AuthManager(HugeParamsBase):
         return {}
 
     @router.http("GET", "auth/groups/{group_id}")
-    def get_group(self, group_id):
+    def get_group(self, group_id) -> Optional[Dict]:  # pylint: disable=unused-argument
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     @router.http("POST", "auth/accesses")
-    def grant_accesses(self, group_id, target_id, access_permission):
+    def grant_accesses(self, group_id, target_id, access_permission) -> Optional[Dict]:
         data = {
             "group": group_id,
             "target": target_id,
@@ -134,12 +144,16 @@ class AuthManager(HugeParamsBase):
         return {}
 
     @router.http("DELETE", "auth/accesses/{access_id}")
-    def revoke_accesses(self, access_id):
+    def revoke_accesses(
+        self, access_id  # pylint: disable=unused-argument
+    ) -> Optional[Dict]:
         response = self._invoke_request()
         check_if_success(response, NotFoundError(response.content))
 
     @router.http("PUT", "auth/accesses/{access_id}")
-    def modify_accesses(self, access_id, access_description):
+    def modify_accesses(
+        self, access_id, access_description  # pylint: disable=unused-argument
+    ) -> Optional[Dict]:
         # The permission of access can\'t be updated
         data = {"access_description": access_description}
         response = self._invoke_request(data=json.dumps(data))
@@ -148,21 +162,25 @@ class AuthManager(HugeParamsBase):
         return {}
 
     @router.http("GET", "auth/accesses/{access_id}")
-    def get_accesses(self, access_id):
+    def get_accesses(
+        self, access_id  # pylint: disable=unused-argument
+    ) -> Optional[Dict]:
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     @router.http("GET", "auth/accesses")
-    def list_accesses(self):
+    def list_accesses(self) -> Optional[Dict]:
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     @router.http("POST", "auth/targets")
-    def create_target(self, target_name, target_graph, target_url, target_resources):
+    def create_target(
+        self, target_name, target_graph, target_url, target_resources
+    ) -> Optional[Dict]:
         data = {
             "target_name": target_name,
             "target_graph": target_graph,
@@ -175,14 +193,19 @@ class AuthManager(HugeParamsBase):
         return {}
 
     @router.http("DELETE", "auth/targets/{target_id}")
-    def delete_target(self, target_id):
+    def delete_target(self, target_id) -> None:  # pylint: disable=unused-argument
         response = self._invoke_request()
         check_if_success(response, NotFoundError(response.content))
 
     @router.http("PUT", "auth/targets/{target_id}")
     def update_target(
-        self, target_id, target_name, target_graph, target_url, target_resources
-    ):
+        self,
+        target_id,  # pylint: disable=unused-argument
+        target_name,
+        target_graph,
+        target_url,
+        target_resources,
+    ) -> Optional[Dict]:
         data = {
             "target_name": target_name,
             "target_graph": target_graph,
@@ -195,21 +218,23 @@ class AuthManager(HugeParamsBase):
         return {}
 
     @router.http("GET", "auth/targets/{target_id}")
-    def get_target(self, target_id, response=None):
+    def get_target(
+        self, target_id, response=None  # pylint: disable=unused-argument
+    ) -> Optional[Dict]:
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     @router.http("GET", "auth/targets")
-    def list_targets(self):
+    def list_targets(self) -> Optional[Dict]:
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     @router.http("POST", "auth/belongs")
-    def create_belong(self, user_id, group_id):
+    def create_belong(self, user_id, group_id) -> Optional[Dict]:
         data = {"user": user_id, "group": group_id}
         response = self._invoke_request(data=json.dumps(data))
         if check_if_success(response, NotFoundError(response.content)):
@@ -217,12 +242,14 @@ class AuthManager(HugeParamsBase):
         return {}
 
     @router.http("DELETE", "auth/belongs/{belong_id}")
-    def delete_belong(self, belong_id):
+    def delete_belong(self, belong_id) -> None:  # pylint: disable=unused-argument
         response = self._invoke_request()
         check_if_success(response, NotFoundError(response.content))
 
     @router.http("PUT", "auth/belongs/{belong_id}")
-    def update_belong(self, belong_id, description):
+    def update_belong(
+        self, belong_id, description  # pylint: disable=unused-argument
+    ) -> Optional[Dict]:
         data = {"belong_description": description}
         response = self._invoke_request(data=json.dumps(data))
         if check_if_success(response, NotFoundError(response.content)):
@@ -230,14 +257,16 @@ class AuthManager(HugeParamsBase):
         return {}
 
     @router.http("GET", "auth/belongs/{belong_id}")
-    def get_belong(self, belong_id):
+    def get_belong(
+        self, belong_id  # pylint: disable=unused-argument
+    ) -> Optional[Dict]:
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     @router.http("GET", "auth/belongs")
-    def list_belongs(self):
+    def list_belongs(self) -> Optional[Dict]:
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()

@@ -26,14 +26,14 @@ from pyhugegraph.utils.util import check_if_success
 class VariableManager(HugeParamsBase):
 
     @router.http("PUT", "variables/{key}")
-    def set(self, key, value):
+    def set(self, key, value):  # pylint: disable=unused-argument
         response = self._invoke_request(data=json.dumps({"data": value}))
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
     @router.http("GET", "variables/{key}")
-    def get(self, key):
+    def get(self, key):  # pylint: disable=unused-argument
         response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
@@ -47,6 +47,6 @@ class VariableManager(HugeParamsBase):
         return {}
 
     @router.http("DELETE", "variables/{key}")
-    def remove(self, key):
+    def remove(self, key):  # pylint: disable=unused-argument
         response = self._invoke_request()
         check_if_success(response, NotFoundError(response.content))

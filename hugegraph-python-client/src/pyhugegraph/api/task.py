@@ -35,19 +35,19 @@ class TaskManager(HugeParamsBase):
         return response.json()
 
     @router.http("GET", "tasks/{task_id}")
-    def get_task(self, task_id):
+    def get_task(self, task_id):  # pylint: disable=unused-argument
         response = self._invoke_request()
         check_if_success(response, NotFoundError(response.content))
         return response.json()
 
     @router.http("DELETE", "tasks/{task_id}")
-    def delete_task(self, task_id):
+    def delete_task(self, task_id):  # pylint: disable=unused-argument
         response = self._invoke_request()
         check_if_success(response, NotFoundError(response.content))
         return response.status_code
 
     @router.http("PUT", "tasks/{task_id}?action=cancel")
-    def cancel_task(self, task_id):
+    def cancel_task(self, task_id):  # pylint: disable=unused-argument
         response = self._invoke_request()
         check_if_success(response, NotFoundError(response.content))
         return response.json()
