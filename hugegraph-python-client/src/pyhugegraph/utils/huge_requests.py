@@ -18,15 +18,101 @@
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+from urllib.parse import urljoin
+
+from typing import Any, Optional
+from pyhugegraph.utils.constants import Constants
+from pyhugegraph.utils.huge_config import HGraphConfig
 
 
-class HugeSession:
-    @staticmethod
-    def new_session():
-        session = requests.Session()
-        retry = Retry(connect=5, backoff_factor=1)
-        adapter = HTTPAdapter(max_retries=retry)
-        session.mount("http://", adapter)
-        session.mount("https://", adapter)
-        session.keep_alive = False
-        return session
+class HGraphSession:
+    def __init__(
+        self,
+        cfg: HGraphConfig,
+        retries: int = 5,
+        backoff_factor: int = 1,
+        status_forcelist=(500, 502, 504),
+        session: Optional[requests.Session] = None,
+    ):
+        """
+        Initialize the HGraphSession object.
+        :param retries: The maximum number of retries.
+        :param backoff_factor: The backoff factor, used to calculate the interval between retries.
+        :param status_forcelist: A list of status codes that trigger a retry.
+        :param session: An optional requests.Session instance, for testing or advanced use cases.
+        """
+        self._cfg = cfg
+        self._retries = retries
+        self._backoff_factor = backoff_factor
+        self._status_forcelist = status_forcelist
+        self._auth = (cfg.username, cfg.password)
+        self._headers = {"Content-Type": Constants.HEADER_CONTENT_TYPE}
+        self._timeout = cfg.timeout
+        self._session = session if session else requests.Session()
+        self.__configure_session()
+
+    def __configure_session(self):
+        """
+        Configure the retry strategy and connection adapter for the session.
+        """
+        retry_strategy = Retry(
+            total=self._retries,
+            read=self._retries,
+            connect=self._retries,
+            backoff_factor=self._backoff_factor,
+            status_forcelist=self._status_forcelist,
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self._session.mount("http://", adapter)
+        self._session.mount("https://", adapter)
+        self._session.keep_alive = False
+        # logger.debug(
+        #     "Session configured with retries=%s and backoff_factor=%s",
+        #     self.retries,
+        #     self.backoff_factor,
+        # )
+
+    def resolve(self, path: str):
+        """
+        Constructs the full URL for the given pathinfo based on the session context and API version.
+
+        :param path: The pathinfo to be appended to the base URL.
+        :return: The fully resolved URL as a string.
+
+        When path is "/some/things":
+        - Since path starts with "/", it is considered an absolute path, and urljoin will replace the path part of the base URL.
+        - Assuming the base URL is "http://127.0.0.1:8000/graphspaces/default/graphs/test_graph/"
+        - The result will be "http://127.0.0.1:8000/some/things"
+
+        When path is "some/things":
+        - Since path is a relative path, urljoin will append it to the path part of the base URL.
+        - Assuming the base URL is "http://127.0.0.1:8000/graphspaces/default/graphs/test_graph/"
+        - The result will be "http://127.0.0.1:8000/graphspaces/default/graphs/test_graph/some/things"
+        """
+
+        url = f"http://{self._cfg.ip}:{self._cfg.port}/"
+        if self._cfg.gs_supported:
+            url = urljoin(
+                url,
+                f"graphspaces/{self._cfg.graphspace}/graphs/{self._cfg.graph_name}/",
+            )
+        else:
+            url = urljoin(url, f"graphs/{self._cfg.graph_name}/")
+        return urljoin(url, path).strip("/")
+
+    def close(self):
+        self._session.close()
+
+    def request(self, path: str, method: str = "GET", **kwargs: Any):
+        try:
+            # print(method, self.resolve(path))
+            response = getattr(self._session, method.lower())(
+                self.resolve(path),
+                auth=self._auth,
+                headers=self._headers,
+                timeout=self._timeout,
+                **kwargs,
+            )
+            return response
+        except requests.RequestException as e:
+            raise

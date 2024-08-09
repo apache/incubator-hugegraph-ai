@@ -14,8 +14,10 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
+from typing import Optional
+
 from pyhugegraph.api.auth import AuthManager
-from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.api.graph import GraphManager
 from pyhugegraph.api.graphs import GraphsManager
 from pyhugegraph.api.gremlin import GremlinManager
@@ -25,60 +27,74 @@ from pyhugegraph.api.task import TaskManager
 from pyhugegraph.api.traverser import TraverserManager
 from pyhugegraph.api.variable import VariableManager
 from pyhugegraph.api.version import VersionManager
-from pyhugegraph.structure.graph_instance import GraphInstance
+from pyhugegraph.utils.huge_config import HGraphConfig
+from pyhugegraph.utils.huge_requests import HGraphSession
 
 
-class PyHugeClient(HugeParamsBase):
-    def __init__(self, ip, port, graph, user, pwd, timeout=10):
-        self._graph_instance = GraphInstance(ip, port, graph, user, pwd, timeout)
-        super().__init__(self._graph_instance)
-        self._schema = None
-        self._graph = None
-        self._graphs = None
-        self._gremlin = None
-        self._variable = None
-        self._auth = None
-        self._task = None
-        self._metrics = None
-        self._traverser = None
-        self._version = None
+def manager_builder(fn):
+    attr_name = "_lazy_" + fn.__name__
 
-    def schema(self):
-        self._schema = self._schema or SchemaManager(self._graph_instance)
-        return self._schema
+    def wrapper(self: "PyHugeClient"):
+        if not hasattr(self, attr_name):
+            session = HGraphSession(self._cfg)
+            setattr(self, attr_name, fn(self)(session))
+        return getattr(self, attr_name)
 
-    def gremlin(self):
-        self._gremlin = self._gremlin or GremlinManager(self._graph_instance)
-        return self._gremlin
+    return wrapper
 
-    def graph(self):
-        self._graph = self._graph or GraphManager(self._graph_instance)
-        return self._graph
 
-    def graphs(self):
-        self._graphs = self._graphs or GraphsManager(self._graph_instance)
-        return self._graphs
+class PyHugeClient:
+    def __init__(
+        self,
+        ip: str,
+        port: str,
+        graph: str,
+        user: str,
+        pwd: str,
+        timeout: int = 10,
+        gs: Optional[str] = None,
+    ):
+        self._cfg = HGraphConfig(ip, port, user, pwd, graph, gs, timeout)
 
-    def variable(self):
-        self._variable = self._variable or VariableManager(self._graph_instance)
-        return self._variable
+    @manager_builder
+    def schema(self) -> "SchemaManager":
+        return SchemaManager
 
-    def auth(self):
-        self._auth = self._auth or AuthManager(self._graph_instance)
-        return self._auth
+    @manager_builder
+    def gremlin(self) -> "GremlinManager":
+        return GremlinManager
 
-    def task(self):
-        self._task = self._task or TaskManager(self._graph_instance)
-        return self._task
+    @manager_builder
+    def graph(self) -> "GraphManager":
+        return GraphManager
 
-    def metrics(self):
-        self._metrics = self._metrics or MetricsManager(self._graph_instance)
-        return self._metrics
+    @manager_builder
+    def graphs(self) -> "GraphsManager":
+        return GraphsManager
 
-    def traverser(self):
-        self._traverser = self._traverser or TraverserManager(self._graph_instance)
-        return self._traverser
+    @manager_builder
+    def variable(self) -> "VariableManager":
+        return VariableManager
 
-    def version(self):
-        self._version = self._version or VersionManager(self._graph_instance)
-        return self._version
+    @manager_builder
+    def auth(self) -> "AuthManager":
+        return AuthManager
+
+    @manager_builder
+    def task(self) -> "TaskManager":
+        return TaskManager
+
+    @manager_builder
+    def metrics(self) -> "MetricsManager":
+        return MetricsManager
+
+    @manager_builder
+    def traverser(self) -> "TraverserManager":
+        return TraverserManager
+
+    @manager_builder
+    def version(self) -> "VersionManager":
+        return VersionManager
+
+    def __repr__(self) -> str:
+        return f"{self._cfg}"

@@ -19,58 +19,34 @@ import json
 
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils.exceptions import NotFoundError
-from pyhugegraph.utils.huge_requests import HugeSession
+from pyhugegraph.utils import huge_router as router
 from pyhugegraph.utils.util import check_if_success
 
 
 class VariableManager(HugeParamsBase):
-    def __init__(self, graph_instance):
-        super().__init__(graph_instance)
-        self.__session = HugeSession.new_session()
 
-    def close(self):
-        if self.__session:
-            self.__session.close()
-
+    @router.http("PUT", "variables/{key}")
     def set(self, key, value):
-        url = f"{self._host}/graphs/{self._graph_name}/variables/{key}"
-        data = {"data": value}
-
-        response = self.__session.put(
-            url,
-            data=json.dumps(data),
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._invoke_request(data=json.dumps({"data": value}))
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("GET", "variables/{key}")
     def get(self, key):
-        url = f"{self._host}/graphs/{self._graph_name}/variables/{key}"
-
-        response = self.__session.get(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("GET", "variables")
     def all(self):
-        url = f"{self._host}/graphs/{self._graph_name}/variables"
-
-        response = self.__session.get(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("DELETE", "variables/{key}")
     def remove(self, key):
-        url = f"{self._host}/graphs/{self._graph_name}/variables/{key}"
-
-        response = self.__session.delete(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+        response = self._invoke_request()
         check_if_success(response, NotFoundError(response.content))

@@ -14,9 +14,14 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from pyhugegraph.utils.constants import Constants
 
 
+from abc import ABC
+from pyhugegraph.utils.huge_router import HGraphRouter
+from pyhugegraph.utils.huge_requests import HGraphSession
+
+
+# todo: rename -> HGraphMetaData or delete
 class ParameterHolder:
     def __init__(self):
         self._dic = {}
@@ -36,19 +41,20 @@ class ParameterHolder:
         return self._dic.keys()
 
 
-class HugeParamsBase:
-    def __init__(self, graph_instance):
-        self._graph_instance = graph_instance
-        self._ip = graph_instance.ip
-        self._port = graph_instance.port
-        self._user = graph_instance.user_name
-        self._pwd = graph_instance.passwd
-        self._host = f"http://{graph_instance.ip}:{graph_instance.port}"
-        self._auth = (graph_instance.user_name, graph_instance.passwd)
-        self._graph_name = graph_instance.graph_name
+class HGraphContext(ABC):
+    def __init__(self, sess: HGraphSession) -> None:
+        self._sess = sess
+        self._cache = {}  # todo: move parameter_holder to cache
+
+    def close(self):
+        self._sess.close()
+
+
+# todo: rename -> HGraphModule | HGraphRouterable | HGraphModel
+class HugeParamsBase(HGraphContext, HGraphRouter):
+    def __init__(self, sess: HGraphSession) -> None:
+        super().__init__(sess)
         self._parameter_holder = None
-        self._headers = {"Content-Type": Constants.HEADER_CONTENT_TYPE}
-        self._timeout = graph_instance.timeout
 
     def add_parameter(self, key, value):
         self._parameter_holder.set(key, value)

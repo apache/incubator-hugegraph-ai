@@ -20,67 +20,42 @@ import json
 
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils.exceptions import NotFoundError
-from pyhugegraph.utils.huge_requests import HugeSession
+from pyhugegraph.utils import huge_router as router
 from pyhugegraph.utils.util import check_if_success
 
 
 class AuthManager(HugeParamsBase):
-    def __init__(self, graph_instance):
-        super().__init__(graph_instance)
-        self.__session = HugeSession.new_session()
 
-    def close(self):
-        if self.__session:
-            self.__session.close()
-
+    @router.http("GET", "auth/users")
     def list_users(self, limit=None):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/users"
-        params = {}
-        if limit is not None:
-            params["limit"] = limit
-        response = self.__session.get(
-            url,
-            params=params,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        params = {"limit": limit} if limit is not None else {}
+        response = self._invoke_request(params=params)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return []
 
+    @router.http("POST", "auth/users")
     def create_user(self, user_name, user_password, user_phone=None, user_email=None):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/users"
         data = {
             "user_name": user_name,
             "user_password": user_password,
             "user_phone": user_phone,
             "user_email": user_email,
         }
-        response = self.__session.post(
-            url,
-            data=json.dumps(data),
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._invoke_request(data=json.dumps(data))
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("DELETE", "auth/users/{user_id}")
     def delete_user(self, user_id):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/users/{user_id}"
-        response = self.__session.delete(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             if response.status_code != 204:
                 return response.json()
         return {}
 
+    @router.http("PUT", "auth/users/{user_id}")
     def modify_user(
         self,
         user_id,
@@ -89,275 +64,181 @@ class AuthManager(HugeParamsBase):
         user_phone=None,
         user_email=None,
     ):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/users/{user_id}"
         data = {
             "user_name": user_name,
             "user_password": user_password,
             "user_phone": user_phone,
             "user_email": user_email,
         }
-        response = self.__session.put(
-            url,
-            data=json.dumps(data),
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._invoke_request(data=json.dumps(data))
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("GET", "auth/users/{user_id}")
     def get_user(self, user_id):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/users/{user_id}"
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("GET", "auth/groups")
     def list_groups(self, limit=None):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/groups"
-        params = {}
-        if limit is not None:
-            params["limit"] = limit
-        response = self.__session.get(
-            url,
-            params=params,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        params = {"limit": limit} if limit is not None else {}
+        response = self._invoke_request(params=params)
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return []
 
+    @router.http("POST", "auth/groups")
     def create_group(self, group_name, group_description=None):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/groups"
         data = {"group_name": group_name, "group_description": group_description}
-        response = self.__session.post(
-            url,
-            data=json.dumps(data),
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._invoke_request(data=json.dumps(data))
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("DELETE", "auth/groups/{group_id}")
     def delete_group(self, group_id):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/groups/{group_id}"
-        response = self.__session.delete(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             if response.status_code != 204:
                 return response.json()
         return {}
 
+    @router.http("PUT", "auth/groups/{group_id}")
     def modify_group(self, group_id, group_name=None, group_description=None):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/groups/{group_id}"
         data = {"group_name": group_name, "group_description": group_description}
-        response = self.__session.put(
-            url,
-            data=json.dumps(data),
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._invoke_request(data=json.dumps(data))
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("GET", "auth/groups/{group_id}")
     def get_group(self, group_id):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/groups/{group_id}"
-        response = self.__session.get(
-            url,
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("POST", "auth/accesses")
     def grant_accesses(self, group_id, target_id, access_permission):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/accesses"
         data = {
             "group": group_id,
             "target": target_id,
             "access_permission": access_permission,
         }
-        response = self.__session.post(
-            url,
-            data=json.dumps(data),
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._invoke_request(data=json.dumps(data))
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("DELETE", "auth/accesses/{access_id}")
     def revoke_accesses(self, access_id):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/accesses/{access_id}"
-        response = self.__session.delete(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+        response = self._invoke_request()
         check_if_success(response, NotFoundError(response.content))
 
+    @router.http("PUT", "auth/accesses/{access_id}")
     def modify_accesses(self, access_id, access_description):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/accesses/{access_id}"
         # The permission of access can\'t be updated
         data = {"access_description": access_description}
-        response = self.__session.put(
-            url,
-            data=json.dumps(data),
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._invoke_request(data=json.dumps(data))
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("GET", "auth/accesses/{access_id}")
     def get_accesses(self, access_id):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/accesses/{access_id}"
-        response = self.__session.get(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("GET", "auth/accesses")
     def list_accesses(self):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/accesses"
-        response = self.__session.get(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("POST", "auth/targets")
     def create_target(self, target_name, target_graph, target_url, target_resources):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/targets"
         data = {
             "target_name": target_name,
             "target_graph": target_graph,
             "target_url": target_url,
             "target_resources": target_resources,
         }
-        response = self.__session.post(
-            url,
-            data=json.dumps(data),
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._invoke_request(data=json.dumps(data))
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("DELETE", "auth/targets/{target_id}")
     def delete_target(self, target_id):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/targets/{target_id}"
-        response = self.__session.delete(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+        response = self._invoke_request()
         check_if_success(response, NotFoundError(response.content))
 
-    def update_target(self, target_id, target_name, target_graph, target_url, target_resources):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/targets/{target_id}"
+    @router.http("PUT", "auth/targets/{target_id}")
+    def update_target(
+        self, target_id, target_name, target_graph, target_url, target_resources
+    ):
         data = {
             "target_name": target_name,
             "target_graph": target_graph,
             "target_url": target_url,
             "target_resources": target_resources,
         }
-        response = self.__session.put(
-            url,
-            data=json.dumps(data),
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._invoke_request(data=json.dumps(data))
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
-    def get_target(self, target_id):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/targets/{target_id}"
-        response = self.__session.get(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+    @router.http("GET", "auth/targets/{target_id}")
+    def get_target(self, target_id, response=None):
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("GET", "auth/targets")
     def list_targets(self):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/targets"
-        response = self.__session.get(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("POST", "auth/belongs")
     def create_belong(self, user_id, group_id):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/belongs"
         data = {"user": user_id, "group": group_id}
-        response = self.__session.post(
-            url,
-            data=json.dumps(data),
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._invoke_request(data=json.dumps(data))
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("DELETE", "auth/belongs/{belong_id}")
     def delete_belong(self, belong_id):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/belongs/{belong_id}"
-        response = self.__session.delete(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+        response = self._invoke_request()
         check_if_success(response, NotFoundError(response.content))
 
+    @router.http("PUT", "auth/belongs/{belong_id}")
     def update_belong(self, belong_id, description):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/belongs/{belong_id}"
         data = {"belong_description": description}
-        response = self.__session.put(
-            url,
-            data=json.dumps(data),
-            auth=self._auth,
-            headers=self._headers,
-            timeout=self._timeout,
-        )
+        response = self._invoke_request(data=json.dumps(data))
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("GET", "auth/belongs/{belong_id}")
     def get_belong(self, belong_id):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/belongs/{belong_id}"
-        response = self.__session.get(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
 
+    @router.http("GET", "auth/belongs")
     def list_belongs(self):
-        url = f"{self._host}/graphs/{self._graph_name}/auth/belongs"
-        response = self.__session.get(
-            url, auth=self._auth, headers=self._headers, timeout=self._timeout
-        )
+        response = self._invoke_request()
         if check_if_success(response, NotFoundError(response.content)):
             return response.json()
         return {}
