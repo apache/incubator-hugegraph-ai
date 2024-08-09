@@ -18,7 +18,7 @@
 
 import json
 
-from typing import Optional, Callable, Dict
+from typing import Optional, Dict
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.api.schema_manage.edge_label import EdgeLabel
 from pyhugegraph.api.schema_manage.index_label import IndexLabel
