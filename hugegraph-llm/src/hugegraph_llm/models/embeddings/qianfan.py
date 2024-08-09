@@ -49,3 +49,11 @@ class QianFanEmbedding:
             texts=[text]
         )
         return response["body"]["data"][0]["embedding"]
+
+    async def async_get_text_embedding(self, text: str) -> List[float]:
+        """ Usage refer: https://cloud.baidu.com/doc/WENXINWORKSHOP/s/hlmokk9qn"""
+        response = await self.client.ado(
+            model=self.embedding_model_name,
+            texts=[text]
+        )
+        return response["body"]["data"][0]["embedding"]

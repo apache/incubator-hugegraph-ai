@@ -58,10 +58,11 @@ class GraphRAG:
         )
         return self
 
-    def match_keyword_to_id(self):
+    def match_keyword_to_id(self, topk_per_keyword: int = 1):
         self._operators.append(
             SemanticIdQuery(
                 embedding=self._embedding,
+                topk_per_keyword=topk_per_keyword
             )
         )
         return self

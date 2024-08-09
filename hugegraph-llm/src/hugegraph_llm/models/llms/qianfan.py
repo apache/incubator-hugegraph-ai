@@ -49,6 +49,23 @@ class QianfanClient(BaseLLM):
             )
         return response.body["result"]
 
+    @retry(tries=3, delay=1)
+    async def agenerate(
+            self,
+            messages: Optional[List[Dict[str, Any]]] = None,
+            prompt: Optional[str] = None,
+    ) -> str:
+        if messages is None:
+            assert prompt is not None, "Messages or prompt must be provided."
+            messages = [{"role": "user", "content": prompt}]
+
+        response = await self.chat_comp.ado(model=self.chat_model, messages=messages)
+        if response.code != 200:
+            raise Exception(
+                f"Request failed with code {response.code}, message: {response.body['error_msg']}"
+            )
+        return response.body["result"]
+
     def generate_streaming(
             self,
             messages: Optional[List[Dict[str, Any]]] = None,

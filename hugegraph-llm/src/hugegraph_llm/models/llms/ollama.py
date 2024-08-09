@@ -29,6 +29,7 @@ class OllamaClient(BaseLLM):
     def __init__(self, model: str, host: str = "127.0.0.1", port: int = 11434, **kwargs):
         self.model = model
         self.client = ollama.Client(host=f"http://{host}:{port}", **kwargs)
+        self.async_client = ollama.AsyncClient(host=f"http://{host}:{port}", **kwargs)
 
     @retry(tries=3, delay=1)
     def generate(
@@ -42,6 +43,26 @@ class OllamaClient(BaseLLM):
             messages = [{"role": "user", "content": prompt}]
         try:
             response = self.client.chat(
+                model=self.model,
+                messages=messages,
+            )
+            return response["message"]["content"]
+        except Exception as e:
+            print(f"Retrying LLM call {e}")
+            raise e
+
+    @retry(tries=3, delay=1)
+    async def agenerate(
+            self,
+            messages: Optional[List[Dict[str, Any]]] = None,
+            prompt: Optional[str] = None,
+    ) -> str:
+        """Comment"""
+        if messages is None:
+            assert prompt is not None, "Messages or prompt must be provided."
+            messages = [{"role": "user", "content": prompt}]
+        try:
+            response = await self.async_client.chat(
                 model=self.model,
                 messages=messages,
             )

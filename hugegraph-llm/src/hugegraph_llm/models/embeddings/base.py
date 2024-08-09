@@ -60,6 +60,13 @@ class BaseEmbedding(ABC):
     ) -> List[float]:
         """Comment"""
 
+    @abstractmethod
+    async def async_get_text_embedding(
+            self,
+            text: str
+    ) -> List[float]:
+        """Comment"""
+
     @staticmethod
     def similarity(
             embedding1: Union[List[float], np.ndarray],

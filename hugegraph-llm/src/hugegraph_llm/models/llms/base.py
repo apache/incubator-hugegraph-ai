@@ -32,6 +32,14 @@ class BaseLLM(ABC):
         """Comment"""
 
     @abstractmethod
+    async def agenerate(
+            self,
+            messages: Optional[List[Dict[str, Any]]] = None,
+            prompt: Optional[str] = None,
+    ) -> str:
+        """Comment"""
+
+    @abstractmethod
     def generate_streaming(
         self,
         messages: Optional[List[Dict[str, Any]]] = None,

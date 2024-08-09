@@ -25,19 +25,20 @@ from hugegraph_llm.models.embeddings.base import BaseEmbedding
 
 
 class SemanticIdQuery:
-    def __init__(self, embedding: BaseEmbedding):
+    def __init__(self, embedding: BaseEmbedding, topk_per_keyword: int = 1):
         index_file = str(os.path.join(resource_path, settings.graph_name, "vid.faiss"))
         content_file = str(os.path.join(resource_path, settings.graph_name, "vid.pkl"))
         self.vector_index = VectorIndex.from_index_file(index_file, content_file)
         self.embedding = embedding
+        self._topk_per_keyword = topk_per_keyword
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         keywords = context["keywords"]
         graph_query_entrance = []
         for keyword in keywords:
             query_vector = self.embedding.get_text_embedding(keyword)
-            results = self.vector_index.search(query_vector, top_k=1)
+            results = self.vector_index.search(query_vector, top_k=self._topk_per_keyword)
             if results:
-                graph_query_entrance.append(results[0])
-        context["entrance_vids"] = graph_query_entrance
+                graph_query_entrance.extend(results[:self._topk_per_keyword])
+        context["entrance_vids"] = list(set(graph_query_entrance))
         return context

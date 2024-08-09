@@ -24,6 +24,9 @@ from pyhugegraph.client import PyHugeClient
 
 
 class GraphRAGQuery:
+    VERTEX_GREMLIN_QUERY_TEMPL = (
+        "g.V().hasId({keywords}).as('subj').toList()"
+    )
     ID_RAG_GREMLIN_QUERY_TEMPL = (
         "g.V().hasId({keywords}).as('subj')"
         ".repeat("
@@ -114,25 +117,29 @@ class GraphRAGQuery:
 
         if not use_id_to_match:
             keywords_str = ",".join("'" + kw + "'" for kw in keywords)
-            rag_gremlin_query_template = self.PROP_RAG_GREMLIN_QUERY_TEMPL
-            rag_gremlin_query = rag_gremlin_query_template.format(
+            rag_gremlin_query = self.PROP_RAG_GREMLIN_QUERY_TEMPL.format(
                 prop=self._prop_to_match,
                 keywords=keywords_str,
                 max_deep=self._max_deep,
                 max_items=self._max_items,
                 edge_labels=edge_labels_str,
             )
+            result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
+            knowledge: Set[str] = self._format_knowledge_from_query_result(query_result=result)
         else:
-            rag_gremlin_query_template = self.ID_RAG_GREMLIN_QUERY_TEMPL
-            rag_gremlin_query = rag_gremlin_query_template.format(
+            rag_gremlin_query = self.VERTEX_GREMLIN_QUERY_TEMPL.format(
+                keywords=entrance_vids,
+            )
+            result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
+            knowledge: Set[str] = self._format_knowledge_from_vertex(query_result=result)
+            rag_gremlin_query = self.ID_RAG_GREMLIN_QUERY_TEMPL.format(
                 keywords=entrance_vids,
                 max_deep=self._max_deep,
                 max_items=self._max_items,
                 edge_labels=edge_labels_str,
             )
-
-        result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
-        knowledge: Set[str] = self._format_knowledge_from_query_result(query_result=result)
+            result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
+            knowledge.update(self._format_knowledge_from_query_result(query_result=result))
 
         context["graph_result"] = list(knowledge)
         context["synthesize_context_head"] = (
@@ -148,6 +155,14 @@ class GraphRAGQuery:
             print("\n".join(rel for rel in context["graph_result"]) + "\033[0m")
 
         return context
+
+    def _format_knowledge_from_vertex(self, query_result: List[Any]):
+        knowledge = set()
+        for item in query_result:
+            props_str = ", ".join(f"{k}: {v}" for k, v in item["properties"].items())
+            node_str = f"{item['id']}{{{props_str}}}"
+            knowledge.add(node_str)
+        return knowledge
 
     def _format_knowledge_from_query_result(
             self,
