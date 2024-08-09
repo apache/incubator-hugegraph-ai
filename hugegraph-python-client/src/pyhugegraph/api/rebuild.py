@@ -21,6 +21,19 @@ from pyhugegraph.api.common import HugeParamsBase
 
 
 class RebuildManager(HugeParamsBase):
+    """
+    Manages the rebuilding of index, vertex, and edge labels via HTTP endpoints.
+
+    Methods:
+        rebuild_indexlabels(indexlabel: str):
+            Rebuilds the specified IndexLabel. Returns a dictionary with the task ID.
+
+        rebuild_vertexlabels(vertexlabel: str):
+            Rebuilds the specified VertexLabel. Returns a dictionary with the task ID.
+
+        rebuild_edgelabels(edgelabel: str):
+            Rebuilds the specified EdgeLabel. Returns a dictionary with the task ID.
+    """
 
     @router.http("PUT", "jobs/rebuild/indexlabels/{indexlabel}")
     def rebuild_indexlabels(self, indexlabel: str):  # pylint: disable=unused-argument
