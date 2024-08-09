@@ -17,7 +17,7 @@ release soon
 ```python
 from pyhugegraph.client import PyHugeClient
 
-client = PyHugeClient("127.0.0.1", "8080", user="admin", pwd="admin", graph="hugegraph")
+client = PyHugeClient("127.0.0.1", "8080", user="admin", pwd="admin", graph="hugegraph", gs="DEFAULT")
 
 """system"""
 print(client.get_graphinfo())

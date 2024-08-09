@@ -74,6 +74,19 @@ class HGraphSession:
             self._backoff_factor,
         )
 
+    @property
+    def cfg(self):
+        """
+        Get the configuration information of the current instance.
+
+        Args:
+            None.
+
+        Returns:
+            dict: The configuration information of the current instance.
+        """
+        return self._cfg
+
     def resolve(self, path: str):
         """
         Constructs the full URL for the given pathinfo based on the session context and API version.
@@ -115,7 +128,9 @@ class HGraphSession:
         """
         self._session.close()
 
-    def request(self, path: str, method: str = "GET", **kwargs: Any):
+    def request(self, path: str, method: str = "GET", **kwargs: Any) -> dict:
+        results = {}
+
         try:
             url = self.resolve(path)
             response = getattr(self._session, method.lower())(
@@ -125,13 +140,16 @@ class HGraphSession:
                 timeout=self._timeout,
                 **kwargs,
             )
-            # print(response.json())
             response.raise_for_status()
-            return response
+            results = response.json()
 
         except requests.exceptions.HTTPError as e:
             details = response.json()["exception"]
-            logger.error(f"{e}\nServer Exception: {details}")
+            logger.error(  # pylint: disable=logging-fstring-interpolation
+                f"{e}\nServer Exception: {details}"
+            )
 
-        except Exception as e:
+        except Exception:  # pylint: disable=broad-exception-caught
             logger.error(traceback.format_exc())
+
+        return results
