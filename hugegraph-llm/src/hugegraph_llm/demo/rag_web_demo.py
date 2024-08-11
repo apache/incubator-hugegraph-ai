@@ -50,10 +50,12 @@ def convert_bool_str(string):
     raise gr.Error(f"Invalid boolean string: {string}")
 
 
+# TODO: enhance/distinguish the "graph_rag" name to avoid confusion
 def graph_rag(text: str, raw_answer: str, vector_only_answer: str,
               graph_only_answer: str, graph_vector_answer):
     vector_search = convert_bool_str(vector_only_answer) or convert_bool_str(graph_vector_answer)
     graph_search = convert_bool_str(graph_only_answer) or convert_bool_str(graph_vector_answer)
+
     if raw_answer == "false" and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
         return "", "", "", ""
@@ -68,6 +70,7 @@ def graph_rag(text: str, raw_answer: str, vector_only_answer: str,
         graph_only_answer=convert_bool_str(graph_only_answer),
         graph_vector_answer=convert_bool_str(graph_vector_answer)
     ).run(verbose=True, query=text)
+
     try:
         context = searcher.run(verbose=True, query=text)
         return (
@@ -76,9 +79,12 @@ def graph_rag(text: str, raw_answer: str, vector_only_answer: str,
             context.get("graph_only_answer", ""),
             context.get("graph_vector_answer", "")
         )
-    except Exception as e:  # pylint: disable=broad-exception-caught
+    except ValueError as e:
         log.error(e)
         raise gr.Error(str(e))
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        log.error(e)
+        raise gr.Error(f"An unexpected error occurred: {str(e)}")
 
 
 def build_kg(file, schema, example_prompt, build_mode):  # pylint: disable=too-many-branches
