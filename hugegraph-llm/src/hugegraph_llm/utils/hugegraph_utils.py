@@ -14,15 +14,15 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
+import json
 
 from pyhugegraph.client import PyHugeClient
 from hugegraph_llm.config import settings
 
 
-def run_gremlin_query(query):
+def run_gremlin_query(query, format=False):
     res = get_hg_client().gremlin().exec(query)
-    return res
+    return json.dumps(res, indent=4, ensure_ascii=False) if format else res
 
 
 def get_hg_client():
