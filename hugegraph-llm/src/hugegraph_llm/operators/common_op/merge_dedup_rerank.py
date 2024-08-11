@@ -35,10 +35,7 @@ class MergeDedupRerank:
         self.topk = topk
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        # TODO: 逻辑应该是：
-        # 1. 分词后优先关键词匹配 vid （直接匹配）
-        # 2. 匹配不到，尝试退化模糊vid召回（并提示用户是否想问的是xxx）
-        # 3. 之后我们可以把chunk/graph加上，查询的时候可以同时查询关键词对应的chunk，然后一起综合（进阶）
+        # TODO: exact > fuzzy; vertex > 1-depth-neighbour > 2-depth-neighbour; priority vertices
         query = context.get("query")
 
         vector_result = context.get("vector_result", [])
