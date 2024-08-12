@@ -49,6 +49,17 @@ class HGraphContext(ABC):
     def close(self):
         self._sess.close()
 
+    @property
+    def session(self):
+        """
+        Get session.
+
+        Returns:
+        -------
+            HGraphSession: session
+        """
+        return self._sess
+
 
 # todo: rename -> HGraphModule | HGraphRouterable | HGraphModel
 class HugeParamsBase(HGraphContext, HGraphRouter):

@@ -52,7 +52,8 @@ class HGraphRouterManager(metaclass=SingletonBase):
     def register(self, key, path):
         self._routers.update({key: path})
 
-    def get_routers(self):
+    @property
+    def routers(self):
         return self._routers
 
     def __repr__(self) -> str:
@@ -100,10 +101,10 @@ def http(method: str, path: str) -> Callable:
             else:
                 formatted_path = path
 
-            # todo: If possible, reduce unnecessary multiple creations.
-            cache_key = (func.__qualname__, method, formatted_path)
             # Use functools.partial to create a partial function for making requests
-            make_request = functools.partial(self._sess.request, formatted_path, method)
+            make_request = functools.partial(
+                self.session.request, formatted_path, method
+            )
             # Store the partial function on the instance
             setattr(self, f"_{func.__name__}_request", make_request)
 
@@ -116,7 +117,7 @@ def http(method: str, path: str) -> Callable:
 
 class HGraphRouter(ABC):
 
-    def _invoke_request(self, _template: dict = None, **kwargs: Any):
+    def _invoke_request(self, **kwargs: Any):
         """
         Make an HTTP request using the stored partial request function.
 
@@ -128,7 +129,7 @@ class HGraphRouter(ABC):
         """
         frame = inspect.currentframe().f_back
         fname = frame.f_code.co_name
-        logger.debug(
-            f"Invoke request: {str(self)}.{fname}"  # pylint: disable=logging-fstring-interpolation
+        logger.debug(  # pylint: disable=logging-fstring-interpolation
+            f"Invoke request: {str(self)}.{fname}"
         )
         return getattr(self, f"_{fname}_request")(**kwargs)

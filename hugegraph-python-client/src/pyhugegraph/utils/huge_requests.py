@@ -83,7 +83,8 @@ class HGraphSession:
             None.
 
         Returns:
-            dict: The configuration information of the current instance.
+        -------
+            HGraphConfig: The configuration information of the current instance.
         """
         return self._cfg
 

@@ -58,8 +58,18 @@ class IndexLabel(HugeParamsBase):
         return self
 
     @decorator_params
-    def Search(self) -> "IndexLabel":
+    def search(self) -> "IndexLabel":
         self._parameter_holder.set("index_type", "SEARCH")
+        return self
+
+    @decorator_params
+    def shard(self) -> "IndexLabel":
+        self._parameter_holder.set("index_type", "SHARD")
+        return self
+
+    @decorator_params
+    def unique(self) -> "IndexLabel":
+        self._parameter_holder.set("index_type", "UNIQUE")
         return self
 
     @decorator_params

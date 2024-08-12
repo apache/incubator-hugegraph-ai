@@ -30,15 +30,15 @@ class GremlinManager(HugeParamsBase):
     @router.http("POST", "/gremlin")
     def exec(self, gremlin):
         gremlin_data = GremlinData(gremlin)
-        if self._sess._cfg.gs_supported:
+        if self._sess.cfg.gs_supported:
             gremlin_data.aliases = {
-                "graph": f"{self._sess._cfg.graphspace}-{self._sess._cfg.graph_name}",
-                "g": f"__g_{self._sess._cfg.graphspace}-{self._sess._cfg.graph_name}",
+                "graph": f"{self._sess.cfg.graphspace}-{self._sess.cfg.graph_name}",
+                "g": f"__g_{self._sess.cfg.graphspace}-{self._sess.cfg.graph_name}",
             }
         else:
             gremlin_data.aliases = {
-                "graph": f"{self._sess._cfg.graph_name}",
-                "g": f"__g_{self._sess._cfg.graph_name}",
+                "graph": f"{self._sess.cfg.graph_name}",
+                "g": f"__g_{self._sess.cfg.graph_name}",
             }
         response = self._invoke_request(data=gremlin_data.to_json())
         error = NotFoundError(f"Gremlin can't get results: {str(response.content)}")
