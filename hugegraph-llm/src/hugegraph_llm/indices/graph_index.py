@@ -36,12 +36,12 @@ class GraphIndex:
     def clear_graph(self):
         self.client.gremlin().exec("g.V().drop()")
 
+    # TODO: replace triples with a more specific graph element type & implement it
     def add_triples(self, triples: list):
-        # TODO
         pass
 
+    # TODO: replace triples with a more specific graph element type & implement it
     def search_triples(self, max_deep: int = 2):
-        # TODO
         pass
 
     def execute_gremlin_query(self, query: str):

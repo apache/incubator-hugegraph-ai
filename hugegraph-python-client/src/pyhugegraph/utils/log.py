@@ -29,7 +29,7 @@ def init_log(log_file="logs/output.log"):
     log_dir = os.path.dirname(log_file)
     os.makedirs(log_dir, exist_ok=True)
 
-    # Create a log
+    # Create a logger
     log = logging.getLogger(__name__)
     log.setLevel(logging.DEBUG)
 
@@ -72,6 +72,6 @@ def init_log(log_file="logs/output.log"):
 
     return log
 
-
-# Default log configuration
+ 
+# Default logger configuration
 log = init_log()

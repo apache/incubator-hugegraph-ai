@@ -38,3 +38,8 @@ class OpenAIEmbedding:
         """Comment"""
         response = self.client.create(input=text, model=self.embedding_model_name)
         return response.data[0].embedding
+
+    async def async_get_text_embedding(self, text: str) -> List[float]:
+        """Comment"""
+        response = await self.client.acreate(input=text, model=self.embedding_model_name)
+        return response.data[0].embedding

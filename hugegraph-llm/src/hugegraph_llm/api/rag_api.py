@@ -14,14 +14,3 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
-
-from enum import Enum
-
-
-# Note: we don't support the "UUID" strategy for now
-class IdStrategy(Enum):
-    AUTOMATIC = "AUTOMATIC"
-    CUSTOMIZE_NUMBER = "CUSTOMIZE_NUMBER"
-    CUSTOMIZE_STRING = "CUSTOMIZE_STRING"
-    PRIMARY_KEY = "PRIMARY_KEY"

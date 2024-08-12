@@ -152,7 +152,8 @@ class InfoExtract:
 
         for sentence in chunks:
             proceeded_chunk = self.extract_triples_by_llm(schema, sentence)
-            log.debug("[LLM] %s input: %s \n output:%s", self.__class__.__name__, sentence, proceeded_chunk)
+            log.debug("[LLM] %s input: %s \n output:%s", self.__class__.__name__,
+                      sentence, proceeded_chunk)
             if schema:
                 extract_triples_by_regex_with_schema(schema, proceeded_chunk, context)
             else:

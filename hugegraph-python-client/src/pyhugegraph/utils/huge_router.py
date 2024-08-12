@@ -22,6 +22,7 @@ import functools
 import threading
 
 from abc import ABC
+
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Optional, TYPE_CHECKING
 from pyhugegraph.utils.log import log

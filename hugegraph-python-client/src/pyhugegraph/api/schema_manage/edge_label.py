@@ -112,7 +112,6 @@ class EdgeLabel(HugeParamsBase):
     @decorator_params
     def remove(self):
         path = f'schema/edgelabels/{self._parameter_holder.get_value("name")}'
-
         self.clean_parameter_holder()
         if response := self._sess.request(path, "DELETE"):
             return f'remove EdgeLabel success, Detail: "{str(response)}"'
