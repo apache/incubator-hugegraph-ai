@@ -52,7 +52,7 @@ class ServicesManager(HugeParamsBase):
     def create_services(
         self,
         graphspace: str,  # pylint: disable=unused-argument
-        service_create_parameters: ServiceCreateParameters,
+        body_params: ServiceCreateParameters,
     ):
         """
         Create HugeGraph Servers.
@@ -63,7 +63,7 @@ class ServicesManager(HugeParamsBase):
         Returns:
             dict: A dictionary containing the response from the HTTP request.
         """
-        return self._invoke_request(json=service_create_parameters)
+        return self._invoke_request(data=body_params.dumps())
 
     @router.http("GET", "/graphspaces/${graphspace}/services")
     def list_services(self, graphspace: str):  # pylint: disable=unused-argument

@@ -15,9 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import json
 
 from typing import List, Union
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 
 
 @dataclass
@@ -27,9 +28,12 @@ class NeighborRankStep:
     """
 
     direction: str = "BOTH"
-    labels: List[str]
+    labels: List[str] = field(default_factory=list)
     max_degree: int = 10000
     top: int = 100
+
+    def dumps(self):
+        return json.dumps(asdict(self))
 
 
 @dataclass
@@ -43,6 +47,9 @@ class NeighborRankParameters:
     alpha: float = 0.85
     capacity: int = 10000000
     steps: List[NeighborRankStep] = field(default_factory=list)
+
+    def dumps(self):
+        return json.dumps(asdict(self))
 
 
 @dataclass
@@ -71,3 +78,6 @@ class PersonalRankParameters:
     max_diff: float = 0.0001
     sorted: bool = True
     with_label: str = "BOTH_LABEL"
+
+    def dumps(self):
+        return json.dumps(asdict(self))

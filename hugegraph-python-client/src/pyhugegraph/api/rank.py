@@ -49,7 +49,7 @@ class RankManager(HugeParamsBase):
         Returns:
             dict: A dictionary containing the ranked list of vertices and their corresponding rank values.
         """
-        return self._invoke_request(data=body_params)
+        return self._invoke_request(data=body_params.dumps())
 
     @router.http("POST", "traversers/neighborrank")
     def neighbor_rank(self, body_params: NeighborRankParameters):
@@ -62,4 +62,4 @@ class RankManager(HugeParamsBase):
         Returns:
             dict: A dictionary containing the probability of reaching other vertices from the source vertex.
         """
-        return self._invoke_request(data=body_params)
+        return self._invoke_request(data=body_params.dumps())

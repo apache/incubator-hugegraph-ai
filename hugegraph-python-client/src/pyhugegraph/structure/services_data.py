@@ -15,9 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import json
 
 from typing import List, Optional
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 
 
 @dataclass
@@ -43,7 +44,7 @@ class ServiceCreateParameters:
 
     name: str
     description: str
-    type: str = 'OLTP'
+    type: str = "OLTP"
     count: int = 1
     cpu_limit: int = 1
     memory_limit: int = 4
@@ -52,3 +53,6 @@ class ServiceCreateParameters:
     port: Optional[int] = None
     urls: List[str] = field(default_factory=list)
     deployment_type: Optional[str] = None
+
+    def dumps(self):
+        return json.dumps(asdict(self))
