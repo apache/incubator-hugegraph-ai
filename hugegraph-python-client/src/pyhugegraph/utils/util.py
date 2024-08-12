@@ -19,7 +19,6 @@ import json
 import requests
 import traceback
 
-from abc import ABC
 from pyhugegraph.utils.exceptions import (
     ServiceUnavailableException,
     NotAuthorizedError,
@@ -107,3 +106,6 @@ class ResponseValidation:
                 f"Unhandled exception occurred: {traceback.format_exc()}"
             )
         return result
+
+    def __repr__(self) -> str:
+        return f"ResponseValidation(content_type={self._content_type}, strict={self._strict})"

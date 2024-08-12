@@ -145,41 +145,7 @@ class HGraphSession:
             timeout=self._timeout,
             **kwargs,
         )
+        log.debug(  # pylint: disable=logging-fstring-interpolation
+            f"Request: {method} {url} validator={validator} kwargs={kwargs} {response}"
+        )
         return validator(response, method=method, path=path)
-
-        # results = {}
-
-        # try:
-        #     url = self.resolve(path)
-        #     response: requests.Response = getattr(self._session, method.lower())(
-        #         url,
-        #         auth=self._auth,
-        #         headers=self._headers,
-        #         timeout=self._timeout,
-        #         **kwargs,
-        #     )
-        #     log.debug(
-        #         f"Request: {method} {url} {quiet} {kwargs} {response} {response.content}"
-        #     )
-
-        #     response.raise_for_status()
-
-        #     if response.status_code == 204:
-        #         log.warning("No content returned for %s: %s", method, path)
-        #     else:
-        #         results = response.json()
-
-        # except requests.exceptions.HTTPError as e:
-
-        #     if quiet and response.status_code == 404:
-        #         pass
-        #     else:
-        #         details = response.json()["exception"]
-        #         log.error(  # pylint: disable=logging-fstring-interpolation
-        #             f"{method}: {e}; Server Exception: {details}"
-        #         )
-
-        # except Exception:  # pylint: disable=broad-exception-caught
-        #     log.error(traceback.format_exc())
-
-        # return results
