@@ -93,14 +93,7 @@ class HugeParamsBase(HGraphContext, HGraphRouter):
                         s = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", attr)
                         snake = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s).lower()
                         setattr(self, snake, getattr(self, attr))
-<<<<<<< Updated upstream
-                        # log.debug(  # pylint: disable=logging-fstring-interpolation
-                        #     f"The method {self.__class__.__name__}.{attr} is deprecated and will be removed in future versions. "
-                        #     f"Please update your code to use the new method name {self.__class__.__name__}.{snake} instead."
-                        # )
-=======
                         log.debug(  # pylint: disable=logging-fstring-interpolation
                             f"The method {self.__class__.__name__}.{attr} is deprecated and will be removed in future versions. "
                             f"Please update your code to use the new method name {self.__class__.__name__}.{snake} instead."
                         )
->>>>>>> Stashed changes
