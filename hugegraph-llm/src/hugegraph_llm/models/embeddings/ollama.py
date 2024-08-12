@@ -32,6 +32,7 @@ class OllamaEmbedding(BaseEmbedding):
     ):
         self.model = model
         self.client = ollama.Client(host=f"http://{host}:{port}", **kwargs)
+        self.async_client = ollama.AsyncClient(host=f"http://{host}:{port}", **kwargs)
         self.embedding_dimension = None
 
     def get_text_embedding(
@@ -40,3 +41,11 @@ class OllamaEmbedding(BaseEmbedding):
     ) -> List[float]:
         """Comment"""
         return list(self.client.embeddings(model=self.model, prompt=text)["embedding"])
+
+    async def async_get_text_embedding(
+            self,
+            text: str
+    ) -> List[float]:
+        """Comment"""
+        response = await self.async_client.embeddings(model=self.model, prompt=text)
+        return list(response["embedding"])

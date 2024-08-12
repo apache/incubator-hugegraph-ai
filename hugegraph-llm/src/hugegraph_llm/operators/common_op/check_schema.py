@@ -31,7 +31,8 @@ class CheckSchema:
             raise ValueError("Input data is not a dictionary.")
         if "vertexlabels" not in schema or "edgelabels" not in schema:
             raise ValueError("Input data does not contain 'vertexlabels' or 'edgelabels'.")
-        if not isinstance(schema["vertexlabels"], list) or not isinstance(schema["edgelabels"], list):
+        if not isinstance(schema["vertexlabels"], list) or not isinstance(schema["edgelabels"],
+                                                                          list):
             raise ValueError("'vertexlabels' or 'edgelabels' in input data is not a list.")
         for vertex in schema["vertexlabels"]:
             if not isinstance(vertex, dict):

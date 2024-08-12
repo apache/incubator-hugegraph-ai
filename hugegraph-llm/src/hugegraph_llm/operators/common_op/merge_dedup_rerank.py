@@ -35,6 +35,7 @@ class MergeDedupRerank:
         self.topk = topk
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        # TODO: exact > fuzzy; vertex > 1-depth-neighbour > 2-depth-neighbour; priority vertices
         query = context.get("query")
 
         vector_result = context.get("vector_result", [])

@@ -24,45 +24,50 @@ from pyhugegraph.client import PyHugeClient
 
 
 class GraphRAGQuery:
-    ID_RAG_GREMLIN_QUERY_TEMPL = (
-        "g.V().hasId({keywords}).as('subj')"
-        ".repeat("
-        "   bothE({edge_labels}).as('rel').otherV().as('obj')"
-        ").times({max_deep})"
-        ".path()"
-        ".by(project('label', 'id', 'props')"
-        "   .by(label())"
-        "   .by(id())"
-        "   .by(valueMap().by(unfold()))"
-        ")"
-        ".by(project('label', 'inV', 'outV', 'props')"
-        "   .by(label())"
-        "   .by(inV().id())"
-        "   .by(outV().id())"
-        "   .by(valueMap().by(unfold()))"
-        ")"
-        ".limit({max_items})"
-        ".toList()"
+    VERTEX_GREMLIN_QUERY_TEMPL = (
+        "g.V().hasId({keywords}).as('subj').toList()"
     )
-    PROP_RAG_GREMLIN_QUERY_TEMPL = (
-        "g.V().has('{prop}', within({keywords})).as('subj')"
-        ".repeat("
-        "   bothE({edge_labels}).as('rel').otherV().as('obj')"
-        ").times({max_deep})"
-        ".path()"
-        ".by(project('label', 'props')"
-        "   .by(label())"
-        "   .by(valueMap().by(unfold()))"
-        ")"
-        ".by(project('label', 'inV', 'outV', 'props')"
-        "   .by(label())"
-        "   .by(inV().values('{prop}'))"
-        "   .by(outV().values('{prop}'))"
-        "   .by(valueMap().by(unfold()))"
-        ")"
-        ".limit({max_items})"
-        ".toList()"
+    # TODO: we could use a simpler query (like kneighbor-api to get the edges)
+    ID_RAG_GREMLIN_QUERY_TEMPL = """
+    g.V().hasId({keywords}).as('subj')
+    .repeat(
+       bothE({edge_labels}).as('rel').otherV().as('obj')
+    ).times({max_deep})
+    .path()
+    .by(project('label', 'id', 'props')
+       .by(label())
+       .by(id())
+       .by(valueMap().by(unfold()))
     )
+    .by(project('label', 'inV', 'outV', 'props')
+       .by(label())
+       .by(inV().id())
+       .by(outV().id())
+       .by(valueMap().by(unfold()))
+    )
+    .limit({max_items})
+    .toList()
+    """
+
+    PROP_RAG_GREMLIN_QUERY_TEMPL = """
+    g.V().has('{prop}', within({keywords})).as('subj')
+    .repeat(
+       bothE({edge_labels}).as('rel').otherV().as('obj')
+    ).times({max_deep})
+    .path()
+    .by(project('label', 'props')
+       .by(label())
+       .by(valueMap().by(unfold()))
+    )
+    .by(project('label', 'inV', 'outV', 'props')
+       .by(label())
+       .by(inV().values('{prop}'))
+       .by(outV().values('{prop}'))
+       .by(valueMap().by(unfold()))
+    )
+    .limit({max_items})
+    .toList()
+    """
 
     def __init__(
             self,
@@ -93,10 +98,10 @@ class GraphRAGQuery:
                 user = context.get("user") or "admin"
                 pwd = context.get("pwd") or "admin"
                 self._client = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd)
-        assert self._client is not None, "No graph for query."
+        assert self._client is not None, "No valid graph to search."
 
         keywords = context.get("keywords")
-        assert keywords is not None, "No keywords for query."
+        assert keywords is not None, "No keywords for graph query."
         entrance_vids = context.get("entrance_vids")
         assert entrance_vids is not None, "No entrance vertices for query."
 
@@ -114,25 +119,29 @@ class GraphRAGQuery:
 
         if not use_id_to_match:
             keywords_str = ",".join("'" + kw + "'" for kw in keywords)
-            rag_gremlin_query_template = self.PROP_RAG_GREMLIN_QUERY_TEMPL
-            rag_gremlin_query = rag_gremlin_query_template.format(
+            rag_gremlin_query = self.PROP_RAG_GREMLIN_QUERY_TEMPL.format(
                 prop=self._prop_to_match,
                 keywords=keywords_str,
                 max_deep=self._max_deep,
                 max_items=self._max_items,
                 edge_labels=edge_labels_str,
             )
+            result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
+            knowledge: Set[str] = self._format_knowledge_from_query_result(query_result=result)
         else:
-            rag_gremlin_query_template = self.ID_RAG_GREMLIN_QUERY_TEMPL
-            rag_gremlin_query = rag_gremlin_query_template.format(
+            rag_gremlin_query = self.VERTEX_GREMLIN_QUERY_TEMPL.format(
+                keywords=entrance_vids,
+            )
+            result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
+            knowledge: Set[str] = self._format_knowledge_from_vertex(query_result=result)
+            rag_gremlin_query = self.ID_RAG_GREMLIN_QUERY_TEMPL.format(
                 keywords=entrance_vids,
                 max_deep=self._max_deep,
                 max_items=self._max_items,
                 edge_labels=edge_labels_str,
             )
-
-        result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
-        knowledge: Set[str] = self._format_knowledge_from_query_result(query_result=result)
+            result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
+            knowledge.update(self._format_knowledge_from_query_result(query_result=result))
 
         context["graph_result"] = list(knowledge)
         context["synthesize_context_head"] = (
@@ -142,17 +151,23 @@ class GraphRAGQuery:
             "extracted based on key entities as subject:"
         )
 
+        # TODO: replace print to log
         verbose = context.get("verbose") or False
         if verbose:
-            print("\033[93mKNOWLEDGE FROM GRAPH:")
+            print("\033[93mKnowledge from Graph:")
             print("\n".join(rel for rel in context["graph_result"]) + "\033[0m")
 
         return context
 
-    def _format_knowledge_from_query_result(
-            self,
-            query_result: List[Any],
-    ) -> Set[str]:
+    def _format_knowledge_from_vertex(self, query_result: List[Any]) -> Set[str]:
+        knowledge = set()
+        for item in query_result:
+            props_str = ", ".join(f"{k}: {v}" for k, v in item["properties"].items())
+            node_str = f"{item['id']}{{{props_str}}}"
+            knowledge.add(node_str)
+        return knowledge
+
+    def _format_knowledge_from_query_result(self, query_result: List[Any]) -> Set[str]:
         use_id_to_match = self._prop_to_match is None
         knowledge = set()
         for line in query_result:
