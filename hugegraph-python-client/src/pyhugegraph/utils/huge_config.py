@@ -21,7 +21,7 @@ import traceback
 
 from dataclasses import dataclass, field
 from typing import Optional, List
-from pyhugegraph.utils.log import logger
+from pyhugegraph.utils.log import log
 
 
 @dataclass
@@ -47,9 +47,7 @@ class HGraphConfig:
                     f"http://{self.ip}:{self.port}/versions", timeout=1
                 )
                 core = response.json()["versions"]["core"]
-                logger.info(
-                    f"Retrieved API version information from the server: {core}."
-                )
+                log.info(f"Retrieved API version information from the server: {core}.")
 
                 match = re.search("(\d+)\.(\d+)(?:\.(\d+))?(?:\.\d+)?", core)
                 major, minor, patch = map(int, match.groups())
@@ -58,13 +56,13 @@ class HGraphConfig:
                 if major >= 3:
                     self.graphspace = "DEFAULT"
                     self.gs_supported = True
-                    logger.warn(
+                    log.warn(
                         "graph space is not set, default value 'DEFAULT' will be used."
                     )
 
             except Exception as e:
                 traceback.print_exception(e)
                 self.gs_supported = False
-                logger.warn(
+                log.warn(
                     "Failed to retrieve API version information from the server, reverting to default v1."
                 )

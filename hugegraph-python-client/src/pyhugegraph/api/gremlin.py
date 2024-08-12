@@ -15,14 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
 
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.structure.gremlin_data import GremlinData
 from pyhugegraph.structure.response_data import ResponseData
-from pyhugegraph.utils.exceptions import NotFoundError
 from pyhugegraph.utils import huge_router as router
-from pyhugegraph.utils.util import check_if_success
+from pyhugegraph.utils.log import log
 
 
 class GremlinManager(HugeParamsBase):
@@ -41,7 +39,9 @@ class GremlinManager(HugeParamsBase):
                 "g": f"__g_{self._sess.cfg.graph_name}",
             }
         response = self._invoke_request(data=gremlin_data.to_json())
-        error = NotFoundError(f"Gremlin can't get results: {str(response.content)}")
-        if check_if_success(response, error):
-            return ResponseData(json.loads(response.content)).result
-        return ""
+        if response:
+            return ResponseData(response).result
+        log.error(  # pylint: disable=logging-fstring-interpolation
+            f"Gremlin can't get results: {str(response)}"
+        )
+        return None

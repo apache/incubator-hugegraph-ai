@@ -24,7 +24,8 @@ from urllib.parse import urljoin
 from typing import Any, Optional
 from pyhugegraph.utils.constants import Constants
 from pyhugegraph.utils.huge_config import HGraphConfig
-from pyhugegraph.utils.log import logger
+from pyhugegraph.utils.util import ResponseValidation
+from pyhugegraph.utils.log import log
 
 
 class HGraphSession:
@@ -68,7 +69,7 @@ class HGraphSession:
         self._session.mount("http://", adapter)
         self._session.mount("https://", adapter)
         self._session.keep_alive = False
-        logger.debug(
+        log.debug(
             "Session configured with retries=%s and backoff_factor=%s",
             self._retries,
             self._backoff_factor,
@@ -129,28 +130,56 @@ class HGraphSession:
         """
         self._session.close()
 
-    def request(self, path: str, method: str = "GET", **kwargs: Any) -> dict:
-        results = {}
+    def request(
+        self,
+        path: str,
+        method: str = "GET",
+        validator=ResponseValidation(),
+        **kwargs: Any,
+    ) -> dict:
+        url = self.resolve(path)
+        response: requests.Response = getattr(self._session, method.lower())(
+            url,
+            auth=self._auth,
+            headers=self._headers,
+            timeout=self._timeout,
+            **kwargs,
+        )
+        return validator(response, method=method, path=path)
 
-        try:
-            url = self.resolve(path)
-            response = getattr(self._session, method.lower())(
-                url,
-                auth=self._auth,
-                headers=self._headers,
-                timeout=self._timeout,
-                **kwargs,
-            )
-            response.raise_for_status()
-            results = response.json()
+        # results = {}
 
-        except requests.exceptions.HTTPError as e:
-            details = response.json()["exception"]
-            logger.error(  # pylint: disable=logging-fstring-interpolation
-                f"{e}\nServer Exception: {details}"
-            )
+        # try:
+        #     url = self.resolve(path)
+        #     response: requests.Response = getattr(self._session, method.lower())(
+        #         url,
+        #         auth=self._auth,
+        #         headers=self._headers,
+        #         timeout=self._timeout,
+        #         **kwargs,
+        #     )
+        #     log.debug(
+        #         f"Request: {method} {url} {quiet} {kwargs} {response} {response.content}"
+        #     )
 
-        except Exception:  # pylint: disable=broad-exception-caught
-            logger.error(traceback.format_exc())
+        #     response.raise_for_status()
 
-        return results
+        #     if response.status_code == 204:
+        #         log.warning("No content returned for %s: %s", method, path)
+        #     else:
+        #         results = response.json()
+
+        # except requests.exceptions.HTTPError as e:
+
+        #     if quiet and response.status_code == 404:
+        #         pass
+        #     else:
+        #         details = response.json()["exception"]
+        #         log.error(  # pylint: disable=logging-fstring-interpolation
+        #             f"{method}: {e}; Server Exception: {details}"
+        #         )
+
+        # except Exception:  # pylint: disable=broad-exception-caught
+        #     log.error(traceback.format_exc())
+
+        # return results

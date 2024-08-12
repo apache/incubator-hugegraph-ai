@@ -16,72 +16,43 @@
 # under the License.
 
 from pyhugegraph.api.common import HugeParamsBase
-from pyhugegraph.utils.exceptions import NotFoundError
 from pyhugegraph.utils import huge_router as router
-from pyhugegraph.utils.util import check_if_success
 
 
 class MetricsManager(HugeParamsBase):
 
     @router.http("GET", "/metrics/?type=json")
-    def get_all_basic_metrics(self):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def get_all_basic_metrics(self) -> dict:
+        return self._invoke_request()
 
     @router.http("GET", "/metrics/gauges")
-    def get_gauges_metrics(self):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def get_gauges_metrics(self) -> dict:
+        return self._invoke_request()
 
     @router.http("GET", "/metrics/counters")
-    def get_counters_metrics(self):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def get_counters_metrics(self) -> dict:
+        return self._invoke_request()
 
     @router.http("GET", "/metrics/gauges")
-    def get_histograms_metrics(self):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def get_histograms_metrics(self) -> dict:
+        return self._invoke_request()
 
     @router.http("GET", "/metrics/meters")
-    def get_meters_metrics(self):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def get_meters_metrics(self) -> dict:
+        return self._invoke_request()
 
     @router.http("GET", "/metrics/timers")
-    def get_timers_metrics(self):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def get_timers_metrics(self) -> dict:
+        return self._invoke_request()
 
     @router.http("GET", "/metrics/statistics/?type=json")
-    def get_statistics_metrics(self):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def get_statistics_metrics(self) -> dict:
+        return self._invoke_request()
 
     @router.http("GET", "/metrics/system")
-    def get_system_metrics(self):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def get_system_metrics(self) -> dict:
+        return self._invoke_request()
 
     @router.http("GET", "/metrics/backend")
-    def get_backend_metrics(self):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def get_backend_metrics(self) -> dict:
+        return self._invoke_request()

@@ -22,8 +22,11 @@ import functools
 import threading
 
 from abc import ABC
-from typing import Any, Callable, Dict, TYPE_CHECKING
-from pyhugegraph.utils.log import logger
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, Optional, TYPE_CHECKING
+from pyhugegraph.utils.log import log
+from pyhugegraph.utils.util import ResponseValidation
+
 
 if TYPE_CHECKING:
     from pyhugegraph.api.common import HGraphContext
@@ -45,9 +48,16 @@ class SingletonBase(type):
         return cls._instances[cls]
 
 
+@dataclass
+class RouterElement:
+    method: str
+    path: str
+    request_func: Optional[Callable] = None
+
+
 class HGraphRouterManager(metaclass=SingletonBase):
     def __init__(self):
-        self._routers = {}
+        self._routers: Dict[str, RouterElement] = {}
 
     def register(self, key, path):
         self._routers.update({key: path})
@@ -56,8 +66,11 @@ class HGraphRouterManager(metaclass=SingletonBase):
     def routers(self):
         return self._routers
 
+    def get(self, key) -> RouterElement:
+        return self._routers.get(key)
+
     def __repr__(self) -> str:
-        return json.dumps(self._routers, indent=4)
+        return str(self._routers)
 
 
 def http(method: str, path: str) -> Callable:
@@ -74,7 +87,7 @@ def http(method: str, path: str) -> Callable:
 
     def decorator(func: Callable) -> Callable:
         """Decorator function that modifies the original function."""
-        HGraphRouterManager().register(func.__qualname__, (method, path))
+        HGraphRouterManager().register(func.__qualname__, RouterElement(method, path))
 
         @functools.wraps(func)
         def wrapper(self: "HGraphContext", *args: Any, **kwargs: Any) -> Any:
@@ -117,7 +130,7 @@ def http(method: str, path: str) -> Callable:
 
 class HGraphRouter(ABC):
 
-    def _invoke_request(self, **kwargs: Any):
+    def _invoke_request(self, validator=ResponseValidation(), **kwargs: Any):
         """
         Make an HTTP request using the stored partial request function.
 
@@ -129,7 +142,7 @@ class HGraphRouter(ABC):
         """
         frame = inspect.currentframe().f_back
         fname = frame.f_code.co_name
-        logger.debug(  # pylint: disable=logging-fstring-interpolation
-            f"Invoke request: {str(self)}.{fname}"
+        log.debug(  # pylint: disable=logging-fstring-interpolation
+            f"Invoke request: {str(self.__class__.__name__)}.{fname}"
         )
-        return getattr(self, f"_{fname}_request")(**kwargs)
+        return getattr(self, f"_{fname}_request")(validator=validator, **kwargs)

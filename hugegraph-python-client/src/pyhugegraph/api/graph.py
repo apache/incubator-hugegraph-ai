@@ -17,21 +17,12 @@
 
 import json
 
+from typing import Optional, List
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.structure.vertex_data import VertexData
 from pyhugegraph.structure.edge_data import EdgeData
 from pyhugegraph.utils import huge_router as router
-from pyhugegraph.utils.exceptions import (
-    NotFoundError,
-    CreateError,
-    RemoveError,
-    UpdateError,
-)
-from pyhugegraph.utils.util import (
-    create_exception,
-    check_if_authorized,
-    check_if_success,
-)
+from pyhugegraph.utils.exceptions import NotFoundError
 
 
 class GraphManager(HugeParamsBase):
@@ -43,12 +34,8 @@ class GraphManager(HugeParamsBase):
             data["id"] = id
         data["label"] = label
         data["properties"] = properties
-        response = self._invoke_request(data=json.dumps(data))
-        if check_if_success(
-            response, CreateError(f"create vertex failed: {str(response.content)}")
-        ):
-            res = VertexData(json.loads(response.content))
-            return res
+        if response := self._invoke_request(data=json.dumps(data)):
+            return VertexData(response)
         return None
 
     @router.http("POST", "graph/vertices/batch")
@@ -56,46 +43,28 @@ class GraphManager(HugeParamsBase):
         data = []
         for item in input_data:
             data.append({"label": item[0], "properties": item[1]})
-        response = self._invoke_request(data=json.dumps(data))
-        if check_if_success(
-            response, CreateError(f"create vertexes failed: {str(response.content)}")
-        ):
-            res = []
-            for item in json.loads(response.content):
-                res.append(VertexData({"id": item}))
-            return res
+        if response := self._invoke_request(data=json.dumps(data)):
+            return [VertexData({"id": item}) for item in response]
         return None
 
     @router.http("PUT", 'graph/vertices/"{vertex_id}"?action=append')
     def appendVertex(self, vertex_id, properties):  # pylint: disable=unused-argument
         data = {"properties": properties}
-        response = self._invoke_request(data=json.dumps(data))
-        if check_if_success(
-            response, UpdateError(f"append vertex failed: {str(response.content)}")
-        ):
-            res = VertexData(json.loads(response.content))
-            return res
+        if response := self._invoke_request(data=json.dumps(data)):
+            return VertexData(response)
         return None
 
     @router.http("PUT", 'graph/vertices/"{vertex_id}"?action=eliminate')
     def eliminateVertex(self, vertex_id, properties):  # pylint: disable=unused-argument
         data = {"properties": properties}
-        response = self._invoke_request(data=json.dumps(data))
-        if check_if_success(
-            response, UpdateError(f"eliminate vertex failed: {str(response.content)}")
-        ):
-            res = VertexData(json.loads(response.content))
-            return res
+        if response := self._invoke_request(data=json.dumps(data)):
+            return VertexData(response)
         return None
 
     @router.http("GET", 'graph/vertices/"{vertex_id}"')
     def getVertexById(self, vertex_id):  # pylint: disable=unused-argument
-        response = self._invoke_request()
-        if check_if_success(
-            response, NotFoundError(f"Vertex not found: {str(response.content)}")
-        ):
-            res = VertexData(json.loads(response.content))
-            return res
+        if response := self._invoke_request():
+            return VertexData(response)
         return None
 
     def getVertexByPage(self, label, limit, page=None, properties=None):
@@ -110,16 +79,11 @@ class GraphManager(HugeParamsBase):
             para += "&page"
         para = para + "&limit=" + str(limit)
         path = path + para[1:]
-        response = self._sess.request(path)
-        if check_if_success(
-            response, NotFoundError(f"Vertex not found: {str(response.content)}")
-        ):
-            res = []
-            for item in json.loads(response.content)["vertices"]:
-                res.append(VertexData(item))
-            next_page = json.loads(response.content)["page"]
+        if response := self._sess.request(path):
+            res = [VertexData(item) for item in response["vertices"]]
+            next_page = response["page"]
             return res, next_page
-        return None
+        return None, None
 
     def getVertexByCondition(self, label="", limit=0, page=None, properties=None):
         path = "graph/vertices?"
@@ -135,43 +99,28 @@ class GraphManager(HugeParamsBase):
         else:
             para += "&page"
         path = path + para[1:]
-        response = self._sess.request(path)
-        if check_if_success(
-            response, NotFoundError(f"Vertex not found: {str(response.content)}")
-        ):
-            res = []
-            for item in json.loads(response.content)["vertices"]:
-                res.append(VertexData(item))
-            return res
+        if response := self._sess.request(path):
+            return [VertexData(item) for item in response["vertices"]]
         return None
 
     @router.http("DELETE", 'graph/vertices/"{vertex_id}"')
     def removeVertexById(self, vertex_id):  # pylint: disable=unused-argument
-        response = self._invoke_request()
-        if check_if_success(
-            response, RemoveError(f"remove vertex failed: {str(response.content)}")
-        ):
-            return response.content
-        return None
+        return self._invoke_request()
 
     @router.http("POST", "graph/edges")
-    def addEdge(self, edge_label, out_id, in_id, properties):
+    def addEdge(self, edge_label, out_id, in_id, properties) -> Optional[EdgeData]:
         data = {
             "label": edge_label,
             "outV": out_id,
             "inV": in_id,
             "properties": properties,
         }
-        response = self._invoke_request(data=json.dumps(data))
-        if check_if_success(
-            response, CreateError(f"created edge failed: {str(response.content)}")
-        ):
-            res = EdgeData(json.loads(response.content))
-            return res
+        if response := self._invoke_request(data=json.dumps(data)):
+            return EdgeData(response)
         return None
 
     @router.http("POST", "graph/edges/batch")
-    def addEdges(self, input_data):
+    def addEdges(self, input_data) -> Optional[List[EdgeData]]:
         data = []
         for item in input_data:
             data.append(
@@ -184,44 +133,36 @@ class GraphManager(HugeParamsBase):
                     "properties": item[5],
                 }
             )
-        response = self._invoke_request(data=json.dumps(data))
-        if check_if_success(
-            response, CreateError(f"created edges failed:  {str(response.content)}")
-        ):
-            res = []
-            for item in json.loads(response.content):
-                res.append(EdgeData({"id": item}))
-            return res
+        if response := self._invoke_request(data=json.dumps(data)):
+            return [EdgeData({"id": item}) for item in response]
         return None
 
     @router.http("PUT", "graph/edges/{edge_id}?action=append")
-    def appendEdge(self, edge_id, properties):  # pylint: disable=unused-argument
-        response = self._invoke_request(data=json.dumps({"properties": properties}))
-        if check_if_success(
-            response, UpdateError(f"append edge failed: {str(response.content)}")
+    def appendEdge(
+        self, edge_id, properties  # pylint: disable=unused-argument
+    ) -> Optional[EdgeData]:
+        if response := self._invoke_request(
+            data=json.dumps({"properties": properties})
         ):
-            res = EdgeData(json.loads(response.content))
-            return res
+            return EdgeData(response)
         return None
 
     @router.http("PUT", "graph/edges/{edge_id}?action=eliminate")
-    def eliminateEdge(self, edge_id, properties):  # pylint: disable=unused-argument
-        response = self._invoke_request(data=json.dumps({"properties": properties}))
-        if check_if_success(
-            response, UpdateError(f"eliminate edge failed: {str(response.content)}")
+    def eliminateEdge(
+        self, edge_id, properties  # pylint: disable=unused-argument
+    ) -> Optional[EdgeData]:
+        if response := self._invoke_request(
+            data=json.dumps({"properties": properties})
         ):
-            res = EdgeData(json.loads(response.content))
-            return res
+            return EdgeData(response)
         return None
 
     @router.http("GET", "graph/edges/{edge_id}")
-    def getEdgeById(self, edge_id):  # pylint: disable=unused-argument
-        response = self._invoke_request()
-        if check_if_success(
-            response, NotFoundError(f"not found edge: {str(response.content)}")
-        ):
-            res = EdgeData(json.loads(response.content))
-            return res
+    def getEdgeById(
+        self, edge_id  # pylint: disable=unused-argument
+    ) -> Optional[EdgeData]:
+        if response := self._invoke_request():
+            return EdgeData(response)
         return None
 
     def getEdgeByPage(
@@ -251,53 +192,32 @@ class GraphManager(HugeParamsBase):
         if limit > 0:
             para = para + "&limit=" + str(limit)
         path = path + para[1:]
-        response = self._sess.request(path)
-        if check_if_success(
-            response, NotFoundError(f"not found edges: {str(response.content)}")
-        ):
-            res = []
-            for item in json.loads(response.content)["edges"]:
-                res.append(EdgeData(item))
-            return res, json.loads(response.content)["page"]
-        return None
+        if response := self._sess.request(path):
+            return [EdgeData(item) for item in response["edges"]], response["page"]
+        return None, None
 
     @router.http("DELETE", "graph/edges/{edge_id}")
-    def removeEdgeById(self, edge_id):  # pylint: disable=unused-argument
-        response = self._invoke_request()
-        if check_if_success(
-            response, RemoveError(f"remove edge failed: {str(response.content)}")
-        ):
-            return response.content
-        return None
+    def removeEdgeById(self, edge_id) -> dict:  # pylint: disable=unused-argument
+        return self._invoke_request()
 
-    def getVerticesById(self, vertex_ids):
+    def getVerticesById(self, vertex_ids) -> Optional[List[VertexData]]:
         if not vertex_ids:
             return []
         path = "traversers/vertices?"
         for vertex_id in vertex_ids:
             path += f'ids="{vertex_id}"&'
         path = path.rstrip("&")
-        response = self._sess.request(path)
-        if response.status_code == 200 and check_if_authorized(response):
-            res = []
-            for item in json.loads(response.content)["vertices"]:
-                res.append(VertexData(item))
-            return res
-        create_exception(response.content)
+        if response := self._sess.request(path):
+            return [VertexData(item) for item in response["vertices"]]
         return None
 
-    def getEdgesById(self, edge_ids):
+    def getEdgesById(self, edge_ids) -> Optional[List[EdgeData]]:
         if not edge_ids:
             return []
         path = "traversers/edges?"
         for vertex_id in edge_ids:
             path += f"ids={vertex_id}&"
         path = path.rstrip("&")
-        response = self._sess.request(path)
-        if response.status_code == 200 and check_if_authorized(response):
-            res = []
-            for item in json.loads(response.content)["edges"]:
-                res.append(EdgeData(item))
-            return res
-        create_exception(response.content)
+        if response := self._sess.request(path):
+            return [EdgeData(item) for item in response["edges"]]
         return None

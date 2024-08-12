@@ -16,7 +16,10 @@
 # under the License.
 
 
+import re
+
 from abc import ABC
+from pyhugegraph.utils.log import log
 from pyhugegraph.utils.huge_router import HGraphRouter
 from pyhugegraph.utils.huge_requests import HGraphSession
 
@@ -66,6 +69,7 @@ class HugeParamsBase(HGraphContext, HGraphRouter):
     def __init__(self, sess: HGraphSession) -> None:
         super().__init__(sess)
         self._parameter_holder = None
+        self.__camel_to_snake_case()
 
     def add_parameter(self, key, value):
         self._parameter_holder.set(key, value)
@@ -78,3 +82,18 @@ class HugeParamsBase(HGraphContext, HGraphRouter):
 
     def clean_parameter_holder(self):
         self._parameter_holder = None
+
+    def __camel_to_snake_case(self):
+        camel_case_pattern = re.compile(r"^[a-z]+([A-Z][a-z]*)+$")
+        attributes = dir(self)
+        for attr in attributes:
+            if not attr.startswith("__"):
+                if callable(getattr(self, attr)):
+                    if camel_case_pattern.match(attr):
+                        s = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", attr)
+                        snake = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s).lower()
+                        setattr(self, snake, getattr(self, attr))
+                        # log.debug(  # pylint: disable=logging-fstring-interpolation
+                        #     f"The method {self.__class__.__name__}.{attr} is deprecated and will be removed in future versions. "
+                        #     f"Please update your code to use the new method name {self.__class__.__name__}.{snake} instead."
+                        # )

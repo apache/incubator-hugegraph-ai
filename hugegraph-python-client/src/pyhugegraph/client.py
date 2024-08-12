@@ -36,7 +36,7 @@ def manager_builder(fn):
 
     def wrapper(self: "PyHugeClient"):
         if not hasattr(self, attr_name):
-            session = HGraphSession(self._cfg)
+            session = HGraphSession(self.cfg)
             setattr(self, attr_name, fn(self)(session))
         return getattr(self, attr_name)
 
@@ -54,7 +54,7 @@ class PyHugeClient:
         timeout: int = 10,
         gs: Optional[str] = None,
     ):
-        self._cfg = HGraphConfig(ip, port, user, pwd, graph, gs, timeout)
+        self.cfg = HGraphConfig(ip, port, user, pwd, graph, gs, timeout)
 
     @manager_builder
     def schema(self) -> "SchemaManager":
@@ -97,4 +97,4 @@ class PyHugeClient:
         return VersionManager
 
     def __repr__(self) -> str:
-        return f"{self._cfg}"
+        return f"{self.cfg}"

@@ -18,7 +18,7 @@
 
 import json
 
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.api.schema_manage.edge_label import EdgeLabel
 from pyhugegraph.api.schema_manage.index_label import IndexLabel
@@ -31,6 +31,7 @@ from pyhugegraph.structure.vertex_label_data import VertexLabelData
 from pyhugegraph.utils.exceptions import NotFoundError
 from pyhugegraph.utils.util import check_if_success
 from pyhugegraph.utils import huge_router as router
+from pyhugegraph.utils.log import log
 
 
 class SchemaManager(HugeParamsBase):
@@ -67,93 +68,72 @@ class SchemaManager(HugeParamsBase):
         return index_label
 
     @router.http("GET", "schema?format={_format}")
-    def getSchema(self, _format: str = "json") -> Optional[Dict]:
-        response = self._invoke_request()
-        return {}
-        # error = NotFoundError(f"schema not found: {str(response.content)}")
-        # if check_if_success(response, error):
-        #     schema = json.loads(response.content)
-        #     return schema
-        # return None
+    def getSchema(
+        self, _format: str = "json"  # pylint: disable=unused-argument
+    ) -> Optional[Dict]:
+        return self._invoke_request()
 
     @router.http("GET", "schema/propertykeys/{property_name}")
-    def getPropertyKey(self, property_name):  # pylint: disable=unused-argument
-        response = self._invoke_request()
-        error = NotFoundError(f"PropertyKey not found: {str(response.content)}")
-        if check_if_success(response, error):
-            property_keys_data = PropertyKeyData(json.loads(response.content))
-            return property_keys_data
+    def getPropertyKey(
+        self, property_name  # pylint: disable=unused-argument
+    ) -> Optional[PropertyKeyData]:
+        if response := self._invoke_request():
+            return PropertyKeyData(response)
         return None
 
     @router.http("GET", "schema/propertykeys")
-    def getPropertyKeys(self):
-        response = self._invoke_request()
-        res = []
-        if check_if_success(response):
-            for item in json.loads(response.content)["propertykeys"]:
-                res.append(PropertyKeyData(item))
-            return res
+    def getPropertyKeys(self) -> Optional[List[PropertyKeyData]]:
+        if response := self._invoke_request():
+            return [PropertyKeyData(item) for item in response["propertykeys"]]
         return None
 
     @router.http("GET", "schema/vertexlabels/{name}")
-    def getVertexLabel(self, name):  # pylint: disable=unused-argument
-        response = self._invoke_request()
-        error = NotFoundError(f"VertexLabel not found: {str(response.content)}")
-        if check_if_success(response, error):
-            res = VertexLabelData(json.loads(response.content))
-            return res
+    def getVertexLabel(
+        self, name  # pylint: disable=unused-argument
+    ) -> Optional[VertexLabelData]:
+        if response := self._invoke_request():
+            return VertexLabelData(response)
+        log.error("VertexLabel not found: %s", str(response))
         return None
 
     @router.http("GET", "schema/vertexlabels")
-    def getVertexLabels(self):
-        response = self._invoke_request()
-        res = []
-        if check_if_success(response):
-            for item in json.loads(response.content)["vertexlabels"]:
-                res.append(VertexLabelData(item))
-        return res
+    def getVertexLabels(self) -> Optional[List[VertexLabelData]]:
+        if response := self._invoke_request():
+            return [VertexLabelData(item) for item in response["vertexlabels"]]
+        return None
 
     @router.http("GET", "schema/edgelabels/{label_name}")
-    def getEdgeLabel(self, label_name: str):  # pylint: disable=unused-argument
-        response = self._invoke_request()
-        error = NotFoundError(f"EdgeLabel not found: {str(response.content)}")
-        if check_if_success(response, error):
-            res = EdgeLabelData(json.loads(response.content))
-            return res
+    def getEdgeLabel(
+        self, label_name: str  # pylint: disable=unused-argument
+    ) -> Optional[EdgeLabelData]:
+        if response := self._invoke_request():
+            return EdgeLabelData(response)
+        log.error("EdgeLabel not found: %s", str(response))
         return None
 
     @router.http("GET", "schema/edgelabels")
-    def getEdgeLabels(self):
-        response = self._invoke_request()
-        res = []
-        if check_if_success(response):
-            for item in json.loads(response.content)["edgelabels"]:
-                res.append(EdgeLabelData(item))
-        return res
+    def getEdgeLabels(self) -> Optional[List[EdgeLabelData]]:
+        if response := self._invoke_request():
+            return [EdgeLabelData(item) for item in response["edgelabels"]]
+        return None
 
     @router.http("GET", "schema/edgelabels")
-    def getRelations(self):
-        response = self._invoke_request()
-        res = []
-        if check_if_success(response):
-            for item in json.loads(response.content)["edgelabels"]:
-                res.append(EdgeLabelData(item).relations())
-        return res
+    def getRelations(self) -> Optional[List[str]]:
+        if response := self._invoke_request():
+            return [EdgeLabelData(item).relations() for item in response["edgelabels"]]
+        return None
 
     @router.http("GET", "schema/indexlabels/{name}")
-    def getIndexLabel(self, name):  # pylint: disable=unused-argument
-        response = self._invoke_request()
-        error = NotFoundError(f"EdgeLabel not found: {str(response.content)}")
-        if check_if_success(response, error):
-            res = IndexLabelData(json.loads(response.content))
-            return res
+    def getIndexLabel(
+        self, name  # pylint: disable=unused-argument
+    ) -> Optional[IndexLabelData]:
+        if response := self._invoke_request():
+            return IndexLabelData(response)
+        log.error("IndexLabel not found: %s", str(response))
         return None
 
     @router.http("GET", "schema/indexlabels")
-    def getIndexLabels(self):
-        response = self._invoke_request()
-        res = []
-        if check_if_success(response):
-            for item in json.loads(response.content)["indexlabels"]:
-                res.append(IndexLabelData(item))
-        return res
+    def getIndexLabels(self) -> Optional[List[IndexLabelData]]:
+        if response := self._invoke_request():
+            return [IndexLabelData(item) for item in response["indexlabels"]]
+        return None
