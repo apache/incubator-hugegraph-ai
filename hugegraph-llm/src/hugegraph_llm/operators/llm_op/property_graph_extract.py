@@ -66,10 +66,13 @@ def generate_extract_property_graph_prompt(text, schema=None) -> str:
     return f"""---
 
 Following the full instructions above, try to extract the following text from the given schema, output the JSON result:
+# Input
 ## Text:
 {text}
-## Graph schema:
-{schema}"""
+## Graph schema
+{schema}
+
+# Output"""
 
 
 def split_text(text: str) -> List[str]:
@@ -98,7 +101,8 @@ class PropertyGraphExtract:
         items = []
         for chunk in chunks:
             proceeded_chunk = self.extract_property_graph_by_llm(schema, chunk)
-            log.debug("[LLM] %s input: %s \n output:%s", self.__class__.__name__, chunk, proceeded_chunk)
+            log.debug("[LLM] %s input: %s \n output:%s", self.__class__.__name__, chunk,
+                      proceeded_chunk)
             items.extend(self._extract_and_filter_label(schema, proceeded_chunk))
         items = self.filter_item(schema, items)
         for item in items:

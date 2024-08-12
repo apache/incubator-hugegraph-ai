@@ -73,6 +73,36 @@ class OpenAIChat(BaseLLM):
             log.error("Retrying LLM call %s", e)
             raise e
 
+    @retry(tries=3, delay=1)
+    async def agenerate(
+            self,
+            messages: Optional[List[Dict[str, Any]]] = None,
+            prompt: Optional[str] = None,
+    ) -> str:
+        """Generate a response to the query messages/prompt."""
+        if messages is None:
+            assert prompt is not None, "Messages or prompt must be provided."
+            messages = [{"role": "user", "content": prompt}]
+        try:
+            completions = await openai.ChatCompletion.acreate(
+                model=self.model,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                messages=messages,
+            )
+            return completions.choices[0].message.content
+        # catch context length / do not retry
+        except openai.error.InvalidRequestError as e:
+            log.critical("Fatal: %s", e)
+            return str(f"Error: {e}")
+        # catch authorization errors / do not retry
+        except openai.error.AuthenticationError:
+            log.critical("The provided OpenAI API key is invalid")
+            return "Error: The provided OpenAI API key is invalid"
+        except Exception as e:
+            log.error("Retrying LLM call %s", e)
+            raise e
+
     def generate_streaming(
         self,
         messages: Optional[List[Dict[str, Any]]] = None,

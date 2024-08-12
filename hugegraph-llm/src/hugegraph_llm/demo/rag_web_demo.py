@@ -50,11 +50,12 @@ def convert_bool_str(string):
     raise gr.Error(f"Invalid boolean string: {string}")
 
 
-# TODO: support rest api for the functions below (Later -> function_call)
+# TODO: enhance/distinguish the "graph_rag" name to avoid confusion
 def graph_rag(text: str, raw_answer: str, vector_only_answer: str,
               graph_only_answer: str, graph_vector_answer):
     vector_search = convert_bool_str(vector_only_answer) or convert_bool_str(graph_vector_answer)
     graph_search = convert_bool_str(graph_only_answer) or convert_bool_str(graph_vector_answer)
+
     if raw_answer == "false" and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
         return "", "", "", ""
@@ -69,6 +70,7 @@ def graph_rag(text: str, raw_answer: str, vector_only_answer: str,
         graph_only_answer=convert_bool_str(graph_only_answer),
         graph_vector_answer=convert_bool_str(graph_vector_answer)
     ).run(verbose=True, query=text)
+
     try:
         context = searcher.run(verbose=True, query=text)
         return (
@@ -77,9 +79,12 @@ def graph_rag(text: str, raw_answer: str, vector_only_answer: str,
             context.get("graph_only_answer", ""),
             context.get("graph_vector_answer", "")
         )
-    except Exception as e:  # pylint: disable=broad-exception-caught
+    except ValueError as e:
         log.error(e)
         raise gr.Error(str(e))
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        log.error(e)
+        raise gr.Error(f"An unexpected error occurred: {str(e)}")
 
 
 def build_kg(file, schema, example_prompt, build_mode):  # pylint: disable=too-many-branches
@@ -94,10 +99,11 @@ def build_kg(file, schema, example_prompt, build_mode):  # pylint: disable=too-m
             text += para.text
             text += "\n"
     elif full_path.endswith(".pdf"):
-        raise gr.Error("PDF will be supported later!")
+        raise gr.Error("PDF will be supported later! Try to upload text/docx now")
     else:
         raise gr.Error("Please input txt or docx file.")
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
+
     if build_mode != "Rebuild vertex index":
         if schema:
             try:
@@ -109,19 +115,22 @@ def build_kg(file, schema, example_prompt, build_mode):  # pylint: disable=too-m
         else:
             return "ERROR: please input schema."
     builder.chunk_split(text, "paragraph", "zh")
-    if build_mode == "Rebuild vertex index":
+
+    # TODO: avoid hardcoding the "build_mode" strings (use var/constant instead)
+    if build_mode == "Rebuild Vector":
         builder.fetch_graph_data()
     else:
         builder.extract_info(example_prompt, "property_graph")
-    if build_mode != "Test":
-        if build_mode in ("Clear and import", "Rebuild vertex index"):
+    # "Test Mode", "Import Mode", "Clear and Import", "Rebuild Vector"
+    if build_mode != "Test Mode":
+        if build_mode in ("Clear and Import", "Rebuild Vector"):
             clean_vector_index()
         builder.build_vector_index()
-    if build_mode == "Clear and import":
+    if build_mode == "Clear and Import":
         clean_hg_data()
-    if build_mode in ("Clear and import", "Import"):
+    if build_mode in ("Clear and Import", "Import Mode"):
         builder.commit_to_hugegraph()
-    if build_mode != "Test":
+    if build_mode != "Test Mode":
         builder.build_vertex_id_semantic_index()
     log.debug(builder.operators)
     try:
@@ -320,22 +329,18 @@ if __name__ == "__main__":
 
 
         gr.Markdown(
-            """## 1. Build KG(graph) & vector/index
+            """## 1. Build vector/graph RAG (💡)
 - Document: Input document file which should be TXT or DOCX.
 - Schema: Accepts two types of text as below:
     - User-defined JSON format Schema.
-    - Specify the name of the HugeGraph graph instance, and it will
-    automatically extract the schema of the graph.
+    - Specify the name of the HugeGraph graph instance, it will automatically get the schema from it.
 - Info extract head: The head of prompt of info extracting.
 - Build mode: 
-    - Test: Only extract vertices and edges from file without building vector index or 
-    importing into HugeGraph.
-    - Clear and Import: Clear the vector index and data of HugeGraph and then extract and 
-    import new data.
-    - Import: Extract the data and append it to HugeGraph and vector index without clearing 
-    anything.
-    - Rebuild vertex index: Do not clear the HugeGraph data, but only clear vector index 
-    and build new one.
+    - Test Mode: Only extract vertices and edges from the file into memory (without building the vector index or 
+    writing data into HugeGraph)
+    - Import Mode: Extract the data and append it to HugeGraph & the vector index (without clearing any existing data)
+    - Clear and Import: Clear all existed RAG data(vector + graph), then rebuild them from the current input
+    - Rebuild Vector: Only rebuild vector index. (keep the graph data intact)
 """
         )
 
@@ -381,10 +386,9 @@ if __name__ == "__main__":
             info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT,
                                                label="Info extract head")
             with gr.Column():
-                mode = gr.Radio(choices=["Test", "Clear and import", "Import",
-                                         "Rebuild vertex index"],
-                                value="Test", label="Build mode")
-                btn = gr.Button("Build knowledge graph")
+                mode = gr.Radio(choices=["Test Mode", "Import Mode", "Clear and Import", "Rebuild Vector"],
+                                value="Test Mode", label="Build mode")
+                btn = gr.Button("Build Vector/Graph RAG")
         with gr.Row():
             out = gr.Textbox(label="Output", show_copy_button=True)
         btn.click(  # pylint: disable=no-member
@@ -393,41 +397,43 @@ if __name__ == "__main__":
             outputs=out
         )
 
-        gr.Markdown("""## 2. RAG Answer by HugeGraph""")
+        gr.Markdown("""## 2. RAG with HugeGraph 📖""")
         with gr.Row():
             with gr.Column(scale=2):
-                inp = gr.Textbox(value="Tell me about Sarah.", label="Question")
-                raw_out = gr.Textbox(label="Raw LLM Answer", show_copy_button=True)
-                vector_only_out = gr.Textbox(label="Vector-only answer", show_copy_button=True)
-                graph_only_out = gr.Textbox(label="Graph-only answer", show_copy_button=True)
-                graph_vector_out = gr.Textbox(label="Graph-Vector answer", show_copy_button=True)
+                inp = gr.Textbox(value="Tell me about Sarah.", label="Question", show_copy_button=True)
+                raw_out = gr.Textbox(label="Basic LLM Answer", show_copy_button=True)
+                vector_only_out = gr.Textbox(label="Vector-only Answer", show_copy_button=True)
+                graph_only_out = gr.Textbox(label="Graph-only Answer", show_copy_button=True)
+                graph_vector_out = gr.Textbox(label="Graph-Vector Answer", show_copy_button=True)
             with gr.Column(scale=1):
                 raw_radio = gr.Radio(choices=["true", "false"], value="false",
-                                     label="Raw LLM answer")
+                                     label="Basic LLM Answer")
                 vector_only_radio = gr.Radio(choices=["true", "false"], value="true",
-                                             label="Vector-only answer")
+                                             label="Vector-only Answer")
                 graph_only_radio = gr.Radio(choices=["true", "false"], value="false",
-                                            label="Graph-only answer")
+                                            label="Graph-only Answer")
                 graph_vector_radio = gr.Radio(choices=["true", "false"], value="false",
-                                              label="Graph-Vector answer")
-                btn = gr.Button("Retrieval augmented generation")
-        btn.click(fn=graph_rag, inputs=[inp, raw_radio,
-                                        vector_only_radio, graph_only_radio,  # pylint: disable=no-member
+                                              label="Graph-Vector Answer")
+                btn = gr.Button("Answer Question")
+        btn.click(fn=graph_rag, inputs=[inp, raw_radio, vector_only_radio, graph_only_radio, # pylint: disable=no-member
                                         graph_vector_radio],
                   outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out])
 
-        gr.Markdown("""## 3. Other function """)
+        gr.Markdown("""## 3. Others (🚧) """)
+        with gr.Row():
+            with gr.Column():
+                inp = gr.Textbox(value="g.V().limit(10)", label="Gremlin query", show_copy_button=True)
+                format = gr.Checkbox(label="Format JSON", value=True)
+            out = gr.Textbox(label="Output", show_copy_button=True)
+        btn = gr.Button("Run gremlin query on HugeGraph")
+        btn.click(fn=run_gremlin_query, inputs=[inp, format], outputs=out)  # pylint: disable=no-member
+
         with gr.Row():
             inp = []
             out = gr.Textbox(label="Output", show_copy_button=True)
-        btn = gr.Button("Initialize HugeGraph test data")
+        btn = gr.Button("(BETA) Init HugeGraph test data (🚧WIP)")
         btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
 
-        with gr.Row():
-            inp = gr.Textbox(value="g.V().limit(10)", label="Gremlin query")
-            out = gr.Textbox(label="Output", show_copy_button=True)
-        btn = gr.Button("Run gremlin query on HugeGraph")
-        btn.click(fn=run_gremlin_query, inputs=inp, outputs=out)  # pylint: disable=no-member
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
     # Note: set reload to False in production environment
     uvicorn.run(app, host=args.host, port=args.port)

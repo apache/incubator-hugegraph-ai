@@ -19,6 +19,7 @@
 from enum import Enum
 
 
+# Note: we don't support the "UUID" strategy for now
 class IdStrategy(Enum):
     AUTOMATIC = "AUTOMATIC"
     CUSTOMIZE_NUMBER = "CUSTOMIZE_NUMBER"
