@@ -15,8 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
-
 
 from pyhugegraph.utils import huge_router as router
 from pyhugegraph.structure.rank_data import (
