@@ -10,36 +10,43 @@ pip3 install hugegraph-python
 
 ### Install from source
 
-release soon
+```bash
+cd /path/to/hugegraph-python-client
+
+# Normal install 
+pip install .
+
+# (Optional) install the devel version
+pip install -e .
+```
 
 ## Examples
 
 ```python
 from pyhugegraph.client import PyHugeClient
 
-client = PyHugeClient("127.0.0.1", "8080", user="admin", pwd="admin", graph="hugegraph")
+# For HugeGraph API version ≥ v3: (Or enable graphspace function)  
+# - The 'graphspace' parameter becomes relevant if graphspaces are enabled.(default name is 'DEFAULT')
+# - Otherwise, the graphspace parameter is optional and can be ignored. 
+client = PyHugeClient("127.0.0.1", "8080", user="admin", pwd="admin", graph="hugegraph", graphspace="DEFAULT")
 
-"""system"""
-print(client.get_graphinfo())
-print(client.get_all_graphs())
-print(client.get_version())
-print(client.get_graph_config())
-
-"""schema"""
+""""
+Note:
+Could refer to the official REST-API doc of your HugeGraph version for accurate details.
+If some API is not as expected, please submit a issue or contact us.
+"""
 schema = client.schema()
 schema.propertyKey("name").asText().ifNotExist().create()
 schema.propertyKey("birthDate").asText().ifNotExist().create()
-schema.vertexLabel("Person").properties("name", "birthDate").usePrimaryKeyId().primaryKeys(
-    "name").ifNotExist().create()
-schema.vertexLabel("Movie").properties("name").usePrimaryKeyId().primaryKeys(
-    "name").ifNotExist().create()
+schema.vertexLabel("Person").properties("name", "birthDate").usePrimaryKeyId().primaryKeys("name").ifNotExist().create()
+schema.vertexLabel("Movie").properties("name").usePrimaryKeyId().primaryKeys("name").ifNotExist().create()
 schema.edgeLabel("ActedIn").sourceLabel("Person").targetLabel("Movie").ifNotExist().create()
 
 print(schema.getVertexLabels())
 print(schema.getEdgeLabels())
 print(schema.getRelations())
 
-"""graph"""
+"""Init Graph"""
 g = client.graph()
 g.addVertex("Person", {"name": "Al Pacino", "birthDate": "1940-04-25"})
 g.addVertex("Person", {"name": "Robert De Niro", "birthDate": "1943-08-17"})
@@ -57,8 +64,8 @@ res = g.getVertexById("12:Al Pacino").label
 print(res)
 g.close()
 
-"""gremlin"""
+"""Execute Gremlin Query"""
 g = client.gremlin()
-res = g.exec("g.V().limit(10)")
+res = g.exec("g.V().limit(5)")
 print(res)
 ```

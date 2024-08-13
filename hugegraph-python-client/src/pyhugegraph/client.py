@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Optional
+from typing import Any, Callable, Optional, TypeVar
 
 from pyhugegraph.api.auth import AuthManager
 from pyhugegraph.api.graph import GraphManager
@@ -30,13 +30,15 @@ from pyhugegraph.api.version import VersionManager
 from pyhugegraph.utils.huge_config import HGraphConfig
 from pyhugegraph.utils.huge_requests import HGraphSession
 
+T = TypeVar("T")
 
-def manager_builder(fn):
+
+def manager_builder(fn: Callable[[Any, "HGraphSession"], T]) -> Callable[[Any], T]:
     attr_name = "_lazy_" + fn.__name__
 
-    def wrapper(self: "PyHugeClient"):
+    def wrapper(self: "PyHugeClient") -> T:
         if not hasattr(self, attr_name):
-            session = HGraphSession(self._cfg)
+            session = HGraphSession(self.cfg)
             setattr(self, attr_name, fn(self)(session))
         return getattr(self, attr_name)
 
@@ -51,10 +53,10 @@ class PyHugeClient:
         graph: str,
         user: str,
         pwd: str,
+        graphspace: Optional[str] = None,
         timeout: int = 10,
-        gs: Optional[str] = None,
     ):
-        self._cfg = HGraphConfig(ip, port, user, pwd, graph, gs, timeout)
+        self.cfg = HGraphConfig(ip, port, user, pwd, graph, graphspace, timeout)
 
     @manager_builder
     def schema(self) -> "SchemaManager":
@@ -97,4 +99,4 @@ class PyHugeClient:
         return VersionManager
 
     def __repr__(self) -> str:
-        return f"{self._cfg}"
+        return f"{self.cfg}"

@@ -18,35 +18,23 @@
 import json
 
 from pyhugegraph.api.common import HugeParamsBase
-from pyhugegraph.utils.exceptions import NotFoundError
 from pyhugegraph.utils import huge_router as router
-from pyhugegraph.utils.util import check_if_success
 
 
 class VariableManager(HugeParamsBase):
 
     @router.http("PUT", "variables/{key}")
-    def set(self, key, value):
-        response = self._invoke_request(data=json.dumps({"data": value}))
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def set(self, key, value):  # pylint: disable=unused-argument
+        return self._invoke_request(data=json.dumps({"data": value}))
 
     @router.http("GET", "variables/{key}")
-    def get(self, key):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def get(self, key):  # pylint: disable=unused-argument
+        return self._invoke_request()
 
     @router.http("GET", "variables")
     def all(self):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+        return self._invoke_request()
 
     @router.http("DELETE", "variables/{key}")
-    def remove(self, key):
-        response = self._invoke_request()
-        check_if_success(response, NotFoundError(response.content))
+    def remove(self, key):  # pylint: disable=unused-argument
+        return self._invoke_request()

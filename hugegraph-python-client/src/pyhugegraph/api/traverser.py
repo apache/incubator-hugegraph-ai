@@ -17,86 +17,71 @@
 import json
 
 from pyhugegraph.api.common import HugeParamsBase
-from pyhugegraph.utils.exceptions import NotFoundError
 from pyhugegraph.utils import huge_router as router
-from pyhugegraph.utils.util import check_if_success
 
 
 class TraverserManager(HugeParamsBase):
 
     @router.http("GET", 'traversers/kout?source="{source_id}"&max_depth={max_depth}')
-    def k_out(self, source_id, max_depth):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def k_out(self, source_id, max_depth):  # pylint: disable=unused-argument
+        return self._invoke_request()
 
     @router.http(
         "GET", 'traversers/kneighbor?source="{source_id}"&max_depth={max_depth}'
     )
-    def k_neighbor(self, source_id, max_depth):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def k_neighbor(self, source_id, max_depth):  # pylint: disable=unused-argument
+        return self._invoke_request()
 
     @router.http(
         "GET", 'traversers/sameneighbors?vertex="{vertex_id}"&other="{other_id}"'
     )
-    def same_neighbors(self, vertex_id, other_id):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def same_neighbors(self, vertex_id, other_id):  # pylint: disable=unused-argument
+        return self._invoke_request()
 
     @router.http(
         "GET", 'traversers/jaccardsimilarity?vertex="{vertex_id}"&other="{other_id}"'
     )
-    def jaccard_similarity(self, vertex_id, other_id):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def jaccard_similarity(
+        self, vertex_id, other_id  # pylint: disable=unused-argument
+    ):
+        return self._invoke_request()
 
     @router.http(
         "GET",
         'traversers/shortestpath?source="{source_id}"&target="{target_id}"&max_depth={max_depth}',
     )
-    def shortest_path(self, source_id, target_id, max_depth):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def shortest_path(
+        self, source_id, target_id, max_depth  # pylint: disable=unused-argument
+    ):
+        return self._invoke_request()
 
     @router.http(
         "GET",
         'traversers/allshortestpaths?source="{source_id}"&target="{target_id}"&max_depth={max_depth}',
     )
-    def all_shortest_paths(self, source_id, target_id, max_depth):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def all_shortest_paths(
+        self, source_id, target_id, max_depth  # pylint: disable=unused-argument
+    ):
+        return self._invoke_request()
 
     @router.http(
         "GET",
-        'traversers/weightedshortestpath?source="{source_id}"&target="{target_id}"&weight={weight}&max_depth={max_depth}',
+        'traversers/weightedshortestpath?source="{source_id}"&target="{target_id}"'
+        "&weight={weight}&max_depth={max_depth}",
     )
-    def weighted_shortest_path(self, source_id, target_id, weight, max_depth):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def weighted_shortest_path(
+        self, source_id, target_id, weight, max_depth  # pylint: disable=unused-argument
+    ):
+        return self._invoke_request()
 
     @router.http(
         "GET",
         'traversers/singlesourceshortestpath?source="{source_id}"&max_depth={max_depth}',
     )
-    def single_source_shortest_path(self, source_id, max_depth):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def single_source_shortest_path(
+        self, source_id, max_depth  # pylint: disable=unused-argument
+    ):
+        return self._invoke_request()
 
     @router.http("POST", "traversers/multinodeshortestpath")
     def multi_node_shortest_path(
@@ -110,71 +95,67 @@ class TraverserManager(HugeParamsBase):
     ):
         if properties is None:
             properties = {}
-        data = {
-            "vertices": {"ids": vertices},
-            "step": {"direction": direction, "properties": properties},
-            "max_depth": max_depth,
-            "capacity": capacity,
-            "with_vertex": with_vertex,
-        }
-        response = self._invoke_request(data=json.dumps(data))
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+        return self._invoke_request(
+            data=json.dumps(
+                {
+                    "vertices": {"ids": vertices},
+                    "step": {"direction": direction, "properties": properties},
+                    "max_depth": max_depth,
+                    "capacity": capacity,
+                    "with_vertex": with_vertex,
+                }
+            )
+        )
 
     @router.http(
         "GET",
         'traversers/paths?source="{source_id}"&target="{target_id}"&max_depth={max_depth}',
     )
-    def paths(self, source_id, target_id, max_depth):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def paths(self, source_id, target_id, max_depth):  # pylint: disable=unused-argument
+        return self._invoke_request()
 
     @router.http("POST", "traversers/customizedpaths")
     def customized_paths(
         self, sources, steps, sort_by="INCR", with_vertex=True, capacity=-1, limit=-1
     ):
-        data = {
-            "sources": sources,
-            "steps": steps,
-            "sort_by": sort_by,
-            "with_vertex": with_vertex,
-            "capacity": capacity,
-            "limit": limit,
-        }
-        response = self._invoke_request(data=json.dumps(data))
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+        return self._invoke_request(
+            data=json.dumps(
+                {
+                    "sources": sources,
+                    "steps": steps,
+                    "sort_by": sort_by,
+                    "with_vertex": with_vertex,
+                    "capacity": capacity,
+                    "limit": limit,
+                }
+            )
+        )
 
     @router.http("POST", "traversers/templatepaths")
     def template_paths(
         self, sources, targets, steps, capacity=10000, limit=10, with_vertex=True
     ):
-        data = {
-            "sources": sources,
-            "targets": targets,
-            "steps": steps,
-            "capacity": capacity,
-            "limit": limit,
-            "with_vertex": with_vertex,
-        }
-        response = self._invoke_request(data=json.dumps(data))
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+        return self._invoke_request(
+            data=json.dumps(
+                {
+                    "sources": sources,
+                    "targets": targets,
+                    "steps": steps,
+                    "capacity": capacity,
+                    "limit": limit,
+                    "with_vertex": with_vertex,
+                }
+            )
+        )
 
     @router.http(
         "GET",
         'traversers/crosspoints?source="{source_id}"&target="{target_id}"&max_depth={max_depth}',
     )
-    def crosspoints(self, source_id, target_id, max_depth):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def crosspoints(
+        self, source_id, target_id, max_depth  # pylint: disable=unused-argument
+    ):
+        return self._invoke_request()
 
     @router.http("POST", "traversers/customizedcrosspoints")
     def customized_crosspoints(
@@ -186,32 +167,26 @@ class TraverserManager(HugeParamsBase):
         capacity=-1,
         limit=-1,
     ):
-        data = {
-            "sources": sources,
-            "path_patterns": path_patterns,
-            "with_path": with_path,
-            "with_vertex": with_vertex,
-            "capacity": capacity,
-            "limit": limit,
-        }
-        response = self._invoke_request(data=json.dumps(data))
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+        return self._invoke_request(
+            data=json.dumps(
+                {
+                    "sources": sources,
+                    "path_patterns": path_patterns,
+                    "with_path": with_path,
+                    "with_vertex": with_vertex,
+                    "capacity": capacity,
+                    "limit": limit,
+                }
+            )
+        )
 
     @router.http("GET", 'traversers/rings?source="{source_id}"&max_depth={max_depth}')
-    def rings(self, source_id, max_depth):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def rings(self, source_id, max_depth):  # pylint: disable=unused-argument
+        return self._invoke_request()
 
     @router.http("GET", 'traversers/rays?source="{source_id}"&max_depth={max_depth}')
-    def rays(self, source_id, max_depth):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+    def rays(self, source_id, max_depth):  # pylint: disable=unused-argument
+        return self._invoke_request()
 
     @router.http("POST", "traversers/fusiformsimilarity")
     def fusiform_similarity(
@@ -231,39 +206,33 @@ class TraverserManager(HugeParamsBase):
         with_intermediary=False,
         with_vertex=True,
     ):
-        data = {
-            "sources": sources,
-            "label": label,
-            "direction": direction,
-            "min_neighbors": min_neighbors,
-            "alpha": alpha,
-            "min_similars": min_similars,
-            "top": top,
-            "group_property": group_property,
-            "min_groups": min_groups,
-            "max_degree": max_degree,
-            "capacity": capacity,
-            "limit": limit,
-            "with_intermediary": with_intermediary,
-            "with_vertex": with_vertex,
-        }
-        response = self._invoke_request(data=json.dumps(data))
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+        return self._invoke_request(
+            data=json.dumps(
+                {
+                    "sources": sources,
+                    "label": label,
+                    "direction": direction,
+                    "min_neighbors": min_neighbors,
+                    "alpha": alpha,
+                    "min_similars": min_similars,
+                    "top": top,
+                    "group_property": group_property,
+                    "min_groups": min_groups,
+                    "max_degree": max_degree,
+                    "capacity": capacity,
+                    "limit": limit,
+                    "with_intermediary": with_intermediary,
+                    "with_vertex": with_vertex,
+                }
+            )
+        )
 
     @router.http("GET", "traversers/vertices")
     def vertices(self, ids):
         params = {"ids": f'"{ids}"'}
-        response = self._invoke_request(params=params)
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+        return self._invoke_request(params=params)
 
     @router.http("GET", "traversers/edges")
     def edges(self, ids):
         params = {"ids": ids}
-        response = self._invoke_request(params=params)
-        if check_if_success(response, NotFoundError(response.content)):
-            return response.json()
-        return {}
+        return self._invoke_request(params=params)

@@ -15,14 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
 
 from pyhugegraph.api.common import HugeParamsBase
+from pyhugegraph.utils.exceptions import NotFoundError
 from pyhugegraph.structure.gremlin_data import GremlinData
 from pyhugegraph.structure.response_data import ResponseData
-from pyhugegraph.utils.exceptions import NotFoundError
 from pyhugegraph.utils import huge_router as router
-from pyhugegraph.utils.util import check_if_success
+from pyhugegraph.utils.log import log
 
 
 class GremlinManager(HugeParamsBase):
@@ -30,18 +29,23 @@ class GremlinManager(HugeParamsBase):
     @router.http("POST", "/gremlin")
     def exec(self, gremlin):
         gremlin_data = GremlinData(gremlin)
-        if self._sess._cfg.gs_supported:
+        if self._sess.cfg.gs_supported:
             gremlin_data.aliases = {
-                "graph": f"{self._sess._cfg.graphspace}-{self._sess._cfg.graph_name}",
-                "g": f"__g_{self._sess._cfg.graphspace}-{self._sess._cfg.graph_name}",
+                "graph": f"{self._sess.cfg.graphspace}-{self._sess.cfg.graph_name}",
+                "g": f"__g_{self._sess.cfg.graphspace}-{self._sess.cfg.graph_name}",
             }
         else:
             gremlin_data.aliases = {
-                "graph": f"{self._sess._cfg.graph_name}",
-                "g": f"__g_{self._sess._cfg.graph_name}",
+                "graph": f"{self._sess.cfg.graph_name}",
+                "g": f"__g_{self._sess.cfg.graph_name}",
             }
-        response = self._invoke_request(data=gremlin_data.to_json())
-        error = NotFoundError(f"Gremlin can't get results: {str(response.content)}")
-        if check_if_success(response, error):
-            return ResponseData(json.loads(response.content)).result
-        return ""
+
+        try:
+            if response := self._invoke_request(data=gremlin_data.to_json()):
+                return ResponseData(response).result
+            log.error(  # pylint: disable=logging-fstring-interpolation
+                f"Gremlin can't get results: {str(response)}"
+            )
+            return None
+        except Exception as e:
+            raise NotFoundError(f"Gremlin can't get results: {e}") from e

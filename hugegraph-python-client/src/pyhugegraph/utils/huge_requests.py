@@ -15,14 +15,17 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import requests
-from requests.adapters import HTTPAdapter
+
 from urllib3.util.retry import Retry
 from urllib.parse import urljoin
-
 from typing import Any, Optional
+from requests.adapters import HTTPAdapter
 from pyhugegraph.utils.constants import Constants
 from pyhugegraph.utils.huge_config import HGraphConfig
+from pyhugegraph.utils.util import ResponseValidation
+from pyhugegraph.utils.log import log
+
+import requests
 
 
 class HGraphSession:
@@ -66,11 +69,25 @@ class HGraphSession:
         self._session.mount("http://", adapter)
         self._session.mount("https://", adapter)
         self._session.keep_alive = False
-        # logger.debug(
-        #     "Session configured with retries=%s and backoff_factor=%s",
-        #     self.retries,
-        #     self.backoff_factor,
-        # )
+        log.debug(
+            "Session configured with retries=%s and backoff_factor=%s",
+            self._retries,
+            self._backoff_factor,
+        )
+
+    @property
+    def cfg(self):
+        """
+        Get the configuration information of the current instance.
+
+        Args:
+            None.
+
+        Returns:
+        -------
+            HGraphConfig: The configuration information of the current instance.
+        """
+        return self._cfg
 
     def resolve(self, path: str):
         """
@@ -80,7 +97,8 @@ class HGraphSession:
         :return: The fully resolved URL as a string.
 
         When path is "/some/things":
-        - Since path starts with "/", it is considered an absolute path, and urljoin will replace the path part of the base URL.
+        - Since path starts with "/", it is considered an absolute path,
+          and urljoin will replace the path part of the base URL.
         - Assuming the base URL is "http://127.0.0.1:8000/graphspaces/default/graphs/test_graph/"
         - The result will be "http://127.0.0.1:8000/some/things"
 
@@ -101,18 +119,34 @@ class HGraphSession:
         return urljoin(url, path).strip("/")
 
     def close(self):
+        """
+        closes the session.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        """
         self._session.close()
 
-    def request(self, path: str, method: str = "GET", **kwargs: Any):
-        try:
-            # print(method, self.resolve(path))
-            response = getattr(self._session, method.lower())(
-                self.resolve(path),
-                auth=self._auth,
-                headers=self._headers,
-                timeout=self._timeout,
-                **kwargs,
-            )
-            return response
-        except requests.RequestException as e:
-            raise
+    def request(
+        self,
+        path: str,
+        method: str = "GET",
+        validator=ResponseValidation(),
+        **kwargs: Any,
+    ) -> dict:
+        url = self.resolve(path)
+        response: requests.Response = getattr(self._session, method.lower())(
+            url,
+            auth=self._auth,
+            headers=self._headers,
+            timeout=self._timeout,
+            **kwargs,
+        )
+        log.debug(  # pylint: disable=logging-fstring-interpolation
+            f"Request: {method} {url} validator={validator} kwargs={kwargs} {response}"
+        )
+        return validator(response, method=method, path=path)

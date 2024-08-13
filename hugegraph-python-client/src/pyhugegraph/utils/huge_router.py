@@ -16,19 +16,21 @@
 # under the License.
 
 import re
-import json
 import inspect
 import functools
 import threading
 
-from abc import ABC
-from typing import Any, Callable, Dict, TYPE_CHECKING
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, Optional, TYPE_CHECKING
+from pyhugegraph.utils.log import log
+from pyhugegraph.utils.util import ResponseValidation
+
 
 if TYPE_CHECKING:
     from pyhugegraph.api.common import HGraphContext
 
 
-class SingletonBase(type):
+class SingletonMeta(type):
     _instances = {}
     _lock = threading.Lock()
 
@@ -44,18 +46,50 @@ class SingletonBase(type):
         return cls._instances[cls]
 
 
-class HGraphRouterManager(metaclass=SingletonBase):
+@dataclass
+class Route:
+    method: str
+    path: str
+    request_func: Optional[Callable] = None
+
+
+class RouterRegistry(metaclass=SingletonMeta):
     def __init__(self):
-        self._routers = {}
+        self._routers: Dict[str, Route] = {}
 
-    def register(self, key, path):
-        self._routers.update({key: path})
+    def register(self, key: str, route: Route):
+        self._routers[key] = route
 
-    def get_routers(self):
+    @property
+    def routers(self):
         return self._routers
 
     def __repr__(self) -> str:
-        return json.dumps(self._routers, indent=4)
+        return str(self._routers)
+
+
+def register(method: str, path: str) -> Callable:
+
+    def decorator(func: Callable) -> Callable:
+        RouterRegistry().register(
+            func.__qualname__,
+            Route(method, path),
+        )
+
+        @functools.wraps(func)
+        def wrapper(self: "HGraphContext", *args: Any, **kwargs: Any) -> Any:
+            route = RouterRegistry().routers.get(func.__qualname__)
+
+            if route.request_func is None:
+                route.request_func = functools.partial(
+                    self.session.request, method=method
+                )
+
+            return func(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 def http(method: str, path: str) -> Callable:
@@ -72,7 +106,7 @@ def http(method: str, path: str) -> Callable:
 
     def decorator(func: Callable) -> Callable:
         """Decorator function that modifies the original function."""
-        HGraphRouterManager().register(func.__qualname__, (method, path))
+        RouterRegistry().register(func.__qualname__, Route(method, path))
 
         @functools.wraps(func)
         def wrapper(self: "HGraphContext", *args: Any, **kwargs: Any) -> Any:
@@ -99,10 +133,10 @@ def http(method: str, path: str) -> Callable:
             else:
                 formatted_path = path
 
-            # todo: If possible, reduce unnecessary multiple creations.
-            cache_key = (func.__qualname__, method, formatted_path)
             # Use functools.partial to create a partial function for making requests
-            make_request = functools.partial(self._sess.request, formatted_path, method)
+            make_request = functools.partial(
+                self.session.request, formatted_path, method
+            )
             # Store the partial function on the instance
             setattr(self, f"_{func.__name__}_request", make_request)
 
@@ -113,9 +147,35 @@ def http(method: str, path: str) -> Callable:
     return decorator
 
 
-class HGraphRouter(ABC):
+class RouterMixin:
 
-    def _invoke_request(self, **kwargs: Any):
+    def _invoke_request_registered(
+        self, placeholders: dict = None, validator=ResponseValidation(), **kwargs: Any
+    ):
+        """
+        Make an HTTP request using the stored partial request function.
+        Args:
+            **kwargs (Any): Keyword arguments to be passed to the request function.
+        Returns:
+            Any: The response from the HTTP request.
+        """
+        frame = inspect.currentframe().f_back
+        fname = frame.f_code.co_name
+        route = RouterRegistry().routers.get(f"{self.__class__.__name__}.{fname}")
+
+        if re.search(r"{\w+}", route.path):
+            assert placeholders is not None, "Placeholders must be provided"
+            formatted_path = route.path.format(**placeholders)
+        else:
+            formatted_path = route.path
+
+        log.debug(  # pylint: disable=logging-fstring-interpolation
+            f"Invoke request registered with router: {route.method}: "
+            f"{self.__class__.__name__}.{fname}: {formatted_path}"
+        )
+        return route.request_func(formatted_path, validator=validator, **kwargs)
+
+    def _invoke_request(self, validator=ResponseValidation(), **kwargs: Any):
         """
         Make an HTTP request using the stored partial request function.
 
@@ -127,4 +187,7 @@ class HGraphRouter(ABC):
         """
         frame = inspect.currentframe().f_back
         fname = frame.f_code.co_name
-        return getattr(self, f"_{fname}_request")(**kwargs)
+        log.debug(  # pylint: disable=logging-fstring-interpolation
+            f"Invoke request: {str(self.__class__.__name__)}.{fname}"
+        )
+        return getattr(self, f"_{fname}_request")(validator=validator, **kwargs)

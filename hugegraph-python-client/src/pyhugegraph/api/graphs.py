@@ -19,49 +19,39 @@ import json
 
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils import huge_router as router
-from pyhugegraph.utils.exceptions import NotFoundError
-from pyhugegraph.utils.util import check_if_success
+from pyhugegraph.utils.util import ResponseValidation
 
 
 class GraphsManager(HugeParamsBase):
 
     @router.http("GET", "/graphs")
-    def get_all_graphs(self):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return str(response.content)
-        return ""
+    def get_all_graphs(self) -> dict:
+        return self._invoke_request(validator=ResponseValidation("text"))
 
     @router.http("GET", "/versions")
-    def get_version(self):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return str(response.content)
-        return ""
+    def get_version(self) -> dict:
+        return self._invoke_request(validator=ResponseValidation("text"))
 
     @router.http("GET", "")
-    def get_graph_info(self):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return str(response.content)
-        return ""
+    def get_graph_info(self) -> dict:
+        return self._invoke_request(validator=ResponseValidation("text"))
 
-    def clear_graph_all_data(self):
-        if self._sess._cfg.gs_supported:
+    def clear_graph_all_data(self) -> dict:
+        if self._sess.cfg.gs_supported:
             response = self._sess.request(
-                "", "PUT", data=json.dumps({"action": "clear", "clear_schema": True})
+                "",
+                "PUT",
+                validator=ResponseValidation("text"),
+                data=json.dumps({"action": "clear", "clear_schema": True}),
             )
         else:
             response = self._sess.request(
-                "clear?confirm_message=I%27m+sure+to+delete+all+data", "DELETE"
+                "clear?confirm_message=I%27m+sure+to+delete+all+data",
+                "DELETE",
+                validator=ResponseValidation("text"),
             )
-        if check_if_success(response, NotFoundError(response.content)):
-            return str(response.content)
-        return ""
+        return response
 
     @router.http("GET", "conf")
-    def get_graph_config(self):
-        response = self._invoke_request()
-        if check_if_success(response, NotFoundError(response.content)):
-            return str(response.content)
-        return ""
+    def get_graph_config(self) -> dict:
+        return self._invoke_request(validator=ResponseValidation("text"))

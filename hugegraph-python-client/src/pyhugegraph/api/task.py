@@ -16,9 +16,7 @@
 # under the License.
 
 from pyhugegraph.api.common import HugeParamsBase
-from pyhugegraph.utils.exceptions import NotFoundError
 from pyhugegraph.utils import huge_router as router
-from pyhugegraph.utils.util import check_if_success
 
 
 class TaskManager(HugeParamsBase):
@@ -30,24 +28,16 @@ class TaskManager(HugeParamsBase):
             params["status"] = status
         if limit is not None:
             params["limit"] = limit
-        response = self._invoke_request(params=params)
-        check_if_success(response, NotFoundError(response.content))
-        return response.json()
+        return self._invoke_request(params=params)
 
     @router.http("GET", "tasks/{task_id}")
-    def get_task(self, task_id):
-        response = self._invoke_request()
-        check_if_success(response, NotFoundError(response.content))
-        return response.json()
+    def get_task(self, task_id):  # pylint: disable=unused-argument
+        return self._invoke_request()
 
     @router.http("DELETE", "tasks/{task_id}")
-    def delete_task(self, task_id):
-        response = self._invoke_request()
-        check_if_success(response, NotFoundError(response.content))
-        return response.status_code
+    def delete_task(self, task_id):  # pylint: disable=unused-argument
+        return self._invoke_request()
 
     @router.http("PUT", "tasks/{task_id}?action=cancel")
-    def cancel_task(self, task_id):
-        response = self._invoke_request()
-        check_if_success(response, NotFoundError(response.content))
-        return response.json()
+    def cancel_task(self, task_id):  # pylint: disable=unused-argument
+        return self._invoke_request()

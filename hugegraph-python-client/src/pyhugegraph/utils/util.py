@@ -16,12 +16,15 @@
 # under the License.
 
 import json
+import traceback
+import requests
 
 from pyhugegraph.utils.exceptions import (
     ServiceUnavailableException,
     NotAuthorizedError,
     NotFoundError,
 )
+from pyhugegraph.utils.log import log
 
 
 def create_exception(response_content):
@@ -60,3 +63,68 @@ def check_if_success(response, error=None):
         )
         raise error
     return True
+
+
+class ResponseValidation:
+    def __init__(self, content_type: str = "json", strict: bool = True) -> None:
+        super().__init__()
+        self._content_type = content_type
+        self._strict = strict
+
+    def __call__(self, response: requests.Response, method: str, path: str):
+        """
+        Validate the HTTP response according to the provided content type and strictness.
+
+        :param response: HTTP response object
+        :param method: HTTP method used (e.g., 'GET', 'POST')
+        :param path: URL path of the request
+        :return: Parsed response content or empty dict if none applicable
+        """
+        result = {}
+
+        try:
+            response.raise_for_status()
+
+            if response.status_code == 204:
+                log.debug("No content returned (204) for %s: %s", method, path)
+            else:
+                if self._content_type == "raw":
+                    result = response
+                elif self._content_type == "json":
+                    result = response.json()
+                elif self._content_type == "text":
+                    result = response.text
+                else:
+                    raise ValueError(f"Unknown content type: {self._content_type}")
+
+        except requests.exceptions.HTTPError as e:
+            if not self._strict and response.status_code == 404:
+                log.info(  # pylint: disable=logging-fstring-interpolation
+                    f"Resource {path} not found (404)"
+                )
+            else:
+                try:
+                    details = response.json().get(
+                        "exception", "key 'exception' not found"
+                    )
+                except (ValueError, KeyError):
+                    details = "key 'exception' not found"
+
+                log.error(  # pylint: disable=logging-fstring-interpolation
+                    f"{method}: {e}; Server Exception: {details}"
+                )
+
+                if response.status_code == 404:
+                    raise NotFoundError(response.content) from e
+
+                raise e
+
+        except Exception:  # pylint: disable=broad-exception-caught
+            log.error(  # pylint: disable=logging-fstring-interpolation
+                f"Unhandled exception occurred: {traceback.format_exc()}"
+            )
+
+        return result
+
+    def __repr__(self) -> str:
+        return f"ResponseValidation(content_type={self._content_type}, strict={self._strict})"

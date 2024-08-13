@@ -18,9 +18,9 @@
 import json
 
 from pyhugegraph.api.common import HugeParamsBase
-from pyhugegraph.utils.exceptions import CreateError, UpdateError, RemoveError
+from pyhugegraph.utils.util import ResponseValidation
 from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
-from pyhugegraph.utils.util import check_if_success, check_if_authorized
+from pyhugegraph.utils.log import log
 
 
 class EdgeLabel(HugeParamsBase):
@@ -81,8 +81,7 @@ class EdgeLabel(HugeParamsBase):
     @decorator_params
     def ifNotExist(self) -> "EdgeLabel":
         path = f'schema/edgelabels/{self._parameter_holder.get_value("name")}'
-        response = self._sess.request(path)
-        if response.status_code == 200 and check_if_authorized(response):
+        if _ := self._sess.request(path, validator=ResponseValidation(strict=False)):
             self._parameter_holder.set("not_exist", False)
         return self
 
@@ -105,25 +104,19 @@ class EdgeLabel(HugeParamsBase):
             if key in dic:
                 data[key] = dic[key]
         path = "schema/edgelabels"
-        response = self._sess.request(path, "POST", data=json.dumps(data))
         self.clean_parameter_holder()
-        error = CreateError(
-            f'CreateError: "create EdgeLabel failed", Detail:  "{str(response.content)}"'
-        )
-        if check_if_success(response, error):
-            return f'create EdgeLabel success, Detail: "{str(response.content)}"'
+        if response := self._sess.request(path, "POST", data=json.dumps(data)):
+            return f'create EdgeLabel success, Detail: "{str(response)}"'
+        log.error(f'create EdgeLabel failed, Detail: "{str(response)}"')
         return None
 
     @decorator_params
     def remove(self):
         path = f'schema/edgelabels/{self._parameter_holder.get_value("name")}'
-        response = self._sess.request(path, "DELETE")
         self.clean_parameter_holder()
-        error = RemoveError(
-            f'RemoveError: "remove EdgeLabel failed", Detail:  "{str(response.content)}"'
-        )
-        if check_if_success(response, error):
-            return f'remove EdgeLabel success, Detail: "{str(response.content)}"'
+        if response := self._sess.request(path, "DELETE"):
+            return f'remove EdgeLabel success, Detail: "{str(response)}"'
+        log.error(f'remove EdgeLabel failed, Detail: "{str(response)}"')
         return None
 
     @decorator_params
@@ -136,13 +129,10 @@ class EdgeLabel(HugeParamsBase):
                 data[key] = dic[key]
 
         path = f'schema/edgelabels/{data["name"]}?action=append'
-        response = self._sess.request(path, "PUT", data=json.dumps(data))
         self.clean_parameter_holder()
-        error = UpdateError(
-            f'UpdateError: "append EdgeLabel failed", Detail: "{str(response.content)}"'
-        )
-        if check_if_success(response, error):
-            return f'append EdgeLabel success, Detail: "{str(response.content)}"'
+        if response := self._sess.request(path, "PUT", data=json.dumps(data)):
+            return f'append EdgeLabel success, Detail: "{str(response)}"'
+        log.error(f'append EdgeLabel failed, Detail: "{str(response)}"')
         return None
 
     @decorator_params
@@ -155,11 +145,8 @@ class EdgeLabel(HugeParamsBase):
         )
         path = f"schema/edgelabels/{name}?action=eliminate"
         data = {"name": name, "user_data": user_data}
-        response = self._sess.request(path, "PUT", data=json.dumps(data))
         self.clean_parameter_holder()
-        error = UpdateError(
-            f'UpdateError: "eliminate EdgeLabel failed", Detail: "{str(response.content)}"'
-        )
-        if check_if_success(response, error):
-            return f'eliminate EdgeLabel success, Detail: "{str(response.content)}"'
+        if response := self._sess.request(path, "PUT", data=json.dumps(data)):
+            return f'eliminate EdgeLabel success, Detail: "{str(response)}"'
+        log.error(f'eliminate EdgeLabel failed, Detail: "{str(response)}"')
         return None

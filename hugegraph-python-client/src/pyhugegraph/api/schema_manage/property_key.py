@@ -19,9 +19,9 @@ import json
 
 
 from pyhugegraph.api.common import HugeParamsBase
-from pyhugegraph.utils.exceptions import CreateError, UpdateError, RemoveError
+from pyhugegraph.utils.util import ResponseValidation
 from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
-from pyhugegraph.utils.util import check_if_success, check_if_authorized
+from pyhugegraph.utils.log import log
 
 
 class PropertyKey(HugeParamsBase):
@@ -100,8 +100,7 @@ class PropertyKey(HugeParamsBase):
 
     def ifNotExist(self) -> "PropertyKey":
         path = f'schema/propertykeys/{self._parameter_holder.get_value("name")}'
-        response = self._sess.request(path)
-        if response.status_code == 200 and check_if_authorized(response):
+        if _ := self._sess.request(path, validator=ResponseValidation(strict=False)):
             self._parameter_holder.set("not_exist", False)
         return self
 
@@ -114,16 +113,10 @@ class PropertyKey(HugeParamsBase):
         if "cardinality" in dic:
             property_keys["cardinality"] = dic["cardinality"]
         path = "schema/propertykeys"
-        response = self._sess.request(path, "POST", data=json.dumps(property_keys))
         self.clean_parameter_holder()
-        if check_if_success(
-            response,
-            CreateError(
-                f'CreateError: "create PropertyKey failed", Detail: {str(response.content)}'
-            ),
-        ):
-            return f"create PropertyKey success, Detail: {str(response.content)}"
-        return f"create PropertyKey failed, Detail: {str(response.content)}"
+        if response := self._sess.request(path, "POST", data=json.dumps(property_keys)):
+            return f"create PropertyKey success, Detail: {str(response)}"
+        log.error("create PropertyKey failed, Detail: %s", str(response))
 
     @decorator_params
     def append(self):
@@ -134,16 +127,10 @@ class PropertyKey(HugeParamsBase):
         data = {"name": property_name, "user_data": user_data}
 
         path = f"schema/propertykeys/{property_name}/?action=append"
-        response = self._sess.request(path, "PUT", data=json.dumps(data))
         self.clean_parameter_holder()
-        if check_if_success(
-            response,
-            UpdateError(
-                f'UpdateError: "append PropertyKey failed", Detail: {str(response.content)}'
-            ),
-        ):
-            return f"append PropertyKey success, Detail: {str(response.content)}"
-        return f"append PropertyKey failed, Detail: {str(response.content)}"
+        if response := self._sess.request(path, "PUT", data=json.dumps(data)):
+            return f"append PropertyKey success, Detail: {str(response)}"
+        log.error("append PropertyKey failed, Detail: %s", str(response))
 
     @decorator_params
     def eliminate(self):
@@ -154,26 +141,16 @@ class PropertyKey(HugeParamsBase):
         data = {"name": property_name, "user_data": user_data}
 
         path = f"schema/propertykeys/{property_name}/?action=eliminate"
-        response = self._sess.request(path, "PUT", data=json.dumps(data))
         self.clean_parameter_holder()
-        error = UpdateError(
-            f'UpdateError: "eliminate PropertyKey failed", Detail: {str(response.content)}'
-        )
-        if check_if_success(response, error):
-            return f"eliminate PropertyKey success, Detail: {str(response.content)}"
-        return f"eliminate PropertyKey failed, Detail: {str(response.content)}"
+        if response := self._sess.request(path, "PUT", data=json.dumps(data)):
+            return f"eliminate PropertyKey success, Detail: {str(response)}"
+        log.error("eliminate PropertyKey failed, Detail: %s", str(response))
 
     @decorator_params
     def remove(self):
         dic = self._parameter_holder.get_dic()
         path = f'schema/propertykeys/{dic["name"]}'
-        response = self._sess.request(path, "DELETE")
         self.clean_parameter_holder()
-        if check_if_success(
-            response,
-            RemoveError(
-                f'RemoveError: "delete PropertyKey failed", Detail: {str(response.content)}'
-            ),
-        ):
-            return f'delete PropertyKey success, Detail: {dic["name"]}'
-        return f"delete PropertyKey failed, Detail: {str(response.content)}"
+        if response := self._sess.request(path, "DELETE"):
+            return f"delete PropertyKey success, Detail: {str(response)}"
+        log.error("delete PropertyKey failed, Detail: %s", str(response))
