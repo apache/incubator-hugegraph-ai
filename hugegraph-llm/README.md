@@ -18,28 +18,28 @@ graph systems and large language models.
 ## Environment Requirements
 
 - python 3.9+ 
-- hugegraph 1.0.0+
+- hugegraph-server 1.0+
 
 ## Preparation
 
-- Start the HugeGraph database, you can do it via Docker/[Binary packages](https://hugegraph.apache.org/docs/download/download/). 
+1. Start the HugeGraph database, you can do it via Docker/[Binary packages](https://hugegraph.apache.org/docs/download/download/). 
 Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for guidance
-- Clone this project
+2. Clone this project
     ```bash
     git clone https://github.com/apache/incubator-hugegraph-ai.git
     ```
-- Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph_llm](src/hugegraph_llm)
+3. Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph_llm](src/hugegraph_llm)
     ```bash
     cd ./incubator-hugegraph-ai # better to use virtualenv (source venv/bin/activate) 
     pip install ./hugegraph-python-client
     pip install -r ./hugegraph-llm/requirements.txt
     ```
-- Enter the project directory
+4. Enter the project directory
     ```bash
     cd ./hugegraph-llm/src
     ```
 
-- Start the gradio interactive demo of **Graph RAG**, you can start with the following command, and open http://127.0.0.1:8001 after starting
+5. Start the gradio interactive demo of **Graph RAG**, you can start with the following command, and open http://127.0.0.1:8001 after starting
     ```bash
     python3 -m hugegraph_llm.demo.rag_web_demo
     ```
@@ -48,12 +48,12 @@ Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-d
     python3 -m hugegraph_llm.demo.rag_web_demo --host 127.0.0.1 --port 18001
     ```
 
-- Or start the gradio interactive demo of **Text2Gremlin**, you can start with the following command, and open http://127.0.0.1:8002 after starting. You can also change the default host `0.0.0.0` and port `8002` as above.
+6. Or start the gradio interactive demo of **Text2Gremlin**, you can start with the following command, and open http://127.0.0.1:8002 after starting. You can also change the default host `0.0.0.0` and port `8002` as above. (🚧ing)
     ```bash
     python3 -m hugegraph_llm.demo.gremlin_generate_web_demo
    ```
 
-- After starting the web demo, the config file `.env` will be automatically generated. You can modify its content in the web page. Or modify the file directly and restart the web application.
+7. After starting the web demo, the config file `.env` will be automatically generated. You can modify its content in the web page. Or modify the file directly and restart the web application.
 
     (Optional)To regenerate the config file, you can use `config.generate` with `-u` or `--update`.
     ```bash
