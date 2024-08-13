@@ -28,8 +28,6 @@ from pyhugegraph.structure.edge_label_data import EdgeLabelData
 from pyhugegraph.structure.index_label_data import IndexLabelData
 from pyhugegraph.structure.property_key_data import PropertyKeyData
 from pyhugegraph.structure.vertex_label_data import VertexLabelData
-from pyhugegraph.utils.exceptions import NotFoundError
-from pyhugegraph.utils.util import check_if_success
 from pyhugegraph.utils import huge_router as router
 from pyhugegraph.utils.log import log
 

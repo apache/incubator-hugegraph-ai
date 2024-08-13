@@ -68,6 +68,30 @@ class RouterRegistry(metaclass=SingletonMeta):
         return str(self._routers)
 
 
+def register(method: str, path: str) -> Callable:
+
+    def decorator(func: Callable) -> Callable:
+        RouterRegistry().register(
+            func.__qualname__,
+            Route(method, path),
+        )
+
+        @functools.wraps(func)
+        def wrapper(self: "HGraphContext", *args: Any, **kwargs: Any) -> Any:
+            route = RouterRegistry().routers.get(func.__qualname__)
+
+            if route.request_func is None:
+                route.request_func = functools.partial(
+                    self.session.request, method=method
+                )
+
+            return func(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 def http(method: str, path: str) -> Callable:
     """
     A decorator to format the pathinfo and inject a request function into the decorated method.
@@ -124,6 +148,31 @@ def http(method: str, path: str) -> Callable:
 
 
 class RouterMixin:
+
+    def _invoke_request_registered(
+        self, placeholders: dict = None, validator=ResponseValidation(), **kwargs: Any
+    ):
+        """
+        Make an HTTP request using the stored partial request function.
+        Args:
+            **kwargs (Any): Keyword arguments to be passed to the request function.
+        Returns:
+            Any: The response from the HTTP request.
+        """
+        frame = inspect.currentframe().f_back
+        fname = frame.f_code.co_name
+        route = RouterRegistry().routers.get(f"{self.__class__.__name__}.{fname}")
+
+        if re.search(r"{\w+}", route.path):
+            assert placeholders is not None, "Placeholders must be provided"
+            formatted_path = route.path.format(**placeholders)
+        else:
+            formatted_path = route.path
+
+        log.debug(  # pylint: disable=logging-fstring-interpolation
+            f"Invoke request registered with router: {route.method}: {self.__class__.__name__}.{fname}: {formatted_path}"
+        )
+        return route.request_func(formatted_path, validator=validator, **kwargs)
 
     def _invoke_request(self, validator=ResponseValidation(), **kwargs: Any):
         """
