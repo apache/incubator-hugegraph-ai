@@ -16,8 +16,8 @@
 # under the License.
 
 import json
-import requests
 import traceback
+import requests
 
 from pyhugegraph.utils.exceptions import (
     ServiceUnavailableException,
@@ -116,8 +116,8 @@ class ResponseValidation:
 
                 if response.status_code == 404:
                     raise NotFoundError(response.content) from e
-                else:
-                    raise e
+
+                raise e
 
         except Exception:  # pylint: disable=broad-exception-caught
             log.error(  # pylint: disable=logging-fstring-interpolation
