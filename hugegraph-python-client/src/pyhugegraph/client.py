@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import TypeVar, Callable, Any, Optional
+from typing import Any, Callable, Optional, TypeVar
 
 from pyhugegraph.api.auth import AuthManager
 from pyhugegraph.api.graph import GraphManager
@@ -29,7 +29,6 @@ from pyhugegraph.api.variable import VariableManager
 from pyhugegraph.api.version import VersionManager
 from pyhugegraph.utils.huge_config import HGraphConfig
 from pyhugegraph.utils.huge_requests import HGraphSession
-
 
 T = TypeVar("T")
 
@@ -54,8 +53,8 @@ class PyHugeClient:
         graph: str,
         user: str,
         pwd: str,
-        timeout: int = 10,
         graphspace: Optional[str] = None,
+        timeout: int = 10,
     ):
         self.cfg = HGraphConfig(ip, port, user, pwd, graph, graphspace, timeout)
 
