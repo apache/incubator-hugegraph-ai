@@ -48,7 +48,7 @@ Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-d
     python3 -m hugegraph_llm.demo.rag_web_demo --host 127.0.0.1 --port 18001
     ```
 
-6. Or start the gradio interactive demo of **Text2Gremlin**, you can start with the following command, and open http://127.0.0.1:8002 after starting. You can also change the default host `0.0.0.0` and port `8002` as above.
+6. Or start the gradio interactive demo of **Text2Gremlin**, you can start with the following command, and open http://127.0.0.1:8002 after starting. You can also change the default host `0.0.0.0` and port `8002` as above. (🚧ing)
     ```bash
     python3 -m hugegraph_llm.demo.gremlin_generate_web_demo
    ```
