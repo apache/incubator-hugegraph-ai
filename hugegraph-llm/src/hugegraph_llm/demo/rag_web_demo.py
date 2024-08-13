@@ -435,6 +435,15 @@ if __name__ == "__main__":
         btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
 
     # TODO: we need to mount gradio to a FastAPI app to provide api service
+
+
+    @app.get("/graph_rag")
+    def graph_rag_api(text: str):
+        result = graph_rag(text, "false", "true", "false", "false")
+        return {"raw_answer": result[0], "vector_only_answer": result[1],
+                "graph_only_answer": result[2], "graph_vector_answer": result[3]}
+
+
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
     # Note: set reload to False in production environment
     uvicorn.run(app, host=args.host, port=args.port)
