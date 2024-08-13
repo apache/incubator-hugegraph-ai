@@ -25,17 +25,18 @@ pip install -e .
 ```python
 from pyhugegraph.client import PyHugeClient
 
-# The 'gs' parameter is optional and represents the name of the graph space to operate on (if graph spaces are configured in your HugeGraph setup).
-# The default is usually 'DEFAULT' (depending on your HugeGraph server configuration).
-# If your HugeGraph configuration enables graph spaces and you need to operate on a specific graph space, you can specify it here.
-client = PyHugeClient("127.0.0.1", "8080", user="admin", pwd="admin", graph="hugegraph", gs="DEFAULT") # If graph spaces are not enabled or not of concern, the 'gs' parameter can be omitted
+# For users of HugeGraph API version 3 and higher, the 'gs' parameter becomes relevant if graph spaces are enabled.
+# It specifies the name of the graph space to operate on. If graph spaces are not enabled, this parameter is optional and can be omitted.
+# The default graph space name is often 'DEFAULT', but it depends on your HugeGraph server configuration.
+# If you're using a version older than v3 or if graph spaces are not enabled, simply omit the 'gs' parameter.
+client = PyHugeClient("127.0.0.1", "8080", user="admin", pwd="admin", graph="hugegraph", gs="DEFAULT") # For v3+ with graph spaces enabled. Omit 'gs' for older versions or without graph spaces.
 
 """
 Note:
 
-The ‘gs’ parameter is used to specify the graph space to operate on. In graph database management, graph spaces are often used to separate and manage different graph structures within a single HugeGraph cluster, providing isolation and resource management capabilities. If your use case involves multiple graphs or graph spaces, you need to specify the ‘gs’ parameter.
-The ‘graph’ parameter refers to the specific graph you want to operate on, not an alias. There can be multiple graphs within the same graph space.
-Make sure you modify the IP address, port number, authentication information, etc., in the above sample code according to your HugeGraph configuration and service status.
+Starting with HugeGraph API version 3, the gs parameter is necessary when graph spaces are enabled to specify the graph space context within which operations are performed.
+If you’re using a version older than v3 or your HugeGraph instance does not have graph spaces enabled, the gs parameter is optional and you can safely omit it from the PyHugeClient initialization.
+Always refer to the documentation of your HugeGraph version for accurate configuration details and to ensure compatibility with the features you intend to use.
 """
 
 """system"""
