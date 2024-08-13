@@ -15,10 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import re
-import functools
 
-from typing import Any, Callable
 from decorator import decorator
 from pyhugegraph.utils.exceptions import NotAuthorizedError
 

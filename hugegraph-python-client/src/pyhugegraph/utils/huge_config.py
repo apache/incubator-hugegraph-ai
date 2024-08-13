@@ -51,7 +51,7 @@ class HGraphConfig:
                     f"Retrieved API version information from the server: {core}."
                 )
 
-                match = re.search("(\d+)\.(\d+)(?:\.(\d+))?(?:\.\d+)?", core)
+                match = re.search(r"(\d+)\.(\d+)(?:\.(\d+))?(?:\.\d+)?", core)
                 major, minor, patch = map(int, match.groups())
                 self.version.extend([major, minor, patch])
 

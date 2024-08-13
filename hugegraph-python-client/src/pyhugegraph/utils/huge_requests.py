@@ -15,8 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import requests
-import traceback
 
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -26,6 +24,8 @@ from pyhugegraph.utils.constants import Constants
 from pyhugegraph.utils.huge_config import HGraphConfig
 from pyhugegraph.utils.util import ResponseValidation
 from pyhugegraph.utils.log import log
+
+import requests
 
 
 class HGraphSession:
@@ -97,7 +97,8 @@ class HGraphSession:
         :return: The fully resolved URL as a string.
 
         When path is "/some/things":
-        - Since path starts with "/", it is considered an absolute path, and urljoin will replace the path part of the base URL.
+        - Since path starts with "/", it is considered an absolute path,
+          and urljoin will replace the path part of the base URL.
         - Assuming the base URL is "http://127.0.0.1:8000/graphspaces/default/graphs/test_graph/"
         - The result will be "http://127.0.0.1:8000/some/things"
 
