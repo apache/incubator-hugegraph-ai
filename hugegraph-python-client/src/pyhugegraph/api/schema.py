@@ -16,8 +16,6 @@
 # under the License.
 
 
-import json
-
 from typing import Optional, Dict, List
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.api.schema_manage.edge_label import EdgeLabel

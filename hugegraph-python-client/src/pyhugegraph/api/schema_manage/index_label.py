@@ -24,7 +24,6 @@ from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
 from pyhugegraph.utils.log import log
 
 
-# pylint: disable=unbound-method-call-no-value-for-parameter
 class IndexLabel(HugeParamsBase):
 
     @decorator_params

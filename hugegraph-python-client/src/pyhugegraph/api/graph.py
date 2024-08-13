@@ -174,7 +174,7 @@ class GraphManager(HugeParamsBase):
         page=None,
         properties=None,
     ):
-        path = f"graph/edges?"
+        path = "graph/edges?"
         para = ""
         if vertex_id:
             if direction:

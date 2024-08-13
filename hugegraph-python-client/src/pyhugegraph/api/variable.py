@@ -18,9 +18,7 @@
 import json
 
 from pyhugegraph.api.common import HugeParamsBase
-from pyhugegraph.utils.exceptions import NotFoundError
 from pyhugegraph.utils import huge_router as router
-from pyhugegraph.utils.util import check_if_success
 
 
 class VariableManager(HugeParamsBase):
