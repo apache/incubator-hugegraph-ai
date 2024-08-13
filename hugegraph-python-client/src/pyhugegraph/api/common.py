@@ -87,13 +87,16 @@ class HugeParamsBase(HGraphContext, RouterMixin):
         camel_case_pattern = re.compile(r"^[a-z]+([A-Z][a-z]*)+$")
         attributes = dir(self)
         for attr in attributes:
-            if not attr.startswith("__"):
-                if callable(getattr(self, attr)):
-                    if camel_case_pattern.match(attr):
-                        s = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", attr)
-                        snake = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s).lower()
-                        setattr(self, snake, getattr(self, attr))
-                        log.debug(  # pylint: disable=logging-fstring-interpolation
-                            f"The method {self.__class__.__name__}.{attr} is deprecated and will be removed in future versions. "
-                            f"Please update your code to use the new method name {self.__class__.__name__}.{snake} instead."
-                        )
+            if attr.startswith("__"):
+                continue
+            if not callable(getattr(self, attr)):
+                continue
+            if camel_case_pattern.match(attr):
+                s = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", attr)
+                snake = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s).lower()
+                setattr(self, snake, getattr(self, attr))
+                log.debug(  # pylint: disable=logging-fstring-interpolation
+                    f"The method {self.__class__.__name__}.{attr} "
+                    f"is deprecated and will be removed in future versions. "
+                    f"Please update your code to use the new method name {self.__class__.__name__}.{snake} instead."
+                )
