@@ -88,10 +88,10 @@ class IndexLabel(HugeParamsBase):
         data["base_value"] = dic["base_value"]
         data["index_type"] = dic["index_type"]
         data["fields"] = list(dic["fields"])
-        path = f"schema/indexlabels"
+        path = "schema/indexlabels"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "POST", data=json.dumps(data)):
-            return f'create IndexLabel success, Deatil: "{str(response)}"'
+            return f'create IndexLabel success, Detail: "{str(response)}"'
         log.error(f'create IndexLabel failed, Detail: "{str(response)}"')
         return None
 
@@ -101,6 +101,6 @@ class IndexLabel(HugeParamsBase):
         path = f"schema/indexlabels/{name}"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "DELETE"):
-            return f'remove IndexLabel success, Deatil: "{str(response)}"'
+            return f'remove IndexLabel success, Detail: "{str(response)}"'
         log.error(f'remove IndexLabel failed, Detail: "{str(response)}"')
         return None
