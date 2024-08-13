@@ -55,9 +55,9 @@ class PyHugeClient:
         user: str,
         pwd: str,
         timeout: int = 10,
-        gs: Optional[str] = None,
+        graphspace: Optional[str] = None,
     ):
-        self.cfg = HGraphConfig(ip, port, user, pwd, graph, gs, timeout)
+        self.cfg = HGraphConfig(ip, port, user, pwd, graph, graphspace, timeout)
 
     @manager_builder
     def schema(self) -> "SchemaManager":

@@ -25,17 +25,17 @@ pip install -e .
 ```python
 from pyhugegraph.client import PyHugeClient
 
-# For users of HugeGraph API version 3 and higher, the 'gs' parameter becomes relevant if graph spaces are enabled.
+# For users of HugeGraph API version 3 and higher, the 'graphspace' parameter becomes relevant if graph spaces are enabled.
 # It specifies the name of the graph space to operate on. If graph spaces are not enabled, this parameter is optional and can be omitted.
 # The default graph space name is often 'DEFAULT', but it depends on your HugeGraph server configuration.
-# If you're using a version older than v3 or if graph spaces are not enabled, simply omit the 'gs' parameter.
-client = PyHugeClient("127.0.0.1", "8080", user="admin", pwd="admin", graph="hugegraph", gs="DEFAULT") # For v3+ with graph spaces enabled. Omit 'gs' for older versions or without graph spaces.
+# If you're using a version older than v3 or if graph spaces are not enabled, simply omit the 'graphspace' parameter.
+client = PyHugeClient("127.0.0.1", "8080", user="admin", pwd="admin", graph="hugegraph", graphspace="DEFAULT") # For v3+ with graph spaces enabled. Omit 'graphspace' for older versions or without graph spaces.
 
 """
 Note:
 
-Starting with HugeGraph API version 3, the gs parameter is necessary when graph spaces are enabled to specify the graph space context within which operations are performed.
-If you’re using a version older than v3 or your HugeGraph instance does not have graph spaces enabled, the gs parameter is optional and you can safely omit it from the PyHugeClient initialization.
+Starting with HugeGraph API version 3, the graphspace parameter is necessary when graph spaces are enabled to specify the graph space context within which operations are performed.
+If you’re using a version older than v3 or your HugeGraph instance does not have graph spaces enabled, the graphspace parameter is optional and you can safely omit it from the PyHugeClient initialization.
 Always refer to the documentation of your HugeGraph version for accurate configuration details and to ensure compatibility with the features you intend to use.
 """
 
