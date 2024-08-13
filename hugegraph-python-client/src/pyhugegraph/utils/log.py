@@ -31,7 +31,7 @@ def init_log(log_file="logs/output.log"):
 
     # Create a logger
     log = logging.getLogger(__name__)
-    log.setLevel(logging.DEBUG)
+    log.setLevel(logging.INFO)
 
     # Create a handler for writing to log file
     file_handler = TimedRotatingFileHandler(
@@ -72,6 +72,6 @@ def init_log(log_file="logs/output.log"):
 
     return log
 
- 
+
 # Default logger configuration
 log = init_log()

@@ -66,7 +66,7 @@ def check_if_success(response, error=None):
 
 
 class ResponseValidation:
-    def __init__(self, content_type="json", strict: bool = False) -> None:
+    def __init__(self, content_type: str = "json", strict: bool = True) -> None:
         super().__init__()
         self._content_type = content_type
         self._strict = strict
@@ -81,30 +81,49 @@ class ResponseValidation:
         :return: Parsed response content or empty dict if none applicable
         """
         result = {}
+
         try:
             response.raise_for_status()
 
             if response.status_code == 204:
-                log.warning("No content returned (204) for %s: %s", method, path)
+                log.debug("No content returned (204) for %s: %s", method, path)
             else:
-                if self._content_type == "json":
+                if self._content_type == "raw":
+                    result = response
+                elif self._content_type == "json":
                     result = response.json()
-                else:
+                elif self._content_type == "text":
                     result = response.text
+                else:
+                    raise ValueError(f"Unknown content type: {self._content_type}")
 
         except requests.exceptions.HTTPError as e:
             if not self._strict and response.status_code == 404:
-                log.info("Resource %s not found (404)", path)
+                log.info(  # pylint: disable=logging-fstring-interpolation
+                    f"Resource {path} not found (404)"
+                )
             else:
-                details = response.json()["exception"]
+                try:
+                    details = response.json().get(
+                        "exception", "key 'exception' not found"
+                    )
+                except (ValueError, KeyError):
+                    details = "key 'exception' not found"
+
                 log.error(  # pylint: disable=logging-fstring-interpolation
                     f"{method}: {e}; Server Exception: {details}"
                 )
+
+                if response.status_code == 404:
+                    raise NotFoundError(response.content) from e
+                else:
+                    raise e
 
         except Exception:  # pylint: disable=broad-exception-caught
             log.error(  # pylint: disable=logging-fstring-interpolation
                 f"Unhandled exception occurred: {traceback.format_exc()}"
             )
+
         return result
 
     def __repr__(self) -> str:

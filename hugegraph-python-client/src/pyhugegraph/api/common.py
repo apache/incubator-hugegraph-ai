@@ -20,7 +20,7 @@ import re
 
 from abc import ABC
 from pyhugegraph.utils.log import log
-from pyhugegraph.utils.huge_router import HGraphRouter
+from pyhugegraph.utils.huge_router import RouterMixin
 from pyhugegraph.utils.huge_requests import HGraphSession
 
 
@@ -65,7 +65,7 @@ class HGraphContext(ABC):
 
 
 # todo: rename -> HGraphModule | HGraphRouterable | HGraphModel
-class HugeParamsBase(HGraphContext, HGraphRouter):
+class HugeParamsBase(HGraphContext, RouterMixin):
     def __init__(self, sess: HGraphSession) -> None:
         super().__init__(sess)
         self._parameter_holder = None

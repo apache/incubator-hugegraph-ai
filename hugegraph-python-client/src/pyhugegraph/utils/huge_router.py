@@ -16,12 +16,9 @@
 # under the License.
 
 import re
-import json
 import inspect
 import functools
 import threading
-
-from abc import ABC
 
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Optional, TYPE_CHECKING
@@ -33,7 +30,7 @@ if TYPE_CHECKING:
     from pyhugegraph.api.common import HGraphContext
 
 
-class SingletonBase(type):
+class SingletonMeta(type):
     _instances = {}
     _lock = threading.Lock()
 
@@ -50,25 +47,22 @@ class SingletonBase(type):
 
 
 @dataclass
-class RouterElement:
+class Route:
     method: str
     path: str
     request_func: Optional[Callable] = None
 
 
-class HGraphRouterManager(metaclass=SingletonBase):
+class RouterRegistry(metaclass=SingletonMeta):
     def __init__(self):
-        self._routers: Dict[str, RouterElement] = {}
+        self._routers: Dict[str, Route] = {}
 
-    def register(self, key, path):
-        self._routers.update({key: path})
+    def register(self, key: str, route: Route):
+        self._routers[key] = route
 
     @property
     def routers(self):
         return self._routers
-
-    def get(self, key) -> RouterElement:
-        return self._routers.get(key)
 
     def __repr__(self) -> str:
         return str(self._routers)
@@ -88,7 +82,7 @@ def http(method: str, path: str) -> Callable:
 
     def decorator(func: Callable) -> Callable:
         """Decorator function that modifies the original function."""
-        HGraphRouterManager().register(func.__qualname__, RouterElement(method, path))
+        RouterRegistry().register(func.__qualname__, Route(method, path))
 
         @functools.wraps(func)
         def wrapper(self: "HGraphContext", *args: Any, **kwargs: Any) -> Any:
@@ -129,7 +123,7 @@ def http(method: str, path: str) -> Callable:
     return decorator
 
 
-class HGraphRouter(ABC):
+class RouterMixin:
 
     def _invoke_request(self, validator=ResponseValidation(), **kwargs: Any):
         """

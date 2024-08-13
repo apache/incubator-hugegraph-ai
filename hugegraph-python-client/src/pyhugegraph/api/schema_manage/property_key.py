@@ -19,6 +19,7 @@ import json
 
 
 from pyhugegraph.api.common import HugeParamsBase
+from pyhugegraph.utils.util import ResponseValidation
 from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
 from pyhugegraph.utils.log import log
 
@@ -99,7 +100,7 @@ class PropertyKey(HugeParamsBase):
 
     def ifNotExist(self) -> "PropertyKey":
         path = f'schema/propertykeys/{self._parameter_holder.get_value("name")}'
-        if _ := self._sess.request(path):
+        if _ := self._sess.request(path, validator=ResponseValidation(strict=False)):
             self._parameter_holder.set("not_exist", False)
         return self
 
