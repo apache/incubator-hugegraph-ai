@@ -434,6 +434,7 @@ if __name__ == "__main__":
         btn = gr.Button("(BETA) Init HugeGraph test data (🚧WIP)")
         btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
 
+    # TODO: we need to mount gradio to a FastAPI app to provide api service
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
     # Note: set reload to False in production environment
     uvicorn.run(app, host=args.host, port=args.port)
