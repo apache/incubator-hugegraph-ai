@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Optional
+from typing import TypeVar, Callable, Any, Optional
 
 from pyhugegraph.api.auth import AuthManager
 from pyhugegraph.api.graph import GraphManager
@@ -31,10 +31,13 @@ from pyhugegraph.utils.huge_config import HGraphConfig
 from pyhugegraph.utils.huge_requests import HGraphSession
 
 
-def manager_builder(fn):
+T = TypeVar("T")
+
+
+def manager_builder(fn: Callable[[Any, "HGraphSession"], T]) -> Callable[[Any], T]:
     attr_name = "_lazy_" + fn.__name__
 
-    def wrapper(self: "PyHugeClient"):
+    def wrapper(self: "PyHugeClient") -> T:
         if not hasattr(self, attr_name):
             session = HGraphSession(self.cfg)
             setattr(self, attr_name, fn(self)(session))
