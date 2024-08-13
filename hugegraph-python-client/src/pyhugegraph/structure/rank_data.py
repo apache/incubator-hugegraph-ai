@@ -58,15 +58,28 @@ class PersonalRankParameters:
     Data class that represents the body parameters for a rank API request.
 
     Attributes:
-        source (Union[str, int]): The ID of the source vertex. This is a required field with no default value.
-        label (str): The label of the edge type that starts the traversal. This is a required field with no default value.
-        alpha (float): The probability of moving to a neighboring vertex in each iteration, similar to the alpha in PageRank. Optional with a default value of 0.85. The value should be in the range (0, 1].
-        max_degree (int): The maximum number of adjacent edges a single vertex can traverse during the query process. Optional with a default value of 10000. The value should be greater than 0.
-        max_depth (int): The maximum number of iterations for the traversal. Optional with a default value of 5. The value should be within the range [2, 50].
-        limit (int): The maximum number of vertices to return in the results. Optional with a default value of 100. The value should be greater than 0.
-        max_diff (float): The precision difference for early convergence (to be implemented later). Optional with a default value of 0.0001. The value should be in the range (0, 1).
-        sorted (bool): Indicates whether the results should be sorted based on rank. If true, the results are sorted in descending order of rank; if false, they are not sorted. Optional with a default value of True.
-        with_label (str): Determines which results to keep in the final output. Optional with a default value of "BOTH_LABEL". The options are "SAME_LABEL" to keep only vertices of the same category as the source vertex, "OTHER_LABEL" to keep only vertices of a different category (the other end of a bipartite graph), and "BOTH_LABEL" to keep both.
+      - source (Union[str, int]): The ID of the source vertex. This is a required field with no default value.
+      - label (str): The label of the edge type that starts the traversal.
+                     This is a required field with no default value.
+      - alpha (float): The probability of moving to a neighboring vertex in each iteration,
+                       similar to the alpha in PageRank. Optional with a default value of 0.85.
+                       The value should be in the range (0, 1].
+      - max_degree (int): The maximum number of adjacent edges a single vertex can traverse
+                          during the query process. Optional with a default value of 10000.
+                          The value should be greater than 0.
+      - max_depth (int): The maximum number of iterations for the traversal. Optional with a default value of 5.
+                         The value should be within the range [2, 50].
+      - limit (int): The maximum number of vertices to return in the results. Optional with a default value of 100.
+                     The value should be greater than 0.
+      - max_diff (float): The precision difference for early convergence (to be implemented later).
+                          Optional with a default value of 0.0001. The value should be in the range (0, 1).
+      - sorted (bool): Indicates whether the results should be sorted based on rank.
+                       If true, the results are sorted in descending order of rank;
+                       if false, they are not sorted. Optional with a default value of True.
+      - with_label (str): Determines which results to keep in the final output.
+                          Optional with a default value of "BOTH_LABEL". The options are "SAME_LABEL" to keep only
+                          vertices of the same category as the source vertex, "OTHER_LABEL" to keep only vertices
+                          of a different category (the other end of a bipartite graph), and "BOTH_LABEL" to keep both.
     """
 
     source: Union[str, int]
