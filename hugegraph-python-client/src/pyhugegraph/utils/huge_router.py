@@ -170,7 +170,8 @@ class RouterMixin:
             formatted_path = route.path
 
         log.debug(  # pylint: disable=logging-fstring-interpolation
-            f"Invoke request registered with router: {route.method}: {self.__class__.__name__}.{fname}: {formatted_path}"
+            f"Invoke request registered with router: {route.method}: "
+            f"{self.__class__.__name__}.{fname}: {formatted_path}"
         )
         return route.request_func(formatted_path, validator=validator, **kwargs)
 
