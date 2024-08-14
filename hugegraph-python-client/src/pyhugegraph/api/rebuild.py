@@ -47,7 +47,7 @@ class RebuildManager(HugeParamsBase):
             dict: A dictionary containing the response from the HTTP request.
                   The structure of the response is as follows:
                   response = {
-                      "task_id": 1  # Unique identifier for the task.
+                      "task_id": 1 # Unique identifier for the task.
                   }
         """
         return self._invoke_request()
@@ -64,7 +64,7 @@ class RebuildManager(HugeParamsBase):
             dict: A dictionary containing the response from the HTTP request.
                   The structure of the response is as follows:
                   response = {
-                      "task_id": 1  # Unique identifier for the task.
+                      "task_id": 1 # Unique identifier for the task.
                   }
         """
         return self._invoke_request()
@@ -81,7 +81,7 @@ class RebuildManager(HugeParamsBase):
             dict: A dictionary containing the response from the HTTP request.
                   The structure of the response is as follows:
                   response = {
-                      "task_id": 1  # Unique identifier for the task.
+                      "task_id": 1 # Unique identifier for the task.
                   }
         """
         return self._invoke_request()

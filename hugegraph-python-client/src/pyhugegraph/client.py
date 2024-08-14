@@ -49,7 +49,7 @@ class PyHugeClient:
     def __init__(
         self,
         ip: str,
-        port: str,
+        port: str, # TODO: port should be int?
         graph: str,
         user: str,
         pwd: str,

@@ -22,7 +22,7 @@ LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S %p"
 
 
-# Function to configure logging path, default is "logs/output.log"
+# Function to configure the logging path, default is "logs/output.log"
 # You could import it in "__init__.py" & use it in the whole package
 def init_log(log_file="logs/output.log"):
     # Ensure the log directory exists
@@ -33,7 +33,7 @@ def init_log(log_file="logs/output.log"):
     log = logging.getLogger(__name__)  # pylint: disable=redefined-outer-name
     log.setLevel(logging.INFO)
 
-    # Create a handler for writing to log file
+    # Create a handler for writing to log files
     file_handler = TimedRotatingFileHandler(
         log_file, when="midnight", interval=1, backupCount=3, encoding="utf-8"
     )
