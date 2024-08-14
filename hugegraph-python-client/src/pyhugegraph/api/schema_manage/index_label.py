@@ -15,13 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=logging-fstring-interpolation
+
 import json
 
-
 from pyhugegraph.api.common import HugeParamsBase
-from pyhugegraph.utils.util import ResponseValidation
-from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
+from pyhugegraph.utils.huge_decorator import decorator_create, decorator_params
 from pyhugegraph.utils.log import log
+from pyhugegraph.utils.util import ResponseValidation
 
 
 class IndexLabel(HugeParamsBase):
@@ -82,12 +83,11 @@ class IndexLabel(HugeParamsBase):
     @decorator_create
     def create(self):
         dic = self._parameter_holder.get_dic()
-        data = {}
-        data["name"] = dic["name"]
-        data["base_type"] = dic["base_type"]
-        data["base_value"] = dic["base_value"]
-        data["index_type"] = dic["index_type"]
-        data["fields"] = list(dic["fields"])
+        data = {"name": dic["name"],
+                "base_type": dic["base_type"],
+                "base_value": dic["base_value"],
+                "index_type": dic["index_type"],
+                "fields": list(dic["fields"])}
         path = "schema/indexlabels"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "POST", data=json.dumps(data)):

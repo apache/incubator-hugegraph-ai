@@ -24,7 +24,7 @@ from dataclasses import asdict, dataclass, field
 @dataclass
 class NeighborRankStep:
     """
-    Steps object defines the traversal path rules from the starting vertex.
+    Step object defines the traversal path rules from the starting vertex.
     """
 
     direction: str = "BOTH"

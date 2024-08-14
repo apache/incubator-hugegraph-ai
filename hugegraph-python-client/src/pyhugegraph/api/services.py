@@ -40,11 +40,11 @@ class ServicesManager(HugeParamsBase):
             Returns a dictionary containing a list of service names.
 
         get_service(graphspace: str, service: str):
-            Retrieves detailed information about a specific service within a graph space.
+            Retrieve detailed information about a specific service within a graph space.
             Returns a dictionary with the service details.
 
         delete_service(graphspace: str, service: str):
-            Deletes a specific service within a graph space after confirmation.
+            Delete a specific service within a graph space after confirmation.
             No return value expected; the operation's success is indicated by an HTTP 204 status code.
     """
 
@@ -68,7 +68,7 @@ class ServicesManager(HugeParamsBase):
     @router.http("GET", "/graphspaces/${graphspace}/services")
     def list_services(self, graphspace: str):  # pylint: disable=unused-argument
         """
-        List all services in a specified graph space..
+        List all services in a specified graph space.
 
         Args:
             graphspace (str): The name of the graph space to list services from.

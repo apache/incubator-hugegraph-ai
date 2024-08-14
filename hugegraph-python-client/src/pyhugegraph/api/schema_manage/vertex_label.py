@@ -18,9 +18,9 @@
 import json
 
 from pyhugegraph.api.common import HugeParamsBase
-from pyhugegraph.utils.util import ResponseValidation
-from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
+from pyhugegraph.utils.huge_decorator import decorator_create, decorator_params
 from pyhugegraph.utils.log import log
+from pyhugegraph.utils.util import ResponseValidation
 
 
 class VertexLabel(HugeParamsBase):
@@ -104,9 +104,10 @@ class VertexLabel(HugeParamsBase):
         if response := self._sess.request(path, "POST", data=json.dumps(data)):
             return f'create VertexLabel success, Detail: "{str(response)}"'
         log.error("create VertexLabel failed, Detail: %s", str(response))
+        return ""
 
     @decorator_params
-    def append(self):
+    def append(self) -> None:
         dic = self._parameter_holder.get_dic()
         properties = dic["properties"] if "properties" in dic else []
         nullable_keys = dic["nullable_keys"] if "nullable_keys" in dic else []
@@ -122,18 +123,20 @@ class VertexLabel(HugeParamsBase):
         if response := self._sess.request(path, "PUT", data=json.dumps(data)):
             return f'append VertexLabel success, Detail: "{str(response)}"'
         log.error("append VertexLabel failed, Detail: %s", str(response))
+        return ""
 
     @decorator_params
-    def remove(self):
+    def remove(self) -> None:
         name = self._parameter_holder.get_value("name")
         path = f"schema/vertexlabels/{name}"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "DELETE"):
             return f'remove VertexLabel success, Detail: "{str(response)}"'
         log.error("remove VertexLabel failed, Detail: %s", str(response))
+        return ""
 
     @decorator_params
-    def eliminate(self):
+    def eliminate(self) -> None:
         name = self._parameter_holder.get_value("name")
         path = f"schema/vertexlabels/{name}/?action=eliminate"
 
@@ -146,3 +149,4 @@ class VertexLabel(HugeParamsBase):
         if response := self._sess.request(path, "PUT", data=json.dumps(data)):
             return f'eliminate VertexLabel success, Detail: "{str(response)}"'
         log.error("eliminate VertexLabel failed, Detail: %s", str(response))
+        return ""

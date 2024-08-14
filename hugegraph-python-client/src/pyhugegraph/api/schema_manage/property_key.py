@@ -17,11 +17,10 @@
 
 import json
 
-
 from pyhugegraph.api.common import HugeParamsBase
-from pyhugegraph.utils.util import ResponseValidation
-from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
+from pyhugegraph.utils.huge_decorator import decorator_create, decorator_params
 from pyhugegraph.utils.log import log
+from pyhugegraph.utils.util import ResponseValidation
 
 
 class PropertyKey(HugeParamsBase):
@@ -117,6 +116,7 @@ class PropertyKey(HugeParamsBase):
         if response := self._sess.request(path, "POST", data=json.dumps(property_keys)):
             return f"create PropertyKey success, Detail: {str(response)}"
         log.error("create PropertyKey failed, Detail: %s", str(response))
+        return ""
 
     @decorator_params
     def append(self):
@@ -131,6 +131,7 @@ class PropertyKey(HugeParamsBase):
         if response := self._sess.request(path, "PUT", data=json.dumps(data)):
             return f"append PropertyKey success, Detail: {str(response)}"
         log.error("append PropertyKey failed, Detail: %s", str(response))
+        return ""
 
     @decorator_params
     def eliminate(self):
@@ -145,6 +146,7 @@ class PropertyKey(HugeParamsBase):
         if response := self._sess.request(path, "PUT", data=json.dumps(data)):
             return f"eliminate PropertyKey success, Detail: {str(response)}"
         log.error("eliminate PropertyKey failed, Detail: %s", str(response))
+        return ""
 
     @decorator_params
     def remove(self):
@@ -154,3 +156,4 @@ class PropertyKey(HugeParamsBase):
         if response := self._sess.request(path, "DELETE"):
             return f"delete PropertyKey success, Detail: {str(response)}"
         log.error("delete PropertyKey failed, Detail: %s", str(response))
+        return ""

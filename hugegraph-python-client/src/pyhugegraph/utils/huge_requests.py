@@ -16,16 +16,16 @@
 # under the License.
 
 
-from urllib3.util.retry import Retry
-from urllib.parse import urljoin
 from typing import Any, Optional
-from requests.adapters import HTTPAdapter
-from pyhugegraph.utils.constants import Constants
-from pyhugegraph.utils.huge_config import HGraphConfig
-from pyhugegraph.utils.util import ResponseValidation
-from pyhugegraph.utils.log import log
+from urllib.parse import urljoin
 
 import requests
+from pyhugegraph.utils.constants import Constants
+from pyhugegraph.utils.huge_config import HGraphConfig
+from pyhugegraph.utils.log import log
+from pyhugegraph.utils.util import ResponseValidation
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 
 class HGraphSession:

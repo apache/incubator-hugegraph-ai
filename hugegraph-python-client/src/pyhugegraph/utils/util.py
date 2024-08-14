@@ -15,14 +15,15 @@
 # specific language governing permissions and limitations
 # under the License.
 
+
 import json
 import traceback
-import requests
 
+import requests
 from pyhugegraph.utils.exceptions import (
-    ServiceUnavailableException,
     NotAuthorizedError,
     NotFoundError,
+    ServiceUnavailableException,
 )
 from pyhugegraph.utils.log import log
 
@@ -111,7 +112,7 @@ class ResponseValidation:
                     details = "key 'exception' not found"
 
                 log.error(  # pylint: disable=logging-fstring-interpolation
-                    f"{method}: {e}; Server Exception: {details}"
+                    f"{method}: {e}\n[Body]: {response.request.body}\n[Server Exception]: {details}"
                 )
 
                 if response.status_code == 404:
