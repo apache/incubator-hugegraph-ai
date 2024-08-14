@@ -19,12 +19,15 @@
 import json
 import argparse
 import os
+from typing import Optional
 
 import requests
 import uvicorn
 import docx
 import gradio as gr
 from fastapi import FastAPI
+from pydantic import BaseModel
+from requests.auth import HTTPBasicAuth
 
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
@@ -51,12 +54,12 @@ def convert_bool_str(string):
 
 
 # TODO: enhance/distinguish the "graph_rag" name to avoid confusion
-def graph_rag(text: str, raw_answer: str, vector_only_answer: str,
-              graph_only_answer: str, graph_vector_answer):
-    vector_search = convert_bool_str(vector_only_answer) or convert_bool_str(graph_vector_answer)
-    graph_search = convert_bool_str(graph_only_answer) or convert_bool_str(graph_vector_answer)
+def graph_rag(text: str, raw_answer: bool, vector_only_answer: bool,
+              graph_only_answer: bool, graph_vector_answer: bool):
+    vector_search = vector_only_answer or graph_vector_answer
+    graph_search = graph_only_answer or graph_vector_answer
 
-    if raw_answer == "false" and not vector_search and not graph_search:
+    if raw_answer == False and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
         return "", "", "", ""
     searcher = GraphRAG()
@@ -65,10 +68,10 @@ def graph_rag(text: str, raw_answer: str, vector_only_answer: str,
     if graph_search:
         searcher.extract_keyword().match_keyword_to_id().query_graph_for_rag()
     searcher.merge_dedup_rerank().synthesize_answer(
-        raw_answer=convert_bool_str(raw_answer),
-        vector_only_answer=convert_bool_str(vector_only_answer),
-        graph_only_answer=convert_bool_str(graph_only_answer),
-        graph_vector_answer=convert_bool_str(graph_vector_answer)
+        raw_answer=raw_answer,
+        vector_only_answer=vector_only_answer,
+        graph_only_answer=graph_only_answer,
+        graph_vector_answer=graph_vector_answer
     ).run(verbose=True, query=text)
 
     try:
@@ -141,6 +144,14 @@ def build_kg(file, schema, example_prompt, build_mode):  # pylint: disable=too-m
         raise gr.Error(str(e))
 
 
+class RAGRequest(BaseModel):
+    query: str
+    raw_llm: Optional[bool] = None
+    vector_only: Optional[bool] = None
+    graph_only: Optional[bool] = None
+    graph_vector: Optional[bool] = None
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="0.0.0.0", help="host")
@@ -159,18 +170,19 @@ if __name__ == "__main__":
                 gr.Textbox(value=str(settings.graph_port), label="port"),
                 gr.Textbox(value=settings.graph_name, label="graph"),
                 gr.Textbox(value=settings.graph_user, label="user"),
-                gr.Textbox(value=settings.graph_pwd, label="pwd")
+                gr.Textbox(value=settings.graph_pwd, label="pwd", type="password"),
+                gr.Textbox(value=settings.graph_space, label="graphspace (None)"),
             ]
         graph_config_button = gr.Button("apply configuration")
 
 
-        def test_api_connection(url, method="GET", ak=None, sk=None, headers=None, body=None):
+        def test_api_connection(url, method="GET", headers=None, body=None, auth=None):
             # TODO: use fastapi.request / starlette instead? (Also add a try-catch here)
             log.debug("Request URL: %s", url)
             if method.upper() == "GET":
-                response = requests.get(url, headers=headers, timeout=5)
+                response = requests.get(url, headers=headers, timeout=5, auth=auth)
             elif method.upper() == "POST":
-                response = requests.post(url, headers=headers, json=body, timeout=5)
+                response = requests.post(url, headers=headers, json=body, timeout=5, auth=auth)
             else:
                 log.error("Unsupported method: %s", method)
                 return
@@ -184,14 +196,20 @@ if __name__ == "__main__":
                 gr.Error(f"Connection failed with status code: {response.status_code}")
 
 
-        def apply_graph_configuration(ip, port, name, user, pwd):
+        def apply_graph_configuration(ip, port, name, user, pwd, gs):
             settings.graph_ip = ip
             settings.graph_port = int(port)
             settings.graph_name = name
             settings.graph_user = user
             settings.graph_pwd = pwd
-            test_url = f"http://{ip}:{port}/graphs/{name}/schema"
-            test_api_connection(test_url)
+            settings.graph_space = gs
+            # Test graph connection (Auth)
+            if gs and gs.strip():
+                test_url = f"http://{ip}:{port}/graphspaces/{gs}/graphs/{name}/schema"
+            else:
+                test_url = f"http://{ip}:{port}/graphs/{name}/schema"
+            auth = HTTPBasicAuth(user, pwd)
+            test_api_connection(test_url, auth=auth)
             settings.update_env()
 
 
@@ -249,7 +267,7 @@ if __name__ == "__main__":
                     settings.openai_max_tokens = int(arg4)
                     test_url = settings.openai_api_base + "/models"
                     headers = {"Authorization": f"Bearer {arg1}"}
-                    test_api_connection(test_url, headers=headers, ak=arg1)
+                    test_api_connection(test_url, headers=headers)
                 elif llm_option == "qianfan_wenxin":
                     settings.qianfan_api_key = arg1
                     settings.qianfan_secret_key = arg2
@@ -312,7 +330,7 @@ if __name__ == "__main__":
                     settings.openai_embedding_model = arg3
                     test_url = settings.openai_api_base + "/models"
                     headers = {"Authorization": f"Bearer {arg1}"}
-                    test_api_connection(test_url, headers=headers, ak=arg1)
+                    test_api_connection(test_url, headers=headers)
                 elif embedding_option == "ollama":
                     settings.ollama_host = arg1
                     settings.ollama_port = int(arg2)
@@ -406,17 +424,18 @@ if __name__ == "__main__":
                 graph_only_out = gr.Textbox(label="Graph-only Answer", show_copy_button=True)
                 graph_vector_out = gr.Textbox(label="Graph-Vector Answer", show_copy_button=True)
             with gr.Column(scale=1):
-                raw_radio = gr.Radio(choices=["true", "false"], value="false",
+                raw_radio = gr.Radio(choices=[True, False], value=True,
                                      label="Basic LLM Answer")
-                vector_only_radio = gr.Radio(choices=["true", "false"], value="true",
+                vector_only_radio = gr.Radio(choices=[True, False], value=False,
                                              label="Vector-only Answer")
-                graph_only_radio = gr.Radio(choices=["true", "false"], value="false",
+                graph_only_radio = gr.Radio(choices=[True, False], value=False,
                                             label="Graph-only Answer")
-                graph_vector_radio = gr.Radio(choices=["true", "false"], value="false",
+                graph_vector_radio = gr.Radio(choices=[True, False], value=False,
                                               label="Graph-Vector Answer")
                 btn = gr.Button("Answer Question")
-        btn.click(fn=graph_rag, inputs=[inp, raw_radio, vector_only_radio, graph_only_radio, # pylint: disable=no-member
-                                        graph_vector_radio],
+        btn.click(fn=graph_rag,
+                  inputs=[inp, raw_radio, vector_only_radio, graph_only_radio,  # pylint: disable=no-member
+                          graph_vector_radio],
                   outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out])
 
         gr.Markdown("""## 3. Others (🚧) """)
@@ -434,14 +453,25 @@ if __name__ == "__main__":
         btn = gr.Button("(BETA) Init HugeGraph test data (🚧WIP)")
         btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
 
-    # TODO: we need to mount gradio to a FastAPI app to provide api service
-
-
-    @app.get("/graph_rag")
-    def graph_rag_api(text: str):
-        result = graph_rag(text, "false", "true", "false", "false")
+    @app.get("/rag/{query}")
+    def graph_rag_api(query: str):
+        result = graph_rag(query, True, True, True, True)
         return {"raw_answer": result[0], "vector_only_answer": result[1],
                 "graph_only_answer": result[2], "graph_vector_answer": result[3]}
+
+
+    @app.post("/rag")
+    def graph_rag_api(req: RAGRequest):
+        result = graph_rag(req.query, req.raw_llm, req.vector_only, req.graph_only, req.graph_vector)
+        return {key: value for key, value in zip(
+            ["raw_llm", "vector_only", "graph_only", "graph_vector"], result) if getattr(req, key)}
+
+
+    @app.get("/rag/graph/{query}")
+    def graph_rag_api(query: str):
+        result = graph_rag(query, False, False, True, False)
+        log.debug(result)
+        return {"graph_only_answer": result[2]}
 
 
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
