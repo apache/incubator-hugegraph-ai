@@ -67,7 +67,7 @@ class Config:
     """HugeGraph settings"""
     graph_ip: Optional[str] = "127.0.0.1"
     graph_port: Optional[int] = 8080
-    # graph_space: Optional[str] = "DEFAULT"
+    graph_space: Optional[str] = "DEFAULT"
     graph_name: Optional[str] = "hugegraph"
     graph_user: Optional[str] = "admin"
     graph_pwd: Optional[str] = "xxx"
