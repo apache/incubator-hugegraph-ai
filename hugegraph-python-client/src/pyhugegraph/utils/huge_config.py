@@ -16,11 +16,11 @@
 # under the License.
 
 import re
-import requests
 import traceback
-
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import List, Optional
+
+import requests
 from pyhugegraph.utils.log import log
 
 
@@ -38,7 +38,7 @@ class HGraphConfig:
 
     def __post_init__(self):
 
-        if self.graphspace is not None:
+        if self.graphspace and self.graphspace.strip():
             self.gs_supported = True
 
         else:

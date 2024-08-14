@@ -14,8 +14,8 @@
 #  limitations under the License.
 
 import logging
-from logging.handlers import TimedRotatingFileHandler
 import os
+from logging.handlers import TimedRotatingFileHandler
 
 # Set log format
 LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
@@ -30,7 +30,7 @@ def init_log(log_file="logs/output.log"):
     os.makedirs(log_dir, exist_ok=True)
 
     # Create a logger
-    log = logging.getLogger(__name__)
+    log = logging.getLogger(__name__)  # pylint: disable=redefined-outer-name
     log.setLevel(logging.INFO)
 
     # Create a handler for writing to log file
@@ -60,9 +60,11 @@ def init_log(log_file="logs/output.log"):
                 stream = self.stream
                 stream.write(color_prefix + msg + color_suffix + self.terminator)
                 self.flush()
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 self.handleError(record)
-                log.error(f"Log Print Exception: {e}")
+                log.error(  # pylint: disable=logging-fstring-interpolation
+                    f"Log Print Exception: {e}"
+                )
 
     # Also output logs to the console
     custom_handler = CustomConsoleHandler()

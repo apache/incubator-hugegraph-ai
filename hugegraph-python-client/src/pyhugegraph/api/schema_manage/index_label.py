@@ -15,13 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=logging-fstring-interpolation
+
 import json
 
-
 from pyhugegraph.api.common import HugeParamsBase
-from pyhugegraph.utils.util import ResponseValidation
-from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
+from pyhugegraph.utils.huge_decorator import decorator_create, decorator_params
 from pyhugegraph.utils.log import log
+from pyhugegraph.utils.util import ResponseValidation
 
 
 class IndexLabel(HugeParamsBase):

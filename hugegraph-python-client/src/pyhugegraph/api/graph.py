@@ -16,11 +16,11 @@
 # under the License.
 
 import json
+from typing import List, Optional
 
-from typing import Optional, List
 from pyhugegraph.api.common import HugeParamsBase
-from pyhugegraph.structure.vertex_data import VertexData
 from pyhugegraph.structure.edge_data import EdgeData
+from pyhugegraph.structure.vertex_data import VertexData
 from pyhugegraph.utils import huge_router as router
 from pyhugegraph.utils.exceptions import NotFoundError
 
@@ -205,7 +205,7 @@ class GraphManager(HugeParamsBase):
             return []
         path = "traversers/vertices?"
         for vertex_id in vertex_ids:
-            path += f'ids="{vertex_id}"&'
+            path += f'ids="{vertex_id}"&'  # pylint: disable=consider-using-join
         path = path.rstrip("&")
         if response := self._sess.request(path):
             return [VertexData(item) for item in response["vertices"]]
@@ -216,7 +216,7 @@ class GraphManager(HugeParamsBase):
             return []
         path = "traversers/edges?"
         for vertex_id in edge_ids:
-            path += f"ids={vertex_id}&"
+            path += f"ids={vertex_id}&"  # pylint: disable=consider-using-join
         path = path.rstrip("&")
         if response := self._sess.request(path):
             return [EdgeData(item) for item in response["edges"]]
