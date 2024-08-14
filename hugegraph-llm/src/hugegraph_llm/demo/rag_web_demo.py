@@ -151,6 +151,29 @@ class RAGRequest(BaseModel):
     graph_only: Optional[bool] = None
     graph_vector: Optional[bool] = None
 
+class GraphConfigRequest(BaseModel):
+    ip: str
+    port: str
+    name: str
+    user: str
+    pwd: str
+    gs: str
+
+class LLMConfigRequest(BaseModel):
+    llm_type: str
+    # The common parameters shared by OpenAI, Qianfan Wenxin, and OLLAMA platforms.
+    api_key: str
+    api_base: str
+    language_model: str
+    # Openai-only properties
+    max_tokens: str = None
+    # qianfan-wenxin-only properties
+    secret_key: str = None
+    # ollama-only properties
+    host: str = None
+    port: str = None
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -185,15 +208,20 @@ if __name__ == "__main__":
                 response = requests.post(url, headers=headers, json=body, timeout=5, auth=auth)
             else:
                 log.error("Unsupported method: %s", method)
-                return
+                # for http api return status
+                return {"status": "Unsupported method: " + method}
 
             if 200 <= response.status_code < 300:
                 log.info("Connection successful. Configured finished.")
                 gr.Info("Connection successful. Configured finished.")
+                # for http api return status
+                return {"status": "Connection successful. Configured finished."}
             else:
                 log.error("Connection failed with status code: %s", response.status_code)
                 # pylint: disable=pointless-exception-statement
                 gr.Error(f"Connection failed with status code: {response.status_code}")
+                # for http api return status
+                return {"status": "Connection failed with status code: " + str(response.status_code)}
 
 
         def apply_graph_configuration(ip, port, name, user, pwd, gs):
@@ -209,8 +237,10 @@ if __name__ == "__main__":
             else:
                 test_url = f"http://{ip}:{port}/graphs/{name}/schema"
             auth = HTTPBasicAuth(user, pwd)
-            test_api_connection(test_url, auth=auth)
+            # for http api return status
+            result = test_api_connection(test_url, auth=auth)
             settings.update_env()
+            return result
 
 
         graph_config_button.click(apply_graph_configuration, inputs=graph_config_input)  # pylint: disable=no-member
@@ -290,6 +320,8 @@ if __name__ == "__main__":
             value=settings.embedding_type,
             label="Embedding"
         )
+
+
 
 
         @gr.render(inputs=[embedding_dropdown])
@@ -453,11 +485,19 @@ if __name__ == "__main__":
         btn = gr.Button("(BETA) Init HugeGraph test data (🚧WIP)")
         btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
 
-    @app.get("/rag/{query}")
-    def graph_rag_api(query: str):
-        result = graph_rag(query, True, True, True, True)
-        return {"raw_answer": result[0], "vector_only_answer": result[1],
-                "graph_only_answer": result[2], "graph_vector_answer": result[3]}
+    # @app.get("/rag/{query}")
+    # def graph_rag_api(query: str):
+    #     result = graph_rag(query, True, True, True, True)
+    #     return {"raw_answer": result[0], "vector_only_answer": result[1],
+    #             "graph_only_answer": result[2], "graph_vector_answer": result[3]}
+    
+    # @app.get("/rag/graph/{query}")
+    # def graph_rag_api(query: str):
+    #     result = graph_rag(query, False, False, True, False)
+    #     log.debug(result)
+    #     # return {"graph_only_answer": result[2]}
+    #     return {"raw_answer": result[0], "vector_only_answer": result[1],
+    #             "graph_only_answer": result[2], "graph_vector_answer": result[3]}
 
 
     @app.post("/rag")
@@ -466,12 +506,17 @@ if __name__ == "__main__":
         return {key: value for key, value in zip(
             ["raw_llm", "vector_only", "graph_only", "graph_vector"], result) if getattr(req, key)}
 
-
-    @app.get("/rag/graph/{query}")
-    def graph_rag_api(query: str):
-        result = graph_rag(query, False, False, True, False)
-        log.debug(result)
-        return {"graph_only_answer": result[2]}
+    @app.post("/graph/config")
+    def graph_config_api(req: GraphConfigRequest):
+        result = apply_graph_configuration(req.ip, req.port, req.name, req.user, req.pwd, req.gs)
+        return json.dumps(result)
+    
+    # @app.post("/llm/config")
+    # def graph_config_api(req: LLMConfigRequest):
+    #     settings.llm_type = req.llm_type
+    #     if req.llm_type == req.llm_type:
+    #         result = llm_settings.apply_llm_configuration(req.api_key, req.api_base, req.language_model, req.max_tokens)
+    #     return json.dumps(result)
 
 
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
