@@ -18,6 +18,7 @@
 import json
 from typing import List, Optional
 
+from typing import Optional, List
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.structure.edge_data import EdgeData
 from pyhugegraph.structure.vertex_data import VertexData

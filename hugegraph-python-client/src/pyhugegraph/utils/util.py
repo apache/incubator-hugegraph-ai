@@ -111,7 +111,7 @@ class ResponseValidation:
                 except (ValueError, KeyError):
                     details = "key 'exception' not found"
 
-                log.error(
+                log.error(  # pylint: disable=logging-fstring-interpolation
                     f"{method}: {e}\n[Body]: {response.request.body}\n[Server Exception]: {details}"
                 )
 
