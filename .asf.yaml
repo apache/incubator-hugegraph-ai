@@ -34,7 +34,8 @@ github:
     - graph-embedding
     - knowledge-graph
   enabled_merge_buttons:
-    merge: false
+    # TODO: disable it soon
+    merge: true
     rebase: true
     squash: true
   protected_branches:
