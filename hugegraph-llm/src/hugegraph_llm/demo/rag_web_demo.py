@@ -195,7 +195,9 @@ if __name__ == "__main__":
                 gr.Textbox(value=settings.graph_name, label="graph"),
                 gr.Textbox(value=settings.graph_user, label="user"),
                 gr.Textbox(value=settings.graph_pwd, label="pwd", type="password"),
-                gr.Textbox(value=settings.graph_space, label="graphspace (None)"),
+                # gr.Textbox(value=settings.graph_space, label="graphspace (None)"),
+                # wip: graph_space issue pending
+                gr.Textbox(value="", label="graphspace (None)"),
             ]
         graph_config_button = gr.Button("apply configuration")
 
@@ -329,10 +331,8 @@ if __name__ == "__main__":
             label="Embedding"
         )
 
-
-
-
-        def apply_embedding_configuration(embedding_option, arg1, arg2, arg3):
+        def apply_embedding_configuration(arg1, arg2, arg3):
+            embedding_option = settings.embedding_type
             if embedding_option == "openai":
                 settings.openai_api_key = arg1
                 settings.openai_api_base = arg2
@@ -539,12 +539,14 @@ if __name__ == "__main__":
         
     @app.post("/embedding/config")
     def embedding_config_api(req: LLMConfigRequest):
+        settings.embedding_type = req.llm_type
+
         if req.llm_type == "openai":
-            status_code = apply_embedding_configuration(req.llm_type, req.api_key, req.api_base, req.language_model)
+            status_code = apply_embedding_configuration(req.api_key, req.api_base, req.language_model)
         elif req.llm_type == "qianfan_wenxin":
-            status_code = apply_embedding_configuration(req.llm_type, req.api_key, req.api_base, None)
+            status_code = apply_embedding_configuration(req.api_key, req.api_base, None)
         else:
-            status_code = apply_embedding_configuration(req.llm_type, req.host, req.port, req.language_model)
+            status_code = apply_embedding_configuration(req.host, req.port, req.language_model)
         
         if status_code == -1:
             return {"message":"Unsupported HTTP method"}
