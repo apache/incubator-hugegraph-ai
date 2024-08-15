@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from decorator import decorator
 
+from decorator import decorator
 from pyhugegraph.utils.exceptions import NotAuthorizedError
 
 

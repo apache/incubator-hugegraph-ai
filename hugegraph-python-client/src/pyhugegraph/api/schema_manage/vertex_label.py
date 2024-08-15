@@ -18,58 +18,55 @@
 import json
 
 from pyhugegraph.api.common import HugeParamsBase
-from pyhugegraph.utils.exceptions import CreateError, UpdateError, RemoveError
-from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
-from pyhugegraph.utils.util import check_if_success, check_if_authorized
+from pyhugegraph.utils.huge_decorator import decorator_create, decorator_params
+from pyhugegraph.utils.log import log
+from pyhugegraph.utils.util import ResponseValidation
 
 
 class VertexLabel(HugeParamsBase):
-    def __init__(self, graph_instance, session):
-        super().__init__(graph_instance)
-        self.__session = session
 
     @decorator_params
-    def useAutomaticId(self):
+    def useAutomaticId(self) -> "VertexLabel":
         self._parameter_holder.set("id_strategy", "AUTOMATIC")
         return self
 
     @decorator_params
-    def useCustomizeStringId(self):
+    def useCustomizeStringId(self) -> "VertexLabel":
         self._parameter_holder.set("id_strategy", "CUSTOMIZE_STRING")
         return self
 
     @decorator_params
-    def useCustomizeNumberId(self):
+    def useCustomizeNumberId(self) -> "VertexLabel":
         self._parameter_holder.set("id_strategy", "CUSTOMIZE_NUMBER")
         return self
 
     @decorator_params
-    def usePrimaryKeyId(self):
+    def usePrimaryKeyId(self) -> "VertexLabel":
         self._parameter_holder.set("id_strategy", "PRIMARY_KEY")
         return self
 
     @decorator_params
-    def properties(self, *args):
+    def properties(self, *args) -> "VertexLabel":
         self._parameter_holder.set("properties", list(args))
         return self
 
     @decorator_params
-    def primaryKeys(self, *args):
+    def primaryKeys(self, *args) -> "VertexLabel":
         self._parameter_holder.set("primary_keys", list(args))
         return self
 
     @decorator_params
-    def nullableKeys(self, *args):
+    def nullableKeys(self, *args) -> "VertexLabel":
         self._parameter_holder.set("nullable_keys", list(args))
         return self
 
     @decorator_params
-    def enableLabelIndex(self, flag):
+    def enableLabelIndex(self, flag) -> "VertexLabel":
         self._parameter_holder.set("enable_label_index", flag)
         return self
 
     @decorator_params
-    def userdata(self, *args):
+    def userdata(self, *args) -> "VertexLabel":
         if "user_data" not in self._parameter_holder.get_keys():
             self._parameter_holder.set("user_data", {})
         user_data = self._parameter_holder.get_value("user_data")
@@ -79,14 +76,9 @@ class VertexLabel(HugeParamsBase):
             i += 2
         return self
 
-    def ifNotExist(self):
-        url = (
-            f"{self._host}/graphs/{self._graph_name}/schema/vertexlabels/"
-            f'{self._parameter_holder.get_value("name")}'
-        )
-
-        response = self.__session.get(url, auth=self._auth, headers=self._headers)
-        if response.status_code == 200 and check_if_authorized(response):
+    def ifNotExist(self) -> "VertexLabel":
+        path = f'schema/vertexlabels/{self._parameter_holder.get_value("name")}'
+        if _ := self._sess.request(path, validator=ResponseValidation(strict=False)):
             self._parameter_holder.set("not_exist", False)
         return self
 
@@ -107,63 +99,46 @@ class VertexLabel(HugeParamsBase):
         for key in key_list:
             if key in dic:
                 data[key] = dic[key]
-        url = f"{self._host}/graphs/{self._graph_name}/schema/vertexlabels"
-        response = self.__session.post(
-            url, data=json.dumps(data), auth=self._auth, headers=self._headers
-        )
+        path = "schema/vertexlabels"
         self.clean_parameter_holder()
-        error = CreateError(
-            f'CreateError: "create VertexLabel failed", Detail: "{str(response.content)}"'
-        )
-        if check_if_success(response, error):
-            return f'create VertexLabel success, Detail: "{str(response.content)}"'
-        return f'create VertexLabel failed, Detail: "{str(response.content)}"'
+        if response := self._sess.request(path, "POST", data=json.dumps(data)):
+            return f'create VertexLabel success, Detail: "{str(response)}"'
+        log.error("create VertexLabel failed, Detail: %s", str(response))
+        return ""
 
     @decorator_params
-    def append(self):
+    def append(self) -> None:
         dic = self._parameter_holder.get_dic()
         properties = dic["properties"] if "properties" in dic else []
         nullable_keys = dic["nullable_keys"] if "nullable_keys" in dic else []
         user_data = dic["user_data"] if "user_data" in dic else {}
-        url = (
-            f"{self._host}/graphs/{self._graph_name}"
-            f'/schema/vertexlabels/{dic["name"]}?action=append'
-        )
-
+        path = f'schema/vertexlabels/{dic["name"]}?action=append'
         data = {
             "name": dic["name"],
             "properties": properties,
             "nullable_keys": nullable_keys,
             "user_data": user_data,
         }
-        response = self.__session.put(
-            url, data=json.dumps(data), auth=self._auth, headers=self._headers
-        )
         self.clean_parameter_holder()
-        error = UpdateError(
-            f'UpdateError: "append VertexLabel failed", Detail: "{str(response.content)}"'
-        )
-        if check_if_success(response, error):
-            return f'append VertexLabel success, Detail: "{str(response.content)}"'
-        return f'append VertexLabel failed, Detail: "{str(response.content)}"'
+        if response := self._sess.request(path, "PUT", data=json.dumps(data)):
+            return f'append VertexLabel success, Detail: "{str(response)}"'
+        log.error("append VertexLabel failed, Detail: %s", str(response))
+        return ""
 
     @decorator_params
-    def remove(self):
+    def remove(self) -> None:
         name = self._parameter_holder.get_value("name")
-        url = f"{self._host}/graphs/{self._graph_name}/schema/vertexlabels/{name}"
-        response = self.__session.delete(url, auth=self._auth, headers=self._headers)
+        path = f"schema/vertexlabels/{name}"
         self.clean_parameter_holder()
-        error = RemoveError(
-            f'RemoveError: "remove VertexLabel failed", Detail: "{str(response.content)}"'
-        )
-        if check_if_success(response, error):
-            return f'remove VertexLabel success, Detail: "{str(response.content)}"'
-        return f'remove VertexLabel failed, Detail: "{str(response.content)}"'
+        if response := self._sess.request(path, "DELETE"):
+            return f'remove VertexLabel success, Detail: "{str(response)}"'
+        log.error("remove VertexLabel failed, Detail: %s", str(response))
+        return ""
 
     @decorator_params
-    def eliminate(self):
+    def eliminate(self) -> None:
         name = self._parameter_holder.get_value("name")
-        url = f"{self._host}/graphs/{self._graph_name}/schema/vertexlabels/{name}/?action=eliminate"
+        path = f"schema/vertexlabels/{name}/?action=eliminate"
 
         dic = self._parameter_holder.get_dic()
         user_data = dic["user_data"] if "user_data" in dic else {}
@@ -171,12 +146,7 @@ class VertexLabel(HugeParamsBase):
             "name": self._parameter_holder.get_value("name"),
             "user_data": user_data,
         }
-        response = self.__session.put(
-            url, data=json.dumps(data), auth=self._auth, headers=self._headers
-        )
-        error = UpdateError(
-            f'UpdateError: "eliminate VertexLabel failed", Detail: "{str(response.content)}"'
-        )
-        if check_if_success(response, error):
-            return f'eliminate VertexLabel success, Detail: "{str(response.content)}"'
-        return f'eliminate VertexLabel failed, Detail: "{str(response.content)}"'
+        if response := self._sess.request(path, "PUT", data=json.dumps(data)):
+            return f'eliminate VertexLabel success, Detail: "{str(response)}"'
+        log.error("eliminate VertexLabel failed, Detail: %s", str(response))
+        return ""
