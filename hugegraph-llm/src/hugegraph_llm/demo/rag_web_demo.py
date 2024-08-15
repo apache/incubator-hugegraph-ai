@@ -146,10 +146,10 @@ def build_kg(file, schema, example_prompt, build_mode):  # pylint: disable=too-m
 
 class RAGRequest(BaseModel):
     query: str
-    raw_llm: Optional[bool] = None
-    vector_only: Optional[bool] = None
-    graph_only: Optional[bool] = None
-    graph_vector: Optional[bool] = None
+    raw_llm: Optional[bool] = True
+    vector_only: Optional[bool] = False
+    graph_only: Optional[bool] = False
+    graph_vector: Optional[bool] = False
 
 class GraphConfigRequest(BaseModel):
     ip: str = "127.0.0.1"
