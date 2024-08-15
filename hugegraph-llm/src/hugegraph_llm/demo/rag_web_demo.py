@@ -369,7 +369,7 @@ def create_hugegraph_llm_interface():
 
             embedding_config_button = gr.Button("apply configuration")
             
-            # 在这里调用独立的 apply_embedding_configuration 函数
+            # Call the separate apply_embedding_configuration function here
             embedding_config_button.click(
                 lambda arg1, arg2, arg3: apply_embedding_configuration(arg1, arg2, arg3),
                 inputs=embedding_config_input
