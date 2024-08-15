@@ -161,7 +161,8 @@ class GraphConfigRequest(BaseModel):
 
 class LLMConfigRequest(BaseModel):
     llm_type: str
-    # The common parameters shared by OpenAI, Qianfan Wenxin, and OLLAMA platforms.
+    # The common parameters shared by OpenAI, Qianfan Wenxin, 
+    # and OLLAMA platforms.
     api_key: str
     api_base: str
     language_model: str
@@ -208,21 +209,17 @@ if __name__ == "__main__":
                 response = requests.post(url, headers=headers, json=body, timeout=5, auth=auth)
             else:
                 log.error("Unsupported method: %s", method)
-                # for http api return status
-                # return {"status": "Unsupported method: " + method}
 
             if 200 <= response.status_code < 300:
                 log.info("Connection successful. Configured finished.")
                 gr.Info("Connection successful. Configured finished.")
-                # for http api return status
-                # return {"status": "Connection successful. Configured finished."}
             else:
                 log.error("Connection failed with status code: %s", response.status_code)
                 # pylint: disable=pointless-exception-statement
                 gr.Error(f"Connection failed with status code: {response.status_code}")
-                # for http api return status
-                # return {"status": "Connection failed with status code: " + str(response.status_code)}
-            return {"status": "hello!!!"}
+            # for http api return status
+            return response.status_code
+
 
 
         def apply_graph_configuration(ip, port, name, user, pwd, gs):
@@ -252,10 +249,11 @@ if __name__ == "__main__":
             label="LLM"
         )
 
-
+        # Different llm models have different parameters,
+        # so no meaningful argument names are given here
         def apply_llm_configuration(arg1, arg2, arg3, arg4):
             llm_option = settings.llm_type
-
+            status_code = 200
             if llm_option == "openai":
                 settings.openai_api_key = arg1
                 settings.openai_api_base = arg2
@@ -263,7 +261,7 @@ if __name__ == "__main__":
                 settings.openai_max_tokens = int(arg4)
                 test_url = settings.openai_api_base + "/models"
                 headers = {"Authorization": f"Bearer {arg1}"}
-                test_api_connection(test_url, headers=headers)
+                status_code = test_api_connection(test_url, headers=headers)
             elif llm_option == "qianfan_wenxin":
                 settings.qianfan_api_key = arg1
                 settings.qianfan_secret_key = arg2
@@ -276,6 +274,7 @@ if __name__ == "__main__":
                 settings.ollama_language_model = arg3
             gr.Info("configured!")
             settings.update_env()
+            return status_code
 
         @gr.render(inputs=[llm_dropdown])
         def llm_settings(llm_type):
@@ -492,15 +491,28 @@ if __name__ == "__main__":
 
     @app.post("/graph/config")
     def graph_config_api(req: GraphConfigRequest):
-        result = apply_graph_configuration(req.ip, req.port, req.name, req.user, req.pwd, req.gs)
-        return json.dumps(result)
+        # Accept status code
+        status_code = apply_graph_configuration(req.ip, req.port, req.name, req.user, req.pwd, req.gs)
+        if 200 <= status_code < 300:
+            return {"message":"Connection successful. Configured finished."}
+        else:
+            return {"message":f"Connection failed with status code: {status_code}"}
     
-    # @app.post("/llm/config")
-    # def graph_config_api(req: LLMConfigRequest):
-    #     settings.llm_type = req.llm_type
-    #     if req.llm_type == req.llm_type:
-    #         result = llm_settings.apply_llm_configuration(req.api_key, req.api_base, req.language_model, req.max_tokens)
-    #     return json.dumps(result)
+    @app.post("/llm/config")
+    def graph_config_api(req: LLMConfigRequest):
+        settings.llm_type = req.llm_type
+        
+        if req.llm_type == "openai":
+            status_code = apply_llm_configuration(req.api_key, req.api_base, req.language_model, req.max_tokens)
+        elif req.llm_type == "qianfan_wenxin":
+            status_code = apply_llm_configuration(req.api_key, req.secret_key, req.language_model, None)
+        else:
+            status_code = apply_llm_configuration(req.host, req.port, req.language_model, None)
+        
+        if 200 <= status_code < 300:
+            return {"message":"Connection successful. Configured finished."}
+        else:
+            return {"message":f"Connection failed with status code: {status_code}"}
 
 
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
