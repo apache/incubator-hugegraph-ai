@@ -174,15 +174,100 @@ class LLMConfigRequest(BaseModel):
     host: str = None
     port: str = None
 
+def test_api_connection(url, method="GET", headers=None, body=None, auth=None):
+    # TODO: use fastapi.request / starlette instead? (Also add a try-catch here)
+    log.debug("Request URL: %s", url)
+    if method.upper() == "GET":
+        response = requests.get(url, headers=headers, timeout=5, auth=auth)
+        
+    elif method.upper() == "POST":
+        response = requests.post(url, headers=headers, json=body, timeout=5, auth=auth)
+    else:
+        log.error("Unsupported method: %s", method)
 
+    if response is None:
+        # Unsupported method encountered
+        return -1
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--host", type=str, default="0.0.0.0", help="host")
-    parser.add_argument("--port", type=int, default=8001, help="port")
-    args = parser.parse_args()
-    app = FastAPI()
+    # HTTP API return status
+    status_code = response.status_code
 
+    if 200 <= status_code < 300:
+        message = "Connection successful. Configured finished."
+        log.info(message)
+        gr.Info(message)
+    else:
+        message = f"Connection failed with status code: {status_code}"
+        log.error(message)
+        gr.Error(message)
+    
+    return status_code
+
+def apply_embedding_configuration(arg1, arg2, arg3):
+    embedding_option = settings.embedding_type
+    if embedding_option == "openai":
+        settings.openai_api_key = arg1
+        settings.openai_api_base = arg2
+        settings.openai_embedding_model = arg3
+        test_url = settings.openai_api_base + "/models"
+        headers = {"Authorization": f"Bearer {arg1}"}
+        test_api_connection(test_url, headers=headers)
+    elif embedding_option == "ollama":
+        settings.ollama_host = arg1
+        settings.ollama_port = int(arg2)
+        settings.ollama_embedding_model = arg3
+    elif embedding_option == "qianfan_wenxin":
+        settings.qianfan_access_token = arg1
+        settings.qianfan_embed_url = arg2
+    settings.update_env()
+    gr.Info("configured!")
+
+def apply_graph_configuration(ip, port, name, user, pwd, gs):
+    settings.graph_ip = ip
+    settings.graph_port = int(port)
+    settings.graph_name = name
+    settings.graph_user = user
+    settings.graph_pwd = pwd
+    settings.graph_space = gs
+    # Test graph connection (Auth)
+    if gs and gs.strip():
+        test_url = f"http://{ip}:{port}/graphspaces/{gs}/graphs/{name}/schema"
+    else:
+        test_url = f"http://{ip}:{port}/graphs/{name}/schema"
+    auth = HTTPBasicAuth(user, pwd)
+    # for http api return status
+    result = test_api_connection(test_url, auth=auth)
+    settings.update_env()
+    return result
+
+# Different llm models have different parameters,
+# so no meaningful argument names are given here
+def apply_llm_configuration(arg1, arg2, arg3, arg4):
+    llm_option = settings.llm_type
+    status_code = 200
+    if llm_option == "openai":
+        settings.openai_api_key = arg1
+        settings.openai_api_base = arg2
+        settings.openai_language_model = arg3
+        settings.openai_max_tokens = int(arg4)
+        test_url = settings.openai_api_base + "/models"
+        headers = {"Authorization": f"Bearer {arg1}"}
+        status_code = test_api_connection(test_url, headers=headers)
+    elif llm_option == "qianfan_wenxin":
+        settings.qianfan_api_key = arg1
+        settings.qianfan_secret_key = arg2
+        settings.qianfan_language_model = arg3
+        # TODO: test the connection
+        # test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
+    elif llm_option == "ollama":
+        settings.ollama_host = arg1
+        settings.ollama_port = int(arg2)
+        settings.ollama_language_model = arg3
+    gr.Info("configured!")
+    settings.update_env()
+    return status_code
+
+def create_hugegraph_llm_interface():
     with gr.Blocks() as hugegraph_llm:
         gr.Markdown(
             """# HugeGraph LLM RAG Demo
@@ -200,58 +285,7 @@ if __name__ == "__main__":
                 gr.Textbox(value="", label="graphspace (None)"),
             ]
         graph_config_button = gr.Button("apply configuration")
-
-
-        def test_api_connection(url, method="GET", headers=None, body=None, auth=None):
-            # TODO: use fastapi.request / starlette instead? (Also add a try-catch here)
-            log.debug("Request URL: %s", url)
-            if method.upper() == "GET":
-                response = requests.get(url, headers=headers, timeout=5, auth=auth)
-                
-            elif method.upper() == "POST":
-                response = requests.post(url, headers=headers, json=body, timeout=5, auth=auth)
-            else:
-                log.error("Unsupported method: %s", method)
-
-            if response is None:
-                # Unsupported method encountered
-                return -1
-
-            # HTTP API return status
-            status_code = response.status_code
-
-            if 200 <= status_code < 300:
-                message = "Connection successful. Configured finished."
-                log.info(message)
-                gr.Info(message)
-            else:
-                message = f"Connection failed with status code: {status_code}"
-                log.error(message)
-                gr.Error(message)
-            
-            return status_code
-
-
-
-
-        def apply_graph_configuration(ip, port, name, user, pwd, gs):
-            settings.graph_ip = ip
-            settings.graph_port = int(port)
-            settings.graph_name = name
-            settings.graph_user = user
-            settings.graph_pwd = pwd
-            settings.graph_space = gs
-            # Test graph connection (Auth)
-            if gs and gs.strip():
-                test_url = f"http://{ip}:{port}/graphspaces/{gs}/graphs/{name}/schema"
-            else:
-                test_url = f"http://{ip}:{port}/graphs/{name}/schema"
-            auth = HTTPBasicAuth(user, pwd)
-            # for http api return status
-            result = test_api_connection(test_url, auth=auth)
-            settings.update_env()
-            return result
-
+        
         graph_config_button.click(apply_graph_configuration, inputs=graph_config_input)  # pylint: disable=no-member
 
         gr.Markdown("2. Set up the LLM.")
@@ -260,33 +294,6 @@ if __name__ == "__main__":
             value=settings.llm_type,
             label="LLM"
         )
-
-        # Different llm models have different parameters,
-        # so no meaningful argument names are given here
-        def apply_llm_configuration(arg1, arg2, arg3, arg4):
-            llm_option = settings.llm_type
-            status_code = 200
-            if llm_option == "openai":
-                settings.openai_api_key = arg1
-                settings.openai_api_base = arg2
-                settings.openai_language_model = arg3
-                settings.openai_max_tokens = int(arg4)
-                test_url = settings.openai_api_base + "/models"
-                headers = {"Authorization": f"Bearer {arg1}"}
-                status_code = test_api_connection(test_url, headers=headers)
-            elif llm_option == "qianfan_wenxin":
-                settings.qianfan_api_key = arg1
-                settings.qianfan_secret_key = arg2
-                settings.qianfan_language_model = arg3
-                # TODO: test the connection
-                # test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
-            elif llm_option == "ollama":
-                settings.ollama_host = arg1
-                settings.ollama_port = int(arg2)
-                settings.ollama_language_model = arg3
-            gr.Info("configured!")
-            settings.update_env()
-            return status_code
 
         @gr.render(inputs=[llm_dropdown])
         def llm_settings(llm_type):
@@ -331,25 +338,6 @@ if __name__ == "__main__":
             label="Embedding"
         )
 
-        def apply_embedding_configuration(arg1, arg2, arg3):
-            embedding_option = settings.embedding_type
-            if embedding_option == "openai":
-                settings.openai_api_key = arg1
-                settings.openai_api_base = arg2
-                settings.openai_embedding_model = arg3
-                test_url = settings.openai_api_base + "/models"
-                headers = {"Authorization": f"Bearer {arg1}"}
-                test_api_connection(test_url, headers=headers)
-            elif embedding_option == "ollama":
-                settings.ollama_host = arg1
-                settings.ollama_port = int(arg2)
-                settings.ollama_embedding_model = arg3
-            elif embedding_option == "qianfan_wenxin":
-                settings.qianfan_access_token = arg1
-                settings.qianfan_embed_url = arg2
-            settings.update_env()
-            gr.Info("configured!")
-
         @gr.render(inputs=[embedding_dropdown])
         def embedding_settings(embedding_type):
             settings.embedding_type = embedding_type
@@ -383,7 +371,7 @@ if __name__ == "__main__":
             
             # 在这里调用独立的 apply_embedding_configuration 函数
             embedding_config_button.click(
-                lambda arg1, arg2, arg3: apply_embedding_configuration(settings.embedding_type, arg1, arg2, arg3),
+                lambda arg1, arg2, arg3: apply_embedding_configuration(arg1, arg2, arg3),
                 inputs=embedding_config_input
             )
 
@@ -498,7 +486,10 @@ if __name__ == "__main__":
             out = gr.Textbox(label="Output", show_copy_button=True)
         btn = gr.Button("(BETA) Init HugeGraph test data (🚧WIP)")
         btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
+    return hugegraph_llm
 
+
+def rag_web_http_api():
     @app.post("/rag")
     def graph_rag_api(req: RAGRequest):
         result = graph_rag(req.query, req.raw_llm, req.vector_only, req.graph_only, req.graph_vector)
@@ -556,6 +547,17 @@ if __name__ == "__main__":
         else:
             return {"message":f"Connection failed with status code: {status_code}"}
 
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="host")
+    parser.add_argument("--port", type=int, default=8001, help="port")
+    args = parser.parse_args()
+    app = FastAPI()
+
+    hugegraph_llm = create_hugegraph_llm_interface()
+    
+    rag_web_http_api()
 
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
     # Note: set reload to False in production environment
