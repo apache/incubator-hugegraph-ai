@@ -205,20 +205,30 @@ if __name__ == "__main__":
             log.debug("Request URL: %s", url)
             if method.upper() == "GET":
                 response = requests.get(url, headers=headers, timeout=5, auth=auth)
+                
             elif method.upper() == "POST":
                 response = requests.post(url, headers=headers, json=body, timeout=5, auth=auth)
             else:
                 log.error("Unsupported method: %s", method)
 
-            if 200 <= response.status_code < 300:
-                log.info("Connection successful. Configured finished.")
-                gr.Info("Connection successful. Configured finished.")
+            if response is None:
+                # Unsupported method encountered
+                return -1
+
+            # HTTP API return status
+            status_code = response.status_code
+
+            if 200 <= status_code < 300:
+                message = "Connection successful. Configured finished."
+                log.info(message)
+                gr.Info(message)
             else:
-                log.error("Connection failed with status code: %s", response.status_code)
-                # pylint: disable=pointless-exception-statement
-                gr.Error(f"Connection failed with status code: {response.status_code}")
-            # for http api return status
-            return response.status_code
+                message = f"Connection failed with status code: {status_code}"
+                log.error(message)
+                gr.Error(message)
+            
+            return status_code
+
 
 
 
@@ -322,6 +332,24 @@ if __name__ == "__main__":
 
 
 
+        def apply_embedding_configuration(embedding_option, arg1, arg2, arg3):
+            if embedding_option == "openai":
+                settings.openai_api_key = arg1
+                settings.openai_api_base = arg2
+                settings.openai_embedding_model = arg3
+                test_url = settings.openai_api_base + "/models"
+                headers = {"Authorization": f"Bearer {arg1}"}
+                test_api_connection(test_url, headers=headers)
+            elif embedding_option == "ollama":
+                settings.ollama_host = arg1
+                settings.ollama_port = int(arg2)
+                settings.ollama_embedding_model = arg3
+            elif embedding_option == "qianfan_wenxin":
+                settings.qianfan_access_token = arg1
+                settings.qianfan_embed_url = arg2
+            settings.update_env()
+            gr.Info("configured!")
+
         @gr.render(inputs=[embedding_dropdown])
         def embedding_settings(embedding_type):
             settings.embedding_type = embedding_type
@@ -336,9 +364,9 @@ if __name__ == "__main__":
                 with gr.Row():
                     embedding_config_input = [
                         gr.Textbox(value=settings.qianfan_api_key, label="api_key",
-                                   type="password"),
+                                type="password"),
                         gr.Textbox(value=settings.qianfan_secret_key, label="secret_key",
-                                   type="password"),
+                                type="password"),
                         gr.Textbox(value=settings.qianfan_embedding_model, label="model_name"),
                     ]
             elif embedding_type == "ollama":
@@ -350,27 +378,15 @@ if __name__ == "__main__":
                     ]
             else:
                 embedding_config_input = []
+
             embedding_config_button = gr.Button("apply configuration")
+            
+            # 在这里调用独立的 apply_embedding_configuration 函数
+            embedding_config_button.click(
+                lambda arg1, arg2, arg3: apply_embedding_configuration(settings.embedding_type, arg1, arg2, arg3),
+                inputs=embedding_config_input
+            )
 
-            def apply_embedding_configuration(arg1, arg2, arg3):
-                embedding_option = settings.embedding_type
-                if embedding_option == "openai":
-                    settings.openai_api_key = arg1
-                    settings.openai_api_base = arg2
-                    settings.openai_embedding_model = arg3
-                    test_url = settings.openai_api_base + "/models"
-                    headers = {"Authorization": f"Bearer {arg1}"}
-                    test_api_connection(test_url, headers=headers)
-                elif embedding_option == "ollama":
-                    settings.ollama_host = arg1
-                    settings.ollama_port = int(arg2)
-                    settings.ollama_embedding_model = arg3
-                elif embedding_option == "qianfan_wenxin":
-                    settings.qianfan_access_token = arg1
-                    settings.qianfan_embed_url = arg2
-                settings.update_env()
-
-                gr.Info("configured!")
 
             embedding_config_button.click(apply_embedding_configuration,  # pylint: disable=no-member
                                           inputs=embedding_config_input)
@@ -493,6 +509,10 @@ if __name__ == "__main__":
     def graph_config_api(req: GraphConfigRequest):
         # Accept status code
         status_code = apply_graph_configuration(req.ip, req.port, req.name, req.user, req.pwd, req.gs)
+        
+        if status_code == -1:
+            return {"message":"Unsupported HTTP method"}
+        
         if 200 <= status_code < 300:
             return {"message":"Connection successful. Configured finished."}
         else:
@@ -509,6 +529,9 @@ if __name__ == "__main__":
         else:
             status_code = apply_llm_configuration(req.host, req.port, req.language_model, None)
         
+        if status_code == -1:
+            return {"message":"Unsupported HTTP method"}
+
         if 200 <= status_code < 300:
             return {"message":"Connection successful. Configured finished."}
         else:
