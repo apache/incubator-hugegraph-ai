@@ -152,12 +152,12 @@ class RAGRequest(BaseModel):
     graph_vector: Optional[bool] = None
 
 class GraphConfigRequest(BaseModel):
-    ip: str
-    port: str
-    name: str
-    user: str
-    pwd: str
-    gs: str
+    ip: str = "127.0.0.1"
+    port: str = "8080"
+    name: str = "hugegraph"
+    user: str = "xxx"
+    pwd: str = "xxx"
+    gs: str = ""
 
 class LLMConfigRequest(BaseModel):
     llm_type: str
@@ -209,19 +209,20 @@ if __name__ == "__main__":
             else:
                 log.error("Unsupported method: %s", method)
                 # for http api return status
-                return {"status": "Unsupported method: " + method}
+                # return {"status": "Unsupported method: " + method}
 
             if 200 <= response.status_code < 300:
                 log.info("Connection successful. Configured finished.")
                 gr.Info("Connection successful. Configured finished.")
                 # for http api return status
-                return {"status": "Connection successful. Configured finished."}
+                # return {"status": "Connection successful. Configured finished."}
             else:
                 log.error("Connection failed with status code: %s", response.status_code)
                 # pylint: disable=pointless-exception-statement
                 gr.Error(f"Connection failed with status code: {response.status_code}")
                 # for http api return status
-                return {"status": "Connection failed with status code: " + str(response.status_code)}
+                # return {"status": "Connection failed with status code: " + str(response.status_code)}
+            return {"status": "hello!!!"}
 
 
         def apply_graph_configuration(ip, port, name, user, pwd, gs):
@@ -242,7 +243,6 @@ if __name__ == "__main__":
             settings.update_env()
             return result
 
-
         graph_config_button.click(apply_graph_configuration, inputs=graph_config_input)  # pylint: disable=no-member
 
         gr.Markdown("2. Set up the LLM.")
@@ -252,6 +252,30 @@ if __name__ == "__main__":
             label="LLM"
         )
 
+
+        def apply_llm_configuration(arg1, arg2, arg3, arg4):
+            llm_option = settings.llm_type
+
+            if llm_option == "openai":
+                settings.openai_api_key = arg1
+                settings.openai_api_base = arg2
+                settings.openai_language_model = arg3
+                settings.openai_max_tokens = int(arg4)
+                test_url = settings.openai_api_base + "/models"
+                headers = {"Authorization": f"Bearer {arg1}"}
+                test_api_connection(test_url, headers=headers)
+            elif llm_option == "qianfan_wenxin":
+                settings.qianfan_api_key = arg1
+                settings.qianfan_secret_key = arg2
+                settings.qianfan_language_model = arg3
+                # TODO: test the connection
+                # test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
+            elif llm_option == "ollama":
+                settings.ollama_host = arg1
+                settings.ollama_port = int(arg2)
+                settings.ollama_language_model = arg3
+            gr.Info("configured!")
+            settings.update_env()
 
         @gr.render(inputs=[llm_dropdown])
         def llm_settings(llm_type):
@@ -276,9 +300,9 @@ if __name__ == "__main__":
                 with gr.Row():
                     llm_config_input = [
                         gr.Textbox(value=settings.qianfan_api_key, label="api_key",
-                                   type="password"),
+                                type="password"),
                         gr.Textbox(value=settings.qianfan_secret_key, label="secret_key",
-                                   type="password"),
+                                type="password"),
                         gr.Textbox(value=settings.qianfan_language_model, label="model_name"),
                         gr.Textbox(value="", visible=False)
                     ]
@@ -287,32 +311,7 @@ if __name__ == "__main__":
                 llm_config_input = []
             llm_config_button = gr.Button("apply configuration")
 
-            def apply_llm_configuration(arg1, arg2, arg3, arg4):
-                llm_option = settings.llm_type
-
-                if llm_option == "openai":
-                    settings.openai_api_key = arg1
-                    settings.openai_api_base = arg2
-                    settings.openai_language_model = arg3
-                    settings.openai_max_tokens = int(arg4)
-                    test_url = settings.openai_api_base + "/models"
-                    headers = {"Authorization": f"Bearer {arg1}"}
-                    test_api_connection(test_url, headers=headers)
-                elif llm_option == "qianfan_wenxin":
-                    settings.qianfan_api_key = arg1
-                    settings.qianfan_secret_key = arg2
-                    settings.qianfan_language_model = arg3
-                    # TODO: test the connection
-                    # test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
-                elif llm_option == "ollama":
-                    settings.ollama_host = arg1
-                    settings.ollama_port = int(arg2)
-                    settings.ollama_language_model = arg3
-                gr.Info("configured!")
-                settings.update_env()
-
             llm_config_button.click(apply_llm_configuration, inputs=llm_config_input)  # pylint: disable=no-member
-
 
         gr.Markdown("3. Set up the Embedding.")
         embedding_dropdown = gr.Dropdown(
@@ -484,21 +483,6 @@ if __name__ == "__main__":
             out = gr.Textbox(label="Output", show_copy_button=True)
         btn = gr.Button("(BETA) Init HugeGraph test data (🚧WIP)")
         btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
-
-    # @app.get("/rag/{query}")
-    # def graph_rag_api(query: str):
-    #     result = graph_rag(query, True, True, True, True)
-    #     return {"raw_answer": result[0], "vector_only_answer": result[1],
-    #             "graph_only_answer": result[2], "graph_vector_answer": result[3]}
-    
-    # @app.get("/rag/graph/{query}")
-    # def graph_rag_api(query: str):
-    #     result = graph_rag(query, False, False, True, False)
-    #     log.debug(result)
-    #     # return {"graph_only_answer": result[2]}
-    #     return {"raw_answer": result[0], "vector_only_answer": result[1],
-    #             "graph_only_answer": result[2], "graph_vector_answer": result[3]}
-
 
     @app.post("/rag")
     def graph_rag_api(req: RAGRequest):
