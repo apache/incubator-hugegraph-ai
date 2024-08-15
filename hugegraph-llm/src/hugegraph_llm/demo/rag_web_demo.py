@@ -519,7 +519,7 @@ if __name__ == "__main__":
             return {"message":f"Connection failed with status code: {status_code}"}
     
     @app.post("/llm/config")
-    def graph_config_api(req: LLMConfigRequest):
+    def llm_config_api(req: LLMConfigRequest):
         settings.llm_type = req.llm_type
         
         if req.llm_type == "openai":
@@ -528,6 +528,23 @@ if __name__ == "__main__":
             status_code = apply_llm_configuration(req.api_key, req.secret_key, req.language_model, None)
         else:
             status_code = apply_llm_configuration(req.host, req.port, req.language_model, None)
+        
+        if status_code == -1:
+            return {"message":"Unsupported HTTP method"}
+
+        if 200 <= status_code < 300:
+            return {"message":"Connection successful. Configured finished."}
+        else:
+            return {"message":f"Connection failed with status code: {status_code}"}
+        
+    @app.post("/embedding/config")
+    def embedding_config_api(req: LLMConfigRequest):
+        if req.llm_type == "openai":
+            status_code = apply_embedding_configuration(req.llm_type, req.api_key, req.api_base, req.language_model)
+        elif req.llm_type == "qianfan_wenxin":
+            status_code = apply_embedding_configuration(req.llm_type, req.api_key, req.api_base, None)
+        else:
+            status_code = apply_embedding_configuration(req.llm_type, req.host, req.port, req.language_model)
         
         if status_code == -1:
             return {"message":"Unsupported HTTP method"}
