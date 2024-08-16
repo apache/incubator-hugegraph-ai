@@ -502,12 +502,12 @@ def rag_web_http_api():
         status_code = apply_graph_configuration(req.ip, req.port, req.name, req.user, req.pwd, req.gs)
         
         if status_code == -1:
-            return {"message":"Unsupported HTTP method"}
+            return {"message": "Unsupported HTTP method"}
         
         if 200 <= status_code < 300:
-            return {"message":"Connection successful. Configured finished."}
+            return {"message": "Connection successful. Configured finished."}
         else:
-            return {"message":f"Connection failed with status code: {status_code}"}
+            return {"message": f"Connection failed with status code: {status_code}"}
     
     @app.post("/llm/config")
     def llm_config_api(req: LLMConfigRequest):
@@ -521,12 +521,12 @@ def rag_web_http_api():
             status_code = apply_llm_configuration(req.host, req.port, req.language_model, None)
         
         if status_code == -1:
-            return {"message":"Unsupported HTTP method"}
+            return {"message": "Unsupported HTTP method"}
 
         if 200 <= status_code < 300:
-            return {"message":"Connection successful. Configured finished."}
+            return {"message": "Connection successful. Configured finished."}
         else:
-            return {"message":f"Connection failed with status code: {status_code}"}
+            return {"message": f"Connection failed with status code: {status_code}"}
         
     @app.post("/embedding/config")
     def embedding_config_api(req: LLMConfigRequest):
@@ -540,10 +540,10 @@ def rag_web_http_api():
             status_code = apply_embedding_configuration(req.host, req.port, req.language_model)
         
         if status_code == -1:
-            return {"message":"Unsupported HTTP method"}
+            return {"message": "Unsupported HTTP method"}
 
         if 200 <= status_code < 300:
-            return {"message":"Connection successful. Configured finished."}
+            return {"message": "Connection successful. Configured finished."}
         else:
             return {"message":f"Connection failed with status code: {status_code}"}
 
