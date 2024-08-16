@@ -59,7 +59,7 @@ def graph_rag(text: str, raw_answer: bool, vector_only_answer: bool,
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
 
-    if raw_answer == False and not vector_search and not graph_search:
+    if raw_answer is False and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
         return "", "", "", ""
     searcher = GraphRAG()
@@ -151,13 +151,15 @@ class RAGRequest(BaseModel):
     graph_only: Optional[bool] = False
     graph_vector: Optional[bool] = False
 
+
 class GraphConfigRequest(BaseModel):
     ip: str = "127.0.0.1"
     port: str = "8080"
     name: str = "hugegraph"
     user: str = "xxx"
     pwd: str = "xxx"
-    gs: str = ""
+    gs: str = None
+
 
 class LLMConfigRequest(BaseModel):
     llm_type: str
@@ -174,12 +176,13 @@ class LLMConfigRequest(BaseModel):
     host: str = None
     port: str = None
 
+
 def test_api_connection(url, method="GET", headers=None, body=None, auth=None):
     # TODO: use fastapi.request / starlette instead? (Also add a try-catch here)
+    response = None
     log.debug("Request URL: %s", url)
     if method.upper() == "GET":
         response = requests.get(url, headers=headers, timeout=5, auth=auth)
-        
     elif method.upper() == "POST":
         response = requests.post(url, headers=headers, json=body, timeout=5, auth=auth)
     else:
@@ -191,7 +194,6 @@ def test_api_connection(url, method="GET", headers=None, body=None, auth=None):
 
     # HTTP API return status
     status_code = response.status_code
-
     if 200 <= status_code < 300:
         message = "Connection successful. Configured finished."
         log.info(message)
@@ -200,8 +202,8 @@ def test_api_connection(url, method="GET", headers=None, body=None, auth=None):
         message = f"Connection failed with status code: {status_code}"
         log.error(message)
         gr.Error(message)
-    
     return status_code
+
 
 def apply_embedding_configuration(arg1, arg2, arg3):
     # Because of ollama, the qianfan_wenxin model is missing the test connect procedure,
@@ -223,8 +225,9 @@ def apply_embedding_configuration(arg1, arg2, arg3):
         settings.qianfan_access_token = arg1
         settings.qianfan_embed_url = arg2
     settings.update_env()
-    gr.Info("configured!")
+    gr.Info("Configured!")
     return status_code
+
 
 def apply_graph_configuration(ip, port, name, user, pwd, gs):
     settings.graph_ip = ip
@@ -243,6 +246,7 @@ def apply_graph_configuration(ip, port, name, user, pwd, gs):
     status_code = test_api_connection(test_url, auth=auth)
     settings.update_env()
     return status_code
+
 
 # Different llm models have different parameters,
 # so no meaningful argument names are given here
@@ -269,9 +273,10 @@ def apply_llm_configuration(arg1, arg2, arg3, arg4):
         settings.ollama_host = arg1
         settings.ollama_port = int(arg2)
         settings.ollama_language_model = arg3
-    gr.Info("configured!")
+    gr.Info("Configured!")
     settings.update_env()
     return status_code
+
 
 def create_hugegraph_llm_interface():
     with gr.Blocks() as hugegraph_llm:
@@ -291,7 +296,7 @@ def create_hugegraph_llm_interface():
                 gr.Textbox(value="", label="graphspace (None)"),
             ]
         graph_config_button = gr.Button("apply configuration")
-        
+
         graph_config_button.click(apply_graph_configuration, inputs=graph_config_input)  # pylint: disable=no-member
 
         gr.Markdown("2. Set up the LLM.")
@@ -324,9 +329,9 @@ def create_hugegraph_llm_interface():
                 with gr.Row():
                     llm_config_input = [
                         gr.Textbox(value=settings.qianfan_api_key, label="api_key",
-                                type="password"),
+                                   type="password"),
                         gr.Textbox(value=settings.qianfan_secret_key, label="secret_key",
-                                type="password"),
+                                   type="password"),
                         gr.Textbox(value=settings.qianfan_language_model, label="model_name"),
                         gr.Textbox(value="", visible=False)
                     ]
@@ -358,9 +363,9 @@ def create_hugegraph_llm_interface():
                 with gr.Row():
                     embedding_config_input = [
                         gr.Textbox(value=settings.qianfan_api_key, label="api_key",
-                                type="password"),
+                                   type="password"),
                         gr.Textbox(value=settings.qianfan_secret_key, label="secret_key",
-                                type="password"),
+                                   type="password"),
                         gr.Textbox(value=settings.qianfan_embedding_model, label="model_name"),
                     ]
             elif embedding_type == "ollama":
@@ -374,17 +379,15 @@ def create_hugegraph_llm_interface():
                 embedding_config_input = []
 
             embedding_config_button = gr.Button("apply configuration")
-            
+
             # Call the separate apply_embedding_configuration function here
             embedding_config_button.click(
                 lambda arg1, arg2, arg3: apply_embedding_configuration(arg1, arg2, arg3),
                 inputs=embedding_config_input
             )
 
-
             embedding_config_button.click(apply_embedding_configuration,  # pylint: disable=no-member
                                           inputs=embedding_config_input)
-
 
         gr.Markdown(
             """## 1. Build vector/graph RAG (💡)
@@ -506,26 +509,7 @@ def rag_web_http_api():
     def graph_config_api(req: GraphConfigRequest):
         # Accept status code
         status_code = apply_graph_configuration(req.ip, req.port, req.name, req.user, req.pwd, req.gs)
-        
-        if status_code == -1:
-            return {"message": "Unsupported HTTP method"}
-        
-        if 200 <= status_code < 300:
-            return {"message": "Connection successful. Configured finished."}
-        else:
-            return {"message": f"Connection failed with status code: {status_code}"}
-    
-    @app.post("/llm/config")
-    def llm_config_api(req: LLMConfigRequest):
-        settings.llm_type = req.llm_type
-        
-        if req.llm_type == "openai":
-            status_code = apply_llm_configuration(req.api_key, req.api_base, req.language_model, req.max_tokens)
-        elif req.llm_type == "qianfan_wenxin":
-            status_code = apply_llm_configuration(req.api_key, req.secret_key, req.language_model, None)
-        else:
-            status_code = apply_llm_configuration(req.host, req.port, req.language_model, None)
-        
+
         if status_code == -1:
             return {"message": "Unsupported HTTP method"}
 
@@ -533,7 +517,26 @@ def rag_web_http_api():
             return {"message": "Connection successful. Configured finished."}
         else:
             return {"message": f"Connection failed with status code: {status_code}"}
-        
+
+    @app.post("/llm/config")
+    def llm_config_api(req: LLMConfigRequest):
+        settings.llm_type = req.llm_type
+
+        if req.llm_type == "openai":
+            status_code = apply_llm_configuration(req.api_key, req.api_base, req.language_model, req.max_tokens)
+        elif req.llm_type == "qianfan_wenxin":
+            status_code = apply_llm_configuration(req.api_key, req.secret_key, req.language_model, None)
+        else:
+            status_code = apply_llm_configuration(req.host, req.port, req.language_model, None)
+
+        if status_code == -1:
+            return {"message": "Unsupported HTTP method"}
+
+        if 200 <= status_code < 300:
+            return {"message": "Connection successful. Configured finished."}
+        else:
+            return {"message": f"Connection failed with status code: {status_code}"}
+
     @app.post("/embedding/config")
     def embedding_config_api(req: LLMConfigRequest):
         settings.embedding_type = req.llm_type
@@ -544,7 +547,7 @@ def rag_web_http_api():
             status_code = apply_embedding_configuration(req.api_key, req.api_base, None)
         else:
             status_code = apply_embedding_configuration(req.host, req.port, req.language_model)
-        
+
         if status_code == -1:
             return {"message": "Unsupported HTTP method"}
 
@@ -562,7 +565,7 @@ if __name__ == "__main__":
     app = FastAPI()
 
     hugegraph_llm = create_hugegraph_llm_interface()
-    
+
     rag_web_http_api()
 
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
