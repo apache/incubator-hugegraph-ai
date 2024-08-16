@@ -204,6 +204,9 @@ def test_api_connection(url, method="GET", headers=None, body=None, auth=None):
     return status_code
 
 def apply_embedding_configuration(arg1, arg2, arg3):
+    # Because of ollama, the qianfan_wenxin model is missing the test connect procedure,
+    #  so it defaults to 200 so that there is no return value problem
+    status_code = 200
     embedding_option = settings.embedding_type
     if embedding_option == "openai":
         settings.openai_api_key = arg1
@@ -211,7 +214,7 @@ def apply_embedding_configuration(arg1, arg2, arg3):
         settings.openai_embedding_model = arg3
         test_url = settings.openai_api_base + "/models"
         headers = {"Authorization": f"Bearer {arg1}"}
-        test_api_connection(test_url, headers=headers)
+        status_code = test_api_connection(test_url, headers=headers)
     elif embedding_option == "ollama":
         settings.ollama_host = arg1
         settings.ollama_port = int(arg2)
@@ -221,6 +224,7 @@ def apply_embedding_configuration(arg1, arg2, arg3):
         settings.qianfan_embed_url = arg2
     settings.update_env()
     gr.Info("configured!")
+    return status_code
 
 def apply_graph_configuration(ip, port, name, user, pwd, gs):
     settings.graph_ip = ip
@@ -236,14 +240,16 @@ def apply_graph_configuration(ip, port, name, user, pwd, gs):
         test_url = f"http://{ip}:{port}/graphs/{name}/schema"
     auth = HTTPBasicAuth(user, pwd)
     # for http api return status
-    result = test_api_connection(test_url, auth=auth)
+    status_code = test_api_connection(test_url, auth=auth)
     settings.update_env()
-    return result
+    return status_code
 
 # Different llm models have different parameters,
 # so no meaningful argument names are given here
 def apply_llm_configuration(arg1, arg2, arg3, arg4):
     llm_option = settings.llm_type
+    # Because of ollama, the qianfan_wenxin model is missing the test connect procedure,
+    #  so it defaults to 200 so that there is no return value problem
     status_code = 200
     if llm_option == "openai":
         settings.openai_api_key = arg1
@@ -545,7 +551,7 @@ def rag_web_http_api():
         if 200 <= status_code < 300:
             return {"message": "Connection successful. Configured finished."}
         else:
-            return {"message":f"Connection failed with status code: {status_code}"}
+            return {"message": f"Connection failed with status code: {status_code}"}
 
 
 if __name__ == "__main__":
