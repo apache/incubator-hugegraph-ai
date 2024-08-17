@@ -128,7 +128,7 @@ def build_kg(file, schema, example_prompt, build_mode) -> str:  # pylint: disabl
     log.debug(builder.operators)
     try:
         context = builder.run()
-        return context
+        return str(context)
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
         raise gr.Error(str(e))
