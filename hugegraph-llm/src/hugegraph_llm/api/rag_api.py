@@ -65,7 +65,6 @@ def rag_http_api(app: FastAPI, rag_answer_func, apply_graph_conf, apply_llm_conf
     def graph_config_api(req: GraphConfigRequest):
         # Accept status code
         status_code = apply_graph_conf(req.ip, req.port, req.name, req.user, req.pwd, req.gs, origin_call="http")
-
         return {
             "message": (
                 "Connection successful. Configured finished." if 200 <= status_code < 300 else
@@ -86,7 +85,6 @@ def rag_http_api(app: FastAPI, rag_answer_func, apply_graph_conf, apply_llm_conf
             status_code = apply_llm_conf(req.api_key, req.secret_key, req.language_model, None, origin_call="http")
         else:
             status_code = apply_llm_conf(req.host, req.port, req.language_model, None, origin_call="http")
-
         return {
             "message": (
                 "Connection successful. Configured finished." if 200 <= status_code < 300 else
@@ -105,7 +103,6 @@ def rag_http_api(app: FastAPI, rag_answer_func, apply_graph_conf, apply_llm_conf
             status_code = apply_embedding_conf(req.api_key, req.api_base, None, origin_call="http")
         else:
             status_code = apply_embedding_conf(req.host, req.port, req.language_model, origin_call="http")
-
         return {
             "message": (
                 "Connection successful. Configured finished." if 200 <= status_code < 300 else
