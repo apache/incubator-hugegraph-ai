@@ -14,9 +14,17 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from pyhugegraph.utils.constants import Constants
 
 
+import re
+
+from abc import ABC
+from pyhugegraph.utils.log import log
+from pyhugegraph.utils.huge_router import RouterMixin
+from pyhugegraph.utils.huge_requests import HGraphSession
+
+
+# todo: rename -> HGraphMetaData or delete
 class ParameterHolder:
     def __init__(self):
         self._dic = {}
@@ -36,19 +44,32 @@ class ParameterHolder:
         return self._dic.keys()
 
 
-class HugeParamsBase:
-    def __init__(self, graph_instance):
-        self._graph_instance = graph_instance
-        self._ip = graph_instance.ip
-        self._port = graph_instance.port
-        self._user = graph_instance.user_name
-        self._pwd = graph_instance.passwd
-        self._host = f"http://{graph_instance.ip}:{graph_instance.port}"
-        self._auth = (graph_instance.user_name, graph_instance.passwd)
-        self._graph_name = graph_instance.graph_name
+class HGraphContext(ABC):
+    def __init__(self, sess: HGraphSession) -> None:
+        self._sess = sess
+        self._cache = {}  # todo: move parameter_holder to cache
+
+    def close(self):
+        self._sess.close()
+
+    @property
+    def session(self):
+        """
+        Get session.
+
+        Returns:
+        -------
+            HGraphSession: session
+        """
+        return self._sess
+
+
+# todo: rename -> HGraphModule | HGraphRouterable | HGraphModel
+class HugeParamsBase(HGraphContext, RouterMixin):
+    def __init__(self, sess: HGraphSession) -> None:
+        super().__init__(sess)
         self._parameter_holder = None
-        self._headers = {"Content-Type": Constants.HEADER_CONTENT_TYPE}
-        self._timeout = graph_instance.timeout
+        self.__camel_to_snake_case()
 
     def add_parameter(self, key, value):
         self._parameter_holder.set(key, value)
@@ -61,3 +82,21 @@ class HugeParamsBase:
 
     def clean_parameter_holder(self):
         self._parameter_holder = None
+
+    def __camel_to_snake_case(self):
+        camel_case_pattern = re.compile(r"^[a-z]+([A-Z][a-z]*)+$")
+        attributes = dir(self)
+        for attr in attributes:
+            if attr.startswith("__"):
+                continue
+            if not callable(getattr(self, attr)):
+                continue
+            if camel_case_pattern.match(attr):
+                s = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", attr)
+                snake = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s).lower()
+                setattr(self, snake, getattr(self, attr))
+                log.debug(  # pylint: disable=logging-fstring-interpolation
+                    f"The method {self.__class__.__name__}.{attr} "
+                    f"is deprecated and will be removed in future versions. "
+                    f"Please update your code to use the new method name {self.__class__.__name__}.{snake} instead."
+                )

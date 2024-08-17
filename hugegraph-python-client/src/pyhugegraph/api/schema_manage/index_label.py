@@ -15,34 +15,32 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=logging-fstring-interpolation
+
 import json
 
-
 from pyhugegraph.api.common import HugeParamsBase
-from pyhugegraph.utils.huge_decorator import decorator_params, decorator_create
-from pyhugegraph.utils.exceptions import CreateError, RemoveError
-from pyhugegraph.utils.util import check_if_authorized, check_if_success
+from pyhugegraph.utils.huge_decorator import decorator_create, decorator_params
+from pyhugegraph.utils.log import log
+from pyhugegraph.utils.util import ResponseValidation
 
 
 class IndexLabel(HugeParamsBase):
-    def __init__(self, graph_instance, session):
-        super().__init__(graph_instance)
-        self.__session = session
 
     @decorator_params
-    def onV(self, vertex_label):
+    def onV(self, vertex_label) -> "IndexLabel":
         self._parameter_holder.set("base_value", vertex_label)
         self._parameter_holder.set("base_type", "VERTEX_LABEL")
         return self
 
     @decorator_params
-    def onE(self, edge_label):
+    def onE(self, edge_label) -> "IndexLabel":
         self._parameter_holder.set("base_value", edge_label)
         self._parameter_holder.set("base_type", "EDGE_LABEL")
         return self
 
     @decorator_params
-    def by(self, *args):
+    def by(self, *args) -> "IndexLabel":
         if "fields" not in self._parameter_holder.get_keys():
             self._parameter_holder.set("fields", set())
         s = self._parameter_holder.get_value("fields")
@@ -51,61 +49,58 @@ class IndexLabel(HugeParamsBase):
         return self
 
     @decorator_params
-    def secondary(self):
+    def secondary(self) -> "IndexLabel":
         self._parameter_holder.set("index_type", "SECONDARY")
         return self
 
     @decorator_params
-    def range(self):
+    def range(self) -> "IndexLabel":
         self._parameter_holder.set("index_type", "RANGE")
         return self
 
     @decorator_params
-    def Search(self):
+    def search(self) -> "IndexLabel":
         self._parameter_holder.set("index_type", "SEARCH")
         return self
 
     @decorator_params
-    def ifNotExist(self):
-        url = (
-            f"{self._host}/graphs/{self._graph_name}/schema/indexlabels/"
-            f'{self._parameter_holder.get_value("name")}'
-        )
-        response = self.__session.get(url, auth=self._auth, headers=self._headers)
-        if response.status_code == 200 and check_if_authorized(response):
+    def shard(self) -> "IndexLabel":
+        self._parameter_holder.set("index_type", "SHARD")
+        return self
+
+    @decorator_params
+    def unique(self) -> "IndexLabel":
+        self._parameter_holder.set("index_type", "UNIQUE")
+        return self
+
+    @decorator_params
+    def ifNotExist(self) -> "IndexLabel":
+        path = f'schema/indexlabels/{self._parameter_holder.get_value("name")}'
+        if _ := self._sess.request(path, validator=ResponseValidation(strict=False)):
             self._parameter_holder.set("not_exist", False)
         return self
 
     @decorator_create
     def create(self):
         dic = self._parameter_holder.get_dic()
-        data = {}
-        data["name"] = dic["name"]
-        data["base_type"] = dic["base_type"]
-        data["base_value"] = dic["base_value"]
-        data["index_type"] = dic["index_type"]
-        data["fields"] = list(dic["fields"])
-        url = f"{self._host}/graphs/{self._graph_name}/schema/indexlabels"
-        response = self.__session.post(
-            url, data=json.dumps(data), auth=self._auth, headers=self._headers
-        )
+        data = {"name": dic["name"],
+                "base_type": dic["base_type"],
+                "base_value": dic["base_value"],
+                "index_type": dic["index_type"],
+                "fields": list(dic["fields"])}
+        path = "schema/indexlabels"
         self.clean_parameter_holder()
-        error = CreateError(
-            f'CreateError: "create IndexLabel failed", Detail "{str(response.content)}"'
-        )
-        if check_if_success(response, error):
-            return f'create IndexLabel success, Deatil: "{str(response.content)}"'
+        if response := self._sess.request(path, "POST", data=json.dumps(data)):
+            return f'create IndexLabel success, Detail: "{str(response)}"'
+        log.error(f'create IndexLabel failed, Detail: "{str(response)}"')
         return None
 
     @decorator_params
     def remove(self):
         name = self._parameter_holder.get_value("name")
-        url = f"{self._host}/graphs/{self._graph_name}/schema/indexlabels/{name}"
-        response = self.__session.delete(url, auth=self._auth, headers=self._headers)
+        path = f"schema/indexlabels/{name}"
         self.clean_parameter_holder()
-        error = RemoveError(
-            f'RemoveError: "remove IndexLabel failed", Detail "{str(response.content)}"'
-        )
-        if check_if_success(response, error):
-            return f'remove IndexLabel success, Deatil: "{str(response.content)}"'
+        if response := self._sess.request(path, "DELETE"):
+            return f'remove IndexLabel success, Detail: "{str(response)}"'
+        log.error(f'remove IndexLabel failed, Detail: "{str(response)}"')
         return None
