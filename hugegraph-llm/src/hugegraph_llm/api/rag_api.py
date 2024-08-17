@@ -54,10 +54,10 @@ class LLMConfigRequest(BaseModel):
     port: str = None
 
 
-def rag_http_api(app: FastAPI, graph_rag_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf):
+def rag_http_api(app: FastAPI, rag_answer_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf):
     @app.post("/rag")
-    def graph_rag_api(req: RAGRequest):
-        result = graph_rag_func(req.query, req.raw_llm, req.vector_only, req.graph_only, req.graph_vector)
+    def rag_answer_api(req: RAGRequest):
+        result = rag_answer_func(req.query, req.raw_llm, req.vector_only, req.graph_only, req.graph_vector)
         return {key: value for key, value in zip(
             ["raw_llm", "vector_only", "graph_only", "graph_vector"], result) if getattr(req, key)}
 
@@ -66,13 +66,14 @@ def rag_http_api(app: FastAPI, graph_rag_func, apply_graph_conf, apply_llm_conf,
         # Accept status code
         status_code = apply_graph_conf(req.ip, req.port, req.name, req.user, req.pwd, req.gs, origin_call="http")
 
-        if status_code == -1:
-            return {"message": "Unsupported HTTP method"}
+        return {
+            "message": (
+                "Connection successful. Configured finished." if 200 <= status_code < 300 else
+                "Unsupported HTTP method" if status_code == -1 else
+                f"Connection failed with status code: {status_code}"
+            )
+        }
 
-        if 200 <= status_code < 300:
-            return {"message": "Connection successful. Configured finished."}
-        else:
-            return {"message": f"Connection failed with status code: {status_code}"}
 
     @app.post("/llm/config")
     def llm_config_api(req: LLMConfigRequest):
@@ -86,13 +87,13 @@ def rag_http_api(app: FastAPI, graph_rag_func, apply_graph_conf, apply_llm_conf,
         else:
             status_code = apply_llm_conf(req.host, req.port, req.language_model, None, origin_call="http")
 
-        if status_code == -1:
-            return {"message": "Unsupported HTTP method"}
-
-        if 200 <= status_code < 300:
-            return {"message": "Connection successful. Configured finished."}
-        else:
-            return {"message": f"Connection failed with status code: {status_code}"}
+        return {
+            "message": (
+                "Connection successful. Configured finished." if 200 <= status_code < 300 else
+                "Unsupported HTTP method" if status_code == -1 else
+                f"Connection failed with status code: {status_code}"
+            )
+        }
 
     @app.post("/embedding/config")
     def embedding_config_api(req: LLMConfigRequest):
@@ -105,10 +106,10 @@ def rag_http_api(app: FastAPI, graph_rag_func, apply_graph_conf, apply_llm_conf,
         else:
             status_code = apply_embedding_conf(req.host, req.port, req.language_model, origin_call="http")
 
-        if status_code == -1:
-            return {"message": "Unsupported HTTP method"}
-
-        if 200 <= status_code < 300:
-            return {"message": "Connection successful. Configured finished."}
-        else:
-            return {"message": f"Connection failed with status code: {status_code}"}
+        return {
+            "message": (
+                "Connection successful. Configured finished." if 200 <= status_code < 300 else
+                "Unsupported HTTP method" if status_code == -1 else
+                f"Connection failed with status code: {status_code}"
+            )
+        }
