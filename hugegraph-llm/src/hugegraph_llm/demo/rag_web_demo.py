@@ -41,20 +41,11 @@ from hugegraph_llm.utils.hugegraph_utils import (
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index
-from hugegraph_llm.api.rag_api import rag_web_http_api
+from hugegraph_llm.api.rag_api import rag_http_api
 
 
-def convert_bool_str(string):
-    if string == "true":
-        return True
-    if string == "false":
-        return False
-    raise gr.Error(f"Invalid boolean string: {string}")
-
-
-# TODO: enhance/distinguish the "graph_rag" name to avoid confusion
-def graph_rag(text: str, raw_answer: bool, vector_only_answer: bool,
-              graph_only_answer: bool, graph_vector_answer: bool):
+def rag_answer(text: str, raw_answer: bool, vector_only_answer: bool,
+               graph_only_answer: bool, graph_vector_answer: bool) -> tuple:
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
 
@@ -89,7 +80,7 @@ def graph_rag(text: str, raw_answer: bool, vector_only_answer: bool,
         raise gr.Error(f"An unexpected error occurred: {str(e)}")
 
 
-def build_kg(file, schema, example_prompt, build_mode):  # pylint: disable=too-many-branches
+def build_kg(file, schema, example_prompt, build_mode) -> str:  # pylint: disable=too-many-branches
     full_path = file.name
     if full_path.endswith(".txt"):
         with open(full_path, "r", encoding="utf-8") as f:
@@ -142,8 +133,9 @@ def build_kg(file, schema, example_prompt, build_mode):  # pylint: disable=too-m
         log.error(e)
         raise gr.Error(str(e))
 
+
 # todo: origin_call was created to stave off problems with gr.error that needed to be fixed
-def test_api_connection(url, method="GET", headers=None, body=None, auth=None, origin_call=None):
+def test_api_connection(url, method="GET", headers=None, body=None, auth=None, origin_call=None) -> int:
     # TODO: use fastapi.request / starlette instead? (Also add a try-catch here)
     response = None
     log.debug("Request URL: %s", url)
@@ -172,7 +164,7 @@ def test_api_connection(url, method="GET", headers=None, body=None, auth=None, o
     return response.status_code
 
 
-def apply_embedding_configuration(arg1, arg2, arg3, origin_call=None):
+def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
     # Because of ollama, the qianfan_wenxin model is missing the test connect procedure,
     #  so it defaults to 200 so that there is no return value problem
     status_code = 200
@@ -184,19 +176,19 @@ def apply_embedding_configuration(arg1, arg2, arg3, origin_call=None):
         test_url = settings.openai_api_base + "/models"
         headers = {"Authorization": f"Bearer {arg1}"}
         status_code = test_api_connection(test_url, headers=headers, origin_call=origin_call)
+    elif embedding_option == "qianfan_wenxin":
+        settings.qianfan_access_token = arg1
+        settings.qianfan_embed_url = arg2
     elif embedding_option == "ollama":
         settings.ollama_host = arg1
         settings.ollama_port = int(arg2)
         settings.ollama_embedding_model = arg3
-    elif embedding_option == "qianfan_wenxin":
-        settings.qianfan_access_token = arg1
-        settings.qianfan_embed_url = arg2
     settings.update_env()
     gr.Info("Configured!")
     return status_code
 
 
-def apply_graph_configuration(ip, port, name, user, pwd, gs, origin_call=None):
+def apply_graph_config(ip, port, name, user, pwd, gs, origin_call=None) -> int:
     settings.graph_ip = ip
     settings.graph_port = int(port)
     settings.graph_name = name
@@ -217,7 +209,7 @@ def apply_graph_configuration(ip, port, name, user, pwd, gs, origin_call=None):
 
 # Different llm models have different parameters,
 # so no meaningful argument names are given here
-def apply_llm_configuration(arg1, arg2, arg3, arg4, origin_call=None):
+def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
     llm_option = settings.llm_type
     # Because of ollama, the qianfan_wenxin model is missing the test connect procedure,
     #  so it defaults to 200 so that there is no return value problem
@@ -245,7 +237,7 @@ def apply_llm_configuration(arg1, arg2, arg3, arg4, origin_call=None):
     return status_code
 
 
-def create_hugegraph_llm_interface():
+def init_rag_ui() -> gr.Interface:
     with gr.Blocks() as hugegraph_llm:
         gr.Markdown(
             """# HugeGraph LLM RAG Demo
@@ -264,7 +256,7 @@ def create_hugegraph_llm_interface():
             ]
         graph_config_button = gr.Button("apply configuration")
 
-        graph_config_button.click(apply_graph_configuration, inputs=graph_config_input)  # pylint: disable=no-member
+        graph_config_button.click(apply_graph_config, inputs=graph_config_input)  # pylint: disable=no-member
 
         gr.Markdown("2. Set up the LLM.")
         llm_dropdown = gr.Dropdown(
@@ -307,7 +299,7 @@ def create_hugegraph_llm_interface():
                 llm_config_input = []
             llm_config_button = gr.Button("apply configuration")
 
-            llm_config_button.click(apply_llm_configuration, inputs=llm_config_input)  # pylint: disable=no-member
+            llm_config_button.click(apply_llm_config, inputs=llm_config_input)  # pylint: disable=no-member
 
         gr.Markdown("3. Set up the Embedding.")
         embedding_dropdown = gr.Dropdown(
@@ -349,11 +341,11 @@ def create_hugegraph_llm_interface():
 
             # Call the separate apply_embedding_configuration function here
             embedding_config_button.click(
-                lambda arg1, arg2, arg3: apply_embedding_configuration(arg1, arg2, arg3),
+                lambda arg1, arg2, arg3: apply_embedding_config(arg1, arg2, arg3),
                 inputs=embedding_config_input
             )
 
-            embedding_config_button.click(apply_embedding_configuration,  # pylint: disable=no-member
+            embedding_config_button.click(apply_embedding_config,  # pylint: disable=no-member
                                           inputs=embedding_config_input)
 
         gr.Markdown(
@@ -443,7 +435,7 @@ def create_hugegraph_llm_interface():
                 graph_vector_radio = gr.Radio(choices=[True, False], value=False,
                                               label="Graph-Vector Answer")
                 btn = gr.Button("Answer Question")
-        btn.click(fn=graph_rag,
+        btn.click(fn=rag_answer,
                   inputs=[inp, raw_radio, vector_only_radio, graph_only_radio,  # pylint: disable=no-member
                           graph_vector_radio],
                   outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out])
@@ -472,9 +464,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     app = FastAPI()
 
-    hugegraph_llm = create_hugegraph_llm_interface()
+    hugegraph_llm = init_rag_ui()
 
-    rag_web_http_api(app, graph_rag, apply_graph_configuration, apply_llm_configuration, apply_embedding_configuration)
+    rag_http_api(app, rag_answer, apply_graph_config, apply_llm_config, apply_embedding_config)
 
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
     # Note: set reload to False in production environment

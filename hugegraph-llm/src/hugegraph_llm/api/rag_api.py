@@ -54,8 +54,7 @@ class LLMConfigRequest(BaseModel):
     port: str = None
 
 
-def rag_web_http_api(app: FastAPI, graph_rag_func, apply_graph_configuration_func, 
-                     apply_llm_configuration_func, apply_embedding_configuration_func):
+def rag_http_api(app: FastAPI, graph_rag_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf):
     @app.post("/rag")
     def graph_rag_api(req: RAGRequest):
         result = graph_rag_func(req.query, req.raw_llm, req.vector_only, req.graph_only, req.graph_vector)
@@ -65,7 +64,7 @@ def rag_web_http_api(app: FastAPI, graph_rag_func, apply_graph_configuration_fun
     @app.post("/graph/config")
     def graph_config_api(req: GraphConfigRequest):
         # Accept status code
-        status_code = apply_graph_configuration_func(req.ip, req.port, req.name, req.user, req.pwd, req.gs, origin_call="http")
+        status_code = apply_graph_conf(req.ip, req.port, req.name, req.user, req.pwd, req.gs, origin_call="http")
 
         if status_code == -1:
             return {"message": "Unsupported HTTP method"}
@@ -80,11 +79,12 @@ def rag_web_http_api(app: FastAPI, graph_rag_func, apply_graph_configuration_fun
         settings.llm_type = req.llm_type
 
         if req.llm_type == "openai":
-            status_code = apply_llm_configuration_func(req.api_key, req.api_base, req.language_model, req.max_tokens, origin_call="http")
+            status_code = apply_llm_conf(req.api_key, req.api_base, req.language_model, req.max_tokens,
+                                         origin_call="http")
         elif req.llm_type == "qianfan_wenxin":
-            status_code = apply_llm_configuration_func(req.api_key, req.secret_key, req.language_model, None, origin_call="http")
+            status_code = apply_llm_conf(req.api_key, req.secret_key, req.language_model, None, origin_call="http")
         else:
-            status_code = apply_llm_configuration_func(req.host, req.port, req.language_model, None, origin_call="http")
+            status_code = apply_llm_conf(req.host, req.port, req.language_model, None, origin_call="http")
 
         if status_code == -1:
             return {"message": "Unsupported HTTP method"}
@@ -99,11 +99,11 @@ def rag_web_http_api(app: FastAPI, graph_rag_func, apply_graph_configuration_fun
         settings.embedding_type = req.llm_type
 
         if req.llm_type == "openai":
-            status_code = apply_embedding_configuration_func(req.api_key, req.api_base, req.language_model, origin_call="http")
+            status_code = apply_embedding_conf(req.api_key, req.api_base, req.language_model, origin_call="http")
         elif req.llm_type == "qianfan_wenxin":
-            status_code = apply_embedding_configuration_func(req.api_key, req.api_base, None, origin_call="http")
+            status_code = apply_embedding_conf(req.api_key, req.api_base, None, origin_call="http")
         else:
-            status_code = apply_embedding_configuration_func(req.host, req.port, req.language_model, origin_call="http")
+            status_code = apply_embedding_conf(req.host, req.port, req.language_model, origin_call="http")
 
         if status_code == -1:
             return {"message": "Unsupported HTTP method"}
