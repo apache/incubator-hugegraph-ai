@@ -134,17 +134,24 @@ def build_kg(file, schema, example_prompt, build_mode) -> str:  # pylint: disabl
         raise gr.Error(str(e))
 
 
-# todo: origin_call was created to stave off problems with gr.error that needed to be fixed
 def test_api_connection(url, method="GET", headers=None, body=None, auth=None, origin_call=None) -> int:
-    # TODO: use fastapi.request / starlette instead? (Also add a try-catch here)
+    # TODO: use fastapi.request / starlette instead?
     response = None
     log.debug("Request URL: %s", url)
-    if method.upper() == "GET":
-        response = requests.get(url, headers=headers, timeout=5, auth=auth)
-    elif method.upper() == "POST":
-        response = requests.post(url, headers=headers, json=body, timeout=5, auth=auth)
-    else:
-        log.error("Unsupported method: %s", method)
+    try:
+        if method.upper() == "GET":
+            response = requests.get(url, headers=headers, timeout=5, auth=auth)
+        elif method.upper() == "POST":
+            response = requests.post(url, headers=headers, json=body, timeout=5, auth=auth)
+        else:
+            log.error("Unsupported method: %s", method)
+            return -1
+    except requests.exceptions.RequestException as e:
+        message = f"Connection failed: {e}"
+        log.error(message)
+        if origin_call is None:
+            raise gr.Error(message)
+        return -1
 
     if response is None:
         # Unsupported method encountered
@@ -157,10 +164,8 @@ def test_api_connection(url, method="GET", headers=None, body=None, auth=None, o
     else:
         message = f"Connection failed with status code: {response.status_code}"
         log.error(message)
-        # todo: How to remove raise and gr will render error
-        # pylint: disable=pointless-exception-statement
-        if origin_call == None:
-            raise gr.Error(f"Connection failed with status code: {response.status_code}")
+        if origin_call is None:
+            raise gr.Error(message)
     return response.status_code
 
 
