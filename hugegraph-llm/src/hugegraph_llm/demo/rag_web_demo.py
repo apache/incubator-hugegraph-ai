@@ -33,11 +33,7 @@ from hugegraph_llm.operators.graph_rag_task import GraphRAG
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.config import settings, resource_path
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
-from hugegraph_llm.utils.hugegraph_utils import (
-    init_hg_test_data,
-    run_gremlin_query,
-    clean_hg_data
-)
+from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index
@@ -45,8 +41,9 @@ from hugegraph_llm.api.rag_api import rag_http_api
 from hugegraph_llm.enums.build_mode import BuildMode
 
 
-def rag_answer(text: str, raw_answer: bool, vector_only_answer: bool,
-               graph_only_answer: bool, graph_vector_answer: bool) -> tuple:
+def rag_answer(
+    text: str, raw_answer: bool, vector_only_answer: bool, graph_only_answer: bool, graph_vector_answer: bool
+) -> tuple:
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
 
@@ -62,7 +59,7 @@ def rag_answer(text: str, raw_answer: bool, vector_only_answer: bool,
         raw_answer=raw_answer,
         vector_only_answer=vector_only_answer,
         graph_only_answer=graph_only_answer,
-        graph_vector_answer=graph_vector_answer
+        graph_vector_answer=graph_vector_answer,
     ).run(verbose=True, query=text)
 
     try:
@@ -71,7 +68,7 @@ def rag_answer(text: str, raw_answer: bool, vector_only_answer: bool,
             context.get("raw_answer", ""),
             context.get("vector_only_answer", ""),
             context.get("graph_only_answer", ""),
-            context.get("graph_vector_answer", "")
+            context.get("graph_vector_answer", ""),
         )
     except ValueError as e:
         log.error(e)
@@ -265,11 +262,7 @@ def init_rag_ui() -> gr.Interface:
         graph_config_button.click(apply_graph_config, inputs=graph_config_input)  # pylint: disable=no-member
 
         gr.Markdown("2. Set up the LLM.")
-        llm_dropdown = gr.Dropdown(
-            choices=["openai", "qianfan_wenxin", "ollama"],
-            value=settings.llm_type,
-            label="LLM"
-        )
+        llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama"], value=settings.llm_type, label="LLM")
 
         @gr.render(inputs=[llm_dropdown])
         def llm_settings(llm_type):
@@ -288,17 +281,15 @@ def init_rag_ui() -> gr.Interface:
                         gr.Textbox(value=settings.ollama_host, label="host"),
                         gr.Textbox(value=str(settings.ollama_port), label="port"),
                         gr.Textbox(value=settings.ollama_language_model, label="model_name"),
-                        gr.Textbox(value="", visible=False)
+                        gr.Textbox(value="", visible=False),
                     ]
             elif llm_type == "qianfan_wenxin":
                 with gr.Row():
                     llm_config_input = [
-                        gr.Textbox(value=settings.qianfan_api_key, label="api_key",
-                                   type="password"),
-                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key",
-                                   type="password"),
+                        gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
+                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
                         gr.Textbox(value=settings.qianfan_language_model, label="model_name"),
-                        gr.Textbox(value="", visible=False)
+                        gr.Textbox(value="", visible=False),
                     ]
                 log.debug(llm_config_input)
             else:
@@ -309,9 +300,7 @@ def init_rag_ui() -> gr.Interface:
 
         gr.Markdown("3. Set up the Embedding.")
         embedding_dropdown = gr.Dropdown(
-            choices=["openai", "ollama", "qianfan_wenxin"],
-            value=settings.embedding_type,
-            label="Embedding"
+            choices=["openai", "ollama", "qianfan_wenxin"], value=settings.embedding_type, label="Embedding"
         )
 
         @gr.render(inputs=[embedding_dropdown])
@@ -322,15 +311,13 @@ def init_rag_ui() -> gr.Interface:
                     embedding_config_input = [
                         gr.Textbox(value=settings.openai_api_key, label="api_key", type="password"),
                         gr.Textbox(value=settings.openai_api_base, label="api_base"),
-                        gr.Textbox(value=settings.openai_embedding_model, label="model_name")
+                        gr.Textbox(value=settings.openai_embedding_model, label="model_name"),
                     ]
             elif embedding_type == "qianfan_wenxin":
                 with gr.Row():
                     embedding_config_input = [
-                        gr.Textbox(value=settings.qianfan_api_key, label="api_key",
-                                   type="password"),
-                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key",
-                                   type="password"),
+                        gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
+                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
                         gr.Textbox(value=settings.qianfan_embedding_model, label="model_name"),
                     ]
             elif embedding_type == "ollama":
@@ -347,12 +334,12 @@ def init_rag_ui() -> gr.Interface:
 
             # Call the separate apply_embedding_configuration function here
             embedding_config_button.click(
-                lambda arg1, arg2, arg3: apply_embedding_config(arg1, arg2, arg3),
-                inputs=embedding_config_input
+                lambda arg1, arg2, arg3: apply_embedding_config(arg1, arg2, arg3), inputs=embedding_config_input
             )
 
-            embedding_config_button.click(apply_embedding_config,  # pylint: disable=no-member
-                                          inputs=embedding_config_input)
+            embedding_config_button.click(
+                apply_embedding_config, inputs=embedding_config_input  # pylint: disable=no-member
+            )
 
         gr.Markdown(
             """## 1. Build vector/graph RAG (💡)
@@ -406,21 +393,20 @@ def init_rag_ui() -> gr.Interface:
 }"""
 
         with gr.Row():
-            input_file = gr.File(value=os.path.join(resource_path, "demo", "test.txt"),
-                                 label="Document")
+            input_file = gr.File(value=os.path.join(resource_path, "demo", "test.txt"), label="Document")
             input_schema = gr.Textbox(value=SCHEMA, label="Schema")
-            info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT,
-                                               label="Info extract head")
+            info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head")
             with gr.Column():
-                mode = gr.Radio(choices=["Test Mode", "Import Mode", "Clear and Import", "Rebuild Vector"],
-                                value="Test Mode", label="Build mode")
+                mode = gr.Radio(
+                    choices=["Test Mode", "Import Mode", "Clear and Import", "Rebuild Vector"],
+                    value="Test Mode",
+                    label="Build mode",
+                )
                 btn = gr.Button("Build Vector/Graph RAG")
         with gr.Row():
             out = gr.Textbox(label="Output", show_copy_button=True)
         btn.click(  # pylint: disable=no-member
-            fn=build_kg,
-            inputs=[input_file, input_schema, info_extract_template, mode],
-            outputs=out
+            fn=build_kg, inputs=[input_file, input_schema, info_extract_template, mode], outputs=out
         )
 
         gr.Markdown("""## 2. RAG with HugeGraph 📖""")
@@ -432,19 +418,22 @@ def init_rag_ui() -> gr.Interface:
                 graph_only_out = gr.Textbox(label="Graph-only Answer", show_copy_button=True)
                 graph_vector_out = gr.Textbox(label="Graph-Vector Answer", show_copy_button=True)
             with gr.Column(scale=1):
-                raw_radio = gr.Radio(choices=[True, False], value=True,
-                                     label="Basic LLM Answer")
-                vector_only_radio = gr.Radio(choices=[True, False], value=False,
-                                             label="Vector-only Answer")
-                graph_only_radio = gr.Radio(choices=[True, False], value=False,
-                                            label="Graph-only Answer")
-                graph_vector_radio = gr.Radio(choices=[True, False], value=False,
-                                              label="Graph-Vector Answer")
+                raw_radio = gr.Radio(choices=[True, False], value=True, label="Basic LLM Answer")
+                vector_only_radio = gr.Radio(choices=[True, False], value=False, label="Vector-only Answer")
+                graph_only_radio = gr.Radio(choices=[True, False], value=False, label="Graph-only Answer")
+                graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
                 btn = gr.Button("Answer Question")
-        btn.click(fn=rag_answer,
-                  inputs=[inp, raw_radio, vector_only_radio, graph_only_radio,  # pylint: disable=no-member
-                          graph_vector_radio],
-                  outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out])
+        btn.click(
+            fn=rag_answer,
+            inputs=[
+                inp,
+                raw_radio,
+                vector_only_radio,
+                graph_only_radio,  # pylint: disable=no-member
+                graph_vector_radio,
+            ],
+            outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
+        )
 
         gr.Markdown("""## 3. Others (🚧) """)
         with gr.Row():
