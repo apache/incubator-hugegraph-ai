@@ -17,7 +17,7 @@
 
 
 import time
-from typing import Dict, Any, Optional, Literal
+from typing import Dict, Any, Optional, Literal, Union, List
 
 from pyhugegraph.client import PyHugeClient
 
@@ -63,7 +63,7 @@ class KgBuilder:
 
     def chunk_split(
             self,
-            text: str,  # text to be split
+            text: Union[str, List[str]],  # text to be split
             split_type: Literal["paragraph", "sentence"] = "paragraph",
             language: Literal["zh", "en"] = "zh"
     ):

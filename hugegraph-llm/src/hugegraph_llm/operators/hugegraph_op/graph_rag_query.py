@@ -101,9 +101,7 @@ class GraphRAGQuery:
         assert self._client is not None, "No valid graph to search."
 
         keywords = context.get("keywords")
-        assert keywords is not None, "No keywords for graph query."
         entrance_vids = context.get("entrance_vids")
-        assert entrance_vids is not None, "No entrance vertices for query."
 
         if isinstance(context.get("max_deep"), int):
             self._max_deep = context["max_deep"]
@@ -118,6 +116,7 @@ class GraphRAGQuery:
         use_id_to_match = self._prop_to_match is None
 
         if not use_id_to_match:
+            assert keywords is not None, "No keywords for graph query."
             keywords_str = ",".join("'" + kw + "'" for kw in keywords)
             rag_gremlin_query = self.PROP_RAG_GREMLIN_QUERY_TEMPL.format(
                 prop=self._prop_to_match,
@@ -129,6 +128,7 @@ class GraphRAGQuery:
             result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
             knowledge: Set[str] = self._format_knowledge_from_query_result(query_result=result)
         else:
+            assert entrance_vids is not None, "No entrance vertices for query."
             rag_gremlin_query = self.VERTEX_GREMLIN_QUERY_TEMPL.format(
                 keywords=entrance_vids,
             )

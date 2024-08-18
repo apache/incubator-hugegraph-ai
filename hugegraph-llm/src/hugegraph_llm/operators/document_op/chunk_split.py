@@ -16,18 +16,20 @@
 # under the License.
 
 
-from typing import Literal, Dict, Any, Optional
+from typing import Literal, Dict, Any, Optional, Union, List
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
 class ChunkSplit:
     def __init__(
             self,
-            text: str,
+            texts: Union[str, List[str]],
             split_type: Literal["paragraph", "sentence"] = "paragraph",
             language: Literal["zh", "en"] = "zh"
     ):
-        self.text = text
+        if isinstance(texts, str):
+            texts = [texts]
+        self.texts = texts
         if language == "zh":
             separators = ["\n\n", "\n", "。", "，", ""]
         elif language == "en":
@@ -50,8 +52,11 @@ class ChunkSplit:
             raise ValueError("type must be paragraph, sentence, html or markdown")
 
     def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        chunks = self.text_splitter.split_text(self.text)
+        all_chunks = []
+        for text in self.texts:
+            chunks = self.text_splitter.split_text(text)
+            all_chunks.extend(chunks)
         if context is None:
-            return {"chunks": chunks}
-        context["chunks"] = chunks
+            return {"chunks": all_chunks}
+        context["chunks"] = all_chunks
         return context

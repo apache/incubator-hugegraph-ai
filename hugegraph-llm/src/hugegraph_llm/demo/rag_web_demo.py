@@ -16,15 +16,18 @@
 # under the License.
 
 
+import os
 import json
 import argparse
-import os
+from typing import List, Union
 
 import requests
 import uvicorn
 import docx
 import gradio as gr
+from gradio.utils import NamedString
 from fastapi import FastAPI
+from requests.auth import HTTPBasicAuth
 
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
@@ -32,43 +35,33 @@ from hugegraph_llm.operators.graph_rag_task import GraphRAG
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.config import settings, resource_path
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
-from hugegraph_llm.utils.hugegraph_utils import (
-    init_hg_test_data,
-    run_gremlin_query,
-    clean_hg_data
-)
+from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index
+# from hugegraph_llm.api.rag_api import rag_http_api
+from hugegraph_llm.enums.build_mode import BuildMode
 
 
-def convert_bool_str(string):
-    if string == "true":
-        return True
-    if string == "false":
-        return False
-    raise gr.Error(f"Invalid boolean string: {string}")
+def rag_answer(
+    text: str, raw_answer: bool, vector_only_answer: bool, graph_only_answer: bool, graph_vector_answer: bool
+) -> tuple:
+    vector_search = vector_only_answer or graph_vector_answer
+    graph_search = graph_only_answer or graph_vector_answer
 
-
-# TODO: enhance/distinguish the "graph_rag" name to avoid confusion
-def graph_rag(text: str, raw_answer: str, vector_only_answer: str,
-              graph_only_answer: str, graph_vector_answer):
-    vector_search = convert_bool_str(vector_only_answer) or convert_bool_str(graph_vector_answer)
-    graph_search = convert_bool_str(graph_only_answer) or convert_bool_str(graph_vector_answer)
-
-    if raw_answer == "false" and not vector_search and not graph_search:
+    if raw_answer is False and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
         return "", "", "", ""
     searcher = GraphRAG()
     if vector_search:
         searcher.query_vector_index_for_rag()
     if graph_search:
-        searcher.extract_keyword().match_keyword_to_id().query_graph_for_rag()
+        searcher.extract_word().match_keyword_to_id().query_graph_for_rag()
     searcher.merge_dedup_rerank().synthesize_answer(
-        raw_answer=convert_bool_str(raw_answer),
-        vector_only_answer=convert_bool_str(vector_only_answer),
-        graph_only_answer=convert_bool_str(graph_only_answer),
-        graph_vector_answer=convert_bool_str(graph_vector_answer)
+        raw_answer=raw_answer,
+        vector_only_answer=vector_only_answer,
+        graph_only_answer=graph_only_answer,
+        graph_vector_answer=graph_vector_answer,
     ).run(verbose=True, query=text)
 
     try:
@@ -77,7 +70,7 @@ def graph_rag(text: str, raw_answer: str, vector_only_answer: str,
             context.get("raw_answer", ""),
             context.get("vector_only_answer", ""),
             context.get("graph_only_answer", ""),
-            context.get("graph_vector_answer", "")
+            context.get("graph_vector_answer", ""),
         )
     except ValueError as e:
         log.error(e)
@@ -87,24 +80,39 @@ def graph_rag(text: str, raw_answer: str, vector_only_answer: str,
         raise gr.Error(f"An unexpected error occurred: {str(e)}")
 
 
-def build_kg(file, schema, example_prompt, build_mode):  # pylint: disable=too-many-branches
-    full_path = file.name
-    if full_path.endswith(".txt"):
-        with open(full_path, "r", encoding="utf-8") as f:
-            text = f.read()
-    elif full_path.endswith(".docx"):
-        text = ""
-        doc = docx.Document(full_path)
-        for para in doc.paragraphs:
-            text += para.text
-            text += "\n"
-    elif full_path.endswith(".pdf"):
-        raise gr.Error("PDF will be supported later! Try to upload text/docx now")
-    else:
-        raise gr.Error("Please input txt or docx file.")
+def build_kg(  # pylint: disable=too-many-branches
+        files: Union[NamedString, List[NamedString]],
+        schema: str,
+        example_prompt: str,
+        build_mode: str
+) -> str:
+    if isinstance(files, NamedString):
+        files = [files]
+    texts = []
+    for file in files:
+        full_path = file.name
+        if full_path.endswith(".txt"):
+            with open(full_path, "r", encoding="utf-8") as f:
+                texts.append(f.read())
+        elif full_path.endswith(".docx"):
+            text = ""
+            doc = docx.Document(full_path)
+            for para in doc.paragraphs:
+                text += para.text
+                text += "\n"
+            texts.append(text)
+        elif full_path.endswith(".pdf"):
+            # TODO: support PDF file
+            raise gr.Error("PDF will be supported later! Try to upload text/docx now")
+        else:
+            raise gr.Error("Please input txt or docx file.")
+    if build_mode in (BuildMode.CLEAR_AND_IMPORT.value, BuildMode.REBUILD_VECTOR.value):
+        clean_vector_index()
+    if build_mode == BuildMode.CLEAR_AND_IMPORT.value:
+        clean_hg_data()
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
 
-    if build_mode != "Rebuild vertex index":
+    if build_mode != BuildMode.REBUILD_VERTEX_INDEX.value:
         if schema:
             try:
                 schema = json.loads(schema.strip())
@@ -114,40 +122,137 @@ def build_kg(file, schema, example_prompt, build_mode):  # pylint: disable=too-m
                 builder.import_schema(from_hugegraph=schema)
         else:
             return "ERROR: please input schema."
-    builder.chunk_split(text, "paragraph", "zh")
+    builder.chunk_split(texts, "paragraph", "zh")
 
-    # TODO: avoid hardcoding the "build_mode" strings (use var/constant instead)
-    if build_mode == "Rebuild Vector":
+    if build_mode == BuildMode.REBUILD_VECTOR.value:
         builder.fetch_graph_data()
     else:
         builder.extract_info(example_prompt, "property_graph")
     # "Test Mode", "Import Mode", "Clear and Import", "Rebuild Vector"
-    if build_mode != "Test Mode":
-        if build_mode in ("Clear and Import", "Rebuild Vector"):
-            clean_vector_index()
+    if build_mode != BuildMode.TEST_MODE.value:
         builder.build_vector_index()
-    if build_mode == "Clear and Import":
-        clean_hg_data()
-    if build_mode in ("Clear and Import", "Import Mode"):
+    if build_mode in (BuildMode.CLEAR_AND_IMPORT.value, BuildMode.IMPORT_MODE.value):
         builder.commit_to_hugegraph()
-    if build_mode != "Test Mode":
+    if build_mode != BuildMode.TEST_MODE.value:
         builder.build_vertex_id_semantic_index()
     log.debug(builder.operators)
     try:
         context = builder.run()
-        return context
+        return str(context)
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
         raise gr.Error(str(e))
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--host", type=str, default="0.0.0.0", help="host")
-    parser.add_argument("--port", type=int, default=8001, help="port")
-    args = parser.parse_args()
-    app = FastAPI()
+def test_api_connection(url, method="GET", headers=None, body=None, auth=None, origin_call=None) -> int:
+    # TODO: use fastapi.request / starlette instead?
+    response = None
+    log.debug("Request URL: %s", url)
+    try:
+        if method.upper() == "GET":
+            response = requests.get(url, headers=headers, timeout=5, auth=auth)
+        elif method.upper() == "POST":
+            response = requests.post(url, headers=headers, json=body, timeout=5, auth=auth)
+        else:
+            log.error("Unsupported method: %s", method)
+            return -1
+    except requests.exceptions.RequestException as e:
+        message = f"Connection failed: {e}"
+        log.error(message)
+        if origin_call is None:
+            raise gr.Error(message)
+        return -1
 
+    if response is None:
+        # Unsupported method encountered
+        return -1
+
+    if 200 <= response.status_code < 300:
+        message = "Connection successful. Configured finished."
+        log.info(message)
+        gr.Info(message)
+    else:
+        message = f"Connection failed with status code: {response.status_code}"
+        log.error(message)
+        if origin_call is None:
+            raise gr.Error(message)
+    return response.status_code
+
+
+def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
+    # Because of ollama, the qianfan_wenxin model is missing the test connect procedure,
+    #  so it defaults to 200 so that there is no return value problem
+    status_code = 200
+    embedding_option = settings.embedding_type
+    if embedding_option == "openai":
+        settings.openai_api_key = arg1
+        settings.openai_api_base = arg2
+        settings.openai_embedding_model = arg3
+        test_url = settings.openai_api_base + "/models"
+        headers = {"Authorization": f"Bearer {arg1}"}
+        status_code = test_api_connection(test_url, headers=headers, origin_call=origin_call)
+    elif embedding_option == "qianfan_wenxin":
+        settings.qianfan_access_token = arg1
+        settings.qianfan_embed_url = arg2
+    elif embedding_option == "ollama":
+        settings.ollama_host = arg1
+        settings.ollama_port = int(arg2)
+        settings.ollama_embedding_model = arg3
+    settings.update_env()
+    gr.Info("Configured!")
+    return status_code
+
+
+def apply_graph_config(ip, port, name, user, pwd, gs, origin_call=None) -> int:
+    settings.graph_ip = ip
+    settings.graph_port = int(port)
+    settings.graph_name = name
+    settings.graph_user = user
+    settings.graph_pwd = pwd
+    settings.graph_space = gs
+    # Test graph connection (Auth)
+    if gs and gs.strip():
+        test_url = f"http://{ip}:{port}/graphspaces/{gs}/graphs/{name}/schema"
+    else:
+        test_url = f"http://{ip}:{port}/graphs/{name}/schema"
+    auth = HTTPBasicAuth(user, pwd)
+    # for http api return status
+    status_code = test_api_connection(test_url, auth=auth, origin_call=origin_call)
+    settings.update_env()
+    return status_code
+
+
+# Different llm models have different parameters,
+# so no meaningful argument names are given here
+def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
+    llm_option = settings.llm_type
+    # Because of ollama, the qianfan_wenxin model is missing the test connect procedure,
+    #  so it defaults to 200 so that there is no return value problem
+    status_code = 200
+    if llm_option == "openai":
+        settings.openai_api_key = arg1
+        settings.openai_api_base = arg2
+        settings.openai_language_model = arg3
+        settings.openai_max_tokens = int(arg4)
+        test_url = settings.openai_api_base + "/models"
+        headers = {"Authorization": f"Bearer {arg1}"}
+        status_code = test_api_connection(test_url, headers=headers, origin_call=origin_call)
+    elif llm_option == "qianfan_wenxin":
+        settings.qianfan_api_key = arg1
+        settings.qianfan_secret_key = arg2
+        settings.qianfan_language_model = arg3
+        # TODO: test the connection
+        # test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
+    elif llm_option == "ollama":
+        settings.ollama_host = arg1
+        settings.ollama_port = int(arg2)
+        settings.ollama_language_model = arg3
+    gr.Info("Configured!")
+    settings.update_env()
+    return status_code
+
+
+def init_rag_ui() -> gr.Interface:  # pylint: disable=too-many-statements
     with gr.Blocks() as hugegraph_llm:
         gr.Markdown(
             """# HugeGraph LLM RAG Demo
@@ -159,51 +264,17 @@ if __name__ == "__main__":
                 gr.Textbox(value=str(settings.graph_port), label="port"),
                 gr.Textbox(value=settings.graph_name, label="graph"),
                 gr.Textbox(value=settings.graph_user, label="user"),
-                gr.Textbox(value=settings.graph_pwd, label="pwd")
+                gr.Textbox(value=settings.graph_pwd, label="pwd"),
+                # gr.Textbox(value=settings.graph_space, label="graphspace (None)"),
+                # wip: graph_space issue pending
+                gr.Textbox(value="", label="graphspace (None)"),
             ]
         graph_config_button = gr.Button("apply configuration")
 
-
-        def test_api_connection(url, method="GET", ak=None, sk=None, headers=None, body=None):
-            # TODO: use fastapi.request / starlette instead? (Also add a try-catch here)
-            log.debug("Request URL: %s", url)
-            if method.upper() == "GET":
-                response = requests.get(url, headers=headers, timeout=5)
-            elif method.upper() == "POST":
-                response = requests.post(url, headers=headers, json=body, timeout=5)
-            else:
-                log.error("Unsupported method: %s", method)
-                return
-
-            if 200 <= response.status_code < 300:
-                log.info("Connection successful. Configured finished.")
-                gr.Info("Connection successful. Configured finished.")
-            else:
-                log.error("Connection failed with status code: %s", response.status_code)
-                # pylint: disable=pointless-exception-statement
-                gr.Error(f"Connection failed with status code: {response.status_code}")
-
-
-        def apply_graph_configuration(ip, port, name, user, pwd):
-            settings.graph_ip = ip
-            settings.graph_port = int(port)
-            settings.graph_name = name
-            settings.graph_user = user
-            settings.graph_pwd = pwd
-            test_url = f"http://{ip}:{port}/graphs/{name}/schema"
-            test_api_connection(test_url)
-            settings.update_env()
-
-
-        graph_config_button.click(apply_graph_configuration, inputs=graph_config_input)  # pylint: disable=no-member
+        graph_config_button.click(apply_graph_config, inputs=graph_config_input)  # pylint: disable=no-member
 
         gr.Markdown("2. Set up the LLM.")
-        llm_dropdown = gr.Dropdown(
-            choices=["openai", "qianfan_wenxin", "ollama"],
-            value=settings.llm_type,
-            label="LLM"
-        )
-
+        llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama"], value=settings.llm_type, label="LLM")
 
         @gr.render(inputs=[llm_dropdown])
         def llm_settings(llm_type):
@@ -222,57 +293,28 @@ if __name__ == "__main__":
                         gr.Textbox(value=settings.ollama_host, label="host"),
                         gr.Textbox(value=str(settings.ollama_port), label="port"),
                         gr.Textbox(value=settings.ollama_language_model, label="model_name"),
-                        gr.Textbox(value="", visible=False)
+                        gr.Textbox(value="", visible=False),
                     ]
             elif llm_type == "qianfan_wenxin":
                 with gr.Row():
                     llm_config_input = [
-                        gr.Textbox(value=settings.qianfan_api_key, label="api_key",
-                                   type="password"),
-                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key",
-                                   type="password"),
+                        gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
+                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
                         gr.Textbox(value=settings.qianfan_language_model, label="model_name"),
-                        gr.Textbox(value="", visible=False)
+                        gr.Textbox(value="", visible=False),
                     ]
                 log.debug(llm_config_input)
             else:
                 llm_config_input = []
             llm_config_button = gr.Button("apply configuration")
 
-            def apply_llm_configuration(arg1, arg2, arg3, arg4):
-                llm_option = settings.llm_type
-
-                if llm_option == "openai":
-                    settings.openai_api_key = arg1
-                    settings.openai_api_base = arg2
-                    settings.openai_language_model = arg3
-                    settings.openai_max_tokens = int(arg4)
-                    test_url = settings.openai_api_base + "/models"
-                    headers = {"Authorization": f"Bearer {arg1}"}
-                    test_api_connection(test_url, headers=headers, ak=arg1)
-                elif llm_option == "qianfan_wenxin":
-                    settings.qianfan_api_key = arg1
-                    settings.qianfan_secret_key = arg2
-                    settings.qianfan_language_model = arg3
-                    # TODO: test the connection
-                    # test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
-                elif llm_option == "ollama":
-                    settings.ollama_host = arg1
-                    settings.ollama_port = int(arg2)
-                    settings.ollama_language_model = arg3
-                gr.Info("configured!")
-                settings.update_env()
-
-            llm_config_button.click(apply_llm_configuration, inputs=llm_config_input)  # pylint: disable=no-member
+            llm_config_button.click(apply_llm_config, inputs=llm_config_input)  # pylint: disable=no-member
 
 
         gr.Markdown("3. Set up the Embedding.")
         embedding_dropdown = gr.Dropdown(
-            choices=["openai", "ollama", "qianfan_wenxin"],
-            value=settings.embedding_type,
-            label="Embedding"
+            choices=["openai", "ollama", "qianfan_wenxin"], value=settings.embedding_type, label="Embedding"
         )
-
 
         @gr.render(inputs=[embedding_dropdown])
         def embedding_settings(embedding_type):
@@ -282,15 +324,13 @@ if __name__ == "__main__":
                     embedding_config_input = [
                         gr.Textbox(value=settings.openai_api_key, label="api_key", type="password"),
                         gr.Textbox(value=settings.openai_api_base, label="api_base"),
-                        gr.Textbox(value=settings.openai_embedding_model, label="model_name")
+                        gr.Textbox(value=settings.openai_embedding_model, label="model_name"),
                     ]
             elif embedding_type == "qianfan_wenxin":
                 with gr.Row():
                     embedding_config_input = [
-                        gr.Textbox(value=settings.qianfan_api_key, label="api_key",
-                                   type="password"),
-                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key",
-                                   type="password"),
+                        gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
+                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
                         gr.Textbox(value=settings.qianfan_embedding_model, label="model_name"),
                     ]
             elif embedding_type == "ollama":
@@ -302,31 +342,17 @@ if __name__ == "__main__":
                     ]
             else:
                 embedding_config_input = []
+
             embedding_config_button = gr.Button("apply configuration")
 
-            def apply_embedding_configuration(arg1, arg2, arg3):
-                embedding_option = settings.embedding_type
-                if embedding_option == "openai":
-                    settings.openai_api_key = arg1
-                    settings.openai_api_base = arg2
-                    settings.openai_embedding_model = arg3
-                    test_url = settings.openai_api_base + "/models"
-                    headers = {"Authorization": f"Bearer {arg1}"}
-                    test_api_connection(test_url, headers=headers, ak=arg1)
-                elif embedding_option == "ollama":
-                    settings.ollama_host = arg1
-                    settings.ollama_port = int(arg2)
-                    settings.ollama_embedding_model = arg3
-                elif embedding_option == "qianfan_wenxin":
-                    settings.qianfan_access_token = arg1
-                    settings.qianfan_embed_url = arg2
-                settings.update_env()
+            # Call the separate apply_embedding_configuration function here
+            embedding_config_button.click(  # pylint: disable=no-member
+                lambda arg1, arg2, arg3: apply_embedding_config(arg1, arg2, arg3), inputs=embedding_config_input
+            )
 
-                gr.Info("configured!")
-
-            embedding_config_button.click(apply_embedding_configuration,  # pylint: disable=no-member
-                                          inputs=embedding_config_input)
-
+            embedding_config_button.click(  # pylint: disable=no-member
+                apply_embedding_config, inputs=embedding_config_input
+            )
 
         gr.Markdown(
             """## 1. Build vector/graph RAG (💡)
@@ -380,21 +406,21 @@ if __name__ == "__main__":
 }"""
 
         with gr.Row():
-            input_file = gr.File(value=os.path.join(resource_path, "demo", "test.txt"),
-                                 label="Document")
+            input_file = gr.File(value=[os.path.join(resource_path, "demo", "test.txt")],
+                                 label="Document", file_count="multiple")
             input_schema = gr.Textbox(value=SCHEMA, label="Schema")
-            info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT,
-                                               label="Info extract head")
+            info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head")
             with gr.Column():
-                mode = gr.Radio(choices=["Test Mode", "Import Mode", "Clear and Import", "Rebuild Vector"],
-                                value="Test Mode", label="Build mode")
+                mode = gr.Radio(
+                    choices=["Test Mode", "Import Mode", "Clear and Import", "Rebuild Vector"],
+                    value="Test Mode",
+                    label="Build mode",
+                )
                 btn = gr.Button("Build Vector/Graph RAG")
         with gr.Row():
             out = gr.Textbox(label="Output", show_copy_button=True)
         btn.click(  # pylint: disable=no-member
-            fn=build_kg,
-            inputs=[input_file, input_schema, info_extract_template, mode],
-            outputs=out
+            fn=build_kg, inputs=[input_file, input_schema, info_extract_template, mode], outputs=out
         )
 
         gr.Markdown("""## 2. RAG with HugeGraph 📖""")
@@ -406,18 +432,22 @@ if __name__ == "__main__":
                 graph_only_out = gr.Textbox(label="Graph-only Answer", show_copy_button=True)
                 graph_vector_out = gr.Textbox(label="Graph-Vector Answer", show_copy_button=True)
             with gr.Column(scale=1):
-                raw_radio = gr.Radio(choices=["true", "false"], value="false",
-                                     label="Basic LLM Answer")
-                vector_only_radio = gr.Radio(choices=["true", "false"], value="true",
-                                             label="Vector-only Answer")
-                graph_only_radio = gr.Radio(choices=["true", "false"], value="false",
-                                            label="Graph-only Answer")
-                graph_vector_radio = gr.Radio(choices=["true", "false"], value="false",
-                                              label="Graph-Vector Answer")
+                raw_radio = gr.Radio(choices=[True, False], value=True, label="Basic LLM Answer")
+                vector_only_radio = gr.Radio(choices=[True, False], value=False, label="Vector-only Answer")
+                graph_only_radio = gr.Radio(choices=[True, False], value=False, label="Graph-only Answer")
+                graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
                 btn = gr.Button("Answer Question")
-        btn.click(fn=graph_rag, inputs=[inp, raw_radio, vector_only_radio, graph_only_radio, # pylint: disable=no-member
-                                        graph_vector_radio],
-                  outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out])
+        btn.click(  # pylint: disable=no-member
+            fn=rag_answer,
+            inputs=[
+                inp,
+                raw_radio,
+                vector_only_radio,
+                graph_only_radio,
+                graph_vector_radio,
+            ],
+            outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
+        )
 
         gr.Markdown("""## 3. Others (🚧) """)
         with gr.Row():
@@ -433,8 +463,21 @@ if __name__ == "__main__":
             out = gr.Textbox(label="Output", show_copy_button=True)
         btn = gr.Button("(BETA) Init HugeGraph test data (🚧WIP)")
         btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
+    return hugegraph_llm
 
-    app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="host")
+    parser.add_argument("--port", type=int, default=8001, help="port")
+    args = parser.parse_args()
+    app = FastAPI()
+
+    hugegraph_llm_ui = init_rag_ui()
+
+    # rag_http_api(app, rag_answer, apply_graph_config, apply_llm_config, apply_embedding_config)
+
+    app = gr.mount_gradio_app(app, hugegraph_llm_ui, path="/")
     # Note: set reload to False in production environment
     uvicorn.run(app, host=args.host, port=args.port)
     # TODO: we can't use reload now due to the config 'app' of uvicorn.run
