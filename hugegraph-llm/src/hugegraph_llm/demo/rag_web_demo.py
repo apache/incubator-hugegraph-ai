@@ -38,6 +38,7 @@ from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index
 from hugegraph_llm.api.rag_api import rag_http_api
+from hugegraph_llm.api.models.rag_response import RAGResponse
 from hugegraph_llm.enums.build_mode import BuildMode
 
 
@@ -132,9 +133,12 @@ def build_kg(file, schema, example_prompt, build_mode) -> str:  # pylint: disabl
         raise gr.Error(str(e))
 
 
-def test_api_connection(url, method="GET", headers=None, body=None, auth=None, origin_call=None) -> int:
+def test_api_connection(url, method="GET", headers=None, body=None, auth=None, origin_call=None) -> RAGResponse:
     # TODO: use fastapi.request / starlette instead?
     response = None
+
+    return_dict = RAGResponse()
+
     log.debug("Request URL: %s", url)
     try:
         if method.upper() == "GET":
@@ -143,34 +147,47 @@ def test_api_connection(url, method="GET", headers=None, body=None, auth=None, o
             response = requests.post(url, headers=headers, json=body, timeout=5, auth=auth)
         else:
             log.error("Unsupported method: %s", method)
-            return -1
     except requests.exceptions.RequestException as e:
         message = f"Connection failed: {e}"
         log.error(message)
         if origin_call is None:
             raise gr.Error(message)
-        return -1
+        return return_dict
 
     if response is None:
         # Unsupported method encountered
-        return -1
+        if origin_call is None:
+            raise gr.Error("Connection failed with error code: -1")
+        return return_dict
 
     if 200 <= response.status_code < 300:
         message = "Connection successful. Configured finished."
         log.info(message)
         gr.Info(message)
+        return_dict.status_code = response.status_code
+        return_dict.message = message
     else:
         message = f"Connection failed with status code: {response.status_code}"
         log.error(message)
-        if origin_call is None:
-            raise gr.Error(message)
-    return response.status_code
+        try:
+            # TODO: Feedback on graph name errors alone, but needs to be modified
+            if origin_call is None:
+                raise gr.Error(json.loads(response.text)["message"])
+            return_dict.status_code = response.status_code
+            return_dict.message = json.loads(response.text)["message"]
+            return return_dict
+        # TODO: The problem is that only the message returned by rag can be processed, and the other return values are not processed
+        except json.JSONDecodeError as e:
+            if origin_call is None:
+                raise gr.Error(message)
+            return_dict.status_code = response.status_code
+            return_dict.message = message
+            return return_dict
 
 
-def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
-    # Because of ollama, the qianfan_wenxin model is missing the test connect procedure,
+def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> RAGResponse:
+    # TODO:Because of ollama, the qianfan_wenxin model is missing the test connect procedure,
     #  so it defaults to 200 so that there is no return value problem
-    status_code = 200
     embedding_option = settings.embedding_type
     if embedding_option == "openai":
         settings.openai_api_key = arg1
@@ -178,20 +195,24 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
         settings.openai_embedding_model = arg3
         test_url = settings.openai_api_base + "/models"
         headers = {"Authorization": f"Bearer {arg1}"}
-        status_code = test_api_connection(test_url, headers=headers, origin_call=origin_call)
+        response = test_api_connection(test_url, headers=headers, origin_call=origin_call)
     elif embedding_option == "qianfan_wenxin":
         settings.qianfan_access_token = arg1
         settings.qianfan_embed_url = arg2
+        # TODO: add test connection
+        response = RAGResponse(status_code=200)
     elif embedding_option == "ollama":
         settings.ollama_host = arg1
         settings.ollama_port = int(arg2)
         settings.ollama_embedding_model = arg3
+        # TODO: add test connection
+        response = RAGResponse(status_code=200)
     settings.update_env()
     gr.Info("Configured!")
-    return status_code
+    return response
 
 
-def apply_graph_config(ip, port, name, user, pwd, gs, origin_call=None) -> int:
+def apply_graph_config(ip, port, name, user, pwd, gs, origin_call=None) -> RAGResponse:
     settings.graph_ip = ip
     settings.graph_port = int(port)
     settings.graph_name = name
@@ -205,18 +226,17 @@ def apply_graph_config(ip, port, name, user, pwd, gs, origin_call=None) -> int:
         test_url = f"http://{ip}:{port}/graphs/{name}/schema"
     auth = HTTPBasicAuth(user, pwd)
     # for http api return status
-    status_code = test_api_connection(test_url, auth=auth, origin_call=origin_call)
+    response = test_api_connection(test_url, auth=auth, origin_call=origin_call)
     settings.update_env()
-    return status_code
+    return response
 
 
 # Different llm models have different parameters,
 # so no meaningful argument names are given here
-def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
+def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> RAGResponse:
     llm_option = settings.llm_type
     # Because of ollama, the qianfan_wenxin model is missing the test connect procedure,
     #  so it defaults to 200 so that there is no return value problem
-    status_code = 200
     if llm_option == "openai":
         settings.openai_api_key = arg1
         settings.openai_api_base = arg2
@@ -224,20 +244,23 @@ def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
         settings.openai_max_tokens = int(arg4)
         test_url = settings.openai_api_base + "/models"
         headers = {"Authorization": f"Bearer {arg1}"}
-        status_code = test_api_connection(test_url, headers=headers, origin_call=origin_call)
+        response = test_api_connection(test_url, headers=headers, origin_call=origin_call)
     elif llm_option == "qianfan_wenxin":
         settings.qianfan_api_key = arg1
         settings.qianfan_secret_key = arg2
         settings.qianfan_language_model = arg3
-        # TODO: test the connection
+        # TODO: add test connection
+        response = RAGResponse(status_code=200)
         # test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
     elif llm_option == "ollama":
         settings.ollama_host = arg1
         settings.ollama_port = int(arg2)
         settings.ollama_language_model = arg3
+        # TODO: add test connection
+        response = RAGResponse(status_code=200)
     gr.Info("Configured!")
     settings.update_env()
-    return status_code
+    return response
 
 
 def init_rag_ui() -> gr.Interface:
@@ -333,10 +356,6 @@ def init_rag_ui() -> gr.Interface:
             embedding_config_button = gr.Button("apply configuration")
 
             # Call the separate apply_embedding_configuration function here
-            embedding_config_button.click(
-                lambda arg1, arg2, arg3: apply_embedding_config(arg1, arg2, arg3), inputs=embedding_config_input
-            )
-
             embedding_config_button.click(
                 apply_embedding_config, inputs=embedding_config_input  # pylint: disable=no-member
             )
