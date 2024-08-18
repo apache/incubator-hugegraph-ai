@@ -18,17 +18,20 @@
 from fastapi import HTTPException
 from hugegraph_llm.api.models.rag_response import RAGResponse
 
-class UnsupportedMethodException(HTTPException):
+
+class ExternalException(HTTPException):
     def __init__(self):
-        super().__init__(status_code=400, detail="Connection failed with error code: -1")
+        super().__init__(status_code=400, detail="Connect failed with error code -1, please check the input.")
+
 
 class ConnectionFailedException(HTTPException):
     def __init__(self, status_code: int, message: str):
         super().__init__(status_code=status_code, detail=message)
 
+
 def generate_response(response: RAGResponse) -> dict:
     if response.status_code == -1:
-        raise UnsupportedMethodException()
+        raise ExternalException()
     elif not (200 <= response.status_code < 300):
         raise ConnectionFailedException(response.status_code, response.message)
     return {"message": "Connection successful. Configured finished."}

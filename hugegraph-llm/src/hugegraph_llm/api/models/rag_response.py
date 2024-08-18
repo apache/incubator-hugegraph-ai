@@ -17,6 +17,7 @@
 
 from pydantic import BaseModel
 
+
 class RAGResponse(BaseModel):
     status_code: int = -1
     message: str = ""

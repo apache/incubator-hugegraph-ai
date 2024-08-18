@@ -16,34 +16,33 @@
 # under the License.
 
 
-import json
 import argparse
+import json
 import os
 
-import requests
-import uvicorn
 import docx
 import gradio as gr
+import requests
+import uvicorn
 from fastapi import FastAPI
 from requests.auth import HTTPBasicAuth
 
-from hugegraph_llm.models.llms.init_llm import LLMs
+from hugegraph_llm.api.rag_api import rag_http_api
+from hugegraph_llm.config import settings, resource_path
+from hugegraph_llm.enums.build_mode import BuildMode
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
+from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.graph_rag_task import GraphRAG
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
-from hugegraph_llm.config import settings, resource_path
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
+from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index
-from hugegraph_llm.api.rag_api import rag_http_api
-from hugegraph_llm.api.models.rag_response import RAGResponse
-from hugegraph_llm.enums.build_mode import BuildMode
 
 
 def rag_answer(
-    text: str, raw_answer: bool, vector_only_answer: bool, graph_only_answer: bool, graph_vector_answer: bool
+        text: str, raw_answer: bool, vector_only_answer: bool, graph_only_answer: bool, graph_vector_answer: bool
 ) -> tuple:
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
@@ -134,56 +133,52 @@ def build_kg(file, schema, example_prompt, build_mode) -> str:  # pylint: disabl
 
 
 def test_api_connection(url, method="GET",
-                        headers=None, params=None, body=None, auth=None, origin_call=None) -> RAGResponse:
+                        headers=None, params=None, body=None, auth=None, origin_call=None) -> int:
     # TODO: use fastapi.request / starlette instead?
-    response = None
-    global return_dict
-
     log.debug("Request URL: %s", url)
     try:
         if method.upper() == "GET":
-            response = requests.get(url, headers=headers, params=params, timeout=5, auth=auth)
+            resp = requests.get(url, headers=headers, params=params, timeout=5, auth=auth)
         elif method.upper() == "POST":
-            response = requests.post(url, headers=headers, params=params, json=body, timeout=5, auth=auth)
+            resp = requests.post(url, headers=headers, params=params, json=body, timeout=5, auth=auth)
         else:
-            raise gr.Error("Unsupported method")
+            raise ValueError("Unsupported HTTP method, please use GET/POST instead")
     except requests.exceptions.RequestException as e:
-        message = f"Connection failed: {e}"
-        log.error(message)
+        msg = f"Connection failed: {e}"
+        log.error(msg)
         if origin_call is None:
-            raise gr.Error(message)
-        return return_dict
+            raise gr.Error(msg)
+        return -1  # Error code
 
-    if 200 <= response.status_code < 300:
-        message = "Connection successful. Configured finished."
-        log.info(message)
-        gr.Info(message)
-        return_dict.status_code = response.status_code
-        return_dict.message = message
-        return return_dict
+    if 200 <= resp.status_code < 300:
+        msg = "Test connection successful~"
+        log.info(msg)
+        gr.Info(msg)
     else:
-        message = f"Connection failed with status code: {response.status_code}"
-        log.error(message)
-        try:
-            # TODO: Feedback on graph name errors alone, but needs to be modified
-            if origin_call is None:
-                raise gr.Error(json.loads(response.text)["message"])
-            return_dict.status_code = response.status_code
-            return_dict.message = json.loads(response.text)["message"]
-            return return_dict
+        msg = f"Connection failed with status code: {resp.status_code}, error: {resp.text}"
+        log.error(msg)
         # TODO: Only the message returned by rag can be processed, and the other return values can't be processed
-        except json.JSONDecodeError as e:
-            if origin_call is None:
-                raise gr.Error(message)
-            return_dict.status_code = response.status_code
-            return_dict.message = message
-            return return_dict
+        if origin_call is None:
+            raise gr.Error(json.loads(resp.text).get("message", msg))
+    return resp.status_code
 
 
-def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> RAGResponse:
-    # TODO:Because of ollama, the qianfan_wenxin model is missing the test connect procedure,
-    #  so it defaults to 200 so that there is no return value problem
-    global response
+def config_qianfan_model(arg1, arg2, arg3 = None, origin_call=None) -> int:
+    settings.qianfan_api_key = arg1
+    settings.qianfan_secret_key = arg2
+    settings.qianfan_language_model = arg3
+    params = {
+        "grant_type": "client_credentials",
+        "client_id": arg1,
+        "client_secret": arg2
+    }
+    status_code = test_api_connection("https://aip.baidubce.com/oauth/2.0/token", "POST", params=params,
+                                      origin_call=origin_call)
+    return status_code
+
+
+def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
+    status_code = -1
     embedding_option = settings.embedding_type
     if embedding_option == "openai":
         settings.openai_api_key = arg1
@@ -191,30 +186,22 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> RAGResponse:
         settings.openai_embedding_model = arg3
         test_url = settings.openai_api_base + "/models"
         headers = {"Authorization": f"Bearer {arg1}"}
-        response = test_api_connection(test_url, headers=headers, origin_call=origin_call)
+        status_code = test_api_connection(test_url, headers=headers, origin_call=origin_call)
     elif embedding_option == "qianfan_wenxin":
-        settings.qianfan_api_key = arg1
-        settings.qianfan_secret_key = arg2
-        params = {
-            "grant_type": "client_credentials",
-            "client_id": arg1,
-            "client_secret": arg2
-        }
-        status_code = test_api_connection("https://aip.baidubce.com/oauth/2.0/token", "POST", params=params,
-                                          origin_call=origin_call)
-        log.debug("####")
+        status_code = config_qianfan_model(arg1, arg2, origin_call=origin_call)
+        settings.qianfan_embedding_model = arg3
     elif embedding_option == "ollama":
         settings.ollama_host = arg1
         settings.ollama_port = int(arg2)
         settings.ollama_embedding_model = arg3
-        # TODO: add test connection
-        response = RAGResponse(status_code=200)
+        # TODO: right way to test ollama conn?
+        status_code = test_api_connection(f"http://{arg1}:{arg2}/status", origin_call=origin_call)
     settings.update_env()
     gr.Info("Configured!")
-    return response
+    return status_code
 
 
-def apply_graph_config(ip, port, name, user, pwd, gs, origin_call=None) -> RAGResponse:
+def apply_graph_config(ip, port, name, user, pwd, gs, origin_call=None) -> int:
     settings.graph_ip = ip
     settings.graph_port = int(port)
     settings.graph_name = name
@@ -235,10 +222,9 @@ def apply_graph_config(ip, port, name, user, pwd, gs, origin_call=None) -> RAGRe
 
 # Different llm models have different parameters,
 # so no meaningful argument names are given here
-def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> RAGResponse:
+def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
     llm_option = settings.llm_type
-    # Because of ollama, the qianfan_wenxin model is missing the test connect procedure,
-    #  so it defaults to 200 so that there is no return value problem
+    status_code = -1
     if llm_option == "openai":
         settings.openai_api_key = arg1
         settings.openai_api_base = arg2
@@ -246,27 +232,22 @@ def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> RAGResponse:
         settings.openai_max_tokens = int(arg4)
         test_url = settings.openai_api_base + "/models"
         headers = {"Authorization": f"Bearer {arg1}"}
-        response = test_api_connection(test_url, headers=headers, origin_call=origin_call)
+        status_code = test_api_connection(test_url, headers=headers, origin_call=origin_call)
     elif llm_option == "qianfan_wenxin":
-        settings.qianfan_api_key = arg1
-        settings.qianfan_secret_key = arg2
-        settings.qianfan_language_model = arg3
-        # TODO: add test connection
-        response = RAGResponse(status_code=200, message="")
-        # test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
+        status_code = config_qianfan_model(arg1, arg2, arg3, origin_call)
     elif llm_option == "ollama":
         settings.ollama_host = arg1
         settings.ollama_port = int(arg2)
         settings.ollama_language_model = arg3
-        # TODO: add test connection
-        response = RAGResponse(status_code=200, message="")
+        # TODO: right way to test ollama conn?
+        status_code = test_api_connection(f"http://{arg1}:{arg2}/status", origin_call=origin_call)
     gr.Info("Configured!")
     settings.update_env()
-    return response
+    return status_code
 
 
 def init_rag_ui() -> gr.Interface:
-    with gr.Blocks() as hugegraph_llm:
+    with gr.Blocks() as hugegraph_llm_ui:
         gr.Markdown(
             """# HugeGraph LLM RAG Demo
         1. Set up the HugeGraph server."""
@@ -325,7 +306,7 @@ def init_rag_ui() -> gr.Interface:
 
         gr.Markdown("3. Set up the Embedding.")
         embedding_dropdown = gr.Dropdown(
-            choices=["openai", "ollama", "qianfan_wenxin"], value=settings.embedding_type, label="Embedding"
+            choices=["openai", "qianfan_wenxin", "ollama"], value=settings.embedding_type, label="Embedding"
         )
 
         @gr.render(inputs=[embedding_dropdown])
@@ -470,7 +451,7 @@ def init_rag_ui() -> gr.Interface:
             out = gr.Textbox(label="Output", show_copy_button=True)
         btn = gr.Button("(BETA) Init HugeGraph test data (🚧WIP)")
         btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
-    return hugegraph_llm
+    return hugegraph_llm_ui
 
 
 if __name__ == "__main__":

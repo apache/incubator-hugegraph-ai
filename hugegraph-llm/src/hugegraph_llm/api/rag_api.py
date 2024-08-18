@@ -16,6 +16,8 @@
 # under the License.
 
 from fastapi import FastAPI, status
+
+from hugegraph_llm.api.models.rag_response import RAGResponse
 from hugegraph_llm.config import settings
 from hugegraph_llm.api.models.rag_requests import RAGRequest, GraphConfigRequest, LLMConfigRequest
 from hugegraph_llm.api.exceptions.rag_exceptions import generate_response
@@ -34,31 +36,31 @@ def rag_http_api(app: FastAPI, rag_answer_func, apply_graph_conf, apply_llm_conf
     @app.post("/config/graph", status_code=status.HTTP_201_CREATED)
     def graph_config_api(req: GraphConfigRequest):
         # Accept status code
-        response = apply_graph_conf(req.ip, req.port, req.name, req.user, req.pwd, req.gs, origin_call="http")
-        return generate_response(response)
+        res = apply_graph_conf(req.ip, req.port, req.name, req.user, req.pwd, req.gs, origin_call="http")
+        return generate_response(RAGResponse(status_code=res, message="Missing Value"))
 
     @app.post("/config/llm", status_code=status.HTTP_201_CREATED)
     def llm_config_api(req: LLMConfigRequest):
         settings.llm_type = req.llm_type
 
         if req.llm_type == "openai":
-            response = apply_llm_conf(
+            res = apply_llm_conf(
                 req.api_key, req.api_base, req.language_model, req.max_tokens, origin_call="http"
             )
         elif req.llm_type == "qianfan_wenxin":
-            response = apply_llm_conf(req.api_key, req.secret_key, req.language_model, None, origin_call="http")
+            res = apply_llm_conf(req.api_key, req.secret_key, req.language_model, None, origin_call="http")
         else:
-            response = apply_llm_conf(req.host, req.port, req.language_model, None, origin_call="http")
-        return generate_response(response)
+            res = apply_llm_conf(req.host, req.port, req.language_model, None, origin_call="http")
+        return generate_response(RAGResponse(status_code=res, message="Missing Value"))
 
     @app.post("/config/embedding", status_code=status.HTTP_201_CREATED)
     def embedding_config_api(req: LLMConfigRequest):
         settings.embedding_type = req.llm_type
 
         if req.llm_type == "openai":
-            response = apply_embedding_conf(req.api_key, req.api_base, req.language_model, origin_call="http")
+            res = apply_embedding_conf(req.api_key, req.api_base, req.language_model, origin_call="http")
         elif req.llm_type == "qianfan_wenxin":
-            response = apply_embedding_conf(req.api_key, req.api_base, None, origin_call="http")
+            res = apply_embedding_conf(req.api_key, req.api_base, None, origin_call="http")
         else:
-            response = apply_embedding_conf(req.host, req.port, req.language_model, origin_call="http")
-        return generate_response(response)
+            res = apply_embedding_conf(req.host, req.port, req.language_model, origin_call="http")
+        return generate_response(RAGResponse(status_code=res, message="Missing Value"))
