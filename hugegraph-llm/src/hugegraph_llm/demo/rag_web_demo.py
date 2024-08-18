@@ -136,7 +136,6 @@ def build_kg(file, schema, example_prompt, build_mode) -> str:  # pylint: disabl
 def test_api_connection(url, method="GET", headers=None, body=None, auth=None, origin_call=None) -> RAGResponse:
     # TODO: use fastapi.request / starlette instead?
     response = None
-
     return_dict = RAGResponse()
 
     log.debug("Request URL: %s", url)
@@ -153,19 +152,18 @@ def test_api_connection(url, method="GET", headers=None, body=None, auth=None, o
         if origin_call is None:
             raise gr.Error(message)
         return return_dict
-
     if response is None:
         # Unsupported method encountered
         if origin_call is None:
             raise gr.Error("Connection failed with error code: -1")
         return return_dict
-
     if 200 <= response.status_code < 300:
         message = "Connection successful. Configured finished."
         log.info(message)
         gr.Info(message)
         return_dict.status_code = response.status_code
         return_dict.message = message
+        return return_dict
     else:
         message = f"Connection failed with status code: {response.status_code}"
         log.error(message)
@@ -250,14 +248,14 @@ def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> RAGResponse:
         settings.qianfan_secret_key = arg2
         settings.qianfan_language_model = arg3
         # TODO: add test connection
-        response = RAGResponse(status_code=200)
+        response = RAGResponse(status_code=200, message="")
         # test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
     elif llm_option == "ollama":
         settings.ollama_host = arg1
         settings.ollama_port = int(arg2)
         settings.ollama_language_model = arg3
         # TODO: add test connection
-        response = RAGResponse(status_code=200)
+        response = RAGResponse(status_code=200, message="")
     gr.Info("Configured!")
     settings.update_env()
     return response

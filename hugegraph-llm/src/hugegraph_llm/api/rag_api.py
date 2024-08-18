@@ -49,8 +49,6 @@ def rag_http_api(app: FastAPI, rag_answer_func, apply_graph_conf, apply_llm_conf
             response = apply_llm_conf(req.api_key, req.secret_key, req.language_model, None, origin_call="http")
         else:
             response = apply_llm_conf(req.host, req.port, req.language_model, None, origin_call="http")
-        
-        print(response)
         return generate_response(response)
 
     @app.post("/config/embedding", status_code=status.HTTP_201_CREATED)
