@@ -18,6 +18,7 @@
 
 from enum import Enum
 
+
 class BuildMode(Enum):
     REBUILD_VECTOR = "Rebuild Vector"
     TEST_MODE = "Test Mode"

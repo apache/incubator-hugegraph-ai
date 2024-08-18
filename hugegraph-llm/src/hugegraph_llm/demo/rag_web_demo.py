@@ -163,7 +163,7 @@ def test_api_connection(url, method="GET",
     return resp.status_code
 
 
-def config_qianfan_model(arg1, arg2, arg3 = None, origin_call=None) -> int:
+def config_qianfan_model(arg1, arg2, arg3=None, origin_call=None) -> int:
     settings.qianfan_api_key = arg1
     settings.qianfan_secret_key = arg2
     settings.qianfan_language_model = arg3
@@ -359,7 +359,7 @@ def init_rag_ui() -> gr.Interface:
 """
         )
 
-        SCHEMA = """{
+        schema = """{
   "vertexlabels": [
     {
       "id":1,
@@ -396,7 +396,7 @@ def init_rag_ui() -> gr.Interface:
 
         with gr.Row():
             input_file = gr.File(value=os.path.join(resource_path, "demo", "test.txt"), label="Document")
-            input_schema = gr.Textbox(value=SCHEMA, label="Schema")
+            input_schema = gr.Textbox(value=schema, label="Schema")
             info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head")
             with gr.Column():
                 mode = gr.Radio(
@@ -441,10 +441,10 @@ def init_rag_ui() -> gr.Interface:
         with gr.Row():
             with gr.Column():
                 inp = gr.Textbox(value="g.V().limit(10)", label="Gremlin query", show_copy_button=True)
-                format = gr.Checkbox(label="Format JSON", value=True)
+                fmt = gr.Checkbox(label="Format JSON", value=True)
             out = gr.Textbox(label="Output", show_copy_button=True)
         btn = gr.Button("Run gremlin query on HugeGraph")
-        btn.click(fn=run_gremlin_query, inputs=[inp, format], outputs=out)  # pylint: disable=no-member
+        btn.click(fn=run_gremlin_query, inputs=[inp, fmt], outputs=out)  # pylint: disable=no-member
 
         with gr.Row():
             inp = []
