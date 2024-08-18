@@ -43,7 +43,7 @@ from hugegraph_llm.enums.build_mode import BuildMode
 
 
 def rag_answer(
-    text: str, raw_answer: bool, vector_only_answer: bool, graph_only_answer: bool, graph_vector_answer: bool
+        text: str, raw_answer: bool, vector_only_answer: bool, graph_only_answer: bool, graph_vector_answer: bool
 ) -> tuple:
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
@@ -133,31 +133,25 @@ def build_kg(file, schema, example_prompt, build_mode) -> str:  # pylint: disabl
         raise gr.Error(str(e))
 
 
-def test_api_connection(url, method="GET", headers=None, body=None, auth=None, origin_call=None) -> RAGResponse:
+def test_api_connection(url, method="GET",
+                        headers=None, params=None, body=None, auth=None, origin_call=None) -> RAGResponse:
     # TODO: use fastapi.request / starlette instead?
     response = None
-
-    return_dict = RAGResponse()
+    global return_dict
 
     log.debug("Request URL: %s", url)
     try:
         if method.upper() == "GET":
-            response = requests.get(url, headers=headers, timeout=5, auth=auth)
+            response = requests.get(url, headers=headers, params=params, timeout=5, auth=auth)
         elif method.upper() == "POST":
-            response = requests.post(url, headers=headers, json=body, timeout=5, auth=auth)
+            response = requests.post(url, headers=headers, params=params, json=body, timeout=5, auth=auth)
         else:
-            log.error("Unsupported method: %s", method)
+            raise gr.Error("Unsupported method")
     except requests.exceptions.RequestException as e:
         message = f"Connection failed: {e}"
         log.error(message)
         if origin_call is None:
             raise gr.Error(message)
-        return return_dict
-
-    if response is None:
-        # Unsupported method encountered
-        if origin_call is None:
-            raise gr.Error("Connection failed with error code: -1")
         return return_dict
 
     if 200 <= response.status_code < 300:
@@ -176,7 +170,7 @@ def test_api_connection(url, method="GET", headers=None, body=None, auth=None, o
             return_dict.status_code = response.status_code
             return_dict.message = json.loads(response.text)["message"]
             return return_dict
-        # TODO: The problem is that only the message returned by rag can be processed, and the other return values are not processed
+        # TODO: Only the message returned by rag can be processed, and the other return values can't be processed
         except json.JSONDecodeError as e:
             if origin_call is None:
                 raise gr.Error(message)
@@ -188,6 +182,7 @@ def test_api_connection(url, method="GET", headers=None, body=None, auth=None, o
 def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> RAGResponse:
     # TODO:Because of ollama, the qianfan_wenxin model is missing the test connect procedure,
     #  so it defaults to 200 so that there is no return value problem
+    global response
     embedding_option = settings.embedding_type
     if embedding_option == "openai":
         settings.openai_api_key = arg1
@@ -197,10 +192,16 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> RAGResponse:
         headers = {"Authorization": f"Bearer {arg1}"}
         response = test_api_connection(test_url, headers=headers, origin_call=origin_call)
     elif embedding_option == "qianfan_wenxin":
-        settings.qianfan_access_token = arg1
-        settings.qianfan_embed_url = arg2
-        # TODO: add test connection
-        response = RAGResponse(status_code=200)
+        settings.qianfan_api_key = arg1
+        settings.qianfan_secret_key = arg2
+        params = {
+            "grant_type": "client_credentials",
+            "client_id": arg1,
+            "client_secret": arg2
+        }
+        status_code = test_api_connection("https://aip.baidubce.com/oauth/2.0/token", "POST", params=params,
+                                          origin_call=origin_call)
+        log.debug("####")
     elif embedding_option == "ollama":
         settings.ollama_host = arg1
         settings.ollama_port = int(arg2)
@@ -323,7 +324,7 @@ def init_rag_ui() -> gr.Interface:
 
         gr.Markdown("3. Set up the Embedding.")
         embedding_dropdown = gr.Dropdown(
-            choices=["openai", "ollama", "qianfan_wenxin"], value=settings.embedding_type, label="Embedding"
+            choices=["openai", "qianfan_wenxin", "ollama"], value=settings.embedding_type, label="Embedding"
         )
 
         @gr.render(inputs=[embedding_dropdown])
