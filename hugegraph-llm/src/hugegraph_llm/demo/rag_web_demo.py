@@ -43,7 +43,7 @@ from hugegraph_llm.enums.build_mode import BuildMode
 
 
 def rag_answer(
-        text: str, raw_answer: bool, vector_only_answer: bool, graph_only_answer: bool, graph_vector_answer: bool
+    text: str, raw_answer: bool, vector_only_answer: bool, graph_only_answer: bool, graph_vector_answer: bool
 ) -> tuple:
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
@@ -160,6 +160,7 @@ def test_api_connection(url, method="GET",
         gr.Info(message)
         return_dict.status_code = response.status_code
         return_dict.message = message
+        return return_dict
     else:
         message = f"Connection failed with status code: {response.status_code}"
         log.error(message)
@@ -251,14 +252,14 @@ def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> RAGResponse:
         settings.qianfan_secret_key = arg2
         settings.qianfan_language_model = arg3
         # TODO: add test connection
-        response = RAGResponse(status_code=200)
+        response = RAGResponse(status_code=200, message="")
         # test_url = "https://aip.baidubce.com/oauth/2.0/token"  # POST
     elif llm_option == "ollama":
         settings.ollama_host = arg1
         settings.ollama_port = int(arg2)
         settings.ollama_language_model = arg3
         # TODO: add test connection
-        response = RAGResponse(status_code=200)
+        response = RAGResponse(status_code=200, message="")
     gr.Info("Configured!")
     settings.update_env()
     return response
@@ -324,7 +325,7 @@ def init_rag_ui() -> gr.Interface:
 
         gr.Markdown("3. Set up the Embedding.")
         embedding_dropdown = gr.Dropdown(
-            choices=["openai", "qianfan_wenxin", "ollama"], value=settings.embedding_type, label="Embedding"
+            choices=["openai", "ollama", "qianfan_wenxin"], value=settings.embedding_type, label="Embedding"
         )
 
         @gr.render(inputs=[embedding_dropdown])
