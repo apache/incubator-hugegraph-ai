@@ -96,7 +96,7 @@ def build_kg(file, schema, example_prompt, build_mode) -> str:  # pylint: disabl
         raise gr.Error("Please input txt or docx file.")
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
 
-    if build_mode != BuildMode.REBUILD_VERTEX_INDEX:
+    if build_mode != BuildMode.REBUILD_VERTEX_INDEX.value:
         if schema:
             try:
                 schema = json.loads(schema.strip())
@@ -108,20 +108,20 @@ def build_kg(file, schema, example_prompt, build_mode) -> str:  # pylint: disabl
             return "ERROR: please input schema."
     builder.chunk_split(text, "paragraph", "zh")
 
-    if build_mode == BuildMode.REBUILD_VECTOR:
+    if build_mode == BuildMode.REBUILD_VECTOR.value:
         builder.fetch_graph_data()
     else:
         builder.extract_info(example_prompt, "property_graph")
     # "Test Mode", "Import Mode", "Clear and Import", "Rebuild Vector"
-    if build_mode != BuildMode.TEST_MODE:
-        if build_mode in (BuildMode.CLEAR_AND_IMPORT, BuildMode.REBUILD_VECTOR):
+    if build_mode != BuildMode.TEST_MODE.value:
+        if build_mode in (BuildMode.CLEAR_AND_IMPORT.value, BuildMode.REBUILD_VECTOR.value):
             clean_vector_index()
         builder.build_vector_index()
-    if build_mode == BuildMode.CLEAR_AND_IMPORT:
+    if build_mode == BuildMode.CLEAR_AND_IMPORT.value:
         clean_hg_data()
-    if build_mode in (BuildMode.CLEAR_AND_IMPORT, BuildMode.IMPORT_MODE):
+    if build_mode in (BuildMode.CLEAR_AND_IMPORT.value, BuildMode.IMPORT_MODE.value):
         builder.commit_to_hugegraph()
-    if build_mode != BuildMode.TEST_MODE:
+    if build_mode != BuildMode.TEST_MODE.value:
         builder.build_vertex_id_semantic_index()
     log.debug(builder.operators)
     try:
