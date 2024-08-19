@@ -15,13 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from pydantic import BaseModel
 
-from enum import Enum
 
-
-class BuildMode(Enum):
-    REBUILD_VECTOR = "Rebuild Vector"
-    TEST_MODE = "Test Mode"
-    IMPORT_MODE = "Import Mode"
-    CLEAR_AND_IMPORT = "Clear and Import"
-    REBUILD_VERTEX_INDEX = "Rebuild vertex index"
+class RAGResponse(BaseModel):
+    status_code: int = -1
+    message: str = ""

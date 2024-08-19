@@ -14,14 +14,3 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
-
-from enum import Enum
-
-
-class BuildMode(Enum):
-    REBUILD_VECTOR = "Rebuild Vector"
-    TEST_MODE = "Test Mode"
-    IMPORT_MODE = "Import Mode"
-    CLEAR_AND_IMPORT = "Clear and Import"
-    REBUILD_VERTEX_INDEX = "Rebuild vertex index"

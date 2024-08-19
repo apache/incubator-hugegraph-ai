@@ -15,13 +15,23 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from fastapi import HTTPException
+from hugegraph_llm.api.models.rag_response import RAGResponse
 
-from enum import Enum
+
+class ExternalException(HTTPException):
+    def __init__(self):
+        super().__init__(status_code=400, detail="Connect failed with error code -1, please check the input.")
 
 
-class BuildMode(Enum):
-    REBUILD_VECTOR = "Rebuild Vector"
-    TEST_MODE = "Test Mode"
-    IMPORT_MODE = "Import Mode"
-    CLEAR_AND_IMPORT = "Clear and Import"
-    REBUILD_VERTEX_INDEX = "Rebuild vertex index"
+class ConnectionFailedException(HTTPException):
+    def __init__(self, status_code: int, message: str):
+        super().__init__(status_code=status_code, detail=message)
+
+
+def generate_response(response: RAGResponse) -> dict:
+    if response.status_code == -1:
+        raise ExternalException()
+    elif not (200 <= response.status_code < 300):
+        raise ConnectionFailedException(response.status_code, response.message)
+    return {"message": "Connection successful. Configured finished."}
