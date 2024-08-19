@@ -19,12 +19,8 @@
 import os
 import json
 import argparse
-import json
-import os
 from typing import List, Union
 
-import docx
-import gradio as gr
 import requests
 import uvicorn
 import docx
@@ -33,9 +29,7 @@ from gradio.utils import NamedString
 from fastapi import FastAPI
 from requests.auth import HTTPBasicAuth
 
-from hugegraph_llm.api.rag_api import rag_http_api
 from hugegraph_llm.config import settings, resource_path
-from hugegraph_llm.enums.build_mode import BuildMode
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.graph_rag_task import GraphRAG
@@ -43,10 +37,9 @@ from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
-from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index
-# from hugegraph_llm.api.rag_api import rag_http_api
+from hugegraph_llm.api.rag_api import rag_http_api
 from hugegraph_llm.enums.build_mode import BuildMode
 
 
@@ -69,7 +62,7 @@ def rag_answer(
         vector_only_answer=vector_only_answer,
         graph_only_answer=graph_only_answer,
         graph_vector_answer=graph_vector_answer,
-    ).run(verbose=True, query=text)
+    )
 
     try:
         context = searcher.run(verbose=True, query=text)
@@ -214,7 +207,7 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
         settings.ollama_port = int(arg2)
         settings.ollama_embedding_model = arg3
         # TODO: right way to test ollama conn?
-        status_code = test_api_connection(f"http://{arg1}:{arg2}/status", origin_call=origin_call)
+        status_code = test_api_connection(f"http://{arg1}:{arg2}", origin_call=origin_call)
     settings.update_env()
     gr.Info("Configured!")
     return status_code
@@ -266,7 +259,7 @@ def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
 
 
 def init_rag_ui() -> gr.Interface:
-    with gr.Blocks() as hugegraph_llm_ui:
+    with gr.Blocks(title="HugeGraph LLM") as hugegraph_llm_ui:
         gr.Markdown(
             """# HugeGraph LLM RAG Demo
         1. Set up the HugeGraph server."""
