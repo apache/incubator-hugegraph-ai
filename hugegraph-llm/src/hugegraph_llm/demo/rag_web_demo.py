@@ -25,7 +25,7 @@ import gradio as gr
 import requests
 import uvicorn
 from fastapi import FastAPI, Depends, APIRouter
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from requests.auth import HTTPBasicAuth
 
 from hugegraph_llm.api.rag_api import rag_http_api
