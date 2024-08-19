@@ -24,7 +24,8 @@ import docx
 import gradio as gr
 import requests
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, APIRouter
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, OAuth2PasswordBearer
 from requests.auth import HTTPBasicAuth
 
 from hugegraph_llm.api.rag_api import rag_http_api
@@ -40,6 +41,18 @@ from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_q
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index
 
+sec = HTTPBearer()
+
+
+def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
+    correct_token = os.getenv("TOKEN")
+    if credentials.credentials != correct_token:
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid token, please contact the admin",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 def rag_answer(
         text: str, raw_answer: bool, vector_only_answer: bool, graph_only_answer: bool, graph_vector_answer: bool
@@ -460,12 +473,16 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8001, help="port")
     args = parser.parse_args()
     app = FastAPI()
+    app_auth = APIRouter(dependencies=[Depends(authenticate)])
 
     hugegraph_llm = init_rag_ui()
 
-    rag_http_api(app, rag_answer, apply_graph_config, apply_llm_config, apply_embedding_config)
+    rag_http_api(app_auth, rag_answer, apply_graph_config, apply_llm_config, apply_embedding_config)
 
-    app = gr.mount_gradio_app(app, hugegraph_llm, path="/")
+    app.include_router(app_auth)
+
+    app = gr.mount_gradio_app(app, hugegraph_llm, path="/", auth=("rag", os.getenv("TOKEN")) if os.getenv("ENABLE_LOGIN") == "True" else None)
+
     # Note: set reload to False in production environment
     uvicorn.run(app, host=args.host, port=args.port)
     # TODO: we can't use reload now due to the config 'app' of uvicorn.run
