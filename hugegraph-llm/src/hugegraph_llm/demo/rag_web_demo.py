@@ -54,6 +54,7 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+
 def rag_answer(
         text: str, raw_answer: bool, vector_only_answer: bool, graph_only_answer: bool, graph_vector_answer: bool
 ) -> tuple:
@@ -476,12 +477,13 @@ if __name__ == "__main__":
     app_auth = APIRouter(dependencies=[Depends(authenticate)])
 
     hugegraph_llm = init_rag_ui()
-
     rag_http_api(app_auth, rag_answer, apply_graph_config, apply_llm_config, apply_embedding_config)
 
     app.include_router(app_auth)
-
-    app = gr.mount_gradio_app(app, hugegraph_llm, path="/", auth=("rag", os.getenv("TOKEN")) if os.getenv("ENABLE_LOGIN") == "True" else None)
+    auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
+    log.info("Authentication is %s.", "enabled" if auth_enabled else "disabled")
+    # TODO: support multi-user login when need
+    app = gr.mount_gradio_app(app, hugegraph_llm, path="/", auth=("rag", os.getenv("TOKEN")) if auth_enabled else None)
 
     # Note: set reload to False in production environment
     uvicorn.run(app, host=args.host, port=args.port)
