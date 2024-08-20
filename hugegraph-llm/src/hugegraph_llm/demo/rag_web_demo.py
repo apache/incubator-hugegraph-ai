@@ -16,21 +16,23 @@
 # under the License.
 
 
-import os
-import json
 import argparse
+import json
+import os
 from typing import List, Union
 
-import requests
-import uvicorn
 import docx
 import gradio as gr
-from gradio.utils import NamedString
+import requests
+import uvicorn
 from fastapi import FastAPI, Depends, APIRouter
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from gradio.utils import NamedString
 from requests.auth import HTTPBasicAuth
 
+from hugegraph_llm.api.rag_api import rag_http_api
 from hugegraph_llm.config import settings, resource_path
+from hugegraph_llm.enums.build_mode import BuildMode
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.graph_rag_task import GraphRAG
@@ -40,8 +42,6 @@ from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index
-from hugegraph_llm.api.rag_api import rag_http_api
-from hugegraph_llm.enums.build_mode import BuildMode
 
 sec = HTTPBearer()
 
@@ -52,7 +52,7 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
         from fastapi import HTTPException
         raise HTTPException(
             status_code=401,
-            detail="Invalid token, please contact the admin",
+            detail=f"Invalid token {credentials.credentials}, please contact the admin",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -89,7 +89,7 @@ def rag_answer(
     except ValueError as e:
         log.error(e)
         raise gr.Error(str(e))
-    except Exception as e:  # pylint: disable=broad-exception-caught
+    except Exception as e:
         log.error(e)
         raise gr.Error(f"An unexpected error occurred: {str(e)}")
 
@@ -220,7 +220,6 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
         settings.ollama_host = arg1
         settings.ollama_port = int(arg2)
         settings.ollama_embedding_model = arg3
-        # TODO: right way to test ollama conn?
         status_code = test_api_connection(f"http://{arg1}:{arg2}", origin_call=origin_call)
     settings.update_env()
     gr.Info("Configured!")
@@ -229,7 +228,7 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
 
 def apply_graph_config(ip, port, name, user, pwd, gs, origin_call=None) -> int:
     settings.graph_ip = ip
-    settings.graph_port = int(port)
+    settings.graph_port = port
     settings.graph_name = name
     settings.graph_user = user
     settings.graph_pwd = pwd
@@ -265,15 +264,16 @@ def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
         settings.ollama_host = arg1
         settings.ollama_port = int(arg2)
         settings.ollama_language_model = arg3
-        # TODO: right way to test ollama conn?
-        status_code = test_api_connection(f"http://{arg1}:{arg2}/status", origin_call=origin_call)
+        status_code = test_api_connection(f"http://{arg1}:{arg2}", origin_call=origin_call)
     gr.Info("Configured!")
     settings.update_env()
     return status_code
 
 
 def init_rag_ui() -> gr.Interface:
-    with gr.Blocks(title="HugeGraph LLM") as hugegraph_llm_ui:
+    with gr.Blocks(theme='default',
+                   title="HugeGraph RAG Platform",
+                   css="footer {visibility: hidden}") as hugegraph_llm_ui:
         gr.Markdown(
             """# HugeGraph LLM RAG Demo
         1. Set up the HugeGraph server."""
@@ -281,13 +281,11 @@ def init_rag_ui() -> gr.Interface:
         with gr.Row():
             graph_config_input = [
                 gr.Textbox(value=settings.graph_ip, label="ip"),
-                gr.Textbox(value=str(settings.graph_port), label="port"),
+                gr.Textbox(value=settings.graph_port, label="port"),
                 gr.Textbox(value=settings.graph_name, label="graph"),
                 gr.Textbox(value=settings.graph_user, label="user"),
                 gr.Textbox(value=settings.graph_pwd, label="pwd", type="password"),
-                # gr.Textbox(value=settings.graph_space, label="graphspace (None)"),
-                # wip: graph_space issue pending
-                gr.Textbox(value="", label="graphspace (None)"),
+                gr.Textbox(value=settings.graph_space, label="graphspace(Optional)"),
             ]
         graph_config_button = gr.Button("apply configuration")
 

@@ -19,7 +19,7 @@ from pyhugegraph.client import PyHugeClient
 
 if __name__ == "__main__":
     client = PyHugeClient(
-        "127.0.0.1", "8080", user="admin", pwd="admin", graph="hugegraph"
+        "127.0.0.1", "8080", user="admin", pwd="admin", graph="hugegraph", graphspace=None
     )
 
     """schema"""

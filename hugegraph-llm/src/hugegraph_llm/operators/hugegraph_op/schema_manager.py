@@ -29,10 +29,11 @@ class SchemaManager:
             self.graph_name,
             settings.graph_user,
             settings.graph_pwd,
+            settings.graph_space,
         )
         self.schema = self.client.schema()
 
-    def run(self, data: dict):
+    def run(self):
         schema = self.schema.getSchema()
         vertices = []
         for vl in schema["vertexlabels"]:

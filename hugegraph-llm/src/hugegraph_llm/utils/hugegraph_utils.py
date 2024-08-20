@@ -32,6 +32,7 @@ def get_hg_client():
         settings.graph_name,
         settings.graph_user,
         settings.graph_pwd,
+        settings.graph_space,
     )
 
 
@@ -41,9 +42,7 @@ def init_hg_test_data():
     schema = client.schema()
     schema.propertyKey("name").asText().ifNotExist().create()
     schema.propertyKey("birthDate").asText().ifNotExist().create()
-    schema.vertexLabel("Person").properties(
-        "name", "birthDate"
-    ).useCustomizeStringId().ifNotExist().create()
+    schema.vertexLabel("Person").properties("name", "birthDate").useCustomizeStringId().ifNotExist().create()
     schema.vertexLabel("Movie").properties("name").useCustomizeStringId().ifNotExist().create()
     schema.edgeLabel("ActedIn").sourceLabel("Person").targetLabel("Movie").ifNotExist().create()
 
