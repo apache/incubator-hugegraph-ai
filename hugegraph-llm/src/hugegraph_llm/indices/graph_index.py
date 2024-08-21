@@ -26,12 +26,13 @@ class GraphIndex:
     def __init__(
             self,
             graph_ip: Optional[str] = settings.graph_ip,
-            graph_port: Optional[int] = settings.graph_port,
+            graph_port: Optional[str] = settings.graph_port,
             graph_name: Optional[str] = settings.graph_name,
             graph_user: Optional[str] = settings.graph_user,
             graph_pwd: Optional[str] = settings.graph_pwd,
+            graph_space: Optional[str] = settings.graph_space,
     ):
-        self.client = PyHugeClient(graph_ip, graph_port, graph_name, graph_user, graph_pwd)
+        self.client = PyHugeClient(graph_ip, graph_port, graph_name, graph_user, graph_pwd, graph_space)
 
     def clear_graph(self):
         self.client.gremlin().exec("g.V().drop()")

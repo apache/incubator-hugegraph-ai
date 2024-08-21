@@ -32,6 +32,7 @@ class CommitToKg:
             settings.graph_name,
             settings.graph_user,
             settings.graph_pwd,
+            settings.graph_space,
         )
         self.schema = self.client.schema()
 

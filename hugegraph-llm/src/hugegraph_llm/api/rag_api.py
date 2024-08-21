@@ -15,16 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from fastapi import FastAPI, status
+from fastapi import status, APIRouter
 
+from hugegraph_llm.api.exceptions.rag_exceptions import generate_response
+from hugegraph_llm.api.models.rag_requests import RAGRequest, GraphConfigRequest, LLMConfigRequest
 from hugegraph_llm.api.models.rag_response import RAGResponse
 from hugegraph_llm.config import settings
-from hugegraph_llm.api.models.rag_requests import RAGRequest, GraphConfigRequest, LLMConfigRequest
-from hugegraph_llm.api.exceptions.rag_exceptions import generate_response
 
 
-def rag_http_api(app: FastAPI, rag_answer_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf):
-    @app.post("/rag", status_code=status.HTTP_200_OK)
+def rag_http_api(router: APIRouter, rag_answer_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf):
+    @router.post("/rag", status_code=status.HTTP_200_OK)
     def rag_answer_api(req: RAGRequest):
         result = rag_answer_func(req.query, req.raw_llm, req.vector_only, req.graph_only, req.graph_vector)
         return {
@@ -33,13 +33,13 @@ def rag_http_api(app: FastAPI, rag_answer_func, apply_graph_conf, apply_llm_conf
             if getattr(req, key)
         }
 
-    @app.post("/config/graph", status_code=status.HTTP_201_CREATED)
+    @router.post("/config/graph", status_code=status.HTTP_201_CREATED)
     def graph_config_api(req: GraphConfigRequest):
         # Accept status code
         res = apply_graph_conf(req.ip, req.port, req.name, req.user, req.pwd, req.gs, origin_call="http")
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
 
-    @app.post("/config/llm", status_code=status.HTTP_201_CREATED)
+    @router.post("/config/llm", status_code=status.HTTP_201_CREATED)
     def llm_config_api(req: LLMConfigRequest):
         settings.llm_type = req.llm_type
 
@@ -53,7 +53,7 @@ def rag_http_api(app: FastAPI, rag_answer_func, apply_graph_conf, apply_llm_conf
             res = apply_llm_conf(req.host, req.port, req.language_model, None, origin_call="http")
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
 
-    @app.post("/config/embedding", status_code=status.HTTP_201_CREATED)
+    @router.post("/config/embedding", status_code=status.HTTP_201_CREATED)
     def embedding_config_api(req: LLMConfigRequest):
         settings.embedding_type = req.llm_type
 

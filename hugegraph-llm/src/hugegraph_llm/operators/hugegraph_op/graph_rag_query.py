@@ -27,6 +27,11 @@ class GraphRAGQuery:
     VERTEX_GREMLIN_QUERY_TEMPL = (
         "g.V().hasId({keywords}).as('subj').toList()"
     )
+    # ID_RAG_GREMLIN_QUERY_TEMPL = "g.V().hasId({keywords}).as('subj').repeat(bothE({edge_labels}).as('rel').otherV(
+    # ).as('obj')).times({max_deep}).path().by(project('label', 'id', 'props').by(label()).by(id()).by(valueMap().by(
+    # unfold()))).by(project('label', 'inV', 'outV', 'props').by(label()).by(inV().id()).by(outV().id()).by(valueMap(
+    # ).by(unfold()))).limit({max_items}).toList()"
+
     # TODO: we could use a simpler query (like kneighbor-api to get the edges)
     ID_RAG_GREMLIN_QUERY_TEMPL = """
     g.V().hasId({keywords}).as('subj')
@@ -81,6 +86,7 @@ class GraphRAGQuery:
             settings.graph_name,
             settings.graph_user,
             settings.graph_pwd,
+            settings.graph_space,
         )
         self._max_deep = max_deep
         self._max_items = max_items
@@ -93,11 +99,12 @@ class GraphRAGQuery:
                 self._client = context["graph_client"]
             else:
                 ip = context.get("ip") or "localhost"
-                port = context.get("port") or 8080
+                port = context.get("port") or "8080"
                 graph = context.get("graph") or "hugegraph"
                 user = context.get("user") or "admin"
                 pwd = context.get("pwd") or "admin"
-                self._client = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd)
+                gs = context.get("graphspace") or None
+                self._client = PyHugeClient(ip, port, graph, user, pwd, gs)
         assert self._client is not None, "No valid graph to search."
 
         keywords = context.get("keywords")
