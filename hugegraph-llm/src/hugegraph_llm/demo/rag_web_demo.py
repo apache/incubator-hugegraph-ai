@@ -56,7 +56,7 @@ def rag_answer(
     if vector_search:
         searcher.query_vector_index_for_rag()
     if graph_search:
-        searcher.extract_word().match_keyword_to_id().query_graph_for_rag()
+        searcher.extract_keyword().match_keyword_to_id().query_graph_for_rag()
     searcher.merge_dedup_rerank().synthesize_answer(
         raw_answer=raw_answer,
         vector_only_answer=vector_only_answer,
@@ -351,7 +351,7 @@ def init_rag_ui() -> gr.Interface:
             embedding_config_button = gr.Button("apply configuration")
 
             # Call the separate apply_embedding_configuration function here
-            embedding_config_button.click(
+            embedding_config_button.click(  # pylint: disable=no-member
                 apply_embedding_config, inputs=embedding_config_input  # pylint: disable=no-member
             )
 
@@ -407,8 +407,10 @@ def init_rag_ui() -> gr.Interface:
 }"""
 
         with gr.Row():
-            input_file = gr.File(value=[os.path.join(resource_path, "demo", "test.txt")],
-                                 label="Document", file_count="multiple")
+            input_file = gr.File(
+                value=[os.path.join(resource_path, "demo", "test.txt")],
+                label="Document (You can add multiple files by clicking and selecting multiple files)",
+                file_count="multiple")
             input_schema = gr.Textbox(value=schema, label="Schema")
             info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head")
             with gr.Column():
