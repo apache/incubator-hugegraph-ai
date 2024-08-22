@@ -365,13 +365,13 @@ def init_rag_ui() -> gr.Interface:
             embedding_config_button = gr.Button("apply configuration")
 
             # Call the separate apply_embedding_configuration function here
-            embedding_config_button.click(
+            embedding_config_button.click(  # pylint: disable=no-member
                 apply_embedding_config, inputs=embedding_config_input  # pylint: disable=no-member
             )
 
         gr.Markdown(
             """## 1. Build vector/graph RAG (💡)
-- Document: Input document file which should be TXT or DOCX.
+- Doc(s): Upload document file(s) which should be TXT or DOCX. (Multiple files can be selected together)
 - Schema: Accepts two types of text as below:
     - User-defined JSON format Schema.
     - Specify the name of the HugeGraph graph instance, it will automatically get the schema from it.
@@ -421,8 +421,10 @@ def init_rag_ui() -> gr.Interface:
 }"""
 
         with gr.Row():
-            input_file = gr.File(value=[os.path.join(resource_path, "demo", "test.txt")],
-                                 label="Document", file_count="multiple")
+            input_file = gr.File(
+                value=[os.path.join(resource_path, "demo", "test.txt")],
+                label="Docs (multi-files can be selected together)",
+                file_count="multiple")
             input_schema = gr.Textbox(value=schema, label="Schema")
             info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head")
             with gr.Column():

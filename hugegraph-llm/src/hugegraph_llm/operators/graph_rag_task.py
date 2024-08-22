@@ -17,7 +17,7 @@
 
 
 import time
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Literal
 
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
@@ -52,9 +52,9 @@ class RAGPipeline:
         self._operators: List[Any] = []
 
     def extract_word(
-            self,
-            text: Optional[str] = None,
-            language: str = "english",
+        self,
+        text: Optional[str] = None,
+        language: str = "english",
     ):
         """
         Add a word extraction operator to the pipeline.
@@ -63,7 +63,12 @@ class RAGPipeline:
         :param language: Language of the text.
         :return: Self-instance for chaining.
         """
-        self._operators.append(WordExtract(text=text, language=language))
+        self._operators.append(
+            WordExtract(
+                text=text,
+                language=language,
+            )
+        )
         return self
 
     def extract_keyword(
@@ -95,7 +100,12 @@ class RAGPipeline:
         )
         return self
 
-    def match_keyword_to_id(self, topk_per_keyword: int = 1):
+    def match_keyword_to_id(
+            self,
+            by: Literal["query", "keywords"] = "keywords",
+            topk_per_keyword: int = 1,
+            topk_per_query: int = 10
+    ):
         """
         Add a semantic ID query operator to the pipeline.
 
@@ -105,7 +115,9 @@ class RAGPipeline:
         self._operators.append(
             SemanticIdQuery(
                 embedding=self._embedding,
-                topk_per_keyword=topk_per_keyword
+                by=by,
+                topk_per_keyword=topk_per_keyword,
+                topk_per_query=topk_per_query
             )
         )
         return self
