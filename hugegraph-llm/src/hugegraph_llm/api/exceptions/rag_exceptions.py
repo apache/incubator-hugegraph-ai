@@ -32,6 +32,6 @@ class ConnectionFailedException(HTTPException):
 def generate_response(response: RAGResponse) -> dict:
     if response.status_code == -1:
         raise ExternalException()
-    elif not (200 <= response.status_code < 300):
+    if not 200 <= response.status_code < 300:
         raise ConnectionFailedException(response.status_code, response.message)
     return {"message": "Connection successful. Configured finished."}

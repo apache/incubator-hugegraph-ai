@@ -17,7 +17,7 @@
 
 
 import time
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Literal
 
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
@@ -25,6 +25,7 @@ from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.operators.common_op.print_result import PrintResult
 from hugegraph_llm.operators.common_op.merge_dedup_rerank import MergeDedupRerank
+from hugegraph_llm.operators.document_op.word_extract import WordExtract
 from hugegraph_llm.operators.hugegraph_op.graph_rag_query import GraphRAGQuery
 from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
@@ -38,6 +39,19 @@ class GraphRAG:
         self._llm = llm or LLMs().get_llm()
         self._embedding = embedding or Embeddings().get_embedding()
         self._operators: List[Any] = []
+
+    def extract_word(
+        self,
+        text: Optional[str] = None,
+        language: str = "english",
+    ):
+        self._operators.append(
+            WordExtract(
+                text=text,
+                language=language,
+            )
+        )
+        return self
 
     def extract_keyword(
         self,
@@ -58,20 +72,27 @@ class GraphRAG:
         )
         return self
 
-    def match_keyword_to_id(self, topk_per_keyword: int = 1):
+    def match_keyword_to_id(
+            self,
+            by: Literal["query", "keywords"] = "keywords",
+            topk_per_keyword: int = 1,
+            topk_per_query: int = 10
+    ):
         self._operators.append(
             SemanticIdQuery(
                 embedding=self._embedding,
-                topk_per_keyword=topk_per_keyword
+                by=by,
+                topk_per_keyword=topk_per_keyword,
+                topk_per_query=topk_per_query
             )
         )
         return self
 
     def query_graph_for_rag(
-        self,
-        max_deep: int = 2,
-        max_items: int = 30,
-        prop_to_match: Optional[str] = None,
+            self,
+            max_deep: int = 2,
+            max_items: int = 30,
+            prop_to_match: Optional[str] = None,
     ):
         self._operators.append(
             GraphRAGQuery(

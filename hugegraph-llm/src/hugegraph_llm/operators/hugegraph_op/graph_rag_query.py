@@ -27,6 +27,11 @@ class GraphRAGQuery:
     VERTEX_GREMLIN_QUERY_TEMPL = (
         "g.V().hasId({keywords}).as('subj').toList()"
     )
+    # ID_RAG_GREMLIN_QUERY_TEMPL = "g.V().hasId({keywords}).as('subj').repeat(bothE({edge_labels}).as('rel').otherV(
+    # ).as('obj')).times({max_deep}).path().by(project('label', 'id', 'props').by(label()).by(id()).by(valueMap().by(
+    # unfold()))).by(project('label', 'inV', 'outV', 'props').by(label()).by(inV().id()).by(outV().id()).by(valueMap(
+    # ).by(unfold()))).limit({max_items}).toList()"
+
     # TODO: we could use a simpler query (like kneighbor-api to get the edges)
     ID_RAG_GREMLIN_QUERY_TEMPL = """
     g.V().hasId({keywords}).as('subj')
@@ -81,6 +86,7 @@ class GraphRAGQuery:
             settings.graph_name,
             settings.graph_user,
             settings.graph_pwd,
+            settings.graph_space,
         )
         self._max_deep = max_deep
         self._max_items = max_items
@@ -93,17 +99,16 @@ class GraphRAGQuery:
                 self._client = context["graph_client"]
             else:
                 ip = context.get("ip") or "localhost"
-                port = context.get("port") or 8080
+                port = context.get("port") or "8080"
                 graph = context.get("graph") or "hugegraph"
                 user = context.get("user") or "admin"
                 pwd = context.get("pwd") or "admin"
-                self._client = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd)
+                gs = context.get("graphspace") or None
+                self._client = PyHugeClient(ip, port, graph, user, pwd, gs)
         assert self._client is not None, "No valid graph to search."
 
         keywords = context.get("keywords")
-        assert keywords is not None, "No keywords for graph query."
         entrance_vids = context.get("entrance_vids")
-        assert entrance_vids is not None, "No entrance vertices for query."
 
         if isinstance(context.get("max_deep"), int):
             self._max_deep = context["max_deep"]
@@ -118,6 +123,7 @@ class GraphRAGQuery:
         use_id_to_match = self._prop_to_match is None
 
         if not use_id_to_match:
+            assert keywords is not None, "No keywords for graph query."
             keywords_str = ",".join("'" + kw + "'" for kw in keywords)
             rag_gremlin_query = self.PROP_RAG_GREMLIN_QUERY_TEMPL.format(
                 prop=self._prop_to_match,
@@ -129,6 +135,7 @@ class GraphRAGQuery:
             result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
             knowledge: Set[str] = self._format_knowledge_from_query_result(query_result=result)
         else:
+            assert entrance_vids is not None, "No entrance vertices for query."
             rag_gremlin_query = self.VERTEX_GREMLIN_QUERY_TEMPL.format(
                 keywords=entrance_vids,
             )

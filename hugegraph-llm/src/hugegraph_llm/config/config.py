@@ -66,11 +66,11 @@ class Config:
 
     """HugeGraph settings"""
     graph_ip: Optional[str] = "127.0.0.1"
-    graph_port: Optional[int] = 8080
-    graph_space: Optional[str] = None
+    graph_port: Optional[str] = "8080"
     graph_name: Optional[str] = "hugegraph"
     graph_user: Optional[str] = "admin"
     graph_pwd: Optional[str] = "xxx"
+    graph_space: Optional[str] = None
 
     def from_env(self):
         if os.path.exists(env_path):
