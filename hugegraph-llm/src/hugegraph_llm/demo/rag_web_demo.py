@@ -70,7 +70,7 @@ def rag_answer(
     if vector_search:
         searcher.query_vector_index_for_rag()
     if graph_search:
-        searcher.extract_word().match_keyword_to_id().query_graph_for_rag()
+        searcher.extract_keyword().match_keyword_to_id().query_graph_for_rag()
     # TODO: add more user-defined search strategies
     searcher.merge_dedup_rerank().synthesize_answer(
         raw_answer=raw_answer,
@@ -453,10 +453,10 @@ def init_rag_ui() -> gr.Interface:
                 vector_only_radio = gr.Radio(choices=[True, False], value=False, label="Vector-only Answer")
                 graph_only_radio = gr.Radio(choices=[True, False], value=False, label="Graph-only Answer")
                 graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
+                btn = gr.Button("Answer Question")
                 from hugegraph_llm.operators.llm_op.answer_synthesize import DEFAULT_ANSWER_TEMPLATE
                 answer_prompt_input = gr.Textbox(value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt",
                                                  show_copy_button=True)
-                btn = gr.Button("Answer Question")
         btn.click(  # pylint: disable=no-member
             fn=rag_answer,
             inputs=[

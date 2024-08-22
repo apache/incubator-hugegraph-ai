@@ -52,9 +52,9 @@ class RAGPipeline:
         self._operators: List[Any] = []
 
     def extract_word(
-        self,
-        text: Optional[str] = None,
-        language: str = "english",
+            self,
+            text: Optional[str] = None,
+            language: str = "english",
     ):
         """
         Add a word extraction operator to the pipeline.
@@ -169,10 +169,7 @@ class RAGPipeline:
 
         :return: Self-instance for chaining.
         """
-        self._operators.append(MergeDedupRerank(
-            embedding=self._embedding,
-        )
-        )
+        self._operators.append(MergeDedupRerank(embedding=self._embedding))
         return self
 
     def synthesize_answer(
