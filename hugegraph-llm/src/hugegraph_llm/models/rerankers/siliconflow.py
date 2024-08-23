@@ -1,0 +1,61 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+
+import requests
+from typing import Optional
+from hugegraph_llm.config import settings
+
+
+class SiliconReranker:
+    def __init__(
+        self,
+        api_key: str = settings.reranker_api_key,
+        model: str = settings.reranker_model,
+    ):
+        self.api_key = api_key
+        self.model = model
+
+    def get_rerank_lists(
+        self, query: str, documents: list[str], top_n: Optional[int] = None
+    ) -> list:
+        if not top_n:
+            top_n = len(documents)
+        assert top_n <= len(
+            documents
+        ), "'top_n' should be less than or equal to the number of documents"
+        
+        url = "https://api.siliconflow.cn/v1/rerank"
+        payload = {
+            "model": self.model,
+            "query": query,
+            "documents": documents,
+            "return_documents": False,
+            "max_chunks_per_doc": 1024,
+            "overlap_tokens": 80,
+            "top_n": top_n,
+        }
+        headers = {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "authorization": f"Bearer {self.api_key}",
+        }
+        response = requests.post(url, json=payload, headers=headers)
+        response.raise_for_status()  # Raise an error for bad status codes
+        results = response.json()["results"]
+        sorted_docs = [documents[item["index"]] for item in results]
+        return sorted_docs

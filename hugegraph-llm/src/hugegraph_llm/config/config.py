@@ -35,22 +35,27 @@ class Config:
     # env_path: Optional[str] = ".env"
     llm_type: Literal["openai", "ollama", "qianfan_wenxin", "zhipu"] = "openai"
     embedding_type: Optional[Literal["openai", "ollama", "qianfan_wenxin", "zhipu"]] = "openai"
+    reranker_type: Optional[Literal["cohere", "siliconflow"]] = "cohere"
     # 1. OpenAI settings
     openai_api_base: Optional[str] = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
     openai_api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
     openai_language_model: Optional[str] = "gpt-4o-mini"
     openai_embedding_model: Optional[str] = "text-embedding-3-small"
     openai_max_tokens: int = 4096
-    # 2. Ollama settings
+    # 2. Rerank settings
+    cohere_base_url: Optional[str] = os.environ.get("CO_API_URL", "https://api.cohere.com/v1/rerank")
+    reranker_api_key: Optional[str] = None
+    reranker_model: Optional[str] = "rerank-multilingual-v3.0"
+    # 3. Ollama settings
     ollama_host: Optional[str] = "127.0.0.1"
     ollama_port: Optional[int] = 11434
     ollama_language_model: Optional[str] = None
     ollama_embedding_model: Optional[str] = None
-    # 3. QianFan/WenXin settings
+    # 4. QianFan/WenXin settings
     qianfan_api_key: Optional[str] = None
     qianfan_secret_key: Optional[str] = None
     qianfan_access_token: Optional[str] = None
-    # 3.1 url settings
+    # 4.1 url settings
     qianfan_url_prefix: Optional[str] = (
         "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
     )
@@ -59,7 +64,7 @@ class Config:
     qianfan_embed_url: Optional[str] = qianfan_url_prefix + "/embeddings/"
     # https://cloud.baidu.com/doc/WENXINWORKSHOP/s/alj562vvu
     qianfan_embedding_model: Optional[str] = "embedding-v1"
-    # 4. ZhiPu(GLM) settings
+    # 5. ZhiPu(GLM) settings
     zhipu_api_key: Optional[str] = None
     zhipu_language_model: Optional[str] = "glm-4"
     zhipu_embedding_model: Optional[str] = "embedding-2"

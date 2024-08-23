@@ -39,7 +39,11 @@ from hugegraph_llm.operators.graph_rag_task import GraphRAG
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
-from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
+from hugegraph_llm.utils.hugegraph_utils import (
+    init_hg_test_data,
+    run_gremlin_query,
+    clean_hg_data,
+)
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index
 
@@ -50,6 +54,7 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
     correct_token = os.getenv("TOKEN")
     if credentials.credentials != correct_token:
         from fastapi import HTTPException
+
         raise HTTPException(
             status_code=401,
             detail=f"Invalid token {credentials.credentials}, please contact the admin",
@@ -58,7 +63,13 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
 
 
 def rag_answer(
-        text: str, raw_answer: bool, vector_only_answer: bool, graph_only_answer: bool, graph_vector_answer: bool
+    text: str,
+    raw_answer: bool,
+    vector_only_answer: bool,
+    graph_only_answer: bool,
+    graph_vector_answer: bool,
+    graph_ratio: float,
+    rerank_method: str,
 ) -> tuple:
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
@@ -71,7 +82,7 @@ def rag_answer(
         searcher.query_vector_index_for_rag()
     if graph_search:
         searcher.extract_keyword().match_keyword_to_id().query_graph_for_rag()
-    searcher.merge_dedup_rerank().synthesize_answer(
+    searcher.merge_dedup_rerank(graph_ratio, rerank_method).synthesize_answer(
         raw_answer=raw_answer,
         vector_only_answer=vector_only_answer,
         graph_only_answer=graph_only_answer,
@@ -79,7 +90,12 @@ def rag_answer(
     )
 
     try:
-        context = searcher.run(verbose=True, query=text)
+        context = searcher.run(
+            verbose=True,
+            query=text,
+            vector_search=vector_search,
+            graph_search=graph_search,
+        )
         return (
             context.get("raw_answer", ""),
             context.get("vector_only_answer", ""),
@@ -95,10 +111,10 @@ def rag_answer(
 
 
 def build_kg(  # pylint: disable=too-many-branches
-        files: Union[NamedString, List[NamedString]],
-        schema: str,
-        example_prompt: str,
-        build_mode: str
+    files: Union[NamedString, List[NamedString]],
+    schema: str,
+    example_prompt: str,
+    build_mode: str,
 ) -> str:
     if isinstance(files, NamedString):
         files = [files]
@@ -158,15 +174,20 @@ def build_kg(  # pylint: disable=too-many-branches
         raise gr.Error(str(e))
 
 
-def test_api_connection(url, method="GET",
-                        headers=None, params=None, body=None, auth=None, origin_call=None) -> int:
+def test_api_connection(
+    url, method="GET", headers=None, params=None, body=None, auth=None, origin_call=None
+) -> int:
     # TODO: use fastapi.request / starlette instead?
     log.debug("Request URL: %s", url)
     try:
         if method.upper() == "GET":
-            resp = requests.get(url, headers=headers, params=params, timeout=5, auth=auth)
+            resp = requests.get(
+                url, headers=headers, params=params, timeout=5, auth=auth
+            )
         elif method.upper() == "POST":
-            resp = requests.post(url, headers=headers, params=params, json=body, timeout=5, auth=auth)
+            resp = requests.post(
+                url, headers=headers, params=params, json=body, timeout=5, auth=auth
+            )
         else:
             raise ValueError("Unsupported HTTP method, please use GET/POST instead")
     except requests.exceptions.RequestException as e:
@@ -185,7 +206,10 @@ def test_api_connection(url, method="GET",
         log.error(msg)
         # TODO: Only the message returned by rag can be processed, and the other return values can't be processed
         if origin_call is None:
-            raise gr.Error(json.loads(resp.text).get("message", msg))
+            try:
+                raise gr.Error(json.loads(resp.text).get("message", msg))
+            except json.decoder.JSONDecodeError:
+                raise gr.Error(resp.text)
     return resp.status_code
 
 
@@ -196,10 +220,14 @@ def config_qianfan_model(arg1, arg2, arg3=None, origin_call=None) -> int:
     params = {
         "grant_type": "client_credentials",
         "client_id": arg1,
-        "client_secret": arg2
+        "client_secret": arg2,
     }
-    status_code = test_api_connection("https://aip.baidubce.com/oauth/2.0/token", "POST", params=params,
-                                      origin_call=origin_call)
+    status_code = test_api_connection(
+        "https://aip.baidubce.com/oauth/2.0/token",
+        "POST",
+        params=params,
+        origin_call=origin_call,
+    )
     return status_code
 
 
@@ -212,7 +240,9 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
         settings.openai_embedding_model = arg3
         test_url = settings.openai_api_base + "/models"
         headers = {"Authorization": f"Bearer {arg1}"}
-        status_code = test_api_connection(test_url, headers=headers, origin_call=origin_call)
+        status_code = test_api_connection(
+            test_url, headers=headers, origin_call=origin_call
+        )
     elif embedding_option == "qianfan_wenxin":
         status_code = config_qianfan_model(arg1, arg2, origin_call=origin_call)
         settings.qianfan_embedding_model = arg3
@@ -220,7 +250,40 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
         settings.ollama_host = arg1
         settings.ollama_port = int(arg2)
         settings.ollama_embedding_model = arg3
-        status_code = test_api_connection(f"http://{arg1}:{arg2}", origin_call=origin_call)
+        status_code = test_api_connection(
+            f"http://{arg1}:{arg2}", origin_call=origin_call
+        )
+    settings.update_env()
+    gr.Info("Configured!")
+    return status_code
+
+
+def apply_reranker_config(arg1, arg2, arg3: str | None = None, origin_call=None) -> int:
+    status_code = -1
+    reranker_option = settings.reranker_type
+    if reranker_option == "cohere":
+        settings.reranker_api_key = arg1
+        settings.reranker_model = arg2
+        settings.cohere_base_url = arg3
+        headers = {"Authorization": f"Bearer {arg1}"}
+        status_code = test_api_connection(
+            arg3.rsplit("/", 1)[0] + "/check-api-key",
+            method="POST",
+            headers=headers,
+            origin_call=origin_call,
+        )
+    elif reranker_option == "siliconflow":
+        settings.reranker_api_key = arg1
+        settings.reranker_model = arg2
+        headers = {
+            "accept": "application/json",
+            "authorization": f"Bearer {arg1}",
+        }
+        status_code = test_api_connection(
+            "https://api.siliconflow.cn/v1/user/info",
+            headers=headers,
+            origin_call=origin_call,
+        )
     settings.update_env()
     gr.Info("Configured!")
     return status_code
@@ -257,23 +320,29 @@ def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
         settings.openai_max_tokens = int(arg4)
         test_url = settings.openai_api_base + "/models"
         headers = {"Authorization": f"Bearer {arg1}"}
-        status_code = test_api_connection(test_url, headers=headers, origin_call=origin_call)
+        status_code = test_api_connection(
+            test_url, headers=headers, origin_call=origin_call
+        )
     elif llm_option == "qianfan_wenxin":
         status_code = config_qianfan_model(arg1, arg2, arg3, origin_call)
     elif llm_option == "ollama":
         settings.ollama_host = arg1
         settings.ollama_port = int(arg2)
         settings.ollama_language_model = arg3
-        status_code = test_api_connection(f"http://{arg1}:{arg2}", origin_call=origin_call)
+        status_code = test_api_connection(
+            f"http://{arg1}:{arg2}", origin_call=origin_call
+        )
     gr.Info("Configured!")
     settings.update_env()
     return status_code
 
 
 def init_rag_ui() -> gr.Interface:
-    with gr.Blocks(theme='default',
-                   title="HugeGraph RAG Platform",
-                   css="footer {visibility: hidden}") as hugegraph_llm_ui:
+    with gr.Blocks(
+        theme="default",
+        title="HugeGraph RAG Platform",
+        css="footer {visibility: hidden}",
+    ) as hugegraph_llm_ui:
         gr.Markdown(
             """# HugeGraph LLM RAG Demo
         1. Set up the HugeGraph server."""
@@ -289,10 +358,16 @@ def init_rag_ui() -> gr.Interface:
             ]
         graph_config_button = gr.Button("apply configuration")
 
-        graph_config_button.click(apply_graph_config, inputs=graph_config_input)  # pylint: disable=no-member
+        graph_config_button.click(
+            apply_graph_config, inputs=graph_config_input
+        )  # pylint: disable=no-member
 
         gr.Markdown("2. Set up the LLM.")
-        llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama"], value=settings.llm_type, label="LLM")
+        llm_dropdown = gr.Dropdown(
+            choices=["openai", "qianfan_wenxin", "ollama"],
+            value=settings.llm_type,
+            label="LLM",
+        )
 
         @gr.render(inputs=[llm_dropdown])
         def llm_settings(llm_type):
@@ -300,9 +375,15 @@ def init_rag_ui() -> gr.Interface:
             if llm_type == "openai":
                 with gr.Row():
                     llm_config_input = [
-                        gr.Textbox(value=settings.openai_api_key, label="api_key", type="password"),
+                        gr.Textbox(
+                            value=settings.openai_api_key,
+                            label="api_key",
+                            type="password",
+                        ),
                         gr.Textbox(value=settings.openai_api_base, label="api_base"),
-                        gr.Textbox(value=settings.openai_language_model, label="model_name"),
+                        gr.Textbox(
+                            value=settings.openai_language_model, label="model_name"
+                        ),
                         gr.Textbox(value=settings.openai_max_tokens, label="max_token"),
                     ]
             elif llm_type == "ollama":
@@ -310,15 +391,27 @@ def init_rag_ui() -> gr.Interface:
                     llm_config_input = [
                         gr.Textbox(value=settings.ollama_host, label="host"),
                         gr.Textbox(value=str(settings.ollama_port), label="port"),
-                        gr.Textbox(value=settings.ollama_language_model, label="model_name"),
+                        gr.Textbox(
+                            value=settings.ollama_language_model, label="model_name"
+                        ),
                         gr.Textbox(value="", visible=False),
                     ]
             elif llm_type == "qianfan_wenxin":
                 with gr.Row():
                     llm_config_input = [
-                        gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
-                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
-                        gr.Textbox(value=settings.qianfan_language_model, label="model_name"),
+                        gr.Textbox(
+                            value=settings.qianfan_api_key,
+                            label="api_key",
+                            type="password",
+                        ),
+                        gr.Textbox(
+                            value=settings.qianfan_secret_key,
+                            label="secret_key",
+                            type="password",
+                        ),
+                        gr.Textbox(
+                            value=settings.qianfan_language_model, label="model_name"
+                        ),
                         gr.Textbox(value="", visible=False),
                     ]
                 log.debug(llm_config_input)
@@ -326,11 +419,15 @@ def init_rag_ui() -> gr.Interface:
                 llm_config_input = []
             llm_config_button = gr.Button("apply configuration")
 
-            llm_config_button.click(apply_llm_config, inputs=llm_config_input)  # pylint: disable=no-member
+            llm_config_button.click(
+                apply_llm_config, inputs=llm_config_input
+            )  # pylint: disable=no-member
 
         gr.Markdown("3. Set up the Embedding.")
         embedding_dropdown = gr.Dropdown(
-            choices=["openai", "qianfan_wenxin", "ollama"], value=settings.embedding_type, label="Embedding"
+            choices=["openai", "qianfan_wenxin", "ollama"],
+            value=settings.embedding_type,
+            label="Embedding",
         )
 
         @gr.render(inputs=[embedding_dropdown])
@@ -339,23 +436,41 @@ def init_rag_ui() -> gr.Interface:
             if embedding_type == "openai":
                 with gr.Row():
                     embedding_config_input = [
-                        gr.Textbox(value=settings.openai_api_key, label="api_key", type="password"),
+                        gr.Textbox(
+                            value=settings.openai_api_key,
+                            label="api_key",
+                            type="password",
+                        ),
                         gr.Textbox(value=settings.openai_api_base, label="api_base"),
-                        gr.Textbox(value=settings.openai_embedding_model, label="model_name"),
+                        gr.Textbox(
+                            value=settings.openai_embedding_model, label="model_name"
+                        ),
                     ]
             elif embedding_type == "qianfan_wenxin":
                 with gr.Row():
                     embedding_config_input = [
-                        gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
-                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
-                        gr.Textbox(value=settings.qianfan_embedding_model, label="model_name"),
+                        gr.Textbox(
+                            value=settings.qianfan_api_key,
+                            label="api_key",
+                            type="password",
+                        ),
+                        gr.Textbox(
+                            value=settings.qianfan_secret_key,
+                            label="secret_key",
+                            type="password",
+                        ),
+                        gr.Textbox(
+                            value=settings.qianfan_embedding_model, label="model_name"
+                        ),
                     ]
             elif embedding_type == "ollama":
                 with gr.Row():
                     embedding_config_input = [
                         gr.Textbox(value=settings.ollama_host, label="host"),
                         gr.Textbox(value=str(settings.ollama_port), label="port"),
-                        gr.Textbox(value=settings.ollama_embedding_model, label="model_name"),
+                        gr.Textbox(
+                            value=settings.ollama_embedding_model, label="model_name"
+                        ),
                     ]
             else:
                 embedding_config_input = []
@@ -364,7 +479,54 @@ def init_rag_ui() -> gr.Interface:
 
             # Call the separate apply_embedding_configuration function here
             embedding_config_button.click(  # pylint: disable=no-member
-                apply_embedding_config, inputs=embedding_config_input  # pylint: disable=no-member
+                apply_embedding_config,
+                inputs=embedding_config_input,  # pylint: disable=no-member
+            )
+
+        gr.Markdown("4. Set up the Reranker(Optional).")
+        reranker_dropdown = gr.Dropdown(
+            choices=["cohere", "siliconflow"],
+            value=settings.reranker_type,
+            label="Reranker",
+        )
+
+        @gr.render(inputs=[reranker_dropdown])
+        def reranker_settings(reranker_type):
+            settings.reranker_type = reranker_type
+            if reranker_type == "cohere":
+                with gr.Row():
+                    reranker_config_input = [
+                        gr.Textbox(
+                            value=settings.reranker_api_key,
+                            label="api_key",
+                            type="password",
+                        ),
+                        gr.Textbox(value=settings.reranker_model, label="model"),
+                        gr.Textbox(value=settings.cohere_base_url, label="base_url"),
+                    ]
+            elif reranker_type == "siliconflow":
+                with gr.Row():
+                    reranker_config_input = [
+                        gr.Textbox(
+                            value=settings.reranker_api_key,
+                            label="api_key",
+                            type="password",
+                        ),
+                        gr.Textbox(
+                            value="BAAI/bge-reranker-v2-m3",
+                            label="model",
+                            info="Please refer to https://siliconflow.cn/pricing",
+                        ),
+                    ]
+            else:
+                reranker_config_input = []
+
+            reranker_config_button = gr.Button("apply configuration")
+
+            # Call the separate apply_reranker_configuration function here
+            reranker_config_button.click(  # pylint: disable=no-member
+                apply_reranker_config,
+                inputs=reranker_config_input,  # pylint: disable=no-member
             )
 
         gr.Markdown(
@@ -422,12 +584,20 @@ def init_rag_ui() -> gr.Interface:
             input_file = gr.File(
                 value=[os.path.join(resource_path, "demo", "test.txt")],
                 label="Doc(s) (multi-files can be selected together)",
-                file_count="multiple")
+                file_count="multiple",
+            )
             input_schema = gr.Textbox(value=schema, label="Schema")
-            info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head")
+            info_extract_template = gr.Textbox(
+                value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head"
+            )
             with gr.Column():
                 mode = gr.Radio(
-                    choices=["Test Mode", "Import Mode", "Clear and Import", "Rebuild Vector"],
+                    choices=[
+                        "Test Mode",
+                        "Import Mode",
+                        "Clear and Import",
+                        "Rebuild Vector",
+                    ],
                     value="Test Mode",
                     label="Build mode",
                 )
@@ -435,22 +605,71 @@ def init_rag_ui() -> gr.Interface:
         with gr.Row():
             out = gr.Textbox(label="Output", show_copy_button=True)
         btn.click(  # pylint: disable=no-member
-            fn=build_kg, inputs=[input_file, input_schema, info_extract_template, mode], outputs=out
+            fn=build_kg,
+            inputs=[input_file, input_schema, info_extract_template, mode],
+            outputs=out,
         )
 
         gr.Markdown("""## 2. RAG with HugeGraph 📖""")
         with gr.Row():
             with gr.Column(scale=2):
-                inp = gr.Textbox(value="Tell me about Sarah.", label="Question", show_copy_button=True)
+                inp = gr.Textbox(
+                    value="Tell me about Sarah.",
+                    label="Question",
+                    show_copy_button=True,
+                )
                 raw_out = gr.Textbox(label="Basic LLM Answer", show_copy_button=True)
-                vector_only_out = gr.Textbox(label="Vector-only Answer", show_copy_button=True)
-                graph_only_out = gr.Textbox(label="Graph-only Answer", show_copy_button=True)
-                graph_vector_out = gr.Textbox(label="Graph-Vector Answer", show_copy_button=True)
+                vector_only_out = gr.Textbox(
+                    label="Vector-only Answer", show_copy_button=True
+                )
+                graph_only_out = gr.Textbox(
+                    label="Graph-only Answer", show_copy_button=True
+                )
+                graph_vector_out = gr.Textbox(
+                    label="Graph-Vector Answer", show_copy_button=True
+                )
             with gr.Column(scale=1):
-                raw_radio = gr.Radio(choices=[True, False], value=True, label="Basic LLM Answer")
-                vector_only_radio = gr.Radio(choices=[True, False], value=False, label="Vector-only Answer")
-                graph_only_radio = gr.Radio(choices=[True, False], value=False, label="Graph-only Answer")
-                graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
+                raw_radio = gr.Radio(
+                    choices=[True, False], value=True, label="Basic LLM Answer"
+                )
+                vector_only_radio = gr.Radio(
+                    choices=[True, False], value=False, label="Vector-only Answer"
+                )
+                graph_only_radio = gr.Radio(
+                    choices=[True, False], value=False, label="Graph-only Answer"
+                )
+                with gr.Row():
+
+                    def toggle_slider(enable):
+                        return gr.update(interactive=enable)
+
+                    graph_vector_radio = gr.Radio(
+                        choices=[True, False], value=False, label="Graph-Vector Answer"
+                    )
+                    graph_ratio = gr.Slider(
+                        0,
+                        1,
+                        0.5,
+                        label="Graph Ratio",
+                        step=0.1,
+                        interactive=False,
+                    )
+                    graph_vector_radio.change(
+                        toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio
+                    )
+                with gr.Column():
+                    rerank_method = gr.Dropdown(
+                        choices=["bleu", "reranker"],
+                        value="bleu",
+                        label="Rerank method",
+                    )
+                    graph_strategy = gr.Checkbox(
+                        value=False, label="Near neighbor first(Optional)", info="One-depth neighbors > two-depth neighbors"
+                    )
+                    custom_related_information = gr.Text(
+                        "",
+                        label="Custom related information(Optional)",
+                    )
                 btn = gr.Button("Answer Question")
         btn.click(  # pylint: disable=no-member
             fn=rag_answer,
@@ -460,6 +679,8 @@ def init_rag_ui() -> gr.Interface:
                 vector_only_radio,
                 graph_only_radio,
                 graph_vector_radio,
+                graph_ratio,
+                rerank_method,
             ],
             outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
         )
@@ -467,17 +688,25 @@ def init_rag_ui() -> gr.Interface:
         gr.Markdown("""## 3. Others (🚧) """)
         with gr.Row():
             with gr.Column():
-                inp = gr.Textbox(value="g.V().limit(10)", label="Gremlin query", show_copy_button=True)
+                inp = gr.Textbox(
+                    value="g.V().limit(10)",
+                    label="Gremlin query",
+                    show_copy_button=True,
+                )
                 fmt = gr.Checkbox(label="Format JSON", value=True)
             out = gr.Textbox(label="Output", show_copy_button=True)
         btn = gr.Button("Run gremlin query on HugeGraph")
-        btn.click(fn=run_gremlin_query, inputs=[inp, fmt], outputs=out)  # pylint: disable=no-member
+        btn.click(
+            fn=run_gremlin_query, inputs=[inp, fmt], outputs=out
+        )  # pylint: disable=no-member
 
         with gr.Row():
             inp = []
             out = gr.Textbox(label="Output", show_copy_button=True)
         btn = gr.Button("(BETA) Init HugeGraph test data (🚧WIP)")
-        btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
+        btn.click(
+            fn=init_hg_test_data, inputs=inp, outputs=out
+        )  # pylint: disable=no-member
     return hugegraph_llm_ui
 
 
@@ -490,13 +719,25 @@ if __name__ == "__main__":
     app_auth = APIRouter(dependencies=[Depends(authenticate)])
 
     hugegraph_llm = init_rag_ui()
-    rag_http_api(app_auth, rag_answer, apply_graph_config, apply_llm_config, apply_embedding_config)
+    rag_http_api(
+        app_auth,
+        rag_answer,
+        apply_graph_config,
+        apply_llm_config,
+        apply_embedding_config,
+        apply_reranker_config,
+    )
 
     app.include_router(app_auth)
     auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
     log.info("Authentication is %s.", "enabled" if auth_enabled else "disabled")
     # TODO: support multi-user login when need
-    app = gr.mount_gradio_app(app, hugegraph_llm, path="/", auth=("rag", os.getenv("TOKEN")) if auth_enabled else None)
+    app = gr.mount_gradio_app(
+        app,
+        hugegraph_llm,
+        path="/",
+        auth=("rag", os.getenv("TOKEN")) if auth_enabled else None,
+    )
 
     # Note: set reload to False in production environment
     uvicorn.run(app, host=args.host, port=args.port)

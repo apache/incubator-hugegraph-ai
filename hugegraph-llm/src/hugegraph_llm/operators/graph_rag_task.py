@@ -35,7 +35,9 @@ from hugegraph_llm.utils.log import log
 
 
 class GraphRAG:
-    def __init__(self, llm: Optional[BaseLLM] = None, embedding: Optional[BaseEmbedding] = None):
+    def __init__(
+        self, llm: Optional[BaseLLM] = None, embedding: Optional[BaseEmbedding] = None
+    ):
         self._llm = llm or LLMs().get_llm()
         self._embedding = embedding or Embeddings().get_embedding()
         self._operators: List[Any] = []
@@ -73,26 +75,26 @@ class GraphRAG:
         return self
 
     def match_keyword_to_id(
-            self,
-            by: Literal["query", "keywords"] = "keywords",
-            topk_per_keyword: int = 1,
-            topk_per_query: int = 10
+        self,
+        by: Literal["query", "keywords"] = "keywords",
+        topk_per_keyword: int = 1,
+        topk_per_query: int = 10,
     ):
         self._operators.append(
             SemanticIdQuery(
                 embedding=self._embedding,
                 by=by,
                 topk_per_keyword=topk_per_keyword,
-                topk_per_query=topk_per_query
+                topk_per_query=topk_per_query,
             )
         )
         return self
 
     def query_graph_for_rag(
-            self,
-            max_deep: int = 2,
-            max_items: int = 30,
-            prop_to_match: Optional[str] = None,
+        self,
+        max_deep: int = 2,
+        max_items: int = 30,
+        prop_to_match: Optional[str] = None,
     ):
         self._operators.append(
             GraphRAGQuery(
@@ -103,10 +105,7 @@ class GraphRAG:
         )
         return self
 
-    def query_vector_index_for_rag(
-            self,
-            max_items: int = 3
-    ):
+    def query_vector_index_for_rag(self, max_items: int = 3):
         self._operators.append(
             VectorIndexQuery(
                 embedding=self._embedding,
@@ -115,11 +114,13 @@ class GraphRAG:
         )
         return self
 
-    def merge_dedup_rerank(self):
+    def merge_dedup_rerank(
+        self,
+        graph_ratio: float = 0.5,
+        rerank_method: Literal["bleu", "reranker"] = "bleu",
+    ):
         self._operators.append(
-            MergeDedupRerank(
-                embedding=self._embedding,
-            )
+            MergeDedupRerank(embedding=self._embedding, graph_ratio=graph_ratio, method=rerank_method)
         )
         return self
 
@@ -133,10 +134,10 @@ class GraphRAG:
     ):
         self._operators.append(
             AnswerSynthesize(
-                raw_answer = raw_answer,
-                vector_only_answer = vector_only_answer,
-                graph_only_answer = graph_only_answer,
-                graph_vector_answer = graph_vector_answer,
+                raw_answer=raw_answer,
+                vector_only_answer=vector_only_answer,
+                graph_only_answer=graph_only_answer,
+                graph_vector_answer=graph_vector_answer,
                 prompt_template=prompt_template,
             )
         )
@@ -156,7 +157,10 @@ class GraphRAG:
             log.debug("Running operator: %s", operator.__class__.__name__)
             start = time.time()
             context = operator.run(context)
-            log.debug("Operator %s finished in %s seconds", operator.__class__.__name__,
-                      time.time() - start)
+            log.debug(
+                "Operator %s finished in %s seconds",
+                operator.__class__.__name__,
+                time.time() - start,
+            )
             log.debug("Context:\n%s", context)
         return context

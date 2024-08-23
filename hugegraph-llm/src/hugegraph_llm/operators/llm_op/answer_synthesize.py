@@ -29,9 +29,8 @@ DEFAULT_ANSWER_SYNTHESIZE_TEMPLATE_TMPL = (
     "{context_str}\n"
     "---------------------\n"
     "You need to refer to the context based on the following priority:\n"
-    "1. Graph recall > vector recall\n"
-    "2. Exact recall > Fuzzy recall\n"
-    "3. Independent vertex > 1-depth neighbor> 2-depth neighbors\n"
+    "1. Exact recall > Fuzzy recall\n"
+    "2. Independent vertex > 1-depth neighbor> 2-depth neighbors\n"
     "Given the context information and not prior knowledge, answer the query.\n"
     "Query: {query_str}\n"
     "Answer: "
@@ -138,6 +137,8 @@ class AnswerSynthesize:
             task_cache["graph_only_task"] = asyncio.create_task(self._llm.agenerate(prompt=prompt))
         if self._graph_vector_answer:
             context_body_str = f"{vector_result_context}\n{graph_result_context}"
+            if context.get("graph_ratio", 0.5) < 0.5:
+                context_body_str = f"{graph_result_context}\n{vector_result_context}"
             context_str = (f"{context_head_str}\n"
                            f"{context_body_str}\n"
                            f"{context_tail_str}".strip("\n"))

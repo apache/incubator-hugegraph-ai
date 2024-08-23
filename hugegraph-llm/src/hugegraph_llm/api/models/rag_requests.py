@@ -51,3 +51,15 @@ class LLMConfigRequest(BaseModel):
     # ollama-only properties
     host: str = None
     port: str = None
+
+class EmbeddingConfigRequest(BaseModel):
+    llm_type: str
+    # The common parameters shared by OpenAI, Qianfan Wenxin,
+    # and OLLAMA platforms.
+    api_key: str
+
+class RerankerConfigRequest(BaseModel):
+    reranker_model: str
+    reranker_type: str
+    api_key: str
+    api_base: str

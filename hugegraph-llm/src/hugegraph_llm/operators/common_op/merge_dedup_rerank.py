@@ -16,14 +16,15 @@
 # under the License.
 
 
-from typing import Dict, Any, List, Literal
+from typing import Literal, Dict, Any, List, Optional
 
 import jieba
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from hugegraph_llm.models.rerankers.init_reranker import Rerankers
 from nltk.translate.bleu_score import sentence_bleu
 
 
-def get_score(query: str, content: str) -> float:
+def get_blue_score(query: str, content: str) -> float:
     query_tokens = jieba.lcut(query)
     content_tokens = jieba.lcut(content)
     return sentence_bleu([query_tokens], content_tokens)
@@ -31,44 +32,51 @@ def get_score(query: str, content: str) -> float:
 
 class MergeDedupRerank:
     def __init__(
-            self,
-            embedding: BaseEmbedding,
-            topk: int = 10,
-            policy: Literal["bleu", "priority"] = "bleu"
+        self,
+        embedding: BaseEmbedding,
+        topk: int = 20,
+        graph_ratio: float = 0.5,
+        method: Literal["bleu", "reranker"] = "bleu",
+        prior_vertex: Optional[str] = None,
     ):
         self.embedding = embedding
+        self.graph_ratio = graph_ratio
         self.topk = topk
-        if policy == "bleu":
-            self.rerank_func = self._bleu_rerank
-        elif policy == "priority":
-            self.rerank_func = self._priority_rerank
-        else:
-            raise ValueError(f"Unimplemented policy {policy}.")
+        self.method = method
+        self.priority_vertex = prior_vertex
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context.get("query")
+        context["graph_ratio"] = self.graph_ratio
+        vector_search = context.get("vector_search", False)
+        graph_search = context.get("graph_search", False)
+        if graph_search and vector_search:
+            graph_length = int(self.topk * self.graph_ratio)
+            vector_length = self.topk - graph_length
+        else:
+            graph_length = self.topk
+            vector_length = self.topk
+        print(f"graph length {graph_length}")
 
         vector_result = context.get("vector_result", [])
-        vector_result = self.rerank_func(query, vector_result)[:self.topk]
+        vector_length = min(len(vector_result), vector_length)
+        vector_result = self._dedup_and_rerank(query, vector_result, vector_length)
 
         graph_result = context.get("graph_result", [])
-        graph_result = self.rerank_func(query, graph_result)[:self.topk]
+        graph_length = min(len(graph_result), graph_length)
+        graph_result = self._dedup_and_rerank(query, graph_result, graph_length)
 
         context["vector_result"] = vector_result
         context["graph_result"] = graph_result
 
         return context
 
-    def _bleu_rerank(self, query: str, results: List[str]):
+    def _dedup_and_rerank(self, query: str, results: List[str], topn: int) -> List[str]:
         results = list(set(results))
-        result_score_list = [[res, get_score(query, res)] for res in results]
-        result_score_list.sort(key=lambda x: x[1], reverse=True)
-        return [res[0] for res in result_score_list]
-
-    def _priority_rerank(self, query: str, results: List[str]):
-        # TODO: implement
-        # 1. Precise recall > Fuzzy recall
-        # 2. 1-degree neighbors > 2-degree neighbors
-        # 3. The priority of a certain type of point is higher than others,
-        # such as Law being higher than vehicles/people/locations
-        raise NotImplementedError()
+        if self.method == "bleu":
+            result_score_list = [[res, get_blue_score(query, res)] for res in results]
+            result_score_list.sort(key=lambda x: x[1], reverse=True)
+            return [res[0] for res in result_score_list][:topn]
+        if self.method == "reranker":
+            reranker = Rerankers().get_reranker()
+            return reranker.get_rerank_lists(query, results, topn)
