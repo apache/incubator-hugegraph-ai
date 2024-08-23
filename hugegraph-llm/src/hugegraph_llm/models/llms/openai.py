@@ -24,6 +24,7 @@ from retry import retry
 
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
+from hugegraph_llm.utils.tls import local_var
 
 
 class OpenAIChat(BaseLLM):
@@ -60,6 +61,10 @@ class OpenAIChat(BaseLLM):
                 max_tokens=self.max_tokens,
                 messages=messages,
             )
+            if hasattr(local_var, 'cost'):
+                usage = completions.usage
+                local_var.cost['token'] += usage.total_tokens
+                local_var.cost['call'] += 1
             return completions.choices[0].message.content
         # catch context length / do not retry
         except openai.error.InvalidRequestError as e:
@@ -90,6 +95,10 @@ class OpenAIChat(BaseLLM):
                 max_tokens=self.max_tokens,
                 messages=messages,
             )
+            if hasattr(local_var, 'cost'):
+                usage = completions.usage
+                local_var.cost['token'] += usage.total_tokens
+                local_var.cost['call'] += 1
             return completions.choices[0].message.content
         # catch context length / do not retry
         except openai.error.InvalidRequestError as e:

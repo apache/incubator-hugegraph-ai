@@ -42,6 +42,7 @@ from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index
+from hugegraph_llm.utils.tls import local_var
 
 sec = HTTPBearer()
 
@@ -60,6 +61,10 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
 def rag_answer(
         text: str, raw_answer: bool, vector_only_answer: bool, graph_only_answer: bool, graph_vector_answer: bool
 ) -> tuple:
+    local_var.cost = {
+        'token': 0,
+        'call': 0,
+    }
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
 
@@ -80,6 +85,7 @@ def rag_answer(
 
     try:
         context = searcher.run(verbose=True, query=text)
+        print(local_var.cost)
         return (
             context.get("raw_answer", ""),
             context.get("vector_only_answer", ""),
