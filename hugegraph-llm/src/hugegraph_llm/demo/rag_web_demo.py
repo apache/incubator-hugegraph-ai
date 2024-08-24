@@ -35,7 +35,7 @@ from hugegraph_llm.config import settings, resource_path
 from hugegraph_llm.enums.build_mode import BuildMode
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.init_llm import LLMs
-from hugegraph_llm.operators.graph_rag_task import GraphRAG
+from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
@@ -58,24 +58,26 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
 
 
 def rag_answer(
-        text: str, raw_answer: bool, vector_only_answer: bool, graph_only_answer: bool, graph_vector_answer: bool
-) -> tuple:
+        text: str, raw_answer: bool, vector_only_answer: bool, graph_only_answer: bool,
+         graph_vector_answer: bool, answer_prompt: str) -> tuple:
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
 
     if raw_answer is False and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
         return "", "", "", ""
-    searcher = GraphRAG()
+    searcher = RAGPipeline()
     if vector_search:
         searcher.query_vector_index_for_rag()
     if graph_search:
         searcher.extract_keyword().match_keyword_to_id().query_graph_for_rag()
+    # TODO: add more user-defined search strategies
     searcher.merge_dedup_rerank().synthesize_answer(
         raw_answer=raw_answer,
         vector_only_answer=vector_only_answer,
         graph_only_answer=graph_only_answer,
         graph_vector_answer=graph_vector_answer,
+        answer_prompt=answer_prompt
     )
 
     try:
@@ -421,7 +423,7 @@ def init_rag_ui() -> gr.Interface:
         with gr.Row():
             input_file = gr.File(
                 value=[os.path.join(resource_path, "demo", "test.txt")],
-                label="Doc(s) (multi-files can be selected together)",
+                label="Docs (multi-files can be selected together)",
                 file_count="multiple")
             input_schema = gr.Textbox(value=schema, label="Schema")
             info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head")
@@ -452,6 +454,9 @@ def init_rag_ui() -> gr.Interface:
                 graph_only_radio = gr.Radio(choices=[True, False], value=False, label="Graph-only Answer")
                 graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
                 btn = gr.Button("Answer Question")
+                from hugegraph_llm.operators.llm_op.answer_synthesize import DEFAULT_ANSWER_TEMPLATE
+                answer_prompt_input = gr.Textbox(value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt",
+                                                 show_copy_button=True)
         btn.click(  # pylint: disable=no-member
             fn=rag_answer,
             inputs=[
@@ -460,6 +465,7 @@ def init_rag_ui() -> gr.Interface:
                 vector_only_radio,
                 graph_only_radio,
                 graph_vector_radio,
+                answer_prompt_input,
             ],
             outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
         )
@@ -498,7 +504,6 @@ if __name__ == "__main__":
     # TODO: support multi-user login when need
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/", auth=("rag", os.getenv("TOKEN")) if auth_enabled else None)
 
-    # Note: set reload to False in production environment
-    uvicorn.run(app, host=args.host, port=args.port)
     # TODO: we can't use reload now due to the config 'app' of uvicorn.run
-    # uvicorn.run("rag_web_demo:app", host="0.0.0.0", port=8001, reload=True)
+    # ❎:f'{__name__}:app' / rag_web_demo:app / hugegraph_llm.demo.rag_web_demo:app
+    uvicorn.run(app, host=args.host, port=args.port, reload=False)
