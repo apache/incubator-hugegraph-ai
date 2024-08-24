@@ -99,8 +99,10 @@ class AnswerSynthesize:
             graph_result_context = "There are no knowledge from HugeGraph related to the query."
         else:
             graph_result_context = (
-                    "The following are knowledge from HugeGraph related to the query:\n"
-                    + "\n".join([f"{i + 1}. {res}"
+                    context.get(
+                        "graph_context_head", 
+                        "The following are knowledge from HugeGraph related to the query:\n"
+                    ) + "\n".join([f"{i + 1}. {res}"
                                  for i, res in enumerate(graph_result)]))
         context = asyncio.run(self.async_generate(context, context_head_str, context_tail_str,
                                                   vector_result_context, graph_result_context))

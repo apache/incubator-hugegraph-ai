@@ -151,7 +151,7 @@ class GraphRAGQuery:
             knowledge.update(self._format_knowledge_from_query_result(query_result=result))
 
         context["graph_result"] = list(knowledge)
-        context["synthesize_context_head"] = (
+        context["graph_context_head"] = (
             f"The following are knowledge sequence in max depth {self._max_deep} "
             f"in the form of directed graph like:\n"
             "`subject -[predicate]-> object <-[predicate_next_hop]- object_next_hop ...` "
