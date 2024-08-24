@@ -19,6 +19,7 @@
 import os
 from typing import Any, Dict
 
+from tqdm import tqdm
 from hugegraph_llm.config import resource_path, settings
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.indices.vector_index import VectorIndex
@@ -36,7 +37,7 @@ class BuildSemanticIndex:
             log.debug("Building vector index for %s vertices...", len(context["vertices"]))
             vids = []
             vids_embedding = []
-            for vertex in context["vertices"]:
+            for vertex in tqdm(context["vertices"]):
                 vertex_text = f"{vertex['label']}\n{vertex['properties']}"
                 vids_embedding.append(self.embedding.get_text_embedding(vertex_text))
                 vids.append(vertex["id"])
