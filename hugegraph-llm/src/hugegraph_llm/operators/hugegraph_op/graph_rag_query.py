@@ -155,7 +155,7 @@ class GraphRAGQuery:
             f"The following are knowledge sequence in max depth {self._max_deep} "
             f"in the form of directed graph like:\n"
             "`subject -[predicate]-> object <-[predicate_next_hop]- object_next_hop ...` "
-            "extracted based on key entities as subject:"
+            "extracted based on key entities as subject:\n"
         )
 
         # TODO: replace print to log
