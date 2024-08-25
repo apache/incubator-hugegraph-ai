@@ -15,30 +15,24 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
+from typing import Optional, List
 import requests
-from typing import Optional
-from hugegraph_llm.config import settings
 
 
 class SiliconReranker:
     def __init__(
         self,
-        api_key: str = settings.reranker_api_key,
-        model: str = settings.reranker_model,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
     ):
         self.api_key = api_key
         self.model = model
 
-    def get_rerank_lists(
-        self, query: str, documents: list[str], top_n: Optional[int] = None
-    ) -> list:
+    def get_rerank_lists(self, query: str, documents: List[str], top_n: Optional[int] = None) -> List[str]:
         if not top_n:
             top_n = len(documents)
-        assert top_n <= len(
-            documents
-        ), "'top_n' should be less than or equal to the number of documents"
-        
+        assert top_n <= len(documents), "'top_n' should be less than or equal to the number of documents"
+
         url = "https://api.siliconflow.cn/v1/rerank"
         payload = {
             "model": self.model,

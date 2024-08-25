@@ -15,47 +15,38 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from typing import Optional, List
 
 import requests
-from typing import Optional
-from hugegraph_llm.config import settings
 
 
 class CohereReranker:
     def __init__(
         self,
-        api_key: str = settings.reranker_api_key,
-        base_url: str = settings.cohere_base_url,
-        model: str = settings.reranker_model,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+        model: Optional[str] = None,
     ):
         self.api_key = api_key
         self.base_url = base_url
         self.model = model
 
-    def get_rerank_lists(
-        self,
-        query: str,
-        documents: list[str],
-        top_n: Optional[int] = None
-    ) -> list:
+    def get_rerank_lists(self, query: str, documents: List[str], top_n: Optional[int] = None) -> List[str]:
         if not top_n:
             top_n = len(documents)
-        assert top_n <= len(
-            documents
-        ), "'top_n' should be less than or equal to the number of documents"
-
+        assert top_n <= len(documents), "'top_n' should be less than or equal to the number of documents"
 
         url = self.base_url
         headers = {
             "accept": "application/json",
             "content-type": "application/json",
-            "Authorization": f"Bearer {self.api_key}"
+            "Authorization": f"Bearer {self.api_key}",
         }
         payload = {
             "model": self.model,
             "query": query,
             "top_n": top_n,
-            "documents": documents
+            "documents": documents,
         }
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()  # Raise an error for bad status codes

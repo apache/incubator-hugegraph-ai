@@ -19,15 +19,18 @@ from hugegraph_llm.models.rerankers.cohere import CohereReranker
 from hugegraph_llm.models.rerankers.siliconflow import SiliconReranker
 from hugegraph_llm.config import settings
 
+
 class Rerankers:
     def __init__(self):
         self.reranker_type = settings.reranker_type
 
     def get_reranker(self):
         if self.reranker_type == "cohere":
-            return CohereReranker()
+            return CohereReranker(
+                api_key=settings.reranker_api_key, base_url=settings.cohere_base_url, model=settings.reranker_model
+            )
 
         if self.reranker_type == "siliconflow":
-            return SiliconReranker()
-        
+            return SiliconReranker(api_key=settings.reranker_api_key, model=settings.reranker_model)
+
         raise Exception(f"reranker type is not supported !")

@@ -32,6 +32,7 @@ DEFAULT_ANSWER_SYNTHESIZE_TEMPLATE_TMPL = (
     "1. Exact recall > Fuzzy recall\n"
     "2. Independent vertex > 1-depth neighbor> 2-depth neighbors\n"
     "Given the context information and not prior knowledge, answer the query.\n"
+    "Answer should include as much context as possible.\n"
     "Query: {query_str}\n"
     "Answer: "
 )

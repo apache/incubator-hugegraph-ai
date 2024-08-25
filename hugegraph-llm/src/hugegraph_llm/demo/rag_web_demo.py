@@ -39,11 +39,7 @@ from hugegraph_llm.operators.graph_rag_task import GraphRAG
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
-from hugegraph_llm.utils.hugegraph_utils import (
-    init_hg_test_data,
-    run_gremlin_query,
-    clean_hg_data,
-)
+from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index
 
@@ -70,6 +66,8 @@ def rag_answer(
     graph_vector_answer: bool,
     graph_ratio: float,
     rerank_method: str,
+    near_neighbor_first: bool,
+    custom_related_information: str,
 ) -> tuple:
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
@@ -82,7 +80,9 @@ def rag_answer(
         searcher.query_vector_index_for_rag()
     if graph_search:
         searcher.extract_keyword().match_keyword_to_id().query_graph_for_rag()
-    searcher.merge_dedup_rerank(graph_ratio, rerank_method).synthesize_answer(
+    searcher.merge_dedup_rerank(
+        graph_ratio, rerank_method, near_neighbor_first, custom_related_information
+    ).synthesize_answer(
         raw_answer=raw_answer,
         vector_only_answer=vector_only_answer,
         graph_only_answer=graph_only_answer,
@@ -90,12 +90,7 @@ def rag_answer(
     )
 
     try:
-        context = searcher.run(
-            verbose=True,
-            query=text,
-            vector_search=vector_search,
-            graph_search=graph_search,
-        )
+        context = searcher.run(verbose=True, query=text, vector_search=vector_search, graph_search=graph_search)
         return (
             context.get("raw_answer", ""),
             context.get("vector_only_answer", ""),
@@ -174,9 +169,7 @@ def build_kg(  # pylint: disable=too-many-branches
         raise gr.Error(str(e))
 
 
-def test_api_connection(
-    url, method="GET", headers=None, params=None, body=None, auth=None, origin_call=None
-) -> int:
+def test_api_connection(url, method="GET", headers=None, params=None, body=None, auth=None, origin_call=None) -> int:
     # TODO: use fastapi.request / starlette instead?
     log.debug("Request URL: %s", url)
     try:
@@ -236,9 +229,7 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
         settings.openai_embedding_model = arg3
         test_url = settings.openai_api_base + "/models"
         headers = {"Authorization": f"Bearer {arg1}"}
-        status_code = test_api_connection(
-            test_url, headers=headers, origin_call=origin_call
-        )
+        status_code = test_api_connection(test_url, headers=headers, origin_call=origin_call)
     elif embedding_option == "qianfan_wenxin":
         status_code = config_qianfan_model(arg1, arg2, origin_call=origin_call)
         settings.qianfan_embedding_model = arg3
@@ -246,9 +237,7 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
         settings.ollama_host = arg1
         settings.ollama_port = int(arg2)
         settings.ollama_embedding_model = arg3
-        status_code = test_api_connection(
-            f"http://{arg1}:{arg2}", origin_call=origin_call
-        )
+        status_code = test_api_connection(f"http://{arg1}:{arg2}", origin_call=origin_call)
     settings.update_env()
     gr.Info("Configured!")
     return status_code
@@ -316,18 +305,14 @@ def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
         settings.openai_max_tokens = int(arg4)
         test_url = settings.openai_api_base + "/models"
         headers = {"Authorization": f"Bearer {arg1}"}
-        status_code = test_api_connection(
-            test_url, headers=headers, origin_call=origin_call
-        )
+        status_code = test_api_connection(test_url, headers=headers, origin_call=origin_call)
     elif llm_option == "qianfan_wenxin":
         status_code = config_qianfan_model(arg1, arg2, arg3, origin_call)
     elif llm_option == "ollama":
         settings.ollama_host = arg1
         settings.ollama_port = int(arg2)
         settings.ollama_language_model = arg3
-        status_code = test_api_connection(
-            f"http://{arg1}:{arg2}", origin_call=origin_call
-        )
+        status_code = test_api_connection(f"http://{arg1}:{arg2}", origin_call=origin_call)
     gr.Info("Configured!")
     settings.update_env()
     return status_code
@@ -354,9 +339,7 @@ def init_rag_ui() -> gr.Interface:
             ]
         graph_config_button = gr.Button("apply configuration")
 
-        graph_config_button.click(
-            apply_graph_config, inputs=graph_config_input
-        )  # pylint: disable=no-member
+        graph_config_button.click(apply_graph_config, inputs=graph_config_input)  # pylint: disable=no-member
 
         gr.Markdown("2. Set up the LLM.")
         llm_dropdown = gr.Dropdown(
@@ -377,9 +360,7 @@ def init_rag_ui() -> gr.Interface:
                             type="password",
                         ),
                         gr.Textbox(value=settings.openai_api_base, label="api_base"),
-                        gr.Textbox(
-                            value=settings.openai_language_model, label="model_name"
-                        ),
+                        gr.Textbox(value=settings.openai_language_model, label="model_name"),
                         gr.Textbox(value=settings.openai_max_tokens, label="max_token"),
                     ]
             elif llm_type == "ollama":
@@ -387,9 +368,7 @@ def init_rag_ui() -> gr.Interface:
                     llm_config_input = [
                         gr.Textbox(value=settings.ollama_host, label="host"),
                         gr.Textbox(value=str(settings.ollama_port), label="port"),
-                        gr.Textbox(
-                            value=settings.ollama_language_model, label="model_name"
-                        ),
+                        gr.Textbox(value=settings.ollama_language_model, label="model_name"),
                         gr.Textbox(value="", visible=False),
                     ]
             elif llm_type == "qianfan_wenxin":
@@ -405,9 +384,7 @@ def init_rag_ui() -> gr.Interface:
                             label="secret_key",
                             type="password",
                         ),
-                        gr.Textbox(
-                            value=settings.qianfan_language_model, label="model_name"
-                        ),
+                        gr.Textbox(value=settings.qianfan_language_model, label="model_name"),
                         gr.Textbox(value="", visible=False),
                     ]
                 log.debug(llm_config_input)
@@ -415,9 +392,7 @@ def init_rag_ui() -> gr.Interface:
                 llm_config_input = []
             llm_config_button = gr.Button("apply configuration")
 
-            llm_config_button.click(
-                apply_llm_config, inputs=llm_config_input
-            )  # pylint: disable=no-member
+            llm_config_button.click(apply_llm_config, inputs=llm_config_input)  # pylint: disable=no-member
 
         gr.Markdown("3. Set up the Embedding.")
         embedding_dropdown = gr.Dropdown(
@@ -438,9 +413,7 @@ def init_rag_ui() -> gr.Interface:
                             type="password",
                         ),
                         gr.Textbox(value=settings.openai_api_base, label="api_base"),
-                        gr.Textbox(
-                            value=settings.openai_embedding_model, label="model_name"
-                        ),
+                        gr.Textbox(value=settings.openai_embedding_model, label="model_name"),
                     ]
             elif embedding_type == "qianfan_wenxin":
                 with gr.Row():
@@ -455,18 +428,14 @@ def init_rag_ui() -> gr.Interface:
                             label="secret_key",
                             type="password",
                         ),
-                        gr.Textbox(
-                            value=settings.qianfan_embedding_model, label="model_name"
-                        ),
+                        gr.Textbox(value=settings.qianfan_embedding_model, label="model_name"),
                     ]
             elif embedding_type == "ollama":
                 with gr.Row():
                     embedding_config_input = [
                         gr.Textbox(value=settings.ollama_host, label="host"),
                         gr.Textbox(value=str(settings.ollama_port), label="port"),
-                        gr.Textbox(
-                            value=settings.ollama_embedding_model, label="model_name"
-                        ),
+                        gr.Textbox(value=settings.ollama_embedding_model, label="model_name"),
                     ]
             else:
                 embedding_config_input = []
@@ -583,9 +552,7 @@ def init_rag_ui() -> gr.Interface:
                 file_count="multiple",
             )
             input_schema = gr.Textbox(value=schema, label="Schema")
-            info_extract_template = gr.Textbox(
-                value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head"
-            )
+            info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head")
             with gr.Column():
                 mode = gr.Radio(
                     choices=[
@@ -615,33 +582,19 @@ def init_rag_ui() -> gr.Interface:
                     show_copy_button=True,
                 )
                 raw_out = gr.Textbox(label="Basic LLM Answer", show_copy_button=True)
-                vector_only_out = gr.Textbox(
-                    label="Vector-only Answer", show_copy_button=True
-                )
-                graph_only_out = gr.Textbox(
-                    label="Graph-only Answer", show_copy_button=True
-                )
-                graph_vector_out = gr.Textbox(
-                    label="Graph-Vector Answer", show_copy_button=True
-                )
+                vector_only_out = gr.Textbox(label="Vector-only Answer", show_copy_button=True)
+                graph_only_out = gr.Textbox(label="Graph-only Answer", show_copy_button=True)
+                graph_vector_out = gr.Textbox(label="Graph-Vector Answer", show_copy_button=True)
             with gr.Column(scale=1):
-                raw_radio = gr.Radio(
-                    choices=[True, False], value=True, label="Basic LLM Answer"
-                )
-                vector_only_radio = gr.Radio(
-                    choices=[True, False], value=False, label="Vector-only Answer"
-                )
-                graph_only_radio = gr.Radio(
-                    choices=[True, False], value=False, label="Graph-only Answer"
-                )
+                raw_radio = gr.Radio(choices=[True, False], value=True, label="Basic LLM Answer")
+                vector_only_radio = gr.Radio(choices=[True, False], value=False, label="Vector-only Answer")
+                graph_only_radio = gr.Radio(choices=[True, False], value=False, label="Graph-only Answer")
                 with gr.Row():
 
                     def toggle_slider(enable):
                         return gr.update(interactive=enable)
 
-                    graph_vector_radio = gr.Radio(
-                        choices=[True, False], value=False, label="Graph-Vector Answer"
-                    )
+                    graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
                     graph_ratio = gr.Slider(
                         0,
                         1,
@@ -650,17 +603,17 @@ def init_rag_ui() -> gr.Interface:
                         step=0.1,
                         interactive=False,
                     )
-                    graph_vector_radio.change(
-                        toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio
-                    )
+                    graph_vector_radio.change(toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio)
                 with gr.Column():
                     rerank_method = gr.Dropdown(
                         choices=["bleu", "reranker"],
                         value="bleu",
                         label="Rerank method",
                     )
-                    graph_strategy = gr.Checkbox(
-                        value=False, label="Near neighbor first(Optional)", info="One-depth neighbors > two-depth neighbors"
+                    near_neighbor_first = gr.Checkbox(
+                        value=False,
+                        label="Near neighbor first(Optional)",
+                        info="One-depth neighbors > two-depth neighbors",
                     )
                     custom_related_information = gr.Text(
                         "",
@@ -677,6 +630,8 @@ def init_rag_ui() -> gr.Interface:
                 graph_vector_radio,
                 graph_ratio,
                 rerank_method,
+                near_neighbor_first,
+                custom_related_information,
             ],
             outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
         )
@@ -692,17 +647,13 @@ def init_rag_ui() -> gr.Interface:
                 fmt = gr.Checkbox(label="Format JSON", value=True)
             out = gr.Textbox(label="Output", show_copy_button=True)
         btn = gr.Button("Run gremlin query on HugeGraph")
-        btn.click(
-            fn=run_gremlin_query, inputs=[inp, fmt], outputs=out
-        )  # pylint: disable=no-member
+        btn.click(fn=run_gremlin_query, inputs=[inp, fmt], outputs=out)  # pylint: disable=no-member
 
         with gr.Row():
             inp = []
             out = gr.Textbox(label="Output", show_copy_button=True)
         btn = gr.Button("(BETA) Init HugeGraph test data (🚧WIP)")
-        btn.click(
-            fn=init_hg_test_data, inputs=inp, outputs=out
-        )  # pylint: disable=no-member
+        btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
     return hugegraph_llm_ui
 
 

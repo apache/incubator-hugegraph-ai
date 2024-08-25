@@ -35,9 +35,7 @@ from hugegraph_llm.utils.log import log
 
 
 class GraphRAG:
-    def __init__(
-        self, llm: Optional[BaseLLM] = None, embedding: Optional[BaseEmbedding] = None
-    ):
+    def __init__(self, llm: Optional[BaseLLM] = None, embedding: Optional[BaseEmbedding] = None):
         self._llm = llm or LLMs().get_llm()
         self._embedding = embedding or Embeddings().get_embedding()
         self._operators: List[Any] = []
@@ -118,9 +116,17 @@ class GraphRAG:
         self,
         graph_ratio: float = 0.5,
         rerank_method: Literal["bleu", "reranker"] = "bleu",
+        near_neighbor_first: bool = False,
+        custom_related_information: str = "",
     ):
         self._operators.append(
-            MergeDedupRerank(embedding=self._embedding, graph_ratio=graph_ratio, method=rerank_method)
+            MergeDedupRerank(
+                embedding=self._embedding,
+                graph_ratio=graph_ratio,
+                method=rerank_method,
+                near_neighbor_first=near_neighbor_first,
+                custom_related_information=custom_related_information,
+            )
         )
         return self
 
