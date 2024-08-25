@@ -23,19 +23,22 @@ from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
 
 # TODO: we need enhance the template to answer the question
-DEFAULT_ANSWER_SYNTHESIZE_TEMPLATE_TMPL = (
-    "Context information is below.\n"
-    "---------------------\n"
-    "{context_str}\n"
-    "---------------------\n"
-    "You need to refer to the context based on the following priority:\n"
-    "1. Exact recall > Fuzzy recall\n"
-    "2. Independent vertex > 1-depth neighbor> 2-depth neighbors\n"
-    "Given the context information and not prior knowledge, answer the query.\n"
-    "Answer should include as much context as possible.\n"
-    "Query: {query_str}\n"
-    "Answer: "
-)
+DEFAULT_ANSWER_TEMPLATE = f"""
+You are an expert in knowledge graphs and natural language processing. 
+Your task is to provide a precise and accurate answer based on the given context.
+
+Context information is below.
+---------------------
+{{context_str}}
+---------------------
+Please refer to the context based on the following priority:
+1. Precise data > fuzzy data
+
+Given the context information and without using fictive knowledge, 
+answer the following query in a concise and professional manner.
+Query: {{query_str}}
+Answer:
+"""
 
 
 class AnswerSynthesize:
@@ -53,7 +56,7 @@ class AnswerSynthesize:
             graph_vector_answer: bool = False,
     ):
         self._llm = llm
-        self._prompt_template = prompt_template or DEFAULT_ANSWER_SYNTHESIZE_TEMPLATE_TMPL
+        self._prompt_template = prompt_template or DEFAULT_ANSWER_TEMPLATE
         self._question = question
         self._context_body = context_body
         self._context_head = context_head

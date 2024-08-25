@@ -33,6 +33,9 @@ class SiliconReranker:
             top_n = len(documents)
         assert top_n <= len(documents), "'top_n' should be less than or equal to the number of documents"
 
+        if top_n == 0:
+            return []
+
         url = "https://api.siliconflow.cn/v1/rerank"
         payload = {
             "model": self.model,

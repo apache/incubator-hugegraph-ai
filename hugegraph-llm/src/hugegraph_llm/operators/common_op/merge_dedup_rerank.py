@@ -43,7 +43,7 @@ class MergeDedupRerank:
         assert method in [
             "bleu",
             "reranker",
-        ], "rerank method should be 'bleu' or 'reranker'"
+        ], f"Unimplemented rerank method '{method}'."
         self.embedding = embedding
         self.graph_ratio = graph_ratio
         self.topk = topk

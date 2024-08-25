@@ -24,6 +24,7 @@ from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.document.chunk_split import ChunkSplitter
 from hugegraph_llm.utils.log import log
 
+# TODO: put in a separate file for users to customize the content
 SCHEMA_EXAMPLE_PROMPT = """## Main Task
 Given the following graph schema and a piece of text, your task is to analyze the text and extract information that fits into the schema's structure, formatting the information into vertices and edges as specified.
 

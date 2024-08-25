@@ -19,7 +19,7 @@
 import argparse
 import json
 import os
-from typing import List, Union
+from typing import List, Union, Tuple
 
 import docx
 import gradio as gr
@@ -35,7 +35,7 @@ from hugegraph_llm.config import settings, resource_path
 from hugegraph_llm.enums.build_mode import BuildMode
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.init_llm import LLMs
-from hugegraph_llm.operators.graph_rag_task import GraphRAG
+from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
@@ -68,18 +68,20 @@ def rag_answer(
     rerank_method: str,
     near_neighbor_first: bool,
     custom_related_information: str,
-) -> tuple:
+    answer_prompt: str
+) -> Tuple:
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
 
     if raw_answer is False and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
         return "", "", "", ""
-    searcher = GraphRAG()
+    searcher = RAGPipeline()
     if vector_search:
         searcher.query_vector_index_for_rag()
     if graph_search:
         searcher.extract_keyword().match_keyword_to_id().query_graph_for_rag()
+    # TODO: add more user-defined search strategies
     searcher.merge_dedup_rerank(
         graph_ratio, rerank_method, near_neighbor_first, custom_related_information
     ).synthesize_answer(
@@ -87,6 +89,7 @@ def rag_answer(
         vector_only_answer=vector_only_answer,
         graph_only_answer=graph_only_answer,
         graph_vector_answer=graph_vector_answer,
+        answer_prompt=answer_prompt
     )
 
     try:
@@ -548,19 +551,13 @@ def init_rag_ui() -> gr.Interface:
         with gr.Row():
             input_file = gr.File(
                 value=[os.path.join(resource_path, "demo", "test.txt")],
-                label="Doc(s) (multi-files can be selected together)",
-                file_count="multiple",
-            )
+                label="Docs (multi-files can be selected together)",
+                file_count="multiple")
             input_schema = gr.Textbox(value=schema, label="Schema")
             info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head")
             with gr.Column():
                 mode = gr.Radio(
-                    choices=[
-                        "Test Mode",
-                        "Import Mode",
-                        "Clear and Import",
-                        "Rebuild Vector",
-                    ],
+                    choices=["Test Mode", "Import Mode", "Clear and Import", "Rebuild Vector"],
                     value="Test Mode",
                     label="Build mode",
                 )
@@ -620,6 +617,9 @@ def init_rag_ui() -> gr.Interface:
                         label="Custom related information(Optional)",
                     )
                 btn = gr.Button("Answer Question")
+                from hugegraph_llm.operators.llm_op.answer_synthesize import DEFAULT_ANSWER_TEMPLATE
+                answer_prompt_input = gr.Textbox(value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt",
+                                                 show_copy_button=True)
         btn.click(  # pylint: disable=no-member
             fn=rag_answer,
             inputs=[
@@ -632,6 +632,7 @@ def init_rag_ui() -> gr.Interface:
                 rerank_method,
                 near_neighbor_first,
                 custom_related_information,
+                answer_prompt_input,
             ],
             outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
         )
@@ -679,14 +680,8 @@ if __name__ == "__main__":
     auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
     log.info("Authentication is %s.", "enabled" if auth_enabled else "disabled")
     # TODO: support multi-user login when need
-    app = gr.mount_gradio_app(
-        app,
-        hugegraph_llm,
-        path="/",
-        auth=("rag", os.getenv("TOKEN")) if auth_enabled else None,
-    )
-
-    # Note: set reload to False in production environment
-    uvicorn.run(app, host=args.host, port=args.port)
+    app = gr.mount_gradio_app(app, hugegraph_llm, path="/", auth=("rag", os.getenv("TOKEN")) if auth_enabled else None)
+    
     # TODO: we can't use reload now due to the config 'app' of uvicorn.run
-    # uvicorn.run("rag_web_demo:app", host="0.0.0.0", port=8001, reload=True)
+    # ❎:f'{__name__}:app' / rag_web_demo:app / hugegraph_llm.demo.rag_web_demo:app
+    uvicorn.run(app, host=args.host, port=args.port, reload=False)
