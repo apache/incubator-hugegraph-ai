@@ -42,7 +42,6 @@ from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index
-from hugegraph_llm.utils.tls import local_var
 
 sec = HTTPBearer()
 
@@ -61,10 +60,6 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
 def rag_answer(
         text: str, raw_answer: bool, vector_only_answer: bool, graph_only_answer: bool, graph_vector_answer: bool
 ) -> tuple:
-    local_var.cost = {
-        'token': 0,
-        'call': 0,
-    }
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
 
@@ -85,7 +80,6 @@ def rag_answer(
 
     try:
         context = searcher.run(verbose=True, query=text)
-        print(local_var.cost)
         return (
             context.get("raw_answer", ""),
             context.get("vector_only_answer", ""),
@@ -502,6 +496,20 @@ if __name__ == "__main__":
     auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
     log.info("Authentication is %s.", "enabled" if auth_enabled else "disabled")
     # TODO: support multi-user login when need
+
+    from fastapi import FastAPI, Request
+    import time
+    @app.middleware("http")
+    async def add_process_time_header(request: Request, call_next):
+        log.info(request.url.path)
+        start_time = time.time()
+        response = await call_next(request.json())
+        log.info(response)
+        process_time = time.time() - start_time
+        response.headers["X-Process-Time"] = str(process_time)
+        log.info("process time: %s", process_time)
+        return response
+
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/", auth=("rag", os.getenv("TOKEN")) if auth_enabled else None)
 
     # Note: set reload to False in production environment
