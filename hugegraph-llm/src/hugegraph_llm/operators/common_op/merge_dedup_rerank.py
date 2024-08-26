@@ -34,16 +34,16 @@ class MergeDedupRerank:
             self,
             embedding: BaseEmbedding,
             topk: int = 10,
-            policy: Literal["bleu", "priority"] = "bleu"
+            strategy: Literal["bleu", "priority"] = "bleu"
     ):
         self.embedding = embedding
         self.topk = topk
-        if policy == "bleu":
+        if strategy == "bleu":
             self.rerank_func = self._bleu_rerank
-        elif policy == "priority":
+        elif strategy == "priority":
             self.rerank_func = self._priority_rerank
         else:
-            raise ValueError(f"Unimplemented policy {policy}.")
+            raise ValueError(f"Unimplemented rerank strategy {strategy}.")
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context.get("query")
