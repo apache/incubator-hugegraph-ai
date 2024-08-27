@@ -60,6 +60,7 @@ class OpenAIChat(BaseLLM):
                 max_tokens=self.max_tokens,
                 messages=messages,
             )
+            log.info("Token usage: %s", completions.usage)
             return completions.choices[0].message.content
         # catch context length / do not retry
         except openai.error.InvalidRequestError as e:
@@ -90,6 +91,7 @@ class OpenAIChat(BaseLLM):
                 max_tokens=self.max_tokens,
                 messages=messages,
             )
+            log.info("Token usage: %s", completions.usage)
             return completions.choices[0].message.content
         # catch context length / do not retry
         except openai.error.InvalidRequestError as e:
