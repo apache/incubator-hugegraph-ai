@@ -38,23 +38,17 @@ def rag_http_api(
 ):
     @router.post("/rag", status_code=status.HTTP_200_OK)
     def rag_answer_api(req: RAGRequest):
-        result = rag_answer_func(
-            req.query, req.raw_llm, req.vector_only, req.graph_only, req.graph_vector
-        )
+        result = rag_answer_func(req.query, req.raw_llm, req.vector_only, req.graph_only, req.graph_vector)
         return {
             key: value
-            for key, value in zip(
-                ["raw_llm", "vector_only", "graph_only", "graph_vector"], result
-            )
+            for key, value in zip(["raw_llm", "vector_only", "graph_only", "graph_vector"], result)
             if getattr(req, key)
         }
 
     @router.post("/config/graph", status_code=status.HTTP_201_CREATED)
     def graph_config_api(req: GraphConfigRequest):
         # Accept status code
-        res = apply_graph_conf(
-            req.ip, req.port, req.name, req.user, req.pwd, req.gs, origin_call="http"
-        )
+        res = apply_graph_conf(req.ip, req.port, req.name, req.user, req.pwd, req.gs, origin_call="http")
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
 
     @router.post("/config/llm", status_code=status.HTTP_201_CREATED)
@@ -78,35 +72,5 @@ def rag_http_api(
                 origin_call="http",
             )
         else:
-            res = apply_llm_conf(
-                req.host, req.port, req.language_model, None, origin_call="http"
-            )
-        return generate_response(RAGResponse(status_code=res, message="Missing Value"))
-
-    @router.post("/config/embedding", status_code=status.HTTP_201_CREATED)
-    def embedding_config_api(req: LLMConfigRequest):
-        settings.embedding_type = req.llm_type
-
-        if req.llm_type == "openai":
-            res = apply_embedding_conf(
-                req.api_key, req.api_base, req.language_model, origin_call="http"
-            )
-        elif req.llm_type == "qianfan_wenxin":
-            res = apply_embedding_conf(
-                req.api_key, req.api_base, None, origin_call="http"
-            )
-        else:
-            res = apply_embedding_conf(
-                req.host, req.port, req.language_model, origin_call="http"
-            )
-        return generate_response(RAGResponse(status_code=res, message="Missing Value"))
-
-    @router.post("/config/rerank", status_code=status.HTTP_201_CREATED)
-    def rerank_config_api(req: RerankerConfigRequest):
-        settings.reranker_type = req.reranker_type
-
-        if req.reranker_type == "cohere":
-            res = apply_reranker_conf(
-                req.api_key, req.reranker_model, req.api_base, origin_call="http"
-            )
+            res = apply_llm_conf(req.host, req.port, req.language_model, None, origin_call="http")
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))

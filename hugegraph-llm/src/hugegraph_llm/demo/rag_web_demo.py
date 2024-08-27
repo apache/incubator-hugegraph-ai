@@ -19,7 +19,7 @@
 import argparse
 import json
 import os
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Literal
 
 import docx
 import gradio as gr
@@ -65,10 +65,10 @@ def rag_answer(
     graph_only_answer: bool,
     graph_vector_answer: bool,
     graph_ratio: float,
-    rerank_method: str,
+    rerank_method: Literal["bleu", "reranker"],
     near_neighbor_first: bool,
     custom_related_information: str,
-    answer_prompt: str
+    answer_prompt: str,
 ) -> Tuple:
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
@@ -89,7 +89,7 @@ def rag_answer(
         vector_only_answer=vector_only_answer,
         graph_only_answer=graph_only_answer,
         graph_vector_answer=graph_vector_answer,
-        answer_prompt=answer_prompt
+        answer_prompt=answer_prompt,
     )
 
     try:
@@ -215,10 +215,7 @@ def config_qianfan_model(arg1, arg2, arg3=None, origin_call=None) -> int:
         "client_secret": arg2,
     }
     status_code = test_api_connection(
-        "https://aip.baidubce.com/oauth/2.0/token",
-        "POST",
-        params=params,
-        origin_call=origin_call,
+        "https://aip.baidubce.com/oauth/2.0/token", "POST", params=params, origin_call=origin_call
     )
     return status_code
 
@@ -246,26 +243,28 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
     return status_code
 
 
-def apply_reranker_config(arg1, arg2, arg3: str | None = None, origin_call=None) -> int:
+def apply_reranker_config(
+    reranker_api_key, reranker_model, cohere_base_url: str | None = None, origin_call=None
+) -> int:
     status_code = -1
     reranker_option = settings.reranker_type
     if reranker_option == "cohere":
-        settings.reranker_api_key = arg1
-        settings.reranker_model = arg2
-        settings.cohere_base_url = arg3
-        headers = {"Authorization": f"Bearer {arg1}"}
+        settings.reranker_api_key = reranker_api_key
+        settings.reranker_model = reranker_model
+        settings.cohere_base_url = cohere_base_url
+        headers = {"Authorization": f"Bearer {reranker_api_key}"}
         status_code = test_api_connection(
-            arg3.rsplit("/", 1)[0] + "/check-api-key",
+            cohere_base_url.rsplit("/", 1)[0] + "/check-api-key",
             method="POST",
             headers=headers,
             origin_call=origin_call,
         )
     elif reranker_option == "siliconflow":
-        settings.reranker_api_key = arg1
-        settings.reranker_model = arg2
+        settings.reranker_api_key = reranker_api_key
+        settings.reranker_model = reranker_model
         headers = {
             "accept": "application/json",
-            "authorization": f"Bearer {arg1}",
+            "authorization": f"Bearer {reranker_api_key}",
         }
         status_code = test_api_connection(
             "https://api.siliconflow.cn/v1/user/info",
@@ -345,11 +344,7 @@ def init_rag_ui() -> gr.Interface:
         graph_config_button.click(apply_graph_config, inputs=graph_config_input)  # pylint: disable=no-member
 
         gr.Markdown("2. Set up the LLM.")
-        llm_dropdown = gr.Dropdown(
-            choices=["openai", "qianfan_wenxin", "ollama"],
-            value=settings.llm_type,
-            label="LLM",
-        )
+        llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama"], value=settings.llm_type, label="LLM")
 
         @gr.render(inputs=[llm_dropdown])
         def llm_settings(llm_type):
@@ -357,11 +352,7 @@ def init_rag_ui() -> gr.Interface:
             if llm_type == "openai":
                 with gr.Row():
                     llm_config_input = [
-                        gr.Textbox(
-                            value=settings.openai_api_key,
-                            label="api_key",
-                            type="password",
-                        ),
+                        gr.Textbox(value=settings.openai_api_key, label="api_key", type="password"),
                         gr.Textbox(value=settings.openai_api_base, label="api_base"),
                         gr.Textbox(value=settings.openai_language_model, label="model_name"),
                         gr.Textbox(value=settings.openai_max_tokens, label="max_token"),
@@ -377,16 +368,8 @@ def init_rag_ui() -> gr.Interface:
             elif llm_type == "qianfan_wenxin":
                 with gr.Row():
                     llm_config_input = [
-                        gr.Textbox(
-                            value=settings.qianfan_api_key,
-                            label="api_key",
-                            type="password",
-                        ),
-                        gr.Textbox(
-                            value=settings.qianfan_secret_key,
-                            label="secret_key",
-                            type="password",
-                        ),
+                        gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
+                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
                         gr.Textbox(value=settings.qianfan_language_model, label="model_name"),
                         gr.Textbox(value="", visible=False),
                     ]
@@ -399,9 +382,7 @@ def init_rag_ui() -> gr.Interface:
 
         gr.Markdown("3. Set up the Embedding.")
         embedding_dropdown = gr.Dropdown(
-            choices=["openai", "qianfan_wenxin", "ollama"],
-            value=settings.embedding_type,
-            label="Embedding",
+            choices=["openai", "qianfan_wenxin", "ollama"], value=settings.embedding_type, label="Embedding"
         )
 
         @gr.render(inputs=[embedding_dropdown])
@@ -410,27 +391,15 @@ def init_rag_ui() -> gr.Interface:
             if embedding_type == "openai":
                 with gr.Row():
                     embedding_config_input = [
-                        gr.Textbox(
-                            value=settings.openai_api_key,
-                            label="api_key",
-                            type="password",
-                        ),
+                        gr.Textbox(value=settings.openai_api_key, label="api_key", type="password"),
                         gr.Textbox(value=settings.openai_api_base, label="api_base"),
                         gr.Textbox(value=settings.openai_embedding_model, label="model_name"),
                     ]
             elif embedding_type == "qianfan_wenxin":
                 with gr.Row():
                     embedding_config_input = [
-                        gr.Textbox(
-                            value=settings.qianfan_api_key,
-                            label="api_key",
-                            type="password",
-                        ),
-                        gr.Textbox(
-                            value=settings.qianfan_secret_key,
-                            label="secret_key",
-                            type="password",
-                        ),
+                        gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
+                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
                         gr.Textbox(value=settings.qianfan_embedding_model, label="model_name"),
                     ]
             elif embedding_type == "ollama":
@@ -453,9 +422,7 @@ def init_rag_ui() -> gr.Interface:
 
         gr.Markdown("4. Set up the Reranker(Optional).")
         reranker_dropdown = gr.Dropdown(
-            choices=["cohere", "siliconflow"],
-            value=settings.reranker_type,
-            label="Reranker",
+            choices=["cohere", "siliconflow"], value=settings.reranker_type, label="Reranker"
         )
 
         @gr.render(inputs=[reranker_dropdown])
@@ -464,22 +431,14 @@ def init_rag_ui() -> gr.Interface:
             if reranker_type == "cohere":
                 with gr.Row():
                     reranker_config_input = [
-                        gr.Textbox(
-                            value=settings.reranker_api_key,
-                            label="api_key",
-                            type="password",
-                        ),
+                        gr.Textbox(value=settings.reranker_api_key, label="api_key", type="password"),
                         gr.Textbox(value=settings.reranker_model, label="model"),
                         gr.Textbox(value=settings.cohere_base_url, label="base_url"),
                     ]
             elif reranker_type == "siliconflow":
                 with gr.Row():
                     reranker_config_input = [
-                        gr.Textbox(
-                            value=settings.reranker_api_key,
-                            label="api_key",
-                            type="password",
-                        ),
+                        gr.Textbox(value=settings.reranker_api_key, label="api_key", type="password"),
                         gr.Textbox(
                             value="BAAI/bge-reranker-v2-m3",
                             label="model",
@@ -552,7 +511,8 @@ def init_rag_ui() -> gr.Interface:
             input_file = gr.File(
                 value=[os.path.join(resource_path, "demo", "test.txt")],
                 label="Docs (multi-files can be selected together)",
-                file_count="multiple")
+                file_count="multiple",
+            )
             input_schema = gr.Textbox(value=schema, label="Schema")
             info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head")
             with gr.Column():
@@ -573,11 +533,7 @@ def init_rag_ui() -> gr.Interface:
         gr.Markdown("""## 2. RAG with HugeGraph 📖""")
         with gr.Row():
             with gr.Column(scale=2):
-                inp = gr.Textbox(
-                    value="Tell me about Sarah.",
-                    label="Question",
-                    show_copy_button=True,
-                )
+                inp = gr.Textbox(value="Tell me about Sarah.", label="Question", show_copy_button=True)
                 raw_out = gr.Textbox(label="Basic LLM Answer", show_copy_button=True)
                 vector_only_out = gr.Textbox(label="Vector-only Answer", show_copy_button=True)
                 graph_only_out = gr.Textbox(label="Graph-only Answer", show_copy_button=True)
@@ -618,8 +574,10 @@ def init_rag_ui() -> gr.Interface:
                     )
                 btn = gr.Button("Answer Question")
                 from hugegraph_llm.operators.llm_op.answer_synthesize import DEFAULT_ANSWER_TEMPLATE
-                answer_prompt_input = gr.Textbox(value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt",
-                                                 show_copy_button=True)
+
+                answer_prompt_input = gr.Textbox(
+                    value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt", show_copy_button=True
+                )
         btn.click(  # pylint: disable=no-member
             fn=rag_answer,
             inputs=[
@@ -640,11 +598,7 @@ def init_rag_ui() -> gr.Interface:
         gr.Markdown("""## 3. Others (🚧) """)
         with gr.Row():
             with gr.Column():
-                inp = gr.Textbox(
-                    value="g.V().limit(10)",
-                    label="Gremlin query",
-                    show_copy_button=True,
-                )
+                inp = gr.Textbox(value="g.V().limit(10)", label="Gremlin query", show_copy_button=True)
                 fmt = gr.Checkbox(label="Format JSON", value=True)
             out = gr.Textbox(label="Output", show_copy_button=True)
         btn = gr.Button("Run gremlin query on HugeGraph")
@@ -681,7 +635,7 @@ if __name__ == "__main__":
     log.info("Authentication is %s.", "enabled" if auth_enabled else "disabled")
     # TODO: support multi-user login when need
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/", auth=("rag", os.getenv("TOKEN")) if auth_enabled else None)
-    
+
     # TODO: we can't use reload now due to the config 'app' of uvicorn.run
     # ❎:f'{__name__}:app' / rag_web_demo:app / hugegraph_llm.demo.rag_web_demo:app
     uvicorn.run(app, host=args.host, port=args.port, reload=False)
