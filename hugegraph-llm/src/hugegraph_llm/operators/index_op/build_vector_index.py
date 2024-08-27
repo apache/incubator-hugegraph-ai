@@ -19,9 +19,11 @@
 import os
 from typing import Dict, Any
 
+from tqdm import tqdm
 from hugegraph_llm.config import settings, resource_path
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from hugegraph_llm.utils.log import log
 
 
 class BuildVectorIndex:
@@ -37,7 +39,8 @@ class BuildVectorIndex:
             raise ValueError("chunks not found in context.")
         chunks = context["chunks"]
         chunks_embedding = []
-        for chunk in chunks:
+        log.debug("Building vector index for %s chunks...", len(context["chunks"]))
+        for chunk in tqdm(chunks):
             chunks_embedding.append(self.embedding.get_text_embedding(chunk))
         if len(chunks_embedding) > 0:
             if os.path.exists(self.index_file) and os.path.exists(self.content_file):
