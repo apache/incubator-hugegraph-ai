@@ -39,6 +39,7 @@ class MergeDedupRerank:
         method: Literal["bleu", "reranker"] = "bleu",
         near_neighbor_first: bool = False,
         custom_related_information: Optional[str] = None,
+        priority: bool = False,  # TODO: implement priority
     ):
         assert method in [
             "bleu",
@@ -50,6 +51,8 @@ class MergeDedupRerank:
         self.method = method
         self.near_neighbor_first = near_neighbor_first
         self.custom_related_information = custom_related_information
+        if priority:
+            raise ValueError(f"Unimplemented rerank strategy: priority.")
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context.get("query")
