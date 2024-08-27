@@ -55,10 +55,8 @@ class Config:
     qianfan_api_key: Optional[str] = None
     qianfan_secret_key: Optional[str] = None
     qianfan_access_token: Optional[str] = None
-    # 4.1 url settings
-    qianfan_url_prefix: Optional[str] = (
-        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
-    )
+    # 4.1 URL settings
+    qianfan_url_prefix: Optional[str] = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
     qianfan_chat_url: Optional[str] = qianfan_url_prefix + "/chat/"
     qianfan_language_model: Optional[str] = "ERNIE-4.0-Turbo-8K"
     qianfan_embed_url: Optional[str] = qianfan_url_prefix + "/embeddings/"

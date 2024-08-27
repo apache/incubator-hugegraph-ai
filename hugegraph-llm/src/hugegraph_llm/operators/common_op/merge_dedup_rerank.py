@@ -127,8 +127,8 @@ class MergeDedupRerank:
             if len(knowledge_with_degree[result]) < depth:
                 knowledge_with_degree[result] += [""] * (depth - len(knowledge_with_degree[result]))
 
-        def sort_key(result: str) -> Tuple[int, ...]:
-            return tuple(vertex_degree_rerank_result[i].index(knowledge_with_degree[result][i]) for i in range(depth))
+        def sort_key(res: str) -> Tuple[int, ...]:
+            return tuple(vertex_degree_rerank_result[i].index(knowledge_with_degree[res][i]) for i in range(depth))
 
         sorted_results = sorted(results, key=sort_key)
         return sorted_results[:topn]
