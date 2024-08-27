@@ -22,6 +22,7 @@ import qianfan
 from retry import retry
 
 from hugegraph_llm.models.llms.base import BaseLLM
+from hugegraph_llm.utils.log import log
 
 
 class QianfanClient(BaseLLM):
@@ -47,6 +48,7 @@ class QianfanClient(BaseLLM):
             raise Exception(
                 f"Request failed with code {response.code}, message: {response.body['error_msg']}"
             )
+        log.info("Token usage: %s", response.body["usage"])
         return response.body["result"]
 
     @retry(tries=3, delay=1)
