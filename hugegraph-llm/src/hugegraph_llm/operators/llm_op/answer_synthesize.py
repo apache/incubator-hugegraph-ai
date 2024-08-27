@@ -22,7 +22,7 @@ from typing import Any, Dict, Optional
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
 
-# TODO: we need enhance the template to answer the question
+# TODO: we need enhance the template to answer the question (put it in a separate file)
 DEFAULT_ANSWER_TEMPLATE = f"""
 You are an expert in knowledge graphs and natural language processing. 
 Your task is to provide a precise and accurate answer based on the given context.
@@ -31,8 +31,6 @@ Context information is below.
 ---------------------
 {{context_str}}
 ---------------------
-Please refer to the context based on the following priority:
-1. Precise data > fuzzy data
 
 Given the context information and without using fictive knowledge, 
 answer the following query in a concise and professional manner.
