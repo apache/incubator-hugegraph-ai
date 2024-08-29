@@ -42,7 +42,6 @@ from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index
-from hugegraph_llm.middleware import register_middleware
 
 sec = HTTPBearer()
 
@@ -504,7 +503,6 @@ if __name__ == "__main__":
     log.info("Authentication is %s.", "enabled" if auth_enabled else "disabled")
     # TODO: support multi-user login when need
 
-    register_middleware(app)
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/", auth=("rag", os.getenv("TOKEN")) if auth_enabled else None)
 
     # TODO: we can't use reload now due to the config 'app' of uvicorn.run
