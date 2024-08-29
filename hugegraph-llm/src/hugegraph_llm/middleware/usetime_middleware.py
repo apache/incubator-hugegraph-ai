@@ -29,11 +29,15 @@ class UseTimeMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
         # TODO: handle time record for async task pool in gradio
-        start_time = time.time()
+        start_time = time.perf_counter()
         response = await call_next(request)
-        process_time = time.time() - start_time
-        response.headers["X-Process-Time"] = str(process_time)
-        log.info("Process time: %s", process_time)
-        log.info(f"Method: {request.method}, Args: {request.query_params}, IP: {request.client.host}, "
-                 f"URL: {request.url}, Headers: {request.headers}")
+        process_time = (time.perf_counter() - start_time) * 1000 # ms
+        unit = "ms"
+        if process_time > 1000:
+            process_time /= 1000
+            unit = "s"
+
+        response.headers["X-Process-Time"] = f"{process_time:.2f} {unit}"
+        log.info("Request process time: %.2f ms, code=%d", process_time, response.status_code)
+        log.info(f"{request.method} - Args: {request.query_params}, IP: {request.client.host}, URL: {request.url}")
         return response

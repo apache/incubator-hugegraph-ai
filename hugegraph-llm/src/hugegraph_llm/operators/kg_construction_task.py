@@ -16,25 +16,23 @@
 # under the License.
 
 
-import time
 from typing import Dict, Any, Optional, Literal, Union, List
 
-from pyhugegraph.client import PyHugeClient
-
-from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.common_op.check_schema import CheckSchema
 from hugegraph_llm.operators.common_op.print_result import PrintResult
-from hugegraph_llm.operators.hugegraph_op.fetch_graph_data import FetchGraphData
-from hugegraph_llm.operators.index_op.build_semantic_index import BuildSemanticIndex
-from hugegraph_llm.operators.index_op.build_vector_index import BuildVectorIndex
 from hugegraph_llm.operators.document_op.chunk_split import ChunkSplit
 from hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph import CommitToKg
+from hugegraph_llm.operators.hugegraph_op.fetch_graph_data import FetchGraphData
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
+from hugegraph_llm.operators.index_op.build_semantic_index import BuildSemanticIndex
+from hugegraph_llm.operators.index_op.build_vector_index import BuildVectorIndex
 from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
 from hugegraph_llm.operators.llm_op.info_extract import InfoExtract
 from hugegraph_llm.operators.llm_op.property_graph_extract import PropertyGraphExtract
-from hugegraph_llm.utils.log import log
+from hugegraph_llm.utils.decorators import log_time, log_operator_time
+from pyhugegraph.client import PyHugeClient
 
 
 class KgBuilder:
@@ -98,13 +96,13 @@ class KgBuilder:
         self.operators.append(PrintResult())
         return self
 
+    @log_time
     def run(self) -> Dict[str, Any]:
         context = None
         for operator in self.operators:
-            log.debug("Running operator: %s", operator.__class__.__name__)
-            start = time.time()
-            context = operator.run(context)
-            log.debug("Operator %s finished in %s seconds", operator.__class__.__name__,
-                      time.time() - start)
-            log.debug("Context:\n%s", context)
+            context = self._run_operator(operator, context)
         return context
+
+    @log_operator_time
+    def _run_operator(self, operator, context):
+        return operator.run(context)

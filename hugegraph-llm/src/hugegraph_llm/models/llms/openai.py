@@ -18,6 +18,7 @@
 
 import os
 from typing import Callable, List, Optional, Dict, Any
+
 import openai
 import tiktoken
 from retry import retry

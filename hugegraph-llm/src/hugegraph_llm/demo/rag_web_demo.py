@@ -509,4 +509,5 @@ if __name__ == "__main__":
 
     # TODO: we can't use reload now due to the config 'app' of uvicorn.run
     # ❎:f'{__name__}:app' / rag_web_demo:app / hugegraph_llm.demo.rag_web_demo:app
+    # TODO: merge unicorn log to avoid duplicate log output (should be unified/fixed later)
     uvicorn.run(app, host=args.host, port=args.port, reload=False)
