@@ -14,9 +14,9 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
-
+import json
 import os
+import re
 from typing import Callable, List, Optional, Dict, Any
 
 import openai
@@ -61,7 +61,7 @@ class OpenAIChat(BaseLLM):
                 max_tokens=self.max_tokens,
                 messages=messages,
             )
-            log.info("Token usage: %s", completions.usage)
+            log.info("Token usage: %s", json.dumps(completions.usage))
             return completions.choices[0].message.content
         # catch context length / do not retry
         except openai.error.InvalidRequestError as e:
@@ -92,7 +92,7 @@ class OpenAIChat(BaseLLM):
                 max_tokens=self.max_tokens,
                 messages=messages,
             )
-            log.info("Token usage: %s", completions.usage)
+            log.info("Token usage: %s", json.dumps(completions.usage))
             return completions.choices[0].message.content
         # catch context length / do not retry
         except openai.error.InvalidRequestError as e:

@@ -23,6 +23,7 @@ from retry import retry
 
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
+import json
 
 
 class OllamaClient(BaseLLM):
@@ -52,7 +53,7 @@ class OllamaClient(BaseLLM):
                 "completion_tokens": response['eval_count'],
                 "total_tokens": response['prompt_eval_count'] + response['eval_count'],
             }
-            log.info("Token usage: %s", usage)
+            log.info("Token usage: %s", json.dumps(usage))
             return response["message"]["content"]
         except Exception as e:
             print(f"Retrying LLM call {e}")
@@ -78,7 +79,7 @@ class OllamaClient(BaseLLM):
                 "completion_tokens": response['eval_count'],
                 "total_tokens": response['prompt_eval_count'] + response['eval_count'],
             }
-            log.info("Token usage: %s", usage)
+            log.info("Token usage: %s", json.dumps(usage))
             return response["message"]["content"]
         except Exception as e:
             print(f"Retrying LLM call {e}")
