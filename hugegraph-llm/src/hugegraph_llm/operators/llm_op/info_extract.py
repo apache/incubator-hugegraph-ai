@@ -18,8 +18,8 @@
 import re
 from typing import List, Any, Dict, Optional
 
-from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.document.chunk_split import ChunkSplitter
+from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
 
 SCHEMA_EXAMPLE_PROMPT = """## Main Task
@@ -152,8 +152,7 @@ class InfoExtract:
 
         for sentence in chunks:
             proceeded_chunk = self.extract_triples_by_llm(schema, sentence)
-            log.debug("[LLM] %s input: %s \n output:%s", self.__class__.__name__,
-                      sentence, proceeded_chunk)
+            log.debug("[Legacy] %s input: %s \n output:%s", self.__class__.__name__, sentence, proceeded_chunk)
             if schema:
                 extract_triples_by_regex_with_schema(schema, proceeded_chunk, context)
             else:
@@ -166,7 +165,8 @@ class InfoExtract:
             prompt = self.example_prompt + prompt
         return self.llm.generate(prompt=prompt)
 
-    def valid(self, element_id: str, max_length: int = 128):
+    # TODO: make 'max_length' be a configurable param in settings.py/settings.cfg
+    def valid(self, element_id: str, max_length: int = 256):
         if len(element_id.encode("utf-8")) >= max_length:
             log.warning("Filter out GraphElementID too long: %s", element_id)
             return False

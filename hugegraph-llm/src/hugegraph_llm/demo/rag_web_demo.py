@@ -144,6 +144,7 @@ def build_kg(  # pylint: disable=too-many-branches
         builder.fetch_graph_data()
     else:
         builder.extract_info(example_prompt, "property_graph")
+
     # "Test Mode", "Import Mode", "Clear and Import", "Rebuild Vector"
     if build_mode != BuildMode.TEST_MODE.value:
         builder.build_vector_index()
@@ -151,7 +152,7 @@ def build_kg(  # pylint: disable=too-many-branches
         builder.commit_to_hugegraph()
     if build_mode != BuildMode.TEST_MODE.value:
         builder.build_vertex_id_semantic_index()
-    log.debug(builder.operators)
+    log.warning("Current building mode: [%s]", build_mode)
     try:
         context = builder.run()
         return str(context)
@@ -502,8 +503,10 @@ if __name__ == "__main__":
     auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
     log.info("Authentication is %s.", "enabled" if auth_enabled else "disabled")
     # TODO: support multi-user login when need
+
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/", auth=("rag", os.getenv("TOKEN")) if auth_enabled else None)
 
     # TODO: we can't use reload now due to the config 'app' of uvicorn.run
     # ❎:f'{__name__}:app' / rag_web_demo:app / hugegraph_llm.demo.rag_web_demo:app
+    # TODO: merge unicorn log to avoid duplicate log output (should be unified/fixed later)
     uvicorn.run(app, host=args.host, port=args.port, reload=False)

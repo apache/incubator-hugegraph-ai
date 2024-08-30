@@ -16,7 +16,6 @@
 # under the License.
 
 
-import time
 from typing import Dict, Any, Optional, List, Literal
 
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
@@ -31,7 +30,7 @@ from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
-from hugegraph_llm.utils.log import log
+from hugegraph_llm.utils.decorators import log_time, log_operator_time
 
 
 class RAGPipeline:
@@ -210,6 +209,7 @@ class RAGPipeline:
         self._operators.append(PrintResult())
         return self
 
+    @log_time("total time")
     def run(self, **kwargs) -> Dict[str, Any]:
         """
         Execute all operators in the pipeline in sequence.
@@ -222,11 +222,11 @@ class RAGPipeline:
 
         context = kwargs
         context["llm"] = self._llm
+
         for operator in self._operators:
-            log.debug("Running operator: %s", operator.__class__.__name__)
-            start = time.time()
-            context = operator.run(context)
-            log.debug("Operator %s finished in %s seconds", operator.__class__.__name__,
-                      time.time() - start)
-            log.debug("Context:\n%s", context)
+            context = self._run_operator(operator, context)
         return context
+
+    @log_operator_time
+    def _run_operator(self, operator, context):
+        return operator.run(context)
