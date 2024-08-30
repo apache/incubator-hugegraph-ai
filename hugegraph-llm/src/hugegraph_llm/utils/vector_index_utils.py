@@ -14,19 +14,61 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
-
+import json
 import os
 
+import docx
+import gradio as gr
 from hugegraph_llm.config import resource_path, settings
+from hugegraph_llm.indices.vector_index import VectorIndex
+from hugegraph_llm.models.embeddings.init_embedding import Embeddings
+from hugegraph_llm.models.llms.init_llm import LLMs
+from hugegraph_llm.operators.kg_construction_task import KgBuilder
+from hugegraph_llm.utils.hugegraph_utils import get_hg_client
+
+
+def read_documents(input_file, input_text):
+    if input_file:
+        texts = []
+        for file in input_file:
+            full_path = file.name
+            if full_path.endswith(".txt"):
+                with open(full_path, "r", encoding="utf-8") as f:
+                    texts.append(f.read())
+            elif full_path.endswith(".docx"):
+                text = ""
+                doc = docx.Document(full_path)
+                for para in doc.paragraphs:
+                    text += para.text
+                    text += "\n"
+                texts.append(text)
+            elif full_path.endswith(".pdf"):
+                # TODO: support PDF file
+                raise gr.Error("PDF will be supported later! Try to upload text/docx now")
+            else:
+                raise gr.Error("Please input txt or docx file.")
+    elif input_text:
+        texts = [input_text]
+    else:
+        raise gr.Error("Please input text or upload file.")
+    return texts
+
+
+def get_vector_index_info():
+    vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, settings.graph_name, "chunks")))
+    return json.dumps({
+        "embed_dim": vector_index.index.d,
+        "num_vectors": vector_index.index.ntotal,
+        "num_properties": len(vector_index.properties)
+    }, ensure_ascii=False, indent=2)
 
 
 def clean_vector_index():
-    if os.path.exists(os.path.join(resource_path, settings.graph_name, "vidx.faiss")):
-        os.remove(os.path.join(resource_path, settings.graph_name, "vidx.faiss"))
-    if os.path.exists(os.path.join(resource_path, settings.graph_name, "vidx.pkl")):
-        os.remove(os.path.join(resource_path, settings.graph_name, "vidx.pkl"))
-    if os.path.exists(os.path.join(resource_path, settings.graph_name, "vid.faiss")):
-        os.remove(os.path.join(resource_path, settings.graph_name, "vid.faiss"))
-    if os.path.exists(os.path.join(resource_path, settings.graph_name, "vid.pkl")):
-        os.remove(os.path.join(resource_path, settings.graph_name, "vid.pkl"))
+    VectorIndex.clean(str(os.path.join(resource_path, settings.graph_name, "chunks")))
+    gr.Info("Clean vector index successfully!")
+
+
+def build_vector_index(input_file, input_text):
+    texts = read_documents(input_file, input_text)
+    builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
+    return builder.chunk_split(texts, "paragraph", "zh").build_vector_index().run()

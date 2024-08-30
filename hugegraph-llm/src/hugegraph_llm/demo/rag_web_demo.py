@@ -19,7 +19,7 @@
 import argparse
 import json
 import os
-from typing import List, Union
+from typing import List
 
 import docx
 import gradio as gr
@@ -38,10 +38,12 @@ from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
+from hugegraph_llm.utils.graph_index_utils import get_graph_index_info, clean_graph_index, fit_vid_index, \
+    build_graph_index, extract_graph
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.utils.vector_index_utils import clean_vector_index
+from hugegraph_llm.utils.vector_index_utils import clean_vector_index, build_vector_index, get_vector_index_info
 
 sec = HTTPBearer()
 
@@ -97,31 +99,35 @@ def rag_answer(
 
 
 def build_kg(  # pylint: disable=too-many-branches
-        files: Union[NamedString, List[NamedString]],
+        input_file: List[NamedString],
+        input_text: str,
         schema: str,
         example_prompt: str,
         build_mode: str
 ) -> str:
-    if isinstance(files, NamedString):
-        files = [files]
-    texts = []
-    for file in files:
-        full_path = file.name
-        if full_path.endswith(".txt"):
-            with open(full_path, "r", encoding="utf-8") as f:
-                texts.append(f.read())
-        elif full_path.endswith(".docx"):
-            text = ""
-            doc = docx.Document(full_path)
-            for para in doc.paragraphs:
-                text += para.text
-                text += "\n"
-            texts.append(text)
-        elif full_path.endswith(".pdf"):
-            # TODO: support PDF file
-            raise gr.Error("PDF will be supported later! Try to upload text/docx now")
-        else:
-            raise gr.Error("Please input txt or docx file.")
+    if input_file:
+        texts = []
+        for file in input_file:
+            full_path = file.name
+            if full_path.endswith(".txt"):
+                with open(full_path, "r", encoding="utf-8") as f:
+                    texts.append(f.read())
+            elif full_path.endswith(".docx"):
+                text = ""
+                doc = docx.Document(full_path)
+                for para in doc.paragraphs:
+                    text += para.text
+                    text += "\n"
+                texts.append(text)
+            elif full_path.endswith(".pdf"):
+                # TODO: support PDF file
+                raise gr.Error("PDF will be supported later! Try to upload text/docx now")
+            else:
+                raise gr.Error("Please input txt or docx file.")
+    elif input_text:
+        texts = [input_text]
+    else:
+        raise gr.Error("Please input text or upload file.")
     if build_mode in (BuildMode.CLEAR_AND_IMPORT.value, BuildMode.REBUILD_VECTOR.value):
         clean_vector_index()
     if build_mode == BuildMode.CLEAR_AND_IMPORT.value:
@@ -422,24 +428,49 @@ def init_rag_ui() -> gr.Interface:
 }"""
 
         with gr.Row():
-            input_file = gr.File(
-                value=[os.path.join(resource_path, "demo", "test.txt")],
-                label="Docs (multi-files can be selected together)",
-                file_count="multiple")
+            with gr.Column():
+                with gr.Tab("file") as tab_upload_file:
+                    input_file = gr.File(
+                        value=[os.path.join(resource_path, "demo", "test.txt")],
+                        label="Docs (multi-files can be selected together)",
+                        file_count="multiple"
+                    )
+                with gr.Tab("text") as tab_upload_text:
+                    input_text = gr.Textbox(value="", label="Doc(s)")
             input_schema = gr.Textbox(value=schema, label="Schema")
             info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head")
-            with gr.Column():
-                mode = gr.Radio(
-                    choices=["Test Mode", "Import Mode", "Clear and Import", "Rebuild Vector"],
-                    value="Test Mode",
-                    label="Build mode",
-                )
-                btn = gr.Button("Build Vector/Graph RAG")
+        with gr.Row():
+            vector_index_btn0 = gr.Button("Get Vector Index Info")
+            vector_index_btn1 = gr.Button("Clear Vector Index")
+            vector_index_btn2 = gr.Button("Import into Vector Index", variant="primary")
+        with gr.Row():
+            graph_index_btn0 = gr.Button("Get Graph Index Info")
+            graph_index_btn1 = gr.Button("Clear Graph Index")
+            graph_index_btn2 = gr.Button("Extract Graph")
+            graph_index_btn3 = gr.Button("Fit Vid Index")
+            graph_index_btn4 = gr.Button("Import into Graph Index", variant="primary")
         with gr.Row():
             out = gr.Textbox(label="Output", show_copy_button=True)
-        btn.click(  # pylint: disable=no-member
-            fn=build_kg, inputs=[input_file, input_schema, info_extract_template, mode], outputs=out
-        )
+        vector_index_btn0.click(get_vector_index_info, outputs=out)
+        vector_index_btn1.click(clean_vector_index)  # pylint: disable=no-member
+        vector_index_btn2.click(build_vector_index, inputs=[input_file, input_text], outputs=out)  # pylint: disable=no-member
+        graph_index_btn0.click(get_graph_index_info, outputs=out)  # pylint: disable=no-member
+        graph_index_btn1.click(clean_graph_index)  # pylint: disable=no-member
+        graph_index_btn2.click(extract_graph, inputs=[input_file, input_text, input_schema,  # pylint: disable=no-member
+                                                      info_extract_template], outputs=out)
+        graph_index_btn3.click(fit_vid_index, outputs=out)  # pylint: disable=no-member
+        graph_index_btn4.click(build_graph_index, inputs=[input_file, input_text,  # pylint: disable=no-member
+                                                          input_schema, info_extract_template], outputs=out)
+
+        def on_tab_select(input_f, input_t, evt: gr.SelectData):
+            print(f"You selected {evt.value} at {evt.index} from {evt.target}")
+            if evt.value == "file":
+                return input_f, ""
+            else:
+                return [], input_t
+        tab_upload_file.select(fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text])
+        tab_upload_text.select(fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text])
+
 
         gr.Markdown("""## 2. RAG with HugeGraph 📖""")
         with gr.Row():

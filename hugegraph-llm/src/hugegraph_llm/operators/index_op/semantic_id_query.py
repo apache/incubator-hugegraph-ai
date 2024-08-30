@@ -32,9 +32,8 @@ class SemanticIdQuery:
             topk_per_query: int = 10,
             topk_per_keyword: int = 1
     ):
-        index_file = str(os.path.join(resource_path, settings.graph_name, "vid.faiss"))
-        content_file = str(os.path.join(resource_path, settings.graph_name, "vid.pkl"))
-        self.vector_index = VectorIndex.from_index_file(index_file, content_file)
+        self.index_dir = str(os.path.join(resource_path, settings.graph_name, "graph_vids"))
+        self.vector_index = VectorIndex.from_index_file(self.index_dir)
         self.embedding = embedding
         self.by = by
         self.topk_per_query = topk_per_query
