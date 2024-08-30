@@ -26,6 +26,8 @@ class FetchGraphData:
         self.graph = graph
 
     def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        if context is None:
+            context = {}
         if "vertices" not in context:
             context["vertices"] = []
         vertices = self.graph.gremlin().exec("g.V()")["data"]

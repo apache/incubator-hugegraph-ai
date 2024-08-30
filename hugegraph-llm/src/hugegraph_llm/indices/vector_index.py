@@ -17,7 +17,7 @@
 import os
 import pickle as pkl
 from copy import deepcopy
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Set, Union
 
 import faiss
 import numpy as np
@@ -49,6 +49,8 @@ class VectorIndex:
         return vector_index
 
     def to_index_file(self, dir_path: str):
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
         index_file = os.path.join(dir_path, INDEX_FILE_NAME)
         properties_file = os.path.join(dir_path, PROPERTIES_FILE_NAME)
         faiss.write_index(self.index, index_file)
@@ -63,16 +65,24 @@ class VectorIndex:
         self.index.add(np.array(vectors))
         self.properties.extend(props)
 
-    def remove(self, props: List[Any]):
-        prop_set = set(props)
+    def remove(self, props: Union[Set[Any], List[Any]]) -> int:
+        if isinstance(props, list):
+            props = set(props)
         indices = []
+        remove_num = 0
         for i, p in enumerate(self.properties):
-            if p in prop_set:
+            if p in props:
                 indices.append(i)
+                remove_num += 1
         self.index.remove_ids(np.array(indices))
         self.properties = [p for i, p in enumerate(self.properties) if i not in indices]
+        return remove_num
 
     def search(self, query_vector: List[float], top_k: int) -> List[Dict[str, Any]]:
+        if self.index.ntotal == 0:
+            return []
+        if len(query_vector) != self.index.d:
+            raise ValueError("Query vector dimension does not match index dimension!")
         _, indices = self.index.search(np.array([query_vector]), top_k)
         results = []
         for i in indices[0]:

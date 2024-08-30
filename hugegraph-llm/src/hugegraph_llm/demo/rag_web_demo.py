@@ -19,7 +19,7 @@
 import argparse
 import json
 import os
-from typing import List, Union
+from typing import List
 
 import docx
 import gradio as gr
@@ -38,10 +38,12 @@ from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.graph_rag_task import GraphRAG
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
+from hugegraph_llm.utils.graph_index_utils import get_graph_index_info, clean_graph_index, fit_vid_index, \
+    build_graph_index, extract_graph
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.utils.vector_index_utils import clean_vector_index
+from hugegraph_llm.utils.vector_index_utils import clean_vector_index, build_vector_index, get_vector_index_info
 
 sec = HTTPBearer()
 
@@ -434,30 +436,28 @@ def init_rag_ui() -> gr.Interface:
                     input_text = gr.Textbox(value="", label="Doc(s)")
             input_schema = gr.Textbox(value=schema, label="Schema")
             info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head")
-            with gr.Column():
-                clear_radio = gr.Radio(
-                    choices=[True, False], value=True, label="Clear data"
-                )
         with gr.Row():
             vector_index_btn0 = gr.Button("Get Vector Index Info")
             vector_index_btn1 = gr.Button("Clear Vector Index")
-            vector_index_btn2 = gr.Button("Build Vector Index (Append)", variant="primary")
+            vector_index_btn2 = gr.Button("Import into Vector Index", variant="primary")
         with gr.Row():
             graph_index_btn0 = gr.Button("Get Graph Index Info")
             graph_index_btn1 = gr.Button("Clear Graph Index")
             graph_index_btn2 = gr.Button("Extract Graph")
             graph_index_btn3 = gr.Button("Fit Vid Index")
-            graph_index_btn4 = gr.Button("Build Graph Index (Append)", variant="primary")
+            graph_index_btn4 = gr.Button("Import into Graph Index", variant="primary")
         with gr.Row():
             out = gr.Textbox(label="Output", show_copy_button=True)
         vector_index_btn0.click(get_vector_index_info, outputs=out)
         vector_index_btn1.click(clean_vector_index)  # pylint: disable=no-member
-        vector_index_btn2.click(build_vector_index)  # pylint: disable=no-member
-        graph_index_btn0.click(get_graph_index_info, outputs=out)
-        graph_index_btn1.click(clear_graph_index)
-        graph_index_btn2.click(extract_graph)
-        graph_index_btn3.click(fit_vid_index)
-        graph_index_btn4.click(build_graph_index)
+        vector_index_btn2.click(build_vector_index, inputs=[input_file, input_text], outputs=out)  # pylint: disable=no-member
+        graph_index_btn0.click(get_graph_index_info, outputs=out)  # pylint: disable=no-member
+        graph_index_btn1.click(clean_graph_index)  # pylint: disable=no-member
+        graph_index_btn2.click(extract_graph, inputs=[input_file, input_text, input_schema,  # pylint: disable=no-member
+                                                      info_extract_template], outputs=out)
+        graph_index_btn3.click(fit_vid_index, outputs=out)  # pylint: disable=no-member
+        graph_index_btn4.click(build_graph_index, inputs=[input_file, input_text,  # pylint: disable=no-member
+                                                          input_schema, info_extract_template], outputs=out)
 
         def on_tab_select(input_f, input_t, evt: gr.SelectData):
             print(f"You selected {evt.value} at {evt.index} from {evt.target}")
