@@ -53,8 +53,7 @@ def log_time(msg: Optional[str] = "") -> Callable:
 
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
-        else:
-            return sync_wrapper
+        return sync_wrapper
 
     # handle "@log_time" usage -> better to use "@log_time()" instead
     if callable(msg):

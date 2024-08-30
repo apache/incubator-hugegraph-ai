@@ -26,7 +26,8 @@ from hugegraph_llm.config import settings
 def rag_http_api(router: APIRouter, rag_answer_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf):
     @router.post("/rag", status_code=status.HTTP_200_OK)
     def rag_answer_api(req: RAGRequest):
-        result = rag_answer_func(req.query, req.raw_llm, req.vector_only, req.graph_only, req.graph_vector, req.answer_prompt)
+        result = rag_answer_func(req.query, req.raw_llm, req.vector_only, req.graph_only, req.graph_vector,
+                                 req.answer_prompt)
         return {
             key: value
             for key, value in zip(["raw_llm", "vector_only", "graph_only", "graph_vector"], result)

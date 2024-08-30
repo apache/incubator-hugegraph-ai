@@ -16,6 +16,7 @@
 # under the License.
 
 import os
+import json
 from typing import Optional, List, Dict, Any, Callable
 
 import qianfan
@@ -23,7 +24,6 @@ from retry import retry
 
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
-import json
 
 
 class QianfanClient(BaseLLM):

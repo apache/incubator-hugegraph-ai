@@ -98,7 +98,7 @@ def rag_answer(
         raise gr.Error(f"An unexpected error occurred: {str(e)}")
 
 
-def build_kg(  # pylint: disable=too-many-branches
+def build_kg(
         input_file: List[NamedString],
         input_text: str,
         schema: str,
@@ -451,7 +451,7 @@ def init_rag_ui() -> gr.Interface:
             graph_index_btn4 = gr.Button("Import into Graph Index", variant="primary")
         with gr.Row():
             out = gr.Textbox(label="Output", show_copy_button=True)
-        vector_index_btn0.click(get_vector_index_info, outputs=out)
+        vector_index_btn0.click(get_vector_index_info, outputs=out)  # pylint: disable=no-member
         vector_index_btn1.click(clean_vector_index)  # pylint: disable=no-member
         vector_index_btn2.click(build_vector_index, inputs=[input_file, input_text], outputs=out)  # pylint: disable=no-member
         graph_index_btn0.click(get_graph_index_info, outputs=out)  # pylint: disable=no-member
@@ -468,8 +468,8 @@ def init_rag_ui() -> gr.Interface:
                 return input_f, ""
             else:
                 return [], input_t
-        tab_upload_file.select(fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text])
-        tab_upload_text.select(fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text])
+        tab_upload_file.select(fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text])  # pylint: disable=no-member
+        tab_upload_text.select(fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text])  # pylint: disable=no-member
 
 
         gr.Markdown("""## 2. RAG with HugeGraph 📖""")
