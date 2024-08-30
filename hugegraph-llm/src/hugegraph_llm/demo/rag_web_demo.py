@@ -539,31 +539,38 @@ def init_rag_ui() -> gr.Interface:
                 vector_only_out = gr.Textbox(label="Vector-only Answer", show_copy_button=True)
                 graph_only_out = gr.Textbox(label="Graph-only Answer", show_copy_button=True)
                 graph_vector_out = gr.Textbox(label="Graph-Vector Answer", show_copy_button=True)
+                from hugegraph_llm.operators.llm_op.answer_synthesize import DEFAULT_ANSWER_TEMPLATE
+
+                answer_prompt_input = gr.Textbox(
+                    value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt", show_copy_button=True
+                )
             with gr.Column(scale=1):
-                raw_radio = gr.Radio(choices=[True, False], value=True, label="Basic LLM Answer")
-                vector_only_radio = gr.Radio(choices=[True, False], value=False, label="Vector-only Answer")
-                graph_only_radio = gr.Radio(choices=[True, False], value=False, label="Graph-only Answer")
                 with gr.Row():
-
-                    def toggle_slider(enable):
-                        return gr.update(interactive=enable)
-
+                    raw_radio = gr.Radio(choices=[True, False], value=True, label="Basic LLM Answer")
+                    vector_only_radio = gr.Radio(choices=[True, False], value=False, label="Vector-only Answer")
+                with gr.Row():
+                    graph_only_radio = gr.Radio(choices=[True, False], value=False, label="Graph-only Answer")
                     graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
-                    graph_ratio = gr.Slider(
-                        0,
-                        1,
-                        0.5,
-                        label="Graph Ratio",
-                        step=0.1,
-                        interactive=False,
-                    )
-                    graph_vector_radio.change(toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio)
+
+                def toggle_slider(enable):
+                    return gr.update(interactive=enable)
+
                 with gr.Column():
-                    rerank_method = gr.Dropdown(
-                        choices=["bleu", "reranker"],
-                        value="bleu",
-                        label="Rerank method",
-                    )
+                    with gr.Row():
+                        rerank_method = gr.Dropdown(
+                            choices=["bleu", "reranker"] if settings.reranker_type else ["bleu"],
+                            value="bleu",
+                            label="Rerank method",
+                        )
+                        graph_ratio = gr.Slider(
+                            0,
+                            1,
+                            0.5,
+                            label="Graph Ratio",
+                            step=0.1,
+                            interactive=False,
+                        )
+                    graph_vector_radio.change(toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio)
                     near_neighbor_first = gr.Checkbox(
                         value=False,
                         label="Near neighbor first(Optional)",
@@ -573,12 +580,8 @@ def init_rag_ui() -> gr.Interface:
                         "",
                         label="Custom related information(Optional)",
                     )
-                btn = gr.Button("Answer Question")
-                from hugegraph_llm.operators.llm_op.answer_synthesize import DEFAULT_ANSWER_TEMPLATE
+                    btn = gr.Button("Answer Question")
 
-                answer_prompt_input = gr.Textbox(
-                    value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt", show_copy_button=True
-                )
         btn.click(  # pylint: disable=no-member
             fn=rag_answer,
             inputs=[

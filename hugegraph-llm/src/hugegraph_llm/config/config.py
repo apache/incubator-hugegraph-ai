@@ -35,7 +35,7 @@ class Config:
     # env_path: Optional[str] = ".env"
     llm_type: Literal["openai", "ollama", "qianfan_wenxin", "zhipu"] = "openai"
     embedding_type: Optional[Literal["openai", "ollama", "qianfan_wenxin", "zhipu"]] = "openai"
-    reranker_type: Optional[Literal["cohere", "siliconflow"]] = "cohere"
+    reranker_type: Optional[Literal["cohere", "siliconflow"]] = None
     # 1. OpenAI settings
     openai_api_base: Optional[str] = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
     openai_api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
