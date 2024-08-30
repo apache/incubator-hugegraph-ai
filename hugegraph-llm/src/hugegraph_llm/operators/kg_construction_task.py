@@ -96,7 +96,7 @@ class KgBuilder:
         self.operators.append(PrintResult())
         return self
 
-    @log_time
+    @log_time("total time")
     def run(self) -> Dict[str, Any]:
         context = None
         for operator in self.operators:

@@ -70,7 +70,9 @@ def log_operator_time(func: Callable) -> Callable:
         start = time.perf_counter()
         result = func(*args, **kwargs)
         op_time = time.perf_counter() - start
-        log.debug("Operator %s finished in %.2f seconds", operator.__class__.__name__, op_time)
-        log.debug("Context:\n%s", result)
+        # Only record time ≥ 0.01s (10ms)
+        if op_time >= 0.01:
+            log.debug("Operator %s finished in %.2f seconds", operator.__class__.__name__, op_time)
+            log.debug("Context:\n%s", result)
         return result
     return wrapper

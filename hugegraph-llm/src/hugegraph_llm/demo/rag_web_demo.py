@@ -144,6 +144,7 @@ def build_kg(  # pylint: disable=too-many-branches
         builder.fetch_graph_data()
     else:
         builder.extract_info(example_prompt, "property_graph")
+
     # "Test Mode", "Import Mode", "Clear and Import", "Rebuild Vector"
     if build_mode != BuildMode.TEST_MODE.value:
         builder.build_vector_index()
@@ -151,7 +152,7 @@ def build_kg(  # pylint: disable=too-many-branches
         builder.commit_to_hugegraph()
     if build_mode != BuildMode.TEST_MODE.value:
         builder.build_vertex_id_semantic_index()
-    log.debug(builder.operators)
+    log.warning("Current building mode: [%s]", build_mode)
     try:
         context = builder.run()
         return str(context)
