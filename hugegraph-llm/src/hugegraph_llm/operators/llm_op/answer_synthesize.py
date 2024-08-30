@@ -154,6 +154,7 @@ class AnswerSynthesize:
             task_cache["graph_vector_task"] = asyncio.create_task(
                 self._llm.agenerate(prompt=prompt)
             )
+        # TODO: use log.debug instead of print
         if task_cache.get("raw_task"):
             response = await task_cache["raw_task"]
             context["raw_answer"] = response

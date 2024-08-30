@@ -26,6 +26,7 @@ class RAGRequest(BaseModel):
     vector_only: Optional[bool] = False
     graph_only: Optional[bool] = False
     graph_vector: Optional[bool] = False
+    answer_prompt: Optional[str] = None
 
 
 class GraphConfigRequest(BaseModel):
