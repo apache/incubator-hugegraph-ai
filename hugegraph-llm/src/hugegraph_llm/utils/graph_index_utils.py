@@ -16,32 +16,31 @@
 # under the License.
 
 
+import json
 import os
 
-import docx
 import gradio as gr
-from hugegraph_llm.config import resource_path, settings
-from hugegraph_llm.indices.vector_index import VectorIndex
-from hugegraph_llm.models.embeddings.init_embedding import Embeddings
-from hugegraph_llm.models.llms.init_llm import LLMs
-from hugegraph_llm.operators.kg_construction_task import KgBuilder
-from hugegraph_llm.utils.hugegraph_utils import get_hg_client
+from .hugegraph_utils import get_hg_client, clean_hg_data
+from .log import log
+from ..config import resource_path
+from ..indices.vector_index import VectorIndex
+from ..models.embeddings.init_embedding import Embeddings
+from ..models.llms.init_llm import LLMs
+from ..operators.kg_construction_task import KgBuilder
 
 
-def get_vector_index_info():
-    vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, settings.graph_name, "chunks")))
-    return {
-        "embed_dim": vector_index.index.d,
-        "num_vectors": vector_index.index.ntotal,
-        "num_properties": len(vector_index.properties)
-    }
+def get_graph_index_info():
+    client = get_hg_client()
+    vector_index = VectorIndex.from_index_file(os.path.join(resource_path, "graph_vids"))
+    return client.graph_manager.get_graph_index_info()
 
 
-def clean_vector_index():
-    VectorIndex.clean(str(os.path.join(resource_path, settings.graph_name, "chunks")))
+def clean_graph_index():
+    clean_hg_data()
+    VectorIndex.clean(str(os.path.join(resource_path, settings.graph_name, "graph_vids")))
 
 
-def build_vector_index(input_file, input_text):
+def extract_graph_data(input_file, input_text, schema, example_prompt):
     if input_file:
         texts = []
         for file in input_file:
@@ -66,4 +65,28 @@ def build_vector_index(input_file, input_text):
     else:
         raise gr.Error("Please input text or upload file.")
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
-    return builder.chunk_split(texts, "paragraph", "zh").build_vector_index().run()
+
+    if schema:
+        try:
+            schema = json.loads(schema.strip())
+            builder.import_schema(from_user_defined=schema)
+        except json.JSONDecodeError as e:
+            log.error(e)
+            builder.import_schema(from_hugegraph=schema)
+        else:
+            return "ERROR: please input schema."
+    builder.chunk_split(texts, "paragraph", "zh")
+
+    builder.extract_info(example_prompt, "property_graph")
+
+    if build_mode in (BuildMode.CLEAR_AND_IMPORT.value, BuildMode.IMPORT_MODE.value):
+        builder.commit_to_hugegraph()
+    if build_mode != BuildMode.TEST_MODE.value:
+        builder.build_vertex_id_semantic_index()
+    log.debug(builder.operators)
+    try:
+        context = builder.run()
+        return str(context)
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        log.error(e)
+        raise gr.Error(str(e))

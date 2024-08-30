@@ -27,8 +27,7 @@ from hugegraph_llm.models.embeddings.base import BaseEmbedding
 class BuildVectorIndex:
     def __init__(self, embedding: BaseEmbedding):
         self.embedding = embedding
-        self.index_file = str(os.path.join(resource_path, settings.graph_name, "vidx.faiss"))
-        self.content_file = str(os.path.join(resource_path, settings.graph_name, "vidx.pkl"))
+        self.vector_index = VectorIndex.from_index_file(os.path.join(resource_path, settings.graph_name, "chunks"))
         if not os.path.exists(os.path.join(resource_path, settings.graph_name)):
             os.mkdir(os.path.join(resource_path, settings.graph_name))
 
