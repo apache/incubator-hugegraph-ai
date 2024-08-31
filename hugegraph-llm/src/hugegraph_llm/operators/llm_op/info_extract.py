@@ -157,6 +157,9 @@ class InfoExtract:
                 extract_triples_by_regex_with_schema(schema, proceeded_chunk, context)
             else:
                 extract_triples_by_regex(proceeded_chunk, context)
+
+        context["call_count"] = context.get("call_count", 0) + len(chunks)
+
         return self._filter_long_id(context)
 
     def extract_triples_by_llm(self, schema, chunk):

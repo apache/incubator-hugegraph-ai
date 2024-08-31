@@ -110,6 +110,9 @@ class PropertyGraphExtract:
                 context["vertices"].append(item)
             elif item["type"] == "edge":
                 context["edges"].append(item)
+
+        context["call_count"] = context.get("call_count", 0) + len(chunks)
+
         return context
 
     def extract_property_graph_by_llm(self, schema, chunk):
