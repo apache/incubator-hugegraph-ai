@@ -22,7 +22,7 @@ from hugegraph_llm.operators.common_op.print_result import PrintResult
 from hugegraph_llm.operators.index_op.build_gremlin_example_index import BuildGremlinExampleIndex
 from hugegraph_llm.operators.index_op.gremlin_example_index_query import GremlinExampleIndexQuery
 from hugegraph_llm.operators.llm_op.gremlin_generate import GremlinGenerate
-from hugegraph_llm.utils.decorators import log_time, log_operator_time, log_llm_qps
+from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_qps
 
 
 class GremlinGenerator:
@@ -50,7 +50,7 @@ class GremlinGenerator:
         return self
 
     @log_time("total time")
-    @log_llm_qps
+    @record_qps
     def run(self):
         context = {}
         for operator in self.operators:

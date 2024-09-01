@@ -78,13 +78,14 @@ def log_operator_time(func: Callable) -> Callable:
     return wrapper
 
 
-def log_llm_qps(func: Callable) -> Callable:
+def record_qps(func: Callable) -> Callable:
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         start = time.perf_counter()
         result = func(*args, **kwargs)
         call_count = result.get("call_count", 0)
         qps = call_count / (time.perf_counter() - start)
-        log.debug("%s LLM QPS: %.2f", args[0].__class__.__name__, qps)
+        if qps >= 0.10:
+            log.debug("%s QPS: %.2f/s", args[0].__class__.__name__, qps)
         return result
     return wrapper

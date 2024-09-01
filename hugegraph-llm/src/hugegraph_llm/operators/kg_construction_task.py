@@ -31,7 +31,7 @@ from hugegraph_llm.operators.index_op.build_vector_index import BuildVectorIndex
 from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
 from hugegraph_llm.operators.llm_op.info_extract import InfoExtract
 from hugegraph_llm.operators.llm_op.property_graph_extract import PropertyGraphExtract
-from hugegraph_llm.utils.decorators import log_time, log_operator_time, log_llm_qps
+from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_qps
 from pyhugegraph.client import PyHugeClient
 
 
@@ -97,7 +97,7 @@ class KgBuilder:
         return self
 
     @log_time("total time")
-    @log_llm_qps
+    @record_qps
     def run(self) -> Dict[str, Any]:
         context = None
         for operator in self.operators:
