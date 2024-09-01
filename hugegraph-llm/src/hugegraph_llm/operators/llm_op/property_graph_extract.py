@@ -20,8 +20,8 @@ import json
 import re
 from typing import List, Any, Dict
 
-from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.document.chunk_split import ChunkSplitter
+from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
 
 # TODO: put in a separate file for users to customize the content
@@ -110,6 +110,8 @@ class PropertyGraphExtract:
                 context["vertices"].append(item)
             elif item["type"] == "edge":
                 context["edges"].append(item)
+
+        context["call_count"] = context.get("call_count", 0) + len(chunks)
         return context
 
     def extract_property_graph_by_llm(self, schema, chunk):
@@ -118,7 +120,7 @@ class PropertyGraphExtract:
             prompt = self.example_prompt + prompt
         return self.llm.generate(prompt=prompt)
 
-    def _extract_and_filter_label(self, schema, text):
+    def _extract_and_filter_label(self, schema, text) -> List[Dict[str, Any]]:
         # analyze llm generated text to JSON
         json_strings = re.findall(r'(\[.*?])', text, re.DOTALL)
         longest_json = max(json_strings, key=lambda x: len(''.join(x)), default=('', ''))
@@ -150,7 +152,7 @@ class PropertyGraphExtract:
 
         return items
 
-    def filter_item(self, schema, items):
+    def filter_item(self, schema, items) -> List[Dict[str, Any]]:
         # filter vertex and edge with invalid properties
         filtered_items = []
         properties_map = {"vertex": {}, "edge": {}}

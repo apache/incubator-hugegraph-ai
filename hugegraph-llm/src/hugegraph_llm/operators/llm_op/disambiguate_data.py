@@ -55,4 +55,6 @@ class DisambiguateData:
             print(
                 f"LLM {self.__class__.__name__} input:{prompt} \n"
                 f" output: {llm_output} \n data: {data}")
+            data["call_count"] = data.get("call_count", 0) + 1
+
         return data
