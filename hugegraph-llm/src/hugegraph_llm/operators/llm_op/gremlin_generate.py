@@ -102,7 +102,6 @@ class GremlinGenerate:
         context["result"] = self._extract_gremlin(response)
 
         context["call_count"] = context.get("call_count", 0) + 1
-
         return context
 
     def _extract_gremlin(self, response: str) -> str:
