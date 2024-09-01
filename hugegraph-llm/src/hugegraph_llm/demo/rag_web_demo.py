@@ -580,7 +580,7 @@ def init_rag_ui() -> gr.Interface:
                         "",
                         label="Custom related information(Optional)",
                     )
-                    btn = gr.Button("Answer Question")
+                    btn = gr.Button("Answer Question", variant="primary")
 
         btn.click(  # pylint: disable=no-member
             fn=rag_answer,
