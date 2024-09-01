@@ -87,5 +87,7 @@ def record_qps(func: Callable) -> Callable:
         qps = call_count / (time.perf_counter() - start)
         if qps >= 0.10:
             log.debug("%s QPS: %.2f/s", args[0].__class__.__name__, qps)
+        else:
+            log.debug("%s QPS: %f/s", args[0].__class__.__name__, qps)
         return result
     return wrapper
