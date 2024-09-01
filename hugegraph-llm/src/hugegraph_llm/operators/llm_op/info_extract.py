@@ -157,22 +157,24 @@ class InfoExtract:
                 extract_triples_by_regex_with_schema(schema, proceeded_chunk, context)
             else:
                 extract_triples_by_regex(proceeded_chunk, context)
+
+        context["call_count"] = context.get("call_count", 0) + len(chunks)
         return self._filter_long_id(context)
 
-    def extract_triples_by_llm(self, schema, chunk):
+    def extract_triples_by_llm(self, schema, chunk) -> str:
         prompt = generate_extract_triple_prompt(chunk, schema)
         if self.example_prompt is not None:
             prompt = self.example_prompt + prompt
         return self.llm.generate(prompt=prompt)
 
     # TODO: make 'max_length' be a configurable param in settings.py/settings.cfg
-    def valid(self, element_id: str, max_length: int = 256):
+    def valid(self, element_id: str, max_length: int = 256) -> bool:
         if len(element_id.encode("utf-8")) >= max_length:
             log.warning("Filter out GraphElementID too long: %s", element_id)
             return False
         return True
 
-    def _filter_long_id(self, graph):
+    def _filter_long_id(self, graph) -> Dict[str, List[Any]]:
         graph["vertices"] = [vertex for vertex in graph["vertices"] if self.valid(vertex["id"])]
         graph["edges"] = [edge for edge in graph["edges"]
                           if self.valid(edge["start"]) and self.valid(edge["end"])]

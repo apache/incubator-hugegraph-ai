@@ -175,4 +175,7 @@ class AnswerSynthesize:
             context["graph_vector_answer"] = response
             if verbose:
                 print(f"\033[91mANSWER: {response}\033[0m")
+
+        ops = sum([self._raw_answer, self._vector_only_answer, self._graph_only_answer, self._graph_vector_answer])
+        context['call_count'] = context.get('call_count', 0) + ops
         return context
