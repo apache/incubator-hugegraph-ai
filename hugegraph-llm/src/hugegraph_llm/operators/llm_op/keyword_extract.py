@@ -93,6 +93,7 @@ class KeywordExtract:
         if verbose:
             print(f"\033[92mKEYWORDS: {context['keywords']}\033[0m")
 
+        # extracting keywords and expanding synonyms increases call count by 2
         context["call_count"] = context.get("call_count", 0) + 2
         return context
 
