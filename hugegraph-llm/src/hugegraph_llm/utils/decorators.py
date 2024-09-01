@@ -85,6 +85,7 @@ def log_llm_qps(func: Callable) -> Callable:
         result = func(*args, **kwargs)
         call_count = result.get("call_count", 0)
         qps = call_count / (time.perf_counter() - start)
-        log.debug("%s LLM QPS: %.2f", args[0].__class__.__name__, qps)
+        if qps >= 0.01:
+            log.debug("%s LLM QPS: %.2f", args[0].__class__.__name__, qps)
         return result
     return wrapper
