@@ -28,6 +28,7 @@ dirname = os.path.dirname
 package_path = dirname(dirname(dirname(dirname(os.path.abspath(__file__)))))
 env_path = os.path.join(package_path, ".env")
 
+# TODO: We need to tidy up the partition settings
 
 @dataclass
 class Config:
@@ -59,6 +60,7 @@ class Config:
     qianfan_embed_url: Optional[str] = qianfan_url_prefix + "/embeddings/"
     # https://cloud.baidu.com/doc/WENXINWORKSHOP/s/alj562vvu
     qianfan_embedding_model: Optional[str] = "embedding-v1"
+    # TODO: To be confirmed, whether to configure
     # 4. ZhiPu(GLM) settings
     zhipu_api_key: Optional[str] = None
     zhipu_language_model: Optional[str] = "glm-4"
