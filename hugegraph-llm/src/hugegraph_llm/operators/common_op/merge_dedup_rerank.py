@@ -21,7 +21,9 @@ from typing import Literal, Dict, Any, List, Optional, Tuple
 import jieba
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.rerankers.init_reranker import Rerankers
+from hugegraph_llm.utils.log import log
 from nltk.translate.bleu_score import sentence_bleu
+import requests
 
 
 def get_bleu_score(query: str, content: str) -> float:
@@ -53,6 +55,7 @@ class MergeDedupRerank:
         self.custom_related_information = custom_related_information
         if priority:
             raise ValueError(f"Unimplemented rerank strategy: priority.")
+        self.switch_to_bleu = False
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context.get("query")
@@ -82,6 +85,8 @@ class MergeDedupRerank:
                 context.get("vertex_degree_list"),
                 context.get("knowledge_with_degree"),
             )
+            if self.switch_to_bleu:
+                context["switch_to_bleu"] = True
         else:
             graph_result = self._dedup_and_rerank(query, graph_result, graph_length)
 
@@ -106,10 +111,22 @@ class MergeDedupRerank:
         results: List[str],
         topn: int,
         vertex_degree_list: List[List[str]] | None,
-        knowledge_with_degree: Dict[str, List[str]] | None,
+        knowledge_with_degree: Dict[str, List[str]],
     ) -> List[str]:
         if vertex_degree_list is None or len(vertex_degree_list) == 0:
             return self._dedup_and_rerank(query, results, topn)
+
+        if self.method == "reranker":
+            reranker = Rerankers().get_reranker()
+            try:
+                vertex_degree_rerank_result = [
+                    reranker.get_rerank_lists(query, vertex_degree) + [""] for vertex_degree in vertex_degree_list
+                ]
+            except requests.exceptions.RequestException as e:
+                log.warning(f"Online reranker fails, automatically switches to local bleu method: {e}")
+                self.method = "bleu"
+                self.switch_to_bleu = True
+
         if self.method == "bleu":
             vertex_degree_rerank_result: List[List[str]] = []
             for vertex_degree in vertex_degree_list:
@@ -118,11 +135,6 @@ class MergeDedupRerank:
                 vertex_degree = [res[0] for res in vertex_degree_score_list] + [""]
                 vertex_degree_rerank_result.append(vertex_degree)
 
-        if self.method == "reranker":
-            reranker = Rerankers().get_reranker()
-            vertex_degree_rerank_result = [
-                reranker.get_rerank_lists(query, vertex_degree) + [""] for vertex_degree in vertex_degree_list
-            ]
         depth = len(vertex_degree_list)
         for result in results:
             if result not in knowledge_with_degree:

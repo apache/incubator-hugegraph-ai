@@ -94,6 +94,8 @@ def rag_answer(
 
     try:
         context = searcher.run(verbose=True, query=text, vector_search=vector_search, graph_search=graph_search)
+        if context.get("switch_to_bleu"):
+            gr.Warning("Online reranker fails, automatically switches to local bleu method.")
         return (
             context.get("raw_answer", ""),
             context.get("vector_only_answer", ""),
