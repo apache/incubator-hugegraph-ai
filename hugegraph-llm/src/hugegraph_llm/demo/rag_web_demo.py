@@ -30,6 +30,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from gradio.utils import NamedString
 from requests.auth import HTTPBasicAuth
 
+from hugegraph_llm.demo.css import CSS
 from hugegraph_llm.api.rag_api import rag_http_api
 from hugegraph_llm.config import settings, resource_path
 from hugegraph_llm.enums.build_mode import BuildMode
@@ -39,7 +40,7 @@ from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
 from hugegraph_llm.utils.graph_index_utils import get_graph_index_info, clean_graph_index, fit_vid_index, \
-    build_graph_index, extract_graph
+    build_graph_index, extract_graph, import_graph_data
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
 from hugegraph_llm.utils.log import log
@@ -282,7 +283,7 @@ def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
 def init_rag_ui() -> gr.Interface:
     with gr.Blocks(theme='default',
                    title="HugeGraph RAG Platform",
-                   css="footer {visibility: hidden}") as hugegraph_llm_ui:
+                   css=CSS) as hugegraph_llm_ui:
         gr.Markdown(
             """# HugeGraph LLM RAG Demo
         1. Set up the HugeGraph server."""
@@ -439,6 +440,14 @@ def init_rag_ui() -> gr.Interface:
                     input_text = gr.Textbox(value="", label="Doc(s)")
             input_schema = gr.Textbox(value=schema, label="Schema")
             info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head")
+        with gr.Column(visible=False, elem_classes="modal-box") as preview_box:
+            with gr.Row():
+                import_btn = gr.Button("Import Into Graph")
+                close_btn = gr.Button("Cancel")
+
+            with gr.Row():
+                extraction_result = gr.Textbox(label="Extraction Result")
+
         with gr.Row():
             vector_index_btn0 = gr.Button("Get Vector Index Info")
             vector_index_btn1 = gr.Button("Clear Vector Index")
@@ -446,9 +455,8 @@ def init_rag_ui() -> gr.Interface:
         with gr.Row():
             graph_index_btn0 = gr.Button("Get Graph Index Info")
             graph_index_btn1 = gr.Button("Clear Graph Index")
-            graph_index_btn2 = gr.Button("Extract Graph")
+            graph_index_btn2 = gr.Button("Extract Graph", variant="primary")
             graph_index_btn3 = gr.Button("Fit Vid Index")
-            graph_index_btn4 = gr.Button("Import into Graph Index", variant="primary")
         with gr.Row():
             out = gr.Textbox(label="Output", show_copy_button=True)
         vector_index_btn0.click(get_vector_index_info, outputs=out)  # pylint: disable=no-member
@@ -457,10 +465,12 @@ def init_rag_ui() -> gr.Interface:
         graph_index_btn0.click(get_graph_index_info, outputs=out)  # pylint: disable=no-member
         graph_index_btn1.click(clean_graph_index)  # pylint: disable=no-member
         graph_index_btn2.click(extract_graph, inputs=[input_file, input_text, input_schema,  # pylint: disable=no-member
-                                                      info_extract_template], outputs=out)
+                                                      info_extract_template], outputs=[out, extraction_result, preview_box])
         graph_index_btn3.click(fit_vid_index, outputs=out)  # pylint: disable=no-member
-        graph_index_btn4.click(build_graph_index, inputs=[input_file, input_text,  # pylint: disable=no-member
-                                                          input_schema, info_extract_template], outputs=out)
+
+        import_btn.click(import_graph_data, inputs=[extraction_result], outputs=[preview_box, out], queue=False)  # pylint: disable=no-member
+        close_btn.click(lambda: gr.Column(visible=False), outputs=[preview_box], queue=False)  # pylint: disable=no-member
+
 
         def on_tab_select(input_f, input_t, evt: gr.SelectData):
             print(f"You selected {evt.value} at {evt.index} from {evt.target}")

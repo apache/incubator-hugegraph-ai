@@ -63,12 +63,15 @@ def extract_graph(input_file, input_text, schema, example_prompt):
         return "ERROR: please input schema."
     (builder
      .chunk_split(texts, "paragraph", "zh")
-     .extract_info(example_prompt, "property_graph")
-     .commit_to_hugegraph())
+     .extract_info(example_prompt, "property_graph"))
     log.debug(builder.operators)
     try:
         context = builder.run()
-        return json.dumps(context, ensure_ascii=False, indent=2)
+        return (
+            f"Extract {len(context['vertices'])} entities and {len(context['edges'])} relations successfully.",
+            json.dumps(context, ensure_ascii=False, indent=2),
+            gr.Column(visible=True)
+        )
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
         raise gr.Error(str(e))
@@ -113,3 +116,9 @@ def build_graph_index(input_file, input_text, schema, example_prompt):
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
         raise gr.Error(str(e))
+
+def import_graph_data(data: str):
+    data = json.loads(data.strip())
+    builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
+    context = builder.commit_to_hugegraph().run(data)
+    return gr.Column(visible=False), context

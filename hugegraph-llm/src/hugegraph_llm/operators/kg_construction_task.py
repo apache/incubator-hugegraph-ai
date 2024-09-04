@@ -98,8 +98,7 @@ class KgBuilder:
 
     @log_time("total time")
     @record_qps
-    def run(self) -> Dict[str, Any]:
-        context = None
+    def run(self, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         for operator in self.operators:
             context = self._run_operator(operator, context)
         return context
