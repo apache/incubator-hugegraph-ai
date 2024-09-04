@@ -74,6 +74,9 @@ class Config:
     graph_pwd: Optional[str] = "xxx"
     graph_space: Optional[str] = None
 
+    """rag demo prompt settings"""
+    rag_schema: Optional[str] = '{"vertexlabels":[{"id":1,"name":"person","id_strategy":"PRIMARY_KEY","primary_keys":["name"],"properties":["name","age","occupation"]},{"id":2,"name":"webpage","id_strategy":"PRIMARY_KEY","primary_keys":["name"],"properties":["name","url"]}],"edgelabels":[{"id":1,"name":"roommate","source_label":"person","target_label":"person","properties":["date"]},{"id":2,"name":"link","source_label":"webpage","target_label":"person","properties":[]}]}' 
+
     def from_env(self):
         if os.path.exists(env_path):
             env_config = read_dotenv()
