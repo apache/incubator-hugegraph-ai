@@ -53,6 +53,7 @@ class LLMConfigRequest(BaseModel):
     host: str = None
     port: str = None
 
+
 class RerankerConfigRequest(BaseModel):
     reranker_model: str
     reranker_type: str

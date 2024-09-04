@@ -376,7 +376,7 @@ def init_rag_ui() -> gr.Interface:
                         gr.Textbox(value=settings.qianfan_language_model, label="model_name"),
                         gr.Textbox(value="", visible=False),
                     ]
-                log.debug(llm_config_input)
+                # log.debug(llm_config_input)
             else:
                 llm_config_input = []
             llm_config_button = gr.Button("apply configuration")
@@ -419,7 +419,7 @@ def init_rag_ui() -> gr.Interface:
 
             # Call the separate apply_embedding_configuration function here
             embedding_config_button.click(  # pylint: disable=no-member
-                apply_embedding_config,
+                fn=apply_embedding_config,
                 inputs=embedding_config_input,  # pylint: disable=no-member
             )
 
@@ -455,7 +455,7 @@ def init_rag_ui() -> gr.Interface:
 
             # Call the separate apply_reranker_configuration function here
             reranker_config_button.click(  # pylint: disable=no-member
-                apply_reranker_config,
+                fn=apply_reranker_config,
                 inputs=reranker_config_input,  # pylint: disable=no-member
             )
 
