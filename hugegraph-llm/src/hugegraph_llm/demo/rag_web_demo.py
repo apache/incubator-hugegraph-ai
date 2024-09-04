@@ -203,7 +203,7 @@ def test_api_connection(url, method="GET", headers=None, params=None, body=None,
         if origin_call is None:
             try:
                 raise gr.Error(json.loads(resp.text).get("message", msg))
-            except json.decoder.JSONDecodeError:
+            except json.decoder.JSONDecodeError and AttributeError:
                 raise gr.Error(resp.text)
     return resp.status_code
 
@@ -247,10 +247,13 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
 
 
 def apply_reranker_config(
-    reranker_api_key, reranker_model, cohere_base_url: str | None = None, origin_call=None
+    reranker_api_key: str | None = None,
+    reranker_model: str | None = None,
+    cohere_base_url: str | None = None,
+    origin_call=None,
 ) -> int:
     status_code = -1
-    reranker_option = settings.reranker_type if settings.reranker_type else "cohere"
+    reranker_option = settings.reranker_type
     if reranker_option == "cohere":
         settings.reranker_api_key = reranker_api_key
         settings.reranker_model = reranker_model
@@ -425,12 +428,14 @@ def init_rag_ui() -> gr.Interface:
 
         gr.Markdown("4. Set up the Reranker(Optional).")
         reranker_dropdown = gr.Dropdown(
-            choices=["cohere", "siliconflow"], value=settings.reranker_type, label="Reranker"
+            choices=["cohere", "siliconflow", "None"],
+            value=settings.reranker_type if settings.reranker_type else "None",
+            label="Reranker",
         )
 
         @gr.render(inputs=[reranker_dropdown])
         def reranker_settings(reranker_type):
-            settings.reranker_type = reranker_type
+            settings.reranker_type = reranker_type if reranker_type != "None" else None
             if reranker_type == "cohere":
                 with gr.Row():
                     reranker_config_input = [

@@ -45,7 +45,7 @@ class Config:
     # 2. Rerank settings
     cohere_base_url: Optional[str] = os.environ.get("CO_API_URL", "https://api.cohere.com/v1/rerank")
     reranker_api_key: Optional[str] = None
-    reranker_model: Optional[str] = "rerank-multilingual-v3.0"
+    reranker_model: Optional[str] = None
     # 3. Ollama settings
     ollama_host: Optional[str] = "127.0.0.1"
     ollama_port: Optional[int] = 11434
