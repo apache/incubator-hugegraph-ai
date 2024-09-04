@@ -18,15 +18,23 @@
 from fastapi import status, APIRouter
 
 from hugegraph_llm.api.exceptions.rag_exceptions import generate_response
-from hugegraph_llm.api.models.rag_requests import RAGRequest, GraphConfigRequest, LLMConfigRequest
+from hugegraph_llm.api.models.rag_requests import (
+    RAGRequest,
+    GraphConfigRequest,
+    LLMConfigRequest,
+    RerankerConfigRequest,
+)
 from hugegraph_llm.api.models.rag_response import RAGResponse
 from hugegraph_llm.config import settings
 
 
-def rag_http_api(router: APIRouter, rag_answer_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf):
+def rag_http_api(
+    router: APIRouter, rag_answer_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf, apply_reranker_conf
+):
     @router.post("/rag", status_code=status.HTTP_200_OK)
     def rag_answer_api(req: RAGRequest):
-        result = rag_answer_func(req.query, req.raw_llm, req.vector_only, req.graph_only, req.graph_vector, req.answer_prompt)
+        result = rag_answer_func(req.query, req.raw_llm, req.vector_only, req.graph_only, req.graph_vector,
+                                 req.answer_prompt)
         return {
             key: value
             for key, value in zip(["raw_llm", "vector_only", "graph_only", "graph_vector"], result)
@@ -44,9 +52,7 @@ def rag_http_api(router: APIRouter, rag_answer_func, apply_graph_conf, apply_llm
         settings.llm_type = req.llm_type
 
         if req.llm_type == "openai":
-            res = apply_llm_conf(
-                req.api_key, req.api_base, req.language_model, req.max_tokens, origin_call="http"
-            )
+            res = apply_llm_conf(req.api_key, req.api_base, req.language_model, req.max_tokens, origin_call="http")
         elif req.llm_type == "qianfan_wenxin":
             res = apply_llm_conf(req.api_key, req.secret_key, req.language_model, None, origin_call="http")
         else:
@@ -63,4 +69,16 @@ def rag_http_api(router: APIRouter, rag_answer_func, apply_graph_conf, apply_llm
             res = apply_embedding_conf(req.api_key, req.api_base, None, origin_call="http")
         else:
             res = apply_embedding_conf(req.host, req.port, req.language_model, origin_call="http")
+        return generate_response(RAGResponse(status_code=res, message="Missing Value"))
+
+    @router.post("/config/rerank", status_code=status.HTTP_201_CREATED)
+    def rerank_config_api(req: RerankerConfigRequest):
+        settings.reranker_type = req.reranker_type
+
+        if req.reranker_type == "cohere":
+            res = apply_reranker_conf(req.api_key, req.reranker_model, req.cohere_base_url, origin_call="http")
+        elif req.reranker_type == "siliconflow":
+            res = apply_reranker_conf(req.api_key, req.reranker_model, None, origin_call="http")
+        else:
+            res = status.HTTP_501_NOT_IMPLEMENTED
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))

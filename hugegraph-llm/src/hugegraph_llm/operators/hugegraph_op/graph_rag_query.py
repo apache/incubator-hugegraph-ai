@@ -24,9 +24,7 @@ from pyhugegraph.client import PyHugeClient
 
 
 class GraphRAGQuery:
-    VERTEX_GREMLIN_QUERY_TEMPL = (
-        "g.V().hasId({keywords}).as('subj').toList()"
-    )
+    VERTEX_GREMLIN_QUERY_TEMPL = "g.V().hasId({keywords}).as('subj').toList()"
     # ID_RAG_GREMLIN_QUERY_TEMPL = "g.V().hasId({keywords}).as('subj').repeat(bothE({edge_labels}).as('rel').otherV(
     # ).as('obj')).times({max_deep}).path().by(project('label', 'id', 'props').by(label()).by(id()).by(valueMap().by(
     # unfold()))).by(project('label', 'inV', 'outV', 'props').by(label()).by(inV().id()).by(outV().id()).by(valueMap(
@@ -75,10 +73,10 @@ class GraphRAGQuery:
     """
 
     def __init__(
-            self,
-            max_deep: int = 2,
-            max_items: int = 30,
-            prop_to_match: Optional[str] = None,
+        self,
+        max_deep: int = 2,
+        max_items: int = 30,
+        prop_to_match: Optional[str] = None,
     ):
         self._client = PyHugeClient(
             settings.graph_ip,
@@ -133,14 +131,16 @@ class GraphRAGQuery:
                 edge_labels=edge_labels_str,
             )
             result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
-            knowledge: Set[str] = self._format_knowledge_from_query_result(query_result=result)
+            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_knowledge_from_query_result(
+                query_result=result
+            )
         else:
             assert entrance_vids is not None, "No entrance vertices for query."
             rag_gremlin_query = self.VERTEX_GREMLIN_QUERY_TEMPL.format(
                 keywords=entrance_vids,
             )
             result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
-            knowledge: Set[str] = self._format_knowledge_from_vertex(query_result=result)
+            vertex_knowledge = self._format_knowledge_from_vertex(query_result=result)
             rag_gremlin_query = self.ID_RAG_GREMLIN_QUERY_TEMPL.format(
                 keywords=entrance_vids,
                 max_deep=self._max_deep,
@@ -148,21 +148,27 @@ class GraphRAGQuery:
                 edge_labels=edge_labels_str,
             )
             result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
-            knowledge.update(self._format_knowledge_from_query_result(query_result=result))
+            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_knowledge_from_query_result(
+                query_result=result
+            )
+            graph_chain_knowledge.update(vertex_knowledge)
+            vertex_degree_list[0].update(vertex_knowledge)
 
-        context["graph_result"] = list(knowledge)
-        context["synthesize_context_head"] = (
+        context["graph_result"] = list(graph_chain_knowledge)
+        context["vertex_degree_list"] = [list(vertex_degree) for vertex_degree in vertex_degree_list]
+        context["knowledge_with_degree"] = knowledge_with_degree
+        context["graph_context_head"] = (
             f"The following are knowledge sequence in max depth {self._max_deep} "
             f"in the form of directed graph like:\n"
-            "`subject -[predicate]-> object <-[predicate_next_hop]- object_next_hop ...` "
-            "extracted based on key entities as subject:"
+            "`subject -[predicate]-> object <-[predicate_next_hop]- object_next_hop ...`"
+            "extracted based on key entities as subject:\n"
         )
 
         # TODO: replace print to log
         verbose = context.get("verbose") or False
         if verbose:
             print("\033[93mKnowledge from Graph:")
-            print("\n".join(rel for rel in context["graph_result"]) + "\033[0m")
+            print("\n".join(chain for chain in context["graph_result"]) + "\033[0m")
 
         return context
 
@@ -174,20 +180,24 @@ class GraphRAGQuery:
             knowledge.add(node_str)
         return knowledge
 
-    def _format_knowledge_from_query_result(self, query_result: List[Any]) -> Set[str]:
+    def _format_knowledge_from_query_result(
+        self, query_result: List[Any]
+    ) -> Tuple[Set[str], List[Set[str]], Dict[str, List[str]]]:
         use_id_to_match = self._prop_to_match is None
         knowledge = set()
+        knowledge_with_degree = {}
+        vertex_degree_list: List[Set[str]] = []
         for line in query_result:
             flat_rel = ""
             raw_flat_rel = line["objects"]
             assert len(raw_flat_rel) % 2 == 1
             node_cache = set()
             prior_edge_str_len = 0
+            depth = 0
+            nodes_with_degree = []
             for i, item in enumerate(raw_flat_rel):
                 if i % 2 == 0:
-                    matched_str = (
-                        item["id"] if use_id_to_match else item["props"][self._prop_to_match]
-                    )
+                    matched_str = item["id"] if use_id_to_match else item["props"][self._prop_to_match]
                     if matched_str in node_cache:
                         flat_rel = flat_rel[:-prior_edge_str_len]
                         break
@@ -195,8 +205,14 @@ class GraphRAGQuery:
                     props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items())
                     node_str = f"{item['id']}{{{props_str}}}"
                     flat_rel += node_str
+                    nodes_with_degree.append(node_str)
                     if flat_rel in knowledge:
                         knowledge.remove(flat_rel)
+                        knowledge_with_degree.pop(flat_rel)
+                    if depth >= len(vertex_degree_list):
+                        vertex_degree_list.append(set())
+                    vertex_degree_list[depth].add(node_str)
+                    depth += 1
                 else:
                     props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items())
                     props_str = f"{{{props_str}}}" if len(props_str) > 0 else ""
@@ -212,22 +228,23 @@ class GraphRAGQuery:
                     flat_rel += edge_str
                     prior_edge_str_len = len(edge_str)
             knowledge.add(flat_rel)
-        return knowledge
+            knowledge_with_degree[flat_rel] = nodes_with_degree
+        return knowledge, vertex_degree_list, knowledge_with_degree
 
     def _extract_labels_from_schema(self) -> Tuple[List[str], List[str]]:
         schema = self._get_graph_schema()
         node_props_str, edge_props_str = schema.split("\n")[:2]
-        node_props_str = node_props_str[len("Node properties: "):].strip("[").strip("]")
-        edge_props_str = edge_props_str[len("Edge properties: "):].strip("[").strip("]")
+        node_props_str = node_props_str[len("Node properties: ") :].strip("[").strip("]")
+        edge_props_str = edge_props_str[len("Edge properties: ") :].strip("[").strip("]")
         node_labels = self._extract_label_names(node_props_str)
         edge_labels = self._extract_label_names(edge_props_str)
         return node_labels, edge_labels
 
     @staticmethod
     def _extract_label_names(
-            source: str,
-            head: str = "name: ",
-            tail: str = ", ",
+        source: str,
+        head: str = "name: ",
+        tail: str = ", ",
     ) -> List[str]:
         result = []
         for s in source.split(head):
