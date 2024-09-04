@@ -426,10 +426,10 @@ def init_rag_ui() -> gr.Interface:
                 inputs=embedding_config_input,  # pylint: disable=no-member
             )
 
-        gr.Markdown("4. Set up the Reranker(Optional).")
+        gr.Markdown("4. Set up the Reranker (Optional).")
         reranker_dropdown = gr.Dropdown(
-            choices=["cohere", "siliconflow", "None"],
-            value=settings.reranker_type if settings.reranker_type else "None",
+            choices=["cohere", "siliconflow", ("default/offline", "None")],
+            value=os.getenv("reranker_type") or "None",
             label="Reranker",
         )
 
@@ -564,19 +564,14 @@ def init_rag_ui() -> gr.Interface:
 
                 with gr.Column():
                     with gr.Row():
+                        online_rerank = os.getenv("reranker_type")
                         rerank_method = gr.Dropdown(
-                            choices=["bleu", "reranker"] if settings.reranker_type else ["bleu"],
-                            value="bleu",
+                            choices=["bleu", ("rerank (online)", "reranker")] if online_rerank else ["bleu"],
+                            value="reranker" if online_rerank else "bleu",
                             label="Rerank method",
                         )
-                        graph_ratio = gr.Slider(
-                            0,
-                            1,
-                            0.5,
-                            label="Graph Ratio",
-                            step=0.1,
-                            interactive=False,
-                        )
+                        graph_ratio = gr.Slider(0, 1, 0.5, label="Graph Ratio", step=0.1, interactive=False)
+
                     graph_vector_radio.change(toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio)
                     near_neighbor_first = gr.Checkbox(
                         value=False,

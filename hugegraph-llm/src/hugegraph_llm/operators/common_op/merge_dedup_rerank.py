@@ -19,17 +19,24 @@
 from typing import Literal, Dict, Any, List, Optional, Tuple
 
 import jieba
+import requests
+from nltk.translate.bleu_score import sentence_bleu
+
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.rerankers.init_reranker import Rerankers
 from hugegraph_llm.utils.log import log
-from nltk.translate.bleu_score import sentence_bleu
-import requests
 
 
 def get_bleu_score(query: str, content: str) -> float:
     query_tokens = jieba.lcut(query)
     content_tokens = jieba.lcut(content)
     return sentence_bleu([query_tokens], content_tokens)
+
+
+def _bleu_rerank(query: str, results: List[str]) -> List[str]:
+    result_score_list = [[res, get_bleu_score(query, res)] for res in results]
+    result_score_list.sort(key=lambda x: x[1], reverse=True)
+    return [res[0] for res in result_score_list]
 
 
 class MergeDedupRerank:
@@ -43,10 +50,7 @@ class MergeDedupRerank:
         custom_related_information: Optional[str] = None,
         priority: bool = False,  # TODO: implement priority
     ):
-        assert method in [
-            "bleu",
-            "reranker",
-        ], f"Unimplemented rerank method '{method}'."
+        assert method in ["bleu", "reranker"], f"Unimplemented rerank method '{method}'."
         self.embedding = embedding
         self.graph_ratio = graph_ratio
         self.topk = topk
@@ -98,9 +102,7 @@ class MergeDedupRerank:
     def _dedup_and_rerank(self, query: str, results: List[str], topn: int) -> List[str]:
         results = list(set(results))
         if self.method == "bleu":
-            result_score_list = [[res, get_bleu_score(query, res)] for res in results]
-            result_score_list.sort(key=lambda x: x[1], reverse=True)
-            return [res[0] for res in result_score_list][:topn]
+            return _bleu_rerank(query, results)[:topn]
         if self.method == "reranker":
             reranker = Rerankers().get_reranker()
             return reranker.get_rerank_lists(query, results, topn)
@@ -119,7 +121,7 @@ class MergeDedupRerank:
         if self.method == "reranker":
             reranker = Rerankers().get_reranker()
             try:
-                vertex_degree_rerank_result = [
+                vertex_rerank_res = [
                     reranker.get_rerank_lists(query, vertex_degree) + [""] for vertex_degree in vertex_degree_list
                 ]
             except requests.exceptions.RequestException as e:
@@ -128,12 +130,7 @@ class MergeDedupRerank:
                 self.switch_to_bleu = True
 
         if self.method == "bleu":
-            vertex_degree_rerank_result: List[List[str]] = []
-            for vertex_degree in vertex_degree_list:
-                vertex_degree_score_list = [[res, get_bleu_score(query, res)] for res in vertex_degree]
-                vertex_degree_score_list.sort(key=lambda x: x[1], reverse=True)
-                vertex_degree = [res[0] for res in vertex_degree_score_list] + [""]
-                vertex_degree_rerank_result.append(vertex_degree)
+            vertex_rerank_res = [_bleu_rerank(query, vertex_degree) + [""] for vertex_degree in vertex_degree_list]
 
         depth = len(vertex_degree_list)
         for result in results:
@@ -143,7 +140,7 @@ class MergeDedupRerank:
                 knowledge_with_degree[result] += [""] * (depth - len(knowledge_with_degree[result]))
 
         def sort_key(res: str) -> Tuple[int, ...]:
-            return tuple(vertex_degree_rerank_result[i].index(knowledge_with_degree[res][i]) for i in range(depth))
+            return tuple(vertex_rerank_res[i].index(knowledge_with_degree[res][i]) for i in range(depth))
 
         sorted_results = sorted(results, key=sort_key)
         return sorted_results[:topn]

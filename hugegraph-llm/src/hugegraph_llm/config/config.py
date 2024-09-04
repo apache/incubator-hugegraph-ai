@@ -60,7 +60,7 @@ class Config:
     qianfan_chat_url: Optional[str] = qianfan_url_prefix + "/chat/"
     qianfan_language_model: Optional[str] = "ERNIE-4.0-Turbo-8K"
     qianfan_embed_url: Optional[str] = qianfan_url_prefix + "/embeddings/"
-    # https://cloud.baidu.com/doc/WENXINWORKSHOP/s/alj562vvu
+    # refer https://cloud.baidu.com/doc/WENXINWORKSHOP/s/alj562vvu to get more details
     qianfan_embedding_model: Optional[str] = "embedding-v1"
     # 5. ZhiPu(GLM) settings
     zhipu_api_key: Optional[str] = None

@@ -22,8 +22,8 @@ __all__ = [
 ]
 
 import os
-from .config import Config
 
+from .config import Config
 
 settings = Config()
 settings.from_env()
