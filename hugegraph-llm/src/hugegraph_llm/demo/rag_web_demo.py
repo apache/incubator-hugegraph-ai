@@ -19,7 +19,7 @@
 import argparse
 import json
 import os
-from typing import List, Union, Tuple, Literal
+from typing import List, Union, Tuple, Literal, Optional
 
 import docx
 import gradio as gr
@@ -247,9 +247,9 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
 
 
 def apply_reranker_config(
-    reranker_api_key: str | None = None,
-    reranker_model: str | None = None,
-    cohere_base_url: str | None = None,
+    reranker_api_key: Optional[str] = None,
+    reranker_model: Optional[str] = None,
+    cohere_base_url: Optional[str] = None,
     origin_call=None,
 ) -> int:
     status_code = -1

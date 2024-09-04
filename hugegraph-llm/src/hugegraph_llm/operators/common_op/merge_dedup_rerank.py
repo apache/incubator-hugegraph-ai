@@ -110,7 +110,7 @@ class MergeDedupRerank:
         query: str,
         results: List[str],
         topn: int,
-        vertex_degree_list: List[List[str]] | None,
+        vertex_degree_list: Optional[List[List[str]]],
         knowledge_with_degree: Dict[str, List[str]],
     ) -> List[str]:
         if vertex_degree_list is None or len(vertex_degree_list) == 0:
