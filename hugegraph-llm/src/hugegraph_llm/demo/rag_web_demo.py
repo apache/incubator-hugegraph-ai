@@ -250,7 +250,7 @@ def apply_reranker_config(
     reranker_api_key, reranker_model, cohere_base_url: str | None = None, origin_call=None
 ) -> int:
     status_code = -1
-    reranker_option = settings.reranker_type
+    reranker_option = settings.reranker_type if settings.reranker_type else "cohere"
     if reranker_option == "cohere":
         settings.reranker_api_key = reranker_api_key
         settings.reranker_model = reranker_model
