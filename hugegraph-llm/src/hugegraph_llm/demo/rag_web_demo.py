@@ -458,6 +458,7 @@ def init_rag_ui() -> gr.Interface:
 
             reranker_config_button = gr.Button("apply configuration")
 
+            # TODO: use "gr.update()" or other way to update the config in time (refactor the click event)
             # Call the separate apply_reranker_configuration function here
             reranker_config_button.click(  # pylint: disable=no-member
                 fn=apply_reranker_config,
