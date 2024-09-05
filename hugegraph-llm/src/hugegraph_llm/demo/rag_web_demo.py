@@ -505,8 +505,8 @@ def init_rag_ui() -> gr.Interface:
                 label="Docs (multi-files can be selected together)",
                 file_count="multiple",
             )
-            input_schema = gr.Textbox(value=schema, label="Schema")
-            info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head")
+            input_schema = gr.Textbox(value=schema, label="Schema", lines=2)
+            info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head", lines=2)
             with gr.Column():
                 mode = gr.Radio(
                     choices=["Test Mode", "Import Mode", "Clear and Import", "Rebuild Vector"],
@@ -533,7 +533,7 @@ def init_rag_ui() -> gr.Interface:
                 from hugegraph_llm.operators.llm_op.answer_synthesize import DEFAULT_ANSWER_TEMPLATE
 
                 answer_prompt_input = gr.Textbox(
-                    value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt", show_copy_button=True
+                    value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt", show_copy_button=True, lines=2
                 )
             with gr.Column(scale=1):
                 with gr.Row():
