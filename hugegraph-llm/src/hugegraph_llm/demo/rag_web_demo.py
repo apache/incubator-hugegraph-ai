@@ -624,10 +624,10 @@ def init_rag_ui() -> gr.Interface:
             return df
 
         def several_rag_answer(
-            raw_answer: bool,
-            vector_only_answer: bool,
-            graph_only_answer: bool,
-            graph_vector_answer: bool,
+            is_raw_answer: bool,
+            is_vector_only_answer: bool,
+            is_graph_only_answer: bool,
+            is_graph_vector_answer: bool,
             graph_ratio: float,
             rerank_method: Literal["bleu", "reranker"],
             near_neighbor_first: bool,
@@ -635,16 +635,16 @@ def init_rag_ui() -> gr.Interface:
             answer_prompt: str,
             progress=gr.Progress(track_tqdm=True),
         ):
-            df = pd.read_excel(os.path.join(resource_path, "demo", ".questions.xlsx"))
+            df = pd.read_excel(os.path.join(resource_path, "demo", ".questions.xlsx"), dtype=str)
             total_rows = len(df)
             for index, row in df.iterrows():
-                question = row[0]
+                question = row.iloc[0]
                 basic_llm_answer, vector_only_answer, graph_only_answer, graph_vector_answer = rag_answer(
                     question,
-                    raw_answer,
-                    vector_only_answer,
-                    graph_only_answer,
-                    graph_vector_answer,
+                    is_raw_answer,
+                    is_vector_only_answer,
+                    is_graph_only_answer,
+                    is_graph_vector_answer,
                     graph_ratio,
                     rerank_method,
                     near_neighbor_first,
@@ -655,7 +655,7 @@ def init_rag_ui() -> gr.Interface:
                 df.at[index, "Vector-only Answer"] = vector_only_answer
                 df.at[index, "Graph-only Answer"] = graph_only_answer
                 df.at[index, "Graph-Vector Answer"] = graph_vector_answer
-                progress(index + 1, total=total_rows)
+                progress((index + 1, total_rows))
             answers_path = os.path.join(resource_path, "demo", ".questions_answers.xlsx")
             df.to_excel(answers_path, index=False)
             return df, answers_path
@@ -667,7 +667,6 @@ def init_rag_ui() -> gr.Interface:
                 test_template_file = os.path.join(resource_path, "demo", "questions_template.xlsx")
                 gr.File(value=test_template_file, label="Download Template File")
                 answers_btn = gr.Button("Answer Questions", variant="primary")
-                answers_file = gr.File()
         qa_dataframe = gr.DataFrame(label="Questions and Answers", headers=tests_df_headers)
         answers_btn.click(
             several_rag_answer,
@@ -682,7 +681,7 @@ def init_rag_ui() -> gr.Interface:
                 custom_related_information,
                 answer_prompt_input,
             ],
-            outputs=[qa_dataframe, gr.File()],
+            outputs=[qa_dataframe, gr.File(label="Download Answers File")],
         )
         questions_file.change(read_excel, questions_file, qa_dataframe)
 
