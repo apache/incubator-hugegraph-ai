@@ -38,6 +38,7 @@ from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
+from hugegraph_llm.operators.llm_op.answer_synthesize import DEFAULT_ANSWER_TEMPLATE
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
 from hugegraph_llm.utils.log import log
@@ -437,7 +438,6 @@ def init_rag_ui() -> gr.Interface:
                 graph_only_radio = gr.Radio(choices=[True, False], value=False, label="Graph-only Answer")
                 graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
                 btn = gr.Button("Answer Question")
-                from hugegraph_llm.operators.llm_op.answer_synthesize import DEFAULT_ANSWER_TEMPLATE
                 answer_prompt_input = gr.Textbox(value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt",
                                                  show_copy_button=True)
         btn.click(  # pylint: disable=no-member
