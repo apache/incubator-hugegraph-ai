@@ -22,11 +22,13 @@ __all__ = [
 ]
 
 import os
-from .config import Config
+from .config import Config, PromptConfig
 
 
 settings = Config()
 settings.from_env()
+prompt = PromptConfig()
+
 
 package_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 resource_path = os.path.join(package_path, "resources")

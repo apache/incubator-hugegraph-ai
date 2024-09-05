@@ -31,7 +31,7 @@ from gradio.utils import NamedString
 from requests.auth import HTTPBasicAuth
 
 from hugegraph_llm.api.rag_api import rag_http_api
-from hugegraph_llm.config import settings, resource_path
+from hugegraph_llm.config import settings, resource_path, prompt
 from hugegraph_llm.enums.build_mode import BuildMode
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.init_llm import LLMs
@@ -104,7 +104,11 @@ def build_kg(  # pylint: disable=too-many-branches
 ) -> str:
     
     # update env variables: schema and example_prompt
+    settings.rag_schema = schema
     settings.update_env()
+    
+    prompt.schema_example_prompt = example_prompt
+    prompt.update_prompt_file()
 
     if isinstance(files, NamedString):
         files = [files]
