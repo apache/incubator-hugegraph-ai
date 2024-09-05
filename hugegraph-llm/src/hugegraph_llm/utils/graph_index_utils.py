@@ -64,7 +64,7 @@ def extract_graph(input_file, input_text, schema, example_prompt):
     (builder
      .chunk_split(texts, "paragraph", "zh")
      .extract_info(example_prompt, "property_graph"))
-    log.debug(builder.operators)
+    log.debug("Operators: %s", builder.operators)
     try:
         context = builder.run()
         return (
@@ -80,7 +80,7 @@ def extract_graph(input_file, input_text, schema, example_prompt):
 def fit_vid_index():
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
     builder.fetch_graph_data().build_vertex_id_semantic_index()
-    log.debug(builder.operators)
+    log.debug("Operators: %s", builder.operators)
     try:
         context = builder.run()
         removed_num = context["removed_vid_vector_num"]
@@ -109,7 +109,7 @@ def build_graph_index(input_file, input_text, schema, example_prompt):
      .extract_info(example_prompt, "property_graph")
      .commit_to_hugegraph()
      .build_vertex_id_semantic_index())
-    log.debug(builder.operators)
+    log.debug("Operators: %s", builder.operators)
     try:
         context = builder.run()
         return json.dumps(context, ensure_ascii=False, indent=2)

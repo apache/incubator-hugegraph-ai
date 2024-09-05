@@ -50,11 +50,7 @@ class RAGPipeline:
         self._embedding = embedding or Embeddings().get_embedding()
         self._operators: List[Any] = []
 
-    def extract_word(
-            self,
-            text: Optional[str] = None,
-            language: str = "english",
-    ):
+    def extract_word(self, text: Optional[str] = None, language: str = "english"):
         """
         Add a word extraction operator to the pipeline.
 
@@ -62,15 +58,10 @@ class RAGPipeline:
         :param language: Language of the text.
         :return: Self-instance for chaining.
         """
-        self._operators.append(
-            WordExtract(
-                text=text,
-                language=language,
-            )
-        )
+        self._operators.append(WordExtract(text=text, language=language))
         return self
 
-    def extract_keyword(
+    def extract_keywords(
             self,
             text: Optional[str] = None,
             max_keywords: int = 5,
@@ -99,7 +90,7 @@ class RAGPipeline:
         )
         return self
 
-    def match_keyword_to_id(
+    def keywords_to_vid(
         self,
         by: Literal["query", "keywords"] = "keywords",
         topk_per_keyword: int = 1,
@@ -108,6 +99,8 @@ class RAGPipeline:
         """
         Add a semantic ID query operator to the pipeline.
 
+        :param topk_per_query: Top K results per query.
+        :param by: Match by query or keywords.
         :param topk_per_keyword: Top K results per keyword.
         :return: Self-instance for chaining.
         """
@@ -121,7 +114,7 @@ class RAGPipeline:
         )
         return self
 
-    def query_graph_for_rag(
+    def query_graph_db(
         self,
         max_deep: int = 2,
         max_items: int = 30,
@@ -136,15 +129,11 @@ class RAGPipeline:
         :return: Self-instance for chaining.
         """
         self._operators.append(
-            GraphRAGQuery(
-                max_deep=max_deep,
-                max_items=max_items,
-                prop_to_match=prop_to_match,
-            )
+            GraphRAGQuery(max_deep=max_deep, max_items=max_items, prop_to_match=prop_to_match)
         )
         return self
 
-    def query_vector_index_for_rag(self, max_items: int = 3):
+    def query_vector_index(self, max_items: int = 3):
         """
         Add a vector index query operator to the pipeline.
 
@@ -152,10 +141,7 @@ class RAGPipeline:
         :return: Self-instance for chaining.
         """
         self._operators.append(
-            VectorIndexQuery(
-                embedding=self._embedding,
-                topk=max_items,
-            )
+            VectorIndexQuery(embedding=self._embedding, topk=max_items)
         )
         return self
 
@@ -230,7 +216,7 @@ class RAGPipeline:
         :return: Final context after all operators have been executed.
         """
         if len(self._operators) == 0:
-            self.extract_keyword().query_graph_for_rag().synthesize_answer()
+            self.extract_keywords().query_graph_db().synthesize_answer()
 
         context = kwargs
         context["llm"] = self._llm

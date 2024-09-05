@@ -17,7 +17,7 @@
 
 
 from hugegraph_llm.models.llms.ollama import OllamaClient
-from hugegraph_llm.models.llms.openai import OpenAIChat
+from hugegraph_llm.models.llms.openai import OpenAIClient
 from hugegraph_llm.models.llms.qianfan import QianfanClient
 from hugegraph_llm.config import settings
 
@@ -34,7 +34,7 @@ class LLMs:
                 secret_key=settings.qianfan_secret_key
             )
         if self.llm_type == "openai":
-            return OpenAIChat(
+            return OpenAIClient(
                 api_key=settings.openai_api_key,
                 api_base=settings.openai_api_base,
                 model_name=settings.openai_language_model,

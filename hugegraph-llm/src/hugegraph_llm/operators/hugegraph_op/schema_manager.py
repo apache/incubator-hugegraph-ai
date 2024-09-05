@@ -14,7 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
+from typing import Dict, Any
 
 from hugegraph_llm.config import settings
 from pyhugegraph.client import PyHugeClient
@@ -33,7 +33,9 @@ class SchemaManager:
         )
         self.schema = self.client.schema()
 
-    def run(self):
+    # FIXME: This method is not working as expected
+    # def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def run(self) -> Dict[str, Any]:
         schema = self.schema.getSchema()
         vertices = []
         for vl in schema["vertexlabels"]:

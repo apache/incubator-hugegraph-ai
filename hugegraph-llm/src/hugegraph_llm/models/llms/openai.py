@@ -27,7 +27,7 @@ from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
 
 
-class OpenAIChat(BaseLLM):
+class OpenAIClient(BaseLLM):
     """Wrapper around OpenAI Chat large language models."""
 
     def __init__(

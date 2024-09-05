@@ -130,22 +130,19 @@ The methods of the `KgBuilder` class can be chained together to perform a sequen
 
 Run example like `python3 ./hugegraph_llm/examples/graph_rag_test.py`
 
-The `GraphRAG` class is used to integrate HugeGraph with large language models to provide retrieval-augmented generation capabilities.
+The `RAGPipeline` class is used to integrate HugeGraph with large language models to provide retrieval-augmented generation capabilities.
 Here is a brief usage guide:
 
 1. **Extract Keyword:**: Extract keywords and expand synonyms.
-    
+
     ```python
-    graph_rag.extract_keyword(text="Tell me about Al Pacino.").print_result()
+    graph_rag.extract_keywords(text="Tell me about Al Pacino.").print_result()
     ```
 
 2. **Query Graph for Rag**: Retrieve the corresponding keywords and their multi-degree associated relationships from HugeGraph.
 
      ```python
-     graph_rag.query_graph_for_rag(
-        max_deep=2,
-        max_items=30
-     ).print_result()
+     graph_rag.query_graph_db(max_deep=2, max_items=30).print_result()
      ```
 3. **Synthesize Answer**: Summarize the results and organize the language to answer the question.
 
