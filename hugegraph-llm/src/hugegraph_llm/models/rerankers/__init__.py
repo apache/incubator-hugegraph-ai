@@ -14,19 +14,3 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
-
-__all__ = [
-    "settings",
-    "resource_path"
-]
-
-import os
-
-from .config import Config
-
-settings = Config()
-settings.from_env()
-
-package_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-resource_path = os.path.join(package_path, "resources")

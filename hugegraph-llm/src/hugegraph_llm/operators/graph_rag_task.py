@@ -100,10 +100,10 @@ class RAGPipeline:
         return self
 
     def match_keyword_to_id(
-            self,
-            by: Literal["query", "keywords"] = "keywords",
-            topk_per_keyword: int = 1,
-            topk_per_query: int = 10
+        self,
+        by: Literal["query", "keywords"] = "keywords",
+        topk_per_keyword: int = 1,
+        topk_per_query: int = 10,
     ):
         """
         Add a semantic ID query operator to the pipeline.
@@ -116,16 +116,16 @@ class RAGPipeline:
                 embedding=self._embedding,
                 by=by,
                 topk_per_keyword=topk_per_keyword,
-                topk_per_query=topk_per_query
+                topk_per_query=topk_per_query,
             )
         )
         return self
 
     def query_graph_for_rag(
-            self,
-            max_deep: int = 2,
-            max_items: int = 30,
-            prop_to_match: Optional[str] = None,
+        self,
+        max_deep: int = 2,
+        max_items: int = 30,
+        prop_to_match: Optional[str] = None,
     ):
         """
         Add a graph RAG query operator to the pipeline.
@@ -144,10 +144,7 @@ class RAGPipeline:
         )
         return self
 
-    def query_vector_index_for_rag(
-            self,
-            max_items: int = 3
-    ):
+    def query_vector_index_for_rag(self, max_items: int = 3):
         """
         Add a vector index query operator to the pipeline.
 
@@ -162,13 +159,27 @@ class RAGPipeline:
         )
         return self
 
-    def merge_dedup_rerank(self):
+    def merge_dedup_rerank(
+        self,
+        graph_ratio: float = 0.5,
+        rerank_method: Literal["bleu", "reranker"] = "bleu",
+        near_neighbor_first: bool = False,
+        custom_related_information: str = "",
+    ):
         """
         Add a merge, deduplication, and rerank operator to the pipeline.
 
         :return: Self-instance for chaining.
         """
-        self._operators.append(MergeDedupRerank(embedding=self._embedding))
+        self._operators.append(
+            MergeDedupRerank(
+                embedding=self._embedding,
+                graph_ratio=graph_ratio,
+                method=rerank_method,
+                near_neighbor_first=near_neighbor_first,
+                custom_related_information=custom_related_information,
+            )
+        )
         return self
 
     def synthesize_answer(
