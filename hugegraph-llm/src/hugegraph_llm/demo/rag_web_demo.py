@@ -28,6 +28,8 @@ import uvicorn
 from fastapi import FastAPI, Depends, APIRouter
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from gradio.utils import NamedString
+from io import BytesIO
+import pandas as pd
 from requests.auth import HTTPBasicAuth
 
 from hugegraph_llm.api.rag_api import rag_http_api
@@ -602,7 +604,89 @@ def init_rag_ui() -> gr.Interface:
             outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
         )
 
-        gr.Markdown("""## 3. Others (🚧) """)
+        gr.Markdown("""## 3. Multi Question Test (❔)""")
+        tests_df_headers = [
+            "Question",
+            "Expected Answer",
+            "Basic LLM Answer",
+            "Vector-only Answer",
+            "Graph-only Answer",
+            "Graph-Vector Answer",
+        ]
+
+        def read_excel(file):
+            df = pd.read_excel(BytesIO(file)) if file else pd.DataFrame()
+            df.to_excel(os.path.join(resource_path, "demo", ".questions.xlsx"), index=False)
+            if df.empty:
+                df = pd.DataFrame([[""] * len(tests_df_headers)], columns=tests_df_headers)
+            else:
+                df.columns = tests_df_headers
+            return df
+
+        def several_rag_answer(
+            raw_answer: bool,
+            vector_only_answer: bool,
+            graph_only_answer: bool,
+            graph_vector_answer: bool,
+            graph_ratio: float,
+            rerank_method: Literal["bleu", "reranker"],
+            near_neighbor_first: bool,
+            custom_related_information: str,
+            answer_prompt: str,
+            progress=gr.Progress(track_tqdm=True),
+        ):
+            df = pd.read_excel(os.path.join(resource_path, "demo", ".questions.xlsx"))
+            total_rows = len(df)
+            for index, row in df.iterrows():
+                question = row[0]
+                basic_llm_answer, vector_only_answer, graph_only_answer, graph_vector_answer = rag_answer(
+                    question,
+                    raw_answer,
+                    vector_only_answer,
+                    graph_only_answer,
+                    graph_vector_answer,
+                    graph_ratio,
+                    rerank_method,
+                    near_neighbor_first,
+                    custom_related_information,
+                    answer_prompt,
+                )
+                df.at[index, "Basic LLM Answer"] = basic_llm_answer
+                df.at[index, "Vector-only Answer"] = vector_only_answer
+                df.at[index, "Graph-only Answer"] = graph_only_answer
+                df.at[index, "Graph-Vector Answer"] = graph_vector_answer
+                progress(index + 1, total=total_rows)
+            answers_path = os.path.join(resource_path, "demo", ".questions_answers.xlsx")
+            df.to_excel(answers_path, index=False)
+            return df, answers_path
+
+        with gr.Row():
+            with gr.Column():
+                questions_file = gr.File(file_types=[".xlsx"], label="Questions File", type="binary")
+            with gr.Column():
+                test_template_file = os.path.join(resource_path, "demo", "questions_template.xlsx")
+                gr.File(value=test_template_file, label="Download Template File")
+                answers_btn = gr.Button("Answer Questions", variant="primary")
+                answers_file = gr.File()
+        qa_dataframe = gr.DataFrame(label="Questions and Answers", headers=tests_df_headers)
+        answers_btn.click(
+            several_rag_answer,
+            inputs=[
+                raw_radio,
+                vector_only_radio,
+                graph_only_radio,
+                graph_vector_radio,
+                graph_ratio,
+                rerank_method,
+                near_neighbor_first,
+                custom_related_information,
+                answer_prompt_input,
+            ],
+            outputs=[qa_dataframe, gr.File()],
+        )
+        questions_file.change(read_excel, questions_file, qa_dataframe)
+
+        gr.Markdown("""## 4. Others (🚧) """)
         with gr.Row():
             with gr.Column():
                 inp = gr.Textbox(value="g.V().limit(10)", label="Gremlin query", show_copy_button=True)
