@@ -529,12 +529,14 @@ def init_rag_ui() -> gr.Interface:
                     input_file = gr.File(
                         value=[os.path.join(resource_path, "demo", "test.txt")],
                         label="Docs (multi-files can be selected together)",
-                        file_count="multiple"
+                        file_count="multiple",
                     )
                 with gr.Tab("text") as tab_upload_text:
-                    input_text = gr.Textbox(value="", label="Doc(s)")
-            input_schema = gr.Textbox(value=schema, label="Schema")
-            info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head")
+                    input_text = gr.Textbox(value="", label="Doc(s)", lines=20, show_copy_button=True)
+            input_schema = gr.Textbox(value=schema, label="Schema", lines=15, show_copy_button=True)
+            info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head", lines=15,
+                                               show_copy_button=True)
+            out = gr.Textbox(label="Output", lines=15, show_copy_button=True)
         with gr.Column(visible=False, elem_classes="modal-box") as preview_box:
             with gr.Row():
                 import_btn = gr.Button("Import Into Graph")
@@ -552,8 +554,8 @@ def init_rag_ui() -> gr.Interface:
             graph_index_btn1 = gr.Button("Clear Graph Index")
             graph_index_btn2 = gr.Button("Extract Graph", variant="primary")
             graph_index_btn3 = gr.Button("Fit Vid Index")
-        with gr.Row():
-            out = gr.Textbox(label="Output", show_copy_button=True)
+        # with gr.Row():
+        #     out = gr.Textbox(label="Output", show_copy_button=True)
         vector_index_btn0.click(get_vector_index_info, outputs=out)  # pylint: disable=no-member
         vector_index_btn1.click(clean_vector_index)  # pylint: disable=no-member
         vector_index_btn2.click(build_vector_index, inputs=[input_file, input_text], outputs=out)  # pylint: disable=no-member
