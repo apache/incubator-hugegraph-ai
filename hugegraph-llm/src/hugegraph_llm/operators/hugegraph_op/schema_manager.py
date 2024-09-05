@@ -14,7 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from hugegraph_llm.config import settings
 from pyhugegraph.client import PyHugeClient
@@ -35,7 +35,7 @@ class SchemaManager:
 
     # FIXME: This method is not working as expected
     # def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-    def run(self) -> Dict[str, Any]:
+    def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         schema = self.schema.getSchema()
         vertices = []
         for vl in schema["vertexlabels"]:
@@ -52,4 +52,9 @@ class SchemaManager:
             edges.append(edge)
         if not vertices and not edges:
             raise Exception(f"Can not get {self.graph_name}'s schema from HugeGraph!")
-        return {"vertices": vertices, "edges": edges}
+        if context is None:
+            context = {}
+        context.update({
+            "schema": schema
+        })
+        return context
