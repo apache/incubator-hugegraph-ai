@@ -31,10 +31,6 @@ Context information is below.
 ---------------------
 {{context_str}}
 ---------------------
-Please refer to the context based on the following priority:
-1. Graph data > vector data
-2. Precise data > fuzzy data
-3. One-depth neighbors > two-depth neighbors
 
 Given the context information and without using fictive knowledge, 
 answer the following query in a concise and professional manner.
@@ -95,19 +91,20 @@ class AnswerSynthesize:
 
         vector_result = context.get("vector_result", [])
         if len(vector_result) == 0:
-            vector_result_context = "There are no paragraphs related to the query."
+            vector_result_context = "No (vector)phrase related to the query."
         else:
-            vector_result_context = ("The following are paragraphs related to the query:\n"
-                                     + "\n".join([f"{i + 1}. {res}"
-                                                  for i, res in enumerate(vector_result)]))
+            vector_result_context = "Phrases related to the query:\n" + "\n".join(
+                f"{i + 1}. {res}" for i, res in enumerate(vector_result)
+            )
         graph_result = context.get("graph_result", [])
         if len(graph_result) == 0:
-            graph_result_context = "There are no knowledge from HugeGraph related to the query."
+            graph_result_context = "No knowledge found in HugeGraph for the query."
         else:
-            graph_result_context = (
-                    "The following are knowledge from HugeGraph related to the query:\n"
-                    + "\n".join([f"{i + 1}. {res}"
-                                 for i, res in enumerate(graph_result)]))
+            graph_context_head = context.get("graph_context_head",
+                                             "The following are knowledge from HugeGraph related to the query:\n")
+            graph_result_context = graph_context_head + "\n".join(
+                f"{i + 1}. {res}" for i, res in enumerate(graph_result)
+            )
         context = asyncio.run(self.async_generate(context, context_head_str, context_tail_str,
                                                   vector_result_context, graph_result_context))
 
@@ -117,6 +114,7 @@ class AnswerSynthesize:
                              context_tail_str: str, vector_result_context: str,
                              graph_result_context: str):
         verbose = context.get("verbose") or False
+        # TODO: replace task_cache with a better name
         task_cache = {}
         if self._raw_answer:
             prompt = self._question
@@ -126,31 +124,24 @@ class AnswerSynthesize:
                            f"{vector_result_context}\n"
                            f"{context_tail_str}".strip("\n"))
 
-            prompt = self._prompt_template.format(
-                context_str=context_str,
-                query_str=self._question,
-            )
+            prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
             task_cache["vector_only_task"] = asyncio.create_task(self._llm.agenerate(prompt=prompt))
         if self._graph_only_answer:
             context_str = (f"{context_head_str}\n"
                            f"{graph_result_context}\n"
                            f"{context_tail_str}".strip("\n"))
 
-            prompt = self._prompt_template.format(
-                context_str=context_str,
-                query_str=self._question,
-            )
+            prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
             task_cache["graph_only_task"] = asyncio.create_task(self._llm.agenerate(prompt=prompt))
         if self._graph_vector_answer:
             context_body_str = f"{vector_result_context}\n{graph_result_context}"
+            if context.get("graph_ratio", 0.5) < 0.5:
+                context_body_str = f"{graph_result_context}\n{vector_result_context}"
             context_str = (f"{context_head_str}\n"
                            f"{context_body_str}\n"
                            f"{context_tail_str}".strip("\n"))
 
-            prompt = self._prompt_template.format(
-                context_str=context_str,
-                query_str=self._question,
-            )
+            prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
             task_cache["graph_vector_task"] = asyncio.create_task(
                 self._llm.agenerate(prompt=prompt)
             )
