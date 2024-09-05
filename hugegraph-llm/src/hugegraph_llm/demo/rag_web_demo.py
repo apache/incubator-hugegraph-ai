@@ -104,7 +104,9 @@ def build_kg(  # pylint: disable=too-many-branches
 ) -> str:
     
     # update env variables: schema and example_prompt
-    settings.rag_schema = schema
+    tmp_schema = json.loads(schema)
+    tmp_schema = json.dumps(tmp_schema, separators=(',', ':'))
+    settings.rag_schema = tmp_schema
     settings.update_env()
     
     prompt.schema_example_prompt = example_prompt

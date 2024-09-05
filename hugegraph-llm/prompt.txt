@@ -1,4 +1,4 @@
-## Main Task哈哈哈
+## Main Task
     Given the following graph schema and a piece of text, your task is to analyze the text and extract information that fits into the schema's structure, formatting the information into vertices and edges as specified.
     
     ## Basic Rules
