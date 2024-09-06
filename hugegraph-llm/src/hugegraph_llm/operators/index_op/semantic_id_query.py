@@ -19,12 +19,14 @@
 import os
 from typing import Dict, Any, Literal
 
+from pyhugegraph.client import PyHugeClient
 from hugegraph_llm.config import resource_path, settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 
 
 class SemanticIdQuery:
+    ID_QUERY_TEMPL = "g.V().properties().hasValue('{keyword}')"
     def __init__(
             self,
             embedding: BaseEmbedding,
@@ -38,6 +40,14 @@ class SemanticIdQuery:
         self.by = by
         self.topk_per_query = topk_per_query
         self.topk_per_keyword = topk_per_keyword
+        self._client = PyHugeClient(
+            settings.graph_ip,
+            settings.graph_port,
+            settings.graph_name,
+            settings.graph_user,
+            settings.graph_pwd,
+            settings.graph_space,
+        )
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         graph_query_entrance = []
@@ -48,11 +58,15 @@ class SemanticIdQuery:
             if results:
                 graph_query_entrance.extend(results[:self.topk_per_query])
         else:  # by keywords
-            keywords = context["keywords"]
+            keywords = set(context["keywords"])
             for keyword in keywords:
-                keyword_vector = self.embedding.get_text_embedding(keyword)
-                results = self.vector_index.search(keyword_vector, top_k=self.topk_per_keyword)
-                if results:
-                    graph_query_entrance.extend(results[:self.topk_per_keyword])
+                resp = self._client.gremlin().exec(SemanticIdQuery.ID_QUERY_TEMPL.format(keyword=keyword))
+                if len(resp['data']) > 0:
+                    graph_query_entrance.append(resp['data'][0]['id'])
+                else:
+                    keyword_vector = self.embedding.get_text_embedding(keyword)
+                    results = self.vector_index.search(keyword_vector, top_k=self.topk_per_keyword)
+                    if results:
+                        graph_query_entrance.extend(results[:self.topk_per_keyword])
         context["entrance_vids"] = list(set(graph_query_entrance))
         return context
