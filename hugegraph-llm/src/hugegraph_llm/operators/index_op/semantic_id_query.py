@@ -62,7 +62,7 @@ class SemanticIdQuery:
             for keyword in keywords:
                 resp = self._client.gremlin().exec(SemanticIdQuery.ID_QUERY_TEMPL.format(keyword=keyword))
                 if len(resp['data']) > 0:
-                    graph_query_entrance.append(resp['data'][0]['id'])
+                    graph_query_entrance.append(resp['data'][0]['id'].split('>')[0])
                 else:
                     keyword_vector = self.embedding.get_text_embedding(keyword)
                     results = self.vector_index.search(keyword_vector, top_k=self.topk_per_keyword)
