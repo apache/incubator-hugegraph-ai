@@ -80,7 +80,7 @@ class Config:
     graph_space: Optional[str] = None
 
     """rag demo prompt settings"""
-    rag_schema: Optional[str] = '{"vertexlabels":[{"id":1,"name":"person","id_strategy":"PRIMARY_KEY","primary_keys":["name"],"properties":["name","age","occupation"]},{"id":2,"name":"webpage","id_strategy":"PRIMARY_KEY","primary_keys":["name"],"properties":["name","url"]}],"edgelabels":[{"id":1,"name":"roommate","source_label":"person","target_label":"person","properties":["date"]},{"id":2,"name":"link","source_label":"webpage","target_label":"person","properties":[]}]}' 
+    # rag_schema: Optional[str] = '{"vertexlabels":[{"id":1,"name":"person","id_strategy":"PRIMARY_KEY","primary_keys":["name"],"properties":["name","age","occupation"]},{"id":2,"name":"webpage","id_strategy":"PRIMARY_KEY","primary_keys":["name"],"properties":["name","url"]}],"edgelabels":[{"id":1,"name":"roommate","source_label":"person","target_label":"person","properties":["date"]},{"id":2,"name":"link","source_label":"webpage","target_label":"person","properties":[]}]}' 
     
     """rag question/answering settings"""
     question: Optional[str] = "Tell me about Sarah."
@@ -138,6 +138,57 @@ def read_dotenv() -> dict[str, Optional[str]]:
 
 
 class PromptConfig:
+
+    rag_schema = """
+    {
+    "vertexlabels": [
+        {
+        "id": 1,
+        "name": "person",
+        "id_strategy": "PRIMARY_KEY",
+        "primary_keys": [
+            "name"
+        ],
+        "properties": [
+            "name",
+            "age",
+            "occupation"
+        ]
+        },
+        {
+        "id": 2,
+        "name": "webpage",
+        "id_strategy": "PRIMARY_KEY",
+        "primary_keys": [
+            "name"
+        ],
+        "properties": [
+            "name",
+            "url"
+        ]
+        }
+    ],
+    "edgelabels": [
+        {
+        "id": 1,
+        "name": "roommate",
+        "source_label": "person",
+        "target_label": "person",
+        "properties": [
+            "date"
+        ]
+        },
+        {
+        "id": 2,
+        "name": "link",
+        "source_label": "webpage",
+        "target_label": "person",
+        "properties": []
+        }
+    ]
+    }
+    """
+
     # Data is detached from hugegraph-llm/src/hugegraph_llm/operators/llm_op/property_graph_extract.py
     schema_example_prompt = """
     ## Main Task
@@ -194,6 +245,8 @@ class PromptConfig:
     def save_to_yaml(self):
         # This can be extended to add storage fields according to the data needs to be stored
         yaml_content = f"""
+rag_schema: |{self.rag_schema}
+
 schema_example_prompt: |{self.schema_example_prompt}
         """
         with open(yaml_file_path, 'w') as file:
