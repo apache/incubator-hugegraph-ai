@@ -123,16 +123,9 @@ def build_kg(  # pylint: disable=too-many-branches
 ) -> str:
     
     # update env variables: schema and example_prompt
-    # tmp_schema = json.loads(schema)
-    # tmp_schema = json.dumps(tmp_schema, separators=(',', ':'))
+    prompt.rag_schema = schema
+    prompt.schema_example_prompt = example_prompt
 
-    # prompt.rag_schema = schema
-    indented_schema = "\n".join([f"  {line}" for line in schema.splitlines()])
-    prompt.rag_schema = f"""
-{indented_schema}"""
-    indented_example_prompt = "\n".join([f"    {line}" for line in example_prompt.splitlines()])
-    prompt.schema_example_prompt = f"""
-{indented_example_prompt}"""
     prompt.update_yaml_file()
 
     if isinstance(files, NamedString):
