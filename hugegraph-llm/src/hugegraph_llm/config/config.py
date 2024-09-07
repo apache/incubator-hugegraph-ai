@@ -17,6 +17,7 @@
 
 
 import os
+import yaml
 
 from dataclasses import dataclass
 from typing import Literal, Optional
@@ -27,7 +28,7 @@ from hugegraph_llm.utils.log import log
 dirname = os.path.dirname
 package_path = dirname(dirname(dirname(dirname(os.path.abspath(__file__)))))
 env_path = os.path.join(package_path, ".env")
-schema_prompt_path = os.path.join(package_path, "prompt.txt")
+yaml_file_path = os.path.join(package_path, "src/hugegraph_llm/config/config_prompt.yaml")
 
 # TODO: We need to tidy up the partition settings
 
@@ -135,9 +136,11 @@ def read_dotenv() -> dict[str, Optional[str]]:
             os.environ[key] = value or ""
     return env_config
 
+
 class PromptConfig:
-    
-    schema_example_prompt = """## Main Task
+    # Data is detached from hugegraph-llm/src/hugegraph_llm/operators/llm_op/property_graph_extract.py
+    schema_example_prompt = """
+    ## Main Task
     Given the following graph schema and a piece of text, your task is to analyze the text and extract information that fits into the schema's structure, formatting the information into vertices and edges as specified.
     
     ## Basic Rules
@@ -149,23 +152,23 @@ class PromptConfig:
     ### Content Rule
     Please read the provided text carefully and identify any information that corresponds to the vertices and edges defined in the schema. For each piece of information that matches a vertex or edge, format it according to the following JSON structures:
     #### Vertex Format:
-    {"id":"vertexLabelID:entityName","label":"vertexLabel","type":"vertex","properties":{"propertyName":"propertyValue",
-    ...}}
+    {"id":"vertexLabelID:entityName","label":"vertexLabel","type":"vertex","properties":{"propertyName":"propertyValue", ...}}
     
     #### Edge Format:
     {"label":"edgeLabel","type":"edge","outV":"sourceVertexId","outVLabel":"sourceVertexLabel","inV":"targetVertexId","inVLabel":"targetVertexLabel","properties":{"propertyName":"propertyValue",...}}
     
     Also follow the rules: 
     1. Don't extract property fields that do not exist in the given schema
-    2. Ensure the extract property is in the same type as the schema (like 'age' should be a number)
-    3. If there are multiple primarykeys provided, then the generating strategy of VID is: vertexlabelID:pk1!pk2!pk3 (pk means primary key, and '!' is the separator, no extra space between them)
-    4. Your output should be a list of such JSON objects, each representing either a vertex or an edge, extracted and formatted based on the text and the provided schema.
-    5. Translate the given schema filed into Chinese if the given text is Chinese but the schema is in English (Optional)
+    2. Ensure the extracted property is in the same type as the schema (like 'age' should be a number)
+    3. If there are multiple primary keys, the strategy for generating VID is: vertexlabelID:pk1!pk2!pk3 (pk means primary key, and '!' is the separator)
+    4. Output should be a list of JSON objects, each representing a vertex or an edge, extracted and formatted based on the text and schema.
+    5. Translate the schema fields into Chinese if the given text is Chinese but the schema is in English (Optional)
     
     ## Example
     ### Input example:
     #### text
     Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with since 2010. James, in his professional life, works as a journalist.  
+    
     #### graph schema
     {"vertices":[{"vertex_label":"person","properties":["name","age","occupation"]}], "edges":[{"edge_label":"roommate", "source_vertex_label":"person","target_vertex_label":"person","properties":["date"]]}
 
@@ -174,19 +177,29 @@ class PromptConfig:
     """
 
     def __init__(self):
-        self.ensure_prompt_file_exists()
+        self.ensure_yaml_file_exists()
 
-    def ensure_prompt_file_exists(self):
-        if os.path.exists(schema_prompt_path):
-            print(f"File '{schema_prompt_path}' exists, reading content.")
-            with open(schema_prompt_path, "r") as file:
-                self.schema_example_prompt = file.read()
+    def ensure_yaml_file_exists(self):
+        if os.path.exists(yaml_file_path):
+            print(f"File '{yaml_file_path}' exists, reading content.")
+            with open(yaml_file_path, "r") as file:
+                data = yaml.safe_load(file)
+                # Load existing values from the YAML file into the class attributes
+                for key, value in data.items():
+                    setattr(self, key, value)
         else:
-            print(f"File '{schema_prompt_path}' does not exist, creating it.")
-            with open(schema_prompt_path, "w") as file:
-                file.write(self.schema_example_prompt)
+            print(f"File '{yaml_file_path}' does not exist, creating it.")
+            self.save_to_yaml()
 
-    def update_prompt_file(self):
-        print(f"Updating '{schema_prompt_path}' with the latest schema_example_prompt.")
-        with open(schema_prompt_path, "w") as file:
-            file.write(self.schema_example_prompt)
+    def save_to_yaml(self):
+        # This can be extended to add storage fields according to the data needs to be stored
+        yaml_content = f"""
+schema_example_prompt: |{self.schema_example_prompt}
+        """
+        with open(yaml_file_path, 'w') as file:
+            file.write(yaml_content)
+        print(f"YAML file '{yaml_file_path}' updated successfully.")
+
+    def update_yaml_file(self):
+        print(f"Updating '{yaml_file_path}' with the latest attributes.")
+        self.save_to_yaml()
