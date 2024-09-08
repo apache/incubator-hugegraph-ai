@@ -537,13 +537,6 @@ def init_rag_ui() -> gr.Interface:
             info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head", lines=15,
                                                show_copy_button=True)
             out = gr.Textbox(label="Output", lines=15, show_copy_button=True)
-        with gr.Column(visible=False, elem_classes="modal-box") as preview_box:
-            with gr.Row():
-                import_btn = gr.Button("Import Into Graph")
-                close_btn = gr.Button("Cancel")
-
-            with gr.Row():
-                extraction_result = gr.Textbox(label="Extraction Result")
 
         with gr.Row():
             vector_index_btn0 = gr.Button("Get Vector Index Info")
@@ -553,9 +546,9 @@ def init_rag_ui() -> gr.Interface:
             graph_index_btn0 = gr.Button("Get Graph Index Info")
             graph_index_btn1 = gr.Button("Clear Graph Index")
             graph_index_btn2 = gr.Button("Extract Graph", variant="primary")
-            graph_index_btn3 = gr.Button("Fit Vid Index")
-        # with gr.Row():
-        #     out = gr.Textbox(label="Output", show_copy_button=True)
+            graph_index_btn3 = gr.Button("Import Into Index", interactive=False)
+            graph_index_btn4 = gr.Button("Fit Vid Index")
+
         vector_index_btn0.click(get_vector_index_info, outputs=out)  # pylint: disable=no-member
         vector_index_btn1.click(clean_vector_index)  # pylint: disable=no-member
         vector_index_btn2.click(build_vector_index, inputs=[input_file, input_text], outputs=out)  # pylint: disable=no-member
@@ -564,12 +557,11 @@ def init_rag_ui() -> gr.Interface:
         graph_index_btn2.click(  # pylint: disable=no-member
             extract_graph,
             inputs=[input_file, input_text, input_schema, info_extract_template],
-            outputs=[out, extraction_result, preview_box]
+            outputs=[out, graph_index_btn3]
         )
-        graph_index_btn3.click(fit_vid_index, outputs=out)  # pylint: disable=no-member
-
-        import_btn.click(import_graph_data, inputs=[extraction_result], outputs=[preview_box, out], queue=False)  # pylint: disable=no-member
-        close_btn.click(lambda: gr.Column(visible=False), outputs=[preview_box], queue=False)  # pylint: disable=no-member
+        graph_index_btn3.click(import_graph_data, inputs=[out], outputs=[out, graph_index_btn3],  # pylint: disable=no-member
+                               queue=False)
+        graph_index_btn4.click(fit_vid_index, outputs=out)  # pylint: disable=no-member
 
 
         def on_tab_select(input_f, input_t, evt: gr.SelectData):

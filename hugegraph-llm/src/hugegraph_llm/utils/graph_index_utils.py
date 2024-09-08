@@ -68,9 +68,8 @@ def extract_graph(input_file, input_text, schema, example_prompt):
     try:
         context = builder.run()
         return (
-            f"Extract {len(context['vertices'])} entities and {len(context['edges'])} relations successfully.",
             json.dumps(context, ensure_ascii=False, indent=2),
-            gr.Column(visible=True)
+            gr.Button(interactive=True)
         )
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
@@ -121,4 +120,4 @@ def import_graph_data(data: str):
     data = json.loads(data.strip())
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
     context = builder.commit_to_hugegraph().run(data)
-    return gr.Column(visible=False), context
+    return context, gr.Button(interactive=False)
