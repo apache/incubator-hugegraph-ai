@@ -477,21 +477,7 @@ def init_rag_ui() -> gr.Interface:
                 inputs=reranker_config_input,  # pylint: disable=no-member
             )
 
-        gr.Markdown(
-            """## 1. Build vector/graph RAG (💡)
-- Doc(s): Upload document file(s) which should be TXT or DOCX. (Multiple files can be selected together)
-- Schema: Accepts two types of text as below:
-    - User-defined JSON format Schema.
-    - Specify the name of the HugeGraph graph instance, it will automatically get the schema from it.
-- Info extract head: The head of prompt of info extracting.
-- Build mode: 
-    - Test Mode: Only extract vertices and edges from the file into memory (without building the vector index or 
-    writing data into HugeGraph)
-    - Import Mode: Extract the data and append it to HugeGraph & the vector index (without clearing any existing data)
-    - Clear and Import: Clear all existed RAG data(vector + graph), then rebuild them from the current input
-    - Rebuild Vector: Only rebuild vector index. (keep the graph data intact)
-"""
-        )
+        gr.Markdown(prompt.docs_build_rag)
 
         # tmp_rag_schema = json.loads(prompt.rag_schema)
         schema = prompt.rag_schema

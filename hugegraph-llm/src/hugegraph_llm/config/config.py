@@ -242,6 +242,19 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
 # specific language governing permissions and limitations
 # under the License.
 """
+    docs_build_rag = """## 1. Build vector/graph RAG (💡)
+- Doc(s): Upload document file(s) which should be TXT or DOCX. (Multiple files can be selected together)
+- Schema: Accepts two types of text as below:
+    - User-defined JSON format Schema.
+    - Specify the name of the HugeGraph graph instance, it will automatically get the schema from it.
+- Info extract head: The head of prompt of info extracting.
+- Build mode: 
+    - Test Mode: Only extract vertices and edges from the file into memory (without building the vector index or 
+    writing data into HugeGraph)
+    - Import Mode: Extract the data and append it to HugeGraph & the vector index (without clearing any existing data)
+    - Clear and Import: Clear all existed RAG data(vector + graph), then rebuild them from the current input
+    - Rebuild Vector: Only rebuild vector index. (keep the graph data intact)
+"""
 
     def __init__(self):
         self.ensure_yaml_file_exists()
@@ -261,6 +274,8 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
     def save_to_yaml(self):
         indented_schema = "\n".join([f"  {line}" for line in self.rag_schema.splitlines()])
         indented_example_prompt = "\n".join([f"    {line}" for line in self.schema_example_prompt.splitlines()])
+        indented_docs_build_rag = "\n".join([f"    {line}" for line in self.docs_build_rag.splitlines()])
+        
         # This can be extended to add storage fields according to the data needs to be stored
         yaml_content = f"""{self.apache_license_header}
 
@@ -269,6 +284,9 @@ rag_schema: |
 
 schema_example_prompt: |
 {indented_example_prompt}
+
+docs_build_rag: |
+{indented_docs_build_rag}
         """
         with open(yaml_file_path, 'w') as file:
             file.write(yaml_content)
