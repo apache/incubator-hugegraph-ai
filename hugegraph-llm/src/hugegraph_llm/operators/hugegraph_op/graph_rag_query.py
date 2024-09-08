@@ -120,7 +120,8 @@ class GraphRAGQuery:
 
         use_id_to_match = self._prop_to_match is None
         if use_id_to_match:
-            if not entrance_vids: return context
+            if not entrance_vids:
+                return context
 
             rag_gremlin_query = self.VERTEX_GREMLIN_QUERY_TEMPL.format(keywords=entrance_vids)
             result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]

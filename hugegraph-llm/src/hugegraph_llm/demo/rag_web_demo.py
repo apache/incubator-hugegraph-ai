@@ -19,7 +19,7 @@
 import argparse
 import json
 import os
-from typing import List, Union, Tuple, Literal, Optional
+from typing import List, Tuple, Literal, Optional
 
 import docx
 import gradio as gr
@@ -40,7 +40,7 @@ from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
 from hugegraph_llm.utils.graph_index_utils import get_graph_index_info, clean_graph_index, fit_vid_index, \
-    build_graph_index, extract_graph, import_graph_data
+    extract_graph, import_graph_data
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
 from hugegraph_llm.utils.log import log
@@ -561,8 +561,11 @@ def init_rag_ui() -> gr.Interface:
         vector_index_btn2.click(build_vector_index, inputs=[input_file, input_text], outputs=out)  # pylint: disable=no-member
         graph_index_btn0.click(get_graph_index_info, outputs=out)  # pylint: disable=no-member
         graph_index_btn1.click(clean_graph_index)  # pylint: disable=no-member
-        graph_index_btn2.click(extract_graph, inputs=[input_file, input_text, input_schema,  # pylint: disable=no-member
-                                                      info_extract_template], outputs=[out, extraction_result, preview_box])
+        graph_index_btn2.click(  # pylint: disable=no-member
+            extract_graph,
+            inputs=[input_file, input_text, input_schema, info_extract_template],
+            outputs=[out, extraction_result, preview_box]
+        )
         graph_index_btn3.click(fit_vid_index, outputs=out)  # pylint: disable=no-member
 
         import_btn.click(import_graph_data, inputs=[extraction_result], outputs=[preview_box, out], queue=False)  # pylint: disable=no-member
@@ -573,8 +576,9 @@ def init_rag_ui() -> gr.Interface:
             print(f"You selected {evt.value} at {evt.index} from {evt.target}")
             if evt.value == "file":
                 return input_f, ""
-            else:
+            if evt.value == "text":
                 return [], input_t
+            return [], ""
         tab_upload_file.select(fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text])  # pylint: disable=no-member
         tab_upload_text.select(fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text])  # pylint: disable=no-member
 
@@ -613,7 +617,7 @@ def init_rag_ui() -> gr.Interface:
                         )
                         graph_ratio = gr.Slider(0, 1, 0.5, label="Graph Ratio", step=0.1, interactive=False)
 
-                    graph_vector_radio.change(toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio)
+                    graph_vector_radio.change(toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio)  # pylint: disable=no-member
                     near_neighbor_first = gr.Checkbox(
                         value=False,
                         label="Near neighbor first(Optional)",
