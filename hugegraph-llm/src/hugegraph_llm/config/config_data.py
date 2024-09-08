@@ -189,4 +189,3 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
     - Clear and Import: Clear all existed RAG data(vector + graph), then rebuild them from the current input
     - Rebuild Vector: Only rebuild vector index. (keep the graph data intact)
 """
-

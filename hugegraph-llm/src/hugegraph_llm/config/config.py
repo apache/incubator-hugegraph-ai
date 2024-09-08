@@ -31,7 +31,6 @@ package_path = dirname(dirname(dirname(dirname(os.path.abspath(__file__)))))
 env_path = os.path.join(package_path, ".env")
 yaml_file_path = os.path.join(package_path, "src/hugegraph_llm/config/config_prompt.yaml")
 
-# TODO: We need to tidy up the partition settings
 
 @dataclass
 class Config(ConfigData):

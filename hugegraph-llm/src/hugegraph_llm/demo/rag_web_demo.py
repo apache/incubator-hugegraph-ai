@@ -509,7 +509,7 @@ def init_rag_ui() -> gr.Interface:
         gr.Markdown("""## 2. RAG with HugeGraph 📖""")
         with gr.Row():
             with gr.Column(scale=2):
-                inp = gr.Textbox(value=settings.question, label="Question", show_copy_button=True)
+                inp = gr.Textbox(value=settings.question, label="Question", show_copy_button=True, lines=2)
                 raw_out = gr.Textbox(label="Basic LLM Answer", show_copy_button=True)
                 vector_only_out = gr.Textbox(label="Vector-only Answer", show_copy_button=True)
                 graph_only_out = gr.Textbox(label="Graph-only Answer", show_copy_button=True)
