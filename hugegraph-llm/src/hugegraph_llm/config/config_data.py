@@ -20,9 +20,11 @@ import os
 from dataclasses import dataclass
 from typing import Literal, Optional
 
+
 @dataclass
 class ConfigData:
     """LLM settings"""
+
     # env_path: Optional[str] = ".env"
     llm_type: Literal["openai", "ollama", "qianfan_wenxin", "zhipu"] = "openai"
     embedding_type: Optional[Literal["openai", "ollama", "qianfan_wenxin", "zhipu"]] = "openai"
@@ -66,9 +68,10 @@ class ConfigData:
     graph_user: Optional[str] = "admin"
     graph_pwd: Optional[str] = "xxx"
     graph_space: Optional[str] = None
-  
+
     """rag question/answering settings"""
     question: Optional[str] = "Tell me about Sarah."
+
 
 # Additional static content like PromptConfig
 class PromptData:

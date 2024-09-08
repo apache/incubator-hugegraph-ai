@@ -107,7 +107,7 @@ class PromptConfig(PromptData):
         indented_schema = "\n".join([f"  {line}" for line in self.rag_schema.splitlines()])
         indented_example_prompt = "\n".join([f"    {line}" for line in self.schema_example_prompt.splitlines()])
         indented_docs_build_rag = "\n".join([f"    {line}" for line in self.docs_build_rag.splitlines()])
-        
+
         # This can be extended to add storage fields according to the data needs to be stored
         yaml_content = f"""{self.apache_license_header}
 
@@ -120,7 +120,7 @@ schema_example_prompt: |
 docs_build_rag: |
 {indented_docs_build_rag}
         """
-        with open(yaml_file_path, 'w') as file:
+        with open(yaml_file_path, "w") as file:
             file.write(yaml_content)
         print(f"YAML file '{yaml_file_path}' updated successfully.")
 
