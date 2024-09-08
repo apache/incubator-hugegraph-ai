@@ -14,6 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+import logging
 import os
 import pickle as pkl
 from copy import deepcopy
@@ -22,6 +23,7 @@ from typing import List, Dict, Any, Set, Union
 import faiss
 import numpy as np
 
+from hugegraph_llm.utils.log import log
 
 INDEX_FILE_NAME = "index.faiss"
 PROPERTIES_FILE_NAME = "properties.pkl"
@@ -38,6 +40,7 @@ class VectorIndex:
         index_file = os.path.join(dir_path, INDEX_FILE_NAME)
         properties_file = os.path.join(dir_path, PROPERTIES_FILE_NAME)
         if not os.path.exists(index_file) or not os.path.exists(properties_file):
+            log.warning("No index file found, create a new one.")
             return VectorIndex()
         faiss_index = faiss.read_index(index_file)
         embed_dim = faiss_index.d
