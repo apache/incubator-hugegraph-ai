@@ -23,10 +23,44 @@ from typing import List, Any, Dict
 from hugegraph_llm.document.chunk_split import ChunkSplitter
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.config import prompt
 
-# TODO: put in a separate file for users to customize the content
-SCHEMA_EXAMPLE_PROMPT = prompt.schema_example_prompt
+# TODO: put in a separate file for users to customize the content.
+# When extracting UI-related code logic, it is planned to process related text uniformly.
+SCHEMA_EXAMPLE_PROMPT = """## Main Task
+Given the following graph schema and a piece of text, your task is to analyze the text and extract information that fits into the schema's structure, formatting the information into vertices and edges as specified.
+
+## Basic Rules
+### Schema Format
+Graph Schema:
+- Vertices: [List of vertex labels and their properties]
+- Edges: [List of edge labels, their source and target vertex labels, and properties]
+
+### Content Rule
+Please read the provided text carefully and identify any information that corresponds to the vertices and edges defined in the schema. For each piece of information that matches a vertex or edge, format it according to the following JSON structures:
+#### Vertex Format:
+{"id":"vertexLabelID:entityName","label":"vertexLabel","type":"vertex","properties":{"propertyName":"propertyValue", ...}}
+
+#### Edge Format:
+{"label":"edgeLabel","type":"edge","outV":"sourceVertexId","outVLabel":"sourceVertexLabel","inV":"targetVertexId","inVLabel":"targetVertexLabel","properties":{"propertyName":"propertyValue",...}}
+
+Also follow the rules: 
+1. Don't extract property fields that do not exist in the given schema
+2. Ensure the extracted property is in the same type as the schema (like 'age' should be a number)
+3. If there are multiple primary keys, the strategy for generating VID is: vertexlabelID:pk1!pk2!pk3 (pk means primary key, and '!' is the separator)
+4. Output should be a list of JSON objects, each representing a vertex or an edge, extracted and formatted based on the text and schema.
+5. Translate the schema fields into Chinese if the given text is Chinese but the schema is in English (Optional)
+
+## Example
+### Input example:
+#### text
+Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with since 2010. James, in his professional life, works as a journalist.  
+
+#### graph schema
+{"vertices":[{"vertex_label":"person","properties":["name","age","occupation"]}], "edges":[{"edge_label":"roommate", "source_vertex_label":"person","target_vertex_label":"person","properties":["date"]]}
+
+### Output example:
+[{"id":"1:Sarah","label":"person","type":"vertex","properties":{"name":"Sarah","age":30,"occupation":"attorney"}},{"id":"1:James","label":"person","type":"vertex","properties":{"name":"James","occupation":"journalist"}},{"label":"roommate","type":"edge","outV":"1:Sarah","outVLabel":"person","inV":"1:James","inVLabel":"person","properties":{"date":"2010"}}]
+"""
 
 def generate_extract_property_graph_prompt(text, schema=None) -> str:
     return f"""---
