@@ -1,1 +1,2 @@
-src/hugegraph_llm/resources/demo/.*
+src/hugegraph_llm/resources/demo/questions_answers.xlsx
+src/hugegraph_llm/resources/demo/questions.xlsx

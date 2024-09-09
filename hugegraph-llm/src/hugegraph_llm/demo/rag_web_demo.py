@@ -604,7 +604,7 @@ def init_rag_ui() -> gr.Interface:
             outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
         )
 
-        gr.Markdown("""## 3. Multi Question Test (❔)""")
+        gr.Markdown("""## 3. User Function """)
         tests_df_headers = [
             "Question",
             "Expected Answer",
@@ -613,14 +613,28 @@ def init_rag_ui() -> gr.Interface:
             "Graph-only Answer",
             "Graph-Vector Answer",
         ]
+        answers_path = os.path.join(resource_path, "demo", "questions_answers.xlsx")
+        questions_path = os.path.join(resource_path, "demo", "questions.xlsx")
+        questions_template_path = os.path.join(resource_path, "demo", "questions_template.xlsx")
 
-        def read_excel(file):
-            df = pd.read_excel(BytesIO(file)) if file else pd.DataFrame()
-            df.to_excel(os.path.join(resource_path, "demo", ".questions.xlsx"), index=False)
+        def read_file_to_excel(file, line_count: Optional[int] = None):
+            df = pd.read_excel(BytesIO(file), nrows=line_count) if file else pd.DataFrame()
+            df.to_excel(questions_path, index=False)
             if df.empty:
                 df = pd.DataFrame([[""] * len(tests_df_headers)], columns=tests_df_headers)
             else:
                 df.columns = tests_df_headers
+            if len(df) > 20:
+                return df.head(20), 20
+            return df, len(df)
+
+        def change_showing_excel(line_count):
+            if os.path.exists(answers_path):
+                df = pd.read_excel(answers_path, nrows=line_count)
+            elif os.path.exists(questions_path):
+                df = pd.read_excel(questions_path, nrows=line_count)
+            else:
+                df = pd.read_excel(questions_template_path, nrows=line_count)
             return df
 
         def several_rag_answer(
@@ -634,8 +648,9 @@ def init_rag_ui() -> gr.Interface:
             custom_related_information: str,
             answer_prompt: str,
             progress=gr.Progress(track_tqdm=True),
+            answer_max_line_count: int = 1,
         ):
-            df = pd.read_excel(os.path.join(resource_path, "demo", ".questions.xlsx"), dtype=str)
+            df = pd.read_excel(questions_path, dtype=str)
             total_rows = len(df)
             for index, row in df.iterrows():
                 question = row.iloc[0]
@@ -656,17 +671,20 @@ def init_rag_ui() -> gr.Interface:
                 df.at[index, "Graph-only Answer"] = graph_only_answer
                 df.at[index, "Graph-Vector Answer"] = graph_vector_answer
                 progress((index + 1, total_rows))
-            answers_path = os.path.join(resource_path, "demo", ".questions_answers.xlsx")
+            answers_path = os.path.join(resource_path, "demo", "questions_answers.xlsx")
             df.to_excel(answers_path, index=False)
-            return df, answers_path
+            return df.head(answer_max_line_count), answers_path
 
         with gr.Row():
             with gr.Column():
+                # TODO: Support CSV file
                 questions_file = gr.File(file_types=[".xlsx"], label="Questions File", type="binary")
+                answer_max_line_count = gr.Number(1, label="Max Lines To Show", minimum=1, maximum=100)
             with gr.Column():
                 test_template_file = os.path.join(resource_path, "demo", "questions_template.xlsx")
                 gr.File(value=test_template_file, label="Download Template File")
                 answers_btn = gr.Button("Answer Questions", variant="primary")
+        # TODO: Set individual progress bars for dataframe
         qa_dataframe = gr.DataFrame(label="Questions and Answers", headers=tests_df_headers)
         answers_btn.click(
             several_rag_answer,
@@ -680,10 +698,12 @@ def init_rag_ui() -> gr.Interface:
                 near_neighbor_first,
                 custom_related_information,
                 answer_prompt_input,
+                answer_max_line_count,
             ],
             outputs=[qa_dataframe, gr.File(label="Download Answers File")],
         )
-        questions_file.change(read_excel, questions_file, qa_dataframe)
+        questions_file.change(read_file_to_excel, questions_file, [qa_dataframe, answer_max_line_count])
+        answer_max_line_count.change(change_showing_excel, answer_max_line_count, qa_dataframe)
 
         gr.Markdown("""## 4. Others (🚧) """)
         with gr.Row():
