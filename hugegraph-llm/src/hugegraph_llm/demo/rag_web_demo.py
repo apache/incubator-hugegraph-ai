@@ -123,11 +123,11 @@ def build_kg(  # pylint: disable=too-many-branches
 ) -> str:
     
     # update env variables: schema and example_prompt
-    prompt.rag_schema = schema
-    prompt.schema_example_prompt = example_prompt
-
-    prompt.update_yaml_file()
-
+    if prompt.rag_schema != schema or prompt.schema_example_prompt != example_prompt:
+        prompt.rag_schema = schema
+        prompt.schema_example_prompt = example_prompt
+        prompt.update_yaml_file()
+    
     if isinstance(files, NamedString):
         files = [files]
     texts = []

@@ -119,7 +119,8 @@ schema_example_prompt: |
 
 docs_build_rag: |
 {indented_docs_build_rag}
-        """
+
+"""
         with open(yaml_file_path, "w") as file:
             file.write(yaml_content)
         log.info(f"YAML file '{yaml_file_path}' updated successfully.")
