@@ -73,6 +73,9 @@ class ConfigData:
 # Additional static content like PromptConfig
 class PromptData:
 
+    custom_related_information = """just for test
+hello!"""
+
     question = """Tell me about Sarah."""
 
     # Data is detached from hugegraph-llm/src/hugegraph_llm/operators/llm_op/property_graph_extract.py

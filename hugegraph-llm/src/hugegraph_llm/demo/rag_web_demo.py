@@ -72,7 +72,8 @@ def rag_answer(
     answer_prompt: str,
 ) -> Tuple:
     
-    if prompt.question != text:
+    if prompt.question != text or prompt.custom_related_information != custom_related_information:
+        prompt.custom_related_information = custom_related_information
         prompt.question = text
         prompt.update_yaml_file()
     
@@ -560,7 +561,7 @@ def init_rag_ui() -> gr.Interface:
                         info="One-depth neighbors > two-depth neighbors",
                     )
                     custom_related_information = gr.Text(
-                        "",
+                        prompt.custom_related_information,
                         label="Custom related information(Optional)",
                     )
                     btn = gr.Button("Answer Question", variant="primary")

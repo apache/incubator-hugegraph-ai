@@ -107,6 +107,7 @@ class PromptConfig(PromptData):
         indented_schema = "\n".join([f"  {line}" for line in self.rag_schema.splitlines()])
         indented_example_prompt = "\n".join([f"    {line}" for line in self.schema_example_prompt.splitlines()])
         indented_question = "\n".join([f"    {line}" for line in self.question.splitlines()])
+        indented_custom_related_information = "\n".join([f"    {line}" for line in self.custom_related_information.splitlines()])
 
         # This can be extended to add storage fields according to the data needs to be stored
         yaml_content = f"""{self.apache_license_header}
@@ -119,6 +120,9 @@ schema_example_prompt: |
 
 question: |
 {indented_question}
+
+custom_related_information: |
+{indented_custom_related_information}
 
 """
         with open(yaml_file_path, "w") as file:
