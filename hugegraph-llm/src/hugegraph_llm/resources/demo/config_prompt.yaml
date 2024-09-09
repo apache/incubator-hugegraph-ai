@@ -114,3 +114,4 @@ docs_build_rag: |
         - Import Mode: Extract the data and append it to HugeGraph & the vector index (without clearing any existing data)
         - Clear and Import: Clear all existed RAG data(vector + graph), then rebuild them from the current input
         - Rebuild Vector: Only rebuild vector index. (keep the graph data intact)
+        

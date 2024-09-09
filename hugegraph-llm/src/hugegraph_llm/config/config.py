@@ -29,7 +29,7 @@ from hugegraph_llm.utils.log import log
 dirname = os.path.dirname
 package_path = dirname(dirname(dirname(dirname(os.path.abspath(__file__)))))
 env_path = os.path.join(package_path, ".env")
-yaml_file_path = os.path.join(package_path, "src/hugegraph_llm/config/config_prompt.yaml")
+yaml_file_path = os.path.join(package_path, "src/hugegraph_llm/resources/demo/config_prompt.yaml")
 
 
 @dataclass
