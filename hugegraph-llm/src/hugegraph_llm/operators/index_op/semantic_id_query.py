@@ -27,7 +27,7 @@ from hugegraph_llm.models.embeddings.base import BaseEmbedding
 
 
 class SemanticIdQuery:
-    ID_QUERY_TEMPL = "g.V().hasId({vids_str})"
+    ID_QUERY_TEMPL = "g.V({vids_str})"
     def __init__(
             self,
             embedding: BaseEmbedding,
