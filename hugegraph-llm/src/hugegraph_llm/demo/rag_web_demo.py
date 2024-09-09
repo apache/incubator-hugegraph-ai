@@ -30,7 +30,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from gradio.utils import NamedString
 from requests.auth import HTTPBasicAuth
 
-from hugegraph_llm.demo.css import CSS
+from hugegraph_llm.resources.demo.css import CSS
 from hugegraph_llm.api.rag_api import rag_http_api
 from hugegraph_llm.config import settings, resource_path
 from hugegraph_llm.enums.build_mode import BuildMode
@@ -39,7 +39,7 @@ from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
-from hugegraph_llm.utils.graph_index_utils import get_graph_index_info, clean_graph_index, fit_vid_index, \
+from hugegraph_llm.utils.graph_index_utils import get_graph_index_info, clean_all_graph_index, fit_vid_index, \
     extract_graph, import_graph_data
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
@@ -539,29 +539,33 @@ def init_rag_ui() -> gr.Interface:
             out = gr.Textbox(label="Output", lines=15, show_copy_button=True)
 
         with gr.Row():
-            vector_index_btn0 = gr.Button("Get Vector Index Info")
-            vector_index_btn1 = gr.Button("Clear Vector Index")
-            vector_index_btn2 = gr.Button("Import into Vector Index", variant="primary")
-        with gr.Row():
-            graph_index_btn0 = gr.Button("Get Graph Index Info")
-            graph_index_btn1 = gr.Button("Clear Graph Index")
-            graph_index_btn2 = gr.Button("Extract Graph", variant="primary")
-            graph_index_btn3 = gr.Button("Import Into Index", interactive=False)
-            graph_index_btn4 = gr.Button("Fit Vid Index")
+            with gr.Accordion("Get RAG Info", open=False):
+                with gr.Column():
+                    vector_index_btn0 = gr.Button("Get Vector Index Info", size="sm")
+                    graph_index_btn0 = gr.Button("Get Graph Index Info", size="sm")
+            with gr.Accordion("Clear RAG Info", open=False):
+                with gr.Column():
+                    vector_index_btn1 = gr.Button("Clear Vector Index", size="sm")
+                    graph_index_btn1 = gr.Button("Clear Graph Data & Index", size="sm")
+
+            vector_import_bt = gr.Button("Import into Vector", variant="primary")
+            graph_index_rebuild_bt = gr.Button("Rebuild vid Index")
+            graph_extract_bt = gr.Button("Extract Graph Data (1)", variant="primary")
+            graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=False)
 
         vector_index_btn0.click(get_vector_index_info, outputs=out)  # pylint: disable=no-member
         vector_index_btn1.click(clean_vector_index)  # pylint: disable=no-member
-        vector_index_btn2.click(build_vector_index, inputs=[input_file, input_text], outputs=out)  # pylint: disable=no-member
+        vector_import_bt.click(build_vector_index, inputs=[input_file, input_text], outputs=out)  # pylint: disable=no-member
         graph_index_btn0.click(get_graph_index_info, outputs=out)  # pylint: disable=no-member
-        graph_index_btn1.click(clean_graph_index)  # pylint: disable=no-member
-        graph_index_btn2.click(  # pylint: disable=no-member
+        graph_index_btn1.click(clean_all_graph_index)  # pylint: disable=no-member
+        graph_extract_bt.click(  # pylint: disable=no-member
             extract_graph,
             inputs=[input_file, input_text, input_schema, info_extract_template],
-            outputs=[out, graph_index_btn3]
+            outputs=[out, graph_loading_bt]
         )
-        graph_index_btn3.click(import_graph_data, inputs=[out], outputs=[out, graph_index_btn3],  # pylint: disable=no-member
+        graph_loading_bt.click(import_graph_data, inputs=[out], outputs=[out, graph_loading_bt],  # pylint: disable=no-member
                                queue=False)
-        graph_index_btn4.click(fit_vid_index, outputs=out)  # pylint: disable=no-member
+        graph_index_rebuild_bt.click(fit_vid_index, outputs=out)  # pylint: disable=no-member
 
 
         def on_tab_select(input_f, input_t, evt: gr.SelectData):

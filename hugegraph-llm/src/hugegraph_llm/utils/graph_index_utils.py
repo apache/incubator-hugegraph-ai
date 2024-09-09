@@ -42,7 +42,7 @@ def get_graph_index_info():
     return json.dumps(context, ensure_ascii=False, indent=2)
 
 
-def clean_graph_index():
+def clean_all_graph_index():
     clean_hg_data()
     VectorIndex.clean(str(os.path.join(resource_path, settings.graph_name, "graph_vids")))
     gr.Info("Clean graph index successfully!")
