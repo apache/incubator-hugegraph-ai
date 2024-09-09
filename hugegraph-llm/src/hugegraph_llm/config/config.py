@@ -17,14 +17,14 @@
 
 
 import os
-import yaml
-
 from dataclasses import dataclass
-from typing import Literal, Optional
+from typing import Optional
+
+import yaml
 from dotenv import dotenv_values, set_key
 
-from hugegraph_llm.utils.log import log
 from hugegraph_llm.config.config_data import ConfigData, PromptData
+from hugegraph_llm.utils.log import log
 
 dirname = os.path.dirname
 package_path = dirname(dirname(dirname(dirname(os.path.abspath(__file__)))))
@@ -93,14 +93,14 @@ class PromptConfig(PromptData):
 
     def ensure_yaml_file_exists(self):
         if os.path.exists(yaml_file_path):
-            print(f"File '{yaml_file_path}' exists, reading content.")
+            log.info(f"Loading prompt file '{yaml_file_path}' successfully.")
             with open(yaml_file_path, "r") as file:
                 data = yaml.safe_load(file)
                 # Load existing values from the YAML file into the class attributes
                 for key, value in data.items():
                     setattr(self, key, value)
         else:
-            print(f"File '{yaml_file_path}' does not exist, creating it.")
+            log.info(f"Prompt file '{yaml_file_path}' doesn't exist, create it.")
             self.save_to_yaml()
 
     def save_to_yaml(self):
@@ -122,8 +122,8 @@ docs_build_rag: |
         """
         with open(yaml_file_path, "w") as file:
             file.write(yaml_content)
-        print(f"YAML file '{yaml_file_path}' updated successfully.")
+        log.info(f"YAML file '{yaml_file_path}' updated successfully.")
 
     def update_yaml_file(self):
-        print(f"Updating '{yaml_file_path}' with the latest attributes.")
+        log.info(f"Updating '{yaml_file_path}' with the latest attributes.")
         self.save_to_yaml()
