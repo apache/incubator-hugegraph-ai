@@ -617,8 +617,13 @@ def init_rag_ui() -> gr.Interface:
         questions_path = os.path.join(resource_path, "demo", "questions.xlsx")
         questions_template_path = os.path.join(resource_path, "demo", "questions_template.xlsx")
 
-        def read_file_to_excel(file, line_count: Optional[int] = None):
-            df = pd.read_excel(BytesIO(file), nrows=line_count) if file else pd.DataFrame()
+        def read_file_to_excel(file: NamedString, line_count: Optional[int] = None):
+            if not file:
+                return pd.DataFrame(), 1
+            if file.name.endswith(".xlsx"):
+                df = pd.read_excel(file.name, nrows=line_count) if file else pd.DataFrame()
+            elif file.name.endswith(".csv"):
+                df = pd.read_csv(file.name, nrows=line_count) if file else pd.DataFrame()
             df.to_excel(questions_path, index=False)
             if df.empty:
                 df = pd.DataFrame([[""] * len(tests_df_headers)], columns=tests_df_headers)
@@ -677,8 +682,7 @@ def init_rag_ui() -> gr.Interface:
 
         with gr.Row():
             with gr.Column():
-                # TODO: Support CSV file
-                questions_file = gr.File(file_types=[".xlsx"], label="Questions File", type="binary")
+                questions_file = gr.File(file_types=[".xlsx", ".csv"], label="Questions File (Support Excel and csv file)")
                 answer_max_line_count = gr.Number(1, label="Max Lines To Show", minimum=1, maximum=100)
             with gr.Column():
                 test_template_file = os.path.join(resource_path, "demo", "questions_template.xlsx")
