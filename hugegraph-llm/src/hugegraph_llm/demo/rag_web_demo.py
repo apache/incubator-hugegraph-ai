@@ -72,8 +72,9 @@ def rag_answer(
     answer_prompt: str,
 ) -> Tuple:
     
-    settings.question = text
-    settings.update_env()
+    if prompt.question != text:
+        prompt.question = text
+        prompt.update_yaml_file()
     
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
@@ -521,7 +522,7 @@ def init_rag_ui() -> gr.Interface:
         gr.Markdown("""## 2. RAG with HugeGraph 📖""")
         with gr.Row():
             with gr.Column(scale=2):
-                inp = gr.Textbox(value=settings.question, label="Question", show_copy_button=True, lines=2)
+                inp = gr.Textbox(value=prompt.question, label="Question", show_copy_button=True, lines=2)
                 raw_out = gr.Textbox(label="Basic LLM Answer", show_copy_button=True)
                 vector_only_out = gr.Textbox(label="Vector-only Answer", show_copy_button=True)
                 graph_only_out = gr.Textbox(label="Graph-only Answer", show_copy_button=True)

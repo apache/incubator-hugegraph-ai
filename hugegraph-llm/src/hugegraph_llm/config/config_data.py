@@ -68,13 +68,12 @@ class ConfigData:
     graph_user: Optional[str] = "admin"
     graph_pwd: Optional[str] = "xxx"
     graph_space: Optional[str] = None
-
-    """rag question/answering settings"""
-    question: Optional[str] = "Tell me about Sarah."
-
+    
 
 # Additional static content like PromptConfig
 class PromptData:
+
+    question = """Tell me about Sarah."""
 
     # Data is detached from hugegraph-llm/src/hugegraph_llm/operators/llm_op/property_graph_extract.py
     schema_example_prompt = """## Main Task

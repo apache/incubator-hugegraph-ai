@@ -106,6 +106,7 @@ class PromptConfig(PromptData):
     def save_to_yaml(self):
         indented_schema = "\n".join([f"  {line}" for line in self.rag_schema.splitlines()])
         indented_example_prompt = "\n".join([f"    {line}" for line in self.schema_example_prompt.splitlines()])
+        indented_question = "\n".join([f"    {line}" for line in self.question.splitlines()])
 
         # This can be extended to add storage fields according to the data needs to be stored
         yaml_content = f"""{self.apache_license_header}
@@ -115,6 +116,9 @@ rag_schema: |
 
 schema_example_prompt: |
 {indented_example_prompt}
+
+question: |
+{indented_question}
 
 """
         with open(yaml_file_path, "w") as file:
