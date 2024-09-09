@@ -67,8 +67,12 @@ def extract_graph(input_file, input_text, schema, example_prompt):
     log.debug(builder.operators)
     try:
         context = builder.run()
+        extract_result = {
+            "vertices": context["vertices"],
+            "edges": context["edges"]
+        }
         return (
-            json.dumps(context, ensure_ascii=False, indent=2),
+            json.dumps(extract_result, ensure_ascii=False, indent=2),
             gr.Button(interactive=True)
         )
     except Exception as e:  # pylint: disable=broad-exception-caught
