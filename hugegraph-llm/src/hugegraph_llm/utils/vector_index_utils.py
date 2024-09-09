@@ -71,4 +71,5 @@ def clean_vector_index():
 def build_vector_index(input_file, input_text):
     texts = read_documents(input_file, input_text)
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
-    return builder.chunk_split(texts, "paragraph", "zh").build_vector_index().run()
+    context = builder.chunk_split(texts, "paragraph", "zh").build_vector_index().run()
+    return json.dumps(context, ensure_ascii=False, indent=2)
