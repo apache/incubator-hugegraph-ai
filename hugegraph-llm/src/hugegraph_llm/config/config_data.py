@@ -73,8 +73,7 @@ class ConfigData:
 # Additional static content like PromptConfig
 class PromptData:
 
-    custom_related_information = """just for test
-hello!"""
+    custom_related_information = """"""
 
     question = """Tell me about Sarah."""
 
