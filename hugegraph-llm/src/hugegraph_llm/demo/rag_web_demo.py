@@ -23,6 +23,7 @@ from typing import List, Union, Tuple, Literal, Optional
 
 import docx
 import gradio as gr
+import pandas as pd
 import requests
 import uvicorn
 from fastapi import FastAPI, Depends, APIRouter
@@ -602,7 +603,114 @@ def init_rag_ui() -> gr.Interface:
             outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
         )
 
-        gr.Markdown("""## 3. Others (🚧) """)
+        gr.Markdown("""## 3. User Functions """)
+        tests_df_headers = [
+            "Question",
+            "Expected Answer",
+            "Basic LLM Answer",
+            "Vector-only Answer",
+            "Graph-only Answer",
+            "Graph-Vector Answer",
+        ]
+        answers_path = os.path.join(resource_path, "demo", "questions_answers.xlsx")
+        questions_path = os.path.join(resource_path, "demo", "questions.xlsx")
+        questions_template_path = os.path.join(resource_path, "demo", "questions_template.xlsx")
+
+        def read_file_to_excel(file: NamedString, line_count: Optional[int] = None):
+            df = None
+            if not file:
+                return pd.DataFrame(), 1
+            if file.name.endswith(".xlsx"):
+                df = pd.read_excel(file.name, nrows=line_count) if file else pd.DataFrame()
+            elif file.name.endswith(".csv"):
+                df = pd.read_csv(file.name, nrows=line_count) if file else pd.DataFrame()
+            df.to_excel(questions_path, index=False)
+            if df.empty:
+                df = pd.DataFrame([[""] * len(tests_df_headers)], columns=tests_df_headers)
+            else:
+                df.columns = tests_df_headers
+            # truncate the dataframe if it's too long
+            if len(df) > 40:
+                return df.head(40), 40
+            return df, len(df)
+
+        def change_showing_excel(line_count):
+            if os.path.exists(answers_path):
+                df = pd.read_excel(answers_path, nrows=line_count)
+            elif os.path.exists(questions_path):
+                df = pd.read_excel(questions_path, nrows=line_count)
+            else:
+                df = pd.read_excel(questions_template_path, nrows=line_count)
+            return df
+
+        def several_rag_answer(
+            is_raw_answer: bool,
+            is_vector_only_answer: bool,
+            is_graph_only_answer: bool,
+            is_graph_vector_answer: bool,
+            graph_ratio: float,
+            rerank_method: Literal["bleu", "reranker"],
+            near_neighbor_first: bool,
+            custom_related_information: str,
+            answer_prompt: str,
+            progress=gr.Progress(track_tqdm=True),
+            answer_max_line_count: int = 1,
+        ):
+            df = pd.read_excel(questions_path, dtype=str)
+            total_rows = len(df)
+            for index, row in df.iterrows():
+                question = row.iloc[0]
+                basic_llm_answer, vector_only_answer, graph_only_answer, graph_vector_answer = rag_answer(
+                    question,
+                    is_raw_answer,
+                    is_vector_only_answer,
+                    is_graph_only_answer,
+                    is_graph_vector_answer,
+                    graph_ratio,
+                    rerank_method,
+                    near_neighbor_first,
+                    custom_related_information,
+                    answer_prompt,
+                )
+                df.at[index, "Basic LLM Answer"] = basic_llm_answer
+                df.at[index, "Vector-only Answer"] = vector_only_answer
+                df.at[index, "Graph-only Answer"] = graph_only_answer
+                df.at[index, "Graph-Vector Answer"] = graph_vector_answer
+                progress((index + 1, total_rows))
+            answers_path = os.path.join(resource_path, "demo", "questions_answers.xlsx")
+            df.to_excel(answers_path, index=False)
+            return df.head(answer_max_line_count), answers_path
+
+        with gr.Row():
+            with gr.Column():
+                questions_file = gr.File(file_types=[".xlsx", ".csv"], label="Questions File (.xlsx & csv)")
+            with gr.Column():
+                test_template_file = os.path.join(resource_path, "demo", "questions_template.xlsx")
+                gr.File(value=test_template_file, label="Download Template File")
+                answer_max_line_count = gr.Number(1, label="Max Lines To Show", minimum=1, maximum=40)
+                answers_btn = gr.Button("Generate Answer (Batch)", variant="primary")
+        # TODO: Set individual progress bars for dataframe
+        qa_dataframe = gr.DataFrame(label="Questions & Answers (Preview)", headers=tests_df_headers)
+        answers_btn.click(
+            several_rag_answer,
+            inputs=[
+                raw_radio,
+                vector_only_radio,
+                graph_only_radio,
+                graph_vector_radio,
+                graph_ratio,
+                rerank_method,
+                near_neighbor_first,
+                custom_related_information,
+                answer_prompt_input,
+                answer_max_line_count,
+            ],
+            outputs=[qa_dataframe, gr.File(label="Download Answered File", min_width=40)],
+        )
+        questions_file.change(read_file_to_excel, questions_file, [qa_dataframe, answer_max_line_count])
+        answer_max_line_count.change(change_showing_excel, answer_max_line_count, qa_dataframe)
+
+        gr.Markdown("""## 4. Others (🚧) """)
         with gr.Row():
             with gr.Column():
                 inp = gr.Textbox(value="g.V().limit(10)", label="Gremlin query", show_copy_button=True)
