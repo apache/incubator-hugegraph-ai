@@ -114,9 +114,7 @@ class PromptConfig(PromptData):
         )
 
         # This can be extended to add storage fields according to the data needs to be stored
-        yaml_content = f"""{self.apache_license_header}
-
-rag_schema: |
+        yaml_content = f"""rag_schema: |
 {indented_schema}
 
 schema_example_prompt: |
