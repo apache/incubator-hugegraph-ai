@@ -37,17 +37,19 @@ class CommitToKg:
         self.schema = self.client.schema()
 
     def run(self, data: dict) -> Dict[str, Any]:
-        if "schema" not in data:
+        if "vertices" not in data:
+            # TODO: ensure the function works correctly (update the logic later)
             self.schema_free_mode(data["triples"])
+            log.warning("Using schema_free mode, could try schema_define mode for better effect!")
         else:
             schema = data["schema"]
             vertices = data["vertices"]
             edges = data["edges"]
-            self.init_schema(schema)
-            self.init_graph(vertices, edges, schema)
+            self.init_schema_if_need(schema)
+            self.load_into_graph(vertices, edges, schema)
         return data
 
-    def init_graph(self, vertices, edges, schema):
+    def load_into_graph(self, vertices, edges, schema):
         key_map = {}
         for vertex in schema["vertexlabels"]:
             key_map[vertex["name"]] = vertex
@@ -61,24 +63,29 @@ class CommitToKg:
                 if uk not in properties:
                     properties[uk] = "NULL"
             try:
+                # TODO: we could try batch add vertices first, setback to single-mode if failed
                 vid = self.client.graph().addVertex(label, properties).id
                 vertex["id"] = vid
             except NotFoundError as e:
-                print(e)
+                log.error(e)
+            except CreateError as e:
+                log.error("Error on creating vertex: %s, %s", vertex, e)
+
         for edge in edges:
             start = edge["outV"]
             end = edge["inV"]
             label = edge["label"]
             properties = edge["properties"]
             try:
+                # TODO: we could try batch add edges first, setback to single-mode if failed
                 self.client.graph().addEdge(label, start, end, properties)
             except NotFoundError as e:
-                print(e)
+                log.error(e)
             except CreateError as e:
-                log.error("Error on creating edge: %s", str(edge))
-                print(e)
+                log.error("Error on creating edge: %s, %s", edge, e)
 
-    def init_schema(self, schema):
+    def init_schema_if_need(self, schema):
+        log.debug("Schema type: %s", type(schema))
         vertices = schema["vertexlabels"]
         edges = schema["edgelabels"]
 
@@ -105,19 +112,13 @@ class CommitToKg:
 
     def schema_free_mode(self, data):
         self.schema.propertyKey("name").asText().ifNotExist().create()
-        self.schema.vertexLabel("vertex").useCustomizeStringId().properties(
-            "name"
-        ).ifNotExist().create()
+        self.schema.vertexLabel("vertex").useCustomizeStringId().properties("name").ifNotExist().create()
         self.schema.edgeLabel("edge").sourceLabel("vertex").targetLabel("vertex").properties(
             "name"
         ).ifNotExist().create()
 
-        self.schema.indexLabel("vertexByName").onV("vertex").by(
-            "name"
-        ).secondary().ifNotExist().create()
-        self.schema.indexLabel("edgeByName").onE("edge").by(
-            "name"
-        ).secondary().ifNotExist().create()
+        self.schema.indexLabel("vertexByName").onV("vertex").by("name").secondary().ifNotExist().create()
+        self.schema.indexLabel("edgeByName").onE("edge").by("name").secondary().ifNotExist().create()
 
         for item in data:
             s, p, o = (element.strip() for element in item)

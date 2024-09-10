@@ -18,8 +18,11 @@
 
 import json
 import os
+from typing import Tuple, Dict, Any
 
 import gradio as gr
+from gradio import Button
+
 from .hugegraph_utils import get_hg_client, clean_hg_data
 from .log import log
 from .vector_index_utils import read_documents
@@ -48,7 +51,7 @@ def clean_all_graph_index():
     gr.Info("Clean graph index successfully!")
 
 
-def extract_graph(input_file, input_text, schema, example_prompt):
+def extract_graph(input_file, input_text, schema, example_prompt) -> str | tuple[str, str, Button]:
     texts = read_documents(input_file, input_text)
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
 
@@ -60,19 +63,18 @@ def extract_graph(input_file, input_text, schema, example_prompt):
             log.error(e)
             builder.import_schema(from_hugegraph=schema)
     else:
-        return "ERROR: please input schema."
-    (builder
-     .chunk_split(texts, "paragraph", "zh")
-     .extract_info(example_prompt, "property_graph"))
-    log.debug(builder.operators)
+        return "ERROR: please input with correct schema/format."
+    builder.chunk_split(texts, "paragraph", "zh").extract_info(example_prompt, "property_graph")
+
     try:
         context = builder.run()
-        extract_result = {
+        graph_elements = {
             "vertices": context["vertices"],
             "edges": context["edges"]
         }
         return (
-            json.dumps(extract_result, ensure_ascii=False, indent=2),
+            json.dumps(graph_elements, ensure_ascii=False, indent=2),
+            context["schema"],
             gr.Button(interactive=True)
         )
     except Exception as e:  # pylint: disable=broad-exception-caught
@@ -120,8 +122,12 @@ def build_graph_index(input_file, input_text, schema, example_prompt):
         log.error(e)
         raise gr.Error(str(e))
 
-def import_graph_data(data: str):
+def import_graph_data(data: str, schema: str) -> Tuple[Dict[str, Any], Button]:
     data = json.loads(data.strip())
+    log.debug("1Import graph data: %s", data)
+    data.update({"schema": schema})
+
+    log.debug("2Import graph data: %s", data)
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
     context = builder.commit_to_hugegraph().run(data)
     return context, gr.Button(interactive=False)

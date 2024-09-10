@@ -555,13 +555,16 @@ def init_rag_ui() -> gr.Interface:
         vector_import_bt.click(build_vector_index, inputs=[input_file, input_text], outputs=out)  # pylint: disable=no-member
         graph_index_btn0.click(get_graph_index_info, outputs=out)  # pylint: disable=no-member
         graph_index_btn1.click(clean_all_graph_index)  # pylint: disable=no-member
+
+        # origin_out = gr.Textbox(visible=False)
         graph_extract_bt.click(  # pylint: disable=no-member
             extract_graph,
             inputs=[input_file, input_text, input_schema, info_extract_template],
-            outputs=[out, graph_loading_bt]
+            outputs=[out, input_schema, graph_loading_bt]
         )
-        graph_loading_bt.click(import_graph_data, inputs=[out], outputs=[out, graph_loading_bt],  # pylint: disable=no-member
-                               queue=False)
+        log.debug("out: %s, schema: %s", out.value, input_schema.value) # TODO: remove debug info later
+        graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out, graph_loading_bt],
+                               queue=False)  # pylint: disable=no-member
         graph_index_rebuild_bt.click(fit_vid_index, outputs=out)  # pylint: disable=no-member
 
 
