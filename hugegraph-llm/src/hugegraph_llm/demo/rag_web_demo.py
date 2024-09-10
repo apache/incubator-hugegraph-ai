@@ -23,13 +23,12 @@ from typing import List, Union, Tuple, Literal, Optional
 
 import docx
 import gradio as gr
+import pandas as pd
 import requests
 import uvicorn
 from fastapi import FastAPI, Depends, APIRouter
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from gradio.utils import NamedString
-from io import BytesIO
-import pandas as pd
 from requests.auth import HTTPBasicAuth
 
 from hugegraph_llm.api.rag_api import rag_http_api
@@ -604,7 +603,7 @@ def init_rag_ui() -> gr.Interface:
             outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
         )
 
-        gr.Markdown("""## 3. User Function """)
+        gr.Markdown("""## 3. User Functions """)
         tests_df_headers = [
             "Question",
             "Expected Answer",
@@ -618,6 +617,7 @@ def init_rag_ui() -> gr.Interface:
         questions_template_path = os.path.join(resource_path, "demo", "questions_template.xlsx")
 
         def read_file_to_excel(file: NamedString, line_count: Optional[int] = None):
+            df = None
             if not file:
                 return pd.DataFrame(), 1
             if file.name.endswith(".xlsx"):
@@ -629,8 +629,9 @@ def init_rag_ui() -> gr.Interface:
                 df = pd.DataFrame([[""] * len(tests_df_headers)], columns=tests_df_headers)
             else:
                 df.columns = tests_df_headers
-            if len(df) > 20:
-                return df.head(20), 20
+            # truncate the dataframe if it's too long
+            if len(df) > 40:
+                return df.head(40), 40
             return df, len(df)
 
         def change_showing_excel(line_count):
@@ -682,14 +683,14 @@ def init_rag_ui() -> gr.Interface:
 
         with gr.Row():
             with gr.Column():
-                questions_file = gr.File(file_types=[".xlsx", ".csv"], label="Questions File (Support Excel and csv file)")
-                answer_max_line_count = gr.Number(1, label="Max Lines To Show", minimum=1, maximum=100)
+                questions_file = gr.File(file_types=[".xlsx", ".csv"], label="Questions File (.xlsx & csv)")
             with gr.Column():
                 test_template_file = os.path.join(resource_path, "demo", "questions_template.xlsx")
                 gr.File(value=test_template_file, label="Download Template File")
-                answers_btn = gr.Button("Answer Questions", variant="primary")
+                answer_max_line_count = gr.Number(1, label="Max Lines To Show", minimum=1, maximum=40)
+                answers_btn = gr.Button("Generate Answer (Batch)", variant="primary")
         # TODO: Set individual progress bars for dataframe
-        qa_dataframe = gr.DataFrame(label="Questions and Answers", headers=tests_df_headers)
+        qa_dataframe = gr.DataFrame(label="Questions & Answers (Preview)", headers=tests_df_headers)
         answers_btn.click(
             several_rag_answer,
             inputs=[
@@ -704,7 +705,7 @@ def init_rag_ui() -> gr.Interface:
                 answer_prompt_input,
                 answer_max_line_count,
             ],
-            outputs=[qa_dataframe, gr.File(label="Download Answers File")],
+            outputs=[qa_dataframe, gr.File(label="Download Answered File", min_width=40)],
         )
         questions_file.change(read_file_to_excel, questions_file, [qa_dataframe, answer_max_line_count])
         answer_max_line_count.change(change_showing_excel, answer_max_line_count, qa_dataframe)
