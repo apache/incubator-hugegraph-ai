@@ -101,8 +101,9 @@ class PromptConfig(PromptData):
                 for key, value in data.items():
                     setattr(self, key, value)
         else:
-            log.info(f"Prompt file '{yaml_file_path}' doesn't exist, create it.")
             self.save_to_yaml()
+            log.info(f"Prompt file '{yaml_file_path}' doesn't exist, create it.")
+
 
     def save_to_yaml(self):
         indented_schema = "\n".join([f"  {line}" for line in self.rag_schema.splitlines()])
@@ -130,8 +131,8 @@ custom_related_information: |
 """
         with open(yaml_file_path, "w") as file:
             file.write(yaml_content)
-        log.info(f"Prompt file '{f_name}' updated successfully.")
+
 
     def update_yaml_file(self):
-        # log.info(f"Update '{f_name}' with the latest configs.")
         self.save_to_yaml()
+        log.info(f"Prompt file '{f_name}' updated successfully.")
