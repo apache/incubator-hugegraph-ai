@@ -95,10 +95,6 @@ schema_example_prompt: |
     [{"id":"1:Sarah","label":"person","type":"vertex","properties":{"name":"Sarah","age":30,"occupation":"attorney"}},{"id":"1:James","label":"person","type":"vertex","properties":{"name":"James","occupation":"journalist"}},{"label":"roommate","type":"edge","outV":"1:Sarah","outVLabel":"person","inV":"1:James","inVLabel":"person","properties":{"date":"2010"}}]
 
 question: |
-    Hi! Nice to meet you!
-    Tell me about Sarah.
+    Tell me anything about Sarah
 
 custom_related_information: |
-    just for test
-    hello! It's good!
-

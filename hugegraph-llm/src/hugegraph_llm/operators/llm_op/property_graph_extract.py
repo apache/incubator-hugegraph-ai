@@ -20,17 +20,15 @@ import json
 import re
 from typing import List, Any, Dict
 
+from hugegraph_llm.config import prompt
 from hugegraph_llm.document.chunk_split import ChunkSplitter
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.config import prompt
-
 
 SCHEMA_EXAMPLE_PROMPT = prompt.schema_example_prompt
 
 def generate_extract_property_graph_prompt(text, schema=None) -> str:
     return f"""---
-
 Following the full instructions above, try to extract the following text from the given schema, output the JSON result:
 # Input
 ## Text:

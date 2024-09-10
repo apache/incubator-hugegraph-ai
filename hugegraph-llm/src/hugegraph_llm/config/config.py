@@ -26,10 +26,11 @@ from dotenv import dotenv_values, set_key
 from hugegraph_llm.config.config_data import ConfigData, PromptData
 from hugegraph_llm.utils.log import log
 
-dirname = os.path.dirname
-package_path = dirname(dirname(dirname(dirname(os.path.abspath(__file__)))))
+dir_name = os.path.dirname
+package_path = dir_name(dir_name(dir_name(dir_name(os.path.abspath(__file__)))))
 env_path = os.path.join(package_path, ".env")
-yaml_file_path = os.path.join(package_path, "src/hugegraph_llm/resources/demo/config_prompt.yaml")
+f_name = "config_prompt.yaml"
+yaml_file_path = os.path.join(package_path, f"src/hugegraph_llm/resources/demo/{f_name}")
 
 
 @dataclass
@@ -93,7 +94,7 @@ class PromptConfig(PromptData):
 
     def ensure_yaml_file_exists(self):
         if os.path.exists(yaml_file_path):
-            log.info(f"Loading prompt file '{yaml_file_path}' successfully.")
+            log.info(f"Loading prompt file '{f_name}' successfully.")
             with open(yaml_file_path, "r") as file:
                 data = yaml.safe_load(file)
                 # Load existing values from the YAML file into the class attributes
@@ -107,7 +108,9 @@ class PromptConfig(PromptData):
         indented_schema = "\n".join([f"  {line}" for line in self.rag_schema.splitlines()])
         indented_example_prompt = "\n".join([f"    {line}" for line in self.schema_example_prompt.splitlines()])
         indented_question = "\n".join([f"    {line}" for line in self.question.splitlines()])
-        indented_custom_related_information = "\n".join([f"    {line}" for line in self.custom_related_information.splitlines()])
+        indented_custom_related_information = (
+            "\n".join([f"    {line}" for line in self.custom_related_information.splitlines()])
+        )
 
         # This can be extended to add storage fields according to the data needs to be stored
         yaml_content = f"""{self.apache_license_header}
@@ -127,8 +130,8 @@ custom_related_information: |
 """
         with open(yaml_file_path, "w") as file:
             file.write(yaml_content)
-        log.info(f"YAML file '{yaml_file_path}' updated successfully.")
+        log.info(f"Prompt file '{f_name}' updated successfully.")
 
     def update_yaml_file(self):
-        log.info(f"Updating '{yaml_file_path}' with the latest attributes.")
+        # log.info(f"Update '{f_name}' with the latest configs.")
         self.save_to_yaml()

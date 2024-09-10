@@ -728,7 +728,7 @@ if __name__ == "__main__":
 
     app.include_router(app_auth)
     auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
-    log.info("Authentication is %s.", "enabled" if auth_enabled else "disabled")
+    log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
     # TODO: support multi-user login when need
 
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/", auth=("rag", os.getenv("TOKEN")) if auth_enabled else None)
