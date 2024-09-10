@@ -36,6 +36,8 @@ class SchemaManager:
     # FIXME: This method is not working as expected
     # def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
     def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        if context is None:
+            context = {}
         schema = self.schema.getSchema()
         vertices = []
         for vl in schema["vertexlabels"]:
@@ -52,9 +54,6 @@ class SchemaManager:
             edges.append(edge)
         if not vertices and not edges:
             raise Exception(f"Can not get {self.graph_name}'s schema from HugeGraph!")
-        if context is None:
-            context = {}
-        context.update({
-            "schema": schema
-        })
+
+        context.update({"schema": schema})
         return context

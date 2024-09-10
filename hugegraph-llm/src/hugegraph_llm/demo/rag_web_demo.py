@@ -560,9 +560,9 @@ def init_rag_ui() -> gr.Interface:
         graph_extract_bt.click(  # pylint: disable=no-member
             extract_graph,
             inputs=[input_file, input_text, input_schema, info_extract_template],
-            outputs=[out, input_schema, graph_loading_bt]
+            outputs=[out, graph_loading_bt]
         )
-        log.debug("out: %s, schema: %s", out.value, input_schema.value) # TODO: remove debug info later
+        # log.debug("out: %s, schema: %s", out.value, input_schema.value)  # TODO: remove debug info later
         graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out, graph_loading_bt],
                                queue=False)  # pylint: disable=no-member
         graph_index_rebuild_bt.click(fit_vid_index, outputs=out)  # pylint: disable=no-member

@@ -18,7 +18,7 @@
 
 import json
 import os
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, Union
 
 import gradio as gr
 from gradio import Button
@@ -51,7 +51,7 @@ def clean_all_graph_index():
     gr.Info("Clean graph index successfully!")
 
 
-def extract_graph(input_file, input_text, schema, example_prompt) -> str | tuple[str, str, Button]:
+def extract_graph(input_file, input_text, schema, example_prompt) -> Union[str, Tuple[str, Button]]:
     texts = read_documents(input_file, input_text)
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
 
@@ -74,7 +74,6 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str | tuple
         }
         return (
             json.dumps(graph_elements, ensure_ascii=False, indent=2),
-            context["schema"],
             gr.Button(interactive=True)
         )
     except Exception as e:  # pylint: disable=broad-exception-caught
@@ -124,10 +123,17 @@ def build_graph_index(input_file, input_text, schema, example_prompt):
 
 def import_graph_data(data: str, schema: str) -> Tuple[Dict[str, Any], Button]:
     data = json.loads(data.strip())
-    log.debug("1Import graph data: %s", data)
-    data.update({"schema": schema})
-
-    log.debug("2Import graph data: %s", data)
+    log.debug("1 Import graph data: %s", data)
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
+    if schema:
+        try:
+            schema = json.loads(schema.strip())
+            builder.import_schema(from_user_defined=schema)
+        except json.JSONDecodeError as e:
+            log.error(e)
+            builder.import_schema(from_hugegraph=schema)
+
+    log.debug("2 Import graph data: %s", data)
+
     context = builder.commit_to_hugegraph().run(data)
     return context, gr.Button(interactive=False)
