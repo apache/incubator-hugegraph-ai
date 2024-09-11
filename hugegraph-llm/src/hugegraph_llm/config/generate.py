@@ -20,8 +20,8 @@ import argparse
 
 from hugegraph_llm.config import settings
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Generate hugegraph-llm config file')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Generate hugegraph-llm config file")
     parser.add_argument("-U", "--update", action="store_true", help="Update the config file")
     args = parser.parse_args()
     if args.update:
