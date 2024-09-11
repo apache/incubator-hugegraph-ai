@@ -40,9 +40,10 @@ class CohereReranker:
             return []
 
         url = self.base_url
+        from pyhugegraph.utils.constants import Constants
         headers = {
-            "accept": "application/json",
-            "content-type": "application/json",
+            "accept": Constants.HEADER_CONTENT_TYPE,
+            "content-type": Constants.HEADER_CONTENT_TYPE,
             "Authorization": f"Bearer {self.api_key}",
         }
         payload = {

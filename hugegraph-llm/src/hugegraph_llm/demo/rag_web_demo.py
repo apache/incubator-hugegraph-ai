@@ -276,8 +276,9 @@ def apply_reranker_config(
     elif reranker_option == "siliconflow":
         settings.reranker_api_key = reranker_api_key
         settings.reranker_model = reranker_model
+        from pyhugegraph.utils.constants import Constants
         headers = {
-            "accept": "application/json",
+            "accept": Constants.HEADER_CONTENT_TYPE,
             "authorization": f"Bearer {reranker_api_key}",
         }
         status_code = test_api_connection(

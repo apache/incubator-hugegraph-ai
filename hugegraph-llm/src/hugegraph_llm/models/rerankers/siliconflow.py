@@ -47,9 +47,10 @@ class SiliconReranker:
             "overlap_tokens": 80,
             "top_n": top_n,
         }
+        from pyhugegraph.utils.constants import Constants
         headers = {
-            "accept": "application/json",
-            "content-type": "application/json",
+            "accept": Constants.HEADER_CONTENT_TYPE,
+            "content-type": Constants.HEADER_CONTENT_TYPE,
             "authorization": f"Bearer {self.api_key}",
         }
         response = requests.post(url, json=payload, headers=headers, timeout=60)

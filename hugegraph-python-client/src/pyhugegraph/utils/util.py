@@ -48,7 +48,7 @@ def check_if_authorized(response):
 
 def check_if_success(response, error=None):
     if (not str(response.status_code).startswith("20")) and check_if_authorized(
-        response
+            response
     ):
         if error is None:
             error = NotFoundError(response.content)
@@ -85,7 +85,6 @@ class ResponseValidation:
 
         try:
             response.raise_for_status()
-
             if response.status_code == 204:
                 log.debug("No content returned (204) for %s: %s", method, path)
             else:
@@ -110,14 +109,13 @@ class ResponseValidation:
                     )
                 except (ValueError, KeyError):
                     details = "key 'exception' not found"
-
+                req_body = response.request.body.encode('utf-8').decode('unicode_escape')
                 log.error(  # pylint: disable=logging-fstring-interpolation
-                    f"{method}: {e}\n[Body]: {response.request.body}\n[Server Exception]: {details}"
+                    f"{method}: {e}\n[Body]: {req_body}\n[Server Exception]: {details}"
                 )
 
                 if response.status_code == 404:
                     raise NotFoundError(response.content) from e
-
                 raise e
 
         except Exception:  # pylint: disable=broad-exception-caught
