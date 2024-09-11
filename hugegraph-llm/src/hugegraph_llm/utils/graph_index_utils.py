@@ -26,7 +26,7 @@ from gradio import Button
 from .hugegraph_utils import get_hg_client, clean_hg_data
 from .log import log
 from .vector_index_utils import read_documents
-from ..config import resource_path, settings
+from ..config import resource_path, settings, prompt
 from ..indices.vector_index import VectorIndex
 from ..models.embeddings.init_embedding import Embeddings
 from ..models.llms.init_llm import LLMs
@@ -96,6 +96,11 @@ def fit_vid_index():
 
 
 def build_graph_index(input_file, input_text, schema, example_prompt):
+    # update env variables: schema and example_prompt
+    if prompt.graph_schema != schema or prompt.extract_graph_prompt != example_prompt:
+        prompt.graph_schema = schema
+        prompt.extract_graph_prompt = example_prompt
+        prompt.update_yaml_file()
     texts = read_documents(input_file, input_text)
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
 
@@ -121,19 +126,24 @@ def build_graph_index(input_file, input_text, schema, example_prompt):
         log.error(e)
         raise gr.Error(str(e))
 
-def import_graph_data(data: str, schema: str) -> Tuple[Dict[str, Any], Button]:
-    data = json.loads(data.strip())
-    log.debug("1 Import graph data: %s", data)
-    builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
-    if schema:
-        try:
-            schema = json.loads(schema.strip())
-            builder.import_schema(from_user_defined=schema)
-        except json.JSONDecodeError as e:
-            log.error(e)
-            builder.import_schema(from_hugegraph=schema)
+def import_graph_data(data: str, schema: str) -> Tuple[Union[str, Dict[str, Any]], Button]:
+    try:
+        data_json = json.loads(data.strip())
+        log.debug("1 Import graph data: %s", data)
+        builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
+        if schema:
+            try:
+                schema = json.loads(schema.strip())
+                builder.import_schema(from_user_defined=schema)
+            except json.JSONDecodeError as e:
+                log.error(e)
+                builder.import_schema(from_hugegraph=schema)
 
-    log.debug("2 Import graph data: %s", data)
+        log.debug("2 Import graph data: %s", data_json)
 
-    context = builder.commit_to_hugegraph().run(data)
-    return context, gr.Button(interactive=False)
+        context = builder.commit_to_hugegraph().run(data_json)
+        return context, gr.Button(interactive=False)
+    except Exception as e:
+        log.error(e)
+        gr.Warning(str(e) + " Please check your input data format.")
+        return data, gr.Button(interactive=True)
