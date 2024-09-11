@@ -112,6 +112,7 @@ class PromptConfig(PromptData):
         indented_custom_related_information = (
             "\n".join([f"    {line}" for line in self.custom_related_information.splitlines()])
         )
+        indented_default_answer_template = "\n".join([f"    {line}" for line in self.default_answer_template.splitlines()])
 
         # This can be extended to add storage fields according to the data needs to be stored
         yaml_content = f"""rag_schema: |
@@ -125,6 +126,9 @@ question: |
 
 custom_related_information: |
 {indented_custom_related_information}
+
+default_answer_template: |
+{indented_default_answer_template}
 
 """
         with open(yaml_file_path, "w") as file:

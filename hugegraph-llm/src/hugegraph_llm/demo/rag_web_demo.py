@@ -73,9 +73,10 @@ def rag_answer(
     answer_prompt: str,
 ) -> Tuple:
     
-    if prompt.question != text or prompt.custom_related_information != custom_related_information:
+    if prompt.question != text or prompt.custom_related_information != custom_related_information or prompt.default_answer_template != answer_prompt:
         prompt.custom_related_information = custom_related_information
         prompt.question = text
+        prompt.default_answer_template = answer_prompt
         prompt.update_yaml_file()
     
     vector_search = vector_only_answer or graph_vector_answer
