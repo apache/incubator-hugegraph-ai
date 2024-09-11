@@ -31,7 +31,6 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from gradio.utils import NamedString
 from requests.auth import HTTPBasicAuth
 
-from hugegraph_llm.resources.demo.css import CSS
 from hugegraph_llm.api.rag_api import rag_http_api
 from hugegraph_llm.config import settings, resource_path, prompt
 from hugegraph_llm.enums.build_mode import BuildMode
@@ -40,9 +39,9 @@ from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
+from hugegraph_llm.resources.demo.css import CSS
 from hugegraph_llm.utils.graph_index_utils import get_graph_index_info, clean_all_graph_index, fit_vid_index, \
     extract_graph, import_graph_data
-from hugegraph_llm.operators.llm_op.answer_synthesize import DEFAULT_ANSWER_TEMPLATE
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
 from hugegraph_llm.utils.log import log
@@ -76,10 +75,10 @@ def rag_answer(
     answer_prompt: str,
 ) -> Tuple:
     
-    if prompt.question != text or prompt.custom_related_information != custom_related_information or prompt.default_answer_template != answer_prompt:
-        prompt.custom_related_information = custom_related_information
-        prompt.question = text
-        prompt.default_answer_template = answer_prompt
+    if prompt.default_question != text or prompt.custom_rerank_info != custom_related_information or prompt.answer_prompt != answer_prompt:
+        prompt.custom_rerank_info = custom_related_information
+        prompt.default_question = text
+        prompt.answer_prompt = answer_prompt
         prompt.update_yaml_file()
     
     vector_search = vector_only_answer or graph_vector_answer
@@ -121,7 +120,7 @@ def rag_answer(
         log.error(e)
         raise gr.Error(f"An unexpected error occurred: {str(e)}")
 
-
+# fixme: useless function, need refactor the prompt updating logic
 def build_kg(
         input_file: List[NamedString],
         input_text: str,
@@ -130,9 +129,9 @@ def build_kg(
         build_mode: str
 ) -> str:
     # update env variables: schema and example_prompt
-    if prompt.rag_schema != schema or prompt.schema_example_prompt != example_prompt:
-        prompt.rag_schema = schema
-        prompt.schema_example_prompt = example_prompt
+    if prompt.graph_schema != schema or prompt.extract_graph_prompt != example_prompt:
+        prompt.graph_schema = schema
+        prompt.extract_graph_prompt = example_prompt
         prompt.update_yaml_file()
 
     if input_file:
@@ -501,7 +500,7 @@ def init_rag_ui() -> gr.Interface:
 """
         )
 
-        schema = prompt.rag_schema
+        schema = prompt.graph_schema
         
         with gr.Row():
             with gr.Column():
@@ -565,7 +564,7 @@ def init_rag_ui() -> gr.Interface:
         gr.Markdown("""## 2. RAG with HugeGraph 📖""")
         with gr.Row():
             with gr.Column(scale=2):
-                inp = gr.Textbox(value=prompt.question, label="Question", show_copy_button=True, lines=2)
+                inp = gr.Textbox(value=prompt.default_question, label="Question", show_copy_button=True, lines=2)
                 raw_out = gr.Textbox(label="Basic LLM Answer", show_copy_button=True)
                 vector_only_out = gr.Textbox(label="Vector-only Answer", show_copy_button=True)
                 graph_only_out = gr.Textbox(label="Graph-only Answer", show_copy_button=True)
@@ -603,7 +602,7 @@ def init_rag_ui() -> gr.Interface:
                         info="One-depth neighbors > two-depth neighbors",
                     )
                     custom_related_information = gr.Text(
-                        prompt.custom_related_information,
+                        prompt.custom_rerank_info,
                         label="Custom related information(Optional)",
                     )
                     btn = gr.Button("Answer Question", variant="primary")

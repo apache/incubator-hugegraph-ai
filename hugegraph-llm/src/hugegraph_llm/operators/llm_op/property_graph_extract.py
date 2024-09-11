@@ -25,7 +25,7 @@ from hugegraph_llm.document.chunk_split import ChunkSplitter
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
 
-SCHEMA_EXAMPLE_PROMPT = prompt.schema_example_prompt
+SCHEMA_EXAMPLE_PROMPT = prompt.extract_graph_prompt
 
 def generate_extract_property_graph_prompt(text, schema=None) -> str:
     return f"""---

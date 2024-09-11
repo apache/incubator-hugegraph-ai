@@ -74,7 +74,7 @@ class ConfigData:
 class PromptData:
 
     # Data is detached from hugegraph-llm/src/hugegraph_llm/operators/llm_op/answer_synthesize.py
-    default_answer_template = f"""You are an expert in knowledge graphs and natural language processing. 
+    answer_prompt = f"""You are an expert in knowledge graphs and natural language processing. 
 Your task is to provide a precise and accurate answer based on the given context.
 
 Context information is below.
@@ -88,12 +88,12 @@ Query: {{query_str}}
 Answer:
 """
 
-    custom_related_information = """"""
+    custom_rerank_info = """"""
 
-    question = """Tell me about Sarah."""
+    default_question = """Tell me about Sarah."""
 
     # Data is detached from hugegraph-llm/src/hugegraph_llm/operators/llm_op/property_graph_extract.py
-    schema_example_prompt = """## Main Task
+    extract_graph_prompt = """## Main Task
 Given the following graph schema and a piece of text, your task is to analyze the text and extract information that fits into the schema's structure, formatting the information into vertices and edges as specified.
 ## Basic Rules
 ### Schema Format
@@ -122,7 +122,7 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
 [{"id":"1:Sarah","label":"person","type":"vertex","properties":{"name":"Sarah","age":30,"occupation":"attorney"}},{"id":"1:James","label":"person","type":"vertex","properties":{"name":"James","occupation":"journalist"}},{"label":"roommate","type":"edge","outV":"1:Sarah","outVLabel":"person","inV":"1:James","inVLabel":"person","properties":{"date":"2010"}}]
 """
 
-    rag_schema = """{
+    graph_schema = """{
 "vertexlabels": [
     {
     "id": 1,

@@ -24,7 +24,7 @@ from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.config import prompt
 
 
-DEFAULT_ANSWER_TEMPLATE = prompt.default_answer_template
+DEFAULT_ANSWER_TEMPLATE = prompt.answer_prompt
 
 
 class AnswerSynthesize:
