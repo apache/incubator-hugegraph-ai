@@ -33,7 +33,7 @@ from requests.auth import HTTPBasicAuth
 
 from hugegraph_llm.resources.demo.css import CSS
 from hugegraph_llm.api.rag_api import rag_http_api
-from hugegraph_llm.config import settings, resource_path
+from hugegraph_llm.config import settings, resource_path, prompt
 from hugegraph_llm.enums.build_mode import BuildMode
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.init_llm import LLMs
@@ -42,6 +42,7 @@ from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
 from hugegraph_llm.utils.graph_index_utils import get_graph_index_info, clean_all_graph_index, fit_vid_index, \
     extract_graph, import_graph_data
+from hugegraph_llm.operators.llm_op.answer_synthesize import DEFAULT_ANSWER_TEMPLATE
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
 from hugegraph_llm.utils.log import log
@@ -74,6 +75,13 @@ def rag_answer(
     custom_related_information: str,
     answer_prompt: str,
 ) -> Tuple:
+    
+    if prompt.question != text or prompt.custom_related_information != custom_related_information or prompt.default_answer_template != answer_prompt:
+        prompt.custom_related_information = custom_related_information
+        prompt.question = text
+        prompt.default_answer_template = answer_prompt
+        prompt.update_yaml_file()
+    
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
 
@@ -121,6 +129,12 @@ def build_kg(
         example_prompt: str,
         build_mode: str
 ) -> str:
+    # update env variables: schema and example_prompt
+    if prompt.rag_schema != schema or prompt.schema_example_prompt != example_prompt:
+        prompt.rag_schema = schema
+        prompt.schema_example_prompt = example_prompt
+        prompt.update_yaml_file()
+
     if input_file:
         texts = []
         for file in input_file:
@@ -144,6 +158,7 @@ def build_kg(
         texts = [input_text]
     else:
         raise gr.Error("Please input text or upload file.")
+
     if build_mode in (BuildMode.CLEAR_AND_IMPORT.value, BuildMode.REBUILD_VECTOR.value):
         clean_vector_index()
     if build_mode == BuildMode.CLEAR_AND_IMPORT.value:
@@ -486,41 +501,8 @@ def init_rag_ui() -> gr.Interface:
 """
         )
 
-        schema = """{
-  "vertexlabels": [
-    {
-      "id":1,
-      "name": "person",
-      "id_strategy": "PRIMARY_KEY",
-      "primary_keys":["name"],
-      "properties": ["name","age","occupation"]
-    },
-    {
-      "id":2,
-      "name": "webpage",
-      "id_strategy":"PRIMARY_KEY",
-      "primary_keys":["name"],
-      "properties": ["name","url"]
-    }
-  ],
-  "edgelabels": [
-    {
-      "id": 1,
-      "name": "roommate",
-      "source_label": "person",
-      "target_label": "person",
-      "properties": ["date"]
-    },
-    {
-      "id": 2,
-      "name": "link",
-      "source_label": "webpage",
-      "target_label": "person",
-      "properties": []
-    }
-  ]
-}"""
-
+        schema = prompt.rag_schema
+        
         with gr.Row():
             with gr.Column():
                 with gr.Tab("file") as tab_upload_file:
@@ -583,7 +565,7 @@ def init_rag_ui() -> gr.Interface:
         gr.Markdown("""## 2. RAG with HugeGraph 📖""")
         with gr.Row():
             with gr.Column(scale=2):
-                inp = gr.Textbox(value="Tell me about Sarah.", label="Question", show_copy_button=True)
+                inp = gr.Textbox(value=prompt.question, label="Question", show_copy_button=True, lines=2)
                 raw_out = gr.Textbox(label="Basic LLM Answer", show_copy_button=True)
                 vector_only_out = gr.Textbox(label="Vector-only Answer", show_copy_button=True)
                 graph_only_out = gr.Textbox(label="Graph-only Answer", show_copy_button=True)
@@ -591,7 +573,7 @@ def init_rag_ui() -> gr.Interface:
                 from hugegraph_llm.operators.llm_op.answer_synthesize import DEFAULT_ANSWER_TEMPLATE
 
                 answer_prompt_input = gr.Textbox(
-                    value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt", show_copy_button=True
+                    value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt", show_copy_button=True, lines=2
                 )
             with gr.Column(scale=1):
                 with gr.Row():
@@ -621,7 +603,7 @@ def init_rag_ui() -> gr.Interface:
                         info="One-depth neighbors > two-depth neighbors",
                     )
                     custom_related_information = gr.Text(
-                        "",
+                        prompt.custom_related_information,
                         label="Custom related information(Optional)",
                     )
                     btn = gr.Button("Answer Question", variant="primary")
@@ -787,7 +769,7 @@ if __name__ == "__main__":
 
     app.include_router(app_auth)
     auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
-    log.info("Authentication is %s.", "enabled" if auth_enabled else "disabled")
+    log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
     # TODO: support multi-user login when need
 
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/", auth=("rag", os.getenv("TOKEN")) if auth_enabled else None)

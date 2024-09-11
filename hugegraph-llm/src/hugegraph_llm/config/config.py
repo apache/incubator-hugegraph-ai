@@ -17,64 +17,24 @@
 
 
 import os
-
 from dataclasses import dataclass
-from typing import Literal, Optional
+from typing import Optional
+
+import yaml
 from dotenv import dotenv_values, set_key
 
+from hugegraph_llm.config.config_data import ConfigData, PromptData
 from hugegraph_llm.utils.log import log
 
-dirname = os.path.dirname
-package_path = dirname(dirname(dirname(dirname(os.path.abspath(__file__)))))
+dir_name = os.path.dirname
+package_path = dir_name(dir_name(dir_name(dir_name(os.path.abspath(__file__)))))
 env_path = os.path.join(package_path, ".env")
+f_name = "config_prompt.yaml"
+yaml_file_path = os.path.join(package_path, f"src/hugegraph_llm/resources/demo/{f_name}")
 
 
 @dataclass
-class Config:
-    """LLM settings"""
-    # env_path: Optional[str] = ".env"
-    llm_type: Literal["openai", "ollama", "qianfan_wenxin", "zhipu"] = "openai"
-    embedding_type: Optional[Literal["openai", "ollama", "qianfan_wenxin", "zhipu"]] = "openai"
-    reranker_type: Optional[Literal["cohere", "siliconflow"]] = None
-    # 1. OpenAI settings
-    openai_api_base: Optional[str] = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
-    openai_api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
-    openai_language_model: Optional[str] = "gpt-4o-mini"
-    openai_embedding_model: Optional[str] = "text-embedding-3-small"
-    openai_max_tokens: int = 4096
-    # 2. Rerank settings
-    cohere_base_url: Optional[str] = os.environ.get("CO_API_URL", "https://api.cohere.com/v1/rerank")
-    reranker_api_key: Optional[str] = None
-    reranker_model: Optional[str] = None
-    # 3. Ollama settings
-    ollama_host: Optional[str] = "127.0.0.1"
-    ollama_port: Optional[int] = 11434
-    ollama_language_model: Optional[str] = None
-    ollama_embedding_model: Optional[str] = None
-    # 4. QianFan/WenXin settings
-    qianfan_api_key: Optional[str] = None
-    qianfan_secret_key: Optional[str] = None
-    qianfan_access_token: Optional[str] = None
-    # 4.1 URL settings
-    qianfan_url_prefix: Optional[str] = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
-    qianfan_chat_url: Optional[str] = qianfan_url_prefix + "/chat/"
-    qianfan_language_model: Optional[str] = "ERNIE-4.0-Turbo-8K"
-    qianfan_embed_url: Optional[str] = qianfan_url_prefix + "/embeddings/"
-    # refer https://cloud.baidu.com/doc/WENXINWORKSHOP/s/alj562vvu to get more details
-    qianfan_embedding_model: Optional[str] = "embedding-v1"
-    # 5. ZhiPu(GLM) settings
-    zhipu_api_key: Optional[str] = None
-    zhipu_language_model: Optional[str] = "glm-4"
-    zhipu_embedding_model: Optional[str] = "embedding-2"
-
-    """HugeGraph settings"""
-    graph_ip: Optional[str] = "127.0.0.1"
-    graph_port: Optional[str] = "8080"
-    graph_name: Optional[str] = "hugegraph"
-    graph_user: Optional[str] = "admin"
-    graph_pwd: Optional[str] = "xxx"
-    graph_space: Optional[str] = None
-
+class Config(ConfigData):
     def from_env(self):
         if os.path.exists(env_path):
             env_config = read_dotenv()
@@ -125,3 +85,56 @@ def read_dotenv() -> dict[str, Optional[str]]:
         if key not in os.environ:
             os.environ[key] = value or ""
     return env_config
+
+
+class PromptConfig(PromptData):
+
+    def __init__(self):
+        self.ensure_yaml_file_exists()
+
+    def ensure_yaml_file_exists(self):
+        if os.path.exists(yaml_file_path):
+            log.info(f"Loading prompt file '{f_name}' successfully.")
+            with open(yaml_file_path, "r") as file:
+                data = yaml.safe_load(file)
+                # Load existing values from the YAML file into the class attributes
+                for key, value in data.items():
+                    setattr(self, key, value)
+        else:
+            self.save_to_yaml()
+            log.info(f"Prompt file '{yaml_file_path}' doesn't exist, create it.")
+
+
+    def save_to_yaml(self):
+        indented_schema = "\n".join([f"  {line}" for line in self.rag_schema.splitlines()])
+        indented_example_prompt = "\n".join([f"    {line}" for line in self.schema_example_prompt.splitlines()])
+        indented_question = "\n".join([f"    {line}" for line in self.question.splitlines()])
+        indented_custom_related_information = (
+            "\n".join([f"    {line}" for line in self.custom_related_information.splitlines()])
+        )
+        indented_default_answer_template = "\n".join([f"    {line}" for line in self.default_answer_template.splitlines()])
+
+        # This can be extended to add storage fields according to the data needs to be stored
+        yaml_content = f"""rag_schema: |
+{indented_schema}
+
+schema_example_prompt: |
+{indented_example_prompt}
+
+question: |
+{indented_question}
+
+custom_related_information: |
+{indented_custom_related_information}
+
+default_answer_template: |
+{indented_default_answer_template}
+
+"""
+        with open(yaml_file_path, "w") as file:
+            file.write(yaml_content)
+
+
+    def update_yaml_file(self):
+        self.save_to_yaml()
+        log.info(f"Prompt file '{f_name}' updated successfully.")
