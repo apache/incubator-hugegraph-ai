@@ -52,6 +52,12 @@ def clean_all_graph_index():
 
 
 def extract_graph(input_file, input_text, schema, example_prompt) -> Union[str, Tuple[str, Button]]:
+    # update env variables: schema and example_prompt
+    if prompt.graph_schema != schema or prompt.extract_graph_prompt != example_prompt:
+        prompt.graph_schema = schema
+        prompt.extract_graph_prompt = example_prompt
+        prompt.update_yaml_file()
+
     texts = read_documents(input_file, input_text)
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
 
@@ -95,12 +101,8 @@ def fit_vid_index():
         raise gr.Error(str(e))
 
 
+# TODO: This function is not used for now, remove it if not needed in the future
 def build_graph_index(input_file, input_text, schema, example_prompt):
-    # update env variables: schema and example_prompt
-    if prompt.graph_schema != schema or prompt.extract_graph_prompt != example_prompt:
-        prompt.graph_schema = schema
-        prompt.extract_graph_prompt = example_prompt
-        prompt.update_yaml_file()
     texts = read_documents(input_file, input_text)
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
 

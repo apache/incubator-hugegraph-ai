@@ -115,19 +115,19 @@ class PromptConfig(PromptData):
         indented_default_answer_template = "\n".join([f"    {line}" for line in self.answer_prompt.splitlines()])
 
         # This can be extended to add storage fields according to the data needs to be stored
-        yaml_content = f"""rag_schema: |
+        yaml_content = f"""graph_schema: |
 {indented_schema}
 
-schema_example_prompt: |
+extract_graph_prompt: |
 {indented_example_prompt}
 
-question: |
+default_question: |
 {indented_question}
 
-custom_related_information: |
+custom_rerank_info: |
 {indented_custom_related_information}
 
-default_answer_template: |
+answer_prompt: |
 {indented_default_answer_template}
 
 """
