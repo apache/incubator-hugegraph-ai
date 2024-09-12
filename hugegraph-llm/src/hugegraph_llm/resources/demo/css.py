@@ -15,8 +15,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
-CSS = r"""
+CSS = """
 footer {
   visibility: hidden
+}
+
+.code-container-edit {
+    max-height: 520px;
+    overflow-y: auto; /* enable scroll */
+}
+
+.code-container-show {
+    max-height: 250px;
+    overflow-y: auto; /* enable scroll */
 }
 """

@@ -131,7 +131,7 @@ def build_graph_index(input_file, input_text, schema, example_prompt):
 def import_graph_data(data: str, schema: str) -> Tuple[Union[str, Dict[str, Any]], Button]:
     try:
         data_json = json.loads(data.strip())
-        log.debug("1 Import graph data: %s", data)
+        log.debug("Import graph data: %s", data)
         builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
         if schema:
             try:
@@ -139,13 +139,13 @@ def import_graph_data(data: str, schema: str) -> Tuple[Union[str, Dict[str, Any]
                 builder.import_schema(from_user_defined=schema)
             except json.JSONDecodeError as e:
                 log.error(e)
+                gr.Warning(str(e) + " Please check the json format carefully.")
                 builder.import_schema(from_hugegraph=schema)
-
-        log.debug("2 Import graph data: %s", data_json)
 
         context = builder.commit_to_hugegraph().run(data_json)
         return context, gr.Button(interactive=False)
     except Exception as e:
         log.error(e)
-        gr.Warning(str(e) + " Please check your input data format.")
+        # Note: can't use gr.Error here
+        gr.Warning(str(e) + " Please check the graph data format/type carefully.")
         return data, gr.Button(interactive=True)

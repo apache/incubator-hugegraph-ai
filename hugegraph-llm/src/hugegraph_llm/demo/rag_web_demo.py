@@ -19,9 +19,8 @@
 import argparse
 import json
 import os
-from typing import List, Tuple, Literal, Optional
+from typing import Tuple, Literal, Optional
 
-import docx
 import gradio as gr
 import pandas as pd
 import requests
@@ -33,17 +32,12 @@ from requests.auth import HTTPBasicAuth
 
 from hugegraph_llm.api.rag_api import rag_http_api
 from hugegraph_llm.config import settings, resource_path, prompt
-from hugegraph_llm.enums.build_mode import BuildMode
-from hugegraph_llm.models.embeddings.init_embedding import Embeddings
-from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
-from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
 from hugegraph_llm.resources.demo.css import CSS
 from hugegraph_llm.utils.graph_index_utils import get_graph_index_info, clean_all_graph_index, fit_vid_index, \
     extract_graph, import_graph_data
-from hugegraph_llm.utils.hugegraph_utils import get_hg_client
-from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, clean_hg_data
+from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index, build_vector_index, get_vector_index_info
 
@@ -428,18 +422,18 @@ def init_rag_ui() -> gr.Interface:
         
         with gr.Row():
             with gr.Column():
+                with gr.Tab("text") as tab_upload_text:
+                    input_text = gr.Textbox(value="", label="Doc(s)", lines=20, show_copy_button=True)
                 with gr.Tab("file") as tab_upload_file:
                     input_file = gr.File(
                         value=[os.path.join(resource_path, "demo", "test.txt")],
                         label="Docs (multi-files can be selected together)",
                         file_count="multiple",
                     )
-                with gr.Tab("text") as tab_upload_text:
-                    input_text = gr.Textbox(value="", label="Doc(s)", lines=20, show_copy_button=True)
             input_schema = gr.Textbox(value=schema, label="Schema", lines=15, show_copy_button=True)
             info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head", lines=15,
                                                show_copy_button=True)
-            out = gr.Textbox(label="Output", lines=15, show_copy_button=True)
+            out = gr.Code(label="Output", language="json",  elem_classes="code-container-edit")
 
         with gr.Row():
             with gr.Accordion("Get RAG Info", open=False):
@@ -454,7 +448,7 @@ def init_rag_ui() -> gr.Interface:
             vector_import_bt = gr.Button("Import into Vector", variant="primary")
             graph_index_rebuild_bt = gr.Button("Rebuild vid Index")
             graph_extract_bt = gr.Button("Extract Graph Data (1)", variant="primary")
-            graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=False)
+            graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=True)
 
         vector_index_btn0.click(get_vector_index_info, outputs=out)  # pylint: disable=no-member
         vector_index_btn1.click(clean_vector_index)  # pylint: disable=no-member
@@ -468,7 +462,7 @@ def init_rag_ui() -> gr.Interface:
             inputs=[input_file, input_text, input_schema, info_extract_template],
             outputs=[out, graph_loading_bt]
         )
-        # log.debug("out: %s, schema: %s", out.value, input_schema.value)  # TODO: remove debug info later
+
         graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out, graph_loading_bt])  # pylint: disable=no-member
         graph_index_rebuild_bt.click(fit_vid_index, outputs=out)  # pylint: disable=no-member
 
@@ -493,7 +487,6 @@ def init_rag_ui() -> gr.Interface:
                 graph_only_out = gr.Textbox(label="Graph-only Answer", show_copy_button=True)
                 graph_vector_out = gr.Textbox(label="Graph-Vector Answer", show_copy_button=True)
                 from hugegraph_llm.operators.llm_op.answer_synthesize import DEFAULT_ANSWER_TEMPLATE
-
                 answer_prompt_input = gr.Textbox(
                     value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt", show_copy_button=True, lines=2
                 )
@@ -656,17 +649,16 @@ def init_rag_ui() -> gr.Interface:
 
         gr.Markdown("""## 4. Others (🚧) """)
         with gr.Row():
-            with gr.Column():
-                inp = gr.Textbox(value="g.V().limit(10)", label="Gremlin query", show_copy_button=True)
-                fmt = gr.Checkbox(label="Format JSON", value=True)
-            out = gr.Textbox(label="Output", show_copy_button=True)
-        btn = gr.Button("Run gremlin query on HugeGraph")
-        btn.click(fn=run_gremlin_query, inputs=[inp, fmt], outputs=out)  # pylint: disable=no-member
+                inp = gr.Textbox(value="g.V().limit(10)", label="Gremlin query", show_copy_button=True, lines=8)
+                out = gr.Code(label="Output", language="json", elem_classes="code-container-show")
+        btn = gr.Button("Run Gremlin query")
+        btn.click(fn=run_gremlin_query, inputs=[inp], outputs=out)  # pylint: disable=no-member
 
+        gr.Markdown("---")
         with gr.Row():
             inp = []
-            out = gr.Textbox(label="Output", show_copy_button=True)
-        btn = gr.Button("(BETA) Init HugeGraph test data (🚧WIP)")
+            out = gr.Textbox(label="(🚧)Init Graph Demo Result", show_copy_button=True)
+        btn = gr.Button("(BETA) Init HugeGraph test data (🚧)")
         btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
     return hugegraph_llm_ui
 

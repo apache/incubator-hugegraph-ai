@@ -85,7 +85,6 @@ class CommitToKg:
                 log.error("Error on creating edge: %s, %s", edge, e)
 
     def init_schema_if_need(self, schema):
-        log.debug("Schema type: %s", type(schema))
         vertices = schema["vertexlabels"]
         edges = schema["edgelabels"]
 

@@ -16,13 +16,13 @@
 # under the License.
 import json
 
-from pyhugegraph.client import PyHugeClient
 from hugegraph_llm.config import settings
+from pyhugegraph.client import PyHugeClient
 
 
-def run_gremlin_query(query, format=False):
+def run_gremlin_query(query, fmt=True):
     res = get_hg_client().gremlin().exec(query)
-    return json.dumps(res, indent=4, ensure_ascii=False) if format else res
+    return json.dumps(res, indent=4, ensure_ascii=False) if fmt else res
 
 
 def get_hg_client():
