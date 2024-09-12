@@ -37,14 +37,15 @@ class CommitToKg:
         self.schema = self.client.schema()
 
     def run(self, data: dict) -> Dict[str, Any]:
-        if "vertices" not in data:
+        schema = data.get("schema")
+        vertices = data.get("vertices", [])
+        edges = data.get("edges", [])
+
+        if not schema:
             # TODO: ensure the function works correctly (update the logic later)
-            self.schema_free_mode(data["triples"])
+            self.schema_free_mode(data.get("triples", []))
             log.warning("Using schema_free mode, could try schema_define mode for better effect!")
         else:
-            schema = data["schema"]
-            vertices = data["vertices"]
-            edges = data["edges"]
             self.init_schema_if_need(schema)
             self.load_into_graph(vertices, edges, schema)
         return data
@@ -84,7 +85,7 @@ class CommitToKg:
             except CreateError as e:
                 log.error("Error on creating edge: %s, %s", edge, e)
 
-    def init_schema_if_need(self, schema):
+    def init_schema_if_need(self, schema: object):
         vertices = schema["vertexlabels"]
         edges = schema["edgelabels"]
 
