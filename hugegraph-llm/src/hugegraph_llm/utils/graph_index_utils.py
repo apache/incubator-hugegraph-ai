@@ -18,6 +18,7 @@
 
 import json
 import os
+import traceback
 from typing import Tuple, Dict, Any, Union
 
 import gradio as gr
@@ -143,8 +144,9 @@ def import_graph_data(data: str, schema: str) -> Tuple[Union[str, Dict[str, Any]
                 builder.import_schema(from_hugegraph=schema)
 
         context = builder.commit_to_hugegraph().run(data_json)
-        return context, gr.Button(interactive=False)
+        return json.dumps(context, ensure_ascii=False, indent=2), gr.Button(interactive=False)
     except Exception as e:
+        traceback.print_exc()
         log.error(e)
         # Note: can't use gr.Error here
         gr.Warning(str(e) + " Please check the graph data format/type carefully.")
