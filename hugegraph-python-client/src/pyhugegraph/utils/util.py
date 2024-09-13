@@ -109,7 +109,9 @@ class ResponseValidation:
                     )
                 except (ValueError, KeyError):
                     details = "key 'exception' not found"
-                req_body = response.request.body.encode('utf-8').decode('unicode_escape')
+
+                req_body = response.request.body if response.request.body else "Empty body"
+                req_body = req_body.encode('utf-8').decode('unicode_escape')
                 log.error(  # pylint: disable=logging-fstring-interpolation
                     f"{method}: {e}\n[Body]: {req_body}\n[Server Exception]: {details}"
                 )
