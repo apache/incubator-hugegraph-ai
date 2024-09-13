@@ -273,138 +273,133 @@ def init_rag_ui() -> gr.Interface:
         title="HugeGraph RAG Platform",
         css=CSS,
     ) as hugegraph_llm_ui:
-        gr.Markdown(
-            """# HugeGraph LLM RAG Demo
-        1. Set up the HugeGraph server."""
-        )
-        with gr.Row():
-            graph_config_input = [
-                gr.Textbox(value=settings.graph_ip, label="ip"),
-                gr.Textbox(value=settings.graph_port, label="port"),
-                gr.Textbox(value=settings.graph_name, label="graph"),
-                gr.Textbox(value=settings.graph_user, label="user"),
-                gr.Textbox(value=settings.graph_pwd, label="pwd", type="password"),
-                gr.Textbox(value=settings.graph_space, label="graphspace(Optional)"),
-            ]
-        graph_config_button = gr.Button("apply configuration")
-
+        gr.Markdown("# HugeGraph LLM RAG Demo")
+        with gr.Accordion("1. Set up the HugeGraph server.", open=False):
+            with gr.Row():
+                graph_config_input = [
+                    gr.Textbox(value=settings.graph_ip, label="ip"),
+                    gr.Textbox(value=settings.graph_port, label="port"),
+                    gr.Textbox(value=settings.graph_name, label="graph"),
+                    gr.Textbox(value=settings.graph_user, label="user"),
+                    gr.Textbox(value=settings.graph_pwd, label="pwd", type="password"),
+                    gr.Textbox(value=settings.graph_space, label="graphspace(Optional)"),
+                ]
+            graph_config_button = gr.Button("Apply config")
         graph_config_button.click(apply_graph_config, inputs=graph_config_input)  # pylint: disable=no-member
 
-        gr.Markdown("2. Set up the LLM.")
-        llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama"], value=settings.llm_type, label="LLM")
+        with gr.Accordion("2. Set up the LLM.", open=False):
+            llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama"],
+                                       value=settings.llm_type, label="LLM")
 
-        @gr.render(inputs=[llm_dropdown])
-        def llm_settings(llm_type):
-            settings.llm_type = llm_type
-            if llm_type == "openai":
-                with gr.Row():
-                    llm_config_input = [
-                        gr.Textbox(value=settings.openai_api_key, label="api_key", type="password"),
-                        gr.Textbox(value=settings.openai_api_base, label="api_base"),
-                        gr.Textbox(value=settings.openai_language_model, label="model_name"),
-                        gr.Textbox(value=settings.openai_max_tokens, label="max_token"),
-                    ]
-            elif llm_type == "ollama":
-                with gr.Row():
-                    llm_config_input = [
-                        gr.Textbox(value=settings.ollama_host, label="host"),
-                        gr.Textbox(value=str(settings.ollama_port), label="port"),
-                        gr.Textbox(value=settings.ollama_language_model, label="model_name"),
-                        gr.Textbox(value="", visible=False),
-                    ]
-            elif llm_type == "qianfan_wenxin":
-                with gr.Row():
-                    llm_config_input = [
-                        gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
-                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
-                        gr.Textbox(value=settings.qianfan_language_model, label="model_name"),
-                        gr.Textbox(value="", visible=False),
-                    ]
-                # log.debug(llm_config_input)
-            else:
-                llm_config_input = []
-            llm_config_button = gr.Button("apply configuration")
+            @gr.render(inputs=[llm_dropdown])
+            def llm_settings(llm_type):
+                settings.llm_type = llm_type
+                if llm_type == "openai":
+                    with gr.Row():
+                        llm_config_input = [
+                            gr.Textbox(value=settings.openai_api_key, label="api_key", type="password"),
+                            gr.Textbox(value=settings.openai_api_base, label="api_base"),
+                            gr.Textbox(value=settings.openai_language_model, label="model_name"),
+                            gr.Textbox(value=settings.openai_max_tokens, label="max_token"),
+                        ]
+                elif llm_type == "ollama":
+                    with gr.Row():
+                        llm_config_input = [
+                            gr.Textbox(value=settings.ollama_host, label="host"),
+                            gr.Textbox(value=str(settings.ollama_port), label="port"),
+                            gr.Textbox(value=settings.ollama_language_model, label="model_name"),
+                            gr.Textbox(value="", visible=False),
+                        ]
+                elif llm_type == "qianfan_wenxin":
+                    with gr.Row():
+                        llm_config_input = [
+                            gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
+                            gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
+                            gr.Textbox(value=settings.qianfan_language_model, label="model_name"),
+                            gr.Textbox(value="", visible=False),
+                        ]
+                else:
+                    llm_config_input = []
+                llm_config_button = gr.Button("apply configuration")
+                llm_config_button.click(apply_llm_config, inputs=llm_config_input)  # pylint: disable=no-member
 
-            llm_config_button.click(apply_llm_config, inputs=llm_config_input)  # pylint: disable=no-member
-
-        gr.Markdown("3. Set up the Embedding.")
-        embedding_dropdown = gr.Dropdown(
-            choices=["openai", "qianfan_wenxin", "ollama"], value=settings.embedding_type, label="Embedding"
-        )
-
-        @gr.render(inputs=[embedding_dropdown])
-        def embedding_settings(embedding_type):
-            settings.embedding_type = embedding_type
-            if embedding_type == "openai":
-                with gr.Row():
-                    embedding_config_input = [
-                        gr.Textbox(value=settings.openai_api_key, label="api_key", type="password"),
-                        gr.Textbox(value=settings.openai_api_base, label="api_base"),
-                        gr.Textbox(value=settings.openai_embedding_model, label="model_name"),
-                    ]
-            elif embedding_type == "qianfan_wenxin":
-                with gr.Row():
-                    embedding_config_input = [
-                        gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
-                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
-                        gr.Textbox(value=settings.qianfan_embedding_model, label="model_name"),
-                    ]
-            elif embedding_type == "ollama":
-                with gr.Row():
-                    embedding_config_input = [
-                        gr.Textbox(value=settings.ollama_host, label="host"),
-                        gr.Textbox(value=str(settings.ollama_port), label="port"),
-                        gr.Textbox(value=settings.ollama_embedding_model, label="model_name"),
-                    ]
-            else:
-                embedding_config_input = []
-
-            embedding_config_button = gr.Button("apply configuration")
-
-            # Call the separate apply_embedding_configuration function here
-            embedding_config_button.click(  # pylint: disable=no-member
-                fn=apply_embedding_config,
-                inputs=embedding_config_input,  # pylint: disable=no-member
+        with gr.Accordion("3. Set up the Embedding.", open=False):
+            embedding_dropdown = gr.Dropdown(
+                choices=["openai", "qianfan_wenxin", "ollama"], value=settings.embedding_type, label="Embedding"
             )
 
-        gr.Markdown("4. Set up the Reranker (Optional).")
-        reranker_dropdown = gr.Dropdown(
-            choices=["cohere", "siliconflow", ("default/offline", "None")],
-            value=os.getenv("reranker_type") or "None",
-            label="Reranker",
-        )
+            @gr.render(inputs=[embedding_dropdown])
+            def embedding_settings(embedding_type):
+                settings.embedding_type = embedding_type
+                if embedding_type == "openai":
+                    with gr.Row():
+                        embedding_config_input = [
+                            gr.Textbox(value=settings.openai_api_key, label="api_key", type="password"),
+                            gr.Textbox(value=settings.openai_api_base, label="api_base"),
+                            gr.Textbox(value=settings.openai_embedding_model, label="model_name"),
+                        ]
+                elif embedding_type == "qianfan_wenxin":
+                    with gr.Row():
+                        embedding_config_input = [
+                            gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
+                            gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
+                            gr.Textbox(value=settings.qianfan_embedding_model, label="model_name"),
+                        ]
+                elif embedding_type == "ollama":
+                    with gr.Row():
+                        embedding_config_input = [
+                            gr.Textbox(value=settings.ollama_host, label="host"),
+                            gr.Textbox(value=str(settings.ollama_port), label="port"),
+                            gr.Textbox(value=settings.ollama_embedding_model, label="model_name"),
+                        ]
+                else:
+                    embedding_config_input = []
 
-        @gr.render(inputs=[reranker_dropdown])
-        def reranker_settings(reranker_type):
-            settings.reranker_type = reranker_type if reranker_type != "None" else None
-            if reranker_type == "cohere":
-                with gr.Row():
-                    reranker_config_input = [
-                        gr.Textbox(value=settings.reranker_api_key, label="api_key", type="password"),
-                        gr.Textbox(value=settings.reranker_model, label="model"),
-                        gr.Textbox(value=settings.cohere_base_url, label="base_url"),
-                    ]
-            elif reranker_type == "siliconflow":
-                with gr.Row():
-                    reranker_config_input = [
-                        gr.Textbox(value=settings.reranker_api_key, label="api_key", type="password"),
-                        gr.Textbox(
-                            value="BAAI/bge-reranker-v2-m3",
-                            label="model",
-                            info="Please refer to https://siliconflow.cn/pricing",
-                        ),
-                    ]
-            else:
-                reranker_config_input = []
+                embedding_config_button = gr.Button("apply configuration")
 
-            reranker_config_button = gr.Button("apply configuration")
+                # Call the separate apply_embedding_configuration function here
+                embedding_config_button.click(  # pylint: disable=no-member
+                    fn=apply_embedding_config,
+                    inputs=embedding_config_input,  # pylint: disable=no-member
+                )
 
-            # TODO: use "gr.update()" or other way to update the config in time (refactor the click event)
-            # Call the separate apply_reranker_configuration function here
-            reranker_config_button.click(  # pylint: disable=no-member
-                fn=apply_reranker_config,
-                inputs=reranker_config_input,  # pylint: disable=no-member
+        with gr.Accordion("4. Set up the Reranker.", open=False):
+            reranker_dropdown = gr.Dropdown(
+                choices=["cohere", "siliconflow", ("default/offline", "None")],
+                value=os.getenv("reranker_type") or "None",
+                label="Reranker",
             )
+
+            @gr.render(inputs=[reranker_dropdown])
+            def reranker_settings(reranker_type):
+                settings.reranker_type = reranker_type if reranker_type != "None" else None
+                if reranker_type == "cohere":
+                    with gr.Row():
+                        reranker_config_input = [
+                            gr.Textbox(value=settings.reranker_api_key, label="api_key", type="password"),
+                            gr.Textbox(value=settings.reranker_model, label="model"),
+                            gr.Textbox(value=settings.cohere_base_url, label="base_url"),
+                        ]
+                elif reranker_type == "siliconflow":
+                    with gr.Row():
+                        reranker_config_input = [
+                            gr.Textbox(value=settings.reranker_api_key, label="api_key", type="password"),
+                            gr.Textbox(
+                                value="BAAI/bge-reranker-v2-m3",
+                                label="model",
+                                info="Please refer to https://siliconflow.cn/pricing",
+                            ),
+                        ]
+                else:
+                    reranker_config_input = []
+                reranker_config_button = gr.Button("apply configuration")
+
+                # TODO: use "gr.update()" or other way to update the config in time (refactor the click event)
+                # Call the separate apply_reranker_configuration function here
+                reranker_config_button.click(  # pylint: disable=no-member
+                    fn=apply_reranker_config,
+                    inputs=reranker_config_input,  # pylint: disable=no-member
+                )
 
         gr.Markdown(
             """## 1. Build vector/graph RAG (💡)
@@ -448,13 +443,14 @@ def init_rag_ui() -> gr.Interface:
             vector_import_bt = gr.Button("Import into Vector", variant="primary")
             graph_index_rebuild_bt = gr.Button("Rebuild vid Index")
             graph_extract_bt = gr.Button("Extract Graph Data (1)", variant="primary")
-            graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=True)
+            graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=False)
 
         vector_index_btn0.click(get_vector_index_info, outputs=out)  # pylint: disable=no-member
         vector_index_btn1.click(clean_vector_index)  # pylint: disable=no-member
         vector_import_bt.click(build_vector_index, inputs=[input_file, input_text], outputs=out)  # pylint: disable=no-member
         graph_index_btn0.click(get_graph_index_info, outputs=out)  # pylint: disable=no-member
         graph_index_btn1.click(clean_all_graph_index)  # pylint: disable=no-member
+        graph_index_rebuild_bt.click(fit_vid_index, outputs=out)  # pylint: disable=no-member
 
         # origin_out = gr.Textbox(visible=False)
         graph_extract_bt.click(  # pylint: disable=no-member
@@ -464,7 +460,6 @@ def init_rag_ui() -> gr.Interface:
         )
 
         graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out, graph_loading_bt])  # pylint: disable=no-member
-        graph_index_rebuild_bt.click(fit_vid_index, outputs=out)  # pylint: disable=no-member
 
 
         def on_tab_select(input_f, input_t, evt: gr.SelectData):
@@ -655,11 +650,12 @@ def init_rag_ui() -> gr.Interface:
         btn.click(fn=run_gremlin_query, inputs=[inp], outputs=out)  # pylint: disable=no-member
 
         gr.Markdown("---")
-        with gr.Row():
-            inp = []
-            out = gr.Textbox(label="(🚧)Init Graph Demo Result", show_copy_button=True)
-        btn = gr.Button("(BETA) Init HugeGraph test data (🚧)")
-        btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
+        with gr.Accordion("Init HugeGraph test data (🚧)", open=False):
+            with gr.Row():
+                inp = []
+                out = gr.Textbox(label="Init Graph Demo Result", show_copy_button=True)
+            btn = gr.Button("(BETA) Init HugeGraph test data (🚧)")
+            btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
     return hugegraph_llm_ui
 
 
