@@ -52,17 +52,17 @@ class CommitToKg:
 
     def load_into_graph(self, vertices, edges, schema):
         key_map = {}
-        for vertex in schema["vertexlabels"]:
-            key_map[vertex["name"]] = vertex
+        for vlabel in schema["vertexlabels"]:
+            key_map[vlabel["name"]] = vlabel
         for vertex in vertices:
             label = vertex["label"]
             properties = vertex["properties"]
             for pk in key_map[label]["primary_keys"]:
                 if pk not in properties:
-                    properties[pk] = "NULL"
-            for uk in key_map[label]["nullable_keys"]:
-                if uk not in properties:
-                    properties[uk] = "NULL"
+                    properties[pk] = ""
+            # for uk in key_map[label]["nullable_keys"]:
+            #     if uk not in properties:
+            #         properties[uk] = ""
             try:
                 # TODO: we could try batch add vertices first, setback to single-mode if failed
                 vid = self.client.graph().addVertex(label, properties).id
@@ -99,6 +99,7 @@ class CommitToKg:
             self.schema.vertexLabel(vertex_label).properties(*properties).nullableKeys(
                 *nullable_keys
             ).usePrimaryKeyId().primaryKeys(*primary_keys).ifNotExist().create()
+
         for edge in edges:
             edge_label = edge["name"]
             source_vertex_label = edge["source_label"]
