@@ -146,8 +146,8 @@ def import_graph_data(data: str, schema: str) -> Tuple[Union[str, Dict[str, Any]
         context = builder.commit_to_hugegraph().run(data_json)
         return json.dumps(context, ensure_ascii=False, indent=2), gr.Button(interactive=False)
     except Exception as e:
-        traceback.print_exc()
         log.error(e)
+        traceback.print_exc()
         # Note: can't use gr.Error here
         gr.Warning(str(e) + " Please check the graph data format/type carefully.")
         return data, gr.Button(interactive=True)
