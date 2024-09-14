@@ -144,7 +144,8 @@ def import_graph_data(data: str, schema: str) -> Tuple[Union[str, Dict[str, Any]
                 builder.import_schema(from_hugegraph=schema)
 
         context = builder.commit_to_hugegraph().run(data_json)
-        return json.dumps(context, ensure_ascii=False, indent=2), gr.Button(interactive=False)
+        gr.Info("Import graph data successfully!")
+        return json.dumps(context, ensure_ascii=False, indent=2), gr.Button(interactive=True)
     except Exception as e:
         log.error(e)
         traceback.print_exc()

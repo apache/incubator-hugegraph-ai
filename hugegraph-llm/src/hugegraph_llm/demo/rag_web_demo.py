@@ -443,7 +443,7 @@ def init_rag_ui() -> gr.Interface:
             vector_import_bt = gr.Button("Import into Vector", variant="primary")
             graph_index_rebuild_bt = gr.Button("Rebuild vid Index")
             graph_extract_bt = gr.Button("Extract Graph Data (1)", variant="primary")
-            graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=False)
+            graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=True)
 
         vector_index_btn0.click(get_vector_index_info, outputs=out)  # pylint: disable=no-member
         vector_index_btn1.click(clean_vector_index)  # pylint: disable=no-member
