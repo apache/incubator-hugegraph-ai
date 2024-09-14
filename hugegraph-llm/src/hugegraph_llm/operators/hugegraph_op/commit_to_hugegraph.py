@@ -57,12 +57,28 @@ class CommitToKg:
         for vertex in vertices:
             label = vertex["label"]
             properties = vertex["properties"]
-            for pk in key_map[label]["primary_keys"]:
-                if pk not in properties:
-                    properties[pk] = ""
-            # for uk in key_map[label]["nullable_keys"]:
-            #     if uk not in properties:
-            #         properties[uk] = ""
+            if label not in key_map:
+                log.warning("Vertex label %s not found in schema, ignored!", label)
+                continue
+            primary_keys = key_map[label]["primary_keys"]
+            if len(primary_keys) == 1:
+                # Single primary key
+                if primary_keys[0] not in properties:
+                    log.warning("Vertex %s missing primary key %s, ignored!", vertex, primary_keys[0])
+                    continue
+            elif len(primary_keys) > 1:
+                # Composite primary key
+                for pk in primary_keys:
+                    if pk not in properties:
+                        properties[pk] = ""
+            nullable_keys = key_map[label]["nullable_keys"] if "nullable_keys" in key_map[label] else []
+            nonnull_keys = [
+                key for key in key_map[label]["properties"] if key not in nullable_keys
+            ]
+            for key in nonnull_keys:
+                if key not in properties:
+                    log.warning("Vertex %s missing property %s, set to null!", vertex, key)
+                    properties[key] = "null"
             try:
                 # TODO: we could try batch add vertices first, setback to single-mode if failed
                 vid = self.client.graph().addVertex(label, properties).id
