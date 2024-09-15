@@ -19,11 +19,9 @@
 import json
 import os
 import traceback
-from typing import Tuple, Dict, Any, Union
+from typing import Dict, Any, Union
 
 import gradio as gr
-from gradio import Button
-
 from .hugegraph_utils import get_hg_client, clean_hg_data
 from .log import log
 from .vector_index_utils import read_documents
@@ -52,7 +50,7 @@ def clean_all_graph_index():
     gr.Info("Clean graph index successfully!")
 
 
-def extract_graph(input_file, input_text, schema, example_prompt) -> Union[str, Tuple[str, Button]]:
+def extract_graph(input_file, input_text, schema, example_prompt) -> str:
     # update env variables: schema and example_prompt
     if prompt.graph_schema != schema or prompt.extract_graph_prompt != example_prompt:
         prompt.graph_schema = schema
@@ -66,8 +64,8 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> Union[str, 
         try:
             schema = json.loads(schema.strip())
             builder.import_schema(from_user_defined=schema)
-        except json.JSONDecodeError as e:
-            log.error(e)
+        except json.JSONDecodeError:
+            log.info("Get schema from graph!")
             builder.import_schema(from_hugegraph=schema)
     else:
         return "ERROR: please input with correct schema/format."
@@ -79,10 +77,7 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> Union[str, 
             "vertices": context["vertices"],
             "edges": context["edges"]
         }
-        return (
-            json.dumps(graph_elements, ensure_ascii=False, indent=2),
-            gr.Button(interactive=True)
-        )
+        return json.dumps(graph_elements, ensure_ascii=False, indent=2)
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
         raise gr.Error(str(e))
@@ -102,34 +97,7 @@ def fit_vid_index():
         raise gr.Error(str(e))
 
 
-# TODO: This function is not used for now, remove it if not needed in the future
-def build_graph_index(input_file, input_text, schema, example_prompt):
-    texts = read_documents(input_file, input_text)
-    builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
-
-    if schema:
-        try:
-            schema = json.loads(schema.strip())
-            builder.import_schema(from_user_defined=schema)
-        except json.JSONDecodeError as e:
-            log.error(e)
-            builder.import_schema(from_hugegraph=schema)
-    else:
-        return "ERROR: please input schema."
-    (builder
-     .chunk_split(texts, "paragraph", "zh")
-     .extract_info(example_prompt, "property_graph")
-     .commit_to_hugegraph()
-     .build_vertex_id_semantic_index())
-    log.debug(builder.operators)
-    try:
-        context = builder.run()
-        return json.dumps(context, ensure_ascii=False, indent=2)
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        log.error(e)
-        raise gr.Error(str(e))
-
-def import_graph_data(data: str, schema: str) -> Tuple[Union[str, Dict[str, Any]], Button]:
+def import_graph_data(data: str, schema: str) -> Union[str, Dict[str, Any]]:
     try:
         data_json = json.loads(data.strip())
         log.debug("Import graph data: %s", data)
@@ -138,17 +106,16 @@ def import_graph_data(data: str, schema: str) -> Tuple[Union[str, Dict[str, Any]
             try:
                 schema = json.loads(schema.strip())
                 builder.import_schema(from_user_defined=schema)
-            except json.JSONDecodeError as e:
-                log.error(e)
-                gr.Warning(str(e) + " Please check the json format carefully.")
+            except json.JSONDecodeError:
+                log.info("Get schema from graph!")
                 builder.import_schema(from_hugegraph=schema)
 
         context = builder.commit_to_hugegraph().run(data_json)
         gr.Info("Import graph data successfully!")
-        return json.dumps(context, ensure_ascii=False, indent=2), gr.Button(interactive=True)
+        return json.dumps(context, ensure_ascii=False, indent=2)
     except Exception as e:
         log.error(e)
         traceback.print_exc()
         # Note: can't use gr.Error here
         gr.Warning(str(e) + " Please check the graph data format/type carefully.")
-        return data, gr.Button(interactive=True)
+        return data

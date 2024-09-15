@@ -55,6 +55,10 @@ class CommitToKg:
         for vlabel in schema["vertexlabels"]:
             key_map[vlabel["name"]] = vlabel
         for vertex in vertices:
+            for prop in vertex["properties"]:
+                if prop not in key_map[vertex["label"]]["properties"]:
+                    raise ValueError(f"Extracted vertex property {prop} not found in schema!")
+        for vertex in vertices:
             label = vertex["label"]
             properties = vertex["properties"]
             if label not in key_map:

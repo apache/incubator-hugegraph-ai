@@ -456,10 +456,10 @@ def init_rag_ui() -> gr.Interface:
         graph_extract_bt.click(  # pylint: disable=no-member
             extract_graph,
             inputs=[input_file, input_text, input_schema, info_extract_template],
-            outputs=[out, graph_loading_bt]
+            outputs=[out]
         )
 
-        graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out, graph_loading_bt])  # pylint: disable=no-member
+        graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out])  # pylint: disable=no-member
 
 
         def on_tab_select(input_f, input_t, evt: gr.SelectData):
