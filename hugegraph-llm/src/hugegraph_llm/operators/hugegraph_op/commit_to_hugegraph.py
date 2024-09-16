@@ -41,6 +41,10 @@ class CommitToKg:
         vertices = data.get("vertices", [])
         edges = data.get("edges", [])
 
+        if not vertices and not edges:
+            log.critical("(Loading) Both vertices and edges are empty. Please check the input data again.")
+            raise ValueError("Both vertices and edges input are empty.")
+
         if not schema:
             # TODO: ensure the function works correctly (update the logic later)
             self.schema_free_mode(data.get("triples", []))
@@ -51,41 +55,39 @@ class CommitToKg:
         return data
 
     def load_into_graph(self, vertices, edges, schema):
-        key_map = {}
-        for vlabel in schema["vertexlabels"]:
-            key_map[vlabel["name"]] = vlabel
+        vertex_label_map = {v_label["name"]: v_label for v_label in schema["vertexlabels"]}
+        edge_label_map = {e_label["name"]: e_label for e_label in schema["edgelabels"]}
+
         for vertex in vertices:
-            for prop in vertex["properties"]:
-                if prop not in key_map[vertex["label"]]["properties"]:
-                    raise ValueError(f"Extracted vertex property {prop} not found in schema!")
-        for vertex in vertices:
-            label = vertex["label"]
-            properties = vertex["properties"]
-            if label not in key_map:
-                log.warning("Vertex label %s not found in schema, ignored!", label)
+            input_label = vertex["label"]
+            # 1. ensure the input_label in the graph schema
+            if input_label not in vertex_label_map:
+                log.critical("(Input) VertexLabel %s not found in schema, skip & need check it!", input_label)
                 continue
-            primary_keys = key_map[label]["primary_keys"]
-            if len(primary_keys) == 1:
-                # Single primary key
-                if primary_keys[0] not in properties:
-                    log.warning("Vertex %s missing primary key %s, ignored!", vertex, primary_keys[0])
-                    continue
-            elif len(primary_keys) > 1:
-                # Composite primary key
-                for pk in primary_keys:
-                    if pk not in properties:
-                        properties[pk] = ""
-            nullable_keys = key_map[label]["nullable_keys"] if "nullable_keys" in key_map[label] else []
-            nonnull_keys = [
-                key for key in key_map[label]["properties"] if key not in nullable_keys
-            ]
-            for key in nonnull_keys:
-                if key not in properties:
-                    log.warning("Vertex %s missing property %s, set to null!", vertex, key)
-                    properties[key] = "null"
+
+            input_properties = vertex["properties"]
+            vertex_label = vertex_label_map[input_label]
+            primary_keys = vertex_label["primary_keys"]
+            nullable_keys = vertex_label.get("nullable_keys", [])
+            non_null_keys = [key for key in vertex_label["properties"] if key not in nullable_keys]
+
+            # 2. Handle primary-keys mode vertex
+            for pk in primary_keys:
+                if not input_properties.get(pk):
+                    if len(primary_keys) == 1:
+                        log.error("Primary-key '%s' missing in vertex %s, skip it & need check it again", pk, vertex)
+                        continue
+                    input_properties[pk] = ""
+                    log.warning("Primary-key '%s' missing in vertex %s, mark empty & need check it again!", pk, vertex)
+
+            # 3. Ensure all non-nullable props are set
+            for key in non_null_keys:
+                if key not in input_properties:
+                    input_properties[key] = "null"
+                    log.warning("Property '%s' missing in vertex %s, set to 'null' for now", key, vertex)
             try:
                 # TODO: we could try batch add vertices first, setback to single-mode if failed
-                vid = self.client.graph().addVertex(label, properties).id
+                vid = self.client.graph().addVertex(input_label, input_properties).id
                 vertex["id"] = vid
             except NotFoundError as e:
                 log.error(e)
@@ -97,6 +99,10 @@ class CommitToKg:
             end = edge["inV"]
             label = edge["label"]
             properties = edge["properties"]
+
+            if label not in edge_label_map:
+                log.critical("(Input) EdgeLabel %s not found in schema, skip & need check it!", label)
+                continue
             try:
                 # TODO: we could try batch add edges first, setback to single-mode if failed
                 self.client.graph().addEdge(label, start, end, properties)
