@@ -130,19 +130,19 @@ class PropertyGraphExtract:
             edge_label_set = {edge["name"] for edge in schema["edgelabels"]}
             for item in property_graph:
                 if not isinstance(item, dict):
-                    log.warning("Invalid property graph item type %s.", type(item))
+                    log.warning("Invalid property graph item type '%s'.", type(item))
                     continue
                 if not self.NECESSARY_ITEM_KEYS.issubset(item.keys()):
-                    log.warning("Invalid item keys %s.", item.keys())
+                    log.warning("Invalid item keys '%s'.", item.keys())
                     continue
                 if item["type"] == "vertex" or item["type"] == "edge":
                     if (item["label"] not in vertex_label_set
                             and item["label"] not in edge_label_set):
-                        log.warning("Invalid item label %s has been ignored.", item["label"])
+                        log.warning("Invalid '%s' label '%s' has been ignored.", item["type"], item["label"])
                     else:
                         items.append(item)
                 else:
-                    log.warning("Invalid item type %s has been ignored.", item["type"])
+                    log.warning("Invalid item type '%s' has been ignored.", item["type"])
         except json.JSONDecodeError:
             log.critical("Invalid property graph! Please check the extracted JSON data carefully")
 

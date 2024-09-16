@@ -77,14 +77,14 @@ class CommitToKg:
                     if len(primary_keys) == 1:
                         log.error("Primary-key '%s' missing in vertex %s, skip it & need check it again", pk, vertex)
                         continue
-                    input_properties[pk] = ""
+                    input_properties[pk] = "null" # FIXME: handle bool/number/date type
                     log.warning("Primary-key '%s' missing in vertex %s, mark empty & need check it again!", pk, vertex)
 
             # 3. Ensure all non-nullable props are set
             for key in non_null_keys:
                 if key not in input_properties:
-                    input_properties[key] = "null"
-                    log.warning("Property '%s' missing in vertex %s, set to 'null' for now", key, vertex)
+                    input_properties[key] = "" # FIXME: handle bool/number/date type
+                    log.warning("Property '%s' missing in vertex %s, set to '' for now", key, vertex)
             try:
                 # TODO: we could try batch add vertices first, setback to single-mode if failed
                 vid = self.client.graph().addVertex(input_label, input_properties).id

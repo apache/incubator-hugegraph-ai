@@ -107,10 +107,10 @@ Please read the provided text carefully and identify any information that corres
 #### Edge Format:
 {"label":"edgeLabel","type":"edge","outV":"sourceVertexId","outVLabel":"sourceVertexLabel","inV":"targetVertexId","inVLabel":"targetVertexLabel","properties":{"propertyName":"propertyValue",...}}
 Also follow the rules: 
-1. Don't extract property fields that do not exist in the given schema
-2. Ensure the extracted property is in the same type as the schema (like 'age' should be a number)
+1. Don't extract property fields or labels that doesn't exist in the given schema 
+2. Ensure the extracted property set in the same type as the given schema (like 'age' should be a number, 'select' should be a boolean)
 3. If there are multiple primary keys, the strategy for generating VID is: vertexlabelID:pk1!pk2!pk3 (pk means primary key, and '!' is the separator)
-4. Output should be a list of JSON objects, each representing a vertex or an edge, extracted and formatted based on the text and schema.
+4. Output in JSON format, only include vertexes and edges & remove empty properties, extracted and formatted based on the text/rules and schema
 5. Translate the schema fields into Chinese if the given text is Chinese but the schema is in English (Optional)
 ## Example
 ### Input example:

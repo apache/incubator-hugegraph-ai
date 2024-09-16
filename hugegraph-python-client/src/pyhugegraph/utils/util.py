@@ -99,14 +99,10 @@ class ResponseValidation:
 
         except requests.exceptions.HTTPError as e:
             if not self._strict and response.status_code == 404:
-                log.info(  # pylint: disable=logging-fstring-interpolation
-                    f"Resource {path} not found (404)"
-                )
+                log.info("Resource %s not found (404)", path)
             else:
                 try:
-                    details = response.json().get(
-                        "exception", "key 'exception' not found"
-                    )
+                    details = response.json().get("exception", "key 'exception' not found")
                 except (ValueError, KeyError):
                     details = "key 'exception' not found"
 
