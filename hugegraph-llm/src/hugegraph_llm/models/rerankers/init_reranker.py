@@ -29,7 +29,6 @@ class Rerankers:
             return CohereReranker(
                 api_key=settings.reranker_api_key, base_url=settings.cohere_base_url, model=settings.reranker_model
             )
-        elif self.reranker_type == "siliconflow":
+        if self.reranker_type == "siliconflow":
             return SiliconReranker(api_key=settings.reranker_api_key, model=settings.reranker_model)
-        else:
-            raise Exception(f"reranker type is not supported !")
+        raise Exception("Reranker type is not supported!")

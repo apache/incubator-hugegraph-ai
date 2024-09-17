@@ -16,7 +16,7 @@
 # under the License.
 
 
-from typing import Any
+from typing import Any, Optional, Dict
 from hugegraph_llm.utils.log import log
 
 
@@ -25,8 +25,10 @@ class CheckSchema:
         self.result = None
         self.data = data
 
-    def run(self, schema=None) -> Any:  # pylint: disable=too-many-branches
-        schema = self.data or schema
+    def run(self, context: Optional[Dict[str, Any]] = None) -> Any:  # pylint: disable=too-many-branches
+        if context is None:
+            context = {}
+        schema = self.data or context.get("schema")
         if not isinstance(schema, dict):
             raise ValueError("Input data is not a dictionary.")
         if "vertexlabels" not in schema or "edgelabels" not in schema:
@@ -93,4 +95,5 @@ class CheckSchema:
                     "'name', 'source_label', 'target_label' "
                     "in edge is not of correct type."
                 )
-        return {"schema": schema}
+        context.update({"schema": schema})
+        return context

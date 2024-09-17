@@ -24,7 +24,7 @@ from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.config import prompt
 
 
-DEFAULT_ANSWER_TEMPLATE = prompt.default_answer_template
+DEFAULT_ANSWER_TEMPLATE = prompt.answer_prompt
 
 
 class AnswerSynthesize:
@@ -77,25 +77,26 @@ class AnswerSynthesize:
             response = self._llm.generate(prompt=prompt)
             return {"answer": response}
 
-        vector_result = context.get("vector_result", [])
-        if len(vector_result) == 0:
-            vector_result_context = "No (vector)phrase related to the query."
-        else:
+        vector_result = context.get("vector_result")
+        if vector_result:
             vector_result_context = "Phrases related to the query:\n" + "\n".join(
                 f"{i + 1}. {res}" for i, res in enumerate(vector_result)
             )
-        graph_result = context.get("graph_result", [])
-        if len(graph_result) == 0:
-            graph_result_context = "No knowledge found in HugeGraph for the query."
         else:
+            vector_result_context = "No (vector)phrase related to the query."
+
+        graph_result = context.get("graph_result")
+        if graph_result:
             graph_context_head = context.get("graph_context_head",
                                              "The following are knowledge from HugeGraph related to the query:\n")
             graph_result_context = graph_context_head + "\n".join(
                 f"{i + 1}. {res}" for i, res in enumerate(graph_result)
             )
+        else:
+            graph_result_context = "No related knowledge found in graph for the query."
+
         context = asyncio.run(self.async_generate(context, context_head_str, context_tail_str,
                                                   vector_result_context, graph_result_context))
-
         return context
 
     async def async_generate(self, context: Dict[str, Any], context_head_str: str,

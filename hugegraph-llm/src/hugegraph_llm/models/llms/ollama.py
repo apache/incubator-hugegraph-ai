@@ -16,6 +16,7 @@
 # under the License.
 
 
+import json
 from typing import Any, List, Optional, Callable, Dict
 
 import ollama
@@ -23,7 +24,6 @@ from retry import retry
 
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
-import json
 
 
 class OllamaClient(BaseLLM):

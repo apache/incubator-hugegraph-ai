@@ -28,27 +28,26 @@ from hugegraph_llm.utils.log import log
 
 class BuildSemanticIndex:
     def __init__(self, embedding: BaseEmbedding):
-        self.content_file = str(os.path.join(resource_path, settings.graph_name, "vid.pkl"))
-        self.index_file = str(os.path.join(resource_path, settings.graph_name, "vid.faiss"))
+        self.index_dir = str(os.path.join(resource_path, settings.graph_name, "graph_vids"))
+        self.vid_index = VectorIndex.from_index_file(self.index_dir)
         self.embedding = embedding
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        if len(context["vertices"]) > 0:
-            log.debug("Building vector index for %s vertices...", len(context["vertices"]))
-            vids = []
-            vids_embedding = []
-            for vertex in tqdm(context["vertices"]):
-                vertex_text = f"{vertex['label']}\n{vertex['properties']}"
-                vids_embedding.append(self.embedding.get_text_embedding(vertex_text))
-                vids.append(vertex["id"])
-            vids_embedding = [self.embedding.get_text_embedding(vid) for vid in vids]
-            log.debug("Vector index built for %s vertices.", len(vids))
-            if os.path.exists(self.index_file) and os.path.exists(self.content_file):
-                vector_index = VectorIndex.from_index_file(self.index_file, self.content_file)
-            else:
-                vector_index = VectorIndex(len(vids_embedding[0]))
-            vector_index.add(vids_embedding, vids)
-            vector_index.to_index_file(self.index_file, self.content_file)
+        past_vids = self.vid_index.properties
+        present_vids = [v["id"] for v in context["vertices"]]
+        removed_vids = set(past_vids) - set(present_vids)
+        removed_num = self.vid_index.remove(removed_vids)
+        added_vids = list(set(present_vids) - set(past_vids))
+        if len(added_vids) > 0:
+            log.debug("Building vector index for %s vertices...", len(added_vids))
+            added_embeddings = [self.embedding.get_text_embedding(v) for v in tqdm(added_vids)]
+            log.debug("Vector index built for %s vertices.", len(added_embeddings))
+            self.vid_index.add(added_embeddings, added_vids)
+            self.vid_index.to_index_file(self.index_dir)
         else:
             log.debug("No vertices to build vector index.")
+        context.update({
+            "removed_vid_vector_num": removed_num,
+            "added_vid_vector_num": len(added_vids)
+        })
         return context

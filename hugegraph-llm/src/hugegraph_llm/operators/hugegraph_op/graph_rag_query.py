@@ -119,27 +119,13 @@ class GraphRAGQuery:
         edge_labels_str = ",".join("'" + label + "'" for label in edge_labels)
 
         use_id_to_match = self._prop_to_match is None
+        if use_id_to_match:
+            if not entrance_vids:
+                return context
 
-        if not use_id_to_match:
-            assert keywords is not None, "No keywords for graph query."
-            keywords_str = ",".join("'" + kw + "'" for kw in keywords)
-            rag_gremlin_query = self.PROP_RAG_GREMLIN_QUERY_TEMPL.format(
-                prop=self._prop_to_match,
-                keywords=keywords_str,
-                max_deep=self._max_deep,
-                max_items=self._max_items,
-                edge_labels=edge_labels_str,
-            )
+            rag_gremlin_query = self.VERTEX_GREMLIN_QUERY_TEMPL.format(keywords=entrance_vids)
             result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
-            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_knowledge_from_query_result(
-                query_result=result
-            )
-        else:
-            assert entrance_vids is not None, "No entrance vertices for query."
-            rag_gremlin_query = self.VERTEX_GREMLIN_QUERY_TEMPL.format(
-                keywords=entrance_vids,
-            )
-            result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
+
             vertex_knowledge = self._format_knowledge_from_vertex(query_result=result)
             rag_gremlin_query = self.ID_RAG_GREMLIN_QUERY_TEMPL.format(
                 keywords=entrance_vids,
@@ -152,7 +138,24 @@ class GraphRAGQuery:
                 query_result=result
             )
             graph_chain_knowledge.update(vertex_knowledge)
-            vertex_degree_list[0].update(vertex_knowledge)
+            if vertex_degree_list:
+                vertex_degree_list[0].update(vertex_knowledge)
+            else:
+                vertex_degree_list.append(vertex_knowledge)
+        else:
+            assert keywords, "No related property(keywords) for graph query."
+            keywords_str = ",".join("'" + kw + "'" for kw in keywords)
+            rag_gremlin_query = self.PROP_RAG_GREMLIN_QUERY_TEMPL.format(
+                prop=self._prop_to_match,
+                keywords=keywords_str,
+                max_deep=self._max_deep,
+                max_items=self._max_items,
+                edge_labels=edge_labels_str,
+            )
+            result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
+            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_knowledge_from_query_result(
+                query_result=result
+            )
 
         context["graph_result"] = list(graph_chain_knowledge)
         context["vertex_degree_list"] = [list(vertex_degree) for vertex_degree in vertex_degree_list]

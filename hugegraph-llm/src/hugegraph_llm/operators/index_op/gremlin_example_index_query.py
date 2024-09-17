@@ -18,6 +18,7 @@
 
 import os
 from typing import Dict, Any
+
 from hugegraph_llm.config import resource_path
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.indices.vector_index import VectorIndex
@@ -26,12 +27,10 @@ from hugegraph_llm.indices.vector_index import VectorIndex
 class GremlinExampleIndexQuery:
     def __init__(self, query: str, embedding: BaseEmbedding, num_examples: int = 1):
         self.query = query
-        example_dir_name = ".gremlin_examples"
         self.embedding = embedding
         self.num_examples = num_examples
-        index_file = str(os.path.join(resource_path, example_dir_name, "index.faiss"))
-        content_file = str(os.path.join(resource_path, example_dir_name, "properties.pkl"))
-        self.vector_index = VectorIndex.from_index_file(index_file, content_file)
+        self.index_dir = os.path.join(resource_path, "gremlin_examples")
+        self.vector_index = VectorIndex.from_index_file(self.index_dir)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         context["query"] = self.query

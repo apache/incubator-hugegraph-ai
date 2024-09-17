@@ -121,7 +121,10 @@ class KeywordExtract:
             for k in re.split(r"[,，]+", match):
                 k = k.strip()
                 if len(k) > 0:
-                    keywords.append(k.lower())
+                    if lowercase:
+                        keywords.append(k.lower())
+                    else:
+                        keywords.append(k)
 
         # if the keyword consists of multiple words, split into sub-words
         # (removing stopwords)

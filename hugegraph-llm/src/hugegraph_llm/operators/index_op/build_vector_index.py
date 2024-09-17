@@ -29,10 +29,8 @@ from hugegraph_llm.utils.log import log
 class BuildVectorIndex:
     def __init__(self, embedding: BaseEmbedding):
         self.embedding = embedding
-        self.index_file = str(os.path.join(resource_path, settings.graph_name, "vidx.faiss"))
-        self.content_file = str(os.path.join(resource_path, settings.graph_name, "vidx.pkl"))
-        if not os.path.exists(os.path.join(resource_path, settings.graph_name)):
-            os.mkdir(os.path.join(resource_path, settings.graph_name))
+        self.index_dir = str(os.path.join(resource_path, settings.graph_name, "chunks"))
+        self.vector_index = VectorIndex.from_index_file(self.index_dir)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if "chunks" not in context:
@@ -43,10 +41,6 @@ class BuildVectorIndex:
         for chunk in tqdm(chunks):
             chunks_embedding.append(self.embedding.get_text_embedding(chunk))
         if len(chunks_embedding) > 0:
-            if os.path.exists(self.index_file) and os.path.exists(self.content_file):
-                vector_index = VectorIndex.from_index_file(self.index_file, self.content_file)
-            else:
-                vector_index = VectorIndex(len(chunks_embedding[0]))
-            vector_index.add(chunks_embedding, chunks)
-            vector_index.to_index_file(self.index_file, self.content_file)
+            self.vector_index.add(chunks_embedding, chunks)
+            self.vector_index.to_index_file(self.index_dir)
         return context

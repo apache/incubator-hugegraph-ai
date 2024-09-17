@@ -26,11 +26,7 @@ from hugegraph_llm.indices.vector_index import VectorIndex
 
 class BuildGremlinExampleIndex:
     def __init__(self, embedding: BaseEmbedding, examples: List[Dict[str, str]]):
-        example_dir_name = ".gremlin_examples"
-        self.index_file = os.path.join(resource_path, example_dir_name, "index.faiss")
-        self.content_file = os.path.join(resource_path, example_dir_name, "properties.pkl")
-        if not os.path.exists(os.path.join(resource_path, example_dir_name)):
-            os.mkdir(os.path.join(resource_path, example_dir_name))
+        self.index_dir = os.path.join(resource_path, "gremlin_examples")
         self.examples = examples
         self.embedding = embedding
 
@@ -42,6 +38,6 @@ class BuildGremlinExampleIndex:
         if len(self.examples) > 0:
             vector_index = VectorIndex(embed_dim)
             vector_index.add(examples_embedding, self.examples)
-            vector_index.to_index_file(str(self.index_file), str(self.content_file))
+            vector_index.to_index_file(self.index_dir)
         context["embed_dim"] = embed_dim
         return context

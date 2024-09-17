@@ -18,6 +18,7 @@
 
 import os
 from typing import Dict, Any
+
 from hugegraph_llm.config import resource_path, settings
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.indices.vector_index import VectorIndex
@@ -27,9 +28,8 @@ class VectorIndexQuery:
     def __init__(self, embedding: BaseEmbedding, topk: int = 3):
         self.embedding = embedding
         self.topk = topk
-        index_file = str(os.path.join(resource_path, settings.graph_name, "vidx.faiss"))
-        content_file = str(os.path.join(resource_path, settings.graph_name, "vidx.pkl"))
-        self.vector_index = VectorIndex.from_index_file(index_file, content_file)
+        self.index_dir = str(os.path.join(resource_path, settings.graph_name, "chunks"))
+        self.vector_index = VectorIndex.from_index_file(self.index_dir)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context.get("query")
