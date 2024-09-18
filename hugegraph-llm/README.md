@@ -53,7 +53,7 @@ Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-d
     python3 -m hugegraph_llm.demo.gremlin_generate_web_demo
    ```
 
-7. After starting the web demo, the config file `.env` will be automatically generated. You can modify its content in the web page. Or modify the file directly and restart the web application.
+7. After starting the web demo, the config file `.env` will be automatically generated. You can modify its content on the web page. Or modify the file directly and restart the web application.
 
     (Optional)To regenerate the config file, you can use `config.generate` with `-u` or `--update`.
     ```bash
@@ -130,7 +130,7 @@ The methods of the `KgBuilder` class can be chained together to perform a sequen
 
 Run example like `python3 ./hugegraph_llm/examples/graph_rag_test.py`
 
-The `GraphRAG` class is used to integrate HugeGraph with large language models to provide retrieval-augmented generation capabilities.
+The `RAGPipeline` class is used to integrate HugeGraph with large language models to provide retrieval-augmented generation capabilities.
 Here is a brief usage guide:
 
 1. **Extract Keyword:**: Extract keywords and expand synonyms.
@@ -142,10 +142,7 @@ Here is a brief usage guide:
 2. **Query Graph for Rag**: Retrieve the corresponding keywords and their multi-degree associated relationships from HugeGraph.
 
      ```python
-     graph_rag.query_graphdb(
-        max_deep=2,
-        max_items=30
-     ).print_result()
+     graph_rag.query_graphdb(max_deep=2, max_items=30).print_result()
      ```
 3. **Synthesize Answer**: Summarize the results and organize the language to answer the question.
 
