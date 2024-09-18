@@ -28,8 +28,13 @@ from hugegraph_llm.api.rag_api import rag_http_api
 from hugegraph_llm.resources.demo.css import CSS
 from hugegraph_llm.utils.log import log
 
-from hugegraph_llm.demo.rag_demo.configs_block import (create_configs_block, apply_llm_config, apply_embedding_config,
-                                                       apply_reranker_config, apply_graph_config)
+from hugegraph_llm.demo.rag_demo.configs_block import (
+    create_configs_block,
+    apply_llm_config,
+    apply_embedding_config,
+    apply_reranker_config,
+    apply_graph_config,
+)
 from hugegraph_llm.demo.rag_demo.vector_graph_block import create_vector_graph_block
 from hugegraph_llm.demo.rag_demo.rag_block import create_rag_block, rag_answer
 from hugegraph_llm.demo.rag_demo.other_block import create_other_block

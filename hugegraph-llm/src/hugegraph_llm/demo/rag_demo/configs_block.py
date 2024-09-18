@@ -121,6 +121,7 @@ def apply_reranker_config(
         settings.reranker_api_key = reranker_api_key
         settings.reranker_model = reranker_model
         from pyhugegraph.utils.constants import Constants
+
         headers = {
             "accept": Constants.HEADER_CONTENT_TYPE,
             "authorization": f"Bearer {reranker_api_key}",
@@ -193,8 +194,7 @@ def create_configs_block():
     graph_config_button.click(apply_graph_config, inputs=graph_config_input)  # pylint: disable=no-member
 
     with gr.Accordion("2. Set up the LLM.", open=False):
-        llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama"],
-                                   value=settings.llm_type, label="LLM")
+        llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama"], value=settings.llm_type, label="LLM")
 
         @gr.render(inputs=[llm_dropdown])
         def llm_settings(llm_type):

@@ -19,6 +19,7 @@ import gradio as gr
 
 from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query
 
+
 def create_other_block():
     gr.Markdown("""## 4. Others (🚧) """)
     with gr.Row():

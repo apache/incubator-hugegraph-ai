@@ -28,18 +28,22 @@ from hugegraph_llm.utils.log import log
 
 
 def rag_answer(
-        text: str,
-        raw_answer: bool,
-        vector_only_answer: bool,
-        graph_only_answer: bool,
-        graph_vector_answer: bool,
-        graph_ratio: float,
-        rerank_method: Literal["bleu", "reranker"],
-        near_neighbor_first: bool,
-        custom_related_information: str,
-        answer_prompt: str,
+    text: str,
+    raw_answer: bool,
+    vector_only_answer: bool,
+    graph_only_answer: bool,
+    graph_vector_answer: bool,
+    graph_ratio: float,
+    rerank_method: Literal["bleu", "reranker"],
+    near_neighbor_first: bool,
+    custom_related_information: str,
+    answer_prompt: str,
 ) -> Tuple:
-    if prompt.default_question != text or prompt.custom_rerank_info != custom_related_information or prompt.answer_prompt != answer_prompt:
+    if (
+        prompt.default_question != text
+        or prompt.custom_rerank_info != custom_related_information
+        or prompt.answer_prompt != answer_prompt
+    ):
         prompt.custom_rerank_info = custom_related_information
         prompt.default_question = text
         prompt.answer_prompt = answer_prompt
@@ -95,6 +99,7 @@ def create_rag_block():
             graph_only_out = gr.Textbox(label="Graph-only Answer", show_copy_button=True)
             graph_vector_out = gr.Textbox(label="Graph-Vector Answer", show_copy_button=True)
             from hugegraph_llm.operators.llm_op.answer_synthesize import DEFAULT_ANSWER_TEMPLATE
+
             answer_prompt_input = gr.Textbox(
                 value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt", show_copy_button=True, lines=2
             )
@@ -119,8 +124,9 @@ def create_rag_block():
                     )
                     graph_ratio = gr.Slider(0, 1, 0.5, label="Graph Ratio", step=0.1, interactive=False)
 
-                graph_vector_radio.change(toggle_slider, inputs=graph_vector_radio,
-                                          outputs=graph_ratio)  # pylint: disable=no-member
+                graph_vector_radio.change(
+                    toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio
+                )  # pylint: disable=no-member
                 near_neighbor_first = gr.Checkbox(
                     value=False,
                     label="Near neighbor first(Optional)",
@@ -190,17 +196,17 @@ def create_rag_block():
         return df
 
     def several_rag_answer(
-            is_raw_answer: bool,
-            is_vector_only_answer: bool,
-            is_graph_only_answer: bool,
-            is_graph_vector_answer: bool,
-            graph_ratio: float,
-            rerank_method: Literal["bleu", "reranker"],
-            near_neighbor_first: bool,
-            custom_related_information: str,
-            answer_prompt: str,
-            progress=gr.Progress(track_tqdm=True),
-            answer_max_line_count: int = 1,
+        is_raw_answer: bool,
+        is_vector_only_answer: bool,
+        is_graph_only_answer: bool,
+        is_graph_vector_answer: bool,
+        graph_ratio: float,
+        rerank_method: Literal["bleu", "reranker"],
+        near_neighbor_first: bool,
+        custom_related_information: str,
+        answer_prompt: str,
+        progress=gr.Progress(track_tqdm=True),
+        answer_max_line_count: int = 1,
     ):
         df = pd.read_excel(questions_path, dtype=str)
         total_rows = len(df)

@@ -21,9 +21,15 @@ import gradio as gr
 
 from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
 from hugegraph_llm.config import resource_path, prompt
-from hugegraph_llm.utils.graph_index_utils import get_graph_index_info, clean_all_graph_index, fit_vid_index, \
-    extract_graph, import_graph_data
+from hugegraph_llm.utils.graph_index_utils import (
+    get_graph_index_info,
+    clean_all_graph_index,
+    fit_vid_index,
+    extract_graph,
+    import_graph_data,
+)
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index, build_vector_index, get_vector_index_info
+
 
 def create_vector_graph_block():
     gr.Markdown(
@@ -51,8 +57,9 @@ def create_vector_graph_block():
                     file_count="multiple",
                 )
         input_schema = gr.Textbox(value=schema, label="Schema", lines=15, show_copy_button=True)
-        info_extract_template = gr.Textbox(value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head", lines=15,
-                                           show_copy_button=True)
+        info_extract_template = gr.Textbox(
+            value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head", lines=15, show_copy_button=True
+        )
         out = gr.Code(label="Output", language="json", elem_classes="code-container-edit")
 
     with gr.Row():
@@ -72,17 +79,16 @@ def create_vector_graph_block():
 
     vector_index_btn0.click(get_vector_index_info, outputs=out)  # pylint: disable=no-member
     vector_index_btn1.click(clean_vector_index)  # pylint: disable=no-member
-    vector_import_bt.click(build_vector_index, inputs=[input_file, input_text],
-                           outputs=out)  # pylint: disable=no-member
+    vector_import_bt.click(
+        build_vector_index, inputs=[input_file, input_text], outputs=out
+    )  # pylint: disable=no-member
     graph_index_btn0.click(get_graph_index_info, outputs=out)  # pylint: disable=no-member
     graph_index_btn1.click(clean_all_graph_index)  # pylint: disable=no-member
     graph_index_rebuild_bt.click(fit_vid_index, outputs=out)  # pylint: disable=no-member
 
     # origin_out = gr.Textbox(visible=False)
     graph_extract_bt.click(  # pylint: disable=no-member
-        extract_graph,
-        inputs=[input_file, input_text, input_schema, info_extract_template],
-        outputs=[out]
+        extract_graph, inputs=[input_file, input_text, input_schema, info_extract_template], outputs=[out]
     )
 
     graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out])  # pylint: disable=no-member
@@ -95,7 +101,9 @@ def create_vector_graph_block():
             return [], input_t
         return [], ""
 
-    tab_upload_file.select(fn=on_tab_select, inputs=[input_file, input_text],
-                           outputs=[input_file, input_text])  # pylint: disable=no-member
-    tab_upload_text.select(fn=on_tab_select, inputs=[input_file, input_text],
-                           outputs=[input_file, input_text])  # pylint: disable=no-member
+    tab_upload_file.select(
+        fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text]
+    )  # pylint: disable=no-member
+    tab_upload_text.select(
+        fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text]
+    )  # pylint: disable=no-member
