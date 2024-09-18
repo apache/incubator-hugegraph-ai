@@ -23,20 +23,18 @@ from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.common_op.nltk_helper import NLTKHelper
 
-DEFAULT_KEYWORDS_EXTRACT_TEMPLATE_TMPL = """extract {max_keywords} keywords from the text:
-    {question}
-    Provide keywords in the following comma-separated format: 'KEYWORDS: <keywords>'
-    """
+KEYWORDS_EXTRACT_TPL = """extract {max_keywords} keywords from the text:
+{question}
+Provide keywords in the following comma-separated format: 'KEYWORDS: <keywords>'
+"""
 
-DEFAULT_KEYWORDS_EXPAND_TEMPLATE_TMPL = (
-    "Generate synonyms or possible form of keywords up to {max_keywords} in total,\n"
-    "considering possible cases of capitalization, pluralization, common expressions, etc.\n"
-    "Provide all synonyms of keywords in comma-separated format: 'SYNONYMS: <keywords>'\n"
-    "Note, result should be in one-line with only one 'SYNONYMS: ' prefix\n"
-    "----\n"
-    "KEYWORDS: {question}\n"
-    "----"
-)
+KEYWORDS_EXPAND_TPL = """Generate synonyms or possible form of keywords up to {max_keywords} in total,
+considering possible cases of capitalization, pluralization, common expressions, etc.
+Provide all synonyms of keywords in comma-separated format: 'SYNONYMS: <keywords>'
+Note, result should be in one-line with only one 'SYNONYMS: ' prefix
+----
+KEYWORDS: {question}
+----"""
 
 
 class KeywordExtract:
@@ -53,8 +51,8 @@ class KeywordExtract:
         self._query = text
         self._language = language.lower()
         self._max_keywords = max_keywords
-        self._extract_template = extract_template or DEFAULT_KEYWORDS_EXTRACT_TEMPLATE_TMPL
-        self._expand_template = expand_template or DEFAULT_KEYWORDS_EXPAND_TEMPLATE_TMPL
+        self._extract_template = extract_template or KEYWORDS_EXTRACT_TPL
+        self._expand_template = expand_template or KEYWORDS_EXPAND_TPL
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._query is None:
@@ -91,7 +89,8 @@ class KeywordExtract:
 
         verbose = context.get("verbose") or False
         if verbose:
-            print(f"\033[92mKEYWORDS: {context['keywords']}\033[0m")
+            from hugegraph_llm.utils.log import log
+            log.info(f"KEYWORDS: {context['keywords']}")
 
         # extracting keywords & expanding synonyms increase the call count by 2
         context["call_count"] = context.get("call_count", 0) + 2
@@ -121,17 +120,16 @@ class KeywordExtract:
             for k in re.split(r"[,，]+", match):
                 k = k.strip()
                 if len(k) > 0:
-                    keywords.append(k.lower())
+                    if lowercase:
+                        keywords.append(k.lower())
+                    else:
+                        keywords.append(k)
 
-        # if the keyword consists of multiple words, split into sub-words
-        # (removing stopwords)
+        # if the keyword consists of multiple words, split into sub-words (removing stopwords)
         results = set()
         for token in keywords:
             results.add(token)
             sub_tokens = re.findall(r"\w+", token)
             if len(sub_tokens) > 1:
-                results.update(
-                    {w for w in sub_tokens if w not in NLTKHelper().stopwords(lang=self._language)}
-                )
-
+                results.update({w for w in sub_tokens if w not in NLTKHelper().stopwords(lang=self._language)})
         return results

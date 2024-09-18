@@ -15,26 +15,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
+CSS = """
+footer {
+  visibility: hidden
+}
 
-from typing import Optional, Dict, Any
+.code-container-edit {
+    max-height: 520px;
+    overflow-y: auto; /* enable scroll */
+}
 
-from pyhugegraph.client import PyHugeClient
-
-
-class FetchGraphData:
-    def __init__(self, graph: PyHugeClient):
-        self.graph = graph
-
-    def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        if context is None:
-            context = {}
-        if "vertices" not in context:
-            context["vertices"] = []
-        vertices = self.graph.gremlin().exec("g.V()")["data"]
-        for vertex in vertices:
-            context["vertices"].append({
-                "id": vertex["id"],
-                "label": vertex["label"],
-                "properties": vertex["properties"]
-            })
-        return context
+.code-container-show {
+    max-height: 250px;
+    overflow-y: auto; /* enable scroll */
+}
+"""

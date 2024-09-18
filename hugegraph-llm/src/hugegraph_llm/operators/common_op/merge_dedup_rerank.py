@@ -58,7 +58,7 @@ class MergeDedupRerank:
         self.near_neighbor_first = near_neighbor_first
         self.custom_related_information = custom_related_information
         if priority:
-            raise ValueError(f"Unimplemented rerank strategy: priority.")
+            raise ValueError("Unimplemented rerank strategy: priority.")
         self.switch_to_bleu = False
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -106,6 +106,7 @@ class MergeDedupRerank:
         if self.method == "reranker":
             reranker = Rerankers().get_reranker()
             return reranker.get_rerank_lists(query, results, topn)
+        raise ValueError(f"Unimplemented rerank method '{self.method}'.")
 
     def _rerank_with_vertex_degree(
         self,
@@ -125,7 +126,7 @@ class MergeDedupRerank:
                     reranker.get_rerank_lists(query, vertex_degree) + [""] for vertex_degree in vertex_degree_list
                 ]
             except requests.exceptions.RequestException as e:
-                log.warning(f"Online reranker fails, automatically switches to local bleu method: {e}")
+                log.warning("Online reranker fails, automatically switches to local bleu method: %s", e)
                 self.method = "bleu"
                 self.switch_to_bleu = True
 

@@ -20,64 +20,58 @@ import re
 from typing import Any, Dict, Optional, List, Set, Tuple
 
 from hugegraph_llm.config import settings
+from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
+
+VERTEX_QUERY_TPL = "g.V({keywords}).as('subj').toList()"
+
+# TODO: we could use a simpler query (like kneighbor-api to get the edges)
+# TODO: use dedup() to filter duplicate paths
+ID_QUERY_NEIGHBOR_TPL = """
+g.V({keywords}).as('subj')
+.repeat(
+   bothE({edge_labels}).as('rel').otherV().as('obj')
+).times({max_deep})
+.path()
+.by(project('label', 'id', 'props')
+   .by(label())
+   .by(id())
+   .by(valueMap().by(unfold()))
+)
+.by(project('label', 'inV', 'outV', 'props')
+   .by(label())
+   .by(inV().id())
+   .by(outV().id())
+   .by(valueMap().by(unfold()))
+)
+.limit({max_items})
+.toList()
+"""
+
+PROPERTY_QUERY_NEIGHBOR_TPL = """
+g.V().has('{prop}', within({keywords})).as('subj')
+.repeat(
+   bothE({edge_labels}).as('rel').otherV().as('obj')
+).times({max_deep})
+.path()
+.by(project('label', 'props')
+   .by(label())
+   .by(valueMap().by(unfold()))
+)
+.by(project('label', 'inV', 'outV', 'props')
+   .by(label())
+   .by(inV().values('{prop}'))
+   .by(outV().values('{prop}'))
+   .by(valueMap().by(unfold()))
+)
+.limit({max_items})
+.toList()
+"""
 
 
 class GraphRAGQuery:
-    VERTEX_GREMLIN_QUERY_TEMPL = "g.V().hasId({keywords}).as('subj').toList()"
-    # ID_RAG_GREMLIN_QUERY_TEMPL = "g.V().hasId({keywords}).as('subj').repeat(bothE({edge_labels}).as('rel').otherV(
-    # ).as('obj')).times({max_deep}).path().by(project('label', 'id', 'props').by(label()).by(id()).by(valueMap().by(
-    # unfold()))).by(project('label', 'inV', 'outV', 'props').by(label()).by(inV().id()).by(outV().id()).by(valueMap(
-    # ).by(unfold()))).limit({max_items}).toList()"
 
-    # TODO: we could use a simpler query (like kneighbor-api to get the edges)
-    ID_RAG_GREMLIN_QUERY_TEMPL = """
-    g.V().hasId({keywords}).as('subj')
-    .repeat(
-       bothE({edge_labels}).as('rel').otherV().as('obj')
-    ).times({max_deep})
-    .path()
-    .by(project('label', 'id', 'props')
-       .by(label())
-       .by(id())
-       .by(valueMap().by(unfold()))
-    )
-    .by(project('label', 'inV', 'outV', 'props')
-       .by(label())
-       .by(inV().id())
-       .by(outV().id())
-       .by(valueMap().by(unfold()))
-    )
-    .limit({max_items})
-    .toList()
-    """
-
-    PROP_RAG_GREMLIN_QUERY_TEMPL = """
-    g.V().has('{prop}', within({keywords})).as('subj')
-    .repeat(
-       bothE({edge_labels}).as('rel').otherV().as('obj')
-    ).times({max_deep})
-    .path()
-    .by(project('label', 'props')
-       .by(label())
-       .by(valueMap().by(unfold()))
-    )
-    .by(project('label', 'inV', 'outV', 'props')
-       .by(label())
-       .by(inV().values('{prop}'))
-       .by(outV().values('{prop}'))
-       .by(valueMap().by(unfold()))
-    )
-    .limit({max_items})
-    .toList()
-    """
-
-    def __init__(
-        self,
-        max_deep: int = 2,
-        max_items: int = 30,
-        prop_to_match: Optional[str] = None,
-    ):
+    def __init__(self, max_deep: int = 2, max_items: int = 30, prop_to_match: Optional[str] = None):
         self._client = PyHugeClient(
             settings.graph_ip,
             settings.graph_port,
@@ -106,7 +100,7 @@ class GraphRAGQuery:
         assert self._client is not None, "No valid graph to search."
 
         keywords = context.get("keywords")
-        entrance_vids = context.get("entrance_vids")
+        match_vids = context.get("match_vids")
 
         if isinstance(context.get("max_deep"), int):
             self._max_deep = context["max_deep"]
@@ -119,40 +113,49 @@ class GraphRAGQuery:
         edge_labels_str = ",".join("'" + label + "'" for label in edge_labels)
 
         use_id_to_match = self._prop_to_match is None
+        if use_id_to_match:
+            if not match_vids:
+                return context
 
-        if not use_id_to_match:
-            assert keywords is not None, "No keywords for graph query."
+            gremlin_query = VERTEX_QUERY_TPL.format(keywords=match_vids)
+            result: List[Any] = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
+            log.debug(f"Vids query: {gremlin_query}")
+
+            vertex_knowledge = self._format_graph_from_vertex(query_result=result)
+            gremlin_query = ID_QUERY_NEIGHBOR_TPL.format(
+                keywords=match_vids,
+                max_deep=self._max_deep,
+                max_items=self._max_items,
+                edge_labels=edge_labels_str,
+            )
+            log.debug(f"Kneighbor query: {gremlin_query}")
+
+            result: List[Any] = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
+            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_graph_from_query_result(
+                query_result=result
+            )
+            graph_chain_knowledge.update(vertex_knowledge)
+            if vertex_degree_list:
+                vertex_degree_list[0].update(vertex_knowledge)
+            else:
+                vertex_degree_list.append(vertex_knowledge)
+        else:
+            # WARN: When will the query enter here?
+            assert keywords, "No related property(keywords) for graph query."
             keywords_str = ",".join("'" + kw + "'" for kw in keywords)
-            rag_gremlin_query = self.PROP_RAG_GREMLIN_QUERY_TEMPL.format(
+            gremlin_query = PROPERTY_QUERY_NEIGHBOR_TPL.format(
                 prop=self._prop_to_match,
                 keywords=keywords_str,
                 max_deep=self._max_deep,
                 max_items=self._max_items,
                 edge_labels=edge_labels_str,
             )
-            result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
-            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_knowledge_from_query_result(
+            log.warning("Unable to find vid, downgraded to property query, please confirm if it meets expectation.")
+
+            result: List[Any] = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
+            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_graph_from_query_result(
                 query_result=result
             )
-        else:
-            assert entrance_vids is not None, "No entrance vertices for query."
-            rag_gremlin_query = self.VERTEX_GREMLIN_QUERY_TEMPL.format(
-                keywords=entrance_vids,
-            )
-            result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
-            vertex_knowledge = self._format_knowledge_from_vertex(query_result=result)
-            rag_gremlin_query = self.ID_RAG_GREMLIN_QUERY_TEMPL.format(
-                keywords=entrance_vids,
-                max_deep=self._max_deep,
-                max_items=self._max_items,
-                edge_labels=edge_labels_str,
-            )
-            result: List[Any] = self._client.gremlin().exec(gremlin=rag_gremlin_query)["data"]
-            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_knowledge_from_query_result(
-                query_result=result
-            )
-            graph_chain_knowledge.update(vertex_knowledge)
-            vertex_degree_list[0].update(vertex_knowledge)
 
         context["graph_result"] = list(graph_chain_knowledge)
         context["vertex_degree_list"] = [list(vertex_degree) for vertex_degree in vertex_degree_list]
@@ -172,7 +175,7 @@ class GraphRAGQuery:
 
         return context
 
-    def _format_knowledge_from_vertex(self, query_result: List[Any]) -> Set[str]:
+    def _format_graph_from_vertex(self, query_result: List[Any]) -> Set[str]:
         knowledge = set()
         for item in query_result:
             props_str = ", ".join(f"{k}: {v}" for k, v in item["properties"].items())
@@ -180,7 +183,7 @@ class GraphRAGQuery:
             knowledge.add(node_str)
         return knowledge
 
-    def _format_knowledge_from_query_result(
+    def _format_graph_from_query_result(
         self, query_result: List[Any]
     ) -> Tuple[Set[str], List[Set[str]], Dict[str, List[str]]]:
         use_id_to_match = self._prop_to_match is None
@@ -234,18 +237,14 @@ class GraphRAGQuery:
     def _extract_labels_from_schema(self) -> Tuple[List[str], List[str]]:
         schema = self._get_graph_schema()
         node_props_str, edge_props_str = schema.split("\n")[:2]
-        node_props_str = node_props_str[len("Node properties: ") :].strip("[").strip("]")
-        edge_props_str = edge_props_str[len("Edge properties: ") :].strip("[").strip("]")
+        node_props_str = node_props_str[len("Node properties: "):].strip("[").strip("]")
+        edge_props_str = edge_props_str[len("Edge properties: "):].strip("[").strip("]")
         node_labels = self._extract_label_names(node_props_str)
         edge_labels = self._extract_label_names(edge_props_str)
         return node_labels, edge_labels
 
     @staticmethod
-    def _extract_label_names(
-        source: str,
-        head: str = "name: ",
-        tail: str = ", ",
-    ) -> List[str]:
+    def _extract_label_names(source: str, head: str = "name: ", tail: str = ", ") -> List[str]:
         result = []
         for s in source.split(head):
             end = s.find(tail)

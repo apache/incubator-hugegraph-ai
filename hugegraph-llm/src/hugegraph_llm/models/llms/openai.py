@@ -14,9 +14,9 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
 import json
 import os
-import re
 from typing import Callable, List, Optional, Dict, Any
 
 import openai
@@ -27,8 +27,8 @@ from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
 
 
-class OpenAIChat(BaseLLM):
-    """Wrapper around OpenAI Chat large language models."""
+class OpenAIClient(BaseLLM):
+    """Wrapper for OpenAI Client."""
 
     def __init__(
         self,

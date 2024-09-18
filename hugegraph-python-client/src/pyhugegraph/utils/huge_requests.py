@@ -20,12 +20,13 @@ from typing import Any, Optional
 from urllib.parse import urljoin
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
 from pyhugegraph.utils.constants import Constants
 from pyhugegraph.utils.huge_config import HGraphConfig
 from pyhugegraph.utils.log import log
 from pyhugegraph.utils.util import ResponseValidation
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
 
 class HGraphSession:

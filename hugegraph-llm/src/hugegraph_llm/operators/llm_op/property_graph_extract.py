@@ -25,7 +25,7 @@ from hugegraph_llm.document.chunk_split import ChunkSplitter
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
 
-SCHEMA_EXAMPLE_PROMPT = prompt.schema_example_prompt
+SCHEMA_EXAMPLE_PROMPT = prompt.extract_graph_prompt
 
 def generate_extract_property_graph_prompt(text, schema=None) -> str:
     return f"""---
@@ -43,6 +43,39 @@ def split_text(text: str) -> List[str]:
     chunk_splitter = ChunkSplitter(split_type="paragraph", language="zh")
     chunks = chunk_splitter.split(text)
     return chunks
+
+
+def filter_item(schema, items) -> List[Dict[str, Any]]:
+    # filter vertex and edge with invalid properties
+    filtered_items = []
+    properties_map = {"vertex": {}, "edge": {}}
+    for vertex in schema["vertexlabels"]:
+        properties_map["vertex"][vertex["name"]] = {
+            "primary_keys": vertex["primary_keys"],
+            "nullable_keys": vertex["nullable_keys"],
+            "properties": vertex["properties"]
+        }
+    for edge in schema["edgelabels"]:
+        properties_map["edge"][edge["name"]] = {
+            "properties": edge["properties"]
+        }
+    log.info("properties_map: %s", properties_map)
+    for item in items:
+        item_type = item["type"]
+        if item_type == "vertex":
+            label = item["label"]
+            non_nullable_keys = (
+                set(properties_map[item_type][label]["properties"])
+                .difference(set(properties_map[item_type][label]["nullable_keys"])))
+            for key in non_nullable_keys:
+                if key not in item["properties"]:
+                    item["properties"][key] = "NULL"
+        for key, value in item["properties"].items():
+            if not isinstance(value, str):
+                item["properties"][key] = str(value)
+        filtered_items.append(item)
+
+    return filtered_items
 
 
 class PropertyGraphExtract:
@@ -67,7 +100,7 @@ class PropertyGraphExtract:
             proceeded_chunk = self.extract_property_graph_by_llm(schema, chunk)
             log.debug("[LLM] %s input: %s \n output:%s", self.__class__.__name__, chunk, proceeded_chunk)
             items.extend(self._extract_and_filter_label(schema, proceeded_chunk))
-        items = self.filter_item(schema, items)
+        items = filter_item(schema, items)
         for item in items:
             if item["type"] == "vertex":
                 context["vertices"].append(item)
@@ -97,52 +130,20 @@ class PropertyGraphExtract:
             edge_label_set = {edge["name"] for edge in schema["edgelabels"]}
             for item in property_graph:
                 if not isinstance(item, dict):
-                    log.warning("Invalid property graph item type %s.", type(item))
+                    log.warning("Invalid property graph item type '%s'.", type(item))
                     continue
                 if not self.NECESSARY_ITEM_KEYS.issubset(item.keys()):
-                    log.warning("Invalid item keys %s.", item.keys())
+                    log.warning("Invalid item keys '%s'.", item.keys())
                     continue
                 if item["type"] == "vertex" or item["type"] == "edge":
                     if (item["label"] not in vertex_label_set
                             and item["label"] not in edge_label_set):
-                        log.warning("Invalid item label %s has been ignored.", item["label"])
+                        log.warning("Invalid '%s' label '%s' has been ignored.", item["type"], item["label"])
                     else:
                         items.append(item)
                 else:
-                    log.warning("Invalid item type %s has been ignored.", item["type"])
+                    log.warning("Invalid item type '%s' has been ignored.", item["type"])
         except json.JSONDecodeError:
             log.critical("Invalid property graph! Please check the extracted JSON data carefully")
 
         return items
-
-    def filter_item(self, schema, items) -> List[Dict[str, Any]]:
-        # filter vertex and edge with invalid properties
-        filtered_items = []
-        properties_map = {"vertex": {}, "edge": {}}
-        for vertex in schema["vertexlabels"]:
-            properties_map["vertex"][vertex["name"]] = {
-                "primary_keys": vertex["primary_keys"],
-                "nullable_keys": vertex["nullable_keys"],
-                "properties": vertex["properties"]
-            }
-        for edge in schema["edgelabels"]:
-            properties_map["edge"][edge["name"]] = {
-                "properties": edge["properties"]
-            }
-        log.info("properties_map: %s", properties_map)
-        for item in items:
-            item_type = item["type"]
-            if item_type == "vertex":
-                label = item["label"]
-                non_nullable_keys = (
-                    set(properties_map[item_type][label]["properties"])
-                    .difference(set(properties_map[item_type][label]["nullable_keys"])))
-                for key in non_nullable_keys:
-                    if key not in item["properties"]:
-                        item["properties"][key] = "NULL"
-            for key, value in item["properties"].items():
-                if not isinstance(value, str):
-                    item["properties"][key] = str(value)
-            filtered_items.append(item)
-
-        return filtered_items
