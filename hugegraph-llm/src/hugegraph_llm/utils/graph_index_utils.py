@@ -22,6 +22,7 @@ import traceback
 from typing import Dict, Any, Union
 
 import gradio as gr
+
 from .hugegraph_utils import get_hg_client, clean_hg_data
 from .log import log
 from .vector_index_utils import read_documents
@@ -86,7 +87,7 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
 def fit_vid_index():
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
     builder.fetch_graph_data().build_vertex_id_semantic_index()
-    log.debug(builder.operators)
+    log.debug("Operators: %s", builder.operators)
     try:
         context = builder.run()
         removed_num = context["removed_vid_vector_num"]

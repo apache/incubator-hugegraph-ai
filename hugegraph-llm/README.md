@@ -134,15 +134,15 @@ The `GraphRAG` class is used to integrate HugeGraph with large language models t
 Here is a brief usage guide:
 
 1. **Extract Keyword:**: Extract keywords and expand synonyms.
-    
+
     ```python
-    graph_rag.extract_keyword(text="Tell me about Al Pacino.").print_result()
+    graph_rag.extract_keywords(text="Tell me about Al Pacino.").print_result()
     ```
 
 2. **Query Graph for Rag**: Retrieve the corresponding keywords and their multi-degree associated relationships from HugeGraph.
 
      ```python
-     graph_rag.query_graph_for_rag(
+     graph_rag.query_graphdb(
         max_deep=2,
         max_items=30
      ).print_result()

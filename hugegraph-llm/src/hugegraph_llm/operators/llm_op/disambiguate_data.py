@@ -46,7 +46,7 @@ class DisambiguateData:
         # only disambiguate triples
         if "triples" in data:
             # TODO: ensure the logic here
-            log.debug(data)
+            # log.debug(data)
             triples = data["triples"]
             prompt = generate_disambiguate_prompt(triples)
             llm_output = self.llm.generate(prompt=prompt)
