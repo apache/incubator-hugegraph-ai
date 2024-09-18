@@ -33,8 +33,6 @@ class SchemaManager:
         )
         self.schema = self.client.schema()
 
-    # FIXME: This method is not working as expected
-    # def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
     def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         if context is None:
             context = {}

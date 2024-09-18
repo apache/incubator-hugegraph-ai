@@ -68,8 +68,16 @@ def rag_answer(
     custom_related_information: str,
     answer_prompt: str,
 ) -> Tuple:
-    
-    if prompt.default_question != text or prompt.custom_rerank_info != custom_related_information or prompt.answer_prompt != answer_prompt:
+    """
+    Generate an answer using the RAG (Retrieval-Augmented Generation) pipeline.
+    1. Initialize the RAGPipeline.
+    2. Select vector search or graph search based on parameters.
+    3. Merge, deduplicate, and rerank the results.
+    4. Synthesize the final answer.
+    5. Run the pipeline and return the results.
+    """
+    should_update_prompt = prompt.default_question != text or prompt.answer_prompt != answer_prompt
+    if should_update_prompt or prompt.custom_rerank_info != custom_related_information:
         prompt.custom_rerank_info = custom_related_information
         prompt.default_question = text
         prompt.answer_prompt = answer_prompt
@@ -77,30 +85,23 @@ def rag_answer(
     
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
-
     if raw_answer is False and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
         return "", "", "", ""
-    searcher = RAGPipeline()
+
+    rag = RAGPipeline()
     if vector_search:
-        searcher.query_vector_index_for_rag()
+        rag.query_vector_index()
     if graph_search:
-        searcher.extract_keyword().match_keyword_to_id().query_graph_for_rag()
+        rag.extract_keywords().keywords_to_vid().query_graphdb()
     # TODO: add more user-defined search strategies
-    searcher.merge_dedup_rerank(
-        graph_ratio, rerank_method, near_neighbor_first, custom_related_information
-    ).synthesize_answer(
-        raw_answer=raw_answer,
-        vector_only_answer=vector_only_answer,
-        graph_only_answer=graph_only_answer,
-        graph_vector_answer=graph_vector_answer,
-        answer_prompt=answer_prompt,
-    )
+    rag.merge_dedup_rerank(graph_ratio, rerank_method, near_neighbor_first, custom_related_information)
+    rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
 
     try:
-        context = searcher.run(verbose=True, query=text, vector_search=vector_search, graph_search=graph_search)
+        context = rag.run(verbose=True, query=text, vector_search=vector_search, graph_search=graph_search)
         if context.get("switch_to_bleu"):
-            gr.Warning("Online reranker fails, automatically switches to local bleu method.")
+            gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
         return (
             context.get("raw_answer", ""),
             context.get("vector_only_answer", ""),
@@ -108,10 +109,10 @@ def rag_answer(
             context.get("graph_vector_answer", ""),
         )
     except ValueError as e:
-        log.error(e)
+        log.critical(e)
         raise gr.Error(str(e))
     except Exception as e:
-        log.error(e)
+        log.critical(e)
         raise gr.Error(f"An unexpected error occurred: {str(e)}")
 
 
@@ -665,19 +666,13 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8001, help="port")
     args = parser.parse_args()
     app = FastAPI()
-    app_auth = APIRouter(dependencies=[Depends(authenticate)])
+    api_auth = APIRouter(dependencies=[Depends(authenticate)])
 
     hugegraph_llm = init_rag_ui()
-    rag_http_api(
-        app_auth,
-        rag_answer,
-        apply_graph_config,
-        apply_llm_config,
-        apply_embedding_config,
-        apply_reranker_config,
-    )
+    rag_http_api(api_auth, rag_answer, apply_graph_config, apply_llm_config, apply_embedding_config,
+                 apply_reranker_config)
 
-    app.include_router(app_auth)
+    app.include_router(api_auth)
     auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
     log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
     # TODO: support multi-user login when need

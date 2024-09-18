@@ -15,18 +15,29 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Optional
+from typing import Optional, Literal
 
 from pydantic import BaseModel
 
 
 class RAGRequest(BaseModel):
     query: str
-    raw_llm: Optional[bool] = True
+    raw_llm: Optional[bool] = False
     vector_only: Optional[bool] = False
     graph_only: Optional[bool] = False
     graph_vector: Optional[bool] = False
+    graph_ratio: float = 0.5
+    rerank_method: Literal["bleu", "reranker"] = "bleu"
+    near_neighbor_first: bool = False
+    custom_related_information: str = None
     answer_prompt: Optional[str] = None
+
+
+class GraphRAGRequest(BaseModel):
+    query: str
+    rerank_method: Literal["bleu", "reranker"] = "bleu"
+    near_neighbor_first: bool = False
+    custom_related_information: str = None
 
 
 class GraphConfigRequest(BaseModel):
