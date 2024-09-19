@@ -31,11 +31,11 @@ def dgi_example():
     model = DGI(n_in_feats=graph_info["n_feat_dim"])
     node_embed_task = NodeEmbed(graph=graph, graph_info=graph_info, model=model)
     embedded_graph, graph_info = node_embed_task.train_and_embed(
-        add_self_loop=True, n_epochs=300, gpu=0, patience=30
+        add_self_loop=True, n_epochs=300, patience=30
     )
     model = MLPClassifier(n_in_feat=graph_info["n_feat_dim"], n_out_feat=graph_info["n_classes"])
     node_clf_task = NodeClassify(graph=embedded_graph, graph_info=graph_info, model=model)
-    node_clf_task.train(lr=1e-3, n_epochs=400, gpu=0, patience=40)
+    node_clf_task.train(lr=1e-3, n_epochs=400, patience=40)
     print(node_clf_task.evaluate())
 
 

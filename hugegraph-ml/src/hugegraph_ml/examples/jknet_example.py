@@ -21,8 +21,8 @@ from hugegraph_ml.tasks.node_classify import NodeClassify
 
 
 def jknet_example():
-    g2d = HugeGraph2DGL()
-    graph, graph_info = g2d.convert_graph(
+    hg2d = HugeGraph2DGL()
+    graph, graph_info = hg2d.convert_graph(
         vertex_label="cora_vertex", edge_label="cora_edge", info_vertex_label="cora_info_vertex"
     )
     model = JKNet(
