@@ -186,11 +186,15 @@ class GRACE(nn.Module):
             Contrastive loss between two views of the graph.
         """
         # Generate the first view
-        graph1, feats1 = _generating_views(graph, feats, self.edges_removing_rate_1, self.feats_masking_rate_1)
+        graph1, feats1 = _generating_views(graph, feats, self.edges_removing_rate_1,
+                                           self.feats_masking_rate_1)
         # Generate the second view
-        graph2, feats2 = _generating_views(graph, feats, self.edges_removing_rate_2, self.feats_masking_rate_2)
-        z1 = self.proj(self.encoder(graph1, feats1))  # Project the encoded features for the first view
-        z2 = self.proj(self.encoder(graph2, feats2))  # Project the encoded features for the second view
+        graph2, feats2 = _generating_views(graph, feats, self.edges_removing_rate_2,
+                                           self.feats_masking_rate_2)
+        z1 = self.proj(
+            self.encoder(graph1, feats1))  # Project the encoded features for the first view
+        z2 = self.proj(
+            self.encoder(graph2, feats2))  # Project the encoded features for the second view
         loss = self.loss(z1, z2)  # Compute the contrastive loss
         return loss
 
@@ -216,11 +220,13 @@ class GCN(nn.Module):
         assert n_layers >= 2, "Number of layers should be at least 2."
         self.n_layers = n_layers  # Set the number of layers
         self.n_hidden = n_out_feats * 2  # Set the hidden dimension as twice the output dimension
-        self.input_layer = GraphConv(n_in_feats, self.n_hidden, activation=act_fn)  # Define the input layer
+        self.input_layer = GraphConv(n_in_feats, self.n_hidden,
+                                     activation=act_fn)  # Define the input layer
         self.hidden_layers = nn.ModuleList([
             GraphConv(self.n_hidden, self.n_hidden, activation=act_fn) for _ in range(n_layers - 2)
         ])  # Define the hidden layers
-        self.output_layer = GraphConv(self.n_hidden, n_out_feats, activation=act_fn)  # Define the output layer
+        self.output_layer = GraphConv(self.n_hidden, n_out_feats,
+                                      activation=act_fn)  # Define the output layer
 
     def forward(self, graph, feat):
         """
@@ -302,12 +308,14 @@ def _generating_views(graph, feats, edges_removing_rate, feats_masking_rate):
         Node features with some values masked.
     """
     # Removing edges (RE)
-    removing_edges_idx = _get_removing_edges_idx(graph, edges_removing_rate)  # Get the indices of edges to remove
+    removing_edges_idx = _get_removing_edges_idx(graph,
+                                                 edges_removing_rate)  # Get the indices of edges to remove
     src = graph.edges()[0]  # Source nodes of the edges
     dst = graph.edges()[1]  # Destination nodes of the edges
     new_src = src[removing_edges_idx]  # New source nodes after edge removal
     new_dst = dst[removing_edges_idx]  # New destination nodes after edge removal
-    new_graph = dgl.graph((new_src, new_dst), num_nodes=graph.num_nodes(), device=graph.device)  # Create a new graph with the remaining edges
+    new_graph = dgl.graph((new_src, new_dst), num_nodes=graph.num_nodes(),
+                          device=graph.device)  # Create a new graph with the remaining edges
     new_graph = dgl.add_self_loop(new_graph)  # Add self-loops to the new graph
 
     # Masking node features (MF)
@@ -332,7 +340,8 @@ def _masking_node_feats(feats, masking_rate):
     torch.Tensor
         Node features with some values masked.
     """
-    mask = torch.rand(feats.size(1), dtype=torch.float32, device=feats.device) < masking_rate  # Generate a random mask
+    mask = torch.rand(feats.size(1), dtype=torch.float32,
+                      device=feats.device) < masking_rate  # Generate a random mask
     feats = feats.clone()  # Clone the features to avoid in-place modification
     feats[:, mask] = 0  # Set masked features to zero
     return feats  # Return the masked features
@@ -355,7 +364,8 @@ def _get_removing_edges_idx(graph, edges_removing_rate):
         Indices of the edges to be removed.
     """
     E = graph.num_edges()  # Total number of edges
-    mask_rates = torch.FloatTensor(np.ones(E) * edges_removing_rate)  # Generate mask rates for each edge
+    mask_rates = torch.FloatTensor(
+        np.ones(E) * edges_removing_rate)  # Generate mask rates for each edge
     masks = torch.bernoulli(1 - mask_rates)  # Generate a mask indicating which edges to keep
     mask_idx = masks.nonzero().squeeze(1)  # Get the indices of edges to keep
     return mask_idx  # Return the indices of edges to be removed

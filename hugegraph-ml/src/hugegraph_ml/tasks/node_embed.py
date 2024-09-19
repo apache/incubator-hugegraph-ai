@@ -15,14 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import copy
 from typing import Tuple, Dict, Any
 
 import dgl
 import torch
-from torch import nn
 from dgl import DGLGraph
+from torch import nn
 from tqdm import trange
+
+from hugegraph_ml.utils.early_stopping import EarlyStopping
+
 
 class NodeEmbed:
     def __init__(
@@ -33,34 +35,36 @@ class NodeEmbed:
         self.graph = graph
         self.graph_info = graph_info
         self._model = model
+        self._device = ""
+        self._early_stopping = None
+        self._check_graph()
 
     def _check_graph(self):
-        pass
+        required_node_attrs = ['feat']
+        for attr in required_node_attrs:
+            if attr not in self.graph.ndata:
+                raise ValueError(f"Graph is missing required node attribute '{attr}' in ndata.")
 
     def train_and_embed(
             self,
             add_self_loop: bool = True,
-            lr:float = 1e-3,
+            lr: float = 1e-3,
             weight_decay: float = 0,
             n_epochs: int = 200,
             patience: int = 0,
             gpu: int = -1
     ) -> Tuple[DGLGraph, Dict[str, Any]]:
         # Set device for training
-        device = "cuda:{}".format(gpu) if gpu != -1 and torch.cuda.is_available() else "cpu"
-        self._model = self._model.to(device)
-        self.graph = self.graph.to(device)
+        self._device = "cuda:{}".format(gpu) if gpu != -1 and torch.cuda.is_available() else "cpu"
+        self._early_stopping = EarlyStopping(patience=patience)
+        self._model = self._model.to(self._device)
+        self.graph = self.graph.to(self._device)
         # Add self-loop if required
         if add_self_loop:
             self.graph = dgl.add_self_loop(self.graph)
         # Get node features and move to device
-        feat = self.graph.ndata["feat"].to(device)
+        feat = self.graph.ndata["feat"].to(self._device)
         optimizer = torch.optim.Adam(self._model.parameters(), lr=lr, weight_decay=weight_decay)
-        # Variables for early stopping
-        best_loss = float('inf')
-        best_model = None
-        epochs_no_improve = 0
-
         # Training model
         epochs = trange(n_epochs)
         for epoch in epochs:
@@ -72,20 +76,13 @@ class NodeEmbed:
             optimizer.step()
             # Log
             epochs.set_description("epoch {} | train loss {:.4f}".format(epoch, loss.item()))
-            # Check for improvement
-            if loss.item() < best_loss:
-                best_loss = loss.item()
-                best_model = copy.deepcopy(self._model)  # Save the best model
-                epochs_no_improve = 0  # Reset counter
-            else:
-                epochs_no_improve += 1
-
-            if 0 < patience <= epochs_no_improve:
-                break
+            # early stop
+            self._early_stopping(loss.item(), self._model)
             torch.cuda.empty_cache()
-        # Restore the best model after training
-        if best_model is not None:
-            self._model = best_model
+            if self._early_stopping.early_stop:
+                break
+        self._early_stopping.load_best_model(self._model)
         embed_feat = self._model.get_embedding(self.graph, feat)
         self.graph.ndata["feat"] = embed_feat
+        self.graph_info["n_feat_dim"] = embed_feat.shape[1]
         return self.graph, self.graph_info

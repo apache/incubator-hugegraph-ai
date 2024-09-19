@@ -80,6 +80,4 @@ class HugeGraph2DGL:
             "n_feat_dim": graph.ndata["feat"].size()[1],
         }
 
-        print(graph_info)
-
         return graph, graph_info

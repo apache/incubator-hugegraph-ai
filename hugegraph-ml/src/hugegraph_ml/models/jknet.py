@@ -50,7 +50,15 @@ class JKNet(nn.Module):
         Dropout rate applied after each GraphConv layer. Default is 0.0.
     """
 
-    def __init__(self, n_in_feats, n_hidden, n_out_feats, n_layers=1, mode="cat", dropout=0.0):
+    def __init__(
+            self,
+            n_in_feats,
+            n_out_feats,
+            n_hidden=32,
+            n_layers=6,
+            mode="cat",
+            dropout=0.5
+    ):
         super(JKNet, self).__init__()
         self.mode = mode
         self.dropout = nn.Dropout(dropout)  # Dropout layer to prevent overfitting
@@ -64,7 +72,8 @@ class JKNet(nn.Module):
 
         # Initialize Jumping Knowledge module
         if self.mode == "lstm":
-            self.jump = JumpingKnowledge(mode, n_hidden, n_layers)  # JKNet with LSTM for aggregating representations
+            self.jump = JumpingKnowledge(mode, n_hidden,
+                                         n_layers)  # JKNet with LSTM for aggregating representations
         else:
             # JKNet with concatenation or max pooling for aggregating representations
             self.jump = JumpingKnowledge(mode)
@@ -76,6 +85,7 @@ class JKNet(nn.Module):
 
         # Output layer for final prediction
         self.output_layer = nn.Linear(n_hidden, n_out_feats)
+        self.criterion = nn.CrossEntropyLoss()
         self.reset_params()  # Initialize the model parameters
 
     def reset_params(self):
@@ -86,6 +96,12 @@ class JKNet(nn.Module):
             layer.reset_parameters()  # Reset GraphConv layer parameters
         self.jump.reset_parameters()  # Reset JumpingKnowledge parameters
         self.output_layer.reset_parameters()  # Reset output layer parameters
+
+    def loss(self, logits, labels):
+        return self.criterion(logits, labels)
+
+    def inference(self, graph, feats):
+        return self.forward(graph, feats)
 
     def forward(self, graph, feats):
         """

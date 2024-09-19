@@ -56,11 +56,25 @@ class GRAND(nn.Module):
         Dropout rate for hidden features in the MLP.
     bn : bool
         Whether to use batch normalization in the MLP.
+    temp : float
+            Temperature parameter for sharpening the probabilities.
+    lam : float
+        Weight for the consistency loss.
     """
 
     def __init__(
-            self, n_in_feats, n_hidden, n_out_feats,
-            sample, order, p_drop_node, p_drop_input, p_drop_hidden, bn
+            self,
+            n_in_feats,
+            n_out_feats,
+            n_hidden=32,
+            sample=4,
+            order=8,
+            p_drop_node=0.5,
+            p_drop_input=0.5,
+            p_drop_hidden=0.5,
+            bn=False,
+            temp=0.5,
+            lam=1.0
     ):
         super(GRAND, self).__init__()
         self.sample = sample  # Number of augmentations
@@ -71,9 +85,10 @@ class GRAND(nn.Module):
         # Graph convolution layer without trainable weights
         self.graph_conv = GraphConv(n_in_feats, n_in_feats, norm='both', weight=False, bias=False)
         self.p_drop_node = p_drop_node  # Dropout rate for nodes
+        self.temp = temp
+        self.lam = lam
 
-    @staticmethod
-    def consis_loss(logits, temp, lam):
+    def consis_loss(self, logits):
         """
         Compute the consistency loss between multiple augmented logits.
 
@@ -81,22 +96,23 @@ class GRAND(nn.Module):
         ----------
         logits : list of torch.Tensor
             List of logits from different augmentations.
-        temp : float
-            Temperature parameter for sharpening the probabilities.
-        lam : float
-            Weight for the consistency loss.
 
         Returns
         -------
         torch.Tensor
             The computed consistency loss.
         """
-        ps = torch.stack([torch.exp(logit) for logit in logits], dim=2)  # Convert logits to probabilities
+        ps = torch.stack([torch.exp(logit) for logit in logits],
+                         dim=2)  # Convert logits to probabilities
         avg_p = torch.mean(ps, dim=2)  # Average the probabilities across augmentations
-        sharp_p = torch.pow(avg_p, 1.0 / temp)  # Sharpen the probabilities using the temperature
-        sharp_p = sharp_p / sharp_p.sum(dim=1, keepdim=True)  # Normalize the sharpened probabilities
-        sharp_p = sharp_p.unsqueeze(2).detach()  # Detach to prevent gradients flowing through sharp_p
-        loss = lam * torch.mean((ps - sharp_p).pow(2).sum(dim=1))  # Compute the consistency loss
+        sharp_p = torch.pow(avg_p,
+                            1.0 / self.temp)  # Sharpen the probabilities using the temperature
+        sharp_p = sharp_p / sharp_p.sum(dim=1,
+                                        keepdim=True)  # Normalize the sharpened probabilities
+        sharp_p = sharp_p.unsqueeze(
+            2).detach()  # Detach to prevent gradients flowing through sharp_p
+        loss = self.lam * torch.mean(
+            (ps - sharp_p).pow(2).sum(dim=1))  # Compute the consistency loss
         return loss
 
     def drop_node(self, feats):
@@ -114,7 +130,8 @@ class GRAND(nn.Module):
             Node features with dropout applied.
         """
         n = feats.shape[0]  # Number of nodes
-        drop_rates = torch.FloatTensor(np.ones(n) * self.p_drop_node).to(feats.device)  # Dropout rates for each node
+        drop_rates = torch.FloatTensor(np.ones(n) * self.p_drop_node).to(
+            feats.device)  # Dropout rates for each node
         masks = torch.bernoulli(1.0 - drop_rates).unsqueeze(1)  # Generate dropout masks
         feats = masks.to(feats.device) * feats  # Apply dropout to the node features
         return feats
@@ -157,6 +174,21 @@ class GRAND(nn.Module):
             X = self.graph_conv(graph, X)  # Apply graph convolution
             y = y + X  # Apply residual connection
         return y / (self.order + 1)  # Normalize the output by the order of propagation
+
+    def loss(self, logits, labels):
+        if isinstance(logits, list):
+            # calculate supervised loss
+            loss_sup = 0
+            for k in range(self.sample):
+                loss_sup += F.nll_loss(logits[k], labels)
+            loss_sup = loss_sup / self.sample
+            # calculate consistency loss
+            loss_consis = self.consis_loss(logits)
+            loss = loss_sup + loss_consis
+        else:
+            # loss for evaluate
+            loss = F.nll_loss(logits, labels)
+        return loss
 
     def forward(self, graph, feats):
         """

@@ -15,13 +15,15 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import copy
-from typing import Dict, Any
+from typing import Dict, Any, Literal
 
 import torch
-from torch import nn
 from dgl import DGLGraph
+from torch import nn
 from tqdm import trange
+
+from hugegraph_ml.utils.early_stopping import EarlyStopping
+
 
 class NodeClassify:
     def __init__(
@@ -34,70 +36,84 @@ class NodeClassify:
         self.graph_info = graph_info
         self._model = model
         self._device = ""
-        self.is_trained = False
+        self._early_stopping = None
+        self._is_trained = False
+        self._check_graph()
 
     def _check_graph(self):
-        pass
+        required_node_attrs = ['feat', 'label', 'train_mask', 'val_mask', 'test_mask']
+        for attr in required_node_attrs:
+            if attr not in self.graph.ndata:
+                raise ValueError(f"Graph is missing required node attribute '{attr}' in ndata.")
+
+    def _evaluate(self, feats, labels, mask):
+        self._model.eval()
+        labels = labels[mask]
+        with torch.no_grad():
+            logits = self._model.inference(self.graph, feats)[mask]
+            loss = self._model.loss(logits, labels)
+            _, predicted = torch.max(logits, dim=1)
+            accuracy = (predicted == labels).sum().item() / len(labels)
+        return {
+            "accuracy": accuracy,
+            "loss": loss.item()
+        }
 
     def train(
             self,
             lr: float = 1e-3,
             weight_decay: float = 0,
             n_epochs: int = 200,
-            patience: int = 0,
+            patience: int = float('inf'),
+            early_stopping_monitor: Literal["loss", "accuracy"] = "loss",
             gpu: int = -1
     ):
         # Set device for training
         self._device = "cuda:{}".format(gpu) if gpu != -1 and torch.cuda.is_available() else "cpu"
+        self._early_stopping = EarlyStopping(patience=patience, monitor=early_stopping_monitor)
         self._model.to(self._device)
         self.graph = self.graph.to(self._device)
         # Get node features, labels, masks and move to device
-        feat = self.graph.ndata['feat'].to(self._device)
+        feats = self.graph.ndata['feat'].to(self._device)
         labels = self.graph.ndata['label'].to(self._device)
         train_mask = self.graph.ndata['train_mask'].to(self._device)
         val_mask = self.graph.ndata['val_mask'].to(self._device)
         optimizer = torch.optim.Adam(self._model.parameters(), lr=lr, weight_decay=weight_decay)
-        # Variables for early stopping
-        best_loss = float('inf')
-        best_model = None
-        epochs_no_improve = 0
-
         # Training model
         epochs = trange(n_epochs)
         for epoch in epochs:
+            # train
             self._model.train()
             optimizer.zero_grad()
-            # Forward pass, get logits, compute loss
-            logits = self._model(self.graph, feat)
-            loss = self._model.loss(logits[train_mask], labels[train_mask])
+            # forward pass, get logits, compute loss
+            logits = self._model(self.graph, feats)
+            if isinstance(logits, list):
+                # for GRAND model
+                logits_train_masked = [logit[train_mask] for logit in logits]
+            else:
+                logits_train_masked = logits[train_mask]
+            loss = self._model.loss(logits_train_masked, labels[train_mask])
             loss.backward()
             optimizer.step()
-            # Log
-            epochs.set_description("epoch {} | train loss {:.4f}".format(epoch, loss.item()))
-            # Check for improvement
-            if loss.item() < best_loss:
-                best_loss = loss.item()
-                best_model = copy.deepcopy(self._model)  # Save the best model
-                epochs_no_improve = 0  # Reset counter
-            else:
-                epochs_no_improve += 1
-
-            if 0 < patience <= epochs_no_improve:
-                break
+            # validation
+            valid_metrics = self._evaluate(feats, labels, val_mask)
+            # logs
+            epochs.set_description(
+                "epoch {} | train loss {:.4f} | val loss {:.4f}".format(
+                    epoch, loss.item(), valid_metrics['loss']
+                )
+            )
+            # early stopping
+            self._early_stopping(valid_metrics[self._early_stopping.monitor], self._model)
             torch.cuda.empty_cache()
-        # Restore the best model after training
-        if best_model is not None:
-            self._model = best_model
-        self.is_trained = True
+            if self._early_stopping.early_stop:
+                break
+        self._early_stopping.load_best_model(self._model)
+        self._is_trained = True
 
     def evaluate(self):
-        self._model.eval()
-        feat = self.graph.ndata['feat'].to(self._device)
-        labels = self.graph.ndata['label'].to(self._device)
         test_mask = self.graph.ndata['test_mask'].to(self._device)
-        with torch.no_grad():
-            logits = self._model(self.graph, feat)
-            _, predicted = torch.max(logits[test_mask], dim=1)
-            correct = (predicted == labels[test_mask]).sum().item()
-            acc = correct / test_mask.sum().item()
-        return acc
+        feats = self.graph.ndata['feat'].to(self._device)
+        labels = self.graph.ndata['label'].to(self._device)
+        metrics = self._evaluate(feats, labels, test_mask)
+        return metrics

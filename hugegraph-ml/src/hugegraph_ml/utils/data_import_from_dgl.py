@@ -22,37 +22,49 @@ from pyhugegraph.api.schema import SchemaManager
 from pyhugegraph.client import PyHugeClient
 
 
-def clear_all_data():
-    client: PyHugeClient = PyHugeClient(
+def clear_all_data(
         ip='127.0.0.1',
         port="8080",
-        graph='hugegraph',
+        graph_name='hugegraph',
         user='admin',
         pwd='xxx'
+):
+    client: PyHugeClient = PyHugeClient(
+        ip=ip,
+        port=port,
+        graph=graph_name,
+        user=user,
+        pwd=pwd
     )
     client.graphs().clear_graph_all_data()
 
-def import_graph_from_dgl(dataset_name):
+
+def import_graph_from_dgl(
+        dataset_name,
+        ip='127.0.0.1',
+        port="8080",
+        graph_name='hugegraph',
+        user='admin',
+        pwd='xxx'
+):
     if dataset_name == 'cora':
-        dataset_dgl =CoraGraphDataset()
+        dataset_dgl = CoraGraphDataset()
     elif dataset_name == 'citeseer':
-        dataset_dgl =CiteseerGraphDataset()
+        dataset_dgl = CiteseerGraphDataset()
     elif dataset_name == 'pubmed':
-        dataset_dgl =PubmedGraphDataset()
+        dataset_dgl = PubmedGraphDataset()
     else:
         raise ValueError('dataset not supported')
 
-
     client: PyHugeClient = PyHugeClient(
-        ip='127.0.0.1',
-        port="8080",
-        graph='hugegraph',
-        user='admin',
-        pwd='xxx'
+        ip=ip,
+        port=port,
+        graph=graph_name,
+        user=user,
+        pwd=pwd
     )
     schema: SchemaManager = client.schema()
     graph: GraphManager = client.graph()
-
 
     graph_dgl = dataset_dgl[0]
     node_features = graph_dgl.ndata["feat"]
@@ -66,9 +78,10 @@ def import_graph_from_dgl(dataset_name):
 
     vertex_label = f"{dataset_name}_vertex"
     edge_label = f"{dataset_name}_edge"
-    schema.vertexLabel(vertex_label).useCustomizeStringId().properties("feat", "label").ifNotExist().create()
-    schema.edgeLabel(edge_label).sourceLabel(vertex_label).targetLabel(vertex_label).ifNotExist().create()
-
+    schema.vertexLabel(vertex_label).useCustomizeStringId().properties(
+        "feat", "label").ifNotExist().create()
+    schema.edgeLabel(edge_label).sourceLabel(vertex_label).targetLabel(
+        vertex_label).ifNotExist().create()
 
     for node_id in range(graph_dgl.number_of_nodes()):
         node_feature = node_features[node_id].tolist()
@@ -94,7 +107,8 @@ def import_graph_from_dgl(dataset_name):
     schema.propertyKey("val_mask").asLong().valueList().ifNotExist().create()
     schema.propertyKey("test_mask").asLong().valueList().ifNotExist().create()
     info_vertex = f"{dataset_name}_info_vertex"
-    schema.vertexLabel(info_vertex).useCustomizeStringId().properties("train_mask", "val_mask", "test_mask").ifNotExist().create()
+    schema.vertexLabel(info_vertex).useCustomizeStringId().properties(
+        "train_mask", "val_mask", "test_mask").ifNotExist().create()
 
     train_mask = graph_dgl.ndata["train_mask"].int()
     val_mask = graph_dgl.ndata["val_mask"].int()
@@ -110,7 +124,6 @@ def import_graph_from_dgl(dataset_name):
     )
 
 
-
 if __name__ == "__main__":
     clear_all_data()
-    import_graph_from_dgl('cora')
+    import_graph_from_dgl("cora")
