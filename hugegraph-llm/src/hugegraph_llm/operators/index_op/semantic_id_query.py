@@ -51,19 +51,19 @@ class SemanticIdQuery:
         )
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        graph_query_entrance = []
+        graph_query_list = []
         if self.by == "query":
             query = context["query"]
             query_vector = self.embedding.get_text_embedding(query)
             results = self.vector_index.search(query_vector, top_k=self.topk_per_query)
             if results:
-                graph_query_entrance.extend(results[:self.topk_per_query])
+                graph_query_list.extend(results[:self.topk_per_query])
         else:  # by keywords
             exact_match_vids, unmatched_vids = self._exact_match_vids(context["keywords"])
-            graph_query_entrance.extend(exact_match_vids)
+            graph_query_list.extend(exact_match_vids)
             fuzzy_match_vids = self._fuzzy_match_vids(unmatched_vids)
-            graph_query_entrance.extend(fuzzy_match_vids)
-        context["entrance_vids"] = list(set(graph_query_entrance))
+            graph_query_list.extend(fuzzy_match_vids)
+        context["match_vids"] = list(set(graph_query_list))
         return context
 
     def _exact_match_vids(self, keywords: List[str]) -> Tuple[List[str], List[str]]:
@@ -89,4 +89,4 @@ class SemanticIdQuery:
             results = self.vector_index.search(keyword_vector, top_k=self.topk_per_keyword)
             if results:
                 fuzzy_match_result.extend(results[:self.topk_per_keyword])
-        return fuzzy_match_result
+        return fuzzy_match_result # FIXME: type mismatch, got 'list[dict[str, Any]]' instead

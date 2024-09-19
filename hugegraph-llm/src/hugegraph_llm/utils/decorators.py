@@ -72,7 +72,7 @@ def log_operator_time(func: Callable) -> Callable:
         # Only record time ≥ 0.01s (10ms)
         if op_time >= 0.01:
             log.debug("Operator %s finished in %.2f seconds", operator.__class__.__name__, op_time)
-            # log.debug("Context:\n%s", result)
+            # log.debug("Current context:\n%s", result)
         return result
     return wrapper
 

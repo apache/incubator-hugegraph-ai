@@ -22,7 +22,7 @@ from typing import Any, Dict, Optional
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.config import prompt
-
+from hugegraph_llm.utils.log import log
 
 DEFAULT_ANSWER_TEMPLATE = prompt.answer_prompt
 
@@ -87,13 +87,13 @@ class AnswerSynthesize:
 
         graph_result = context.get("graph_result")
         if graph_result:
-            graph_context_head = context.get("graph_context_head",
-                                             "The following are knowledge from HugeGraph related to the query:\n")
+            graph_context_head = context.get("graph_context_head", "Knowledge from graphdb for the query:\n")
             graph_result_context = graph_context_head + "\n".join(
                 f"{i + 1}. {res}" for i, res in enumerate(graph_result)
             )
         else:
-            graph_result_context = "No related knowledge found in graph for the query."
+            graph_result_context = "No related graph data found for current query."
+            log.warning(graph_result_context)
 
         context = asyncio.run(self.async_generate(context, context_head_str, context_tail_str,
                                                   vector_result_context, graph_result_context))

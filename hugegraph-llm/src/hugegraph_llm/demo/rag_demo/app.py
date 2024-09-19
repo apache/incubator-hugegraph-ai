@@ -81,19 +81,13 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8001, help="port")
     args = parser.parse_args()
     app = FastAPI()
-    app_auth = APIRouter(dependencies=[Depends(authenticate)])
+    api_auth = APIRouter(dependencies=[Depends(authenticate)])
 
     hugegraph_llm = init_rag_ui()
-    rag_http_api(
-        app_auth,
-        rag_answer,
-        apply_graph_config,
-        apply_llm_config,
-        apply_embedding_config,
-        apply_reranker_config,
-    )
+    rag_http_api(api_auth, rag_answer, apply_graph_config, apply_llm_config, apply_embedding_config,
+                 apply_reranker_config)
 
-    app.include_router(app_auth)
+    app.include_router(api_auth)
     auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
     log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
     # TODO: support multi-user login when need
