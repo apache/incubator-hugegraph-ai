@@ -153,7 +153,11 @@ def create_rag_block():
         outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
     )
 
-    gr.Markdown("""## 3. User Functions """)
+    gr.Markdown("""## 3. User Functions (Back-testing)
+    > 1. Download the template file & fill in the questions you want to test.
+    > 2. Upload the file & click the button to generate answers. (Preview shows the first 40 lines)
+    > 3. The answer options are the same as the above RAG/Q&A frame 
+    """)
     tests_df_headers = [
         "Question",
         "Expected Answer",

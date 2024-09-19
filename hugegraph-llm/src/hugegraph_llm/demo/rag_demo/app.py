@@ -65,11 +65,11 @@ def init_rag_ui() -> gr.Interface:
 
         create_configs_block()
 
-        with gr.Tab(label="Build Vector/Graph Index"):
+        with gr.Tab(label="1. Build Vector/Graph Index"):
             create_vector_graph_block()
-        with gr.Tab(label="RAG and User Functions"):
+        with gr.Tab(label="2. (Graph)RAG & User Functions"):
             create_rag_block()
-        with gr.Tab(label="Others"):
+        with gr.Tab(label="3. Others Tools"):
             create_other_block()
 
     return hugegraph_llm_ui
