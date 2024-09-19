@@ -19,8 +19,8 @@ import os
 
 import gradio as gr
 
-from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
 from hugegraph_llm.config import resource_path, prompt
+from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
 from hugegraph_llm.utils.graph_index_utils import (
     get_graph_index_info,
     clean_all_graph_index,
@@ -33,14 +33,15 @@ from hugegraph_llm.utils.vector_index_utils import clean_vector_index, build_vec
 
 def create_vector_graph_block():
     gr.Markdown(
-        """## 1. Build vector/graph Index (💡)
-- Doc(s):
-- text: Build index from plain text.
-- file: Upload document file(s) which should be TXT or DOCX. (Multiple files can be selected together)
-- Schema: Accepts two types of text as below:
-- User-defined JSON format Schema.
-- Specify the name of the HugeGraph graph instance, it will automatically get the schema from it.
-- Info extract head: The head of prompt of info extracting.
+        """## 1. Build Vector/Graph Index & Extract Knowledge Graph
+- Docs:
+  - text: Build rag index from plain text
+  - file: Upload file(s) which should be <u>TXT</u> or <u>.docx</u> (Multiple files can be selected together)
+- [Schema](https://hugegraph.apache.org/docs/clients/restful-api/schema/): (Accept **2 types**)
+  - User-defined Schema (JSON format, follow the template to modify it)
+  - Specify the name of the HugeGraph graph instance, it will automatically get the schema from it (like 
+  **"hugegraph"**)
+- Graph extract head: The user-defined prompt of graph extracting
 """
     )
 
@@ -58,7 +59,7 @@ def create_vector_graph_block():
                 )
         input_schema = gr.Textbox(value=schema, label="Schema", lines=15, show_copy_button=True)
         info_extract_template = gr.Textbox(
-            value=SCHEMA_EXAMPLE_PROMPT, label="Info extract head", lines=15, show_copy_button=True
+            value=SCHEMA_EXAMPLE_PROMPT, label="Graph extract head", lines=15, show_copy_button=True
         )
         out = gr.Code(label="Output", language="json", elem_classes="code-container-edit")
 

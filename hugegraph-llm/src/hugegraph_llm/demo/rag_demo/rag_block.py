@@ -88,7 +88,7 @@ def rag_answer(
 
 
 def create_rag_block():
-    gr.Markdown("""## 2. RAG with HugeGraph 📖""")
+    gr.Markdown("""## 2. RAG with HugeGraph""")
     with gr.Row():
         with gr.Column(scale=2):
             inp = gr.Textbox(value=prompt.default_question, label="Question", show_copy_button=True, lines=2)
@@ -99,7 +99,7 @@ def create_rag_block():
             from hugegraph_llm.operators.llm_op.answer_synthesize import DEFAULT_ANSWER_TEMPLATE
 
             answer_prompt_input = gr.Textbox(
-                value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt", show_copy_button=True, lines=2
+                value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt", show_copy_button=True, lines=7
             )
         with gr.Column(scale=1):
             with gr.Row():
