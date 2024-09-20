@@ -21,11 +21,11 @@ Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-d
     ```bash
     git clone https://github.com/apache/incubator-hugegraph-ai.git
     ```
-3. Install [hugegraph-python-client](../hugegraph-python-client) and [requirements](../hugegraph-ml/requirements.txt)
+3. Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph_ml](../hugegraph-ml)
     ```bash
     cd ./incubator-hugegraph-ai # better to use virtualenv (source venv/bin/activate) 
     pip install ./hugegraph-python-client
-    pip install -r ./hugegraph-ml/requirements.txt
+    pip install -e .
     ```
 4. Enter the project directory
     ```bash
