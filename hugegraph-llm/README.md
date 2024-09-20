@@ -12,18 +12,18 @@ With this project, we aim to reduce the cost of using graph systems, and decreas
 building knowledge graphs. This project will offer more applications and integration solutions for 
 graph systems and large language models.
 1.  Construct knowledge graph by LLM + HugeGraph
-2.  Use natural language to operate graph databases (gremlin)
-3.  Knowledge graph supplements answer context (RAG)
+2.  Use natural language to operate graph databases (Gremlin/Cypher)
+3.  Knowledge graph supplements answer context (GraphRAG)
 
 ## Environment Requirements
 
 - python 3.9+ 
-- hugegraph-server 1.0+
+- hugegraph-server 1.2+
 
 ## Preparation
 
 1. Start the HugeGraph database, you can do it via Docker/[Binary packages](https://hugegraph.apache.org/docs/download/download/). 
-Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for guidance
+Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for guidance (Graph visualization in step8)
 2. Clone this project
     ```bash
     git clone https://github.com/apache/incubator-hugegraph-ai.git
@@ -60,7 +60,10 @@ Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-d
     python3 -m hugegraph_llm.config.generate --update
     ```
    
-8. (Optional) Install Hubble via Docker, refer to [Hubble](https://hub.docker.com/r/hugegraph/hubble) for guidance. Hubble is the Apache HugeGraph analysis dashboard (data loading, schema management, graph traverser and display).
+8. (__Optional__) You could use 
+[hugegraph-hubble](https://hugegraph.apache.org/docs/quickstart/hugegraph-hubble/#21-use-docker-convenient-for-testdev) 
+to visit the graph data, could start it via [Docker/Docker-Compose](https://hub.docker.com/r/hugegraph/hubble) 
+for guidance. (Hubble is a graph-analysis dashboard include data loading/schema management/graph traverser/display).
 
 
 ## Examples
