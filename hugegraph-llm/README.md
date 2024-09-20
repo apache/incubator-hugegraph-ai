@@ -22,8 +22,8 @@ graph systems and large language models.
 
 ## Preparation
 
-1. Start the HugeGraph database, you can do it via Docker/[Binary packages](https://hugegraph.apache.org/docs/download/download/). 
-Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for guidance (Graph visualization in step8)
+1. Start the HugeGraph database, you can run it via [Docker](https://hub.docker.com/r/hugegraph/hugegraph)/[Binary Package](https://hugegraph.apache.org/docs/download/download/).
+Refer to detailed [doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance (PS: Graph visualization in step8)
 2. Clone this project
     ```bash
     git clone https://github.com/apache/incubator-hugegraph-ai.git
@@ -39,7 +39,7 @@ Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-d
     cd ./hugegraph-llm/src
     ```
 
-5. Start the gradio interactive demo of **Graph RAG**, you can start with the following command, and open http://127.0.0.1:8001 after starting
+5. Start the gradio interactive demo of **Graph RAG**, you can run with the following command, and open http://127.0.0.1:8001 after starting
     ```bash
     python3 -m hugegraph_llm.demo.rag_demo.app
     ```
@@ -48,12 +48,12 @@ Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-d
     python3 -m hugegraph_llm.demo.rag_demo.app --host 127.0.0.1 --port 18001
     ```
 
-6. Or start the gradio interactive demo of **Text2Gremlin**, you can start with the following command, and open http://127.0.0.1:8002 after starting. You can also change the default host `0.0.0.0` and port `8002` as above. (🚧ing)
+6. Or start the gradio interactive demo of **Text2Gremlin**, you can run with the following command, and open http://127.0.0.1:8002 after starting. You can also change the default host `0.0.0.0` and port `8002` as above. (🚧ing)
     ```bash
     python3 -m hugegraph_llm.demo.gremlin_generate_web_demo
    ```
 
-7. After starting the web demo, the config file `.env` will be automatically generated. You can modify its content on the web page. Or modify the file directly and restart the web application.
+7. After running the web demo, the config file `.env` will be automatically generated. You can modify its content on the web page. Or modify the file directly and restart the web application.
 
     (Optional)To regenerate the config file, you can use `config.generate` with `-u` or `--update`.
     ```bash
@@ -62,7 +62,7 @@ Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-d
    
 8. (__Optional__) You could use 
 [hugegraph-hubble](https://hugegraph.apache.org/docs/quickstart/hugegraph-hubble/#21-use-docker-convenient-for-testdev) 
-to visit the graph data, could start it via [Docker/Docker-Compose](https://hub.docker.com/r/hugegraph/hubble) 
+to visit the graph data, could run it via [Docker/Docker-Compose](https://hub.docker.com/r/hugegraph/hubble) 
 for guidance. (Hubble is a graph-analysis dashboard include data loading/schema management/graph traverser/display).
 
 
