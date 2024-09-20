@@ -59,6 +59,8 @@ Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-d
     ```bash
     python3 -m hugegraph_llm.config.generate --update
     ```
+   
+8. (Optional) Install Hubble via Docker, refer to [Hubble](https://hub.docker.com/r/hugegraph/hubble) for guidance. Hubble is the Apache HugeGraph analysis dashboard (data loading, schema management, graph traverser and display).
 
 
 ## Examples
