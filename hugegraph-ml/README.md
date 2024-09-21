@@ -25,6 +25,7 @@ Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-d
     ```bash
     cd ./incubator-hugegraph-ai # better to use virtualenv (source venv/bin/activate) 
     pip install ./hugegraph-python-client
+    cd .\hugegraph-ml\
     pip install -e .
     ```
 4. Enter the project directory
@@ -39,8 +40,10 @@ Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-d
 Make sure that the Cora dataset is already in your HugeGraph database. 
 If not, you can run the `import_graph_from_dgl` function to import the `Cora` dataset from `DGL` into
 the `HugeGraph` database.
+
 ```python
-from hugegraph_ml.utils.data_import_from_dgl import import_graph_from_dgl
+from hugegraph_ml.utils.dgl2hugegraph_utils import import_graph_from_dgl
+
 import_graph_from_dgl("cora")
 ```
 
@@ -105,8 +108,9 @@ You can refer to the example in the [grand_example.py](./src/hugegraph_ml/exampl
 from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 from hugegraph_ml.models.grand import GRAND
 from hugegraph_ml.tasks.node_classify import NodeClassify
-g2d = HugeGraph2DGL()
-graph, graph_info = g2d.convert_graph(
+
+hg2d = HugeGraph2DGL()
+graph, graph_info = hg2d.convert_graph(
   vertex_label="cora_vertex", edge_label="cora_edge", info_vertex_label="cora_info_vertex"
 )
 model = GRAND(

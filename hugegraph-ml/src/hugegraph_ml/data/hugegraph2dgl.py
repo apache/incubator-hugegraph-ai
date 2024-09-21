@@ -28,14 +28,16 @@ class HugeGraph2DGL:
             port="8080",
             graph='hugegraph',
             user='admin',
-            pwd='xxx'
+            pwd='xxx',
+            graphspace=None
     ):
         self._client: PyHugeClient = PyHugeClient(
             ip=ip,
             port=port,
             graph=graph,
             user=user,
-            pwd=pwd
+            pwd=pwd,
+            graphspace=graphspace
         )
         self._graph_germlin: GremlinManager = self._client.gremlin()
 
@@ -50,7 +52,6 @@ class HugeGraph2DGL:
         vertices = self._graph_germlin.exec(f"g.V().hasLabel('{vertex_label}')")["data"]
         info_vertex = self._graph_germlin.exec(f"g.V().hasLabel('{info_vertex_label}')")["data"]
         edges = self._graph_germlin.exec(f"g.E().hasLabel('{edge_label}')")["data"]
-        print(len(vertices), len(edges))
 
         node_ids = [v["id"] for v in vertices]
         node_feats = [v["properties"][feat_key] for v in vertices]

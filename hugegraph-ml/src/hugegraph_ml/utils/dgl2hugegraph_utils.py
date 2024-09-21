@@ -27,14 +27,16 @@ def clear_all_data(
         port="8080",
         graph_name='hugegraph',
         user='admin',
-        pwd='xxx'
+        pwd='xxx',
+        graphspace=None
 ):
     client: PyHugeClient = PyHugeClient(
         ip=ip,
         port=port,
         graph=graph_name,
         user=user,
-        pwd=pwd
+        pwd=pwd,
+        graphspace=graphspace
     )
     client.graphs().clear_graph_all_data()
 
@@ -45,7 +47,8 @@ def import_graph_from_dgl(
         port="8080",
         graph_name='hugegraph',
         user='admin',
-        pwd='xxx'
+        pwd='xxx',
+        graphspace=None
 ):
     if dataset_name == 'cora':
         dataset_dgl = CoraGraphDataset()
@@ -61,7 +64,8 @@ def import_graph_from_dgl(
         port=port,
         graph=graph_name,
         user=user,
-        pwd=pwd
+        pwd=pwd,
+        graphspace=graphspace
     )
     schema: SchemaManager = client.schema()
     graph: GraphManager = client.graph()
