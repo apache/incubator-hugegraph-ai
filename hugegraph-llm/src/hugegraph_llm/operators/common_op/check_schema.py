@@ -33,8 +33,7 @@ class CheckSchema:
             raise ValueError("Input data is not a dictionary.")
         if "vertexlabels" not in schema or "edgelabels" not in schema:
             raise ValueError("Input data does not contain 'vertexlabels' or 'edgelabels'.")
-        if not isinstance(schema["vertexlabels"], list) or not isinstance(schema["edgelabels"],
-                                                                          list):
+        if not isinstance(schema["vertexlabels"], list) or not isinstance(schema["edgelabels"], list):
             raise ValueError("'vertexlabels' or 'edgelabels' in input data is not a list.")
         for vertex in schema["vertexlabels"]:
             if not isinstance(vertex, dict):
@@ -56,8 +55,7 @@ class CheckSchema:
             new_primary_keys = []
             for key in primary_keys:
                 if key not in properties:
-                    log.waring("Primary key '%s' not found in properties has been auto removed.",
-                               key)
+                    log.waring("Primary key '%s' not found in properties has been auto removed.", key)
                 else:
                     new_primary_keys.append(key)
             if len(new_primary_keys) == 0:
@@ -69,31 +67,20 @@ class CheckSchema:
             new_nullable_keys = []
             for key in nullable_keys:
                 if key not in properties:
-                    log.warning("Nullable key '%s' not found in properties has been auto removed.",
-                                key)
+                    log.warning("Nullable key '%s' not found in properties has been auto removed.", key)
                 else:
                     new_nullable_keys.append(key)
             vertex["nullable_keys"] = new_nullable_keys
         for edge in schema["edgelabels"]:
             if not isinstance(edge, dict):
                 raise ValueError("Edge in input data is not a dictionary.")
-            if (
-                "name" not in edge
-                or "source_label" not in edge
-                or "target_label" not in edge
-            ):
-                raise ValueError(
-                    "Edge in input data does not contain "
-                    "'name', 'source_label', 'target_label'."
-                )
+            if "name" not in edge or "source_label" not in edge or "target_label" not in edge:
+                raise ValueError("Edge in input data does not contain " "'name', 'source_label', 'target_label'.")
             if (
                 not isinstance(edge["name"], str)
                 or not isinstance(edge["source_label"], str)
                 or not isinstance(edge["target_label"], str)
             ):
-                raise ValueError(
-                    "'name', 'source_label', 'target_label' "
-                    "in edge is not of correct type."
-                )
+                raise ValueError("'name', 'source_label', 'target_label' " "in edge is not of correct type.")
         context.update({"schema": schema})
         return context

@@ -19,9 +19,14 @@
 from enum import Enum
 
 
-class IdStrategy(Enum):
-    AUTOMATIC = "automatic"
-    PRIMARY_KEY = "primary_key"
-    CUSTOMIZE_STRING = "customize_string"
-    CUSTOMIZE_NUMBER = "customize_number"
-    CUSTOMIZE_UUID = "customize_uuid"
+class PropertyDataType(Enum):
+    BOOLEAN = "boolean"
+    BYTE = "byte"
+    INT = "int"
+    LONG = "long"
+    FLOAT = "float"
+    DOUBLE = "double"
+    TEXT = "text"
+    BLOB = "blob"
+    DATE = "date"
+    UUID = "uuid"

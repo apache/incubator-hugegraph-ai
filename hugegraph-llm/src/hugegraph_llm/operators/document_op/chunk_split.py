@@ -22,10 +22,10 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 class ChunkSplit:
     def __init__(
-            self,
-            texts: Union[str, List[str]],
-            split_type: Literal["paragraph", "sentence"] = "paragraph",
-            language: Literal["zh", "en"] = "zh"
+        self,
+        texts: Union[str, List[str]],
+        split_type: Literal["document", "paragraph", "sentence"] = "document",
+        language: Literal["zh", "en"] = "zh",
     ):
         if isinstance(texts, str):
             texts = [texts]
@@ -36,25 +36,27 @@ class ChunkSplit:
             separators = ["\n\n", "\n", ".", ",", " ", ""]
         else:
             raise ValueError("language must be zh or en")
-        if split_type == "paragraph":
+        if split_type == "document":
+
+            def split_text(text: str):
+                return [text]
+
+            self.text_splitter = split_text
+        elif split_type == "paragraph":
             self.text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=500,
-                chunk_overlap=30,
-                separators=separators
-            )
+                chunk_size=500, chunk_overlap=30, separators=separators
+            ).split_text
         elif split_type == "sentence":
             self.text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=50,
-                chunk_overlap=0,
-                separators=separators
-            )
+                chunk_size=50, chunk_overlap=0, separators=separators
+            ).split_text
         else:
             raise ValueError("type must be paragraph, sentence, html or markdown")
 
     def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         all_chunks = []
         for text in self.texts:
-            chunks = self.text_splitter.split_text(text)
+            chunks = self.text_splitter(text)
             all_chunks.extend(chunks)
         if context is None:
             return {"chunks": all_chunks}

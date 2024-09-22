@@ -19,9 +19,7 @@
 from enum import Enum
 
 
-class IdStrategy(Enum):
-    AUTOMATIC = "automatic"
-    PRIMARY_KEY = "primary_key"
-    CUSTOMIZE_STRING = "customize_string"
-    CUSTOMIZE_NUMBER = "customize_number"
-    CUSTOMIZE_UUID = "customize_uuid"
+class PropertyCardinality(Enum):
+    SINGLE = "single"
+    LIST = "list"
+    SET = "set"
