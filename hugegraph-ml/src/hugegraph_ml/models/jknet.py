@@ -25,9 +25,9 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/jknet
 """
 
 import dgl.function as fn
-import torch.nn as nn
 import torch.nn.functional as F
 from dgl.nn.pytorch import GraphConv, JumpingKnowledge
+from torch import nn
 
 
 class JKNet(nn.Module):
@@ -50,15 +50,7 @@ class JKNet(nn.Module):
         Dropout rate applied after each GraphConv layer. Default is 0.0.
     """
 
-    def __init__(
-            self,
-            n_in_feats,
-            n_out_feats,
-            n_hidden=32,
-            n_layers=6,
-            mode="cat",
-            dropout=0.5
-    ):
+    def __init__(self, n_in_feats, n_out_feats, n_hidden=32, n_layers=6, mode="cat", dropout=0.5):
         super(JKNet, self).__init__()
         self.mode = mode
         self.dropout = nn.Dropout(dropout)  # Dropout layer to prevent overfitting
@@ -72,8 +64,7 @@ class JKNet(nn.Module):
 
         # Initialize Jumping Knowledge module
         if self.mode == "lstm":
-            self.jump = JumpingKnowledge(mode, n_hidden,
-                                         n_layers)  # JKNet with LSTM for aggregating representations
+            self.jump = JumpingKnowledge(mode, n_hidden, n_layers)  # JKNet with LSTM for aggregating representations
         else:
             # JKNet with concatenation or max pooling for aggregating representations
             self.jump = JumpingKnowledge(mode)

@@ -28,8 +28,8 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/dgi
 import math
 
 import torch
-import torch.nn as nn
 from dgl.nn.pytorch import GraphConv
+from torch import nn
 
 
 class DGI(nn.Module):
@@ -50,10 +50,8 @@ class DGI(nn.Module):
 
     def __init__(self, n_in_feats, n_hidden=512, n_layers=2, p_drop=0):
         super(DGI, self).__init__()
-        self.encoder = GCNEncoder(n_in_feats, n_hidden, n_layers,
-                                  p_drop)  # Initialize the GCN-based encoder
-        self.discriminator = Discriminator(
-            n_hidden)  # Initialize the discriminator for mutual information maximization
+        self.encoder = GCNEncoder(n_in_feats, n_hidden, n_layers, p_drop)  # Initialize the GCN-based encoder
+        self.discriminator = Discriminator(n_hidden)  # Initialize the discriminator for mutual information maximization
         self.loss = nn.BCEWithLogitsLoss()  # Binary cross-entropy loss with logits for classification
 
     def get_embedding(self, graph, feats):
@@ -91,19 +89,15 @@ class DGI(nn.Module):
         torch.Tensor
             The DGI loss, computed as the sum of positive and negative sample losses.
         """
-        positive = self.encoder(graph, feats,
-                                corrupt=False)  # Encode positive samples without corruption
-        negative = self.encoder(graph, feats,
-                                corrupt=True)  # Encode negative samples with feature corruption
-        summary = torch.sigmoid(positive.mean(
-            dim=0))  # Compute the graph summary vector by taking the mean of node embeddings
-        positive = self.discriminator(positive,
-                                      summary)  # Discriminate positive samples against the summary
-        negative = self.discriminator(negative,
-                                      summary)  # Discriminate negative samples against the summary
+        positive = self.encoder(graph, feats, corrupt=False)  # Encode positive samples without corruption
+        negative = self.encoder(graph, feats, corrupt=True)  # Encode negative samples with feature corruption
+        summary = torch.sigmoid(
+            positive.mean(dim=0)
+        )  # Compute the graph summary vector by taking the mean of node embeddings
+        positive = self.discriminator(positive, summary)  # Discriminate positive samples against the summary
+        negative = self.discriminator(negative, summary)  # Discriminate negative samples against the summary
         l1 = self.loss(positive, torch.ones_like(positive))  # Compute the loss for positive samples
-        l2 = self.loss(negative,
-                       torch.zeros_like(negative))  # Compute the loss for negative samples
+        l2 = self.loss(negative, torch.zeros_like(negative))  # Compute the loss for negative samples
         return l1 + l2  # Return the sum of both losses
 
 
@@ -126,12 +120,12 @@ class GCNEncoder(nn.Module):
     def __init__(self, n_in_feats, n_hidden, n_layers, p_drop):
         super(GCNEncoder, self).__init__()
         assert n_layers >= 2, "The number of GNN layers must be at least 2."
-        self.input_layer = GraphConv(n_in_feats, n_hidden, activation=nn.PReLU(
-            n_hidden))  # Input layer with PReLU activation
-        self.hidden_layers = nn.ModuleList([
-            GraphConv(n_hidden, n_hidden, activation=nn.PReLU(n_hidden)) for _ in
-            range(n_layers - 2)
-        ])  # Define hidden layers with PReLU activation
+        self.input_layer = GraphConv(
+            n_in_feats, n_hidden, activation=nn.PReLU(n_hidden)
+        )  # Input layer with PReLU activation
+        self.hidden_layers = nn.ModuleList(
+            [GraphConv(n_hidden, n_hidden, activation=nn.PReLU(n_hidden)) for _ in range(n_layers - 2)]
+        )  # Define hidden layers with PReLU activation
         self.output_layer = GraphConv(n_hidden, n_hidden)  # Output layer without activation
         self.dropout = nn.Dropout(p=p_drop)  # Dropout layer for regularization
 
@@ -177,8 +171,7 @@ class Discriminator(nn.Module):
 
     def __init__(self, n_hidden):
         super(Discriminator, self).__init__()
-        self.weight = nn.Parameter(
-            torch.Tensor(n_hidden, n_hidden))  # Define weights for bilinear transformation
+        self.weight = nn.Parameter(torch.Tensor(n_hidden, n_hidden))  # Define weights for bilinear transformation
         self.uniform_weight()  # Initialize the weights uniformly
 
     def uniform_weight(self):
@@ -204,6 +197,5 @@ class Discriminator(nn.Module):
         torch.Tensor
             Discrimination score indicating how likely the embeddings are real.
         """
-        feat = torch.matmul(feat,
-                            torch.matmul(self.weight, summary))  # Apply bilinear transformation
+        feat = torch.matmul(feat, torch.matmul(self.weight, summary))  # Apply bilinear transformation
         return feat

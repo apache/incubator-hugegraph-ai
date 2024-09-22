@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from typing import Optional
 
 from dgl.data import CoraGraphDataset, CiteseerGraphDataset, PubmedGraphDataset
 from pyhugegraph.api.graph import GraphManager
@@ -23,108 +24,75 @@ from pyhugegraph.client import PyHugeClient
 
 
 def clear_all_data(
-        ip='127.0.0.1',
-        port="8080",
-        graph_name='hugegraph',
-        user='admin',
-        pwd='xxx',
-        graphspace=None
+    ip: str = "127.0.0.1",
+    port: str = "8080",
+    graph: str = "hugegraph",
+    user: str = "admin",
+    pwd: str = "xxx",
+    graphspace: Optional[str] = None,
 ):
-    client: PyHugeClient = PyHugeClient(
-        ip=ip,
-        port=port,
-        graph=graph_name,
-        user=user,
-        pwd=pwd,
-        graphspace=graphspace
-    )
+    client: PyHugeClient = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
     client.graphs().clear_graph_all_data()
 
 
 def import_graph_from_dgl(
-        dataset_name,
-        ip='127.0.0.1',
-        port="8080",
-        graph_name='hugegraph',
-        user='admin',
-        pwd='xxx',
-        graphspace=None
+    dataset_name,
+    ip: str = "127.0.0.1",
+    port: str = "8080",
+    graph: str = "hugegraph",
+    user: str = "admin",
+    pwd: str = "xxx",
+    graphspace: str | None = None,
 ):
-    if dataset_name == 'cora':
+    if dataset_name == "cora":
         dataset_dgl = CoraGraphDataset()
-    elif dataset_name == 'citeseer':
+    elif dataset_name == "citeseer":
         dataset_dgl = CiteseerGraphDataset()
-    elif dataset_name == 'pubmed':
+    elif dataset_name == "pubmed":
         dataset_dgl = PubmedGraphDataset()
     else:
-        raise ValueError('dataset not supported')
+        raise ValueError("dataset not supported")
 
-    client: PyHugeClient = PyHugeClient(
-        ip=ip,
-        port=port,
-        graph=graph_name,
-        user=user,
-        pwd=pwd,
-        graphspace=graphspace
-    )
-    schema: SchemaManager = client.schema()
-    graph: GraphManager = client.graph()
+    client: PyHugeClient = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
+    client_schema: SchemaManager = client.schema()
+    client_graph: GraphManager = client.graph()
 
     graph_dgl = dataset_dgl[0]
     node_features = graph_dgl.ndata["feat"]
     node_labels = graph_dgl.ndata["label"]
     edges_src, edges_dst = graph_dgl.edges()
 
-    print(graph_dgl.ndata['feat'].shape)
-
-    schema.propertyKey("feat").asDouble().valueList().ifNotExist().create()
-    schema.propertyKey("label").asLong().ifNotExist().create()
+    client_schema.propertyKey("feat").asDouble().valueList().ifNotExist().create()
+    client_schema.propertyKey("label").asLong().ifNotExist().create()
 
     vertex_label = f"{dataset_name}_vertex"
     edge_label = f"{dataset_name}_edge"
-    schema.vertexLabel(vertex_label).useCustomizeStringId().properties(
-        "feat", "label").ifNotExist().create()
-    schema.edgeLabel(edge_label).sourceLabel(vertex_label).targetLabel(
-        vertex_label).ifNotExist().create()
+    client_schema.vertexLabel(vertex_label).useCustomizeNumberId().properties("feat", "label").ifNotExist().create()
+    client_schema.edgeLabel(edge_label).sourceLabel(vertex_label).targetLabel(vertex_label).ifNotExist().create()
 
     for node_id in range(graph_dgl.number_of_nodes()):
         node_feature = node_features[node_id].tolist()
         node_label = int(node_labels[node_id])
-        graph.addVertex(
-            label=vertex_label,
-            properties={
-                "feat": node_feature,
-                "label": node_label
-            },
-            id=dataset_name + str(node_id)
-        )
+        client_graph.addVertex(label=vertex_label, properties={"feat": node_feature, "label": node_label}, id=node_id)
 
     for src, dst in zip(edges_src.numpy(), edges_dst.numpy()):
-        graph.addEdge(
-            edge_label=edge_label,
-            out_id=dataset_name + str(src.item()),
-            in_id=dataset_name + str(dst.item()),
-            properties={}
-        )
+        client_graph.addEdge(edge_label=edge_label, out_id=src.item(), in_id=dst.item(), properties={})
 
-    schema.propertyKey("train_mask").asInt().valueList().ifNotExist().create()
-    schema.propertyKey("val_mask").asLong().valueList().ifNotExist().create()
-    schema.propertyKey("test_mask").asLong().valueList().ifNotExist().create()
+    client_schema.propertyKey("train_mask").asInt().valueList().ifNotExist().create()
+    client_schema.propertyKey("val_mask").asLong().valueList().ifNotExist().create()
+    client_schema.propertyKey("test_mask").asLong().valueList().ifNotExist().create()
     info_vertex = f"{dataset_name}_info_vertex"
-    schema.vertexLabel(info_vertex).useCustomizeStringId().properties(
-        "train_mask", "val_mask", "test_mask").ifNotExist().create()
+    client_schema.vertexLabel(info_vertex).useCustomizeStringId().properties(
+        "train_mask", "val_mask", "test_mask"
+    ).ifNotExist().create()
 
     train_mask = graph_dgl.ndata["train_mask"].int()
     val_mask = graph_dgl.ndata["val_mask"].int()
     test_mask = graph_dgl.ndata["test_mask"].int()
-    graph.addVertex(
+    client_graph.addVertex(
         label=info_vertex,
-        properties={
-            "train_mask": train_mask.tolist(),
-            "val_mask": val_mask.tolist(),
-            "test_mask": test_mask.tolist()
-        },
-        id=dataset_name + "_info"
+        properties={"train_mask": train_mask.tolist(), "val_mask": val_mask.tolist(), "test_mask": test_mask.tolist()},
+        id=dataset_name + "_info",
     )
 
 

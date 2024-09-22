@@ -14,6 +14,8 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
+
 import unittest
 
 from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
@@ -25,9 +27,7 @@ class TestNodeEmbed(unittest.TestCase):
     def setUp(self):
         self.hg2d = HugeGraph2DGL()
         self.graph, self.graph_info = self.hg2d.convert_graph(
-            vertex_label="cora_vertex",
-            edge_label="cora_edge",
-            info_vertex_label="cora_info_vertex"
+            info_vertex_label="cora_info_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
         )
         self.embed_size = 512
 
@@ -39,7 +39,7 @@ class TestNodeEmbed(unittest.TestCase):
                 model=DGI(
                     n_in_feats=self.graph_info["n_feat_dim"],
                     n_hidden=self.embed_size,
-                )
+                ),
             )
         except ValueError as e:
             self.fail(f"_check_graph failed: {str(e)}")
@@ -51,12 +51,12 @@ class TestNodeEmbed(unittest.TestCase):
             model=DGI(
                 n_in_feats=self.graph_info["n_feat_dim"],
                 n_hidden=self.embed_size,
-            )
+            ),
         )
         self.graph, self.graph_info = node_embed_task.train_and_embed(n_epochs=5, patience=5)
         embed_feat_dim = self.graph.ndata["feat"].shape[1]
         self.assertEqual(
             embed_feat_dim,
             self.embed_size,
-            f"Expected node feature dimension {self.embed_size}, but got {embed_feat_dim}."
+            f"Expected node feature dimension {self.embed_size}, but got {embed_feat_dim}.",
         )

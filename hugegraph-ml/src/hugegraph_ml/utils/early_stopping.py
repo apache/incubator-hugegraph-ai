@@ -15,9 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import copy
 
-import torch
+import copy
+from typing import Literal
 
 
 class EarlyStopping:
@@ -29,7 +29,7 @@ class EarlyStopping:
     ----------
     patience : int
         How long to wait after last time the monitored quantity improved.
-        Default is 5.
+        Default: float('inf')
     min_delta : float
         Minimum change in the monitored quantity to qualify as an improvement.
         Default is 0.0.
@@ -38,7 +38,9 @@ class EarlyStopping:
         Default is 'loss'.
     """
 
-    def __init__(self, patience, min_delta=0.0, monitor='loss'):
+    def __init__(
+        self, patience: int = float("inf"), min_delta: float = 0.0, monitor: Literal["loss", "accuracy"] = "loss"
+    ):
         self.patience = patience
         self.min_delta = min_delta
         self.counter = 0
@@ -75,17 +77,14 @@ class EarlyStopping:
                 self.early_stop = True
 
     def _is_improvement(self, current_value):
-        """
-        Check if there is an improvement in the monitored value.
-
-        Returns True if there is an improvement, False otherwise.
-        """
+        is_improved = False
         if self.monitor == "loss":
             # For loss, improvement is when the current value is smaller
-            return current_value < self.best_value - self.min_delta
+            is_improved = current_value < self.best_value - self.min_delta
         elif self.monitor == "accuracy":
             # For accuracy, improvement is when the current value is larger
-            return current_value > self.best_value + self.min_delta
+            is_improved = current_value > self.best_value + self.min_delta
+        return is_improved
 
     def save_best_model(self, model):
         self.best_model = copy.deepcopy(model.state_dict())

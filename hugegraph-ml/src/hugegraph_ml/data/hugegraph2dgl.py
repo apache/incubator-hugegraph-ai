@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from typing import Optional
+
 import dgl
 import torch
 from pyhugegraph.api.gremlin import GremlinManager
@@ -23,51 +25,43 @@ from pyhugegraph.client import PyHugeClient
 
 class HugeGraph2DGL:
     def __init__(
-            self,
-            ip='127.0.0.1',
-            port="8080",
-            graph='hugegraph',
-            user='admin',
-            pwd='xxx',
-            graphspace=None
+        self,
+        ip: str = "127.0.0.1",
+        port: str = "8080",
+        graph: str = "hugegraph",
+        user: str = "admin",
+        pwd: str = "xxx",
+        graphspace: Optional[str] = None,
     ):
         self._client: PyHugeClient = PyHugeClient(
-            ip=ip,
-            port=port,
-            graph=graph,
-            user=user,
-            pwd=pwd,
-            graphspace=graphspace
+            ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace
         )
         self._graph_germlin: GremlinManager = self._client.gremlin()
 
     def convert_graph(
-            self,
-            vertex_label,
-            info_vertex_label,
-            edge_label,
-            feat_key="feat",
-            label_key="label",
+        self,
+        info_vertex_label: str,
+        vertex_label: str,
+        edge_label: str,
+        feat_key: str = "feat",
+        label_key: str = "label",
     ):
-        vertices = self._graph_germlin.exec(f"g.V().hasLabel('{vertex_label}')")["data"]
         info_vertex = self._graph_germlin.exec(f"g.V().hasLabel('{info_vertex_label}')")["data"]
+        vertices = self._graph_germlin.exec(f"g.V().hasLabel('{vertex_label}')")["data"]
         edges = self._graph_germlin.exec(f"g.E().hasLabel('{edge_label}')")["data"]
 
         node_ids = [v["id"] for v in vertices]
+        node_id_to_index = {node_id: index for index, node_id in enumerate(node_ids)}
         node_feats = [v["properties"][feat_key] for v in vertices]
         node_labels = [v["properties"][label_key] for v in vertices]
         train_mask = info_vertex[0]["properties"]["train_mask"]
         val_mask = info_vertex[0]["properties"]["val_mask"]
         test_mask = info_vertex[0]["properties"]["test_mask"]
 
-        src_ids = [e["outV"] for e in edges]
-        dst_ids = [e["inV"] for e in edges]
+        src_indices = [node_id_to_index[e["outV"]] for e in edges]
+        dst_indices = [node_id_to_index[e["inV"]] for e in edges]
 
-        node_id_map = {node_id: idx for idx, node_id in enumerate(node_ids)}
-        mapped_src_ids = [node_id_map[s] for s in src_ids]
-        mapped_dst_ids = [node_id_map[d] for d in dst_ids]
-
-        graph = dgl.graph((mapped_src_ids, mapped_dst_ids))
+        graph = dgl.graph((src_indices, dst_indices))
         graph.ndata["feat"] = torch.tensor(node_feats, dtype=torch.float32)
         graph.ndata["label"] = torch.tensor(node_labels, dtype=torch.long)
         graph.ndata["train_mask"] = torch.tensor(train_mask, dtype=torch.bool)

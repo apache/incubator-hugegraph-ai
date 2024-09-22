@@ -15,23 +15,19 @@
 # specific language governing permissions and limitations
 # under the License.
 
+
 from typing import Tuple, Dict, Any
 
 import dgl
 import torch
 from dgl import DGLGraph
+from hugegraph_ml.utils.early_stopping import EarlyStopping
 from torch import nn
 from tqdm import trange
 
-from hugegraph_ml.utils.early_stopping import EarlyStopping
-
 
 class NodeEmbed:
-    def __init__(
-            self,
-            graph: DGLGraph,
-            graph_info: Dict[str, Any],
-            model: nn.Module):
+    def __init__(self, graph: DGLGraph, graph_info: Dict[str, Any], model: nn.Module):
         self.graph = graph
         self.graph_info = graph_info
         self._model = model
@@ -40,22 +36,22 @@ class NodeEmbed:
         self._check_graph()
 
     def _check_graph(self):
-        required_node_attrs = ['feat']
+        required_node_attrs = ["feat"]
         for attr in required_node_attrs:
             if attr not in self.graph.ndata:
                 raise ValueError(f"Graph is missing required node attribute '{attr}' in ndata.")
 
     def train_and_embed(
-            self,
-            add_self_loop: bool = True,
-            lr: float = 1e-3,
-            weight_decay: float = 0,
-            n_epochs: int = 200,
-            patience: int = 0,
-            gpu: int = -1
+        self,
+        add_self_loop: bool = True,
+        lr: float = 1e-3,
+        weight_decay: float = 0,
+        n_epochs: int = 200,
+        patience: int = float("inf"),
+        gpu: int = -1,
     ) -> Tuple[DGLGraph, Dict[str, Any]]:
         # Set device for training
-        self._device = "cuda:{}".format(gpu) if gpu != -1 and torch.cuda.is_available() else "cpu"
+        self._device = f"cuda:{gpu}" if gpu != -1 and torch.cuda.is_available() else "cpu"
         self._early_stopping = EarlyStopping(patience=patience)
         self._model = self._model.to(self._device)
         self.graph = self.graph.to(self._device)
@@ -75,7 +71,7 @@ class NodeEmbed:
             loss.backward()
             optimizer.step()
             # Log
-            epochs.set_description("epoch {} | train loss {:.4f}".format(epoch, loss.item()))
+            epochs.set_description(f"epoch {epoch} | train loss {loss.item():.4f}")
             # early stop
             self._early_stopping(loss.item(), self._model)
             torch.cuda.empty_cache()

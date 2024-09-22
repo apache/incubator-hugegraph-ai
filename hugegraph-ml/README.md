@@ -25,7 +25,7 @@ Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-d
     ```bash
     cd ./incubator-hugegraph-ai # better to use virtualenv (source venv/bin/activate) 
     pip install ./hugegraph-python-client
-    cd .\hugegraph-ml\
+    cd ./hugegraph-ml/
     pip install -e .
     ```
 4. Enter the project directory
@@ -49,7 +49,7 @@ import_graph_from_dgl("cora")
 
 Run [dgi_example.py](./src/hugegraph_ml/examples/dgi_example.py) to view the example.
 ```bash
-python .\hugegraph_ml\examples\dgi_example.py
+python ./hugegraph_ml/examples/dgi_example.py
 ```
 
 The specific process is as follows:
@@ -57,6 +57,7 @@ The specific process is as follows:
 **1. Graph data convert**
 
 Convert the graph from `HugeGraph` to `DGL` format.
+
 ```python
 from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 from hugegraph_ml.models.dgi import DGI
@@ -66,7 +67,9 @@ from hugegraph_ml.tasks.node_embed import NodeEmbed
 
 hg2d = HugeGraph2DGL()
 graph, graph_info = hg2d.convert_graph(
-  vertex_label="cora_vertex", edge_label="cora_edge", info_vertex_label="cora_info_vertex"
+   info_vertex_label="cora_info_vertex", 
+   vertex_label="cora_vertex",
+   edge_label="cora_edge"
 )
 ```
 
@@ -80,9 +83,7 @@ model = DGI(n_in_feats=graph_info["n_feat_dim"])
 
 ```python
 node_embed_task = NodeEmbed(graph=graph, graph_info=graph_info, model=model)
-embedded_graph, graph_info = node_embed_task.train_and_embed(
-  add_self_loop=True, n_epochs=300, gpu=0, patience=30
-)
+embedded_graph, graph_info = node_embed_task.train_and_embed(add_self_loop=True, n_epochs=300, patience=30)
 ```
 
 **4. Downstream tasks node classification using MLP**
@@ -90,7 +91,7 @@ embedded_graph, graph_info = node_embed_task.train_and_embed(
 ```python
 model = MLPClassifier(n_in_feat=graph_info["n_feat_dim"], n_out_feat=graph_info["n_classes"])
 node_clf_task = NodeClassify(graph=embedded_graph, graph_info=graph_info, model=model)
-node_clf_task.train(lr=1e-3, n_epochs=400, gpu=0, patience=40)
+node_clf_task.train(lr=1e-3, n_epochs=400, patience=40)
 print(node_clf_task.evaluate())
 ```
 
@@ -111,13 +112,15 @@ from hugegraph_ml.tasks.node_classify import NodeClassify
 
 hg2d = HugeGraph2DGL()
 graph, graph_info = hg2d.convert_graph(
-  vertex_label="cora_vertex", edge_label="cora_edge", info_vertex_label="cora_info_vertex"
+   info_vertex_label="cora_info_vertex", 
+   vertex_label="cora_vertex",
+   edge_label="cora_edge"
 )
 model = GRAND(
-  n_in_feats=graph_info["n_feat_dim"],
-  n_out_feats=graph_info["n_classes"]
+    n_in_feats=graph_info["n_feat_dim"],
+    n_out_feats=graph_info["n_classes"]
 )
 node_clf_task = NodeClassify(graph, graph_info, model)
-node_clf_task.train(lr=1e-2, weight_decay=5e-4, n_epochs=2000, patience=100, gpu=0)
+node_clf_task.train(lr=1e-2, weight_decay=5e-4, n_epochs=2000, patience=100)
 print(node_clf_task.evaluate())
 ```

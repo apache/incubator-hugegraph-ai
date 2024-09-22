@@ -27,9 +27,9 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/grand
 
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from dgl.nn.pytorch import GraphConv
+from torch import nn
 
 
 class GRAND(nn.Module):
@@ -63,18 +63,18 @@ class GRAND(nn.Module):
     """
 
     def __init__(
-            self,
-            n_in_feats,
-            n_out_feats,
-            n_hidden=32,
-            sample=4,
-            order=8,
-            p_drop_node=0.5,
-            p_drop_input=0.5,
-            p_drop_hidden=0.5,
-            bn=False,
-            temp=0.5,
-            lam=1.0
+        self,
+        n_in_feats,
+        n_out_feats,
+        n_hidden=32,
+        sample=4,
+        order=8,
+        p_drop_node=0.5,
+        p_drop_input=0.5,
+        p_drop_hidden=0.5,
+        bn=False,
+        temp=0.5,
+        lam=1.0,
     ):
         super(GRAND, self).__init__()
         self.sample = sample  # Number of augmentations
@@ -83,7 +83,7 @@ class GRAND(nn.Module):
         # MLP for final prediction
         self.mlp = MLP(n_in_feats, n_hidden, n_out_feats, p_drop_input, p_drop_hidden, bn)
         # Graph convolution layer without trainable weights
-        self.graph_conv = GraphConv(n_in_feats, n_in_feats, norm='both', weight=False, bias=False)
+        self.graph_conv = GraphConv(n_in_feats, n_in_feats, norm="both", weight=False, bias=False)
         self.p_drop_node = p_drop_node  # Dropout rate for nodes
         self.temp = temp
         self.lam = lam
@@ -102,17 +102,12 @@ class GRAND(nn.Module):
         torch.Tensor
             The computed consistency loss.
         """
-        ps = torch.stack([torch.exp(logit) for logit in logits],
-                         dim=2)  # Convert logits to probabilities
+        ps = torch.stack([torch.exp(logit) for logit in logits], dim=2)  # Convert logits to probabilities
         avg_p = torch.mean(ps, dim=2)  # Average the probabilities across augmentations
-        sharp_p = torch.pow(avg_p,
-                            1.0 / self.temp)  # Sharpen the probabilities using the temperature
-        sharp_p = sharp_p / sharp_p.sum(dim=1,
-                                        keepdim=True)  # Normalize the sharpened probabilities
-        sharp_p = sharp_p.unsqueeze(
-            2).detach()  # Detach to prevent gradients flowing through sharp_p
-        loss = self.lam * torch.mean(
-            (ps - sharp_p).pow(2).sum(dim=1))  # Compute the consistency loss
+        sharp_p = torch.pow(avg_p, 1.0 / self.temp)  # Sharpen the probabilities using the temperature
+        sharp_p = sharp_p / sharp_p.sum(dim=1, keepdim=True)  # Normalize the sharpened probabilities
+        sharp_p = sharp_p.unsqueeze(2).detach()  # Detach to prevent gradients flowing through sharp_p
+        loss = self.lam * torch.mean((ps - sharp_p).pow(2).sum(dim=1))  # Compute the consistency loss
         return loss
 
     def drop_node(self, feats):
@@ -130,8 +125,7 @@ class GRAND(nn.Module):
             Node features with dropout applied.
         """
         n = feats.shape[0]  # Number of nodes
-        drop_rates = torch.FloatTensor(np.ones(n) * self.p_drop_node).to(
-            feats.device)  # Dropout rates for each node
+        drop_rates = torch.FloatTensor(np.ones(n) * self.p_drop_node).to(feats.device)  # Dropout rates for each node
         masks = torch.bernoulli(1.0 - drop_rates).unsqueeze(1)  # Generate dropout masks
         feats = masks.to(feats.device) * feats  # Apply dropout to the node features
         return feats
@@ -153,7 +147,7 @@ class GRAND(nn.Module):
         feats = feats * (1.0 - self.p_drop_node)  # Scale the features
         return feats
 
-    def propagation(self, graph, X):
+    def propagation(self, graph, feats):
         """
         Propagate node features through the graph using graph convolution.
 
@@ -161,7 +155,7 @@ class GRAND(nn.Module):
         ----------
         graph : dgl.DGLGraph
             Input graph.
-        X : torch.Tensor
+        feats : torch.Tensor
             Node features.
 
         Returns
@@ -169,10 +163,10 @@ class GRAND(nn.Module):
         torch.Tensor
             Node features after propagation.
         """
-        y = X
+        y = feats
         for _ in range(self.order):
-            X = self.graph_conv(graph, X)  # Apply graph convolution
-            y = y + X  # Apply residual connection
+            feats = self.graph_conv(graph, feats)  # Apply graph convolution
+            y = y + feats  # Apply residual connection
         return y / (self.order + 1)  # Normalize the output by the order of propagation
 
     def loss(self, logits, labels):
@@ -208,8 +202,8 @@ class GRAND(nn.Module):
         """
         logits_list = []
         for _ in range(self.sample):
-            X = self.drop_node(feats)  # Apply node dropout
-            y = self.propagation(graph, X)  # Propagate through the graph
+            f = self.drop_node(feats)  # Apply node dropout
+            y = self.propagation(graph, f)  # Propagate through the graph
             logits_list.append(torch.log_softmax(self.mlp(y), dim=-1))  # Compute logits
         return logits_list
 
@@ -229,8 +223,8 @@ class GRAND(nn.Module):
         torch.Tensor
             Logits after inference.
         """
-        X = self.scale_node(feats)  # Scale node features
-        y = self.propagation(graph, X)  # Propagate through the graph
+        f = self.scale_node(feats)  # Scale node features
+        y = self.propagation(graph, f)  # Propagate through the graph
         return torch.log_softmax(self.mlp(y), dim=-1)  # Compute final logits
 
 
