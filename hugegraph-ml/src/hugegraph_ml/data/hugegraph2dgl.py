@@ -29,8 +29,8 @@ class HugeGraph2DGL:
         ip: str = "127.0.0.1",
         port: str = "8080",
         graph: str = "hugegraph",
-        user: str = "admin",
-        pwd: str = "xxx",
+        user: str = "",
+        pwd: str = "",
         graphspace: Optional[str] = None,
     ):
         self._client: PyHugeClient = PyHugeClient(
