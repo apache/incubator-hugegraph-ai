@@ -122,7 +122,7 @@ class JKNet(nn.Module):
         graph.ndata["h"] = self.jump(hidden_representations)
 
         # Message passing: aggregate node information using sum operation
-        graph.update_all(fn.copy_u("h", "m"), fn.sum("m", "h"))
+        graph.update_all(fn.copy_u("h", "m"), fn.sum("m", "h"))  # pylint: disable=no-member
 
         # Apply the output layer to the aggregated node features
         h = self.output_layer(graph.ndata["h"])

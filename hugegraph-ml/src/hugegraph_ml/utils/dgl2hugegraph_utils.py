@@ -27,8 +27,8 @@ def clear_all_data(
     ip: str = "127.0.0.1",
     port: str = "8080",
     graph: str = "hugegraph",
-    user: str = "admin",
-    pwd: str = "xxx",
+    user: str = "",
+    pwd: str = "",
     graphspace: Optional[str] = None,
 ):
     client: PyHugeClient = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
@@ -40,8 +40,8 @@ def import_graph_from_dgl(
     ip: str = "127.0.0.1",
     port: str = "8080",
     graph: str = "hugegraph",
-    user: str = "admin",
-    pwd: str = "xxx",
+    user: str = "",
+    pwd: str = "",
     graphspace: str | None = None,
 ):
     if dataset_name == "cora":
