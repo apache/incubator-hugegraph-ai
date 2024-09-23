@@ -17,7 +17,7 @@
 
 from typing import Optional
 
-from dgl.data import CoraGraphDataset, CiteseerGraphDataset, PubmedGraphDataset
+from dgl.data import CoraGraphDataset, CiteseerGraphDataset, PubmedGraphDataset, LegacyTUDataset, GINDataset
 from pyhugegraph.api.graph import GraphManager
 from pyhugegraph.api.schema import SchemaManager
 from pyhugegraph.client import PyHugeClient
@@ -95,7 +95,71 @@ def import_graph_from_dgl(
         id=dataset_name + "_info",
     )
 
+def import_graphs_from_dgl(
+    dataset_name,
+    ip: str = "127.0.0.1",
+    port: str = "8080",
+    graph: str = "hugegraph",
+    user: str = "",
+    pwd: str = "",
+    graphspace: str | None = None,
+):
+    dataset_name = dataset_name.upper()
+    # load dgl bultin dataset
+    if dataset_name in ["ENZYMES", "DD"]:
+        dataset_dgl = LegacyTUDataset(name=dataset_name)
+    elif dataset_name in ["MUTAG", "COLLAB", "NCI1", "PROTEINS", "PTC"]:
+        dataset_dgl = GINDataset(name=dataset_name, self_loop=True)
+    else:
+        raise ValueError("dataset not supported")
+    print(dataset_dgl.gclasses)
+    # hugegraph client
+    client: PyHugeClient = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
+    client_schema: SchemaManager = client.schema()
+    client_graph: GraphManager = client.graph()
+    # define vertexLabel/edgeLabel
+    graph_vertex_label = f"{dataset_name}_graph_vertex"
+    vertex_label = f"{dataset_name}_vertex"
+    edge_label = f"{dataset_name}_edge"
+    # create schema
+    client_schema.propertyKey("label").asLong().ifNotExist().create()
+    client_schema.propertyKey("feat").asDouble().valueList().ifNotExist().create()
+    client_schema.propertyKey("graph_id").asLong().ifNotExist().create()
+    client_schema.vertexLabel(graph_vertex_label).useAutomaticId().properties("label").ifNotExist().create()
+    client_schema.vertexLabel(vertex_label).useAutomaticId().properties("feat", "graph_id").ifNotExist().create()
+    client_schema.edgeLabel(edge_label).sourceLabel(vertex_label).targetLabel(vertex_label).properties(
+        "graph_id").ifNotExist().create()
+    client_schema.indexLabel("vertex_by_graph_id").onV(vertex_label).by("graph_id").secondary().ifNotExist().create()
+    client_schema.indexLabel("edge_by_graph_id").onE(edge_label).by("graph_id").secondary().ifNotExist().create()
+    # import to hugegraph
+    for (graph_dgl, label) in dataset_dgl:
+        graph_vertex = client_graph.addVertex(label=graph_vertex_label, properties={"label": int(label)})
+        if "feat" in graph_dgl.ndata:
+            node_feats = graph_dgl.ndata["feat"]
+        elif "attr" in graph_dgl.ndata:
+            node_feats = graph_dgl.ndata["attr"]
+        else:
+            raise ValueError("Node feature is empty")
+        assert graph_dgl.number_of_nodes() == node_feats.shape[0]
+        idx_to_vertex_id = {}
+        for idx in range(graph_dgl.number_of_nodes()):
+            feat = node_feats[idx].tolist()
+            vertex = client_graph.addVertex(
+                label=vertex_label,
+                properties={"feat": feat, "graph_id": graph_vertex.id}
+            )
+            idx_to_vertex_id[idx] = vertex.id
+        srcs, dsts = graph_dgl.edges()
+        for src, dst in zip(srcs.numpy(), dsts.numpy()):
+            client_graph.addEdge(
+                edge_label=edge_label,
+                out_id=idx_to_vertex_id[src],
+                in_id=idx_to_vertex_id[dst],
+                properties={"graph_id": graph_vertex.id}
+            )
+    client_graph.close()
 
 if __name__ == "__main__":
     clear_all_data()
     import_graph_from_dgl("cora")
+    import_graphs_from_dgl("MUTAG")

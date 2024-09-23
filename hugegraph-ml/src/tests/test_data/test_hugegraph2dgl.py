@@ -19,13 +19,15 @@
 import unittest
 
 import torch
-from dgl.data import CoraGraphDataset
+from dgl import graph
+from dgl.data import CoraGraphDataset, GINDataset
 from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 
 
 class TestHugegraph2dDGL(unittest.TestCase):
     def setUp(self):
         self.cora_data = CoraGraphDataset()[0]
+        self.mutag_dataset = GINDataset(name="MUTAG", self_loop=True)
 
     def test_convert_graph(self):
         hg2d = HugeGraph2DGL()
@@ -70,4 +72,22 @@ class TestHugegraph2dDGL(unittest.TestCase):
 
         self.assertEqual(
             graph_info["n_edges"], self.cora_data.number_of_edges(), "Number of edges in graph_info does not match."
+        )
+
+    def test__convert_graphs(self):
+        hg2d = HugeGraph2DGL()
+        graphs, graphs_info = hg2d.convert_graphs(
+            graph_vertex_label="MUTAG_graph_vertex",
+            vertex_label="MUTAG_vertex",
+            edge_label="MUTAG_edge",
+        )
+
+        self.assertEqual(
+            len(graphs), len(self.mutag_dataset.graphs), "Number of graphs does not match."
+        )
+        self.assertEqual(
+            graphs_info["n_classes"], self.mutag_dataset.gclasses, "Number of graph classes does not match."
+        )
+        self.assertEqual(
+            graphs_info["n_feat_dim"], self.mutag_dataset.dim_nfeats, "Node feature dimensions do not match."
         )
