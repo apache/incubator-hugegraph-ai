@@ -99,4 +99,4 @@ class PyHugeClient:
         return VersionManager
 
     def __repr__(self) -> str:
-        return f"{self.cfg}"
+        return str(self.cfg)

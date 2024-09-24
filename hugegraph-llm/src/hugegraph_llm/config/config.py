@@ -29,8 +29,8 @@ from hugegraph_llm.utils.log import log
 dir_name = os.path.dirname
 package_path = dir_name(dir_name(dir_name(dir_name(os.path.abspath(__file__)))))
 env_path = os.path.join(package_path, ".env")
-f_name = "config_prompt.yaml"
-yaml_file_path = os.path.join(package_path, f"src/hugegraph_llm/resources/demo/{f_name}")
+F_NAME = "config_prompt.yaml"
+yaml_file_path = os.path.join(package_path, f"src/hugegraph_llm/resources/demo/{F_NAME}")
 
 
 @dataclass
@@ -94,15 +94,15 @@ class PromptConfig(PromptData):
 
     def ensure_yaml_file_exists(self):
         if os.path.exists(yaml_file_path):
-            log.info(f"Loading prompt file '{f_name}' successfully.")
-            with open(yaml_file_path, "r") as file:
+            log.info("Loading prompt file '%s' successfully.", F_NAME)
+            with open(yaml_file_path, "r", encoding="utf-8") as file:
                 data = yaml.safe_load(file)
                 # Load existing values from the YAML file into the class attributes
                 for key, value in data.items():
                     setattr(self, key, value)
         else:
             self.save_to_yaml()
-            log.info(f"Prompt file '{yaml_file_path}' doesn't exist, create it.")
+            log.info("Prompt file '%s' doesn't exist, create it.", yaml_file_path)
 
 
     def save_to_yaml(self):
@@ -131,10 +131,10 @@ answer_prompt: |
 {indented_default_answer_template}
 
 """
-        with open(yaml_file_path, "w") as file:
+        with open(yaml_file_path, "w", encoding="utf-8") as file:
             file.write(yaml_content)
 
 
     def update_yaml_file(self):
         self.save_to_yaml()
-        log.info(f"Prompt file '{f_name}' updated successfully.")
+        log.info("Prompt file '%s' updated successfully.", F_NAME)
