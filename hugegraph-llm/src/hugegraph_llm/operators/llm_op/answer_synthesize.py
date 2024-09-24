@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=W0621
 
 import asyncio
 from typing import Any, Dict, Optional
@@ -102,6 +103,7 @@ class AnswerSynthesize:
     async def async_generate(self, context: Dict[str, Any], context_head_str: str,
                              context_tail_str: str, vector_result_context: str,
                              graph_result_context: str):
+        # pylint: disable=R0912 (too-many-branches)
         verbose = context.get("verbose") or False
         # TODO: replace task_cache with a better name
         task_cache = {}
