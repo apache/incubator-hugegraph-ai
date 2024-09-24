@@ -72,6 +72,8 @@ def rag_http_api(
             )
             # TODO/FIXME: handle QianFanClient error (not dict..critical)
             # log.critical(f"## {type(result)}, {json.dumps(result)}")
+            if "llm" in result:
+                result.pop("llm")
             if isinstance(result, dict):
                 log.critical(f"##1. {type(result)}")
                 return {"graph_recall": result}
