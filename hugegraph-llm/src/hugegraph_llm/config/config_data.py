@@ -68,23 +68,23 @@ class ConfigData:
     graph_user: Optional[str] = "admin"
     graph_pwd: Optional[str] = "xxx"
     graph_space: Optional[str] = None
-    
+
 
 # Additional static content like PromptConfig
 class PromptData:
 
-    # Data is detached from hugegraph-llm/src/hugegraph_llm/operators/llm_op/answer_synthesize.py
-    answer_prompt = f"""You are an expert in knowledge graphs and natural language processing. 
+    # Data is detached from llm_op/answer_synthesize.py
+    answer_prompt = """You are an expert in knowledge graphs and natural language processing.
 Your task is to provide a precise and accurate answer based on the given context.
 
 Context information is below.
 ---------------------
-{{context_str}}
+{context_str}
 ---------------------
 
 Given the context information and without using fictive knowledge, 
 answer the following query in a concise and professional manner.
-Query: {{query_str}}
+Query: {query_str}
 Answer:
 """
 
