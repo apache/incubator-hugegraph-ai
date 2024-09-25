@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=E1101
+
 import os
 from typing import Tuple, Literal, Optional
 
@@ -88,6 +90,7 @@ def rag_answer(
 
 
 def create_rag_block():
+    # pylint: disable=R0915 (too-many-statements)
     gr.Markdown("""## 2. RAG with HugeGraph""")
     with gr.Row():
         with gr.Column(scale=2):
