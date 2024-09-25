@@ -20,9 +20,9 @@
 import asyncio
 from typing import Any, Dict, Optional
 
+from hugegraph_llm.config import prompt
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
-from hugegraph_llm.config import prompt
 from hugegraph_llm.utils.log import log
 
 DEFAULT_ANSWER_TEMPLATE = prompt.answer_prompt
@@ -71,11 +71,8 @@ class AnswerSynthesize:
                            f"{self._context_body}\n"
                            f"{context_tail_str}".strip("\n"))
 
-            prompt = self._prompt_template.format(
-                context_str=context_str,
-                query_str=self._question,
-            )
-            response = self._llm.generate(prompt=prompt)
+            final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
+            response = self._llm.generate(prompt=final_prompt)
             return {"answer": response}
 
         vector_result = context.get("vector_result")
@@ -108,22 +105,22 @@ class AnswerSynthesize:
         # TODO: replace task_cache with a better name
         task_cache = {}
         if self._raw_answer:
-            prompt = self._question
-            task_cache["raw_task"] = asyncio.create_task(self._llm.agenerate(prompt=prompt))
+            final_prompt = self._question
+            task_cache["raw_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
         if self._vector_only_answer:
             context_str = (f"{context_head_str}\n"
                            f"{vector_result_context}\n"
                            f"{context_tail_str}".strip("\n"))
 
-            prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
-            task_cache["vector_only_task"] = asyncio.create_task(self._llm.agenerate(prompt=prompt))
+            final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
+            task_cache["vector_only_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
         if self._graph_only_answer:
             context_str = (f"{context_head_str}\n"
                            f"{graph_result_context}\n"
                            f"{context_tail_str}".strip("\n"))
 
-            prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
-            task_cache["graph_only_task"] = asyncio.create_task(self._llm.agenerate(prompt=prompt))
+            final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
+            task_cache["graph_only_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
         if self._graph_vector_answer:
             context_body_str = f"{vector_result_context}\n{graph_result_context}"
             if context.get("graph_ratio", 0.5) < 0.5:
@@ -132,9 +129,9 @@ class AnswerSynthesize:
                            f"{context_body_str}\n"
                            f"{context_tail_str}".strip("\n"))
 
-            prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
+            final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
             task_cache["graph_vector_task"] = asyncio.create_task(
-                self._llm.agenerate(prompt=prompt)
+                self._llm.agenerate(prompt=final_prompt)
             )
         # TODO: use log.debug instead of print
         if task_cache.get("raw_task"):

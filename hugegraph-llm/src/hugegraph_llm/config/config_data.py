@@ -73,7 +73,7 @@ class ConfigData:
 # Additional static content like PromptConfig
 class PromptData:
 
-    # Data is detached from hugegraph-llm/src/hugegraph_llm/operators/llm_op/answer_synthesize.py
+    # Data is detached from llm_op/answer_synthesize.py
     answer_prompt = """You are an expert in knowledge graphs and natural language processing.
 Your task is to provide a precise and accurate answer based on the given context.
 
