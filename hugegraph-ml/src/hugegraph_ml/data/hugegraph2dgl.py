@@ -109,8 +109,7 @@ class HugeGraph2DGL:
             graph.ndata["feat"] = torch.tensor(node_feats, dtype=torch.float32)
             graphs.append(graph)
             # record max num of node
-            if(graph.number_of_nodes() > max_n_nodes):
-                max_n_nodes = graph.number_of_nodes()
+            max_n_nodes = max(max_n_nodes, graph.number_of_nodes())
         # record dataset info
         graphs_info = {
             "n_graphs": len(graph_vertices),

@@ -19,7 +19,6 @@
 import unittest
 
 import torch
-from dgl import graph
 from dgl.data import CoraGraphDataset, GINDataset
 from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 
