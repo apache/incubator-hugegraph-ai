@@ -55,6 +55,7 @@ class CommitToKg:
         return data
 
     def load_into_graph(self, vertices, edges, schema):
+        # pylint: disable=R0912 (too-many-branches)
         vertex_label_map = {v_label["name"]: v_label for v_label in schema["vertexlabels"]}
         edge_label_map = {e_label["name"]: e_label for e_label in schema["edgelabels"]}
 

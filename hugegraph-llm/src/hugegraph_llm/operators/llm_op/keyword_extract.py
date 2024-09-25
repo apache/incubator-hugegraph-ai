@@ -88,7 +88,7 @@ class KeywordExtract:
         verbose = context.get("verbose") or False
         if verbose:
             from hugegraph_llm.utils.log import log
-            log.info(f"KEYWORDS: {context['keywords']}")
+            log.info("KEYWORDS: %s", context['keywords'])
 
         # extracting keywords & expanding synonyms increase the call count by 2
         context["call_count"] = context.get("call_count", 0) + 2

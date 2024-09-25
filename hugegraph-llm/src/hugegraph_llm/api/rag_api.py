@@ -77,11 +77,13 @@ def rag_http_api(
                 return {"graph_recall": json.dumps(result)}
 
         except TypeError as e:
-            log.error(f"TypeError in graph_rag_recall_api: {e}")
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+            log.error("TypeError in graph_rag_recall_api: %s", e)
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
         except Exception as e:
-            log.error(f"Unexpected error occurred: {e}")
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred.")
+            log.error("Unexpected error occurred: %s", e)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred."
+            ) from e
 
 
     @router.post("/config/graph", status_code=status.HTTP_201_CREATED)

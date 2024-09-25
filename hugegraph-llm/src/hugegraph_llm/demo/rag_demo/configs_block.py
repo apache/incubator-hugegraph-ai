@@ -55,8 +55,8 @@ def test_api_connection(url, method="GET", headers=None, params=None, body=None,
         if origin_call is None:
             try:
                 raise gr.Error(json.loads(resp.text).get("message", msg))
-            except json.decoder.JSONDecodeError and AttributeError:
-                raise gr.Error(resp.text)
+            except (json.decoder.JSONDecodeError, AttributeError) as e:
+                raise gr.Error(resp.text) from e
     return resp.status_code
 
 
@@ -181,6 +181,7 @@ def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
 
 
 def create_configs_block():
+    # pylint: disable=R0915 (too-many-statements)
     with gr.Accordion("1. Set up the HugeGraph server.", open=False):
         with gr.Row():
             graph_config_input = [
