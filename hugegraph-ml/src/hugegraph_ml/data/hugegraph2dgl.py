@@ -14,7 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
+import warnings
 from typing import Optional
 
 import dgl
@@ -50,32 +50,23 @@ class HugeGraph2DGL:
         vertices = self._graph_germlin.exec(f"g.V().hasLabel('{vertex_label}')")["data"]
         edges = self._graph_germlin.exec(f"g.E().hasLabel('{edge_label}')")["data"]
 
-        node_ids = [v["id"] for v in vertices]
-        node_id_to_index = {node_id: index for index, node_id in enumerate(node_ids)}
-        node_feats = [v["properties"][feat_key] for v in vertices]
-        node_labels = [v["properties"][label_key] for v in vertices]
+        graph_dgl = self._convert_graph_from_v_e(vertices, edges, feat_key, label_key)
+
         train_mask = info_vertex[0]["properties"]["train_mask"]
         val_mask = info_vertex[0]["properties"]["val_mask"]
         test_mask = info_vertex[0]["properties"]["test_mask"]
+        graph_dgl.ndata["train_mask"] = torch.tensor(train_mask, dtype=torch.bool)
+        graph_dgl.ndata["val_mask"] = torch.tensor(val_mask, dtype=torch.bool)
+        graph_dgl.ndata["test_mask"] = torch.tensor(test_mask, dtype=torch.bool)
 
-        src_indices = [node_id_to_index[e["outV"]] for e in edges]
-        dst_indices = [node_id_to_index[e["inV"]] for e in edges]
-
-        graph = dgl.graph((src_indices, dst_indices))
-        graph.ndata["feat"] = torch.tensor(node_feats, dtype=torch.float32)
-        graph.ndata["label"] = torch.tensor(node_labels, dtype=torch.long)
-        graph.ndata["train_mask"] = torch.tensor(train_mask, dtype=torch.bool)
-        graph.ndata["val_mask"] = torch.tensor(val_mask, dtype=torch.bool)
-        graph.ndata["test_mask"] = torch.tensor(test_mask, dtype=torch.bool)
-
-        graph_info = {
-            "n_nodes": graph.number_of_nodes(),
-            "n_edges": graph.number_of_edges(),
-            "n_classes": graph.ndata["label"].unique().shape[0],
-            "n_feat_dim": graph.ndata["feat"].size()[1],
+        graph_dgl_info = {
+            "n_nodes": graph_dgl.number_of_nodes(),
+            "n_edges": graph_dgl.number_of_edges(),
+            "n_classes": graph_dgl.ndata["label"].unique().shape[0],
+            "n_feat_dim": graph_dgl.ndata["feat"].size()[1],
         }
 
-        return graph, graph_info
+        return graph_dgl, graph_dgl_info
 
     def convert_graphs(
         self,
@@ -99,17 +90,10 @@ class HugeGraph2DGL:
                 f"g.V().hasLabel('{vertex_label}').has('graph_id', {graph_id})")["data"]
             edges = self._graph_germlin.exec(
                 f"g.E().hasLabel('{edge_label}').has('graph_id', {graph_id})")["data"]
-            node_idx = [v["id"] for v in vertices]
-            vertex_id_to_idx = {vertex_id: idx for idx, vertex_id in enumerate(node_idx)}
-            node_feats = [v["properties"][feat_key] for v in vertices]
-            src_idx = [vertex_id_to_idx[e["outV"]] for e in edges]
-            dst_idx = [vertex_id_to_idx[e["inV"]] for e in edges]
-            # construct dgl graph
-            graph = dgl.graph((src_idx, dst_idx))
-            graph.ndata["feat"] = torch.tensor(node_feats, dtype=torch.float32)
-            graphs.append(graph)
+            graph_dgl = self._convert_graph_from_v_e(vertices, edges, feat_key)
+            graphs.append(graph_dgl)
             # record max num of node
-            max_n_nodes = max(max_n_nodes, graph.number_of_nodes())
+            max_n_nodes = max(max_n_nodes, graph_dgl.number_of_nodes())
         # record dataset info
         graphs_info = {
             "n_graphs": len(graph_vertices),
@@ -119,6 +103,27 @@ class HugeGraph2DGL:
         }
         print(graphs_info)
         return graphs, graphs_info
+
+    @staticmethod
+    def _convert_graph_from_v_e(vertices, edges, feat_key=None, label_key=None):
+        if len(vertices) == 0:
+            warnings.warn("This graph has no vertices", Warning)
+            return dgl.graph(())
+        vertex_ids = [v["id"] for v in vertices]
+        vertex_id_to_idx = {vertex_id: idx for idx, vertex_id in enumerate(vertex_ids)}
+        src_idx = [vertex_id_to_idx[e["outV"]] for e in edges]
+        dst_idx = [vertex_id_to_idx[e["inV"]] for e in edges]
+        graph_dgl = dgl.graph((src_idx, dst_idx))
+
+        if feat_key and feat_key in vertices[0]["properties"]:
+            node_feats = [v["properties"][feat_key] for v in vertices]
+            graph_dgl.ndata["feat"] = torch.tensor(node_feats, dtype=torch.float32)
+
+        if label_key and label_key in vertices[0]["properties"]:
+            node_labels = [v["properties"][label_key] for v in vertices]
+            graph_dgl.ndata["label"] = torch.tensor(node_labels, dtype=torch.long)
+
+        return graph_dgl
 
 
 if __name__ == "__main__":

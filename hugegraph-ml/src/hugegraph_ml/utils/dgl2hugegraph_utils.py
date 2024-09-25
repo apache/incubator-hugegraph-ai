@@ -112,7 +112,6 @@ def import_graphs_from_dgl(
         dataset_dgl = GINDataset(name=dataset_name, self_loop=True)
     else:
         raise ValueError("dataset not supported")
-    print(dataset_dgl.gclasses)
     # hugegraph client
     client: PyHugeClient = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
     client_schema: SchemaManager = client.schema()
