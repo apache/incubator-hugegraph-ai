@@ -45,10 +45,8 @@ class WordExtract:
             context["query"] = self._query
 
         if self._llm is None:
-            self._llm = context.get("llm") or LLMs().get_llm()
+            self._llm = LLMs().get_llm()
             assert isinstance(self._llm, BaseLLM), "Invalid LLM Object."
-        if context.get("llm") is None:
-            context["llm"] = self._llm
 
         if isinstance(context.get("language"), str):
             self._language = context["language"].lower()
