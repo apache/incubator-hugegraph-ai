@@ -73,18 +73,20 @@ def rag_http_api(
             # TODO/FIXME: handle QianFanClient error (not dict..critical)
             # log.critical(f"## {type(result)}, {json.dumps(result)}")
             if isinstance(result, dict):
-                log.critical(f"##1. {type(result)}")
+                log.critical("##1. %s", type(result))
                 return {"graph_recall": result}
-            else:
-                log.critical(f"##2. {type(result)}")
-                return {"graph_recall": json.dumps(result)}
+
+            log.critical("##2. %s", type(result))
+            return {"graph_recall": json.dumps(result)}
 
         except TypeError as e:
-            log.error(f"TypeError in graph_rag_recall_api: {e}")
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+            log.error("TypeError in graph_rag_recall_api: %s", e)
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
         except Exception as e:
-            log.error(f"Unexpected error occurred: {e}")
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred.")
+            log.error("Unexpected error occurred: %s", e)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred."
+            ) from e
 
 
     @router.post("/config/graph", status_code=status.HTTP_201_CREATED)

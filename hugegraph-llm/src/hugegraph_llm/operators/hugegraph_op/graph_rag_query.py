@@ -86,6 +86,7 @@ class GraphRAGQuery:
         self._schema = ""
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        # pylint: disable=R0915 (too-many-statements)
         if self._client is None:
             if isinstance(context.get("graph_client"), PyHugeClient):
                 self._client = context["graph_client"]
@@ -119,7 +120,7 @@ class GraphRAGQuery:
 
             gremlin_query = VERTEX_QUERY_TPL.format(keywords=match_vids)
             result: List[Any] = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
-            log.debug(f"Vids query: {gremlin_query}")
+            log.debug("Vids query: %s", gremlin_query)
 
             vertex_knowledge = self._format_graph_from_vertex(query_result=result)
             gremlin_query = ID_QUERY_NEIGHBOR_TPL.format(
@@ -128,7 +129,7 @@ class GraphRAGQuery:
                 max_items=self._max_items,
                 edge_labels=edge_labels_str,
             )
-            log.debug(f"Kneighbor query: {gremlin_query}")
+            log.debug("Kneighbor query: %s", gremlin_query)
 
             result: List[Any] = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
             graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_graph_from_query_result(
