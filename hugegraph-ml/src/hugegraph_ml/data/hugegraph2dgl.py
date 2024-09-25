@@ -14,6 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
 import warnings
 from typing import Optional
 
@@ -21,6 +22,8 @@ import dgl
 import torch
 from pyhugegraph.api.gremlin import GremlinManager
 from pyhugegraph.client import PyHugeClient
+
+from hugegraph_ml.data.hugegraph_dataset import HugeGraphDataset
 
 
 class HugeGraph2DGL:
@@ -68,7 +71,7 @@ class HugeGraph2DGL:
 
         return graph_dgl, graph_dgl_info
 
-    def convert_graphs(
+    def convert_graph_dataset(
         self,
         graph_vertex_label: str,
         vertex_label: str,
@@ -102,7 +105,8 @@ class HugeGraph2DGL:
             "n_classes": len(set(graph_labels)),
         }
         print(graphs_info)
-        return graphs, graphs_info
+        dataset_dgl = HugeGraphDataset(graphs=graphs, labels=graph_labels, info=graphs_info)
+        return dataset_dgl
 
     @staticmethod
     def _convert_graph_from_v_e(vertices, edges, feat_key=None, label_key=None):
@@ -128,7 +132,7 @@ class HugeGraph2DGL:
 
 if __name__ == "__main__":
     hg2d = HugeGraph2DGL()
-    hg2d.convert_graphs(
+    dataset = hg2d.convert_graph_dataset(
         graph_vertex_label="MUTAG_graph_vertex",
         vertex_label="MUTAG_vertex",
         edge_label="MUTAG_edge",

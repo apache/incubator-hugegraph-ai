@@ -73,20 +73,25 @@ class TestHugegraph2dDGL(unittest.TestCase):
             graph_info["n_edges"], self.cora_data.number_of_edges(), "Number of edges in graph_info does not match."
         )
 
-    def test__convert_graphs(self):
+    def test_convert_graph_dataset(self):
         hg2d = HugeGraph2DGL()
-        graphs, graphs_info = hg2d.convert_graphs(
+        dataset_dgl = hg2d.convert_graph_dataset(
             graph_vertex_label="MUTAG_graph_vertex",
             vertex_label="MUTAG_vertex",
             edge_label="MUTAG_edge",
         )
 
         self.assertEqual(
-            len(graphs), len(self.mutag_dataset.graphs), "Number of graphs does not match."
+            len(dataset_dgl), len(self.mutag_dataset), "Number of graphs does not match."
+        )
+
+        self.assertEqual(
+            dataset_dgl.info["n_graphs"], len(self.mutag_dataset), "Number of graphs does not match."
+        )
+
+        self.assertEqual(
+            dataset_dgl.info["n_classes"], self.mutag_dataset.gclasses, "Number of graph classes does not match."
         )
         self.assertEqual(
-            graphs_info["n_classes"], self.mutag_dataset.gclasses, "Number of graph classes does not match."
-        )
-        self.assertEqual(
-            graphs_info["n_feat_dim"], self.mutag_dataset.dim_nfeats, "Node feature dimensions do not match."
+            dataset_dgl.info["n_feat_dim"], self.mutag_dataset.dim_nfeats, "Node feature dimensions do not match."
         )
