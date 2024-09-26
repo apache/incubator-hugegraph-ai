@@ -42,7 +42,7 @@ def import_graph_from_dgl(
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
-    graphspace: str | None = None,
+    graphspace: Optional[str] = None,
 ):
     dataset_name = dataset_name.upper()
     if dataset_name == "CORA":
@@ -102,7 +102,7 @@ def import_graphs_from_dgl(
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
-    graphspace: str | None = None,
+    graphspace: Optional[str] = None,
 ):
     dataset_name = dataset_name.upper()
     # load dgl bultin dataset
