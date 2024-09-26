@@ -1,190 +1,110 @@
-import sys
-import os
+import dgl.function as fn
 
-module_path = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-print(f"module_path = {module_path}")
-if module_path not in sys.path:
-    sys.path.append(module_path)
-print(sys.path)
-
-import argparse
-
-import dgl
 import numpy as np
 import torch
-from torch.nn import functional as F
-from models import DAGNN
-import copy
-import time
-from pyhugegraph.client import PyHugeClient
+from torch import nn
+from torch.nn import functional as F, Parameter
+import random
 
-import data_process
 
-def main(args):
-    # Step 1: Prepare graph data and retrieve train/validation/test index ============================= #
-    client = PyHugeClient(
-        "127.0.0.1",
-        "8080",
-        user="admin",
-        pwd="admin",
-        graph="hugegraph_diy",
-        # graphspace=None,
-    )
+class DAGNNConv(nn.Module):
+    def __init__(self, in_dim, k):
+        super(DAGNNConv, self).__init__()
 
-    dgl_g, features, labels = data_process.hugegraph2dgl(client=client)
+        self.s = Parameter(torch.FloatTensor(in_dim, 1))
+        self.k = k
 
-    train_percent = 0.7
-    val_percent = 0.15
-    train_mask, val_mask, test_mask = data_process.split_dataset(
-        dgl_g=dgl_g, train_percent=train_percent, val_percent=val_percent
-    )
+        self.reset_parameters()
 
-    print(dgl_g)
-    print(features.shape)
-    print(labels.shape)
-    num_ones = np.count_nonzero(train_mask == 1)
-    print(num_ones / dgl_g.num_nodes())
+    def reset_parameters(self):
+        gain = nn.init.calculate_gain("sigmoid")
+        nn.init.xavier_uniform_(self.s, gain=gain)
 
-    device = (
-        f"cuda:{args.gpu}" if args.gpu >= 0 and torch.cuda.is_available() else "cpu"
-    )
+    def forward(self, graph, feats):
+        with graph.local_scope():
+            results = [feats]
 
-    features = features.to(device)
-    labels = labels.to(device)
-    train_mask = train_mask.to(device)
-    val_mask = val_mask.to(device)
-    test_mask = test_mask.to(device)
+            degs = graph.in_degrees().float()
+            norm = torch.pow(degs, -0.5)
+            norm = norm.to(feats.device).unsqueeze(1)
 
-    in_feats = features.shape[1]
-    n_classes = args.num_classes
-    n_edges = dgl_g.num_edges()
+            for _ in range(self.k):
+                feats = feats * norm
+                graph.ndata["h"] = feats
+                graph.update_all(fn.copy_u("h", "m"), fn.sum("m", "h"))
+                feats = graph.ndata["h"]
+                feats = feats * norm
+                results.append(feats)
 
-    print(
-        """----Data statistics------'
-      #Edges %d
-      #Classes %d
-      #Train samples %d
-      #Val samples %d
-      #Test samples %d"""
-        % (
-            n_edges,
-            n_classes,
-            train_mask.int().sum().item(),
-            val_mask.int().sum().item(),
-            test_mask.int().sum().item(),
-        )
-    )
+            H = torch.stack(results, dim=1)
+            S = F.sigmoid(torch.matmul(H, self.s))
+            S = S.permute(0, 2, 1)
+            H = torch.matmul(S, H).squeeze()
 
-    dgl_g = dgl.remove_self_loop(dgl_g)
-    dgl_g = dgl.add_self_loop(dgl_g)
+            return H
 
-    dgl_g = dgl_g.to(device)
 
-    # Step 2: Create model =================================================================== #
-    model = DAGNN(
-        k=args.k,
-        in_dim=in_feats,
-        hid_dim=args.hid_dim,
-        out_dim=n_classes,
-        dropout=args.dropout,
-    )
-    model = model.to(device)
-    best_model = copy.deepcopy(model)
+class MLPLayer(nn.Module):
+    def __init__(self, in_dim, out_dim, bias=True, activation=None, dropout=0):
+        super(MLPLayer, self).__init__()
 
-    # Step 3: Create training components ===================================================== #
-    loss_fn = torch.nn.CrossEntropyLoss()
-    opt = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.lamb)
+        self.linear = nn.Linear(in_dim, out_dim, bias=bias)
+        self.activation = activation
+        self.dropout = nn.Dropout(dropout)
+        self.reset_parameters()
 
-    # Step 4: training epochs =============================================================== #
+    def reset_parameters(self):
+        gain = 1.0
+        if self.activation is F.relu:
+            gain = nn.init.calculate_gain("relu")
+        nn.init.xavier_uniform_(self.linear.weight, gain=gain)
+        if self.linear.bias is not None:
+            nn.init.zeros_(self.linear.bias)
 
-    mean = 0
-    acc = 0
-    no_improvement = 0
-    for epoch in range(args.n_epochs):
-        model.train()
-        if epoch >= 3:
-            t0 = time.time()
+    def forward(self, feats):
+        feats = self.dropout(feats)
+        feats = self.linear(feats)
+        if self.activation:
+            feats = self.activation(feats)
 
-        logits = model(dgl_g, features)
-        train_loss = loss_fn(logits[train_mask], labels[train_mask])
-        train_acc = torch.sum(
-            logits[train_mask].argmax(dim=1) == labels[train_mask]
-        ).item() / len(labels[train_mask])
-        opt.zero_grad()
-        train_loss.backward()
-        opt.step()
+        return feats
 
-        model.eval()
-        with torch.no_grad():
-            valid_loss = loss_fn(logits[val_mask], labels[val_mask])
-            valid_acc = torch.sum(
-                logits[val_mask].argmax(dim=1) == labels[val_mask]
-            ).item() / len(labels[val_mask])
 
-        if valid_acc < acc:
-            no_improvement += 1
-            if no_improvement == args.early_stopping:
-                print("Early stop.")
-                break
-        else:
-            no_improvement = 0
-            acc = valid_acc
-            best_model = copy.deepcopy(model)
-        if epoch >= 3:
-            mean = (mean * (epoch - 3) + (time.time() - t0)) / (epoch - 2)
-            print(
-                "Time(s) {:.4f} | Train Acc {:.4f} | Train Loss {:.4f} | Val Acc {:.4f} | Val loss {:.4f} | Best Acc {:.4f}".format(
-                    mean,
-                    train_acc,
-                    train_loss.item(),
-                    valid_acc,
-                    valid_loss.item(),
-                    acc,
-                )
+class DAGNN(nn.Module):
+    def __init__(
+        self,
+        k,
+        in_dim,
+        hid_dim,
+        out_dim,
+        bias=True,
+        activation=F.relu,
+        dropout=0,
+    ):
+        super(DAGNN, self).__init__()
+        self.mlp = nn.ModuleList()
+        self.mlp.append(
+            MLPLayer(
+                in_dim=in_dim,
+                out_dim=hid_dim,
+                bias=bias,
+                activation=activation,
+                dropout=dropout,
             )
+        )
+        self.mlp.append(
+            MLPLayer(
+                in_dim=hid_dim,
+                out_dim=out_dim,
+                bias=bias,
+                activation=None,
+                dropout=dropout,
+            )
+        )
+        self.dagnn = DAGNNConv(in_dim=out_dim, k=k)
 
-    best_model.eval()
-    logits = best_model(dgl_g, features)
-    test_acc = torch.sum(
-        logits[test_mask].argmax(dim=1) == labels[test_mask]
-    ).item() / len(labels[test_mask])
-    print("Test Acc {:.4f}".format(test_acc))
-
-    return test_acc
-
-
-if __name__ == "__main__":
-    """
-    DAGNN Model Hyperparameters
-    """
-    parser = argparse.ArgumentParser(description="DAGNN")
-    # data source params
-    parser.add_argument(
-        "--num-classes", type=int, default=7, help="the number of classes"
-    )
-    # cuda params
-    parser.add_argument("--gpu", type=int, default=0, help="gpu")
-    # training params
-    parser.add_argument(
-        "--n-epochs", type=int, default=1000, help="number of training epochs"
-    )
-    parser.add_argument(
-        "--early-stopping",
-        type=int,
-        default=100,
-        help="Patient epochs to wait before early stopping.",
-    )
-    parser.add_argument("--lr", type=float, default=0.01, help="Learning rate.")
-    parser.add_argument("--lamb", type=float, default=0.005, help="L2 reg.")
-    # model params
-    parser.add_argument(
-        "--k", type=int, default=12, help="Number of propagation layers."
-    )
-    parser.add_argument(
-        "--hid-dim", type=int, default=64, help="Hidden layer dimensionalities."
-    )
-    parser.add_argument("--dropout", type=float, default=0.8, help="dropout")
-    args = parser.parse_args()
-    print(args)
-
-    main(args)
+    def forward(self, graph, feats):
+        for layer in self.mlp:
+            feats = layer(feats)
+        feats = self.dagnn(graph, feats)
+        return feats
