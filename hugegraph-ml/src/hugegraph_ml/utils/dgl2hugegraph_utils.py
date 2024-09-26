@@ -44,11 +44,12 @@ def import_graph_from_dgl(
     pwd: str = "",
     graphspace: str | None = None,
 ):
-    if dataset_name == "cora":
+    dataset_name = dataset_name.upper()
+    if dataset_name == "CORA":
         dataset_dgl = CoraGraphDataset()
-    elif dataset_name == "citeseer":
+    elif dataset_name == "CITESEER":
         dataset_dgl = CiteseerGraphDataset()
-    elif dataset_name == "pubmed":
+    elif dataset_name == "PUBMED":
         dataset_dgl = PubmedGraphDataset()
     else:
         raise ValueError("dataset not supported")

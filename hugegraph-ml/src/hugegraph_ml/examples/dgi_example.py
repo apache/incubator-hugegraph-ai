@@ -23,19 +23,19 @@ from hugegraph_ml.tasks.node_classify import NodeClassify
 from hugegraph_ml.tasks.node_embed import NodeEmbed
 
 
-def dgi_example():
+def dgi_example(n_epochs_embed=300, n_epochs_clf=400):
     hg2d = HugeGraph2DGL()
     graph = hg2d.convert_graph(
-        graph_vertex_label="cora_graph_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
+        graph_vertex_label="CORA_graph_vertex", vertex_label="CORA_vertex", edge_label="CORA_edge"
     )
     model = DGI(n_in_feats=graph.ndata["feat"].shape[1])
     node_embed_task = NodeEmbed(graph=graph, model=model)
-    embedded_graph = node_embed_task.train_and_embed(add_self_loop=True, n_epochs=300, patience=30)
+    embedded_graph = node_embed_task.train_and_embed(add_self_loop=True, n_epochs=n_epochs_embed, patience=30)
     model = MLPClassifier(
         n_in_feat=embedded_graph.ndata["feat"].shape[1], n_out_feat=embedded_graph.ndata["label"].unique().shape[0]
     )
     node_clf_task = NodeClassify(graph=embedded_graph, model=model)
-    node_clf_task.train(lr=1e-3, n_epochs=400, patience=40)
+    node_clf_task.train(lr=1e-3, n_epochs=n_epochs_clf, patience=40)
     print(node_clf_task.evaluate())
 
 

@@ -66,31 +66,32 @@ from hugegraph_ml.tasks.node_classify import NodeClassify
 from hugegraph_ml.tasks.node_embed import NodeEmbed
 
 hg2d = HugeGraph2DGL()
-graph, graph_info = hg2d.convert_graph(
-   graph_vertex_label="cora_info_vertex",
-   vertex_label="cora_vertex",
-   edge_label="cora_edge"
+graph = hg2d.convert_graph(
+    graph_vertex_label="CORA_graph_vertex", vertex_label="CORA_vertex", edge_label="CORA_edge"
 )
 ```
 
 **2. Select model instance**
 
 ```python
-model = DGI(n_in_feats=graph_info["n_feat_dim"])
+model = DGI(n_in_feats=graph.ndata["feat"].shape[1])
 ```
 
 **3. Train model and node embedding**
 
 ```python
-node_embed_task = NodeEmbed(graph=graph, graph_info=graph_info, model=model)
-embedded_graph, graph_info = node_embed_task.train_and_embed(add_self_loop=True, n_epochs=300, patience=30)
+node_embed_task = NodeEmbed(graph=graph, model=model)
+embedded_graph = node_embed_task.train_and_embed(add_self_loop=True, n_epochs=300, patience=30)
 ```
 
 **4. Downstream tasks node classification using MLP**
 
 ```python
-model = MLPClassifier(n_in_feat=graph_info["n_feat_dim"], n_out_feat=graph_info["n_classes"])
-node_clf_task = NodeClassify(graph=embedded_graph, graph_info=graph_info, model=model)
+model = MLPClassifier(
+   n_in_feat=embedded_graph.ndata["feat"].shape[1], 
+   n_out_feat=embedded_graph.ndata["label"].unique().shape[0]
+)
+node_clf_task = NodeClassify(graph=embedded_graph, model=model)
 node_clf_task.train(lr=1e-3, n_epochs=400, patience=40)
 print(node_clf_task.evaluate())
 ```
@@ -111,16 +112,14 @@ from hugegraph_ml.models.grand import GRAND
 from hugegraph_ml.tasks.node_classify import NodeClassify
 
 hg2d = HugeGraph2DGL()
-graph, graph_info = hg2d.convert_graph(
-   graph_vertex_label="cora_info_vertex",
-   vertex_label="cora_vertex",
-   edge_label="cora_edge"
-)
-model = GRAND(
-   n_in_feats=graph_info["n_feat_dim"],
-   n_out_feats=graph_info["n_classes"]
-)
-node_clf_task = NodeClassify(graph, graph_info, model)
-node_clf_task.train(lr=1e-2, weight_decay=5e-4, n_epochs=2000, patience=100)
-print(node_clf_task.evaluate())
+ graph = hg2d.convert_graph(
+     graph_vertex_label="CORA_graph_vertex", vertex_label="CORA_vertex", edge_label="CORA_edge"
+ )
+ model = GRAND(
+    n_in_feats=graph.ndata["feat"].shape[1], 
+    n_out_feats=graph.ndata["label"].unique().shape[0]
+ )
+ node_clf_task = NodeClassify(graph, model)
+ node_clf_task.train(lr=1e-2, weight_decay=5e-4, n_epochs=2000, patience=100)
+ print(node_clf_task.evaluate())
 ```

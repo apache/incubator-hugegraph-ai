@@ -21,16 +21,16 @@ from hugegraph_ml.models.jknet import JKNet
 from hugegraph_ml.tasks.node_classify import NodeClassify
 
 
-def jknet_example():
+def jknet_example(n_epochs=200):
     hg2d = HugeGraph2DGL()
     graph = hg2d.convert_graph(
-        graph_vertex_label="cora_graph_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
+        graph_vertex_label="CORA_graph_vertex", vertex_label="CORA_vertex", edge_label="CORA_edge"
     )
     model = JKNet(
         n_in_feats=graph.ndata["feat"].shape[1], n_out_feats=graph.ndata["label"].unique().shape[0], mode="max"
     )
     node_clf_task = NodeClassify(graph, model)
-    node_clf_task.train(lr=0.005, weight_decay=0.0005, n_epochs=200, patience=200)
+    node_clf_task.train(lr=0.005, weight_decay=0.0005, n_epochs=n_epochs, patience=200)
     print(node_clf_task.evaluate())
 
 

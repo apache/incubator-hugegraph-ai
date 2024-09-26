@@ -27,7 +27,7 @@ class TestNodeClassify(unittest.TestCase):
     def setUp(self):
         self.hg2d = HugeGraph2DGL()
         self.graph = self.hg2d.convert_graph(
-            graph_vertex_label="cora_graph_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
+            graph_vertex_label="CORA_graph_vertex", vertex_label="CORA_vertex", edge_label="CORA_edge"
         )
 
     def test_check_graph(self):
