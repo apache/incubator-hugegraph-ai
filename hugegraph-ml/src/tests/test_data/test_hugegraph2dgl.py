@@ -31,7 +31,7 @@ class TestHugegraph2dDGL(unittest.TestCase):
     def test_convert_graph(self):
         hg2d = HugeGraph2DGL()
         graph = hg2d.convert_graph(
-            info_vertex_label="cora_info_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
+            graph_vertex_label="cora_graph_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
         )
         self.assertEqual(graph.number_of_nodes(), self.cora_data.number_of_nodes(), "Number of nodes does not match.")
 

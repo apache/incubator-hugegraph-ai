@@ -26,7 +26,7 @@ from hugegraph_ml.tasks.node_embed import NodeEmbed
 def grace_example():
     hg2d = HugeGraph2DGL()
     graph = hg2d.convert_graph(
-        info_vertex_label="cora_info_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
+        graph_vertex_label="cora_graph_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
     )
     model = GRACE(n_in_feats=graph.ndata["feat"].shape[1])
     node_embed_task = NodeEmbed(graph=graph, model=model)
@@ -34,7 +34,9 @@ def grace_example():
         add_self_loop=True, lr=0.001, weight_decay=1e-5, n_epochs=400, patience=40
     )
     model = MLPClassifier(
-        n_in_feat=graph.ndata["feat"].shape[1], n_out_feat=graph.ndata["label"].unique().shape[0], n_hidden=128
+        n_in_feat=embedded_graph.ndata["feat"].shape[1],
+        n_out_feat=embedded_graph.ndata["label"].unique().shape[0],
+        n_hidden=128
     )
     node_clf_task = NodeClassify(graph=embedded_graph, model=model)
     node_clf_task.train(lr=1e-3, n_epochs=300, patience=30)

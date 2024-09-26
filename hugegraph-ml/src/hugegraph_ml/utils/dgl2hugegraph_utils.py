@@ -81,8 +81,8 @@ def import_graph_from_dgl(
     client_schema.propertyKey("train_mask").asInt().valueList().ifNotExist().create()
     client_schema.propertyKey("val_mask").asLong().valueList().ifNotExist().create()
     client_schema.propertyKey("test_mask").asLong().valueList().ifNotExist().create()
-    info_vertex = f"{dataset_name}_info_vertex"
-    client_schema.vertexLabel(info_vertex).useCustomizeStringId().properties(
+    info_vertex = f"{dataset_name}_graph_vertex"
+    client_schema.vertexLabel(info_vertex).useAutomaticId().properties(
         "train_mask", "val_mask", "test_mask"
     ).ifNotExist().create()
 
@@ -91,8 +91,7 @@ def import_graph_from_dgl(
     test_mask = graph_dgl.ndata["test_mask"].int()
     client_graph.addVertex(
         label=info_vertex,
-        properties={"train_mask": train_mask.tolist(), "val_mask": val_mask.tolist(), "test_mask": test_mask.tolist()},
-        id=dataset_name + "_info",
+        properties={"train_mask": train_mask.tolist(), "val_mask": val_mask.tolist(), "test_mask": test_mask.tolist()}
     )
 
 def import_graphs_from_dgl(

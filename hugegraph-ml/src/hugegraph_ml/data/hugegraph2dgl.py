@@ -43,21 +43,21 @@ class HugeGraph2DGL:
 
     def convert_graph(
         self,
-        info_vertex_label: str,
+        graph_vertex_label: str,
         vertex_label: str,
         edge_label: str,
         feat_key: str = "feat",
         label_key: str = "label",
     ):
-        info_vertex = self._graph_germlin.exec(f"g.V().hasLabel('{info_vertex_label}')")["data"]
+        graph_vertex = self._graph_germlin.exec(f"g.V().hasLabel('{graph_vertex_label}')")["data"]
         vertices = self._graph_germlin.exec(f"g.V().hasLabel('{vertex_label}')")["data"]
         edges = self._graph_germlin.exec(f"g.E().hasLabel('{edge_label}')")["data"]
 
         graph_dgl = self._convert_graph_from_v_e(vertices, edges, feat_key, label_key)
 
-        train_mask = info_vertex[0]["properties"]["train_mask"]
-        val_mask = info_vertex[0]["properties"]["val_mask"]
-        test_mask = info_vertex[0]["properties"]["test_mask"]
+        train_mask = graph_vertex[0]["properties"]["train_mask"]
+        val_mask = graph_vertex[0]["properties"]["val_mask"]
+        test_mask = graph_vertex[0]["properties"]["test_mask"]
         graph_dgl.ndata["train_mask"] = torch.tensor(train_mask, dtype=torch.bool)
         graph_dgl.ndata["val_mask"] = torch.tensor(val_mask, dtype=torch.bool)
         graph_dgl.ndata["test_mask"] = torch.tensor(test_mask, dtype=torch.bool)
@@ -125,7 +125,7 @@ class HugeGraph2DGL:
 if __name__ == "__main__":
     hg2d = HugeGraph2DGL()
     graph = hg2d.convert_graph(
-        info_vertex_label="cora_info_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
+        graph_vertex_label="cora_graph_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
     )
     dataset = hg2d.convert_graph_dataset(
         graph_vertex_label="MUTAG_graph_vertex",

@@ -27,7 +27,7 @@ class TestNodeEmbed(unittest.TestCase):
     def setUp(self):
         self.hg2d = HugeGraph2DGL()
         self.graph = self.hg2d.convert_graph(
-            info_vertex_label="cora_info_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
+            graph_vertex_label="cora_graph_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
         )
         self.embed_size = 512
 
