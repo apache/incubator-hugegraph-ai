@@ -73,6 +73,6 @@ if __name__ == "__main__":
     print(schema.getRelations())
     print()
 
-    edge_path = "/data/user/jinsong/code/work/glcc-hugegraph/dataset/cora/cora.cites"
+    edge_path = "hugegraph-ml/dataset/cora/cora.cites"
     g = data_init(client, edge_path)
     print(g)
