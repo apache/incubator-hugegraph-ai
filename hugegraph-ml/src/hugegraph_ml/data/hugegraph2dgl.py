@@ -62,14 +62,7 @@ class HugeGraph2DGL:
         graph_dgl.ndata["val_mask"] = torch.tensor(val_mask, dtype=torch.bool)
         graph_dgl.ndata["test_mask"] = torch.tensor(test_mask, dtype=torch.bool)
 
-        graph_dgl_info = {
-            "n_nodes": graph_dgl.number_of_nodes(),
-            "n_edges": graph_dgl.number_of_edges(),
-            "n_classes": graph_dgl.ndata["label"].unique().shape[0],
-            "n_feat_dim": graph_dgl.ndata["feat"].size()[1],
-        }
-
-        return graph_dgl, graph_dgl_info
+        return graph_dgl
 
     def convert_graph_dataset(
         self,
@@ -126,12 +119,14 @@ class HugeGraph2DGL:
         if label_key and label_key in vertices[0]["properties"]:
             node_labels = [v["properties"][label_key] for v in vertices]
             graph_dgl.ndata["label"] = torch.tensor(node_labels, dtype=torch.long)
-
         return graph_dgl
 
 
 if __name__ == "__main__":
     hg2d = HugeGraph2DGL()
+    graph = hg2d.convert_graph(
+        info_vertex_label="cora_info_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
+    )
     dataset = hg2d.convert_graph_dataset(
         graph_vertex_label="MUTAG_graph_vertex",
         vertex_label="MUTAG_vertex",

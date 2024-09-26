@@ -23,11 +23,11 @@ from hugegraph_ml.tasks.node_classify import NodeClassify
 
 def grand_example():
     hg2d = HugeGraph2DGL()
-    graph, graph_info = hg2d.convert_graph(
+    graph = hg2d.convert_graph(
         info_vertex_label="cora_info_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
     )
-    model = GRAND(n_in_feats=graph_info["n_feat_dim"], n_out_feats=graph_info["n_classes"])
-    node_clf_task = NodeClassify(graph, graph_info, model)
+    model = GRAND(n_in_feats=graph.ndata["feat"].shape[1], n_out_feats=graph.ndata["label"].unique().shape[0])
+    node_clf_task = NodeClassify(graph, model)
     node_clf_task.train(lr=1e-2, weight_decay=5e-4, n_epochs=2000, patience=100)
     print(node_clf_task.evaluate())
 

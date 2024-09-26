@@ -26,7 +26,7 @@ from hugegraph_ml.tasks.node_embed import NodeEmbed
 class TestNodeEmbed(unittest.TestCase):
     def setUp(self):
         self.hg2d = HugeGraph2DGL()
-        self.graph, self.graph_info = self.hg2d.convert_graph(
+        self.graph = self.hg2d.convert_graph(
             info_vertex_label="cora_info_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
         )
         self.embed_size = 512
@@ -35,11 +35,7 @@ class TestNodeEmbed(unittest.TestCase):
         try:
             NodeEmbed(
                 graph=self.graph,
-                graph_info=self.graph_info,
-                model=DGI(
-                    n_in_feats=self.graph_info["n_feat_dim"],
-                    n_hidden=self.embed_size,
-                ),
+                model=DGI(n_in_feats=self.graph.ndata["feat"].shape[1], n_hidden=self.embed_size),
             )
         except ValueError as e:
             self.fail(f"_check_graph failed: {str(e)}")
@@ -47,13 +43,9 @@ class TestNodeEmbed(unittest.TestCase):
     def test_train_and_embed(self):
         node_embed_task = NodeEmbed(
             graph=self.graph,
-            graph_info=self.graph_info,
-            model=DGI(
-                n_in_feats=self.graph_info["n_feat_dim"],
-                n_hidden=self.embed_size,
-            ),
+            model=DGI(n_in_feats=self.graph.ndata["feat"].shape[1], n_hidden=self.embed_size),
         )
-        self.graph, self.graph_info = node_embed_task.train_and_embed(n_epochs=5, patience=5)
+        self.graph = node_embed_task.train_and_embed(n_epochs=5, patience=5)
         embed_feat_dim = self.graph.ndata["feat"].shape[1]
         self.assertEqual(
             embed_feat_dim,

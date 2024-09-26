@@ -26,7 +26,7 @@ from hugegraph_ml.tasks.node_classify import NodeClassify
 class TestNodeClassify(unittest.TestCase):
     def setUp(self):
         self.hg2d = HugeGraph2DGL()
-        self.graph, self.graph_info = self.hg2d.convert_graph(
+        self.graph = self.hg2d.convert_graph(
             info_vertex_label="cora_info_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
         )
 
@@ -34,8 +34,10 @@ class TestNodeClassify(unittest.TestCase):
         try:
             NodeClassify(
                 graph=self.graph,
-                graph_info=self.graph_info,
-                model=JKNet(n_in_feats=self.graph_info["n_feat_dim"], n_out_feats=self.graph_info["n_classes"]),
+                model=JKNet(
+                    n_in_feats=self.graph.ndata["feat"].shape[1],
+                    n_out_feats=self.graph.ndata["label"].unique().shape[0]
+                ),
             )
         except ValueError as e:
             self.fail(f"_check_graph failed: {str(e)}")
@@ -43,8 +45,10 @@ class TestNodeClassify(unittest.TestCase):
     def test_train_and_evaluate(self):
         node_classify_task = NodeClassify(
             graph=self.graph,
-            graph_info=self.graph_info,
-            model=JKNet(n_in_feats=self.graph_info["n_feat_dim"], n_out_feats=self.graph_info["n_classes"]),
+            model=JKNet(
+                n_in_feats=self.graph.ndata["feat"].shape[1],
+                n_out_feats=self.graph.ndata["label"].unique().shape[0]
+            ),
         )
         node_classify_task.train(n_epochs=10, patience=3)
         metrics = node_classify_task.evaluate()

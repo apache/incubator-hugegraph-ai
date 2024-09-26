@@ -16,20 +16,18 @@
 # under the License.
 
 
-from typing import Tuple, Dict, Any
-
 import dgl
 import torch
 from dgl import DGLGraph
-from hugegraph_ml.utils.early_stopping import EarlyStopping
 from torch import nn
 from tqdm import trange
 
+from hugegraph_ml.utils.early_stopping import EarlyStopping
+
 
 class NodeEmbed:
-    def __init__(self, graph: DGLGraph, graph_info: Dict[str, Any], model: nn.Module):
+    def __init__(self, graph: DGLGraph, model: nn.Module):
         self.graph = graph
-        self.graph_info = graph_info
         self._model = model
         self._device = ""
         self._early_stopping = None
@@ -49,7 +47,7 @@ class NodeEmbed:
         n_epochs: int = 200,
         patience: int = float("inf"),
         gpu: int = -1,
-    ) -> Tuple[DGLGraph, Dict[str, Any]]:
+    ) -> DGLGraph:
         # Set device for training
         self._device = f"cuda:{gpu}" if gpu != -1 and torch.cuda.is_available() else "cpu"
         self._early_stopping = EarlyStopping(patience=patience)
@@ -80,5 +78,4 @@ class NodeEmbed:
         self._early_stopping.load_best_model(self._model)
         embed_feat = self._model.get_embedding(self.graph, feat)
         self.graph.ndata["feat"] = embed_feat
-        self.graph_info["n_feat_dim"] = embed_feat.shape[1]
-        return self.graph, self.graph_info
+        return self.graph

@@ -16,19 +16,19 @@
 # under the License.
 
 
-from typing import Dict, Any, Literal
+from typing import Literal
 
 import torch
 from dgl import DGLGraph
-from hugegraph_ml.utils.early_stopping import EarlyStopping
 from torch import nn
 from tqdm import trange
 
+from hugegraph_ml.utils.early_stopping import EarlyStopping
+
 
 class NodeClassify:
-    def __init__(self, graph: DGLGraph, graph_info: Dict[str, Any], model: nn.Module):
+    def __init__(self, graph: DGLGraph, model: nn.Module):
         self.graph = graph
-        self.graph_info = graph_info
         self._model = model
         self._device = ""
         self._early_stopping = None
