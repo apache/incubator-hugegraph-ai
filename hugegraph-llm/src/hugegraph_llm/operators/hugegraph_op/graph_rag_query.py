@@ -30,8 +30,9 @@ VERTEX_QUERY_TPL = "g.V({keywords}).as('subj').toList()"
 ID_QUERY_NEIGHBOR_TPL = """
 g.V({keywords}).as('subj')
 .repeat(
-   bothE({edge_labels}).as('rel').otherV().as('obj')
-).times({max_deep})
+   bothE({edge_labels}).limit({edge_limit}).as('rel').otherV().dedup().as('obj')
+).times({max_deep}).emit()
+.simplePath()
 .path()
 .by(project('label', 'id', 'props')
    .by(label())
@@ -71,7 +72,7 @@ g.V().has('{prop}', within({keywords})).as('subj')
 
 class GraphRAGQuery:
 
-    def __init__(self, max_deep: int = 2, max_items: int = 30, prop_to_match: Optional[str] = None):
+    def __init__(self, max_deep: int = 2, max_items: int = 20, prop_to_match: Optional[str] = None):
         self._client = PyHugeClient(
             settings.graph_ip,
             settings.graph_port,
@@ -112,6 +113,8 @@ class GraphRAGQuery:
 
         _, edge_labels = self._extract_labels_from_schema()
         edge_labels_str = ",".join("'" + label + "'" for label in edge_labels)
+        # TODO: enhance the limit logic later
+        edge_limit_amount = len(edge_labels) * 10
 
         use_id_to_match = self._prop_to_match is None
         if use_id_to_match:
@@ -126,8 +129,9 @@ class GraphRAGQuery:
             gremlin_query = ID_QUERY_NEIGHBOR_TPL.format(
                 keywords=match_vids,
                 max_deep=self._max_deep,
-                max_items=self._max_items,
                 edge_labels=edge_labels_str,
+                edge_limit=edge_limit_amount,
+                max_items=self._max_items,
             )
             log.debug("Kneighbor query: %s", gremlin_query)
 
