@@ -30,7 +30,7 @@ class FetchGraphData:
             context = {}
         if "vertices" not in context:
             context["vertices"] = []
-        vertices = self.graph.gremlin().exec("g.V()")["data"]
+        vertices = self.graph.gremlin().exec("g.V().id()")["data"]
         for vertex in vertices:
             context["vertices"].append({
                 "id": vertex["id"],
