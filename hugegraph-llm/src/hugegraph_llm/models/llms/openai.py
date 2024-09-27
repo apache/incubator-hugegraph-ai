@@ -16,10 +16,10 @@
 # under the License.
 
 import json
-import os
 from typing import Callable, List, Optional, Dict, Any
 
 import openai
+from openai import OpenAI, AsyncOpenAI
 import tiktoken
 from retry import retry
 
@@ -38,8 +38,8 @@ class OpenAIClient(BaseLLM):
         max_tokens: int = 4096,
         temperature: float = 0.0,
     ) -> None:
-        openai.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        openai.api_base = api_base or os.getenv("OPENAI_API_BASE")
+        self.client = OpenAI(api_key=api_key, base_url=api_base)
+        self.aclient = AsyncOpenAI(api_key=api_key, base_url=api_base)
         self.model = model_name
         self.max_tokens = max_tokens
         self.temperature = temperature
@@ -55,20 +55,20 @@ class OpenAIClient(BaseLLM):
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
         try:
-            completions = openai.ChatCompletion.create(
+            completions = self.client.chat.completions.create(
                 model=self.model,
                 temperature=self.temperature,
                 max_tokens=self.max_tokens,
                 messages=messages,
             )
-            log.info("Token usage: %s", json.dumps(completions.usage))
+            log.info("Token usage: %s", json.dumps(completions.usage.to_json()))
             return completions.choices[0].message.content
         # catch context length / do not retry
-        except openai.error.InvalidRequestError as e:
+        except openai.BadRequestError as e:
             log.critical("Fatal: %s", e)
             return str(f"Error: {e}")
         # catch authorization errors / do not retry
-        except openai.error.AuthenticationError:
+        except openai.AuthenticationError:
             log.critical("The provided OpenAI API key is invalid")
             return "Error: The provided OpenAI API key is invalid"
         except Exception as e:
@@ -86,20 +86,20 @@ class OpenAIClient(BaseLLM):
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
         try:
-            completions = await openai.ChatCompletion.acreate(
+            completions = await self.aclient.chat.completions.create(
                 model=self.model,
                 temperature=self.temperature,
                 max_tokens=self.max_tokens,
                 messages=messages,
             )
-            log.info("Token usage: %s", json.dumps(completions.usage))
+            log.info("Token usage: %s", json.dumps(completions.usage.to_json()))
             return completions.choices[0].message.content
         # catch context length / do not retry
-        except openai.error.InvalidRequestError as e:
+        except openai.BadRequestError as e:
             log.critical("Fatal: %s", e)
             return str(f"Error: {e}")
         # catch authorization errors / do not retry
-        except openai.error.AuthenticationError:
+        except openai.AuthenticationError:
             log.critical("The provided OpenAI API key is invalid")
             return "Error: The provided OpenAI API key is invalid"
         except Exception as e:
@@ -116,7 +116,7 @@ class OpenAIClient(BaseLLM):
         if messages is None:
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
-        completions = openai.ChatCompletion.create(
+        completions = self.client.chat.completions.create(
             model=self.model,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
