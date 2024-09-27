@@ -61,7 +61,7 @@ class OpenAIClient(BaseLLM):
                 max_tokens=self.max_tokens,
                 messages=messages,
             )
-            log.info("Token usage: %s", json.dumps(completions.usage.to_json()))
+            log.info("Token usage: %s", completions.usage.model_dump_json())
             return completions.choices[0].message.content
         # catch context length / do not retry
         except openai.BadRequestError as e:
@@ -92,7 +92,7 @@ class OpenAIClient(BaseLLM):
                 max_tokens=self.max_tokens,
                 messages=messages,
             )
-            log.info("Token usage: %s", json.dumps(completions.usage.to_json()))
+            log.info("Token usage: %s", completions.usage.model_dump_json())
             return completions.choices[0].message.content
         # catch context length / do not retry
         except openai.BadRequestError as e:
