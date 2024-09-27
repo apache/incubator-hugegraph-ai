@@ -17,10 +17,9 @@
 
 import unittest
 
-import torch
-from dgl.data import CoraGraphDataset, GINDataset
-from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 from hugegraph_ml.examples.dgi_example import dgi_example
+from hugegraph_ml.examples.diffpool_example import diffpool_example
+from hugegraph_ml.examples.gin_example import gin_example
 from hugegraph_ml.examples.grace_example import grace_example
 from hugegraph_ml.examples.grand_example import grand_example
 from hugegraph_ml.examples.jknet_example import jknet_example
@@ -33,23 +32,35 @@ class TestHugegraph2dDGL(unittest.TestCase):
     def test_dgi_example(self):
         try:
             dgi_example(n_epochs_embed=self.test_n_epochs, n_epochs_clf=self.test_n_epochs)
-        except ValueError as e:
+        except ValueError:
             self.fail("model dgi example failed")
 
     def test_grace_example(self):
         try:
             grace_example(n_epochs_embed=self.test_n_epochs, n_epochs_clf=self.test_n_epochs)
-        except ValueError as e:
+        except ValueError:
             self.fail("model grace example failed")
 
     def test_grand_example(self):
         try:
             grand_example(n_epochs=self.test_n_epochs)
-        except ValueError as e:
+        except ValueError:
             self.fail("model grand example failed")
 
     def test_jknet_example(self):
         try:
             jknet_example(n_epochs=self.test_n_epochs)
-        except ValueError as e:
+        except ValueError:
             self.fail("model jknet example failed")
+
+    def test_diffpool_example(self):
+        try:
+            diffpool_example(n_epochs=self.test_n_epochs)
+        except ValueError:
+            self.fail("model diffpool example failed")
+
+    def test_gin_example(self):
+        try:
+            gin_example(n_epochs=self.test_n_epochs)
+        except ValueError:
+            self.fail("model gin example failed")

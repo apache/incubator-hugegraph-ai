@@ -124,10 +124,10 @@ class HugeGraph2DGL:
 
 if __name__ == "__main__":
     hg2d = HugeGraph2DGL()
-    graph = hg2d.convert_graph(
+    hg2d.convert_graph(
         graph_vertex_label="cora_graph_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
     )
-    dataset = hg2d.convert_graph_dataset(
+    hg2d.convert_graph_dataset(
         graph_vertex_label="MUTAG_graph_vertex",
         vertex_label="MUTAG_vertex",
         edge_label="MUTAG_edge",
