@@ -20,7 +20,6 @@ from typing import Dict, List, Any
 
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.llm_op.info_extract import extract_triples_by_regex
-from hugegraph_llm.utils.log import log
 
 
 def generate_disambiguate_prompt(triples):
