@@ -25,7 +25,7 @@ from hugegraph_ml.examples.grand_example import grand_example
 from hugegraph_ml.examples.jknet_example import jknet_example
 
 
-class TestHugegraph2dDGL(unittest.TestCase):
+class TestHugegraph2DGL(unittest.TestCase):
     def setUp(self):
         self.test_n_epochs = 3
 

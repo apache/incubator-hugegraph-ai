@@ -31,3 +31,4 @@ def setup_and_teardown():
     yield
 
     print("Teardown: Clearing HugeGraph data")
+    clear_all_data()
