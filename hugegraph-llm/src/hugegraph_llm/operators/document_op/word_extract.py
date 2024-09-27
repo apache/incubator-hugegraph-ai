@@ -63,7 +63,7 @@ class WordExtract:
         verbose = context.get("verbose") or False
         if verbose:
             from hugegraph_llm.utils.log import log
-            log.info(f"KEYWORDS: {context['keywords']}")
+            log.info("KEYWORDS: %s", context['keywords'])
 
         return context
 
