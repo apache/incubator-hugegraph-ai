@@ -26,6 +26,9 @@ from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 
+from hugegraph_llm.config import prompt
+from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
+
 
 def read_documents(input_file, input_text):
     if input_file:
@@ -69,6 +72,14 @@ def clean_vector_index():
 
 
 def build_vector_index(input_file, input_text):
+    print("/n/n/n")
+    print("/n/n/n")
+    print("/n/n/n")
+    print(prompt.extract_graph_prompt)
+    print("/n/n/n")
+    print("/n/n/n")
+    print("/n/n/n")
+    prompt.extract_graph_prompt = "chaochoachoahcoahochaohcoahcohaoch"
     texts = read_documents(input_file, input_text)
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
     context = builder.chunk_split(texts, "paragraph", "zh").build_vector_index().run()

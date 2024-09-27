@@ -46,6 +46,14 @@ def create_vector_graph_block():
     )
 
     schema = prompt.graph_schema
+    # SCHEMA_EXAMPLE_PROMPT = "hello"
+    prompt.extract_graph_prompt = """
+
+
+hello
+
+
+"""
 
     with gr.Row():
         with gr.Column():
@@ -59,7 +67,7 @@ def create_vector_graph_block():
                 )
         input_schema = gr.Textbox(value=schema, label="Schema", lines=15, show_copy_button=True)
         info_extract_template = gr.Textbox(
-            value=SCHEMA_EXAMPLE_PROMPT, label="Graph extract head", lines=15, show_copy_button=True
+            value=prompt.extract_graph_prompt, label="Graph extract head", lines=15, show_copy_button=True
         )
         out = gr.Code(label="Output", language="json", elem_classes="code-container-edit")
 
