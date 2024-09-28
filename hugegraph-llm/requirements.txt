@@ -1,4 +1,4 @@
-openai~=0.28.1
+openai~=1.47.1
 ollama~=0.2.1
 qianfan~=0.3.18
 retry~=0.9.2
