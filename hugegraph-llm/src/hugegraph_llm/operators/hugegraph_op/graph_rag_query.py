@@ -26,8 +26,8 @@ from pyhugegraph.client import PyHugeClient
 VERTEX_QUERY_TPL = "g.V({keywords}).as('subj').toList()"
 
 # TODO: we could use a simpler query (like kneighbor-api to get the edges)
-# TODO: use dedup() to filter duplicate paths
-ID_QUERY_NEIGHBOR_TPL = """
+# TODO: test with profile()/explain() to speed up the query
+VID_QUERY_NEIGHBOR_TPL = """
 g.V({keywords}).as('subj')
 .repeat(
    bothE({edge_labels}).limit({edge_limit}).as('rel').otherV().dedup().as('obj')
@@ -52,8 +52,9 @@ g.V({keywords}).as('subj')
 PROPERTY_QUERY_NEIGHBOR_TPL = """
 g.V().has('{prop}', within({keywords})).as('subj')
 .repeat(
-   bothE({edge_labels}).as('rel').otherV().as('obj')
-).times({max_deep})
+   bothE({edge_labels}).limit({edge_limit}).as('rel').otherV().dedup().as('obj')
+).times({max_deep}).emit()
+.simplePath()
 .path()
 .by(project('label', 'props')
    .by(label())
@@ -126,7 +127,7 @@ class GraphRAGQuery:
             log.debug("Vids query: %s", gremlin_query)
 
             vertex_knowledge = self._format_graph_from_vertex(query_result=result)
-            gremlin_query = ID_QUERY_NEIGHBOR_TPL.format(
+            gremlin_query = VID_QUERY_NEIGHBOR_TPL.format(
                 keywords=match_vids,
                 max_deep=self._max_deep,
                 edge_labels=edge_labels_str,
@@ -151,9 +152,10 @@ class GraphRAGQuery:
             gremlin_query = PROPERTY_QUERY_NEIGHBOR_TPL.format(
                 prop=self._prop_to_match,
                 keywords=keywords_str,
+                edge_labels=edge_labels_str,
+                edge_limit=edge_limit_amount,
                 max_deep=self._max_deep,
                 max_items=self._max_items,
-                edge_labels=edge_labels_str,
             )
             log.warning("Unable to find vid, downgraded to property query, please confirm if it meets expectation.")
 
