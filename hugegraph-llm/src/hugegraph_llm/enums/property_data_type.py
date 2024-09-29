@@ -20,13 +20,29 @@ from enum import Enum
 
 
 class PropertyDataType(Enum):
-    BOOLEAN = "boolean"
-    BYTE = "byte"
-    INT = "int"
-    LONG = "long"
-    FLOAT = "float"
-    DOUBLE = "double"
-    TEXT = "text"
-    BLOB = "blob"
-    DATE = "date"
-    UUID = "uuid"
+    BOOLEAN = "BOOLEAN"
+    BYTE = "BYTE"
+    INT = "INT"
+    LONG = "LONG"
+    FLOAT = "FLOAT"
+    DOUBLE = "DOUBLE"
+    TEXT = "TEXT"
+    BLOB = "BLOB"
+    DATE = "DATE"
+    UUID = "UUID"
+    DEFAULT = "TEXT"
+
+
+def default_value_map(data_type: str):
+    return {
+        "BOOLEAN": False,
+        "BYTE": 0,
+        "INT": 0,
+        "LONG": 0,
+        "FLOAT": 0.0,
+        "DOUBLE": 0.0,
+        "TEXT": "",
+        "BLOB": "",
+        "DATE": "2000-01-01",
+        "UUID": "",
+    }[data_type]

@@ -70,11 +70,10 @@ def rag_http_api(
                 near_neighbor_first=req.near_neighbor_first,
                 custom_related_information=req.custom_related_information
             )
-            # TODO/FIXME: handle QianFanClient error (not dict..critical)
+
             if isinstance(result, dict):
                 return {"graph_recall": result}
-            else:
-                return {"graph_recall": json.dumps(result)}
+            return {"graph_recall": json.dumps(result)}
 
         except TypeError as e:
             log.error("TypeError in graph_rag_recall_api: %s", e)

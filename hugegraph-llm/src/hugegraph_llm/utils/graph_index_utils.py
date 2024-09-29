@@ -110,8 +110,9 @@ def import_graph_data(data: str, schema: str) -> Union[str, Dict[str, Any]]:
 
         context = builder.commit_to_hugegraph().run(data_json)
         gr.Info("Import graph data successfully!")
+        print(context)
         return json.dumps(context, ensure_ascii=False, indent=2)
-    except Exception as e: # pylint: disable=W0718
+    except Exception as e:  # pylint: disable=W0718
         log.error(e)
         traceback.print_exc()
         # Note: can't use gr.Error here

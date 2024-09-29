@@ -15,10 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
 from typing import Dict, Any
 
 from hugegraph_llm.config import settings
+from hugegraph_llm.enums.property_data_type import PropertyDataType, default_value_map
 from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
 from pyhugegraph.utils.exceptions import NotFoundError, CreateError
@@ -54,10 +54,11 @@ class CommitToKg:
             self.load_into_graph(vertices, edges, schema)
         return data
 
-    def load_into_graph(self, vertices, edges, schema):
+    def load_into_graph(self, vertices, edges, schema):  # pylint: disable=too-many-statements
         # pylint: disable=R0912 (too-many-branches)
         vertex_label_map = {v_label["name"]: v_label for v_label in schema["vertexlabels"]}
         edge_label_map = {e_label["name"]: e_label for e_label in schema["edgelabels"]}
+        property_label_map = {p_label["name"]: p_label for p_label in schema["propertykeys"]}
 
         for vertex in vertices:
             input_label = vertex["label"]
@@ -72,20 +73,37 @@ class CommitToKg:
             nullable_keys = vertex_label.get("nullable_keys", [])
             non_null_keys = [key for key in vertex_label["properties"] if key not in nullable_keys]
 
+            has_problem = False
             # 2. Handle primary-keys mode vertex
             for pk in primary_keys:
                 if not input_properties.get(pk):
                     if len(primary_keys) == 1:
                         log.error("Primary-key '%s' missing in vertex %s, skip it & need check it again", pk, vertex)
-                        continue
-                    input_properties[pk] = "null" # FIXME: handle bool/number/date type
+                        has_problem = True
+                        break
+                    data_type = property_label_map[pk]["data_type"]
+                    input_properties[pk] = default_value_map(data_type)
                     log.warning("Primary-key '%s' missing in vertex %s, mark empty & need check it again!", pk, vertex)
+            if has_problem:
+                continue
 
             # 3. Ensure all non-nullable props are set
             for key in non_null_keys:
                 if key not in input_properties:
-                    input_properties[key] = "" # FIXME: handle bool/number/date type
-                    log.warning("Property '%s' missing in vertex %s, set to '' for now", key, vertex)
+                    data_type = property_label_map[key]["data_type"]
+                    default_value = default_value_map(data_type)
+                    input_properties[key] = default_value
+                    log.warning("Property '%s' missing in vertex %s, set to %s for now", key, vertex, default_value)
+
+            # 4. Check all data type value is right
+            for key, value in input_properties.items():
+                data_type = property_label_map[key]["data_type"]
+                if not self._check_property_data_type(data_type, value):
+                    log.error("Data type of property '%s' is not correct, skip it & need check it again", key)
+                    has_problem = True
+                    break
+            if has_problem:
+                continue
             try:
                 # TODO: we could try batch add vertices first, setback to single-mode if failed
                 vid = self.client.graph().addVertex(input_label, input_properties).id
@@ -112,17 +130,21 @@ class CommitToKg:
             except CreateError as e:
                 log.error("Error on creating edge: %s, %s", edge, e)
 
-    def init_schema_if_need(self, schema: object):
+    def init_schema_if_need(self, schema: dict):
+        properties = schema["propertykeys"]
         vertices = schema["vertexlabels"]
         edges = schema["edgelabels"]
+
+        for prop in properties:
+            self._create_property(prop)
 
         for vertex in vertices:
             vertex_label = vertex["name"]
             properties = vertex["properties"]
             nullable_keys = vertex["nullable_keys"]
             primary_keys = vertex["primary_keys"]
-            for prop in properties:
-                self.schema.propertyKey(prop).asText().ifNotExist().create()
+            # for prop in properties:
+            #     self.schema.propertyKey(prop).asText().ifNotExist().create()
             self.schema.vertexLabel(vertex_label).properties(*properties).nullableKeys(
                 *nullable_keys
             ).usePrimaryKeyId().primaryKeys(*primary_keys).ifNotExist().create()
@@ -132,8 +154,8 @@ class CommitToKg:
             source_vertex_label = edge["source_label"]
             target_vertex_label = edge["target_label"]
             properties = edge["properties"]
-            for prop in properties:
-                self.schema.propertyKey(prop).asText().ifNotExist().create()
+            # for prop in properties:
+            #     self.schema.propertyKey(prop).asText().ifNotExist().create()
             self.schema.edgeLabel(edge_label).sourceLabel(source_vertex_label).targetLabel(
                 target_vertex_label
             ).properties(*properties).nullableKeys(*properties).ifNotExist().create()
@@ -153,3 +175,56 @@ class CommitToKg:
             s_id = self.client.graph().addVertex("vertex", {"name": s}, id=s).id
             t_id = self.client.graph().addVertex("vertex", {"name": o}, id=o).id
             self.client.graph().addEdge("edge", s_id, t_id, {"name": p})
+
+    def _create_property(self, prop: dict):
+        # TODO: support cardinality
+        name = prop["name"]
+        data_type = prop["data_type"]
+        if prop["data_type"] == PropertyDataType.BOOLEAN.value:
+            # TODO: boolean type is not supported
+            log.error("Boolean type is not supported")
+            # self.schema.propertyKey(name).asBoolean().ifNotExist().create()
+        elif prop["data_type"] == PropertyDataType.BYTE.value:
+            # TODO: byte type is not supported
+            log.warning("Byte type is not supported, use int instead")
+            self.schema.propertyKey(name).asInt().ifNotExist().create()
+        elif prop["data_type"] == PropertyDataType.INT.value:
+            self.schema.propertyKey(name).asInt().ifNotExist().create()
+        elif prop["data_type"] == PropertyDataType.LONG.value:
+            self.schema.propertyKey(name).asLong().ifNotExist().create()
+        elif prop["data_type"] == PropertyDataType.FLOAT.value:
+            # TODO: float type is not supported
+            log.warning("Float type is not supported, use double instead")
+            self.schema.propertyKey(name).asDouble().ifNotExist().create()
+        elif prop["data_type"] == PropertyDataType.DOUBLE.value:
+            self.schema.propertyKey(name).asDouble().ifNotExist().create()
+        elif prop["data_type"] == PropertyDataType.TEXT.value:
+            self.schema.propertyKey(name).asText().ifNotExist().create()
+        elif prop["data_type"] == PropertyDataType.BLOB.value:
+            # TODO: blob type is not supported
+            log.warning("Blob type is not supported, use text instead")
+            self.schema.propertyKey(name).asText().ifNotExist().create()
+        elif prop["data_type"] == PropertyDataType.DATE.value:
+            self.schema.propertyKey(name).asDate().ifNotExist().create()
+        elif prop["data_type"] == PropertyDataType.UUID.value:
+            # TODO: uuid type is not supported
+            log.warning("UUID type is not supported, use text instead")
+            self.schema.propertyKey(name).asText().ifNotExist().create()
+        else:
+            log.error("Unknown data type: %s", data_type)
+
+    def _check_property_data_type(self, data_type: str, value: str) -> bool:
+        if data_type == PropertyDataType.BOOLEAN.value:
+            return isinstance(value, bool)
+        if data_type in (PropertyDataType.BYTE.value, PropertyDataType.INT.value, PropertyDataType.LONG.value):
+            return isinstance(value, int)
+        if data_type in (PropertyDataType.FLOAT.value, PropertyDataType.DOUBLE.value):
+            return isinstance(value, float)
+        if data_type in (PropertyDataType.TEXT.value, PropertyDataType.BLOB.value):
+            return isinstance(value, str)
+        # TODO: check ok below
+        if data_type == PropertyDataType.DATE.value:
+            return isinstance(value, str)
+        if data_type == PropertyDataType.UUID.value:
+            return isinstance(value, str)
+        raise ValueError(f"Unknown data type: {data_type}")

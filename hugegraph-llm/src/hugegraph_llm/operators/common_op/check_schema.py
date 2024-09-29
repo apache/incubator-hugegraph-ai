@@ -17,7 +17,10 @@
 
 
 from typing import Any, Optional, Dict
+
 from hugegraph_llm.utils.log import log
+from hugegraph_llm.enums.property_cardinality import PropertyCardinality
+from hugegraph_llm.enums.property_data_type import PropertyDataType
 
 
 class CheckSchema:
@@ -25,7 +28,8 @@ class CheckSchema:
         self.result = None
         self.data = data
 
-    def run(self, context: Optional[Dict[str, Any]] = None) -> Any:  # pylint: disable=too-many-branches
+    def run(self, context: Optional[Dict[str, Any]] = None) -> Any:  # pylint: disable=too-many-statements
+        # pylint: disable=too-many-branches
         if context is None:
             context = {}
         schema = self.data or context.get("schema")
@@ -35,6 +39,10 @@ class CheckSchema:
             raise ValueError("Input data does not contain 'vertexlabels' or 'edgelabels'.")
         if not isinstance(schema["vertexlabels"], list) or not isinstance(schema["edgelabels"], list):
             raise ValueError("'vertexlabels' or 'edgelabels' in input data is not a list.")
+        property_labels = schema.get("propertykeys", [])
+        property_label_set = {label["name"] for label in property_labels}
+        if not isinstance(property_labels, list):
+            raise ValueError("'propertykeys' in input data is not of correct type.")
         for vertex in schema["vertexlabels"]:
             if not isinstance(vertex, dict):
                 raise ValueError("Vertex in input data is not a dictionary.")
@@ -71,16 +79,38 @@ class CheckSchema:
                 else:
                     new_nullable_keys.append(key)
             vertex["nullable_keys"] = new_nullable_keys
+            for prop in properties:
+                if prop not in property_label_set:
+                    property_labels.append({
+                        "name": prop,
+                        "data_type": PropertyDataType.DEFAULT.value,
+                        "cardinality": PropertyCardinality.DEFAULT.value,
+                    })
+                    property_label_set.add(prop)
         for edge in schema["edgelabels"]:
             if not isinstance(edge, dict):
                 raise ValueError("Edge in input data is not a dictionary.")
             if "name" not in edge or "source_label" not in edge or "target_label" not in edge:
-                raise ValueError("Edge in input data does not contain " "'name', 'source_label', 'target_label'.")
+                raise ValueError("Edge in input data does not contain 'name', 'source_label', 'target_label'.")
             if (
                 not isinstance(edge["name"], str)
                 or not isinstance(edge["source_label"], str)
                 or not isinstance(edge["target_label"], str)
             ):
-                raise ValueError("'name', 'source_label', 'target_label' " "in edge is not of correct type.")
+                raise ValueError("'name', 'source_label', 'target_label' in edge is not of correct type.")
+            if "properties" not in edge:
+                edge["properties"] = []
+            if not isinstance(edge["properties"], list):
+                raise ValueError("'properties' in edge is not of correct type.")
+            properties = edge["properties"]
+            for prop in properties:
+                if prop not in property_label_set:
+                    property_labels.append({
+                        "name": prop,
+                        "data_type": PropertyDataType.DEFAULT.value,
+                        "cardinality": PropertyCardinality.DEFAULT.value,
+                    })
+                    property_label_set.add(prop)
+        schema["propertykeys"] = property_labels
         context.update({"schema": schema})
         return context

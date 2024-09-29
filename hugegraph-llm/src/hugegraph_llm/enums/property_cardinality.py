@@ -20,6 +20,7 @@ from enum import Enum
 
 
 class PropertyCardinality(Enum):
-    SINGLE = "single"
-    LIST = "list"
-    SET = "set"
+    SINGLE = "SINGLE"
+    LIST = "LIST"
+    SET = "SET"
+    DEFAULT = "SINGLE"
