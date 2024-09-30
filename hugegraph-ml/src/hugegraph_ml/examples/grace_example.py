@@ -25,9 +25,7 @@ from hugegraph_ml.tasks.node_embed import NodeEmbed
 
 def grace_example(n_epochs_embed=300, n_epochs_clf=400):
     hg2d = HugeGraph2DGL()
-    graph = hg2d.convert_graph(
-        graph_vertex_label="CORA_graph_vertex", vertex_label="CORA_vertex", edge_label="CORA_edge"
-    )
+    graph = hg2d.convert_graph(vertex_label="CORA_vertex", edge_label="CORA_edge")
     model = GRACE(n_in_feats=graph.ndata["feat"].shape[1])
     node_embed_task = NodeEmbed(graph=graph, model=model)
     embedded_graph = node_embed_task.train_and_embed(

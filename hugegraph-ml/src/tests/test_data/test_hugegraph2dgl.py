@@ -43,9 +43,7 @@ class TestHugegraph2dDGL(unittest.TestCase):
 
     def test_convert_graph(self):
         hg2d = HugeGraph2DGL()
-        graph = hg2d.convert_graph(
-            graph_vertex_label="CORA_graph_vertex", vertex_label="CORA_vertex", edge_label="CORA_edge"
-        )
+        graph = hg2d.convert_graph(vertex_label="CORA_vertex", edge_label="CORA_edge")
         self.assertEqual(graph.number_of_nodes(), self.cora_data.number_of_nodes(), "Number of nodes does not match.")
 
         self.assertEqual(graph.number_of_edges(), self.cora_data.number_of_edges(), "Number of edges does not match.")
@@ -107,8 +105,7 @@ class TestHugegraph2dDGL(unittest.TestCase):
         hg2d = HugeGraph2DGL()
         hetero_graph = hg2d.convert_hetero_graph(
             vertex_labels=["ACM_paper_v", "ACM_author_v", "ACM_field_v"],
-            edge_labels=["ACM_ap_e", "ACM_fp_e", "ACM_pa_e", "ACM_pf_e"],
-            mask_keys=["train_mask", "val_mask", "test_mask"],
+            edge_labels=["ACM_ap_e", "ACM_fp_e", "ACM_pa_e", "ACM_pf_e"]
         )
 
         for ntype in self.acm_data.ntypes:

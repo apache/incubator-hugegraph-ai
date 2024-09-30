@@ -45,24 +45,17 @@ class HugeGraph2DGL:
 
     def convert_graph(
         self,
-        graph_vertex_label: str,
         vertex_label: str,
         edge_label: str,
         feat_key: str = "feat",
         label_key: str = "label",
+        mask_keys: Optional[List[str]] = None,
     ):
-        graph_vertex = self._graph_germlin.exec(f"g.V().hasLabel('{graph_vertex_label}')")["data"]
+        if mask_keys is None:
+            mask_keys = ["train_mask", "val_mask", "test_mask"]
         vertices = self._graph_germlin.exec(f"g.V().hasLabel('{vertex_label}')")["data"]
         edges = self._graph_germlin.exec(f"g.E().hasLabel('{edge_label}')")["data"]
-
-        graph_dgl = self._convert_graph_from_v_e(vertices, edges, feat_key, label_key)
-
-        train_mask = graph_vertex[0]["properties"]["train_mask"]
-        val_mask = graph_vertex[0]["properties"]["val_mask"]
-        test_mask = graph_vertex[0]["properties"]["test_mask"]
-        graph_dgl.ndata["train_mask"] = torch.tensor(train_mask, dtype=torch.bool)
-        graph_dgl.ndata["val_mask"] = torch.tensor(val_mask, dtype=torch.bool)
-        graph_dgl.ndata["test_mask"] = torch.tensor(test_mask, dtype=torch.bool)
+        graph_dgl = self._convert_graph_from_v_e(vertices, edges, feat_key, label_key, mask_keys)
 
         return graph_dgl
 
@@ -74,6 +67,8 @@ class HugeGraph2DGL:
         label_key: str = "label",
         mask_keys: Optional[List[str]] = None,
     ):
+        if mask_keys is None:
+            mask_keys = ["train_mask", "val_mask", "test_mask"]
         vertex_label_id2idx = {}
         vertex_label_data = {}
         # for each vertex label
@@ -156,7 +151,7 @@ class HugeGraph2DGL:
         return dataset_dgl
 
     @staticmethod
-    def _convert_graph_from_v_e(vertices, edges, feat_key=None, label_key=None):
+    def _convert_graph_from_v_e(vertices, edges, feat_key=None, label_key=None, mask_keys=None):
         if len(vertices) == 0:
             warnings.warn("This graph has no vertices", Warning)
             return dgl.graph(())
@@ -169,18 +164,22 @@ class HugeGraph2DGL:
         if feat_key and feat_key in vertices[0]["properties"]:
             node_feats = [v["properties"][feat_key] for v in vertices]
             graph_dgl.ndata["feat"] = torch.tensor(node_feats, dtype=torch.float32)
-
         if label_key and label_key in vertices[0]["properties"]:
             node_labels = [v["properties"][label_key] for v in vertices]
             graph_dgl.ndata["label"] = torch.tensor(node_labels, dtype=torch.long)
+            print(torch.tensor(node_labels, dtype=torch.long).shape)
+        if mask_keys:
+            for mk in mask_keys:
+                if mk in vertices[0]["properties"]:
+                    node_masks = [v["properties"][mk] for v in vertices]
+                    mask = torch.tensor(node_masks, dtype=torch.bool)
+                    graph_dgl.ndata[mk] = mask
         return graph_dgl
 
 
 if __name__ == "__main__":
     hg2d = HugeGraph2DGL()
-    hg2d.convert_graph(
-        graph_vertex_label="cora_graph_vertex", vertex_label="cora_vertex", edge_label="cora_edge"
-    )
+    hg2d.convert_graph(vertex_label="CORA_vertex", edge_label="CORA_edge")
     hg2d.convert_graph_dataset(
         graph_vertex_label="MUTAG_graph_vertex",
         vertex_label="MUTAG_vertex",
@@ -188,6 +187,5 @@ if __name__ == "__main__":
     )
     hg2d.convert_hetero_graph(
         vertex_labels=["ACM_paper_v", "ACM_author_v", "ACM_field_v"],
-        edge_labels=["ACM_ap_e", "ACM_fp_e", "ACM_pa_e", "ACM_pf_e"],
-        mask_keys=["train_mask", "val_mask", "test_mask"],
+        edge_labels=["ACM_ap_e", "ACM_fp_e", "ACM_pa_e", "ACM_pf_e"]
     )

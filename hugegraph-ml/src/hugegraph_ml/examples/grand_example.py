@@ -23,9 +23,7 @@ from hugegraph_ml.tasks.node_classify import NodeClassify
 
 def grand_example(n_epochs=2000):
     hg2d = HugeGraph2DGL()
-    graph = hg2d.convert_graph(
-        graph_vertex_label="CORA_graph_vertex", vertex_label="CORA_vertex", edge_label="CORA_edge"
-    )
+    graph = hg2d.convert_graph(vertex_label="CORA_vertex", edge_label="CORA_edge")
     model = GRAND(n_in_feats=graph.ndata["feat"].shape[1], n_out_feats=graph.ndata["label"].unique().shape[0])
     node_clf_task = NodeClassify(graph, model)
     node_clf_task.train(lr=1e-2, weight_decay=5e-4, n_epochs=n_epochs, patience=100)

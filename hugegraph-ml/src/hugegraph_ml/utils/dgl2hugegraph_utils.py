@@ -60,31 +60,39 @@ def import_graph_from_dgl(
         dataset_dgl = PubmedGraphDataset()
     else:
         raise ValueError("dataset not supported")
+    graph_dgl = dataset_dgl[0]
 
     client: PyHugeClient = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
     client_schema: SchemaManager = client.schema()
     client_graph: GraphManager = client.graph()
 
-    graph_dgl = dataset_dgl[0]
-    node_feats = graph_dgl.ndata["feat"]
-    node_labels = graph_dgl.ndata["label"]
-    edges_src, edges_dst = graph_dgl.edges()
-
     client_schema.propertyKey("feat").asDouble().valueList().ifNotExist().create()
     client_schema.propertyKey("label").asLong().ifNotExist().create()
+    client_schema.propertyKey("train_mask").asInt().ifNotExist().create()
+    client_schema.propertyKey("val_mask").asInt().ifNotExist().create()
+    client_schema.propertyKey("test_mask").asInt().ifNotExist().create()
 
     vertex_label = f"{dataset_name}_vertex"
-    edge_label = f"{dataset_name}_edge"
-    client_schema.vertexLabel(vertex_label).useAutomaticId().properties("feat", "label").ifNotExist().create()
-    client_schema.edgeLabel(edge_label).sourceLabel(vertex_label).targetLabel(vertex_label).ifNotExist().create()
-
+    all_props = ["feat", "label", "train_mask", "val_mask", "test_mask"]
+    props = [p for p in all_props if p in graph_dgl.ndata]
+    props_value = {}
+    for p in props:
+        props_value[p] = graph_dgl.ndata[p].tolist()
+    client_schema.vertexLabel(vertex_label).useAutomaticId().properties(*props).ifNotExist().create()
     idx_to_vertex_id = {}
     for idx in range(graph_dgl.number_of_nodes()):
-        feat = node_feats[idx].tolist()
-        label = int(node_labels[idx])
-        vertex = client_graph.addVertex(label=vertex_label, properties={"feat": feat, "label": label})
+        properties = {}
+        for p in props:
+            if isinstance(props_value[p][idx], bool):
+                properties[p] = int(props_value[p][idx])
+            else:
+                properties[p] = props_value[p][idx]
+        vertex = client_graph.addVertex(label=vertex_label, properties=properties)
         idx_to_vertex_id[idx] = vertex.id
 
+    edge_label = f"{dataset_name}_edge"
+    client_schema.edgeLabel(edge_label).sourceLabel(vertex_label).targetLabel(vertex_label).ifNotExist().create()
+    edges_src, edges_dst = graph_dgl.edges()
     for src, dst in zip(edges_src.numpy(), edges_dst.numpy()):
         client_graph.addEdge(
             edge_label=edge_label,
@@ -93,21 +101,6 @@ def import_graph_from_dgl(
             properties={}
         )
 
-    client_schema.propertyKey("train_mask").asInt().valueList().ifNotExist().create()
-    client_schema.propertyKey("val_mask").asLong().valueList().ifNotExist().create()
-    client_schema.propertyKey("test_mask").asLong().valueList().ifNotExist().create()
-    info_vertex = f"{dataset_name}_graph_vertex"
-    client_schema.vertexLabel(info_vertex).useAutomaticId().properties(
-        "train_mask", "val_mask", "test_mask"
-    ).ifNotExist().create()
-
-    train_mask = graph_dgl.ndata["train_mask"].int()
-    val_mask = graph_dgl.ndata["val_mask"].int()
-    test_mask = graph_dgl.ndata["test_mask"].int()
-    client_graph.addVertex(
-        label=info_vertex,
-        properties={"train_mask": train_mask.tolist(), "val_mask": val_mask.tolist(), "test_mask": test_mask.tolist()}
-    )
 
 def import_graphs_from_dgl(
     dataset_name,
@@ -169,6 +162,7 @@ def import_graphs_from_dgl(
                 in_id=idx_to_vertex_id[dst],
                 properties={"graph_id": graph_vertex.id}
             )
+
 
 def import_hetero_graph_from_dgl(
     dataset_name,
@@ -242,6 +236,7 @@ def import_hetero_graph_from_dgl(
                 properties={}
             )
 
+
 def load_acm_raw():
     # reference: https://github.com/dmlc/dgl/blob/master/examples/pytorch/han/utils.py
     url = "dataset/ACM.mat"
@@ -309,10 +304,12 @@ def load_acm_raw():
 
     return hgraph
 
+
 def _get_mask(size, indices):
     mask = torch.zeros(size)
     mask[indices] = 1
     return mask.bool()
+
 
 if __name__ == "__main__":
     clear_all_data()
