@@ -15,8 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=too-many-branches
+
 import warnings
-from typing import Optional
+from typing import Optional, List
 
 import dgl
 import torch
@@ -64,6 +66,59 @@ class HugeGraph2DGL:
 
         return graph_dgl
 
+    def convert_hetero_graph(
+        self,
+        vertex_labels: List[str],
+        edge_labels: List[str],
+        feat_key: str = "feat",
+        label_key: str = "label",
+        mask_keys: Optional[List[str]] = None,
+    ):
+        vertex_label_id2idx = {}
+        vertex_label_data = {}
+        # for each vertex label
+        for vertex_label in vertex_labels:
+            vertices = self._graph_germlin.exec(f"g.V().hasLabel('{vertex_label}')")["data"]
+            if len(vertices) == 0:
+                warnings.warn(f"Graph has no vertices of vertex_label: {vertex_label}", Warning)
+            else:
+                vertex_ids = [v["id"] for v in vertices]
+                id2idx = {vertex_id: idx for idx, vertex_id in enumerate(vertex_ids)}
+                vertex_label_id2idx[vertex_label] = id2idx
+                # extract vertex property(feat, label, mask)
+                vertex_label_data[vertex_label] = {}
+                if feat_key in vertices[0]["properties"]:
+                    node_feats = torch.tensor([v["properties"][feat_key] for v in vertices], dtype=torch.float32)
+                    vertex_label_data[vertex_label]["feat"] = node_feats
+                if label_key in vertices[0]["properties"]:
+                    node_labels = torch.tensor([v["properties"][label_key] for v in vertices], dtype=torch.long)
+                    vertex_label_data[vertex_label]["label"] = node_labels
+                if mask_keys:
+                    for mk in mask_keys:
+                        if mk in vertices[0]["properties"]:
+                            mask = torch.tensor([v["properties"][mk] for v in vertices], dtype=torch.bool)
+                            vertex_label_data[vertex_label][mk] = mask
+        # build hetero graph from edges
+        edge_data_dict = {}
+        for edge_label in edge_labels:
+            edges = self._graph_germlin.exec(f"g.E().hasLabel('{edge_label}')")["data"]
+            if len(edges) == 0:
+                warnings.warn(f"Graph has no edges of edge_label: {edge_label}", Warning)
+            else:
+                src_vertex_label = edges[0]["outVLabel"]
+                src_idx = [vertex_label_id2idx[src_vertex_label][e["outV"]] for e in edges]
+                dst_vertex_label = edges[0]["inVLabel"]
+                dst_idx = [vertex_label_id2idx[dst_vertex_label][e["inV"]] for e in edges]
+                edge_data_dict[(src_vertex_label, edge_label, dst_vertex_label)] = (src_idx, dst_idx)
+        # add vertex properties data
+        hetero_graph = dgl.heterograph(edge_data_dict)
+        for vertex_label in vertex_labels:
+            for prop in vertex_label_data[vertex_label]:
+                hetero_graph.nodes[vertex_label].data[prop] = vertex_label_data[vertex_label][prop]
+
+        return hetero_graph
+
+
     def convert_graph_dataset(
         self,
         graph_vertex_label: str,
@@ -97,7 +152,6 @@ class HugeGraph2DGL:
             "n_feat_dim": graphs[0].ndata["feat"].size()[1],
             "n_classes": len(set(graph_labels)),
         }
-        print(graphs_info)
         dataset_dgl = HugeGraphDataset(graphs=graphs, labels=graph_labels, info=graphs_info)
         return dataset_dgl
 
@@ -131,4 +185,9 @@ if __name__ == "__main__":
         graph_vertex_label="MUTAG_graph_vertex",
         vertex_label="MUTAG_vertex",
         edge_label="MUTAG_edge",
+    )
+    hg2d.convert_hetero_graph(
+        vertex_labels=["ACM_paper_v", "ACM_author_v", "ACM_field_v"],
+        edge_labels=["ACM_ap_e", "ACM_fp_e", "ACM_pa_e", "ACM_pf_e"],
+        mask_keys=["train_mask", "val_mask", "test_mask"],
     )

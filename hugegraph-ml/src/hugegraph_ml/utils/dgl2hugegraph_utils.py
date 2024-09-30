@@ -66,7 +66,7 @@ def import_graph_from_dgl(
     client_graph: GraphManager = client.graph()
 
     graph_dgl = dataset_dgl[0]
-    node_features = graph_dgl.ndata["feat"]
+    node_feats = graph_dgl.ndata["feat"]
     node_labels = graph_dgl.ndata["label"]
     edges_src, edges_dst = graph_dgl.edges()
 
@@ -75,16 +75,23 @@ def import_graph_from_dgl(
 
     vertex_label = f"{dataset_name}_vertex"
     edge_label = f"{dataset_name}_edge"
-    client_schema.vertexLabel(vertex_label).useCustomizeNumberId().properties("feat", "label").ifNotExist().create()
+    client_schema.vertexLabel(vertex_label).useAutomaticId().properties("feat", "label").ifNotExist().create()
     client_schema.edgeLabel(edge_label).sourceLabel(vertex_label).targetLabel(vertex_label).ifNotExist().create()
 
-    for node_id in range(graph_dgl.number_of_nodes()):
-        node_feature = node_features[node_id].tolist()
-        node_label = int(node_labels[node_id])
-        client_graph.addVertex(label=vertex_label, properties={"feat": node_feature, "label": node_label}, id=node_id)
+    idx_to_vertex_id = {}
+    for idx in range(graph_dgl.number_of_nodes()):
+        feat = node_feats[idx].tolist()
+        label = int(node_labels[idx])
+        vertex = client_graph.addVertex(label=vertex_label, properties={"feat": feat, "label": label})
+        idx_to_vertex_id[idx] = vertex.id
 
     for src, dst in zip(edges_src.numpy(), edges_dst.numpy()):
-        client_graph.addEdge(edge_label=edge_label, out_id=src.item(), in_id=dst.item(), properties={})
+        client_graph.addEdge(
+            edge_label=edge_label,
+            out_id=idx_to_vertex_id[src],
+            in_id=idx_to_vertex_id[dst],
+            properties={}
+        )
 
     client_schema.propertyKey("train_mask").asInt().valueList().ifNotExist().create()
     client_schema.propertyKey("val_mask").asLong().valueList().ifNotExist().create()
@@ -146,7 +153,6 @@ def import_graphs_from_dgl(
             node_feats = graph_dgl.ndata["attr"]
         else:
             raise ValueError("Node feature is empty")
-        assert graph_dgl.number_of_nodes() == node_feats.shape[0]
         idx_to_vertex_id = {}
         for idx in range(graph_dgl.number_of_nodes()):
             feat = node_feats[idx].tolist()
@@ -163,8 +169,6 @@ def import_graphs_from_dgl(
                 in_id=idx_to_vertex_id[dst],
                 properties={"graph_id": graph_vertex.id}
             )
-    client_graph.close()
-
 
 def import_hetero_graph_from_dgl(
     dataset_name,
@@ -177,7 +181,7 @@ def import_hetero_graph_from_dgl(
 ):
     dataset_name = dataset_name.upper()
     if dataset_name == "ACM":
-        hetero_graph = _load_acm_raw()
+        hetero_graph = load_acm_raw()
     else:
         raise ValueError("dataset not supported")
     client: PyHugeClient = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
@@ -237,9 +241,9 @@ def import_hetero_graph_from_dgl(
                 in_id=ntype_idx_to_vertex_id[dst_type][dst],
                 properties={}
             )
-    client_graph.close()
 
-def _load_acm_raw():
+def load_acm_raw():
+    # reference: https://github.com/dmlc/dgl/blob/master/examples/pytorch/han/utils.py
     url = "dataset/ACM.mat"
     data_path = get_download_dir() + "/ACM.mat"
     if not os.path.exists(data_path):

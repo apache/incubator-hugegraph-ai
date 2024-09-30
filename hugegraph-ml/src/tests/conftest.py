@@ -18,15 +18,17 @@
 
 import pytest
 
-from hugegraph_ml.utils.dgl2hugegraph_utils import clear_all_data, import_graph_from_dgl, import_graphs_from_dgl
+from hugegraph_ml.utils.dgl2hugegraph_utils import clear_all_data, import_graph_from_dgl, import_graphs_from_dgl, \
+    import_hetero_graph_from_dgl
 
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_and_teardown():
     print("Setup: Importing DGL dataset to HugeGraph")
     clear_all_data()
-    import_graph_from_dgl("cora")
+    import_graph_from_dgl("CORA")
     import_graphs_from_dgl("MUTAG")
+    import_hetero_graph_from_dgl("ACM")
 
     yield
 
