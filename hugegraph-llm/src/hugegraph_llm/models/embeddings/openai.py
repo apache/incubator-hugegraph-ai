@@ -18,8 +18,7 @@
 
 from typing import Optional, List
 
-import os
-import openai
+from openai import OpenAI, AsyncOpenAI
 
 
 class OpenAIEmbedding:
@@ -29,17 +28,16 @@ class OpenAIEmbedding:
             api_key: Optional[str] = None,
             api_base: Optional[str] = None
     ):
-        openai.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        openai.api_base = api_base or os.getenv("OPENAI_API_BASE")
+        self.client = OpenAI(api_key=api_key, base_url=api_base)
+        self.aclient = AsyncOpenAI(api_key=api_key, base_url=api_base)
         self.embedding_model_name = model_name
-        self.client = openai.Embedding()
 
     def get_text_embedding(self, text: str) -> List[float]:
         """Comment"""
-        response = self.client.create(input=text, model=self.embedding_model_name)
+        response = self.client.embeddings.create(input=text, model=self.embedding_model_name)
         return response.data[0].embedding
 
     async def async_get_text_embedding(self, text: str) -> List[float]:
         """Comment"""
-        response = await self.client.acreate(input=text, model=self.embedding_model_name)
+        response = await self.aclient.embeddings.create(input=text, model=self.embedding_model_name)
         return response.data[0].embedding
