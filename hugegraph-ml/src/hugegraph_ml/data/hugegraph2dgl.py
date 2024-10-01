@@ -167,7 +167,6 @@ class HugeGraph2DGL:
         if label_key and label_key in vertices[0]["properties"]:
             node_labels = [v["properties"][label_key] for v in vertices]
             graph_dgl.ndata["label"] = torch.tensor(node_labels, dtype=torch.long)
-            print(torch.tensor(node_labels, dtype=torch.long).shape)
         if mask_keys:
             for mk in mask_keys:
                 if mk in vertices[0]["properties"]:

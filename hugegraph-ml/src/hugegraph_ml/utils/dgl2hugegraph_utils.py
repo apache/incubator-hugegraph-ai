@@ -15,6 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-statements
+
 import os
 from typing import Optional
 
@@ -29,6 +32,7 @@ from pyhugegraph.api.graph import GraphManager
 from pyhugegraph.api.schema import SchemaManager
 from pyhugegraph.client import PyHugeClient
 
+MAX_BATCH_NUM = 500
 
 def clear_all_data(
     ip: str = "127.0.0.1",
@@ -53,11 +57,11 @@ def import_graph_from_dgl(
 ):
     dataset_name = dataset_name.upper()
     if dataset_name == "CORA":
-        dataset_dgl = CoraGraphDataset()
+        dataset_dgl = CoraGraphDataset(verbose=False)
     elif dataset_name == "CITESEER":
-        dataset_dgl = CiteseerGraphDataset()
+        dataset_dgl = CiteseerGraphDataset(verbose=False)
     elif dataset_name == "PUBMED":
-        dataset_dgl = PubmedGraphDataset()
+        dataset_dgl = PubmedGraphDataset(verbose=False)
     else:
         raise ValueError("dataset not supported")
     graph_dgl = dataset_dgl[0]
@@ -65,13 +69,13 @@ def import_graph_from_dgl(
     client: PyHugeClient = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
     client_schema: SchemaManager = client.schema()
     client_graph: GraphManager = client.graph()
-
+    # create property schema
     client_schema.propertyKey("feat").asDouble().valueList().ifNotExist().create()
     client_schema.propertyKey("label").asLong().ifNotExist().create()
     client_schema.propertyKey("train_mask").asInt().ifNotExist().create()
     client_schema.propertyKey("val_mask").asInt().ifNotExist().create()
     client_schema.propertyKey("test_mask").asInt().ifNotExist().create()
-
+    # check props and create vertex label
     vertex_label = f"{dataset_name}_vertex"
     all_props = ["feat", "label", "train_mask", "val_mask", "test_mask"]
     props = [p for p in all_props if p in graph_dgl.ndata]
@@ -79,27 +83,38 @@ def import_graph_from_dgl(
     for p in props:
         props_value[p] = graph_dgl.ndata[p].tolist()
     client_schema.vertexLabel(vertex_label).useAutomaticId().properties(*props).ifNotExist().create()
+    # add vertices for batch (note MAX_BATCH_NUM)
     idx_to_vertex_id = {}
+    vdatas = []
+    vidxs = []
     for idx in range(graph_dgl.number_of_nodes()):
-        properties = {}
-        for p in props:
-            if isinstance(props_value[p][idx], bool):
-                properties[p] = int(props_value[p][idx])
-            else:
-                properties[p] = props_value[p][idx]
-        vertex = client_graph.addVertex(label=vertex_label, properties=properties)
-        idx_to_vertex_id[idx] = vertex.id
+        # extract props
+        properties = {p: int(props_value[p][idx]) if isinstance(props_value[p][idx], bool) else props_value[p][idx]
+                      for p in props}
+        vdata = [vertex_label, properties]
+        vdatas.append(vdata)
+        vidxs.append(idx)
+        if len(vdatas) == MAX_BATCH_NUM:
+            idx_to_vertex_id.update(_add_batch_vertices(client_graph, vdatas, vidxs))
+            vdatas.clear()
+            vidxs.clear()
+    # add rest vertices
+    if len(vdatas) > 0:
+        idx_to_vertex_id.update(_add_batch_vertices(client_graph, vdatas, vidxs))
 
+    # add edges for batch
     edge_label = f"{dataset_name}_edge"
     client_schema.edgeLabel(edge_label).sourceLabel(vertex_label).targetLabel(vertex_label).ifNotExist().create()
     edges_src, edges_dst = graph_dgl.edges()
+    edatas = []
     for src, dst in zip(edges_src.numpy(), edges_dst.numpy()):
-        client_graph.addEdge(
-            edge_label=edge_label,
-            out_id=idx_to_vertex_id[src],
-            in_id=idx_to_vertex_id[dst],
-            properties={}
-        )
+        edata = [edge_label, idx_to_vertex_id[src], idx_to_vertex_id[dst], vertex_label, vertex_label, {}]
+        edatas.append(edata)
+        if len(edatas) == MAX_BATCH_NUM:
+            _add_batch_edges(client_graph, edatas)
+            edatas.clear()
+    if len(edatas) > 0:
+        _add_batch_edges(client_graph, edatas)
 
 
 def import_graphs_from_dgl(
@@ -140,28 +155,47 @@ def import_graphs_from_dgl(
     # import to hugegraph
     for (graph_dgl, label) in dataset_dgl:
         graph_vertex = client_graph.addVertex(label=graph_vertex_label, properties={"label": int(label)})
+        # refine feat prop
         if "feat" in graph_dgl.ndata:
             node_feats = graph_dgl.ndata["feat"]
         elif "attr" in graph_dgl.ndata:
             node_feats = graph_dgl.ndata["attr"]
         else:
             raise ValueError("Node feature is empty")
+        # add vertices of graph i for barch
         idx_to_vertex_id = {}
+        vdatas = []
+        vidxs = []
         for idx in range(graph_dgl.number_of_nodes()):
             feat = node_feats[idx].tolist()
-            vertex = client_graph.addVertex(
-                label=vertex_label,
-                properties={"feat": feat, "graph_id": graph_vertex.id}
-            )
-            idx_to_vertex_id[idx] = vertex.id
+            properties = {"feat": feat, "graph_id": graph_vertex.id}
+            vdata = [vertex_label, properties]
+            vdatas.append(vdata)
+            vidxs.append(idx)
+            if len(vdatas) == MAX_BATCH_NUM:
+                idx_to_vertex_id.update(_add_batch_vertices(client_graph, vdatas, vidxs))
+                vdatas.clear()
+                vidxs.clear()
+        if len(vdatas) > 0:
+            idx_to_vertex_id.update(_add_batch_vertices(client_graph, vdatas, vidxs))
+        # add edges of graph i for barch
         srcs, dsts = graph_dgl.edges()
+        edatas = []
         for src, dst in zip(srcs.numpy(), dsts.numpy()):
-            client_graph.addEdge(
-                edge_label=edge_label,
-                out_id=idx_to_vertex_id[src],
-                in_id=idx_to_vertex_id[dst],
-                properties={"graph_id": graph_vertex.id}
-            )
+            edata = [
+                edge_label,
+                idx_to_vertex_id[src],
+                idx_to_vertex_id[dst],
+                vertex_label,
+                vertex_label,
+                {"graph_id": graph_vertex.id}
+            ]
+            edatas.append(edata)
+            if len(edatas) == MAX_BATCH_NUM:
+                _add_batch_edges(client_graph, edatas)
+                edatas.clear()
+        if len(edatas) > 0:
+            _add_batch_edges(client_graph, edatas)
 
 
 def import_hetero_graph_from_dgl(
@@ -198,27 +232,29 @@ def import_hetero_graph_from_dgl(
         # check properties
         props = [p for p in all_props if p in hetero_graph.nodes[ntype].data]
         client_schema.vertexLabel(vertex_label).useAutomaticId().properties(*props).ifNotExist().create()
-        # add vertices
         props_value = {}
         for p in props:
             props_value[p] = hetero_graph.nodes[ntype].data[p].tolist()
-        # for each node
+        # add vertices for batch of ntype
         idx_to_vertex_id = {}
+        vdatas = []
+        idxs = []
         for idx in range(hetero_graph.number_of_nodes(ntype=ntype)):
-            properties = {}
-            # for each property
-            for p in props:
-                if isinstance(props_value[p][idx], bool):
-                    properties[p] = int(props_value[p][idx])
-                else:
-                    properties[p] = props_value[p][idx]
-            vertex = client_graph.addVertex(
-                label=vertex_label,
-                properties=properties
-            )
-            idx_to_vertex_id[idx] = vertex.id
+            properties = {p: int(props_value[p][idx]) if isinstance(props_value[p][idx], bool) else props_value[p][idx]
+                          for p in props}
+            vdata = [vertex_label, properties]
+            vdatas.append(vdata)
+            idxs.append(idx)
+            if len(vdatas) == MAX_BATCH_NUM:
+                idx_to_vertex_id.update(_add_batch_vertices(client_graph, vdatas, idxs))
+                vdatas.clear()
+                idxs.clear()
+        if len(vdatas) > 0:
+            idx_to_vertex_id.update(_add_batch_vertices(client_graph, vdatas, idxs))
         ntype_idx_to_vertex_id[ntype] = idx_to_vertex_id
 
+    # add edges
+    edatas = []
     for canonical_etype in hetero_graph.canonical_etypes:
         # create edge schema
         src_type, etype, dst_type = canonical_etype
@@ -226,15 +262,36 @@ def import_hetero_graph_from_dgl(
         client_schema.edgeLabel(edge_label).sourceLabel(ntype_to_vertex_label[src_type]).targetLabel(
             ntype_to_vertex_label[dst_type]
         ).ifNotExist().create()
-        # add edges
+        # add edges for batch of canonical_etype
         srcs, dsts = hetero_graph.edges(etype=canonical_etype)
         for src, dst in zip(srcs.numpy(), dsts.numpy()):
-            client_graph.addEdge(
-                edge_label=edge_label,
-                out_id=ntype_idx_to_vertex_id[src_type][src],
-                in_id=ntype_idx_to_vertex_id[dst_type][dst],
-                properties={}
-            )
+            edata = [
+                edge_label,
+                ntype_idx_to_vertex_id[src_type][src],
+                ntype_idx_to_vertex_id[dst_type][dst],
+                ntype_to_vertex_label[src_type],
+                ntype_to_vertex_label[dst_type],
+                {}
+            ]
+            edatas.append(edata)
+            if len(edatas) == MAX_BATCH_NUM:
+                _add_batch_edges(client_graph, edatas)
+                edatas.clear()
+    if len(edatas) > 0:
+        _add_batch_edges(client_graph, edatas)
+
+
+def _add_batch_vertices(client_graph, vdatas, vidxs):
+    vertices = client_graph.addVertices(vdatas)
+    assert len(vertices) == len(vidxs)
+    idx_to_vertex_id = {}
+    for i, idx in enumerate(vidxs):
+        idx_to_vertex_id[idx] = vertices[i].id
+    return idx_to_vertex_id
+
+
+def _add_batch_edges(client_graph, edatas):
+    client_graph.addEdges(edatas)
 
 
 def load_acm_raw():
