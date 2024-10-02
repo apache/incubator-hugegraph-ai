@@ -22,7 +22,6 @@ import os
 import gradio as gr
 
 from hugegraph_llm.config import resource_path, prompt
-from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
 from hugegraph_llm.utils.graph_index_utils import (
     get_graph_index_info,
     clean_all_graph_index,
@@ -48,14 +47,6 @@ def create_vector_graph_block():
     )
 
     schema = prompt.graph_schema
-    # SCHEMA_EXAMPLE_PROMPT = "hello"
-    prompt.extract_graph_prompt = """
-
-
-hello
-
-
-"""
 
     with gr.Row():
         with gr.Column():
