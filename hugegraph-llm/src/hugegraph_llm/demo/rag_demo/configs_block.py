@@ -23,7 +23,7 @@ import gradio as gr
 import requests
 from requests.auth import HTTPBasicAuth
 
-from hugegraph_llm.config import settings
+from hugegraph_llm.config import settings, prompt
 from hugegraph_llm.utils.log import log
 
 
@@ -225,7 +225,11 @@ def create_configs_block():
                         gr.Textbox(value="", visible=False),
                     ]
             else:
-                llm_config_input = []
+                llm_config_input = [
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                ]
             llm_config_button = gr.Button("apply configuration")
             llm_config_button.click(apply_llm_config, inputs=llm_config_input)  # pylint: disable=no-member
 
@@ -244,13 +248,6 @@ def create_configs_block():
                         gr.Textbox(value=settings.openai_api_base, label="api_base"),
                         gr.Textbox(value=settings.openai_embedding_model, label="model_name"),
                     ]
-            elif embedding_type == "qianfan_wenxin":
-                with gr.Row():
-                    embedding_config_input = [
-                        gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
-                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
-                        gr.Textbox(value=settings.qianfan_embedding_model, label="model_name"),
-                    ]
             elif embedding_type == "ollama":
                 with gr.Row():
                     embedding_config_input = [
@@ -258,8 +255,19 @@ def create_configs_block():
                         gr.Textbox(value=str(settings.ollama_port), label="port"),
                         gr.Textbox(value=settings.ollama_embedding_model, label="model_name"),
                     ]
+            elif embedding_type == "qianfan_wenxin":
+                with gr.Row():
+                    embedding_config_input = [
+                        gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
+                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
+                        gr.Textbox(value=settings.qianfan_embedding_model, label="model_name"),
+                    ]
             else:
-                embedding_config_input = []
+                embedding_config_input = [
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                ]
 
             embedding_config_button = gr.Button("apply configuration")
 
@@ -295,9 +303,14 @@ def create_configs_block():
                             label="model",
                             info="Please refer to https://siliconflow.cn/pricing",
                         ),
+                        gr.Textbox(value="", visible=False),
                     ]
             else:
-                reranker_config_input = []
+                reranker_config_input = [
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                ]
             reranker_config_button = gr.Button("apply configuration")
 
             # TODO: use "gr.update()" or other way to update the config in time (refactor the click event)
