@@ -71,14 +71,14 @@ def init_rag_ui() -> gr.Interface:
         #  = if openai [api_key, api_base, model_name, max_token]
         #  = else if ollama [host, port, model_name, ""]
         #  = else if qianfan_wenxin [api_key, secret_key, model_name, ""]
-        #  = else [] 这个是错误情况
+        #  = else ["","",""] 这个是错误情况
 
         # embedding_config_input = textbox_array_embedding_config
         # 判断 settings.embedding_type，但是这个值也缺少一个刷新机制
         #  = if openai [api_key, api_base, model_name]
         #  = else if ollama [host, port, model_name]
         #  = else if qianfan_wenxin [api_key, secret_key, model_name]
-        #  = else []
+        #  = else ["","",""]
 
         textbox_array_graph_config, textbox_array_llm_config, textbox_array_embedding_config = create_configs_block()
 
