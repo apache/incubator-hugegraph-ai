@@ -18,6 +18,7 @@
 from typing import Dict, Any
 
 from hugegraph_llm.config import settings
+from hugegraph_llm.enums.property_cardinality import PropertyCardinality
 from hugegraph_llm.enums.property_data_type import PropertyDataType, default_value_map
 from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
@@ -82,7 +83,11 @@ class CommitToKg:
                         has_problem = True
                         break
                     data_type = property_label_map[pk]["data_type"]
-                    input_properties[pk] = default_value_map(data_type)
+                    cardinality = property_label_map[pk]["cardinality"]
+                    if cardinality == PropertyCardinality.SINGLE.value:
+                        input_properties[pk] = default_value_map(data_type)
+                    else:
+                        input_properties[pk] = []
                     log.warning("Primary-key '%s' missing in vertex %s, mark empty & need check it again!", pk, vertex)
             if has_problem:
                 continue
@@ -91,14 +96,21 @@ class CommitToKg:
             for key in non_null_keys:
                 if key not in input_properties:
                     data_type = property_label_map[key]["data_type"]
-                    default_value = default_value_map(data_type)
-                    input_properties[key] = default_value
-                    log.warning("Property '%s' missing in vertex %s, set to %s for now", key, vertex, default_value)
+                    cardinality = property_label_map[key]["cardinality"]
+                    if cardinality == PropertyCardinality.SINGLE.value:
+                        default_value = default_value_map(data_type)
+                        input_properties[key] = default_value
+                    else:
+                        # list or set
+                        default_value = []
+                        input_properties[key] = default_value
+                    log.warning("Property '%s' missing in vertex %s, set to '%s' for now", key, vertex, default_value)
 
             # 4. Check all data type value is right
             for key, value in input_properties.items():
                 data_type = property_label_map[key]["data_type"]
-                if not self._check_property_data_type(data_type, value):
+                cardinality = property_label_map[key]["cardinality"]
+                if not self._check_property_data_type(data_type, cardinality, value):
                     log.error("Data type of property '%s' is not correct, skip it & need check it again", key)
                     has_problem = True
                     break
@@ -180,40 +192,61 @@ class CommitToKg:
         # TODO: support cardinality
         name = prop["name"]
         data_type = prop["data_type"]
-        if prop["data_type"] == PropertyDataType.BOOLEAN.value:
+        cardinality = prop["cardinality"]
+        property_key = self.schema.propertyKey(name)
+        if data_type == PropertyDataType.BOOLEAN.value:
             # TODO: boolean type is not supported
             log.error("Boolean type is not supported")
-            # self.schema.propertyKey(name).asBoolean().ifNotExist().create()
-        elif prop["data_type"] == PropertyDataType.BYTE.value:
+            # property_key.asBoolean()
+        elif data_type == PropertyDataType.BYTE.value:
             # TODO: byte type is not supported
             log.warning("Byte type is not supported, use int instead")
-            self.schema.propertyKey(name).asInt().ifNotExist().create()
-        elif prop["data_type"] == PropertyDataType.INT.value:
-            self.schema.propertyKey(name).asInt().ifNotExist().create()
-        elif prop["data_type"] == PropertyDataType.LONG.value:
-            self.schema.propertyKey(name).asLong().ifNotExist().create()
-        elif prop["data_type"] == PropertyDataType.FLOAT.value:
+            property_key.asInt()
+        elif data_type == PropertyDataType.INT.value:
+            property_key.asInt()
+        elif data_type == PropertyDataType.LONG.value:
+            property_key.asLong()
+        elif data_type == PropertyDataType.FLOAT.value:
             # TODO: float type is not supported
             log.warning("Float type is not supported, use double instead")
-            self.schema.propertyKey(name).asDouble().ifNotExist().create()
-        elif prop["data_type"] == PropertyDataType.DOUBLE.value:
-            self.schema.propertyKey(name).asDouble().ifNotExist().create()
-        elif prop["data_type"] == PropertyDataType.TEXT.value:
-            self.schema.propertyKey(name).asText().ifNotExist().create()
-        elif prop["data_type"] == PropertyDataType.BLOB.value:
+            property_key.asDouble()
+        elif data_type == PropertyDataType.DOUBLE.value:
+            property_key.asDouble()
+        elif data_type == PropertyDataType.TEXT.value:
+            property_key.asText()
+        elif data_type == PropertyDataType.BLOB.value:
             # TODO: blob type is not supported
             log.warning("Blob type is not supported, use text instead")
-            self.schema.propertyKey(name).asText().ifNotExist().create()
-        elif prop["data_type"] == PropertyDataType.DATE.value:
-            self.schema.propertyKey(name).asDate().ifNotExist().create()
-        elif prop["data_type"] == PropertyDataType.UUID.value:
+            property_key.asText()
+        elif data_type == PropertyDataType.DATE.value:
+            property_key.asDate()
+        elif data_type == PropertyDataType.UUID.value:
             # TODO: uuid type is not supported
             log.warning("UUID type is not supported, use text instead")
-            self.schema.propertyKey(name).asText().ifNotExist().create()
+            property_key.asText()
         else:
             log.error("Unknown data type: %s", data_type)
+            return
+        if cardinality == PropertyCardinality.SINGLE.value:
+            property_key.valueSingle()
+        elif cardinality == PropertyCardinality.LIST.value:
+            property_key.valueList()
+        elif cardinality == PropertyCardinality.SET.value:
+            property_key.valueSet()
+        else:
+            log.error("Unknown cardinality: %s", cardinality)
+            return
+        property_key.ifNotExist().create()
 
-    def _check_property_data_type(self, data_type: str, value: str) -> bool:
+    def _check_property_data_type(self, data_type: str, cardinality: str, value) -> bool:
+        if cardinality in (PropertyCardinality.LIST.value, PropertyCardinality.SET.value):
+            if not isinstance(value, list):
+                return False
+            for item in value:
+                if not self._check_property_data_type(data_type, PropertyCardinality.SINGLE.value, item):
+                    return False
+            return True
+        # Cardinality is Single
         if data_type == PropertyDataType.BOOLEAN.value:
             return isinstance(value, bool)
         if data_type in (PropertyDataType.BYTE.value, PropertyDataType.INT.value, PropertyDataType.LONG.value):

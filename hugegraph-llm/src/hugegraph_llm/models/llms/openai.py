@@ -15,7 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
 from typing import Callable, List, Optional, Dict, Any
 
 import openai
