@@ -140,3 +140,5 @@ def create_vector_graph_block():
     tab_upload_text.select(
         fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text]
     )  # pylint: disable=no-member
+
+    return input_schema, info_extract_template
