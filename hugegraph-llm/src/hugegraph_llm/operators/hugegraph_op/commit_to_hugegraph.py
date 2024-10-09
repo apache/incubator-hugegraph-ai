@@ -25,7 +25,7 @@ from pyhugegraph.client import PyHugeClient
 from pyhugegraph.utils.exceptions import NotFoundError, CreateError
 
 
-class CommitToKg:
+class Commit2Graph:
     def __init__(self):
         self.client = PyHugeClient(
             settings.graph_ip,
@@ -54,6 +54,26 @@ class CommitToKg:
             self.init_schema_if_need(schema)
             self.load_into_graph(vertices, edges, schema)
         return data
+
+    def _set_default_property(self, key, input_properties, property_label_map):
+        data_type = property_label_map[key]["data_type"]
+        cardinality = property_label_map[key]["cardinality"]
+        if cardinality == PropertyCardinality.SINGLE.value:
+            default_value = default_value_map(data_type)
+            input_properties[key] = default_value
+        else:
+            # list or set
+            default_value = []
+            input_properties[key] = default_value
+        log.warning("Property '%s' missing in vertex, set to '%s' for now", key, default_value)
+
+    def _handle_graph_creation(self, func, *args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except NotFoundError as e:
+            log.error(e)
+        except CreateError as e:
+            log.error("Error on creating: %s, %s", args, e)
 
     def load_into_graph(self, vertices, edges, schema):  # pylint: disable=too-many-statements
         # pylint: disable=R0912 (too-many-branches)
@@ -95,16 +115,7 @@ class CommitToKg:
             # 3. Ensure all non-nullable props are set
             for key in non_null_keys:
                 if key not in input_properties:
-                    data_type = property_label_map[key]["data_type"]
-                    cardinality = property_label_map[key]["cardinality"]
-                    if cardinality == PropertyCardinality.SINGLE.value:
-                        default_value = default_value_map(data_type)
-                        input_properties[key] = default_value
-                    else:
-                        # list or set
-                        default_value = []
-                        input_properties[key] = default_value
-                    log.warning("Property '%s' missing in vertex %s, set to '%s' for now", key, vertex, default_value)
+                    self._set_default_property(key, input_properties, property_label_map)
 
             # 4. Check all data type value is right
             for key, value in input_properties.items():
@@ -116,14 +127,10 @@ class CommitToKg:
                     break
             if has_problem:
                 continue
-            try:
-                # TODO: we could try batch add vertices first, setback to single-mode if failed
-                vid = self.client.graph().addVertex(input_label, input_properties).id
-                vertex["id"] = vid
-            except NotFoundError as e:
-                log.error(e)
-            except CreateError as e:
-                log.error("Error on creating vertex: %s, %s", vertex, e)
+
+            # TODO: we could try batch add vertices first, setback to single-mode if failed
+            vid = self._handle_graph_creation(self.client.graph().addVertex, input_label, input_properties)
+            vertex["id"] = vid
 
         for edge in edges:
             start = edge["outV"]
@@ -134,13 +141,9 @@ class CommitToKg:
             if label not in edge_label_map:
                 log.critical("(Input) EdgeLabel %s not found in schema, skip & need check it!", label)
                 continue
-            try:
-                # TODO: we could try batch add edges first, setback to single-mode if failed
-                self.client.graph().addEdge(label, start, end, properties)
-            except NotFoundError as e:
-                log.error(e)
-            except CreateError as e:
-                log.error("Error on creating edge: %s, %s", edge, e)
+
+            # TODO: we could try batch add edges first, setback to single-mode if failed
+            self._handle_graph_creation(self.client.graph().addEdge, label, start, end, properties)
 
     def init_schema_if_need(self, schema: dict):
         properties = schema["propertykeys"]
@@ -189,17 +192,20 @@ class CommitToKg:
             self.client.graph().addEdge("edge", s_id, t_id, {"name": p})
 
     def _create_property(self, prop: dict):
-        # TODO: support cardinality
         name = prop["name"]
         data_type = prop["data_type"]
         cardinality = prop["cardinality"]
         property_key = self.schema.propertyKey(name)
+
+        self._set_property_data_type(property_key, data_type)
+        self._set_property_cardinality(property_key, cardinality)
+
+        property_key.ifNotExist().create()
+
+    def _set_property_data_type(self, property_key, data_type):
         if data_type == PropertyDataType.BOOLEAN.value:
-            # TODO: boolean type is not supported
             log.error("Boolean type is not supported")
-            # property_key.asBoolean()
         elif data_type == PropertyDataType.BYTE.value:
-            # TODO: byte type is not supported
             log.warning("Byte type is not supported, use int instead")
             property_key.asInt()
         elif data_type == PropertyDataType.INT.value:
@@ -207,7 +213,6 @@ class CommitToKg:
         elif data_type == PropertyDataType.LONG.value:
             property_key.asLong()
         elif data_type == PropertyDataType.FLOAT.value:
-            # TODO: float type is not supported
             log.warning("Float type is not supported, use double instead")
             property_key.asDouble()
         elif data_type == PropertyDataType.DOUBLE.value:
@@ -215,18 +220,17 @@ class CommitToKg:
         elif data_type == PropertyDataType.TEXT.value:
             property_key.asText()
         elif data_type == PropertyDataType.BLOB.value:
-            # TODO: blob type is not supported
             log.warning("Blob type is not supported, use text instead")
             property_key.asText()
         elif data_type == PropertyDataType.DATE.value:
             property_key.asDate()
         elif data_type == PropertyDataType.UUID.value:
-            # TODO: uuid type is not supported
             log.warning("UUID type is not supported, use text instead")
             property_key.asText()
         else:
-            log.error("Unknown data type: %s", data_type)
-            return
+            log.error("Unknown data type %s for property_key %s", data_type, property_key)
+
+    def _set_property_cardinality(self, property_key, cardinality):
         if cardinality == PropertyCardinality.SINGLE.value:
             property_key.valueSingle()
         elif cardinality == PropertyCardinality.LIST.value:
@@ -234,19 +238,22 @@ class CommitToKg:
         elif cardinality == PropertyCardinality.SET.value:
             property_key.valueSet()
         else:
-            log.error("Unknown cardinality: %s", cardinality)
-            return
-        property_key.ifNotExist().create()
+            log.error("Unknown cardinality %s for property_key %s", cardinality, property_key)
 
     def _check_property_data_type(self, data_type: str, cardinality: str, value) -> bool:
         if cardinality in (PropertyCardinality.LIST.value, PropertyCardinality.SET.value):
-            if not isinstance(value, list):
+            return self._check_collection_data_type(data_type, value)
+        return self._check_single_data_type(data_type, value)
+
+    def _check_collection_data_type(self, data_type: str, value) -> bool:
+        if not isinstance(value, list):
+            return False
+        for item in value:
+            if not self._check_single_data_type(data_type, item):
                 return False
-            for item in value:
-                if not self._check_property_data_type(data_type, PropertyCardinality.SINGLE.value, item):
-                    return False
-            return True
-        # Cardinality is Single
+        return True
+
+    def _check_single_data_type(self, data_type: str, value) -> bool:
         if data_type == PropertyDataType.BOOLEAN.value:
             return isinstance(value, bool)
         if data_type in (PropertyDataType.BYTE.value, PropertyDataType.INT.value, PropertyDataType.LONG.value):
@@ -256,8 +263,6 @@ class CommitToKg:
         if data_type in (PropertyDataType.TEXT.value, PropertyDataType.BLOB.value):
             return isinstance(value, str)
         # TODO: check ok below
-        if data_type == PropertyDataType.DATE.value:
-            return isinstance(value, str)
-        if data_type == PropertyDataType.UUID.value:
+        if data_type in (PropertyDataType.DATE.value, PropertyDataType.UUID.value):
             return isinstance(value, str)
         raise ValueError(f"Unknown data type: {data_type}")
