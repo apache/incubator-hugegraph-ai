@@ -23,4 +23,4 @@ class PropertyCardinality(Enum):
     SINGLE = "SINGLE"
     LIST = "LIST"
     SET = "SET"
-    DEFAULT = "SINGLE"
+    DEFAULT = SINGLE

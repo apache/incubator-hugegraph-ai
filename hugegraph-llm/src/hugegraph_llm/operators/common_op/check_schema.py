@@ -18,99 +18,105 @@
 
 from typing import Any, Optional, Dict
 
-from hugegraph_llm.utils.log import log
 from hugegraph_llm.enums.property_cardinality import PropertyCardinality
 from hugegraph_llm.enums.property_data_type import PropertyDataType
+from hugegraph_llm.utils.log import log
+
+
+def log_and_raise(message: str) -> None:
+    log.warning(message)
+    raise ValueError(message)
+
+
+def check_type(value: Any, expected_type: type, message: str) -> None:
+    if not isinstance(value, expected_type):
+        log_and_raise(message)
 
 
 class CheckSchema:
-    def __init__(self, data):
+    def __init__(self, data: Dict[str, Any]):
         self.result = None
         self.data = data
 
-    def run(self, context: Optional[Dict[str, Any]] = None) -> Any:  # pylint: disable=too-many-statements
-        # pylint: disable=too-many-branches
+    def run(self, context: Optional[Dict[str, Any]] = None) -> Any:
         if context is None:
             context = {}
+
+        # 1. Validate the schema structure
         schema = self.data or context.get("schema")
-        if not isinstance(schema, dict):
-            raise ValueError("Input data is not a dictionary.")
-        if "vertexlabels" not in schema or "edgelabels" not in schema:
-            raise ValueError("Input data does not contain 'vertexlabels' or 'edgelabels'.")
-        if not isinstance(schema["vertexlabels"], list) or not isinstance(schema["edgelabels"], list):
-            raise ValueError("'vertexlabels' or 'edgelabels' in input data is not a list.")
-        property_labels = schema.get("propertykeys", [])
-        property_label_set = {label["name"] for label in property_labels}
-        if not isinstance(property_labels, list):
-            raise ValueError("'propertykeys' in input data is not of correct type.")
-        for vertex in schema["vertexlabels"]:
-            if not isinstance(vertex, dict):
-                raise ValueError("Vertex in input data is not a dictionary.")
-            if "name" not in vertex:
-                raise ValueError("Vertex in input data does not contain 'name'.")
-            if not isinstance(vertex["name"], str):
-                raise ValueError("'name' in vertex is not of correct type.")
-            if "properties" not in vertex:
-                raise ValueError("Vertex in input data does not contain 'properties'.")
-            properties = vertex["properties"]
-            if not isinstance(properties, list):
-                raise ValueError("'properties' in vertex is not of correct type.")
-            if len(properties) == 0:
-                raise ValueError("'properties' in vertex is empty.")
-            primary_keys = vertex.get("primary_keys", properties[:1])
-            if not isinstance(primary_keys, list):
-                raise ValueError("'primary_keys' in vertex is not of correct type.")
-            new_primary_keys = []
-            for key in primary_keys:
-                if key not in properties:
-                    log.waring("Primary key '%s' not found in properties has been auto removed.", key)
-                else:
-                    new_primary_keys.append(key)
-            if len(new_primary_keys) == 0:
-                raise ValueError(f"primary keys of vertexLabel {vertex['vertex_label']} is empty.")
-            vertex["primary_keys"] = new_primary_keys
-            nullable_keys = vertex.get("nullable_keys", properties[1:])
-            if not isinstance(nullable_keys, list):
-                raise ValueError("'nullable_keys' in vertex is not of correct type.")
-            new_nullable_keys = []
-            for key in nullable_keys:
-                if key not in properties:
-                    log.warning("Nullable key '%s' not found in properties has been auto removed.", key)
-                else:
-                    new_nullable_keys.append(key)
-            vertex["nullable_keys"] = new_nullable_keys
-            for prop in properties:
-                if prop not in property_label_set:
-                    property_labels.append({
-                        "name": prop,
-                        "data_type": PropertyDataType.DEFAULT.value,
-                        "cardinality": PropertyCardinality.DEFAULT.value,
-                    })
-                    property_label_set.add(prop)
-        for edge in schema["edgelabels"]:
-            if not isinstance(edge, dict):
-                raise ValueError("Edge in input data is not a dictionary.")
-            if "name" not in edge or "source_label" not in edge or "target_label" not in edge:
-                raise ValueError("Edge in input data does not contain 'name', 'source_label', 'target_label'.")
-            if (
-                not isinstance(edge["name"], str)
-                or not isinstance(edge["source_label"], str)
-                or not isinstance(edge["target_label"], str)
-            ):
-                raise ValueError("'name', 'source_label', 'target_label' in edge is not of correct type.")
-            if "properties" not in edge:
-                edge["properties"] = []
-            if not isinstance(edge["properties"], list):
-                raise ValueError("'properties' in edge is not of correct type.")
-            properties = edge["properties"]
-            for prop in properties:
-                if prop not in property_label_set:
-                    property_labels.append({
-                        "name": prop,
-                        "data_type": PropertyDataType.DEFAULT.value,
-                        "cardinality": PropertyCardinality.DEFAULT.value,
-                    })
-                    property_label_set.add(prop)
+        self._validate_schema(schema)
+        # 2. Process property labels and also create a set for it
+        property_labels, property_label_set = self._process_property_labels(schema)
+        # 3. Process properties in given vertex/edge labels
+        self._process_vertex_labels(schema, property_labels, property_label_set)
+        self._process_edge_labels(schema, property_labels, property_label_set)
+        # 4. Update schema with processed pks
         schema["propertykeys"] = property_labels
         context.update({"schema": schema})
         return context
+
+    def _validate_schema(self, schema: Dict[str, Any]) -> None:
+        check_type(schema, dict, "Input data is not a dictionary.")
+        if "vertexlabels" not in schema or "edgelabels" not in schema:
+            log_and_raise("Input data does not contain 'vertexlabels' or 'edgelabels'.")
+        check_type(schema["vertexlabels"], list, "'vertexlabels' in input data is not a list.")
+        check_type(schema["edgelabels"], list, "'edgelabels' in input data is not a list.")
+
+    def _process_property_labels(self, schema: Dict[str, Any]) -> (list, set):
+        property_labels = schema.get("propertykeys", [])
+        check_type(property_labels, list, "'propertykeys' in input data is not of correct type.")
+        property_label_set = {label["name"] for label in property_labels}
+        return property_labels, property_label_set
+
+    def _process_vertex_labels(self, schema: Dict[str, Any], property_labels: list, property_label_set: set) -> None:
+        for vertex_label in schema["vertexlabels"]:
+            self._validate_vertex_label(vertex_label)
+            properties = vertex_label["properties"]
+            primary_keys = self._process_keys(vertex_label, "primary_keys", properties[:1])
+            vertex_label["primary_keys"] = primary_keys
+            nullable_keys = self._process_keys(vertex_label, "nullable_keys", properties[1:])
+            vertex_label["nullable_keys"] = nullable_keys
+            self._add_missing_properties(properties, property_labels, property_label_set)
+
+    def _process_edge_labels(self, schema: Dict[str, Any], property_labels: list, property_label_set: set) -> None:
+        for edge_label in schema["edgelabels"]:
+            self._validate_edge_label(edge_label)
+            properties = edge_label.get("properties", [])
+            self._add_missing_properties(properties, property_labels, property_label_set)
+
+    def _validate_vertex_label(self, vertex_label: Dict[str, Any]) -> None:
+        check_type(vertex_label, dict, "VertexLabel in input data is not a dictionary.")
+        if "name" not in vertex_label:
+            log_and_raise("VertexLabel in input data does not contain 'name'.")
+        check_type(vertex_label["name"], str, "'name' in vertex_label is not of correct type.")
+        if "properties" not in vertex_label:
+            log_and_raise("VertexLabel in input data does not contain 'properties'.")
+        check_type(vertex_label["properties"], list, "'properties' in vertex_label is not of correct type.")
+        if len(vertex_label["properties"]) == 0:
+            log_and_raise("'properties' in vertex_label is empty.")
+
+    def _validate_edge_label(self, edge_label: Dict[str, Any]) -> None:
+        check_type(edge_label, dict, "EdgeLabel in input data is not a dictionary.")
+        if "name" not in edge_label or "source_label" not in edge_label or "target_label" not in edge_label:
+            log_and_raise("EdgeLabel in input data does not contain 'name', 'source_label', 'target_label'.")
+        check_type(edge_label["name"], str, "'name' in edge_label is not of correct type.")
+        check_type(edge_label["source_label"], str, "'source_label' in edge_label is not of correct type.")
+        check_type(edge_label["target_label"], str, "'target_label' in edge_label is not of correct type.")
+
+    def _process_keys(self, label: Dict[str, Any], key_type: str, default_keys: list) -> list:
+        keys = label.get(key_type, default_keys)
+        check_type(keys, list, f"'{key_type}' in {label['name']} is not of correct type.")
+        new_keys = [key for key in keys if key in label["properties"]]
+        if len(new_keys) == 0:
+            log_and_raise(f"{key_type} of {label['name']} is empty.")
+        return new_keys
+
+    def _add_missing_properties(self, properties: list, property_labels: list, property_label_set: set) -> None:
+        for prop in properties:
+            if prop not in property_label_set:
+                property_labels.append({
+                    "name": prop,
+                    "data_type": PropertyDataType.DEFAULT.value,
+                    "cardinality": PropertyCardinality.DEFAULT.value,
+                })
+                property_label_set.add(prop)

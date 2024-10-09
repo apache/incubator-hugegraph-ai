@@ -18,8 +18,8 @@
 from typing import Callable, List, Optional, Dict, Any
 
 import openai
-from openai import OpenAI, AsyncOpenAI
 import tiktoken
+from openai import OpenAI, AsyncOpenAI
 from retry import retry
 
 from hugegraph_llm.models.llms.base import BaseLLM
@@ -140,7 +140,7 @@ class OpenAIClient(BaseLLM):
     def max_allowed_token_length(self) -> int:
         """Get max-allowed token length"""
         # TODO: list all models and their max tokens from api
-        return 2049
+        return 8192
 
     def get_llm_type(self) -> str:
         return "openai"
