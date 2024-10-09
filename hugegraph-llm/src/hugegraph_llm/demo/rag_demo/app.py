@@ -87,7 +87,7 @@ def init_rag_ui() -> gr.Interface:
         #  = else if settings.reranker_type == siliconflow [settings.reranker_api_key, "BAAI/bge-reranker-v2-m3", ""]
         #  = else ["","",""]
 
-        textbox_array_graph_config, textbox_array_llm_config, textbox_array_embedding_config, textbox_array_reranker_config = create_configs_block()
+        textbox_array_graph_config = create_configs_block()
 
         with gr.Tab(label="1. Build RAG Index 💡"):
             create_vector_graph_block()
@@ -100,58 +100,7 @@ def init_rag_ui() -> gr.Interface:
             
             settings.from_env()
 
-            if settings.llm_type == "openai":
-                llm_config_arg_0 = settings.openai_api_key
-                llm_config_arg_1 = settings.openai_api_base
-                llm_config_arg_2 = settings.openai_language_model
-                llm_config_arg_3 = settings.openai_max_tokens
-            elif settings.llm_type == "ollama":
-                llm_config_arg_0 = settings.ollama_host
-                llm_config_arg_1 = settings.ollama_port
-                llm_config_arg_2 = settings.ollama_language_model
-                llm_config_arg_3 = ""
-            elif settings.llm_type == "qianfan_wenxin":
-                llm_config_arg_0 = settings.qianfan_api_key
-                llm_config_arg_1 = settings.qianfan_secret_key
-                llm_config_arg_2 = settings.qianfan_language_model
-                llm_config_arg_3 = ""
-            else:
-                llm_config_arg_0 = ""
-                llm_config_arg_1 = ""
-                llm_config_arg_2 = ""
-                llm_config_arg_3 = ""
-
-            if settings.embedding_type == "openai":
-                embedding_config_arg_0 = settings.openai_api_key
-                embedding_config_arg_1 = settings.openai_api_base
-                embedding_config_arg_2 = settings.openai_embedding_model
-            elif settings.embedding_type == "ollama":
-                embedding_config_arg_0 = settings.ollama_host
-                embedding_config_arg_1 = settings.ollama_port
-                embedding_config_arg_2 = settings.ollama_embedding_model
-            elif settings.embedding_type == "qianfan_wenxin":
-                embedding_config_arg_0 = settings.qianfan_api_key
-                embedding_config_arg_1 = settings.qianfan_secret_key
-                embedding_config_arg_2 = settings.qianfan_embedding_model
-            else:
-                embedding_config_arg_0 = ""
-                embedding_config_arg_1 = ""
-                embedding_config_arg_2 = ""
-
-            if settings.reranker_type == "cohere":
-                reranker_config_arg_0 = settings.reranker_api_key
-                reranker_config_arg_1 = settings.reranker_model
-                reranker_config_arg_2 = settings.cohere_base_url
-            elif settings.reranker_type == "siliconflow":
-                reranker_config_arg_0 = settings.reranker_api_key
-                reranker_config_arg_1 = "BAAI/bge-reranker-v2-m3"
-                reranker_config_arg_2 = ""
-            else:
-                reranker_config_arg_0 = ""
-                reranker_config_arg_1 = ""
-                reranker_config_arg_2 = ""
-
-            return settings.graph_ip, settings.graph_port, settings.graph_name, settings.graph_user, settings.graph_pwd, settings.graph_space,llm_config_arg_0, llm_config_arg_1, llm_config_arg_2, llm_config_arg_3, embedding_config_arg_0, embedding_config_arg_1, embedding_config_arg_2, reranker_config_arg_0, reranker_config_arg_1, reranker_config_arg_2
+            return settings.graph_ip, settings.graph_port, settings.graph_name, settings.graph_user, settings.graph_pwd, settings.graph_space
 
         hugegraph_llm_ui.load(fn=refresh_ui_config_prompt, outputs=[
             textbox_array_graph_config[0],
@@ -160,19 +109,6 @@ def init_rag_ui() -> gr.Interface:
             textbox_array_graph_config[3],
             textbox_array_graph_config[4],
             textbox_array_graph_config[5],
-
-            textbox_array_llm_config[0],
-            textbox_array_llm_config[1],
-            textbox_array_llm_config[2],
-            textbox_array_llm_config[3],
-
-            textbox_array_embedding_config[0],
-            textbox_array_embedding_config[1],
-            textbox_array_embedding_config[2],
-
-            textbox_array_reranker_config[0],
-            textbox_array_reranker_config[1],
-            textbox_array_reranker_config[2],
         ])
 
     return hugegraph_llm_ui

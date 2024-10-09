@@ -180,12 +180,6 @@ def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
 
 
 def create_configs_block():
-    # TODO: Obtaining llm_config_input in this function is somewhat difficult, so we'll use a global variable for now
-    global llm_config_input, embedding_config_input, reranker_config_input
-    llm_config_input = []
-    embedding_config_input = []
-    reranker_config_input = []
-
     # pylint: disable=R0915 (too-many-statements)
     with gr.Accordion("1. Set up the HugeGraph server.", open=False):
         with gr.Row():
@@ -328,4 +322,4 @@ def create_configs_block():
                 inputs=reranker_config_input,  # pylint: disable=no-member
             )
     # The reason for returning this partial value is the functional need to refresh the ui
-    return graph_config_input, llm_config_input, embedding_config_input, reranker_config_input
+    return graph_config_input
