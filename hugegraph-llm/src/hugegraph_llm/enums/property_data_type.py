@@ -30,7 +30,7 @@ class PropertyDataType(Enum):
     BLOB = "BLOB"
     DATE = "DATE"
     UUID = "UUID"
-    DEFAULT = "TEXT"
+    DEFAULT = TEXT
 
 
 def default_value_map(data_type: str):

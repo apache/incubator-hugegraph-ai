@@ -73,6 +73,8 @@ class CheckSchema:
             self._validate_vertex_label(vertex_label)
             properties = vertex_label["properties"]
             primary_keys = self._process_keys(vertex_label, "primary_keys", properties[:1])
+            if len(primary_keys) == 0:
+                log_and_raise(f"'primary_keys' of {vertex_label['name']} is empty.")
             vertex_label["primary_keys"] = primary_keys
             nullable_keys = self._process_keys(vertex_label, "nullable_keys", properties[1:])
             vertex_label["nullable_keys"] = nullable_keys
@@ -107,8 +109,6 @@ class CheckSchema:
         keys = label.get(key_type, default_keys)
         check_type(keys, list, f"'{key_type}' in {label['name']} is not of correct type.")
         new_keys = [key for key in keys if key in label["properties"]]
-        if len(new_keys) == 0:
-            log_and_raise(f"{key_type} of {label['name']} is empty.")
         return new_keys
 
     def _add_missing_properties(self, properties: list, property_labels: list, property_label_set: set) -> None:

@@ -129,7 +129,7 @@ class Commit2Graph:
                 continue
 
             # TODO: we could try batch add vertices first, setback to single-mode if failed
-            vid = self._handle_graph_creation(self.client.graph().addVertex, input_label, input_properties)
+            vid = self._handle_graph_creation(self.client.graph().addVertex, input_label, input_properties).id
             vertex["id"] = vid
 
         for edge in edges:
@@ -158,8 +158,6 @@ class Commit2Graph:
             properties = vertex["properties"]
             nullable_keys = vertex["nullable_keys"]
             primary_keys = vertex["primary_keys"]
-            # for prop in properties:
-            #     self.schema.propertyKey(prop).asText().ifNotExist().create()
             self.schema.vertexLabel(vertex_label).properties(*properties).nullableKeys(
                 *nullable_keys
             ).usePrimaryKeyId().primaryKeys(*primary_keys).ifNotExist().create()
@@ -169,8 +167,6 @@ class Commit2Graph:
             source_vertex_label = edge["source_label"]
             target_vertex_label = edge["target_label"]
             properties = edge["properties"]
-            # for prop in properties:
-            #     self.schema.propertyKey(prop).asText().ifNotExist().create()
             self.schema.edgeLabel(edge_label).sourceLabel(source_vertex_label).targetLabel(
                 target_vertex_label
             ).properties(*properties).nullableKeys(*properties).ifNotExist().create()
