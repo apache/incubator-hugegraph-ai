@@ -37,6 +37,7 @@ from hugegraph_llm.demo.rag_demo.rag_block import create_rag_block, rag_answer
 from hugegraph_llm.demo.rag_demo.vector_graph_block import create_vector_graph_block
 from hugegraph_llm.resources.demo.css import CSS
 from hugegraph_llm.utils.log import log
+from hugegraph_llm.config import settings, prompt
 
 sec = HTTPBearer()
 
@@ -61,26 +62,32 @@ def init_rag_ui() -> gr.Interface:
     ) as hugegraph_llm_ui:
         gr.Markdown("# HugeGraph LLM RAG Demo")
 
-        create_configs_block()
+        # create_configs_block()
 
         # graph_config_input = textbox_array_graph_config
-        #  = [ip, port, graph, user, pwd, graphspace]
+        #  = [settings.graph_ip, settings.graph_port, settings.graph_name, graph_user, settings.graph_pwd, settings.graph_space]
         
         # llm_config_input = textbox_array_llm_config
         # 判断 settings.llm_type，但是这个值似乎也缺少一个刷新机制
-        #  = if openai [api_key, api_base, model_name, max_token]
-        #  = else if ollama [host, port, model_name, ""]
-        #  = else if qianfan_wenxin [api_key, secret_key, model_name, ""]
-        #  = else ["","",""] 这个是错误情况
+        #  = if settings.llm_type == openai [settings.openai_api_key, settings.openai_api_base, settings.openai_language_model, settings.openai_max_tokens]
+        #  = else if settings.llm_type == ollama [settings.ollama_host, settings.ollama_port, settings.ollama_language_model, ""]
+        #  = else if settings.llm_type == qianfan_wenxin [settings.qianfan_api_key, settings.qianfan_secret_key, settings.qianfan_language_model, ""]
+        #  = else ["","","", ""] 这个是错误情况
 
         # embedding_config_input = textbox_array_embedding_config
         # 判断 settings.embedding_type，但是这个值也缺少一个刷新机制
-        #  = if openai [api_key, api_base, model_name]
-        #  = else if ollama [host, port, model_name]
-        #  = else if qianfan_wenxin [api_key, secret_key, model_name]
+        #  = if settings.embedding_type == openai [settings.openai_api_key, settings.openai_api_base, settings.openai_embedding_model]
+        #  = else if settings.embedding_type == ollama [settings.ollama_host, settings.ollama_port, settings.ollama_embedding_model]
+        #  = else if settings.embedding_type == qianfan_wenxin [settings.qianfan_api_key, settings.qianfan_secret_key, settings.qianfan_embedding_model]
         #  = else ["","",""]
 
-        textbox_array_graph_config, textbox_array_llm_config, textbox_array_embedding_config = create_configs_block()
+        # reranker_config_input = textbox_array_reranker_config
+        # 判断 settings.reranker_type，但是这个值也缺少一个刷新机制
+        #  = if settings.reranker_type == cohere [settings.reranker_api_key, settings.reranker_model, settings.cohere_base_url]
+        #  = else if settings.reranker_type == siliconflow [settings.reranker_api_key, "BAAI/bge-reranker-v2-m3", ""]
+        #  = else ["","",""]
+
+        textbox_array_graph_config, textbox_array_llm_config, textbox_array_embedding_config, textbox_array_reranker_config = create_configs_block()
 
         with gr.Tab(label="1. Build RAG Index 💡"):
             create_vector_graph_block()
@@ -88,6 +95,85 @@ def init_rag_ui() -> gr.Interface:
             create_rag_block()
         with gr.Tab(label="3. Others Tools 🚧"):
             create_other_block()
+        
+        def refresh_ui_config_prompt():
+            
+            settings.from_env()
+
+            if settings.llm_type == "openai":
+                llm_config_arg_0 = settings.openai_api_key
+                llm_config_arg_1 = settings.openai_api_base
+                llm_config_arg_2 = settings.openai_language_model
+                llm_config_arg_3 = settings.openai_max_tokens
+            elif settings.llm_type == "ollama":
+                llm_config_arg_0 = settings.ollama_host
+                llm_config_arg_1 = settings.ollama_port
+                llm_config_arg_2 = settings.ollama_language_model
+                llm_config_arg_3 = ""
+            elif settings.llm_type == "qianfan_wenxin":
+                llm_config_arg_0 = settings.qianfan_api_key
+                llm_config_arg_1 = settings.qianfan_secret_key
+                llm_config_arg_2 = settings.qianfan_language_model
+                llm_config_arg_3 = ""
+            else:
+                llm_config_arg_0 = ""
+                llm_config_arg_1 = ""
+                llm_config_arg_2 = ""
+                llm_config_arg_3 = ""
+
+            if settings.embedding_type == "openai":
+                embedding_config_arg_0 = settings.openai_api_key
+                embedding_config_arg_1 = settings.openai_api_base
+                embedding_config_arg_2 = settings.openai_embedding_model
+            elif settings.embedding_type == "ollama":
+                embedding_config_arg_0 = settings.ollama_host
+                embedding_config_arg_1 = settings.ollama_port
+                embedding_config_arg_2 = settings.ollama_embedding_model
+            elif settings.embedding_type == "qianfan_wenxin":
+                embedding_config_arg_0 = settings.qianfan_api_key
+                embedding_config_arg_1 = settings.qianfan_secret_key
+                embedding_config_arg_2 = settings.qianfan_embedding_model
+            else:
+                embedding_config_arg_0 = ""
+                embedding_config_arg_1 = ""
+                embedding_config_arg_2 = ""
+
+            if settings.reranker_type == "cohere":
+                reranker_config_arg_0 = settings.reranker_api_key
+                reranker_config_arg_1 = settings.reranker_model
+                reranker_config_arg_2 = settings.cohere_base_url
+            elif settings.reranker_type == "siliconflow":
+                reranker_config_arg_0 = settings.reranker_api_key
+                reranker_config_arg_1 = "BAAI/bge-reranker-v2-m3"
+                reranker_config_arg_2 = ""
+            else:
+                reranker_config_arg_0 = ""
+                reranker_config_arg_1 = ""
+                reranker_config_arg_2 = ""
+
+            return settings.graph_ip, settings.graph_port, settings.graph_name, settings.graph_user, settings.graph_pwd, settings.graph_space,llm_config_arg_0, llm_config_arg_1, llm_config_arg_2, llm_config_arg_3, embedding_config_arg_0, embedding_config_arg_1, embedding_config_arg_2, reranker_config_arg_0, reranker_config_arg_1, reranker_config_arg_2
+
+        hugegraph_llm_ui.load(fn=refresh_ui_config_prompt, outputs=[
+            textbox_array_graph_config[0],
+            textbox_array_graph_config[1],
+            textbox_array_graph_config[2],
+            textbox_array_graph_config[3],
+            textbox_array_graph_config[4],
+            textbox_array_graph_config[5],
+
+            textbox_array_llm_config[0],
+            textbox_array_llm_config[1],
+            textbox_array_llm_config[2],
+            textbox_array_llm_config[3],
+
+            textbox_array_embedding_config[0],
+            textbox_array_embedding_config[1],
+            textbox_array_embedding_config[2],
+
+            textbox_array_reranker_config[0],
+            textbox_array_reranker_config[1],
+            textbox_array_reranker_config[2],
+        ])
 
     return hugegraph_llm_ui
 
