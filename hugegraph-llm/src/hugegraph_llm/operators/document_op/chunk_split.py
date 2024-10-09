@@ -17,47 +17,57 @@
 
 
 from typing import Literal, Dict, Any, Optional, Union, List
+
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+# Constants
+LANGUAGE_ZH = "zh"
+LANGUAGE_EN = "en"
+SPLIT_TYPE_DOCUMENT = "document"
+SPLIT_TYPE_PARAGRAPH = "paragraph"
+SPLIT_TYPE_SENTENCE = "sentence"
 
 class ChunkSplit:
     def __init__(
         self,
         texts: Union[str, List[str]],
-        split_type: Literal["document", "paragraph", "sentence"] = "document",
-        language: Literal["zh", "en"] = "zh",
+        split_type: Literal["document", "paragraph", "sentence"] = SPLIT_TYPE_DOCUMENT,
+        language: Literal["zh", "en"] = LANGUAGE_ZH,
     ):
         if isinstance(texts, str):
             texts = [texts]
         self.texts = texts
-        if language == "zh":
-            separators = ["\n\n", "\n", "。", "，", ""]
-        elif language == "en":
-            separators = ["\n\n", "\n", ".", ",", " ", ""]
+        self.separators = self._get_separators(language)
+        self.text_splitter = self._get_text_splitter(split_type)
+
+    def _get_separators(self, language: str) -> List[str]:
+        if language == LANGUAGE_ZH:
+            return ["\n\n", "\n", "。", "，", ""]
+        elif language == LANGUAGE_EN:
+            return ["\n\n", "\n", ".", ",", " ", ""]
         else:
             raise ValueError("language must be zh or en")
-        if split_type == "document":
 
-            def split_text(text: str):
-                return [text]
-
-            self.text_splitter = split_text
-        elif split_type == "paragraph":
-            self.text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=500, chunk_overlap=30, separators=separators
+    def _get_text_splitter(self, split_type: str):
+        if split_type == SPLIT_TYPE_DOCUMENT:
+            return lambda text: [text]
+        elif split_type == SPLIT_TYPE_PARAGRAPH:
+            return RecursiveCharacterTextSplitter(
+                chunk_size=500, chunk_overlap=30, separators=self.separators
             ).split_text
-        elif split_type == "sentence":
-            self.text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=50, chunk_overlap=0, separators=separators
+        elif split_type == SPLIT_TYPE_SENTENCE:
+            return RecursiveCharacterTextSplitter(
+                chunk_size=50, chunk_overlap=0, separators=self.separators
             ).split_text
         else:
-            raise ValueError("type must be paragraph, sentence, html or markdown")
+            raise ValueError("Type must be paragraph, sentence, html or markdown")
 
     def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         all_chunks = []
         for text in self.texts:
             chunks = self.text_splitter(text)
             all_chunks.extend(chunks)
+
         if context is None:
             return {"chunks": all_chunks}
         context["chunks"] = all_chunks
