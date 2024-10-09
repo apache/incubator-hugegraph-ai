@@ -92,12 +92,12 @@ def init_rag_ui() -> gr.Interface:
         with gr.Tab(label="3. Others Tools 🚧"):
             create_other_block()
         
+
         def refresh_ui_config_prompt():
-            
             settings.from_env()
             prompt.ensure_yaml_file_exists()
-
             return settings.graph_ip, settings.graph_port, settings.graph_name, settings.graph_user, settings.graph_pwd, settings.graph_space, prompt.graph_schema, prompt.extract_graph_prompt
+
 
         hugegraph_llm_ui.load(fn=refresh_ui_config_prompt, outputs=[
             textbox_array_graph_config[0],
