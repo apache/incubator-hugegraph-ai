@@ -63,7 +63,8 @@ def test_api_connection(url, method="GET", headers=None, params=None, body=None,
 def config_qianfan_model(arg1, arg2, arg3=None, origin_call=None) -> int:
     settings.qianfan_api_key = arg1
     settings.qianfan_secret_key = arg2
-    settings.qianfan_language_model = arg3
+    if arg3:
+        settings.qianfan_language_model = arg3
     params = {
         "grant_type": "client_credentials",
         "client_id": arg1,

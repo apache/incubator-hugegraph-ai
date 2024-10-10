@@ -16,18 +16,11 @@
 # under the License.
 
 
-from typing import Optional, Dict, Any
-
-from pyhugegraph.client import PyHugeClient
+from enum import Enum
 
 
-class FetchGraphData:
-    def __init__(self, graph: PyHugeClient):
-        self.graph = graph
-
-    def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        if context is None:
-            context = {}
-        if "vertices" not in context:
-            context["vertices"] = self.graph.gremlin().exec("g.V().id()")["data"]
-        return context
+class PropertyCardinality(Enum):
+    SINGLE = "SINGLE"
+    LIST = "LIST"
+    SET = "SET"
+    DEFAULT = SINGLE
