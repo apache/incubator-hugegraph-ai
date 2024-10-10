@@ -102,6 +102,7 @@ class Commit2Graph:
                         log.error("Primary-key '%s' missing in vertex %s, skip it & need check it again", pk, vertex)
                         has_problem = True
                         break
+                    # TODO: transform to Enum first (better in earlier step)
                     data_type = property_label_map[pk]["data_type"]
                     cardinality = property_label_map[pk]["cardinality"]
                     if cardinality == PropertyCardinality.SINGLE.value:
@@ -119,10 +120,11 @@ class Commit2Graph:
 
             # 4. Check all data type value is right
             for key, value in input_properties.items():
+                # TODO: transform to Enum first (better in earlier step)
                 data_type = property_label_map[key]["data_type"]
                 cardinality = property_label_map[key]["cardinality"]
                 if not self._check_property_data_type(data_type, cardinality, value):
-                    log.error("Data type of property '%s' is not correct, skip it & need check it again", key)
+                    log.error("Property type/format '%s' is not correct, skip it & need check it again", key)
                     has_problem = True
                     break
             if has_problem:
@@ -189,49 +191,53 @@ class Commit2Graph:
 
     def _create_property(self, prop: dict):
         name = prop["name"]
-        data_type = prop["data_type"]
-        cardinality = prop["cardinality"]
-        property_key = self.schema.propertyKey(name)
+        try:
+            data_type = PropertyDataType(prop["data_type"])
+            cardinality = PropertyCardinality(prop["cardinality"])
+        except ValueError:
+            log.critical("Invalid data type %s / cardinality %s for property %s, skip & should check it again",
+                         prop["data_type"], prop["cardinality"], name)
+            return
 
+        property_key = self.schema.propertyKey(name)
         self._set_property_data_type(property_key, data_type)
         self._set_property_cardinality(property_key, cardinality)
-
         property_key.ifNotExist().create()
 
     def _set_property_data_type(self, property_key, data_type):
-        if data_type == PropertyDataType.BOOLEAN.value:
+        if data_type == PropertyDataType.BOOLEAN:
             log.error("Boolean type is not supported")
-        elif data_type == PropertyDataType.BYTE.value:
+        elif data_type == PropertyDataType.BYTE:
             log.warning("Byte type is not supported, use int instead")
             property_key.asInt()
-        elif data_type == PropertyDataType.INT.value:
+        elif data_type == PropertyDataType.INT:
             property_key.asInt()
-        elif data_type == PropertyDataType.LONG.value:
+        elif data_type == PropertyDataType.LONG:
             property_key.asLong()
-        elif data_type == PropertyDataType.FLOAT.value:
+        elif data_type == PropertyDataType.FLOAT:
             log.warning("Float type is not supported, use double instead")
             property_key.asDouble()
-        elif data_type == PropertyDataType.DOUBLE.value:
+        elif data_type == PropertyDataType.DOUBLE:
             property_key.asDouble()
-        elif data_type == PropertyDataType.TEXT.value:
+        elif data_type == PropertyDataType.TEXT:
             property_key.asText()
-        elif data_type == PropertyDataType.BLOB.value:
+        elif data_type == PropertyDataType.BLOB:
             log.warning("Blob type is not supported, use text instead")
             property_key.asText()
-        elif data_type == PropertyDataType.DATE.value:
+        elif data_type == PropertyDataType.DATE:
             property_key.asDate()
-        elif data_type == PropertyDataType.UUID.value:
+        elif data_type == PropertyDataType.UUID:
             log.warning("UUID type is not supported, use text instead")
             property_key.asText()
         else:
             log.error("Unknown data type %s for property_key %s", data_type, property_key)
 
     def _set_property_cardinality(self, property_key, cardinality):
-        if cardinality == PropertyCardinality.SINGLE.value:
+        if cardinality == PropertyCardinality.SINGLE:
             property_key.valueSingle()
-        elif cardinality == PropertyCardinality.LIST.value:
+        elif cardinality == PropertyCardinality.LIST:
             property_key.valueList()
-        elif cardinality == PropertyCardinality.SET.value:
+        elif cardinality == PropertyCardinality.SET:
             property_key.valueSet()
         else:
             log.error("Unknown cardinality %s for property_key %s", cardinality, property_key)
@@ -256,9 +262,10 @@ class Commit2Graph:
             return isinstance(value, int)
         if data_type in (PropertyDataType.FLOAT.value, PropertyDataType.DOUBLE.value):
             return isinstance(value, float)
-        if data_type in (PropertyDataType.TEXT.value, PropertyDataType.BLOB.value):
+        if data_type in (PropertyDataType.TEXT.value, PropertyDataType.UUID.value):
             return isinstance(value, str)
         # TODO: check ok below
-        if data_type in (PropertyDataType.DATE.value, PropertyDataType.UUID.value):
-            return isinstance(value, str)
-        raise ValueError(f"Unknown data type: {data_type}")
+        if data_type == PropertyDataType.DATE.value: # the format should be "yyyy-MM-dd"
+            import re
+            return isinstance(value, str) and re.match(r'^\d{4}-\d{2}-\d{2}$', value)
+        raise ValueError(f"Unknown/Unsupported data type: {data_type}")

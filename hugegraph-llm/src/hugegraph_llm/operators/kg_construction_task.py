@@ -49,9 +49,9 @@ class KgBuilder:
         elif from_user_defined:
             self.operators.append(CheckSchema(from_user_defined))
         elif from_extraction:
-            raise Exception("Not implemented yet")
+            raise NotImplementedError("Not implemented yet")
         else:
-            raise Exception("No input data / invalid schema type")
+            raise ValueError("No input data / invalid schema type")
         return self
 
     def fetch_graph_data(self):
@@ -104,5 +104,5 @@ class KgBuilder:
         return context
 
     @log_operator_time
-    def _run_operator(self, operator, context):
+    def _run_operator(self, operator, context) -> Dict[str, Any]:
         return operator.run(context)
