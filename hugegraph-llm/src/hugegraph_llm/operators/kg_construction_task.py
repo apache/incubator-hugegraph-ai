@@ -23,7 +23,7 @@ from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.common_op.check_schema import CheckSchema
 from hugegraph_llm.operators.common_op.print_result import PrintResult
 from hugegraph_llm.operators.document_op.chunk_split import ChunkSplit
-from hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph import CommitToKg
+from hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph import Commit2Graph
 from hugegraph_llm.operators.hugegraph_op.fetch_graph_data import FetchGraphData
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.operators.index_op.build_semantic_index import BuildSemanticIndex
@@ -49,9 +49,9 @@ class KgBuilder:
         elif from_user_defined:
             self.operators.append(CheckSchema(from_user_defined))
         elif from_extraction:
-            raise Exception("Not implemented yet")
+            raise NotImplementedError("Not implemented yet")
         else:
-            raise Exception("No input data / invalid schema type")
+            raise ValueError("No input data / invalid schema type")
         return self
 
     def fetch_graph_data(self):
@@ -81,7 +81,7 @@ class KgBuilder:
         return self
 
     def commit_to_hugegraph(self):
-        self.operators.append(CommitToKg())
+        self.operators.append(Commit2Graph())
         return self
 
     def build_vertex_id_semantic_index(self):
@@ -104,5 +104,5 @@ class KgBuilder:
         return context
 
     @log_operator_time
-    def _run_operator(self, operator, context):
+    def _run_operator(self, operator, context) -> Dict[str, Any]:
         return operator.run(context)
