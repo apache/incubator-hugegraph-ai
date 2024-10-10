@@ -66,21 +66,21 @@ class MergeDedupRerank:
         if self.custom_related_information:
             query = query + self.custom_related_information
         context["graph_ratio"] = self.graph_ratio
-        vector_search = context.get("vector_search", False)
-        graph_search = context.get("graph_search", False)
-        if graph_search and vector_search:
-            graph_length = int(self.topk * self.graph_ratio)
-            vector_length = self.topk - graph_length
-        else:
-            graph_length = self.topk
-            vector_length = self.topk
+        
+        raw_answer = context.get("raw_answer", False)
+        vector_only_answer = context.get("vector_only_answer", False)
+        graph_only_answer = context.get("graph_only_answer", False)
+        graph_vector_answer = context.get("graph_vector_answer", False)
 
+        if raw_answer and not (vector_only_answer or graph_only_answer or graph_vector_answer):
+            return context
+        
         vector_result = context.get("vector_result", [])
-        vector_length = min(len(vector_result), vector_length)
+        vector_length = min(len(vector_result), self.topk)
         vector_result = self._dedup_and_rerank(query, vector_result, vector_length)
 
         graph_result = context.get("graph_result", [])
-        graph_length = min(len(graph_result), graph_length)
+        graph_length = min(len(graph_result), self.topk)
         if self.near_neighbor_first:
             graph_result = self._rerank_with_vertex_degree(
                 query,
@@ -94,12 +94,17 @@ class MergeDedupRerank:
         else:
             graph_result = self._dedup_and_rerank(query, graph_result, graph_length)
 
+        context["graph_rerank_length"] = min(graph_length, int(self.topk * self.graph_ratio))
+        context["vector_rerank_length"] = min(vector_length, self.topk - int(self.topk * self.graph_ratio))
+
         context["vector_result"] = vector_result
         context["graph_result"] = graph_result
 
         return context
 
     def _dedup_and_rerank(self, query: str, results: List[str], topn: int) -> List[str]:
+        if topn == 0:
+            return []
         results = list(set(results))
         if self.method == "bleu":
             return _bleu_rerank(query, results)[:topn]
@@ -116,6 +121,9 @@ class MergeDedupRerank:
         vertex_degree_list: Optional[List[List[str]]],
         knowledge_with_degree: Dict[str, List[str]],
     ) -> List[str]:
+        if topn == 0:
+            return []
+
         if vertex_degree_list is None or len(vertex_degree_list) == 0:
             return self._dedup_and_rerank(query, results, topn)
 
