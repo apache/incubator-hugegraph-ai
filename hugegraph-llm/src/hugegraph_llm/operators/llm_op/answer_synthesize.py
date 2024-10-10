@@ -55,9 +55,7 @@ class AnswerSynthesize:
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._llm is None:
-            self._llm = context.get("llm") or LLMs().get_llm()
-        if context.get("llm") is None:
-            context["llm"] = self._llm
+            self._llm = LLMs().get_llm()
 
         if self._question is None:
             self._question = context.get("query") or None

@@ -19,9 +19,30 @@
 from enum import Enum
 
 
-class BuildMode(Enum):
-    REBUILD_VECTOR = "Rebuild Vector"
-    TEST_MODE = "Test Mode"
-    IMPORT_MODE = "Import Mode"
-    CLEAR_AND_IMPORT = "Clear and Import"
-    REBUILD_VERTEX_INDEX = "Rebuild vertex index"
+class PropertyDataType(Enum):
+    BOOLEAN = "BOOLEAN"
+    BYTE = "BYTE"
+    INT = "INT"
+    LONG = "LONG"
+    FLOAT = "FLOAT"
+    DOUBLE = "DOUBLE"
+    TEXT = "TEXT"
+    BLOB = "BLOB"
+    DATE = "DATE"
+    UUID = "UUID"
+    DEFAULT = TEXT
+
+
+def default_value_map(data_type: str):
+    return {
+        "BOOLEAN": False,
+        "BYTE": 0,
+        "INT": 0,
+        "LONG": 0,
+        "FLOAT": 0.0,
+        "DOUBLE": 0.0,
+        "TEXT": "",
+        "BLOB": "",
+        "DATE": "2000-01-01",
+        "UUID": "",
+    }[data_type]
