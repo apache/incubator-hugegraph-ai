@@ -41,6 +41,7 @@ def store_prompt(schema, example_prompt):
 
 
 def create_vector_graph_block():
+    # pylint: disable=no-member
     gr.Markdown(
         """## 1. Build Vector/Graph Index & Extract Knowledge Graph
 - Docs:
@@ -53,7 +54,6 @@ def create_vector_graph_block():
 - Graph extract head: The user-defined prompt of graph extracting
 """
     )
-    
 
     with gr.Row():
         with gr.Column():
@@ -89,42 +89,37 @@ def create_vector_graph_block():
     vector_index_btn0.click(get_vector_index_info, outputs=out).then(
         store_prompt,
         inputs=[input_schema, info_extract_template],
-    )  # pylint: disable=no-member
+    )
     vector_index_btn1.click(clean_vector_index).then(
         store_prompt,
         inputs=[input_schema, info_extract_template],
-    )  # pylint: disable=no-member
-    vector_import_bt.click(
-        build_vector_index, inputs=[input_file, input_text], outputs=out
-    ).then(
+    )
+    vector_import_bt.click(build_vector_index, inputs=[input_file, input_text], outputs=out).then(
         store_prompt,
         inputs=[input_schema, info_extract_template],
-    )  # pylint: disable=no-member
+    )
     graph_index_btn0.click(get_graph_index_info, outputs=out).then(
         store_prompt,
         inputs=[input_schema, info_extract_template],
-    )  # pylint: disable=no-member
+    )
     graph_index_btn1.click(clean_all_graph_index).then(
         store_prompt,
         inputs=[input_schema, info_extract_template],
-    )  # pylint: disable=no-member
+    )
     graph_index_rebuild_bt.click(fit_vid_index, outputs=out).then(
-        store_prompt,
-        inputs=[input_schema, info_extract_template],
-    )  # pylint: disable=no-member
-
-    # origin_out = gr.Textbox(visible=False)
-    graph_extract_bt.click(  # pylint: disable=no-member
-        extract_graph, inputs=[input_file, input_text, input_schema, info_extract_template], outputs=[out]
-    ).then(
         store_prompt,
         inputs=[input_schema, info_extract_template],
     )
 
+    # origin_out = gr.Textbox(visible=False)
+    graph_extract_bt.click(
+        extract_graph, inputs=[input_file, input_text, input_schema, info_extract_template], outputs=[out]
+    ).then(store_prompt, inputs=[input_schema, info_extract_template], )
+
     graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(
         store_prompt,
         inputs=[input_schema, info_extract_template],
-    )  # pylint: disable=no-member
+    )
 
     def on_tab_select(input_f, input_t, evt: gr.SelectData):
         print(f"You selected {evt.value} at {evt.index} from {evt.target}")
@@ -134,11 +129,7 @@ def create_vector_graph_block():
             return [], input_t
         return [], ""
 
-    tab_upload_file.select(
-        fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text]
-    )  # pylint: disable=no-member
-    tab_upload_text.select(
-        fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text]
-    )  # pylint: disable=no-member
+    tab_upload_file.select(fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text])
+    tab_upload_text.select(fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text])
 
     return input_schema, info_extract_template
