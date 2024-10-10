@@ -26,6 +26,8 @@ from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 
+from hugegraph_llm.config import prompt
+
 
 def read_documents(input_file, input_text):
     if input_file:
