@@ -206,7 +206,6 @@ class RAGPipeline:
             self.extract_keywords().query_graphdb().synthesize_answer()
 
         context = kwargs
-        context["llm"] = self._llm
 
         for operator in self._operators:
             context = self._run_operator(operator, context)

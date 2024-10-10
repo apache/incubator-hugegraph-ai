@@ -19,9 +19,9 @@
 from enum import Enum
 
 
-# Note: we don't support the "UUID" strategy for now
 class IdStrategy(Enum):
-    AUTOMATIC = "AUTOMATIC"
-    CUSTOMIZE_NUMBER = "CUSTOMIZE_NUMBER"
-    CUSTOMIZE_STRING = "CUSTOMIZE_STRING"
-    PRIMARY_KEY = "PRIMARY_KEY"
+    AUTOMATIC = "automatic"
+    PRIMARY_KEY = "primary_key"
+    CUSTOMIZE_STRING = "customize_string"
+    CUSTOMIZE_NUMBER = "customize_number"
+    CUSTOMIZE_UUID = "customize_uuid"
