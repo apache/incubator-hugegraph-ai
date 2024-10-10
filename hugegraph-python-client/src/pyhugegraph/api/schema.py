@@ -115,6 +115,14 @@ class SchemaManager(HugeParamsBase):
 
     @router.http("GET", "schema/edgelabels")
     def getRelations(self) -> Optional[List[str]]:
+        """
+        Retrieve all edge_label links/paths from the graph-sever.
+
+        Returns a list of links representations for each edge_label, e.g:
+        The format is like "source_vertexlabel--edge_label-->target_vertexlabel".(e.g. "Person--likes-->Animal")
+
+        :return: A list of relationship links/paths for all edge_labels, or None if not found.
+        """
         if response := self._invoke_request():
             return [EdgeLabelData(item).relations() for item in response["edgelabels"]]
         return None

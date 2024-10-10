@@ -91,7 +91,7 @@ if __name__ == '__main__':
                     ]
             else:
                 llm_config_input = []
-            llm_config_button = gr.Button("apply configuration")
+            llm_config_button = gr.Button("Apply Configuration")
 
             def apply_configuration(arg1, arg2, arg3, arg4):
                 llm_option = settings.llm_type
@@ -139,7 +139,7 @@ if __name__ == '__main__':
                     ]
             else:
                 embedding_config_input = []
-            embedding_config_button = gr.Button("apply configuration")
+            embedding_config_button = gr.Button("Apply Configuration")
 
             def apply_configuration(arg1, arg2, arg3):
                 embedding_option = settings.embedding_type
