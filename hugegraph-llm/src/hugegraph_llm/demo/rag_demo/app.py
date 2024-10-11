@@ -62,26 +62,29 @@ def init_rag_ui() -> gr.Interface:
     ) as hugegraph_llm_ui:
         gr.Markdown("# HugeGraph LLM RAG Demo")
 
-        # TODO: leave a general idea of the unresolved part
-        # graph_config_input = textbox_array_graph_config
-        #  = [settings.graph_ip, settings.graph_port, settings.graph_name, graph_user, settings.graph_pwd, settings.graph_space]
+        """
+        TODO: leave a general idea of the unresolved part
+        graph_config_input = textbox_array_graph_config
+         = [settings.graph_ip, settings.graph_port, settings.graph_name, graph_user, settings.graph_pwd, settings.graph_space]
         
-        # llm_config_input = textbox_array_llm_config
-        #  = if settings.llm_type == openai [settings.openai_api_key, settings.openai_api_base, settings.openai_language_model, settings.openai_max_tokens]
-        #  = else if settings.llm_type == ollama [settings.ollama_host, settings.ollama_port, settings.ollama_language_model, ""]
-        #  = else if settings.llm_type == qianfan_wenxin [settings.qianfan_api_key, settings.qianfan_secret_key, settings.qianfan_language_model, ""]
-        #  = else ["","","", ""]
+        llm_config_input = textbox_array_llm_config
+         = if settings.llm_type == openai [settings.openai_api_key, settings.openai_api_base, settings.openai_language_model, settings.openai_max_tokens]
+         = else if settings.llm_type == ollama [settings.ollama_host, settings.ollama_port, settings.ollama_language_model, ""]
+         = else if settings.llm_type == qianfan_wenxin [settings.qianfan_api_key, settings.qianfan_secret_key, settings.qianfan_language_model, ""]
+         = else ["","","", ""]
 
-        # embedding_config_input = textbox_array_embedding_config
-        #  = if settings.embedding_type == openai [settings.openai_api_key, settings.openai_api_base, settings.openai_embedding_model]
-        #  = else if settings.embedding_type == ollama [settings.ollama_host, settings.ollama_port, settings.ollama_embedding_model]
-        #  = else if settings.embedding_type == qianfan_wenxin [settings.qianfan_api_key, settings.qianfan_secret_key, settings.qianfan_embedding_model]
-        #  = else ["","",""]
+        embedding_config_input = textbox_array_embedding_config
+         = if settings.embedding_type == openai [settings.openai_api_key, settings.openai_api_base, settings.openai_embedding_model]
+         = else if settings.embedding_type == ollama [settings.ollama_host, settings.ollama_port, settings.ollama_embedding_model]
+         = else if settings.embedding_type == qianfan_wenxin [settings.qianfan_api_key, settings.qianfan_secret_key, settings.qianfan_embedding_model]
+         = else ["","",""]
 
-        # reranker_config_input = textbox_array_reranker_config
-        #  = if settings.reranker_type == cohere [settings.reranker_api_key, settings.reranker_model, settings.cohere_base_url]
-        #  = else if settings.reranker_type == siliconflow [settings.reranker_api_key, "BAAI/bge-reranker-v2-m3", ""]
-        #  = else ["","",""]
+        reranker_config_input = textbox_array_reranker_config
+         = if settings.reranker_type == cohere [settings.reranker_api_key, settings.reranker_model, settings.cohere_base_url]
+         = else if settings.reranker_type == siliconflow [settings.reranker_api_key, "BAAI/bge-reranker-v2-m3", ""]
+         = else ["","",""]
+        """
+        
 
         textbox_array_graph_config = create_configs_block()
 
