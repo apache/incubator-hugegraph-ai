@@ -23,7 +23,23 @@ from pyhugegraph.utils.log import log
 from pyhugegraph.utils.util import ResponseValidation
 
 
+# TODO: support UpdateStrategy for PropertyKey (refer java-client/rest-api)
 class PropertyKey(HugeParamsBase):
+    # Data Type: [OBJECT, BOOLEAN, BYTE, INT, LONG, FLOAT, DOUBLE, TEXT, BLOB, DATE]
+    @decorator_params
+    def asObject(self) -> "PropertyKey":
+        self._parameter_holder.set("data_type", "OBJECT")
+        return self
+
+    @decorator_params
+    def asBool(self) -> "PropertyKey":
+        self._parameter_holder.set("data_type", "BOOLEAN")
+        return self
+
+    @decorator_params
+    def asByte(self) -> "PropertyKey":
+        self._parameter_holder.set("data_type", "BYTE")
+        return self
 
     @decorator_params
     def asInt(self) -> "PropertyKey":
@@ -36,8 +52,8 @@ class PropertyKey(HugeParamsBase):
         return self
 
     @decorator_params
-    def asText(self) -> "PropertyKey":
-        self._parameter_holder.set("data_type", "TEXT")
+    def asFloat(self) -> "PropertyKey":
+        self._parameter_holder.set("data_type", "FLOAT")
         return self
 
     @decorator_params
@@ -46,10 +62,21 @@ class PropertyKey(HugeParamsBase):
         return self
 
     @decorator_params
+    def asText(self) -> "PropertyKey":
+        self._parameter_holder.set("data_type", "TEXT")
+        return self
+
+    @decorator_params
+    def asBlob(self) -> "PropertyKey":
+        self._parameter_holder.set("data_type", "BLOB")
+        return self
+
+    @decorator_params
     def asDate(self) -> "PropertyKey":
         self._parameter_holder.set("data_type", "DATE")
         return self
 
+    #  Cardinality Type [SINGLE, LIST, SET]
     @decorator_params
     def valueSingle(self) -> "PropertyKey":
         self._parameter_holder.set("cardinality", "SINGLE")
@@ -65,6 +92,7 @@ class PropertyKey(HugeParamsBase):
         self._parameter_holder.set("cardinality", "SET")
         return self
 
+    #  Aggregate Type [NONE, MAX, MIN, SUM, OLD]
     @decorator_params
     def calcMax(self) -> "PropertyKey":
         self._parameter_holder.set("aggregate_type", "MAX")
