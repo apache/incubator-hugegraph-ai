@@ -42,6 +42,7 @@ class VectorIndex:
         if not os.path.exists(index_file) or not os.path.exists(properties_file):
             log.warning("No index file found, create a new one.")
             return VectorIndex()
+
         faiss_index = faiss.read_index(index_file)
         embed_dim = faiss_index.d
         with open(properties_file, "rb") as f:
@@ -54,6 +55,7 @@ class VectorIndex:
     def to_index_file(self, dir_path: str):
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
+
         index_file = os.path.join(dir_path, INDEX_FILE_NAME)
         properties_file = os.path.join(dir_path, PROPERTIES_FILE_NAME)
         faiss.write_index(self.index, index_file)
@@ -63,6 +65,7 @@ class VectorIndex:
     def add(self, vectors: List[List[float]], props: List[Any]):
         if len(vectors) == 0:
             return
+
         if self.index.ntotal == 0 and len(vectors[0]) != self.index.d:
             self.index = faiss.IndexFlatL2(len(vectors[0]))
         self.index.add(np.array(vectors))
@@ -73,6 +76,7 @@ class VectorIndex:
             props = set(props)
         indices = []
         remove_num = 0
+
         for i, p in enumerate(self.properties):
             if p in props:
                 indices.append(i)
@@ -81,15 +85,20 @@ class VectorIndex:
         self.properties = [p for i, p in enumerate(self.properties) if i not in indices]
         return remove_num
 
-    def search(self, query_vector: List[float], top_k: int) -> List[Dict[str, Any]]:
+    def search(self, query_vector: List[float], top_k: int, dis_threshold: float = 0.8) -> List[Dict[str, Any]]:
         if self.index.ntotal == 0:
             return []
+
         if len(query_vector) != self.index.d:
             raise ValueError("Query vector dimension does not match index dimension!")
-        _, indices = self.index.search(np.array([query_vector]), top_k)
+
+        distances, indices = self.index.search(np.array([query_vector]), top_k)
         results = []
-        for i in indices[0]:
-            results.append(deepcopy(self.properties[i]))
+        for dist, i in zip(distances[0], indices[0]):
+            if dist < dis_threshold: # Smaller distances indicate higher similarity
+                results.append(deepcopy(self.properties[i]))
+            else:
+                log.debug("Distance %s is larger than threshold %s, ignore this result.", dist, dis_threshold)
         return results
 
     @staticmethod

@@ -20,6 +20,7 @@ import os
 from copy import deepcopy
 from typing import Dict, Any, Literal, List, Tuple
 
+from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
 from hugegraph_llm.config import resource_path, settings
 from hugegraph_llm.indices.vector_index import VectorIndex
@@ -71,6 +72,7 @@ class SemanticIdQuery:
         possible_vids = deepcopy(keywords)
         for i in range(vertex_label_num):
             possible_vids.extend([f"{i+1}:{keyword}" for keyword in keywords])
+
         vids_str = ",".join([f"'{vid}'" for vid in possible_vids])
         resp = self._client.gremlin().exec(SemanticIdQuery.ID_QUERY_TEMPL.format(vids_str=vids_str))
         searched_vids = [v['id'] for v in resp['data']]

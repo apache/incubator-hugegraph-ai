@@ -14,7 +14,6 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from cgi import print_arguments
 from typing import Any, Dict, Optional, List, Set, Tuple
 
 from hugegraph_llm.config import settings
@@ -26,9 +25,9 @@ VERTEX_QUERY_TPL = "g.V({keywords}).as('subj').toList()"
 # TODO: we could use a simpler query (like kneighbor-api to get the edges)
 # TODO: test with profile()/explain() to speed up the query
 VID_QUERY_NEIGHBOR_TPL = """
-g.V({keywords}).as('subj')
+g.V({keywords})
 .repeat(
-   bothE({edge_labels}).limit({edge_limit}).as('rel').otherV().dedup().as('obj')
+   bothE({edge_labels}).limit({edge_limit}).otherV().dedup()
 ).times({max_deep}).emit()
 .simplePath()
 .path()
@@ -48,9 +47,9 @@ g.V({keywords}).as('subj')
 """
 
 PROPERTY_QUERY_NEIGHBOR_TPL = """
-g.V().has('{prop}', within({keywords})).as('subj')
+g.V().has('{prop}', within({keywords}))
 .repeat(
-   bothE({edge_labels}).limit({edge_limit}).as('rel').otherV().dedup().as('obj')
+   bothE({edge_labels}).limit({edge_limit}).otherV().dedup()
 ).times({max_deep}).emit()
 .simplePath()
 .path()
@@ -168,7 +167,7 @@ class GraphRAGQuery:
         context["knowledge_with_degree"] = knowledge_with_degree
         context["graph_context_head"] = (
             f"The following are graph knowledge in {self._max_deep} depth, e.g:\n"
-            "`subject -[predicate]-> object <-[predicate_next_hop]- object_next_hop ...`"
+            "`vertexA --[links]--> vertexB <--[links]-- vertexC ...`"
             "extracted based on key entities as subject:\n"
         )
 
@@ -216,21 +215,21 @@ class GraphRAGQuery:
 
         for i, item in enumerate(raw_flat_rel):
             if i % 2 == 0:
-                # 3. Process each vertex
-                flat_rel, prior_edge_str_len, depth = self._process_node(
+                # Process each vertex
+                flat_rel, prior_edge_str_len, depth = self._process_vertex(
                     item, flat_rel, node_cache, prior_edge_str_len, depth, nodes_with_degree, use_id_to_match
                 )
             else:
-                # 4. Process each edge
+                # Process each edge
                 flat_rel, prior_edge_str_len = self._process_edge(
                     item, flat_rel, prior_edge_str_len, raw_flat_rel, i,use_id_to_match
                 )
 
         return flat_rel, nodes_with_degree
 
-    def _process_node(self, item: Any, flat_rel: str, node_cache: Set[str],
-                      prior_edge_str_len: int, depth: int, nodes_with_degree: List[str],
-                      use_id_to_match: bool) -> Tuple[str, int, int]:
+    def _process_vertex(self, item: Any, flat_rel: str, node_cache: Set[str],
+                        prior_edge_str_len: int, depth: int, nodes_with_degree: List[str],
+                        use_id_to_match: bool) -> Tuple[str, int, int]:
         matched_str = item["id"] if use_id_to_match else item["props"][self._prop_to_match]
         if matched_str in node_cache:
             flat_rel = flat_rel[:-prior_edge_str_len]
@@ -250,13 +249,14 @@ class GraphRAGQuery:
         props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items())
         props_str = f"{{{props_str}}}" if len(props_str) > 0 else ""
         prev_matched_str = raw_flat_rel[i - 1]["id"] if use_id_to_match else raw_flat_rel[i - 1]["props"][self._prop_to_match]
+
         if item["outV"] == prev_matched_str:
-            edge_str = f" -[{item['label']}{props_str}]-> "
+            edge_str = f" --[{item['label']}{props_str}]--> "
         else:
-            edge_str = f" <-[{item['label']}{props_str}]- "
+            edge_str = f" <--[{item['label']}{props_str}]-- "
+
         flat_rel += edge_str
         prior_edge_str_len = len(edge_str)
-
         return flat_rel, prior_edge_str_len
 
     def _update_vertex_degree_list(self, vertex_degree_list: List[Set[str]], nodes_with_degree: List[str]) -> None:
@@ -269,7 +269,7 @@ class GraphRAGQuery:
         schema = self._get_graph_schema()
         vertex_props_str, edge_props_str = schema.split("\n")[:2]
         # TODO: rename to vertex (also need update in the schema)
-        vertex_props_str = vertex_props_str[len("Node properties: "):].strip("[").strip("]")
+        vertex_props_str = vertex_props_str[len("Vertex properties: "):].strip("[").strip("]")
         edge_props_str = edge_props_str[len("Edge properties: "):].strip("[").strip("]")
         vertex_labels = self._extract_label_names(vertex_props_str)
         edge_labels = self._extract_label_names(edge_props_str)
@@ -295,9 +295,9 @@ class GraphRAGQuery:
         relationships = schema.getRelations()
 
         self._schema = (
-            f"Node properties: {vertex_schema}\n"
+            f"Vertex properties: {vertex_schema}\n"
             f"Edge properties: {edge_schema}\n"
             f"Relationships: {relationships}\n"
         )
-        log.debug("Schema: %s", self._schema)
+        log.debug("Link(Relation): %s", relationships)
         return self._schema
