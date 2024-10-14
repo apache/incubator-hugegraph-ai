@@ -179,8 +179,8 @@ def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
     settings.update_env()
     return status_code
 
-
-def create_configs_block():
+# TODO: refactor the function to reduce the number of statements & separate the logic
+def create_configs_block() -> list:
     # pylint: disable=R0915 (too-many-statements)
     with gr.Accordion("1. Set up the HugeGraph server.", open=False):
         with gr.Row():

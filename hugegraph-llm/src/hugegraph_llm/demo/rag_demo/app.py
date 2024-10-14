@@ -25,6 +25,7 @@ from fastapi import FastAPI, Depends, APIRouter
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from hugegraph_llm.api.rag_api import rag_http_api
+from hugegraph_llm.config import settings, prompt
 from hugegraph_llm.demo.rag_demo.configs_block import (
     create_configs_block,
     apply_llm_config,
@@ -37,7 +38,6 @@ from hugegraph_llm.demo.rag_demo.rag_block import create_rag_block, rag_answer
 from hugegraph_llm.demo.rag_demo.vector_graph_block import create_vector_graph_block
 from hugegraph_llm.resources.demo.css import CSS
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.config import settings, prompt
 
 sec = HTTPBearer()
 
@@ -96,10 +96,13 @@ def init_rag_ui() -> gr.Interface:
             create_other_block()
         
 
-        def refresh_ui_config_prompt():
+        def refresh_ui_config_prompt() -> tuple:
             settings.from_env()
             prompt.ensure_yaml_file_exists()
-            return settings.graph_ip, settings.graph_port, settings.graph_name, settings.graph_user, settings.graph_pwd, settings.graph_space, prompt.graph_schema, prompt.extract_graph_prompt
+            return (
+                settings.graph_ip, settings.graph_port, settings.graph_name, settings.graph_user,
+                settings.graph_pwd, settings.graph_space, prompt.graph_schema, prompt.extract_graph_prompt
+            )
 
 
         hugegraph_llm_ui.load(fn=refresh_ui_config_prompt, outputs=[
@@ -133,7 +136,6 @@ if __name__ == "__main__":
     auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
     log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
     # TODO: support multi-user login when need
-
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/", auth=("rag", os.getenv("TOKEN")) if auth_enabled else None)
 
     # TODO: we can't use reload now due to the config 'app' of uvicorn.run
