@@ -27,7 +27,7 @@ KEYWORDS_EXTRACT_TPL = """Extract {max_keywords} keywords from the text:
 {question}
 
 1. Keywords can't contain meaningless/broad words(e.g action/relation/thing), must represent certain entities,  
-2. Better to extract subject/verb/object and avoid extracting individual words/particles, don't extend to 
+2. Better to extract subject/verb/object and avoid extracting single character or particles, don't extend to 
 synonyms/general categories.
 Provide keywords in the following comma-separated format: 'KEYWORDS: <keywords>'
 """

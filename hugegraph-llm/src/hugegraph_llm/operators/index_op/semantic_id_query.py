@@ -63,6 +63,7 @@ class SemanticIdQuery:
             exact_match_vids, unmatched_vids = self._exact_match_vids(context["keywords"])
             graph_query_list.extend(exact_match_vids)
             fuzzy_match_vids = self._fuzzy_match_vids(unmatched_vids)
+            log.debug("Fuzzy match vids: %s", fuzzy_match_vids)
             graph_query_list.extend(fuzzy_match_vids)
         context["match_vids"] = list(set(graph_query_list))
         return context
