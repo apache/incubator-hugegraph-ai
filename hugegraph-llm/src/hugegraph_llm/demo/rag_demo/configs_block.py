@@ -192,7 +192,7 @@ def create_configs_block():
                 gr.Textbox(value=settings.graph_pwd, label="pwd", type="password"),
                 gr.Textbox(value=settings.graph_space, label="graphspace(Optional)"),
             ]
-        graph_config_button = gr.Button("Apply config")
+        graph_config_button = gr.Button("Apply Configuration")
     graph_config_button.click(apply_graph_config, inputs=graph_config_input)  # pylint: disable=no-member
 
     with gr.Accordion("2. Set up the LLM.", open=False):
@@ -232,7 +232,7 @@ def create_configs_block():
                     gr.Textbox(value="", visible=False),
                     gr.Textbox(value="", visible=False),
                 ]
-            llm_config_button = gr.Button("apply configuration")
+            llm_config_button = gr.Button("Apply configuration")
             llm_config_button.click(apply_llm_config, inputs=llm_config_input)  # pylint: disable=no-member
 
 
@@ -272,7 +272,7 @@ def create_configs_block():
                     gr.Textbox(value="", visible=False),
                 ]
 
-            embedding_config_button = gr.Button("apply configuration")
+            embedding_config_button = gr.Button("Apply Configuration")
 
             # Call the separate apply_embedding_configuration function here
             embedding_config_button.click(  # pylint: disable=no-member
@@ -314,7 +314,7 @@ def create_configs_block():
                     gr.Textbox(value="", visible=False),
                     gr.Textbox(value="", visible=False),
                 ]
-            reranker_config_button = gr.Button("apply configuration")
+            reranker_config_button = gr.Button("Apply configuration")
 
             # TODO: use "gr.update()" or other way to update the config in time (refactor the click event)
             # Call the separate apply_reranker_configuration function here
