@@ -26,7 +26,7 @@ import gradio as gr
 from .hugegraph_utils import get_hg_client, clean_hg_data
 from .log import log
 from .vector_index_utils import read_documents
-from ..config import resource_path, settings, prompt
+from ..config import resource_path, settings
 from ..indices.vector_index import VectorIndex
 from ..models.embeddings.init_embedding import Embeddings
 from ..models.llms.init_llm import LLMs

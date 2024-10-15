@@ -23,7 +23,7 @@ import gradio as gr
 import requests
 from requests.auth import HTTPBasicAuth
 
-from hugegraph_llm.config import settings, prompt
+from hugegraph_llm.config import settings
 from hugegraph_llm.utils.log import log
 
 

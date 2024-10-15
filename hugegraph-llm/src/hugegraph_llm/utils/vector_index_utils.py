@@ -19,14 +19,13 @@ import os
 
 import docx
 import gradio as gr
+
 from hugegraph_llm.config import resource_path, settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
-
-from hugegraph_llm.config import prompt
 
 
 def read_documents(input_file, input_text):
