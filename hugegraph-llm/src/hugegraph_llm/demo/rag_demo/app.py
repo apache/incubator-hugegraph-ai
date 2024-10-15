@@ -91,7 +91,7 @@ def init_rag_ui() -> gr.Interface:
         with gr.Tab(label="1. Build RAG Index 💡"):
             textbox_input_schema, textbox_info_extract_template = create_vector_graph_block()
         with gr.Tab(label="2. (Graph)RAG & User Functions 📖"):
-            create_rag_block()
+            textbox_inp, textbox_answer_prompt_input = create_rag_block()
         with gr.Tab(label="3. Others Tools 🚧"):
             create_other_block()
         
@@ -101,7 +101,8 @@ def init_rag_ui() -> gr.Interface:
             prompt.ensure_yaml_file_exists()
             return (
                 settings.graph_ip, settings.graph_port, settings.graph_name, settings.graph_user,
-                settings.graph_pwd, settings.graph_space, prompt.graph_schema, prompt.extract_graph_prompt
+                settings.graph_pwd, settings.graph_space, prompt.graph_schema, prompt.extract_graph_prompt,
+                prompt.default_question, prompt.answer_prompt
             )
 
 
@@ -114,7 +115,10 @@ def init_rag_ui() -> gr.Interface:
             textbox_array_graph_config[5],
 
             textbox_input_schema,
-            textbox_info_extract_template
+            textbox_info_extract_template,
+
+            textbox_inp,
+            textbox_answer_prompt_input
         ])
 
     return hugegraph_llm_ui
