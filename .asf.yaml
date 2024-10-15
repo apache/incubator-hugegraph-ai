@@ -23,16 +23,15 @@ github:
     wiki: true
     # Enable projects for project management boards
     projects: true
-  description: The integration of HugeGraph with artificial intelligence
-  homepage: https://hugegraph.apache.org
+  description: The integration of HugeGraph with AI/LLM & GraphRAG
+  homepage: https://hugegraph.apache.org/docs/quickstart/hugegraph-ai/
   del_branch_on_merge: true
   labels:
-    - hugegraph
-    - llm
+    - graphrag
     - graph-machine-learning
-    - graph-neural-networks
-    - graph-embedding
+    - GNN
     - knowledge-graph
+    - hugegraph
   enabled_merge_buttons:
     merge: false
     rebase: true
