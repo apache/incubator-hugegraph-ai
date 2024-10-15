@@ -33,6 +33,16 @@ F_NAME = "config_prompt.yaml"
 yaml_file_path = os.path.join(package_path, f"src/hugegraph_llm/resources/demo/{F_NAME}")
 
 
+def read_dotenv() -> dict[str, Optional[str]]:
+    """Read a .env file in the given root path."""
+    env_config = dotenv_values(f"{env_path}")
+    log.info("Loading %s successfully!", env_path)
+    for key, value in env_config.items():
+        if key not in os.environ:
+            os.environ[key] = value or ""
+    return env_config
+
+
 @dataclass
 class Config(ConfigData):
     def from_env(self):
@@ -75,16 +85,6 @@ class Config(ConfigData):
                 continue
             log.info("Update %s: %s=%s", env_path, k, v)
             set_key(env_path, k, v, quote_mode="never")
-
-
-def read_dotenv() -> dict[str, Optional[str]]:
-    """Read a .env file in the given root path."""
-    env_config = dotenv_values(f"{env_path}")
-    log.info("Loading %s successfully!", env_path)
-    for key, value in env_config.items():
-        if key not in os.environ:
-            os.environ[key] = value or ""
-    return env_config
 
 
 class PromptConfig(PromptData):

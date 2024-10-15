@@ -179,8 +179,8 @@ def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
     settings.update_env()
     return status_code
 
-
-def create_configs_block():
+# TODO: refactor the function to reduce the number of statements & separate the logic
+def create_configs_block() -> list:
     # pylint: disable=R0915 (too-many-statements)
     with gr.Accordion("1. Set up the HugeGraph server.", open=False):
         with gr.Row():
@@ -226,9 +226,15 @@ def create_configs_block():
                         gr.Textbox(value="", visible=False),
                     ]
             else:
-                llm_config_input = []
-            llm_config_button = gr.Button("Apply Configuration")
+                llm_config_input = [
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                ]
+            llm_config_button = gr.Button("Apply configuration")
             llm_config_button.click(apply_llm_config, inputs=llm_config_input)  # pylint: disable=no-member
+
 
     with gr.Accordion("3. Set up the Embedding.", open=False):
         embedding_dropdown = gr.Dropdown(
@@ -245,13 +251,6 @@ def create_configs_block():
                         gr.Textbox(value=settings.openai_api_base, label="api_base"),
                         gr.Textbox(value=settings.openai_embedding_model, label="model_name"),
                     ]
-            elif embedding_type == "qianfan_wenxin":
-                with gr.Row():
-                    embedding_config_input = [
-                        gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
-                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
-                        gr.Textbox(value=settings.qianfan_embedding_model, label="model_name"),
-                    ]
             elif embedding_type == "ollama":
                 with gr.Row():
                     embedding_config_input = [
@@ -259,8 +258,19 @@ def create_configs_block():
                         gr.Textbox(value=str(settings.ollama_port), label="port"),
                         gr.Textbox(value=settings.ollama_embedding_model, label="model_name"),
                     ]
+            elif embedding_type == "qianfan_wenxin":
+                with gr.Row():
+                    embedding_config_input = [
+                        gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
+                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
+                        gr.Textbox(value=settings.qianfan_embedding_model, label="model_name"),
+                    ]
             else:
-                embedding_config_input = []
+                embedding_config_input = [
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                ]
 
             embedding_config_button = gr.Button("Apply Configuration")
 
@@ -296,10 +306,15 @@ def create_configs_block():
                             label="model",
                             info="Please refer to https://siliconflow.cn/pricing",
                         ),
+                        gr.Textbox(value="", visible=False),
                     ]
             else:
-                reranker_config_input = []
-            reranker_config_button = gr.Button("Apply Configuration")
+                reranker_config_input = [
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                ]
+            reranker_config_button = gr.Button("Apply configuration")
 
             # TODO: use "gr.update()" or other way to update the config in time (refactor the click event)
             # Call the separate apply_reranker_configuration function here
@@ -307,3 +322,5 @@ def create_configs_block():
                 fn=apply_reranker_config,
                 inputs=reranker_config_input,  # pylint: disable=no-member
             )
+    # The reason for returning this partial value is the functional need to refresh the ui
+    return graph_config_input

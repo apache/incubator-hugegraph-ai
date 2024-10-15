@@ -26,7 +26,7 @@ import gradio as gr
 from .hugegraph_utils import get_hg_client, clean_hg_data
 from .log import log
 from .vector_index_utils import read_documents
-from ..config import resource_path, settings, prompt
+from ..config import resource_path, settings
 from ..indices.vector_index import VectorIndex
 from ..models.embeddings.init_embedding import Embeddings
 from ..models.llms.init_llm import LLMs
@@ -52,11 +52,6 @@ def clean_all_graph_index():
 
 
 def extract_graph(input_file, input_text, schema, example_prompt) -> str:
-    # update env variables: schema and example_prompt
-    if prompt.graph_schema != schema or prompt.extract_graph_prompt != example_prompt:
-        prompt.graph_schema = schema
-        prompt.extract_graph_prompt = example_prompt
-        prompt.update_yaml_file()
 
     texts = read_documents(input_file, input_text)
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())

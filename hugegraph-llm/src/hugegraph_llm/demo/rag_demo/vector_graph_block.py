@@ -22,7 +22,6 @@ import os
 import gradio as gr
 
 from hugegraph_llm.config import resource_path, prompt
-from hugegraph_llm.operators.llm_op.property_graph_extract import SCHEMA_EXAMPLE_PROMPT
 from hugegraph_llm.utils.graph_index_utils import (
     get_graph_index_info,
     clean_all_graph_index,
@@ -33,21 +32,30 @@ from hugegraph_llm.utils.graph_index_utils import (
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index, build_vector_index, get_vector_index_info
 
 
+def store_prompt(schema, example_prompt):
+    # update env variables: schema and example_prompt
+    if prompt.graph_schema != schema or prompt.extract_graph_prompt != example_prompt:
+        prompt.graph_schema = schema
+        prompt.extract_graph_prompt = example_prompt
+        prompt.update_yaml_file()
+
+
 def create_vector_graph_block():
+    # pylint: disable=no-member
     gr.Markdown(
         """## 1. Build Vector/Graph Index & Extract Knowledge Graph
 - Docs:
   - text: Build rag index from plain text
   - file: Upload file(s) which should be <u>TXT</u> or <u>.docx</u> (Multiple files can be selected together)
 - [Schema](https://hugegraph.apache.org/docs/clients/restful-api/schema/): (Accept **2 types**)
-  - User-defined Schema (JSON format, follow the template to modify it)
+  - User-defined Schema (JSON format, follow the [template](https://github.com/apache/incubator-hugegraph-ai/blob/aff3bbe25fa91c3414947a196131be812c20ef11/hugegraph-llm/src/hugegraph_llm/config/config_data.py#L125) 
+  to modify it)
   - Specify the name of the HugeGraph graph instance, it will automatically get the schema from it (like 
   **"hugegraph"**)
 - Graph extract head: The user-defined prompt of graph extracting
+- If already exist the graph data, you should click "**Rebuild vid Index**" to update the index
 """
     )
-
-    schema = prompt.graph_schema
 
     with gr.Row():
         with gr.Column():
@@ -59,9 +67,9 @@ def create_vector_graph_block():
                     label="Docs (multi-files can be selected together)",
                     file_count="multiple",
                 )
-        input_schema = gr.Textbox(value=schema, label="Schema", lines=15, show_copy_button=True)
+        input_schema = gr.Textbox(value=prompt.graph_schema, label="Schema", lines=15, show_copy_button=True)
         info_extract_template = gr.Textbox(
-            value=SCHEMA_EXAMPLE_PROMPT, label="Graph extract head", lines=15, show_copy_button=True
+            value=prompt.extract_graph_prompt, label="Graph extract head", lines=15, show_copy_button=True
         )
         out = gr.Code(label="Output", language="json", elem_classes="code-container-edit")
 
@@ -80,21 +88,40 @@ def create_vector_graph_block():
         graph_extract_bt = gr.Button("Extract Graph Data (1)", variant="primary")
         graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=True)
 
-    vector_index_btn0.click(get_vector_index_info, outputs=out)  # pylint: disable=no-member
-    vector_index_btn1.click(clean_vector_index)  # pylint: disable=no-member
-    vector_import_bt.click(
-        build_vector_index, inputs=[input_file, input_text], outputs=out
-    )  # pylint: disable=no-member
-    graph_index_btn0.click(get_graph_index_info, outputs=out)  # pylint: disable=no-member
-    graph_index_btn1.click(clean_all_graph_index)  # pylint: disable=no-member
-    graph_index_rebuild_bt.click(fit_vid_index, outputs=out)  # pylint: disable=no-member
-
-    # origin_out = gr.Textbox(visible=False)
-    graph_extract_bt.click(  # pylint: disable=no-member
-        extract_graph, inputs=[input_file, input_text, input_schema, info_extract_template], outputs=[out]
+    vector_index_btn0.click(get_vector_index_info, outputs=out).then(
+        store_prompt,
+        inputs=[input_schema, info_extract_template],
+    )
+    vector_index_btn1.click(clean_vector_index).then(
+        store_prompt,
+        inputs=[input_schema, info_extract_template],
+    )
+    vector_import_bt.click(build_vector_index, inputs=[input_file, input_text], outputs=out).then(
+        store_prompt,
+        inputs=[input_schema, info_extract_template],
+    )
+    graph_index_btn0.click(get_graph_index_info, outputs=out).then(
+        store_prompt,
+        inputs=[input_schema, info_extract_template],
+    )
+    graph_index_btn1.click(clean_all_graph_index).then(
+        store_prompt,
+        inputs=[input_schema, info_extract_template],
+    )
+    graph_index_rebuild_bt.click(fit_vid_index, outputs=out).then(
+        store_prompt,
+        inputs=[input_schema, info_extract_template],
     )
 
-    graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out])  # pylint: disable=no-member
+    # origin_out = gr.Textbox(visible=False)
+    graph_extract_bt.click(
+        extract_graph, inputs=[input_file, input_text, input_schema, info_extract_template], outputs=[out]
+    ).then(store_prompt, inputs=[input_schema, info_extract_template], )
+
+    graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(
+        store_prompt,
+        inputs=[input_schema, info_extract_template],
+    )
 
     def on_tab_select(input_f, input_t, evt: gr.SelectData):
         print(f"You selected {evt.value} at {evt.index} from {evt.target}")
@@ -104,9 +131,7 @@ def create_vector_graph_block():
             return [], input_t
         return [], ""
 
-    tab_upload_file.select(
-        fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text]
-    )  # pylint: disable=no-member
-    tab_upload_text.select(
-        fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text]
-    )  # pylint: disable=no-member
+    tab_upload_file.select(fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text])
+    tab_upload_text.select(fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text])
+
+    return input_schema, info_extract_template
