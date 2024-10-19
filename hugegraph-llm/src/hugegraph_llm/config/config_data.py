@@ -33,6 +33,8 @@ class ConfigData:
     openai_api_base: Optional[str] = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
     openai_api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
     openai_language_model: Optional[str] = "gpt-4o-mini"
+    openai_embedding_api_base: Optional[str] = os.environ.get("OPENAI_EMBEDDING_BASE_URL", "https://api.openai.com/v1")
+    openai_embedding_api_key: Optional[str] = os.environ.get("OPENAI_EMBEDDING_API_KEY")
     openai_embedding_model: Optional[str] = "text-embedding-3-small"
     openai_max_tokens: int = 4096
     # 2. Rerank settings

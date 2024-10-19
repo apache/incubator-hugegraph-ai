@@ -80,12 +80,13 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
     status_code = -1
     embedding_option = settings.embedding_type
     if embedding_option == "openai":
-        settings.openai_api_key = arg1
-        settings.openai_api_base = arg2
+        settings.openai_embedding_api_key = arg1
+        settings.openai_embedding_api_base = arg2
         settings.openai_embedding_model = arg3
-        test_url = settings.openai_api_base + "/models"
+        test_url = settings.openai_embedding_api_base + "/embeddings"
         headers = {"Authorization": f"Bearer {arg1}"}
-        status_code = test_api_connection(test_url, headers=headers, origin_call=origin_call)
+        data = {"model": arg3, "input": "test"}
+        status_code = test_api_connection(test_url, method="POST", headers=headers, body=data, origin_call=origin_call)
     elif embedding_option == "qianfan_wenxin":
         status_code = config_qianfan_model(arg1, arg2, origin_call=origin_call)
         settings.qianfan_embedding_model = arg3
@@ -165,9 +166,14 @@ def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
         settings.openai_api_base = arg2
         settings.openai_language_model = arg3
         settings.openai_max_tokens = int(arg4)
-        test_url = settings.openai_api_base + "/models"
+        test_url = settings.openai_api_base + "/chat/completions"
+        data = {
+            "model": arg3,
+            "temperature": 0.0,
+            "messages": [{"role": "user", "content": "test"}],
+        }
         headers = {"Authorization": f"Bearer {arg1}"}
-        status_code = test_api_connection(test_url, headers=headers, origin_call=origin_call)
+        status_code = test_api_connection(test_url, method="POST", headers=headers, body=data, origin_call=origin_call)
     elif llm_option == "qianfan_wenxin":
         status_code = config_qianfan_model(arg1, arg2, arg3, origin_call)
     elif llm_option == "ollama":
@@ -247,8 +253,8 @@ def create_configs_block() -> list:
             if embedding_type == "openai":
                 with gr.Row():
                     embedding_config_input = [
-                        gr.Textbox(value=settings.openai_api_key, label="api_key", type="password"),
-                        gr.Textbox(value=settings.openai_api_base, label="api_base"),
+                        gr.Textbox(value=settings.openai_embedding_api_key, label="api_key", type="password"),
+                        gr.Textbox(value=settings.openai_embedding_api_base, label="api_base"),
                         gr.Textbox(value=settings.openai_embedding_model, label="model_name"),
                     ]
             elif embedding_type == "ollama":
