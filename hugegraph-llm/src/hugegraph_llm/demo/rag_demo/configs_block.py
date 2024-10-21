@@ -202,7 +202,7 @@ def create_configs_block() -> list:
     graph_config_button.click(apply_graph_config, inputs=graph_config_input)  # pylint: disable=no-member
 
     with gr.Accordion("2. Set up the LLM.", open=False):
-        gr.Markdown("Tips: the openai sdk also support openai style api from other providers.")
+        gr.Markdown("> Tips: the openai sdk also support openai style api from other providers.")
         llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama"], value=settings.llm_type, label="LLM")
 
         @gr.render(inputs=[llm_dropdown])
