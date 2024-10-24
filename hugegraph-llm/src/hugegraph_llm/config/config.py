@@ -33,8 +33,19 @@ F_NAME = "config_prompt.yaml"
 yaml_file_path = os.path.join(package_path, f"src/hugegraph_llm/resources/demo/{F_NAME}")
 
 
+def read_dotenv() -> dict[str, Optional[str]]:
+    """Read a .env file in the given root path."""
+    env_config = dotenv_values(f"{env_path}")
+    log.info("Loading %s successfully!", env_path)
+    for key, value in env_config.items():
+        if key not in os.environ:
+            os.environ[key] = value or ""
+    return env_config
+
+
 @dataclass
 class Config(ConfigData):
+
     def from_env(self):
         if os.path.exists(env_path):
             env_config = read_dotenv()
@@ -48,7 +59,7 @@ class Config(ConfigData):
 
     def generate_env(self):
         if os.path.exists(env_path):
-            log.info("%s already exists, do you want to update it? (y/n)", env_path)
+            log.info("%s already exists, do you want to override with the default configuration? (y/n)", env_path)
             update = input()
             if update.lower() != "y":
                 return
@@ -77,20 +88,7 @@ class Config(ConfigData):
             set_key(env_path, k, v, quote_mode="never")
 
 
-def read_dotenv() -> dict[str, Optional[str]]:
-    """Read a .env file in the given root path."""
-    env_config = dotenv_values(f"{env_path}")
-    log.info("Loading %s successfully!", env_path)
-    for key, value in env_config.items():
-        if key not in os.environ:
-            os.environ[key] = value or ""
-    return env_config
-
-
 class PromptConfig(PromptData):
-
-    def __init__(self):
-        self.ensure_yaml_file_exists()
 
     def ensure_yaml_file_exists(self):
         if os.path.exists(yaml_file_path):
@@ -101,7 +99,7 @@ class PromptConfig(PromptData):
                 for key, value in data.items():
                     setattr(self, key, value)
         else:
-            self.save_to_yaml()
+            self.generate_yaml_file()
             log.info("Prompt file '%s' doesn't exist, create it.", yaml_file_path)
 
 
@@ -134,6 +132,16 @@ answer_prompt: |
         with open(yaml_file_path, "w", encoding="utf-8") as file:
             file.write(yaml_content)
 
+    def generate_yaml_file(self):
+        if os.path.exists(yaml_file_path):
+            log.info("%s already exists, do you want to override with the default configuration? (y/n)", yaml_file_path)
+            update = input()
+            if update.lower() != "y":
+                return
+            self.save_to_yaml()
+        else:
+            self.save_to_yaml()
+            log.info("Prompt file '%s' doesn't exist, create it.", yaml_file_path)
 
     def update_yaml_file(self):
         self.save_to_yaml()

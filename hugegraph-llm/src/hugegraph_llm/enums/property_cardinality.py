@@ -16,14 +16,11 @@
 # under the License.
 
 
-import argparse
+from enum import Enum
 
-from hugegraph_llm.config import Config, PromptConfig
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate hugegraph-llm config file")
-    parser.add_argument("-U", "--update", action="store_true", help="Update the config file")
-    args = parser.parse_args()
-    if args.update:
-        Config().generate_env()
-        PromptConfig().generate_yaml_file()
+class PropertyCardinality(Enum):
+    SINGLE = "SINGLE"
+    LIST = "LIST"
+    SET = "SET"
+    DEFAULT = SINGLE

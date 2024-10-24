@@ -24,7 +24,7 @@ from .config import Config, PromptConfig
 settings = Config()
 settings.from_env()
 prompt = PromptConfig()
-
+prompt.ensure_yaml_file_exists()
 
 package_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 resource_path = os.path.join(package_path, "resources")

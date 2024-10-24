@@ -23,8 +23,11 @@ from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.common_op.nltk_helper import NLTKHelper
 
-KEYWORDS_EXTRACT_TPL = """extract {max_keywords} keywords from the text:
+KEYWORDS_EXTRACT_TPL = """Extract {max_keywords} keywords from the text:
 {question}
+
+1. Keywords can't contain meaningless/broad words(e.g action/relation/thing), must represent certain entities,  
+2. Better to extract subject/verb/object and don't extract particles, don't extend to synonyms/general categories.
 Provide keywords in the following comma-separated format: 'KEYWORDS: <keywords>'
 """
 
@@ -62,10 +65,8 @@ class KeywordExtract:
             context["query"] = self._query
 
         if self._llm is None:
-            self._llm = context.get("llm") or LLMs().get_llm()
+            self._llm = LLMs().get_llm()
             assert isinstance(self._llm, BaseLLM), "Invalid LLM Object."
-        if context.get("llm") is None:
-            context["llm"] = self._llm
 
         if isinstance(context.get("language"), str):
             self._language = context["language"].lower()
@@ -75,10 +76,7 @@ class KeywordExtract:
         if isinstance(context.get("max_keywords"), int):
             self._max_keywords = context["max_keywords"]
 
-        prompt = self._extract_template.format(
-            question=self._query,
-            max_keywords=self._max_keywords,
-        )
+        prompt = self._extract_template.format(question=self._query, max_keywords=self._max_keywords)
         response = self._llm.generate(prompt=prompt)
 
         keywords = self._extract_keywords_from_response(
@@ -97,10 +95,7 @@ class KeywordExtract:
         return context
 
     def _expand_synonyms(self, keywords: Set[str]) -> Set[str]:
-        prompt = self._expand_template.format(
-            question=str(keywords),
-            max_keywords=self._max_keywords,
-        )
+        prompt = self._expand_template.format(question=str(keywords), max_keywords=self._max_keywords)
         response = self._llm.generate(prompt=prompt)
         keywords = self._extract_keywords_from_response(
             response=response, lowercase=False, start_token="SYNONYMS:"
@@ -115,11 +110,12 @@ class KeywordExtract:
     ) -> Set[str]:
         keywords = []
         matches = re.findall(rf'{start_token}[^\n]+\n?', response)
+
         for match in matches:
             match = match[len(start_token):]
             for k in re.split(r"[,，]+", match):
                 k = k.strip()
-                if len(k) > 0:
+                if len(k) > 1:
                     if lowercase:
                         keywords.append(k.lower())
                     else:

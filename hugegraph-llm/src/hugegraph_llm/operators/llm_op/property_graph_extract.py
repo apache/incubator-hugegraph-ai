@@ -26,7 +26,14 @@ from hugegraph_llm.document.chunk_split import ChunkSplitter
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
 
+
+"""
+TODO: It is not clear whether there is any other dependence on the SCHEMA_EXAMPLE_PROMPT variable. 
+Because the SCHEMA_EXAMPLE_PROMPT variable will no longer change based on 
+prompt.extract_graph_prompt changes after the system loads, this does not seem to meet expectations.
+"""
 SCHEMA_EXAMPLE_PROMPT = prompt.extract_graph_prompt
+
 
 def generate_extract_property_graph_prompt(text, schema=None) -> str:
     return f"""---
@@ -83,7 +90,7 @@ class PropertyGraphExtract:
     def __init__(
             self,
             llm: BaseLLM,
-            example_prompt: str = SCHEMA_EXAMPLE_PROMPT
+            example_prompt: str = prompt.extract_graph_prompt
     ) -> None:
         self.llm = llm
         self.example_prompt = example_prompt

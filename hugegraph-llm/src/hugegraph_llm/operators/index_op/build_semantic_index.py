@@ -34,7 +34,7 @@ class BuildSemanticIndex:
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         past_vids = self.vid_index.properties
-        present_vids = [v["id"] for v in context["vertices"]]
+        present_vids = context["vertices"]
         removed_vids = set(past_vids) - set(present_vids)
         removed_num = self.vid_index.remove(removed_vids)
         added_vids = list(set(present_vids) - set(past_vids))

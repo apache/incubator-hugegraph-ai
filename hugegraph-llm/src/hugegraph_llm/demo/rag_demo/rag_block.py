@@ -99,10 +99,9 @@ def create_rag_block():
             vector_only_out = gr.Textbox(label="Vector-only Answer", show_copy_button=True)
             graph_only_out = gr.Textbox(label="Graph-only Answer", show_copy_button=True)
             graph_vector_out = gr.Textbox(label="Graph-Vector Answer", show_copy_button=True)
-            from hugegraph_llm.operators.llm_op.answer_synthesize import DEFAULT_ANSWER_TEMPLATE
 
             answer_prompt_input = gr.Textbox(
-                value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt", show_copy_button=True, lines=7
+                value=prompt.answer_prompt, label="Custom Prompt", show_copy_button=True, lines=7
             )
         with gr.Column(scale=1):
             with gr.Row():
@@ -266,3 +265,4 @@ def create_rag_block():
     )
     questions_file.change(read_file_to_excel, questions_file, [qa_dataframe, answer_max_line_count])
     answer_max_line_count.change(change_showing_excel, answer_max_line_count, qa_dataframe)
+    return inp, answer_prompt_input

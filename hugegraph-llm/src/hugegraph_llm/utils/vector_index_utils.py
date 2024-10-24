@@ -19,6 +19,7 @@ import os
 
 import docx
 import gradio as gr
+
 from hugegraph_llm.config import resource_path, settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings

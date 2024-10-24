@@ -26,7 +26,7 @@ import gradio as gr
 from .hugegraph_utils import get_hg_client, clean_hg_data
 from .log import log
 from .vector_index_utils import read_documents
-from ..config import resource_path, settings, prompt
+from ..config import resource_path, settings
 from ..indices.vector_index import VectorIndex
 from ..models.embeddings.init_embedding import Embeddings
 from ..models.llms.init_llm import LLMs
@@ -40,7 +40,7 @@ def get_graph_index_info():
     context["vid_index"] = {
         "embed_dim": vector_index.index.d,
         "num_vectors": vector_index.index.ntotal,
-        "num_vids": len(vector_index.properties)
+        "num_vids": len(vector_index.properties),
     }
     return json.dumps(context, ensure_ascii=False, indent=2)
 
@@ -52,11 +52,6 @@ def clean_all_graph_index():
 
 
 def extract_graph(input_file, input_text, schema, example_prompt) -> str:
-    # update env variables: schema and example_prompt
-    if prompt.graph_schema != schema or prompt.extract_graph_prompt != example_prompt:
-        prompt.graph_schema = schema
-        prompt.extract_graph_prompt = example_prompt
-        prompt.update_yaml_file()
 
     texts = read_documents(input_file, input_text)
     builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
@@ -70,14 +65,11 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
             builder.import_schema(from_hugegraph=schema)
     else:
         return "ERROR: please input with correct schema/format."
-    builder.chunk_split(texts, "paragraph", "zh").extract_info(example_prompt, "property_graph")
+    builder.chunk_split(texts, "document", "zh").extract_info(example_prompt, "property_graph")
 
     try:
         context = builder.run()
-        graph_elements = {
-            "vertices": context["vertices"],
-            "edges": context["edges"]
-        }
+        graph_elements = {"vertices": context["vertices"], "edges": context["edges"]}
         return json.dumps(graph_elements, ensure_ascii=False, indent=2)
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
@@ -113,8 +105,9 @@ def import_graph_data(data: str, schema: str) -> Union[str, Dict[str, Any]]:
 
         context = builder.commit_to_hugegraph().run(data_json)
         gr.Info("Import graph data successfully!")
+        print(context)
         return json.dumps(context, ensure_ascii=False, indent=2)
-    except Exception as e: # pylint: disable=W0718
+    except Exception as e:  # pylint: disable=W0718
         log.error(e)
         traceback.print_exc()
         # Note: can't use gr.Error here
