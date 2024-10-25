@@ -37,20 +37,7 @@ class SchemaManager:
         if context is None:
             context = {}
         schema = self.schema.getSchema()
-        vertices = []
-        for vl in schema["vertexlabels"]:
-            vertex = {"vertex_label": vl["name"], "properties": vl["properties"]}
-            vertices.append(vertex)
-        edges = []
-        for el in schema["edgelabels"]:
-            edge = {
-                "edge_label": el["name"],
-                "source_vertex_label": el["source_label"],
-                "target_vertex_label": el["target_label"],
-                "properties": el["properties"],
-            }
-            edges.append(edge)
-        if not vertices and not edges:
+        if not schema["vertexlabels"] and not schema["edgelabels"]:
             raise Exception(f"Can not get {self.graph_name}'s schema from HugeGraph!")
 
         context.update({"schema": schema})

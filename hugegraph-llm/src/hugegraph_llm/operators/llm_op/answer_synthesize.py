@@ -25,6 +25,11 @@ from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.utils.log import log
 
+"""
+TODO: It is not clear whether there is any other dependence on the SCHEMA_EXAMPLE_PROMPT variable. 
+Because the SCHEMA_EXAMPLE_PROMPT variable will no longer change based on 
+prompt.extract_graph_prompt changes after the system loads, this does not seem to meet expectations.
+"""
 DEFAULT_ANSWER_TEMPLATE = prompt.answer_prompt
 
 
@@ -65,9 +70,7 @@ class AnswerSynthesize:
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._llm is None:
-            self._llm = context.get("llm") or LLMs().get_llm()
-        if context.get("llm") is None:
-            context["llm"] = self._llm
+            self._llm = LLMs().get_llm()
 
         if self._question is None:
             self._question = context.get("query") or None

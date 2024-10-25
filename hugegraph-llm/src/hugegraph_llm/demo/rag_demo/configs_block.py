@@ -63,7 +63,8 @@ def test_api_connection(url, method="GET", headers=None, params=None, body=None,
 def config_qianfan_model(arg1, arg2, arg3=None, origin_call=None) -> int:
     settings.qianfan_api_key = arg1
     settings.qianfan_secret_key = arg2
-    settings.qianfan_language_model = arg3
+    if arg3:
+        settings.qianfan_language_model = arg3
     params = {
         "grant_type": "client_credentials",
         "client_id": arg1,
@@ -79,12 +80,13 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
     status_code = -1
     embedding_option = settings.embedding_type
     if embedding_option == "openai":
-        settings.openai_api_key = arg1
-        settings.openai_api_base = arg2
+        settings.openai_embedding_api_key = arg1
+        settings.openai_embedding_api_base = arg2
         settings.openai_embedding_model = arg3
-        test_url = settings.openai_api_base + "/models"
+        test_url = settings.openai_embedding_api_base + "/embeddings"
         headers = {"Authorization": f"Bearer {arg1}"}
-        status_code = test_api_connection(test_url, headers=headers, origin_call=origin_call)
+        data = {"model": arg3, "input": "test"}
+        status_code = test_api_connection(test_url, method="POST", headers=headers, body=data, origin_call=origin_call)
     elif embedding_option == "qianfan_wenxin":
         status_code = config_qianfan_model(arg1, arg2, origin_call=origin_call)
         settings.qianfan_embedding_model = arg3
@@ -164,9 +166,14 @@ def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
         settings.openai_api_base = arg2
         settings.openai_language_model = arg3
         settings.openai_max_tokens = int(arg4)
-        test_url = settings.openai_api_base + "/models"
+        test_url = settings.openai_api_base + "/chat/completions"
+        data = {
+            "model": arg3,
+            "temperature": 0.0,
+            "messages": [{"role": "user", "content": "test"}],
+        }
         headers = {"Authorization": f"Bearer {arg1}"}
-        status_code = test_api_connection(test_url, headers=headers, origin_call=origin_call)
+        status_code = test_api_connection(test_url, method="POST", headers=headers, body=data, origin_call=origin_call)
     elif llm_option == "qianfan_wenxin":
         status_code = config_qianfan_model(arg1, arg2, arg3, origin_call)
     elif llm_option == "ollama":
@@ -178,8 +185,8 @@ def apply_llm_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
     settings.update_env()
     return status_code
 
-
-def create_configs_block():
+# TODO: refactor the function to reduce the number of statements & separate the logic
+def create_configs_block() -> list:
     # pylint: disable=R0915 (too-many-statements)
     with gr.Accordion("1. Set up the HugeGraph server.", open=False):
         with gr.Row():
@@ -191,10 +198,11 @@ def create_configs_block():
                 gr.Textbox(value=settings.graph_pwd, label="pwd", type="password"),
                 gr.Textbox(value=settings.graph_space, label="graphspace(Optional)"),
             ]
-        graph_config_button = gr.Button("Apply config")
+        graph_config_button = gr.Button("Apply Configuration")
     graph_config_button.click(apply_graph_config, inputs=graph_config_input)  # pylint: disable=no-member
 
     with gr.Accordion("2. Set up the LLM.", open=False):
+        gr.Markdown("> Tips: the openai sdk also support openai style api from other providers.")
         llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama"], value=settings.llm_type, label="LLM")
 
         @gr.render(inputs=[llm_dropdown])
@@ -225,9 +233,15 @@ def create_configs_block():
                         gr.Textbox(value="", visible=False),
                     ]
             else:
-                llm_config_input = []
-            llm_config_button = gr.Button("apply configuration")
+                llm_config_input = [
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                ]
+            llm_config_button = gr.Button("Apply configuration")
             llm_config_button.click(apply_llm_config, inputs=llm_config_input)  # pylint: disable=no-member
+
 
     with gr.Accordion("3. Set up the Embedding.", open=False):
         embedding_dropdown = gr.Dropdown(
@@ -240,16 +254,9 @@ def create_configs_block():
             if embedding_type == "openai":
                 with gr.Row():
                     embedding_config_input = [
-                        gr.Textbox(value=settings.openai_api_key, label="api_key", type="password"),
-                        gr.Textbox(value=settings.openai_api_base, label="api_base"),
+                        gr.Textbox(value=settings.openai_embedding_api_key, label="api_key", type="password"),
+                        gr.Textbox(value=settings.openai_embedding_api_base, label="api_base"),
                         gr.Textbox(value=settings.openai_embedding_model, label="model_name"),
-                    ]
-            elif embedding_type == "qianfan_wenxin":
-                with gr.Row():
-                    embedding_config_input = [
-                        gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
-                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
-                        gr.Textbox(value=settings.qianfan_embedding_model, label="model_name"),
                     ]
             elif embedding_type == "ollama":
                 with gr.Row():
@@ -258,10 +265,21 @@ def create_configs_block():
                         gr.Textbox(value=str(settings.ollama_port), label="port"),
                         gr.Textbox(value=settings.ollama_embedding_model, label="model_name"),
                     ]
+            elif embedding_type == "qianfan_wenxin":
+                with gr.Row():
+                    embedding_config_input = [
+                        gr.Textbox(value=settings.qianfan_api_key, label="api_key", type="password"),
+                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key", type="password"),
+                        gr.Textbox(value=settings.qianfan_embedding_model, label="model_name"),
+                    ]
             else:
-                embedding_config_input = []
+                embedding_config_input = [
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                ]
 
-            embedding_config_button = gr.Button("apply configuration")
+            embedding_config_button = gr.Button("Apply Configuration")
 
             # Call the separate apply_embedding_configuration function here
             embedding_config_button.click(  # pylint: disable=no-member
@@ -295,10 +313,15 @@ def create_configs_block():
                             label="model",
                             info="Please refer to https://siliconflow.cn/pricing",
                         ),
+                        gr.Textbox(value="", visible=False),
                     ]
             else:
-                reranker_config_input = []
-            reranker_config_button = gr.Button("apply configuration")
+                reranker_config_input = [
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                    gr.Textbox(value="", visible=False),
+                ]
+            reranker_config_button = gr.Button("Apply configuration")
 
             # TODO: use "gr.update()" or other way to update the config in time (refactor the click event)
             # Call the separate apply_reranker_configuration function here
@@ -306,3 +329,5 @@ def create_configs_block():
                 fn=apply_reranker_config,
                 inputs=reranker_config_input,  # pylint: disable=no-member
             )
+    # The reason for returning this partial value is the functional need to refresh the ui
+    return graph_config_input

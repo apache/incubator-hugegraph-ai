@@ -115,10 +115,9 @@ def create_rag_block():
             vector_only_out = gr.Textbox(label="Vector-only Answer", show_copy_button=True)
             graph_only_out = gr.Textbox(label="Graph-only Answer", show_copy_button=True)
             graph_vector_out = gr.Textbox(label="Graph-Vector Answer", show_copy_button=True)
-            from hugegraph_llm.operators.llm_op.answer_synthesize import DEFAULT_ANSWER_TEMPLATE
 
             answer_prompt_input = gr.Textbox(
-                value=DEFAULT_ANSWER_TEMPLATE, label="Custom Prompt", show_copy_button=True, lines=7
+                value=prompt.answer_prompt, label="Custom Prompt", show_copy_button=True, lines=7
             )
         with gr.Column(scale=1):
             with gr.Row():
@@ -351,3 +350,4 @@ def create_rag_block():
         inputs=[ragas_metrics, dataset_nums],
         outputs=[gr.DataFrame(label="RAG Evaluation Results", headers=ragas_metrics_list)],
     )
+    return inp, answer_prompt_input
