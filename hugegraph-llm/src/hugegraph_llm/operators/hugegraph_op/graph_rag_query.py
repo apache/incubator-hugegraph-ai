@@ -171,11 +171,10 @@ class GraphRAGQuery:
             "extracted based on key entities as subject:\n"
         )
 
-        # TODO: replace print to log
         verbose = context.get("verbose") or False
         if verbose:
-            print("\033[93mKnowledge from Graph:")
-            print("\n".join(context["graph_result"]) + "\033[0m")
+            log.debug("\033[93mKnowledge from Graph:\033[0m")
+            log.debug("\033[93m" + "\n".join(context["graph_result"]) + "\033[0m")
 
         return context
 
