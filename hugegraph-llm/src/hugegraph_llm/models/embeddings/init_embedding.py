@@ -30,8 +30,8 @@ class Embeddings:
         if self.embedding_type == "openai":
             return OpenAIEmbedding(
                 model_name=settings.openai_embedding_model,
-                api_key=settings.openai_api_key,
-                api_base=settings.openai_api_base,
+                api_key=settings.openai_embedding_api_key,
+                api_base=settings.openai_embedding_api_base
             )
         if self.embedding_type == "ollama":
             return OllamaEmbedding(

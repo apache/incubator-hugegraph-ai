@@ -29,7 +29,7 @@ github:
   labels:
     - graphrag
     - graph-machine-learning
-    - GNN
+    - gnn
     - knowledge-graph
     - hugegraph
   enabled_merge_buttons:
