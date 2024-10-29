@@ -1,6 +1,6 @@
 # hugegraph-llm
 
-## Summary
+## 1 Summary
 
 The `hugegraph-llm` is a tool for the implementation and research related to large language models.
 This project includes runnable demos, it can also be used as a third-party library.
@@ -15,15 +15,15 @@ graph systems and large language models.
 2.  Use natural language to operate graph databases (Gremlin/Cypher)
 3.  Knowledge graph supplements answer context (GraphRAG)
 
-## Environment Requirements
+## 2 Environment Requirements
 
 - python 3.9+ 
 - hugegraph-server 1.2+
 
-## Preparation
+## 3 Preparation
 
-1. Start the HugeGraph database, you can run it via [Docker](https://hub.docker.com/r/hugegraph/hugegraph)/[Binary Package](https://hugegraph.apache.org/docs/download/download/).
-  Refer to detailed [doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance (PS: Graph visualization in step8)
+1. Start the HugeGraph database, you can run it via [Docker](https://hub.docker.com/r/hugegraph/hugegraph)/[Binary Package](https://hugegraph.apache.org/docs/download/download/).  
+    Refer to detailed [doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance
 
 2. Clone this project
     ```bash
@@ -66,21 +66,46 @@ graph systems and large language models.
     ```
 
 8. (__Optional__) You could use 
-  [hugegraph-hubble](https://hugegraph.apache.org/docs/quickstart/hugegraph-hubble/#21-use-docker-convenient-for-testdev) 
-  to visit the graph data, could run it via [Docker/Docker-Compose](https://hub.docker.com/r/hugegraph/hubble) 
-  for guidance. (Hubble is a graph-analysis dashboard include data loading/schema management/graph traverser/display).
+    [hugegraph-hubble](https://hugegraph.apache.org/docs/quickstart/hugegraph-hubble/#21-use-docker-convenient-for-testdev) 
+    to visit the graph data, could run it via [Docker/Docker-Compose](https://hub.docker.com/r/hugegraph/hubble) 
+    for guidance. (Hubble is a graph-analysis dashboard include data loading/schema management/graph traverser/display).
 
+9. (__Optional__) offline download NLTK stopwords  
+    ```bash
+    python ./hugegraph_llm/operators/common_op/nltk_helper.py
+    ```
 
-## Examples
+## 4 Examples
 
-### 1.Build a knowledge graph in HugeGraph through LLM
+### 4.1 Build a knowledge graph in HugeGraph through LLM
+
+#### 4.1.1 Build a knowledge graph through the gradio interactive interface
+
+**Parameter description:**  
+
+- Docs:
+  - text: Build rag index from plain text
+  - file: Upload file(s) which should be <u>TXT</u> or <u>.docx</u> (Multiple files can be selected together)
+- [Schema](https://hugegraph.apache.org/docs/clients/restful-api/schema/): (Accept **2 types**)
+  - User-defined Schema (JSON format, follow the [template](https://github.com/apache/incubator-hugegraph-ai/blob/aff3bbe25fa91c3414947a196131be812c20ef11/hugegraph-llm/src/hugegraph_llm/config/config_data.py#L125) 
+  to modify it)
+  - Specify the name of the HugeGraph graph instance, it will automatically get the schema from it (like 
+  **"hugegraph"**)
+- Graph extract head: The user-defined prompt of graph extracting
+- If already exist the graph data, you should click "**Rebuild vid Index**" to update the index
+
+![gradio-config](https://hugegraph.apache.org/docs/images/gradio-kg.png
+)
+
+#### 4.1.2 Build a knowledge graph through code
 
 Run example like `python3 ./hugegraph_llm/examples/build_kg_test.py`
 
 The `KgBuilder` class is used to construct a knowledge graph. Here is a brief usage guide:
 
 1. **Initialization**: The `KgBuilder` class is initialized with an instance of a language model. 
-This can be obtained from the `LLMs` class.
+This can be obtained from the `LLMs` class.  
+    Initialize the LLMs instance, get the LLM, and then create a task instance `KgBuilder` for graph construction. `KgBuilder` defines multiple operators, and users can freely combine them according to their needs. (tip: `print_result()` can print the result of each step in the console, without affecting the overall execution logic)
 
     ```python
     from hugegraph_llm.models.llms.init_llm import LLMs
@@ -97,6 +122,8 @@ This can be obtained from the `LLMs` class.
         .run()
     )
     ```
+   
+    ![gradio-config](https://hugegraph.apache.org/docs/images/kg-uml.png)
 
 2. **Import Schema**: The `import_schema` method is used to import a schema from a source. The source can be a HugeGraph instance, a user-defined schema or an extraction result. The method `print_result` can be chained to print the result.
 
@@ -133,10 +160,10 @@ This can be obtained from the `LLMs` class.
     ```python
     run()
     ```
+    
+    The methods of the `KgBuilder` class can be chained together to perform a sequence of operations.
 
-The methods of the `KgBuilder` class can be chained together to perform a sequence of operations.
-
-### 2. Retrieval augmented generation (RAG) based on HugeGraph
+### 4.2 Retrieval augmented generation (RAG) based on HugeGraph
 
 Run example like `python3 ./hugegraph_llm/examples/graph_rag_test.py`
 
