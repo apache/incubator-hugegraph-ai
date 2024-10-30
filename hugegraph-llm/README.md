@@ -1,6 +1,6 @@
 # hugegraph-llm
 
-## 1 Summary
+## 1. Summary
 
 The `hugegraph-llm` is a tool for the implementation and research related to large language models.
 This project includes runnable demos, it can also be used as a third-party library.
