@@ -144,7 +144,7 @@ Run example like `python3 ./hugegraph_llm/examples/graph_rag_test.py`
 The `RAGPipeline` class is used to integrate HugeGraph with large language models to provide retrieval-augmented generation capabilities.
 Here is a brief usage guide:
 
-1. **Extract Keyword:**: Extract keywords and expand synonyms.
+1. **Extract Keyword**: Extract keywords and expand synonyms.
 
     ```python
     from hugegraph_llm.operators.graph_rag_task import RAGPipeline
@@ -152,7 +152,7 @@ Here is a brief usage guide:
     graph_rag.extract_keywords(text="Tell me about Al Pacino.").print_result()
     ```
 
-2. **Match Vid from Keywords**: Match the keywords with the nodes in the graph.
+2. **Match Vid from Keywords*: Match the nodes with the keywords in the graph.
 
     ```python
     graph_rag.keywords_to_vid().print_result()
