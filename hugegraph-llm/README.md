@@ -17,8 +17,8 @@ graph systems and large language models.
 
 ## 2 Environment Requirements
 
-- python 3.9+ 
-- hugegraph-server 1.2+
+- python 3.9+  (better to use `3.10`)
+- hugegraph-server 1.3+
 
 ## 3 Preparation
 
