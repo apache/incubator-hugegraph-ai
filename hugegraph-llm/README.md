@@ -139,8 +139,6 @@ The methods of the `KgBuilder` class can be chained together to perform a sequen
 
 ### 2. Retrieval augmented generation (RAG) based on HugeGraph
 
-Run example like `python3 ./hugegraph_llm/examples/graph_rag_test.py`
-
 The `RAGPipeline` class is used to integrate HugeGraph with large language models to provide retrieval-augmented generation capabilities.
 Here is a brief usage guide:
 
