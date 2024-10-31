@@ -95,22 +95,22 @@ This can be obtained from the `LLMs` class.
 
     ```python
     # Import schema from a HugeGraph instance
-    import_schema(from_hugegraph="xxx").print_result()
+    builder.import_schema(from_hugegraph="xxx").print_result()
     # Import schema from an extraction result
-    import_schema(from_extraction="xxx").print_result()
+    builder.import_schema(from_extraction="xxx").print_result()
     # Import schema from user-defined schema
-    import_schema(from_user_defined="xxx").print_result()
+    builder.import_schema(from_user_defined="xxx").print_result()
     ```
 
 3. **Chunk Split**: The `chunk_split` method is used to split the input text into chunks. The text should be passed as a string argument to the method.
 
     ```python
     # Split the input text into documents
-    chunk_split(TEXT, split_type="document").print_result()
+    builder.chunk_split(TEXT, split_type="document").print_result()
     # Split the input text into paragraphs
-    chunk_split(TEXT, split_type="paragraph").print_result()
+    builder.chunk_split(TEXT, split_type="paragraph").print_result()
     # Split the input text into sentences
-    chunk_split(TEXT, split_type="sentence").print_result()
+    builder.chunk_split(TEXT, split_type="sentence").print_result()
     ```
 
 4. **Extract Info**: The `extract_info` method is used to extract info from a text. The text should be passed as a string argument to the method.
@@ -118,21 +118,21 @@ This can be obtained from the `LLMs` class.
     ```python
     TEXT = "Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with since 2010."
     # extract property graph from the input text
-    extract_info(extract_type="property_graph").print_result()
+    builder.extract_info(extract_type="property_graph").print_result()
     # extract triples from the input text
-    extract_info(extract_type="property_graph").print_result()
+    builder.extract_info(extract_type="property_graph").print_result()
     ```
 
 5. **Commit to HugeGraph**: The `commit_to_hugegraph` method is used to commit the constructed knowledge graph to a HugeGraph instance.
 
     ```python
-    commit_to_hugegraph().print_result()
+    builder.commit_to_hugegraph().print_result()
     ```
 
 6. **Run**: The `run` method is used to execute the chained operations.
 
     ```python
-    run()
+    builder.run()
     ```
 
 The methods of the `KgBuilder` class can be chained together to perform a sequence of operations.
