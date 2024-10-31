@@ -147,13 +147,14 @@ Here is a brief usage guide:
 1. **Extract Keyword:**: Extract keywords and expand synonyms.
 
     ```python
+    graph_rag = RAGPipeline(LLMs().get_llm())
     graph_rag.extract_keywords(text="Tell me about Al Pacino.").print_result()
     ```
 
 2. **Match Vid from Keywords**: Match the keywords with the nodes in the graph.
 
     ```python
-    graph_rag.extract_keywords(text="Tell me about Al Pacino.").print_result()
+    graph_rag.keywords_to_vid(text="Tell me about Al Pacino.").print_result()
     ```
 
 3. **Query Graph for Rag**: Retrieve the corresponding keywords and their multi-degree associated relationships from HugeGraph.
@@ -161,13 +162,20 @@ Here is a brief usage guide:
      ```python
      graph_rag.query_graphdb(max_deep=2, max_items=30).print_result()
      ```
-3. **Synthesize Answer**: Summarize the results and organize the language to answer the question.
+
+4. **Rerank Searched Result**: Rerank the searched results based on the similarity between the question and the results.
+
+     ```python
+     graph_rag.merge_dedup_rerank().print_result()
+     ```
+
+5. **Synthesize Answer**: Summarize the results and organize the language to answer the question.
 
     ```python
-    graph_rag.synthesize_answer().print_result()
+    graph_rag.synthesize_answer(vector_only_answer=False, graph_only_answer=True).print_result()
     ```
 
-4. **Run**: The `run` method is used to execute the above operations.
+6. **Run**: The `run` method is used to execute the above operations.
 
     ```python
     graph_rag.run(verbose=True)
