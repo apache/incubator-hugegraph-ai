@@ -154,7 +154,7 @@ Here is a brief usage guide:
 2. **Match Vid from Keywords**: Match the keywords with the nodes in the graph.
 
     ```python
-    graph_rag.keywords_to_vid(text="Tell me about Al Pacino.").print_result()
+    graph_rag.keywords_to_vid().print_result()
     ```
 
 3. **Query Graph for Rag**: Retrieve the corresponding keywords and their multi-degree associated relationships from HugeGraph.
