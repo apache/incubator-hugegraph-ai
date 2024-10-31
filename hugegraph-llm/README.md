@@ -147,7 +147,8 @@ Here is a brief usage guide:
 1. **Extract Keyword:**: Extract keywords and expand synonyms.
 
     ```python
-    graph_rag = RAGPipeline(LLMs().get_llm())
+    from hugegraph_llm.operators.graph_rag_task import RAGPipeline
+    graph_rag = RAGPipeline()
     graph_rag.extract_keywords(text="Tell me about Al Pacino.").print_result()
     ```
 
