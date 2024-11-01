@@ -26,6 +26,7 @@ from hugegraph_llm.operators.common_op.merge_dedup_rerank import MergeDedupReran
 from hugegraph_llm.operators.common_op.print_result import PrintResult
 from hugegraph_llm.operators.document_op.word_extract import WordExtract
 from hugegraph_llm.operators.hugegraph_op.graph_rag_query import GraphRAGQuery
+from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
@@ -88,6 +89,10 @@ class RAGPipeline:
                 expand_template=expand_template,
             )
         )
+        return self
+
+    def import_schema(self, graph_name: str):
+        self._operators.append(SchemaManager(graph_name))
         return self
 
     def keywords_to_vid(

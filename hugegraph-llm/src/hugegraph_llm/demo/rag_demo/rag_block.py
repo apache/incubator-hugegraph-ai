@@ -24,7 +24,7 @@ import gradio as gr
 import pandas as pd
 from gradio.utils import NamedString
 
-from hugegraph_llm.config import resource_path, prompt
+from hugegraph_llm.config import resource_path, prompt, settings
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.utils.log import log
 
@@ -66,7 +66,7 @@ def rag_answer(
     if vector_search:
         rag.query_vector_index()
     if graph_search:
-        rag.extract_keywords().keywords_to_vid().query_graphdb()
+        rag.extract_keywords().keywords_to_vid().import_schema(settings.graph_name).query_graphdb()
     # TODO: add more user-defined search strategies
     rag.merge_dedup_rerank(graph_ratio, rerank_method, near_neighbor_first, custom_related_information)
     rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)

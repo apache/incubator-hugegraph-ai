@@ -35,5 +35,5 @@ class GremlinExampleIndexQuery:
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         context["query"] = self.query
         query_embedding = self.embedding.get_text_embedding(self.query)
-        context["match_result"] = self.vector_index.search(query_embedding, self.num_examples)
+        context["match_result"] = self.vector_index.search(query_embedding, self.num_examples, dis_threshold=2)
         return context
