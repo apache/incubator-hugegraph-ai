@@ -168,7 +168,7 @@ Here is a brief usage guide:
     graph_rag = RAGPipeline()
     graph_rag.extract_keywords(text="Tell me about Al Pacino.").print_result()
     ```
-2. **Match Vid from Keywords*: Match the nodes with the keywords in the graph.
+2. **Match Vid from Keywords**: Match the nodes with the keywords in the graph.
 
     ```python
     graph_rag.keywords_to_vid().print_result()
