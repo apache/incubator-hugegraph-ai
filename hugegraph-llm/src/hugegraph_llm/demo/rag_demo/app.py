@@ -34,6 +34,7 @@ from hugegraph_llm.demo.rag_demo.configs_block import (
     apply_graph_config,
 )
 from hugegraph_llm.demo.rag_demo.other_block import create_other_block
+from hugegraph_llm.demo.rag_demo.text2gremlin_block import create_text2gremlin_block
 from hugegraph_llm.demo.rag_demo.rag_block import create_rag_block, rag_answer
 from hugegraph_llm.demo.rag_demo.vector_graph_block import create_vector_graph_block
 from hugegraph_llm.resources.demo.css import CSS
@@ -92,7 +93,9 @@ def init_rag_ui() -> gr.Interface:
             textbox_input_schema, textbox_info_extract_template = create_vector_graph_block()
         with gr.Tab(label="2. (Graph)RAG & User Functions 📖"):
             textbox_inp, textbox_answer_prompt_input = create_rag_block()
-        with gr.Tab(label="3. Others Tools 🚧"):
+        with gr.Tab(label="3. Text2gremlin ⚙️"):
+            create_text2gremlin_block()
+        with gr.Tab(label="4. Others Tools 🚧"):
             create_other_block()
         
 
