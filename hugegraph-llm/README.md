@@ -20,7 +20,7 @@ graph systems and large language models.
 - python 3.9+  (better to use `3.10`)
 - hugegraph-server 1.3+
 
-## 3 Preparation
+## 3. Preparation
 
 1. Start the HugeGraph database, you can run it via [Docker](https://hub.docker.com/r/hugegraph/hugegraph)/[Binary Package](https://hugegraph.apache.org/docs/download/download/).  
     Refer to detailed [doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance
