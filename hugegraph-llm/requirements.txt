@@ -14,4 +14,4 @@ python-dotenv>=1.0.1
 pyarrow~=17.0.0 # TODO: a temporary dependency for pandas, figure out why ImportError
 pandas~=2.2.2
 openpyxl~=3.1.5
-ragas~=0.1.20
+git+https://github.com/jasinliu/ragas.git@patch-2 # TODO: wait for release

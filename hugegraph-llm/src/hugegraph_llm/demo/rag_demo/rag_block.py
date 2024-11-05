@@ -19,31 +19,33 @@
 
 import json
 import os
-from typing import Tuple, List, Literal, Optional
+from typing import List, Literal, Optional, Tuple
 
-from datasets import Dataset
 import gradio as gr
-from gradio.utils import NamedString
 import pandas as pd
+from datasets import Dataset
+from gradio.utils import NamedString
+from langchain_openai.chat_models import ChatOpenAI
 from ragas import evaluate
+from ragas.llms import LangchainLLMWrapper
 
-from hugegraph_llm.config import resource_path, prompt
+from hugegraph_llm.config import prompt, resource_path, settings
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.utils.ragas_utils import RAGAS_METRICS_DICT
+from hugegraph_llm.utils.ragas_utils import RAGAS_METRICS_DICT, RAGAS_METRICS_ZH_DICT
 
 
 def rag_answer(
-        text: str,
-        raw_answer: bool,
-        vector_only_answer: bool,
-        graph_only_answer: bool,
-        graph_vector_answer: bool,
-        graph_ratio: float,
-        rerank_method: Literal["bleu", "reranker"],
-        near_neighbor_first: bool,
-        custom_related_information: str,
-        answer_prompt: str,
+    text: str,
+    raw_answer: bool,
+    vector_only_answer: bool,
+    graph_only_answer: bool,
+    graph_vector_answer: bool,
+    graph_ratio: float,
+    rerank_method: Literal["bleu", "reranker"],
+    near_neighbor_first: bool,
+    custom_related_information: str,
+    answer_prompt: str,
 ) -> Tuple:
     """
     Generate an answer using the RAG (Retrieval-Augmented Generation) pipeline.
@@ -177,8 +179,7 @@ def create_rag_block():
     > 1. Download the template file & fill in the questions you want to test.
     > 2. Upload the file & click the button to generate answers. (Preview shows the first 40 lines)
     > 3. The answer options are the same as the above RAG/Q&A frame 
-    """
-    )
+    """)
 
     # TODO: Replace string with python constant
     tests_df_headers = [
@@ -309,29 +310,45 @@ def create_rag_block():
     questions_file.change(read_file_to_excel, questions_file, [qa_dataframe, answer_max_line_count])
     answer_max_line_count.change(change_showing_excel, answer_max_line_count, qa_dataframe)
 
-    def evaluate_rag(metrics: List[str], num: int):
+    def evaluate_rag(metrics: List[str], num: int, language: Literal["english", "chinese"]):
         answers_df = pd.read_excel(answers_path)
         answers_df = answers_df.head(num)
         if not any(answers_df.columns.isin(rag_answer_header_dict)):
             raise gr.Error("No RAG answers found in the answer file.")
-        rag_answers = [answer for answer in rag_answer_header_dict if answer in answers_df.columns]
-        df = pd.DataFrame()
+        if language == "chinese":
+            eval_metrics = [RAGAS_METRICS_ZH_DICT[metric] for metric in metrics]
+        else:
+            eval_metrics = [RAGAS_METRICS_DICT[metric] for metric in metrics]
+        rag_method_names = [answer for answer in rag_answer_header_dict if answer in answers_df.columns]
+        score_df = pd.DataFrame()
 
-        for answer in rag_answers:
+        for answer in rag_method_names:
             context_header = rag_answer_header_dict[answer]
             answers_df[context_header] = answers_df[context_header].apply(json.loads)
             rag_data = {
-                "question": answers_df["Question"].to_list(),
-                "answer": answers_df[answer].to_list(),
-                "contexts": answers_df[rag_answer_header_dict[answer]].to_list(),
-                "ground_truth": answers_df["Expected Answer"].to_list(),
+                "user_input": answers_df["Question"].to_list(),
+                "response": answers_df[answer].to_list(),
+                "retrieved_contexts": answers_df[rag_answer_header_dict[answer]].to_list(),
+                "reference": answers_df["Expected Answer"].to_list(),
             }
+            eval_llm = LangchainLLMWrapper(
+                ChatOpenAI(
+                    model="gpt-4o-mini",
+                    temperature=0,
+                    base_url=settings.openai_api_base,
+                    api_key=settings.openai_api_key,
+                )
+            )
+
             dataset = Dataset.from_dict(rag_data)
-            score = evaluate(dataset, metrics=[RAGAS_METRICS_DICT[metric] for metric in metrics])
-            print(score.scores.to_pandas())
-            df = pd.concat([df, score.scores.to_pandas()])
-        df.insert(0, 'method', rag_answers)
-        return df
+            score = evaluate(
+                dataset,
+                metrics=eval_metrics,
+                llm=eval_llm,
+            )
+            score_df = pd.concat([score_df, score.to_pandas()])
+        score_df.insert(0, "method", rag_method_names)
+        return score_df
 
     with gr.Row():
         with gr.Column():
@@ -340,14 +357,19 @@ def create_rag_block():
                 value=ragas_metrics_list[:4],
                 multiselect=True,
                 label="Metrics",
-                info="Several evaluation metrics from `ragas`, please refer to https://docs.ragas.io/en/stable/concepts/metrics/index.html",
+                info=(
+                    "Several evaluation metrics from `ragas`, ",
+                    "please refer to https://docs.ragas.io/en/stable/concepts/metrics/index.html",
+                ),
             )
         with gr.Column():
-            dataset_nums = gr.Number(1, label="Dataset Numbers", minimum=1, maximum=1)
+            with gr.Row():
+                dataset_nums = gr.Number(1, label="Dataset Numbers", minimum=1, maximum=1)
+                language = gr.Radio(["english", "chinese"], label="Language", value="chinese")
             ragas_btn = gr.Button("Evaluate RAG", variant="primary")
     ragas_btn.click(
         evaluate_rag,
-        inputs=[ragas_metrics, dataset_nums],
+        inputs=[ragas_metrics, dataset_nums, language],
         outputs=[gr.DataFrame(label="RAG Evaluation Results", headers=ragas_metrics_list)],
     )
     return inp, answer_prompt_input

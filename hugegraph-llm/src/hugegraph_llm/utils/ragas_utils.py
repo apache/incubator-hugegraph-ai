@@ -15,22 +15,37 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from pysbd import Segmenter
 from ragas.metrics import (
-    faithfulness,
-    answer_correctness,
-    context_precision,
-    answer_relevancy,
-    context_recall,
-    context_utilization,
-    context_entity_recall,
+    ContextEntityRecall,
+    FactualCorrectness,
+    Faithfulness,
+    LLMContextPrecisionWithoutReference,
+    LLMContextPrecisionWithReference,
+    LLMContextRecall,
+    NoiseSensitivity,
+    ResponseRelevancy,
 )
 
 RAGAS_METRICS_DICT = {
-    "context_precision": context_precision,
-    "faithfulness": faithfulness,
-    "answer_relevancy": answer_relevancy,
-    "answer_correctness": answer_correctness,
-    "context_recall": context_recall,
-    "context_utilization": context_utilization,
-    "context_entity_recall": context_entity_recall,
+    "context_entity_recall": ContextEntityRecall(),
+    "factual_correctness": FactualCorrectness(),
+    "faithfulness": Faithfulness(),
+    "llm_context_precision_without_reference": LLMContextPrecisionWithoutReference(),
+    "llm_context_precision_with_reference": LLMContextPrecisionWithReference(),
+    "llm_context_recall": LLMContextRecall(),
+    "noise_sensitivity": NoiseSensitivity(),
+    "response_relevancy": ResponseRelevancy(),
 }
+
+RAGAS_METRICS_ZH_DICT = {
+    "context_entity_recall": ContextEntityRecall(),
+    "factual_correctness": FactualCorrectness(sentence_segmenter=Segmenter(language="zh", clean=True)),
+    "faithfulness": Faithfulness(sentence_segmenter=Segmenter(language="zh", clean=True)),
+    "llm_context_precision_without_reference": LLMContextPrecisionWithoutReference(),
+    "llm_context_precision_with_reference": LLMContextPrecisionWithReference(),
+    "llm_context_recall": LLMContextRecall(),
+    "noise_sensitivity": NoiseSensitivity(sentence_segmenter=Segmenter(language="zh", clean=True)),
+    "response_relevancy": ResponseRelevancy(),
+}
+
