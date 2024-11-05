@@ -17,6 +17,7 @@
 
 import json
 
+import pandas as pd
 import gradio as gr
 
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
@@ -29,6 +30,8 @@ def build_example_vector_index(temp_file):
     if full_path.endswith(".json"):
         with open(full_path, "r", encoding="utf-8") as f:
             examples = json.load(f)
+    elif full_path.endswith(".csv"):
+        examples = pd.read_csv(full_path).to_dict('records')
     else:
         return "ERROR: please input json file."
     builder = GremlinGenerator(
@@ -53,8 +56,10 @@ def create_text2gremlin_block() -> list:
     gr.Markdown("""## 4. Text2gremlin Tools """)
 
     gr.Markdown("## Build Example Vector Index")
-    gr.Markdown("Uploaded json file should be in format below:\n\n"
-                "[{\"query\":\"who is peter\", \"gremlin\":\"g.V().has('name', 'peter')\"}]")
+    gr.Markdown("Uploaded json file should be in format below:\n"
+                "[{\"query\":\"who is peter\", \"gremlin\":\"g.V().has('name', 'peter')\"}]\n"
+                "Uploaded csv file should be in format below:\n"
+                "query,gremlin\n\"who is peter\",\"g.V().has('name', 'peter')\"")
     with gr.Row():
         file = gr.File(label="Upload Example Query-Gremlin Pairs Json")
         out = gr.Textbox(label="Result Message")
