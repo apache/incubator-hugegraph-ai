@@ -15,7 +15,7 @@ graph systems and large language models.
 2.  Use natural language to operate graph databases (Gremlin/Cypher)
 3.  Knowledge graph supplements answer context (GraphRAG)
 
-## 2 Environment Requirements
+## 2. Environment Requirements
 
 - python 3.9+  (better to use `3.10`)
 - hugegraph-server 1.3+
