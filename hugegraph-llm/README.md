@@ -70,8 +70,6 @@ for guidance. (Hubble is a graph-analysis dashboard include data loading/schema 
 
 ### 1.Build a knowledge graph in HugeGraph through LLM
 
-Run example like `python3 ./hugegraph_llm/examples/build_kg_test.py`
-
 The `KgBuilder` class is used to construct a knowledge graph. Here is a brief usage guide:
 
 1. **Initialization**: The `KgBuilder` class is initialized with an instance of a language model. 
@@ -86,8 +84,8 @@ This can be obtained from the `LLMs` class.
     (
         builder
         .import_schema(from_hugegraph="talent_graph").print_result()
-        .extract_triples(TEXT).print_result()
-        .disambiguate_word_sense().print_result()
+        .chunk_split(TEXT).print_result()
+        .extract_info(extract_type="property_graph").print_result()
         .commit_to_hugegraph()
         .run()
     )
@@ -97,65 +95,86 @@ This can be obtained from the `LLMs` class.
 
     ```python
     # Import schema from a HugeGraph instance
-    import_schema(from_hugegraph="xxx").print_result()
+    builder.import_schema(from_hugegraph="xxx").print_result()
     # Import schema from an extraction result
-    import_schema(from_extraction="xxx").print_result()
+    builder.import_schema(from_extraction="xxx").print_result()
     # Import schema from user-defined schema
-    import_schema(from_user_defined="xxx").print_result()
+    builder.import_schema(from_user_defined="xxx").print_result()
     ```
 
-3. **Extract Triples**: The `extract_triples` method is used to extract triples from a text. The text should be passed as a string argument to the method.
+3. **Chunk Split**: The `chunk_split` method is used to split the input text into chunks. The text should be passed as a string argument to the method.
+
+    ```python
+    # Split the input text into documents
+    builder.chunk_split(TEXT, split_type="document").print_result()
+    # Split the input text into paragraphs
+    builder.chunk_split(TEXT, split_type="paragraph").print_result()
+    # Split the input text into sentences
+    builder.chunk_split(TEXT, split_type="sentence").print_result()
+    ```
+
+4. **Extract Info**: The `extract_info` method is used to extract info from a text. The text should be passed as a string argument to the method.
 
     ```python
     TEXT = "Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with since 2010."
-    extract_triples(TEXT).print_result()
-    ```
-
-4. **Disambiguate Word Sense**: The `disambiguate_word_sense` method is used to disambiguate the sense of words in the extracted triples.
-
-    ```python
-    disambiguate_word_sense().print_result()
+    # extract property graph from the input text
+    builder.extract_info(extract_type="property_graph").print_result()
+    # extract triples from the input text
+    builder.extract_info(extract_type="property_graph").print_result()
     ```
 
 5. **Commit to HugeGraph**: The `commit_to_hugegraph` method is used to commit the constructed knowledge graph to a HugeGraph instance.
 
     ```python
-    commit_to_hugegraph().print_result()
+    builder.commit_to_hugegraph().print_result()
     ```
 
 6. **Run**: The `run` method is used to execute the chained operations.
 
     ```python
-    run()
+    builder.run()
     ```
 
 The methods of the `KgBuilder` class can be chained together to perform a sequence of operations.
 
 ### 2. Retrieval augmented generation (RAG) based on HugeGraph
 
-Run example like `python3 ./hugegraph_llm/examples/graph_rag_test.py`
-
 The `RAGPipeline` class is used to integrate HugeGraph with large language models to provide retrieval-augmented generation capabilities.
 Here is a brief usage guide:
 
-1. **Extract Keyword:**: Extract keywords and expand synonyms.
+1. **Extract Keyword**: Extract keywords and expand synonyms.
 
     ```python
+    from hugegraph_llm.operators.graph_rag_task import RAGPipeline
+    graph_rag = RAGPipeline()
     graph_rag.extract_keywords(text="Tell me about Al Pacino.").print_result()
     ```
 
-2. **Query Graph for Rag**: Retrieve the corresponding keywords and their multi-degree associated relationships from HugeGraph.
+2. **Match Vid from Keywords*: Match the nodes with the keywords in the graph.
+
+    ```python
+    graph_rag.keywords_to_vid().print_result()
+    ```
+
+3. **Query Graph for Rag**: Retrieve the corresponding keywords and their multi-degree associated relationships from HugeGraph.
 
      ```python
      graph_rag.query_graphdb(max_deep=2, max_items=30).print_result()
      ```
-3. **Synthesize Answer**: Summarize the results and organize the language to answer the question.
+
+4. **Rerank Searched Result**: Rerank the searched results based on the similarity between the question and the results.
+
+     ```python
+     graph_rag.merge_dedup_rerank().print_result()
+     ```
+
+5. **Synthesize Answer**: Summarize the results and organize the language to answer the question.
 
     ```python
-    graph_rag.synthesize_answer().print_result()
+    graph_rag.synthesize_answer(vector_only_answer=False, graph_only_answer=True).print_result()
     ```
 
-4. **Run**: The `run` method is used to execute the above operations.
+6. **Run**: The `run` method is used to execute the above operations.
 
     ```python
     graph_rag.run(verbose=True)
