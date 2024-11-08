@@ -74,7 +74,6 @@ import_graph_from_dgl("cora")
 ```
 
 Run [dgi_example.py](./src/hugegraph_ml/examples/dgi_example.py) to view the example.
-
 ```bash
 python ./hugegraph_ml/examples/dgi_example.py
 ```
