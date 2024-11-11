@@ -4,6 +4,7 @@
 .asf.yaml export-ignore
 apache-release.sh export-ignore
 .licenserc.yaml export-ignore
+questions_template.xlsx export-ignore
 
 # ignored directory
 .github/ export-ignore
