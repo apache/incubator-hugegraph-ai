@@ -36,6 +36,7 @@ from hugegraph_llm.demo.rag_demo.configs_block import (
 from hugegraph_llm.demo.rag_demo.other_block import create_other_block
 from hugegraph_llm.demo.rag_demo.rag_block import create_rag_block, rag_answer
 from hugegraph_llm.demo.rag_demo.vector_graph_block import create_vector_graph_block
+from hugegraph_llm.demo.rag_demo.log_block import create_log_block, log_stream
 from hugegraph_llm.resources.demo.css import CSS
 from hugegraph_llm.utils.log import log
 
@@ -94,6 +95,8 @@ def init_rag_ui() -> gr.Interface:
             textbox_inp, textbox_answer_prompt_input = create_rag_block()
         with gr.Tab(label="3. Others Tools 🚧"):
             create_other_block()
+        with gr.Tab(label="4. Admin Tools ⚙️"):
+            create_log_block()
         
 
         def refresh_ui_config_prompt() -> tuple:
@@ -134,7 +137,7 @@ if __name__ == "__main__":
 
     hugegraph_llm = init_rag_ui()
     rag_http_api(api_auth, rag_answer, apply_graph_config, apply_llm_config, apply_embedding_config,
-                 apply_reranker_config)
+                 apply_reranker_config, log_stream)
 
     app.include_router(api_auth)
     auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"

@@ -70,8 +70,10 @@ class ConfigData:
     graph_user: Optional[str] = "admin"
     graph_pwd: Optional[str] = "xxx"
     graph_space: Optional[str] = None
-
-
+    log_auth_key: Optional[str] = "000000"
+    
+    enable_login: Optional[str] = False
+    token: Optional[str] = "123456"
 # Additional static content like PromptConfig
 class PromptData:
 

@@ -14,10 +14,12 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+import os
 import json
 from typing import Literal
 
 from fastapi import status, APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 
 from hugegraph_llm.api.exceptions.rag_exceptions import generate_response
 from hugegraph_llm.api.models.rag_requests import (
@@ -25,6 +27,7 @@ from hugegraph_llm.api.models.rag_requests import (
     GraphConfigRequest,
     LLMConfigRequest,
     RerankerConfigRequest, GraphRAGRequest,
+    LogStreamRequest,
 )
 from hugegraph_llm.api.models.rag_response import RAGResponse
 from hugegraph_llm.config import settings
@@ -49,7 +52,7 @@ def graph_rag_recall(
 
 
 def rag_http_api(
-        router: APIRouter, rag_answer_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf, apply_reranker_conf
+        router: APIRouter, rag_answer_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf, apply_reranker_conf, log_stream
 ):
     @router.post("/rag", status_code=status.HTTP_200_OK)
     def rag_answer_api(req: RAGRequest):
@@ -126,3 +129,14 @@ def rag_http_api(
         else:
             res = status.HTTP_501_NOT_IMPLEMENTED
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
+
+    @router.post("/logs", status_code=status.HTTP_200_OK)
+    async def log_stream_api(req: LogStreamRequest):
+        if settings.log_auth_key != req.log_auth_key:
+            raise generate_response(RAGResponse(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid log_auth_key"))
+        else:
+            log_path = os.path.join("logs", req.log_file)
+
+            # Create a StreamingResponse that reads from the log stream generator
+            return StreamingResponse(log_stream(log_path), media_type="text/plain")
+    
