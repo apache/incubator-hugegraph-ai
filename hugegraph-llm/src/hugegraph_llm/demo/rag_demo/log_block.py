@@ -15,13 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import asyncio
+
 import gradio as gr
+from fastapi import Request
+
 from hugegraph_llm.config import settings
 from hugegraph_llm.utils.log import log
-import os
-import asyncio
-import requests
-from fastapi import Request
 
 
 async def log_stream(log_path: str):
@@ -40,7 +40,8 @@ async def log_stream(log_path: str):
         raise Exception(f"Log file not found: {log_path}")
     except Exception as e:
         raise Exception(f"An error occurred while reading the log: {str(e)}")
-            
+
+
 # Functions to read each log file
 def read_llm_server_log():
     try:
@@ -49,6 +50,8 @@ def read_llm_server_log():
     except FileNotFoundError:
         return "LLM Server log file not found."
 
+
+# TODO: maybe we should merge 2 log files into one (llm-server.log), refactor it in log.py first
 def read_output_log():
     try:
         with open("logs/output.log", "r") as f:
@@ -56,19 +59,22 @@ def read_output_log():
     except FileNotFoundError:
         return "Output log file not found."
 
+
 # Functions to clear each log file
 def clear_llm_server_log():
     with open("logs/llm-server.log", "w") as f:
-        f.truncate(0)  # Clear contents of the file
+        f.truncate(0)  # Clear the contents of the file
     return "LLM Server log cleared."
+
 
 def clear_output_log():
     with open("logs/output.log", "w") as f:
-        f.truncate(0)  # Clear contents of the file
+        f.truncate(0)  # Clear the contents of the file
     return "Output log cleared."
 
+
 # Function to validate password and control access to logs
-def check_password(password, request:Request = None):
+def check_password(password, request: Request = None):
     client_ip = request.client.host if request else "Unknown IP"
     if password == settings.log_token:
         # Return logs and update visibility
@@ -84,25 +90,26 @@ def check_password(password, request:Request = None):
         # Log the failed attempt with IP address
         log.error(f"Incorrect password attempt from IP: {client_ip}")
         return (
-            "", 
-            "", 
-            gr.update(visible=False), 
-            gr.update(visible=False), 
-            gr.update(visible=False), 
+            "",
+            "",
+            gr.update(visible=False),
+            gr.update(visible=False),
+            gr.update(visible=False),
             gr.update(value="Incorrect password. Access denied.", visible=True)
         )
-    
+
+
 def create_log_block():
     with gr.Blocks() as demo:
         gr.Markdown("## 5. Logs Info - Password Protected")
-        
+
         # Password input
         password_input = gr.Textbox(
             label="Enter Password",
             type="password",
             placeholder="Enter password to access logs",
         )
-        
+
         # Error message box, initially hidden
         error_message = gr.Textbox(
             label="",
@@ -149,7 +156,8 @@ def create_log_block():
         submit_button.click(
             fn=check_password,
             inputs=[password_input],
-            outputs=[llm_server_log_output, output_log_output, hidden_row, clear_llm_server_button, clear_output_button, error_message],
+            outputs=[llm_server_log_output, output_log_output, hidden_row, clear_llm_server_button,
+                     clear_output_button,error_message],
         )
 
         # Define what happens when the Clear LLM Server Log button is clicked
