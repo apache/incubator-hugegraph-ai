@@ -132,8 +132,8 @@ def rag_http_api(
 
     @router.post("/logs", status_code=status.HTTP_200_OK)
     async def log_stream_api(req: LogStreamRequest):
-        if settings.log_auth_key != req.log_auth_key:
-            raise generate_response(RAGResponse(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid log_auth_key"))
+        if settings.log_token != req.log_token:
+            raise generate_response(RAGResponse(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid log_token"))
         else:
             log_path = os.path.join("logs", req.log_file)
 

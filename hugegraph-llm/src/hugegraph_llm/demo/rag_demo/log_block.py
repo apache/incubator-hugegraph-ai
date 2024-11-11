@@ -22,16 +22,14 @@ import os
 import asyncio
 import requests
 from fastapi import Request
-# Generator to simulate the tail -f behavior
+
+
 async def log_stream(log_path: str):
     """
     Stream the content of a log file like `tail -f`.
-    This function is asynchronous.
     """
     try:
         with open(log_path, 'r') as file:
-            # Move the cursor to the end of the file
-            # file.seek(0, os.SEEK_END)
             while True:
                 line = file.readline()
                 if line:
@@ -70,9 +68,9 @@ def clear_output_log():
     return "Output log cleared."
 
 # Function to validate password and control access to logs
-def check_password(password, request:Request):
+def check_password(password, request:Request = None):
     client_ip = request.client.host if request else "Unknown IP"
-    if password == settings.log_auth_key:
+    if password == settings.log_token:
         # Return logs and update visibility
         llm_log, output_log = read_llm_server_log(), read_output_log()
         visible_update = gr.update(visible=True)
@@ -85,8 +83,15 @@ def check_password(password, request:Request):
     else:
         # Log the failed attempt with IP address
         log.error(f"Incorrect password attempt from IP: {client_ip}")
-        return "", "", gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(value="Incorrect password. Access denied.", visible=True)
-
+        return (
+            "", 
+            "", 
+            gr.update(visible=False), 
+            gr.update(visible=False), 
+            gr.update(visible=False), 
+            gr.update(value="Incorrect password. Access denied.", visible=True)
+        )
+    
 def create_log_block():
     with gr.Blocks() as demo:
         gr.Markdown("## 5. Logs Info - Password Protected")

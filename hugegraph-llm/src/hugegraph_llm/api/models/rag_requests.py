@@ -72,5 +72,5 @@ class RerankerConfigRequest(BaseModel):
     cohere_base_url: Optional[str] = None
 
 class LogStreamRequest(BaseModel):
-    log_auth_key: Optional[str] = None
+    log_token: Optional[str] = None
     log_file: Optional[str] = 'llm-server.log'
