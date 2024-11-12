@@ -23,6 +23,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install pylint pytest
         pip install -r ./hugegraph-llm/requirements.txt
+        pip install -r ./hugegraph-ml/requirements.txt
         pip install -r ./hugegraph-python-client/requirements.txt
     - name: Analysing the code with pylint
       run: |
