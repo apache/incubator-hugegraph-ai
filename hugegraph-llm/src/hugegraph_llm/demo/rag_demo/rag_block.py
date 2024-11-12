@@ -17,29 +17,35 @@
 
 # pylint: disable=E1101
 
+import json
 import os
-from typing import Tuple, Literal, Optional
+from typing import List, Literal, Optional, Tuple
 
 import gradio as gr
 import pandas as pd
+from datasets import Dataset
 from gradio.utils import NamedString
+from langchain_openai.chat_models import ChatOpenAI
+from ragas import evaluate
+from ragas.llms import LangchainLLMWrapper
 
-from hugegraph_llm.config import resource_path, prompt
+from hugegraph_llm.config import prompt, resource_path, settings
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.utils.log import log
+from hugegraph_llm.utils.ragas_utils import RAGAS_METRICS_DICT, RAGAS_METRICS_ZH_DICT
 
 
 def rag_answer(
-        text: str,
-        raw_answer: bool,
-        vector_only_answer: bool,
-        graph_only_answer: bool,
-        graph_vector_answer: bool,
-        graph_ratio: float,
-        rerank_method: Literal["bleu", "reranker"],
-        near_neighbor_first: bool,
-        custom_related_information: str,
-        answer_prompt: str,
+    text: str,
+    raw_answer: bool,
+    vector_only_answer: bool,
+    graph_only_answer: bool,
+    graph_vector_answer: bool,
+    graph_ratio: float,
+    rerank_method: Literal["bleu", "reranker"],
+    near_neighbor_first: bool,
+    custom_related_information: str,
+    answer_prompt: str,
 ) -> Tuple:
     """
     Generate an answer using the RAG (Retrieval-Augmented Generation) pipeline.
@@ -69,17 +75,29 @@ def rag_answer(
         rag.extract_keywords().keywords_to_vid().query_graphdb()
     # TODO: add more user-defined search strategies
     rag.merge_dedup_rerank(graph_ratio, rerank_method, near_neighbor_first, custom_related_information)
-    rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
+    rag.synthesize_answer(answer_prompt)
 
     try:
-        context = rag.run(verbose=True, query=text, vector_search=vector_search, graph_search=graph_search)
+        context = rag.run(
+            verbose=True,
+            query=text,
+            raw_answer=raw_answer,
+            vector_only_answer=vector_only_answer,
+            graph_only_answer=graph_only_answer,
+            graph_vector_answer=graph_vector_answer,
+        )
         if context.get("switch_to_bleu"):
             gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
         return (
-            context.get("raw_answer", ""),
-            context.get("vector_only_answer", ""),
-            context.get("graph_only_answer", ""),
-            context.get("graph_vector_answer", ""),
+            context.get("raw_answer_result", ""),
+            context.get("vector_only_answer_result", ""),
+            context.get("graph_only_answer_result", ""),
+            context.get("graph_vector_answer_result", ""),
+            {
+                "vector_contexts": context.get("vector_contexts"),
+                "graph_contexts": context.get("graph_contexts"),
+                "graph_vector_contexts": context.get("graph_vector_contexts"),
+            },
         )
     except ValueError as e:
         log.critical(e)
@@ -124,9 +142,7 @@ def create_rag_block():
                     )
                     graph_ratio = gr.Slider(0, 1, 0.5, label="Graph Ratio", step=0.1, interactive=False)
 
-                graph_vector_radio.change(
-                    toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio
-                )  # pylint: disable=no-member
+                graph_vector_radio.change(toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio)  # pylint: disable=no-member
                 near_neighbor_first = gr.Checkbox(
                     value=False,
                     label="Near neighbor first(Optional)",
@@ -135,6 +151,10 @@ def create_rag_block():
                 custom_related_information = gr.Text(
                     prompt.custom_rerank_info,
                     label="Custom related information(Optional)",
+                    info=(
+                        "Used for rerank, can increase the weight of knowledge related to it, such as `law`. "
+                        "Multiple values can be separated by commas."
+                    ),
                 )
                 btn = gr.Button("Answer Question", variant="primary")
 
@@ -160,34 +180,46 @@ def create_rag_block():
     > 2. Upload the file & click the button to generate answers. (Preview shows the first 40 lines)
     > 3. The answer options are the same as the above RAG/Q&A frame 
     """)
+
+    # TODO: Replace string with python constant
     tests_df_headers = [
         "Question",
-        "Expected Answer",
-        "Basic LLM Answer",
-        "Vector-only Answer",
         "Graph-only Answer",
         "Graph-Vector Answer",
+        "Vector-only Answer",
+        "Basic LLM Answer",
+        "Expected Answer",
     ]
+    rag_answer_header_dict = {
+        "Vector-only Answer": "Vector Contexts",
+        "Graph-only Answer": "Graph Contexts",
+        "Graph-Vector Answer": "Graph-Vector Contexts",
+    }
+
     answers_path = os.path.join(resource_path, "demo", "questions_answers.xlsx")
     questions_path = os.path.join(resource_path, "demo", "questions.xlsx")
     questions_template_path = os.path.join(resource_path, "demo", "questions_template.xlsx")
 
+    ragas_metrics_list = list(RAGAS_METRICS_DICT.keys())
+
     def read_file_to_excel(file: NamedString, line_count: Optional[int] = None):
-        df = None
+        if os.path.exists(answers_path):
+            os.remove(answers_path)
+        df = pd.DataFrame()
         if not file:
             return pd.DataFrame(), 1
         if file.name.endswith(".xlsx"):
             df = pd.read_excel(file.name, nrows=line_count) if file else pd.DataFrame()
         elif file.name.endswith(".csv"):
             df = pd.read_csv(file.name, nrows=line_count) if file else pd.DataFrame()
-        df.to_excel(questions_path, index=False)
-        if df.empty:
-            df = pd.DataFrame([[""] * len(tests_df_headers)], columns=tests_df_headers)
         else:
-            df.columns = tests_df_headers
+            raise gr.Error("Only support .xlsx and .csv files.")
+        df.to_excel(questions_path, index=False)
         # truncate the dataframe if it's too long
         if len(df) > 40:
             return df.head(40), 40
+        if len(df) == 0:
+            gr.Warning("No data in the file.")
         return df, len(df)
 
     def change_showing_excel(line_count):
@@ -216,7 +248,7 @@ def create_rag_block():
         total_rows = len(df)
         for index, row in df.iterrows():
             question = row.iloc[0]
-            basic_llm_answer, vector_only_answer, graph_only_answer, graph_vector_answer = rag_answer(
+            llm_answer, vector_only_answer, graph_only_answer, graph_vector_answer, contexts = rag_answer(
                 question,
                 is_raw_answer,
                 is_vector_only_answer,
@@ -228,18 +260,30 @@ def create_rag_block():
                 custom_related_information,
                 answer_prompt,
             )
-            df.at[index, "Basic LLM Answer"] = basic_llm_answer
-            df.at[index, "Vector-only Answer"] = vector_only_answer
-            df.at[index, "Graph-only Answer"] = graph_only_answer
-            df.at[index, "Graph-Vector Answer"] = graph_vector_answer
+            df.at[index, "Basic LLM Answer"] = llm_answer if llm_answer else None
+            df.at[index, "Vector-only Answer"] = vector_only_answer if vector_only_answer else None
+            df.at[index, "Graph-only Answer"] = graph_only_answer if graph_only_answer else None
+            df.at[index, "Graph-Vector Answer"] = graph_vector_answer if graph_vector_answer else None
+            if "Vector Contexts" not in df.columns:
+                df["Vector Contexts"] = None
+                df["Graph Contexts"] = None
+                df["Graph-Vector Contexts"] = None
+            df.at[index, "Vector Contexts"] = contexts.get("vector_contexts")
+            df.at[index, "Graph Contexts"] = contexts.get("graph_contexts")
+            df.at[index, "Graph-Vector Contexts"] = contexts.get("graph_vector_contexts")
             progress((index + 1, total_rows))
-        answers_path = os.path.join(resource_path, "demo", "questions_answers.xlsx")
+
+        df = df.dropna(axis=1, how="all")
+        df_to_show = df[[col for col in tests_df_headers if col in df.columns]]
+        for rag_context_header in rag_answer_header_dict.values():
+            if rag_context_header in df.columns:
+                df[rag_context_header] = df[rag_context_header].apply(lambda x: json.dumps(x, ensure_ascii=False))
         df.to_excel(answers_path, index=False)
-        return df.head(answer_max_line_count), answers_path
+        return df_to_show.head(answer_max_line_count), answers_path
 
     with gr.Row():
         with gr.Column():
-            questions_file = gr.File(file_types=[".xlsx", ".csv"], label="Questions File (.xlsx & csv)")
+            questions_file = gr.File(file_types=[".xlsx", ".csv"], label="Questions File (.xlsx & .csv)")
         with gr.Column():
             test_template_file = os.path.join(resource_path, "demo", "questions_template.xlsx")
             gr.File(value=test_template_file, label="Download Template File")
@@ -265,4 +309,67 @@ def create_rag_block():
     )
     questions_file.change(read_file_to_excel, questions_file, [qa_dataframe, answer_max_line_count])
     answer_max_line_count.change(change_showing_excel, answer_max_line_count, qa_dataframe)
+
+    def evaluate_rag(metrics: List[str], num: int, language: Literal["english", "chinese"]):
+        answers_df = pd.read_excel(answers_path)
+        answers_df = answers_df.head(num)
+        if not any(answers_df.columns.isin(rag_answer_header_dict)):
+            raise gr.Error("No RAG answers found in the answer file.")
+        if language == "chinese":
+            eval_metrics = [RAGAS_METRICS_ZH_DICT[metric] for metric in metrics]
+        else:
+            eval_metrics = [RAGAS_METRICS_DICT[metric] for metric in metrics]
+        rag_method_names = [answer for answer in rag_answer_header_dict if answer in answers_df.columns]
+        score_df = pd.DataFrame()
+
+        for answer in rag_method_names:
+            context_header = rag_answer_header_dict[answer]
+            answers_df[context_header] = answers_df[context_header].apply(json.loads)
+            rag_data = {
+                "user_input": answers_df["Question"].to_list(),
+                "response": answers_df[answer].to_list(),
+                "retrieved_contexts": answers_df[rag_answer_header_dict[answer]].to_list(),
+                "reference": answers_df["Expected Answer"].to_list(),
+            }
+            eval_llm = LangchainLLMWrapper(
+                ChatOpenAI(
+                    model="gpt-4o-mini",
+                    temperature=0,
+                    base_url=settings.openai_api_base,
+                    api_key=settings.openai_api_key,
+                )
+            )
+
+            dataset = Dataset.from_dict(rag_data)
+            score = evaluate(
+                dataset,
+                metrics=eval_metrics,
+                llm=eval_llm,
+            )
+            score_df = pd.concat([score_df, score.to_pandas()])
+        score_df.insert(0, "method", rag_method_names)
+        return score_df
+
+    with gr.Row():
+        with gr.Column():
+            ragas_metrics = gr.Dropdown(
+                choices=ragas_metrics_list,
+                value=ragas_metrics_list[:4],
+                multiselect=True,
+                label="Metrics",
+                info=(
+                    "Several evaluation metrics from `ragas`, ",
+                    "please refer to https://docs.ragas.io/en/stable/concepts/metrics/index.html",
+                ),
+            )
+        with gr.Column():
+            with gr.Row():
+                dataset_nums = gr.Number(1, label="Dataset Numbers", minimum=1, maximum=1)
+                language = gr.Radio(["english", "chinese"], label="Language", value="chinese")
+            ragas_btn = gr.Button("Evaluate RAG", variant="primary")
+    ragas_btn.click(
+        evaluate_rag,
+        inputs=[ragas_metrics, dataset_nums, language],
+        outputs=[gr.DataFrame(label="RAG Evaluation Results", headers=ragas_metrics_list)],
+    )
     return inp, answer_prompt_input

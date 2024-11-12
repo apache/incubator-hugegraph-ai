@@ -169,28 +169,16 @@ class RAGPipeline:
 
     def synthesize_answer(
             self,
-            raw_answer: bool = False,
-            vector_only_answer: bool = True,
-            graph_only_answer: bool = False,
-            graph_vector_answer: bool = False,
             answer_prompt: Optional[str] = None,
     ):
         """
         Add an answer synthesis operator to the pipeline.
 
-        :param raw_answer: Whether to return raw answers.
-        :param vector_only_answer: Whether to return vector-only answers.
-        :param graph_only_answer: Whether to return graph-only answers.
-        :param graph_vector_answer: Whether to return graph-vector combined answers.
         :param answer_prompt: Template for the answer synthesis prompt.
         :return: Self-instance for chaining.
         """
         self._operators.append(
             AnswerSynthesize(
-                raw_answer=raw_answer,
-                vector_only_answer=vector_only_answer,
-                graph_only_answer=graph_only_answer,
-                graph_vector_answer=graph_vector_answer,
                 prompt_template=answer_prompt,
             )
         )
