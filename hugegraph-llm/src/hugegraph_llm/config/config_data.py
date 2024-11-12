@@ -73,7 +73,7 @@ class ConfigData:
     log_token: Optional[str] = "000000"
     
     """Admin settings"""
-    enable_login: Optional[str] = False
+    enable_login: Optional[str] = "False"
     token: Optional[str] = "123456"
 # Additional static content like PromptConfig
 class PromptData:
