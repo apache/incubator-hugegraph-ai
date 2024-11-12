@@ -74,3 +74,4 @@ class RerankerConfigRequest(BaseModel):
 class LogStreamRequest(BaseModel):
     log_token: Optional[str] = None
     log_file: Optional[str] = 'llm-server.log'
+    

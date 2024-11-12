@@ -100,7 +100,7 @@ def check_password(password, request: Request = None):
 
 
 def create_log_block():
-    with gr.Blocks() as demo:
+    with gr.Blocks():
         gr.Markdown("## 5. Logs Info - Password Protected")
 
         # Password input

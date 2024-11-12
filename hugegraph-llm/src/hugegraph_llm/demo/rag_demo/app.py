@@ -25,6 +25,7 @@ from fastapi import FastAPI, Depends, APIRouter
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from hugegraph_llm.api.rag_api import rag_http_api
+from hugegraph_llm.api.admin_api import admin_http_api
 from hugegraph_llm.config import settings, prompt
 from hugegraph_llm.demo.rag_demo.configs_block import (
     create_configs_block,
@@ -137,7 +138,8 @@ if __name__ == "__main__":
 
     hugegraph_llm = init_rag_ui()
     rag_http_api(api_auth, rag_answer, apply_graph_config, apply_llm_config, apply_embedding_config,
-                 apply_reranker_config, log_stream)
+                 apply_reranker_config)
+    admin_http_api(api_auth, log_stream)
 
     app.include_router(api_auth)
     auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"

@@ -52,7 +52,7 @@ def graph_rag_recall(
 
 
 def rag_http_api(
-        router: APIRouter, rag_answer_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf, apply_reranker_conf, log_stream
+        router: APIRouter, rag_answer_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf, apply_reranker_conf
 ):
     @router.post("/rag", status_code=status.HTTP_200_OK)
     def rag_answer_api(req: RAGRequest):
@@ -129,14 +129,4 @@ def rag_http_api(
         else:
             res = status.HTTP_501_NOT_IMPLEMENTED
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
-
-    @router.post("/logs", status_code=status.HTTP_200_OK)
-    async def log_stream_api(req: LogStreamRequest):
-        if settings.log_token != req.log_token:
-            raise generate_response(RAGResponse(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid log_token"))
-        else:
-            log_path = os.path.join("logs", req.log_file)
-
-            # Create a StreamingResponse that reads from the log stream generator
-            return StreamingResponse(log_stream(log_path), media_type="text/plain")
     
