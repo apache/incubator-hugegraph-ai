@@ -48,7 +48,6 @@ class Config(ConfigData):
 
     def from_env(self):
         if os.path.exists(env_path):
-            self.generate_env()
             env_config = read_dotenv()
             for key, value in env_config.items():
                 if key in self.__annotations__ and value:
@@ -93,7 +92,6 @@ class PromptConfig(PromptData):
 
     def ensure_yaml_file_exists(self):
         if os.path.exists(yaml_file_path):
-            self.generate_yaml_file()
             log.info("Loading prompt file '%s' successfully.", F_NAME)
             with open(yaml_file_path, "r", encoding="utf-8") as file:
                 data = yaml.safe_load(file)

@@ -135,12 +135,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
     app = FastAPI()
     api_auth = APIRouter(dependencies=[Depends(authenticate)])
+    
+    settings.update_env()
+    prompt.update_yaml_file()
 
     hugegraph_llm = init_rag_ui()
     rag_http_api(api_auth, rag_answer, apply_graph_config, apply_llm_config, apply_embedding_config,
                  apply_reranker_config)
     admin_http_api(api_auth, log_stream)
-
+    
     app.include_router(api_auth)
     auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
     log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
