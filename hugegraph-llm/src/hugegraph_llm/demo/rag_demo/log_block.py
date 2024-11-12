@@ -204,4 +204,3 @@ def create_log_block():
             inputs=[],
             outputs=[output_log_output],
         )
-
