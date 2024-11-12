@@ -67,7 +67,7 @@ class Config(ConfigData):
         else:
             config_dict = {}
             for k, v in self.__dict__.items():
-                config_dict[k] = v
+                config_dict[k.upper()] = v
             with open(env_path, "w", encoding="utf-8") as f:
                 for k, v in config_dict.items():
                     if v is None:
@@ -79,7 +79,7 @@ class Config(ConfigData):
     def update_env(self):
         config_dict = {}
         for k, v in self.__dict__.items():
-            config_dict[k] = str(v) if v else ""
+            config_dict[k.upper()] = str(v) if v else ""
         env_config = dotenv_values(f"{env_path}")
         for k, v in config_dict.items():
             if k in env_config and env_config[k] == v:

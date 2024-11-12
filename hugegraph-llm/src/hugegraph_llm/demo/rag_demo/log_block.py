@@ -51,15 +51,6 @@ def read_llm_server_log():
         return "LLM Server log file not found."
 
 
-# TODO: maybe we should merge 2 log files into one (llm-server.log), refactor it in log.py first
-def read_output_log():
-    try:
-        with open("logs/output.log", "r") as f:
-            return f.read()
-    except FileNotFoundError:
-        return "Output log file not found."
-
-
 # Functions to clear each log file
 def clear_llm_server_log():
     with open("logs/llm-server.log", "w") as f:
@@ -78,14 +69,11 @@ def check_password(password, request: Request = None):
     client_ip = request.client.host if request else "Unknown IP"
     if password == settings.log_token:
         # Return logs and update visibility
-        llm_log, output_log = read_llm_server_log(), read_output_log()
+        llm_log = read_llm_server_log()
         # Log the successful access with the IP address
         log.info(f"Logs accessed successfully from IP: {client_ip}")
         return (
             llm_log, 
-            output_log, 
-            gr.update(visible=True), 
-            gr.update(visible=True), 
             gr.update(visible=True), 
             gr.update(visible=True), 
             gr.update(visible=True), 
@@ -95,9 +83,6 @@ def check_password(password, request: Request = None):
         log.error(f"Incorrect password attempt from IP: {client_ip}")
         return (
             "",
-            "",
-            gr.update(visible=False),
-            gr.update(visible=False),
             gr.update(visible=False),
             gr.update(visible=False),
             gr.update(visible=False),
@@ -146,34 +131,14 @@ def create_log_block():
                         clear_llm_server_button = gr.Button("Clear LLM Server Log", visible=False)
                     with gr.Column():
                         # Button to refresh LLM Server log manually
-                        refresh_llm_server_button = gr.Button("Refresh LLM Server Log", visible=False)
-
-            with gr.Column():
-                # Output log display, refreshes every 1 second
-                gr.Markdown("### Output Log")
-                output_log_output = gr.Textbox(
-                    label="Output Log (output.log)",
-                    lines=20,
-                    value=read_output_log,  # Initial value using the function
-                    show_copy_button=True,
-                    elem_classes="log-container",
-                    every=60,  # Refresh every 60 second
-                    autoscroll=True  # Enable auto-scroll
-                )
-                with gr.Row():
-                    with gr.Column():
-                        # Button to clear Output log, initially hidden
-                        clear_output_button = gr.Button("Clear Output Log", visible=False)
-                    with gr.Column():
-                        # Button to refresh Output log manually
-                        refresh_output_button = gr.Button("Refresh Output Log", visible=False)
+                        refresh_llm_server_button = gr.Button("Refresh LLM Server Log", visible=False, variant="primary")
 
         # Define what happens when the password is submitted
         submit_button.click(
             fn=check_password,
             inputs=[password_input],
-            outputs=[llm_server_log_output, output_log_output, hidden_row, clear_llm_server_button,
-                     clear_output_button, refresh_llm_server_button, refresh_output_button, 
+            outputs=[llm_server_log_output, hidden_row, clear_llm_server_button,
+                     refresh_llm_server_button, 
                      error_message],
         )
 
@@ -184,23 +149,9 @@ def create_log_block():
             outputs=[llm_server_log_output],
         )
 
-        # Define what happens when the Clear Output Log button is clicked
-        clear_output_button.click(
-            fn=clear_output_log,
-            inputs=[],
-            outputs=[output_log_output],
-        )
-
         # Define what happens when the Refresh LLM Server Log button is clicked
         refresh_llm_server_button.click(
             fn=read_llm_server_log,
             inputs=[],
             outputs=[llm_server_log_output],
-        )
-
-        # Define what happens when the Refresh Output Log button is clicked
-        refresh_output_button.click(
-            fn=read_output_log,
-            inputs=[],
-            outputs=[output_log_output],
         )
