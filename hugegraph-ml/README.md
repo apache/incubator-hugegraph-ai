@@ -1,4 +1,4 @@
- # hugegraph-ml
+  # hugegraph-ml
 
 ## Summary
 
@@ -7,6 +7,26 @@ It implements most graph learning algorithms, enabling users to perform end-to-e
 Graph data can be read directly from `HugeGraph` and used for tasks such as node embedding, node classification, and graph classification. 
 The implemented algorithm models can be found in the [models](./src/hugegraph_ml/models) folder.
 
+| model       | paper                                              |
+| ----------- | -------------------------------------------------- |
+| AGNN        | https://arxiv.org/abs/1803.03735                   |
+| APPNP       | https://arxiv.org/abs/1810.05997                   |
+| ARMA        | https://arxiv.org/abs/1901.01343                   |
+| BGNN        | https://arxiv.org/abs/2101.08543                   |
+| BGRL        | https://arxiv.org/abs/2102.06514                   |
+| CARE-GNN    | https://arxiv.org/abs/2008.08692                   |
+| Cluster-GCN | https://arxiv.org/abs/1905.07953                   |
+| C&S         | https://arxiv.org/abs/2010.13993                   |
+| DAGNN       | https://arxiv.org/abs/2007.09296                   |
+| DeeperGCN   | https://arxiv.org/abs/2006.07739                   |
+| DGI         | https://arxiv.org/abs/1809.10341                   |
+| DiffPool    | https://arxiv.org/abs/1806.08804                   |
+| GATNE       | https://arxiv.org/abs/1905.01669                   |
+| GRACE       | https://arxiv.org/abs/2006.04131                   |
+| GRAND       | https://arxiv.org/abs/2005.11079                   |
+| JKNet       | https://arxiv.org/abs/1806.03536                   |
+| P-GNN       | http://proceedings.mlr.press/v97/you19b/you19b.pdf |
+| SEAL        | https://arxiv.org/abs/1802.09691                   |
 
 ## Environment Requirements
 
@@ -16,22 +36,28 @@ The implemented algorithm models can be found in the [models](./src/hugegraph_ml
 ## Preparation
 
 1. Start the HugeGraph database, you can do it via Docker/[Binary packages](https://hugegraph.apache.org/docs/download/download/). 
-Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for guidance
+   Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for guidance
+
 2. Clone this project
-    ```bash
-    git clone https://github.com/apache/incubator-hugegraph-ai.git
-    ```
-3. Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph_ml](../hugegraph-ml)
-    ```bash
-    cd ./incubator-hugegraph-ai # better to use virtualenv (source venv/bin/activate) 
-    pip install ./hugegraph-python-client
-    cd ./hugegraph-ml/
-    pip install -e .
-    ```
+
+   ```bash
+   git clone https://github.com/apache/incubator-hugegraph-ai.git
+   ```
+
+3. Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph-ml](../hugegraph-ml)
+
+   ```bash
+   cd ./incubator-hugegraph-ai # better to use virtualenv (source venv/bin/activate) 
+   pip install ./hugegraph-python-client
+   cd ./hugegraph-ml/
+   pip install -e .
+   ```
+
 4. Enter the project directory
-    ```bash
-    cd ./hugegraph-ml/src
-    ```
+
+   ```bash
+   cd ./hugegraph-ml/src
+   ```
 
 ## Examples
 

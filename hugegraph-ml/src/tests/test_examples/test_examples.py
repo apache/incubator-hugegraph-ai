@@ -23,7 +23,18 @@ from hugegraph_ml.examples.gin_example import gin_example
 from hugegraph_ml.examples.grace_example import grace_example
 from hugegraph_ml.examples.grand_example import grand_example
 from hugegraph_ml.examples.jknet_example import jknet_example
-
+from hugegraph_ml.examples.agnn_example import agnn_example
+from hugegraph_ml.examples.appnp_example import appnp_example
+from hugegraph_ml.examples.arma_example import arma_example
+from hugegraph_ml.examples.bgnn_example import bgnn_example
+from hugegraph_ml.examples.bgrl_example import bgrl_example
+from hugegraph_ml.examples.care_gnn_example import care_gnn_example
+from hugegraph_ml.examples.cluster_gcn_example import cluster_gcn_example
+from hugegraph_ml.examples.correct_and_smooth_example import cs_example
+from hugegraph_ml.examples.dagnn_example import dagnn_example
+from hugegraph_ml.examples.deepergcn_example import deepergcn_example
+from hugegraph_ml.examples.pgnn_example import pgnn_example
+from hugegraph_ml.examples.seal_example import seal_example
 
 class TestHugegraph2DGL(unittest.TestCase):
     def setUp(self):
@@ -64,3 +75,75 @@ class TestHugegraph2DGL(unittest.TestCase):
             gin_example(n_epochs=self.test_n_epochs)
         except ValueError:
             self.fail("model gin example failed")
+
+    def test_agnn_example(self):
+        try:
+            agnn_example(n_epochs=self.test_n_epochs)
+        except ValueError:
+            self.fail("model agnn example failed")
+
+    def test_appnp_example(self):
+        try:
+            appnp_example(n_epochs=self.test_n_epochs)
+        except ValueError:
+            self.fail("model appnp example failed")
+
+    def test_arma_example(self):
+        try:
+            arma_example(n_epochs=self.test_n_epochs)
+        except ValueError:
+            self.fail("model arma example failed")
+
+    def test_bgnn_example(self):
+        try:
+            bgnn_example(n_epochs=self.test_n_epochs)
+        except ValueError:
+            self.fail("model bgnn example failed")
+
+    def test_bgrl_example(self):
+        try:
+            bgrl_example(n_epochs=self.test_n_epochs)
+        except ValueError:
+            self.fail("model bgrl example failed")
+
+    def test_cluster_gcn_example(self):
+        try:
+            cluster_gcn_example(n_epochs=self.test_n_epochs)
+        except ValueError:
+            self.fail("model cluster-gcn example failed")
+
+    def test_correct_and_smooth_example(self):
+        try:
+            cs_example(n_epochs=self.test_n_epochs)
+        except ValueError:
+            self.fail("model correct and smooth example failed")
+
+    def test_dagnn_example(self):
+        try:
+            dagnn_example(n_epochs=self.test_n_epochs)
+        except ValueError:
+            self.fail("model dagnn example failed")
+
+    def test_deepergcn_example(self):
+        try:
+            deepergcn_example(n_epochs=self.test_n_epochs)
+        except ValueError:
+            self.fail("model deepergcn example failed")
+
+    def test_pgnn_example(self):
+        try:
+            pgnn_example(n_epochs=self.test_n_epochs)
+        except ValueError:
+            self.fail("model p-gnn example failed")
+
+    def test_seal_example(self):
+        try:
+            seal_example(n_epochs=self.test_n_epochs)
+        except ValueError:
+            self.fail("model seal example failed")
+
+    def test_care_gnn_example(self):
+        try:
+            care_gnn_example(n_epochs=self.test_n_epochs)
+        except ValueError:
+            self.fail("model care-gnn example failed")
