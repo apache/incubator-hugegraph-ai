@@ -191,10 +191,11 @@ class GraphRAGQuery:
         subgraph = set()
         subgraph_with_degree = {}
         vertex_degree_list: List[Set[str]] = []
+        global_vertex_cache: Set[str] = set()
 
         for path in query_paths:
             # 1. Process each path
-            flat_rel, nodes_with_degree = self._process_path(path, use_id_to_match)
+            flat_rel, nodes_with_degree = self._process_path(path, use_id_to_match, global_vertex_cache)
             subgraph.add(flat_rel)
             subgraph_with_degree[flat_rel] = nodes_with_degree
             # 2. Update vertex degree list
@@ -202,7 +203,7 @@ class GraphRAGQuery:
 
         return subgraph, vertex_degree_list, subgraph_with_degree
 
-    def _process_path(self, path: Any, use_id_to_match: bool) -> Tuple[str, List[str]]:
+    def _process_path(self, path: Any, use_id_to_match: bool, global_vertex_cache: Set[str]) -> Tuple[str, List[str]]:
         flat_rel = ""
         raw_flat_rel = path["objects"]
         assert len(raw_flat_rel) % 2 == 1, "The length of raw_flat_rel should be odd."
@@ -216,7 +217,8 @@ class GraphRAGQuery:
             if i % 2 == 0:
                 # Process each vertex
                 flat_rel, prior_edge_str_len, depth = self._process_vertex(
-                    item, flat_rel, node_cache, prior_edge_str_len, depth, nodes_with_degree, use_id_to_match
+                    item, flat_rel, node_cache, prior_edge_str_len, depth, nodes_with_degree, use_id_to_match,
+                    global_vertex_cache
                 )
             else:
                 # Process each edge
@@ -228,7 +230,7 @@ class GraphRAGQuery:
 
     def _process_vertex(self, item: Any, flat_rel: str, node_cache: Set[str],
                         prior_edge_str_len: int, depth: int, nodes_with_degree: List[str],
-                        use_id_to_match: bool) -> Tuple[str, int, int]:
+                        use_id_to_match: bool, global_vertex_cache: Set[str]) -> Tuple[str, int, int]:
         matched_str = item["id"] if use_id_to_match else item["props"][self._prop_to_match]
         if matched_str in node_cache:
             flat_rel = flat_rel[:-prior_edge_str_len]
@@ -236,7 +238,11 @@ class GraphRAGQuery:
 
         node_cache.add(matched_str)
         props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items())
-        node_str = f"{item['id']}{{{props_str}}}"
+        if matched_str in global_vertex_cache:
+            node_str = f"{item['id']}"
+        else:
+            global_vertex_cache.add(matched_str)
+            node_str = f"{item['id']}{{{props_str}}}"
         flat_rel += node_str
         nodes_with_degree.append(node_str)
         depth += 1
