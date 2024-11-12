@@ -44,7 +44,7 @@ The implemented algorithm models can be found in the [models](./src/hugegraph_ml
    git clone https://github.com/apache/incubator-hugegraph-ai.git
    ```
 
-3. Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph_ml](../hugegraph-ml)
+3. Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph-ml](../hugegraph-ml)
 
    ```bash
    cd ./incubator-hugegraph-ai # better to use virtualenv (source venv/bin/activate) 
