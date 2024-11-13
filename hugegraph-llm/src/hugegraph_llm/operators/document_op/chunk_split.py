@@ -43,24 +43,22 @@ class ChunkSplit:
     def _get_separators(self, language: str) -> List[str]:
         if language == LANGUAGE_ZH:
             return ["\n\n", "\n", "。", "，", ""]
-        elif language == LANGUAGE_EN:
+        if language == LANGUAGE_EN:
             return ["\n\n", "\n", ".", ",", " ", ""]
-        else:
-            raise ValueError("language must be zh or en")
+        raise ValueError("language must be zh or en")
 
     def _get_text_splitter(self, split_type: str):
         if split_type == SPLIT_TYPE_DOCUMENT:
             return lambda text: [text]
-        elif split_type == SPLIT_TYPE_PARAGRAPH:
+        if split_type == SPLIT_TYPE_PARAGRAPH:
             return RecursiveCharacterTextSplitter(
                 chunk_size=500, chunk_overlap=30, separators=self.separators
             ).split_text
-        elif split_type == SPLIT_TYPE_SENTENCE:
+        if split_type == SPLIT_TYPE_SENTENCE:
             return RecursiveCharacterTextSplitter(
                 chunk_size=50, chunk_overlap=0, separators=self.separators
             ).split_text
-        else:
-            raise ValueError("Type must be paragraph, sentence, html or markdown")
+        raise ValueError("Type must be paragraph, sentence, html or markdown")
 
     def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         all_chunks = []
