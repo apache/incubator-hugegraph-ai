@@ -13,13 +13,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from pyhugegraph.utils.log import init_log
+import logging
+import os
+
+from pyhugegraph.utils import log
+
 # TODO: unify the log format in the project (include gradle(fastapi) frame)
+# Configure log file path and maximum size
+LOG_DIR = "logs"
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR)
+LOG_FILE = os.path.join(LOG_DIR, "llm-server.log")
 
-# Set log format
-LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
-DATE_FORMAT = "%Y-%m-%d %H:%M:%S %p"
-
-# Default logger configuration
-log = init_log(log_file='logs/llm-server.log')
-
+# Create a logger
+log = log.init_logger(log_output=LOG_FILE, log_level=logging.DEBUG, logger_name="rag",
+                      max_log_size=20 * 1024 * 1024)
