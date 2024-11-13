@@ -83,7 +83,7 @@ def init_logger(
             log_filename = os.path.join(log_output, "log.txt")
 
         if rank > 0:
-            log_filename = log_filename + ".rank{}".format(rank)
+            log_filename = f"{log_filename}.rank{rank}"
 
         os.makedirs(os.path.dirname(log_filename), exist_ok=True)
         file_handler = RotatingFileHandler(
@@ -107,9 +107,9 @@ def init_logger(
 def _cached_log_file(filename):
     """Cache the opened file object"""
     # Use 1K buffer if writing to cloud storage
-    file_io = open(filename, "a", buffering=_determine_buffer_size(filename))
-    atexit.register(file_io.close)
-    return file_io
+    with open(filename, "a", buffering=_determine_buffer_size(filename), encoding="utf-8") as file_io:
+        atexit.register(file_io.close)
+        return file_io
 
 
 def _determine_buffer_size(filename: str) -> int:
@@ -129,7 +129,7 @@ def _identify_caller():
         str: module name of the caller
         tuple: a hashable key to be used to identify different callers
     """
-    frame = sys._getframe(2)
+    frame = sys._getframe(2)  # pylint: disable=protected-access
     while frame:
         code = frame.f_code
         if os.path.join("utils", "logger.") not in code.co_filename:
@@ -138,6 +138,7 @@ def _identify_caller():
                 module_name = "core"
             return module_name, (code.co_filename, frame.f_lineno, code.co_name)
         frame = frame.f_back
+    return None, None
 
 
 LOG_COUNTER = Counter()
