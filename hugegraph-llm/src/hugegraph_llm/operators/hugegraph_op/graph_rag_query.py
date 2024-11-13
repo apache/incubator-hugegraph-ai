@@ -240,7 +240,7 @@ class GraphRAGQuery:
         props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items())
         # TODO: we may remove label id or replace with label name
         if matched_str in global_vertex_cache:
-            node_str = f"{item['id']}"
+            node_str = matched_str
         else:
             global_vertex_cache.add(matched_str)
             node_str = f"{item['id']}{{{props_str}}}"
