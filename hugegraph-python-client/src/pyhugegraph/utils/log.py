@@ -33,6 +33,10 @@ def init_log(log_file="logs/output.log"):
     log = logging.getLogger(__name__)  # pylint: disable=redefined-outer-name
     log.setLevel(logging.INFO)
 
+    # Clear existing handlers to avoid duplicate logging
+    if log.hasHandlers():
+        log.handlers.clear()
+        
     # Create a handler for writing to log files
     file_handler = TimedRotatingFileHandler(
         log_file, when="midnight", interval=1, backupCount=3, encoding="utf-8"

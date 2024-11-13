@@ -136,7 +136,7 @@ if __name__ == "__main__":
     app = FastAPI()
     api_auth = APIRouter(dependencies=[Depends(authenticate)])
     
-    settings.update_env()
+    settings.check_env()
     prompt.update_yaml_file()
 
     hugegraph_llm = init_rag_ui()

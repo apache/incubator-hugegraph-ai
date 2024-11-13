@@ -76,6 +76,19 @@ class Config(ConfigData):
                         f.write(f"{k}={v}\n")
             log.info("Generate %s successfully!", env_path)
 
+
+    def check_env(self):
+        config_dict = {}
+        for k, v in self.__dict__.items():
+            config_dict[k.upper()] = str(v) if v else ""
+        env_config = dotenv_values(f"{env_path}")
+        for k, v in config_dict.items():
+            if k in env_config:
+                continue
+            log.info("Update %s: %s=%s", env_path, k, v)
+            set_key(env_path, k, v, quote_mode="never")
+
+
     def update_env(self):
         config_dict = {}
         for k, v in self.__dict__.items():
