@@ -137,7 +137,6 @@ class GraphRAGQuery:
             graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_graph_query_result(
                 query_paths=paths
             )
-            graph_chain_knowledge.update(vertex_knowledge)
             if vertex_degree_list:
                 vertex_degree_list[0].update(vertex_knowledge)
             else:
@@ -191,11 +190,12 @@ class GraphRAGQuery:
         subgraph = set()
         subgraph_with_degree = {}
         vertex_degree_list: List[Set[str]] = []
-        global_vertex_cache: Set[str] = set()
+        v_cache: Set[str] = set()
+        e_cache: Set[str] = set()
 
         for path in query_paths:
             # 1. Process each path
-            flat_rel, nodes_with_degree = self._process_path(path, use_id_to_match, global_vertex_cache)
+            flat_rel, nodes_with_degree = self._process_path(path, use_id_to_match, v_cache, e_cache)
             subgraph.add(flat_rel)
             subgraph_with_degree[flat_rel] = nodes_with_degree
             # 2. Update vertex degree list
@@ -203,7 +203,8 @@ class GraphRAGQuery:
 
         return subgraph, vertex_degree_list, subgraph_with_degree
 
-    def _process_path(self, path: Any, use_id_to_match: bool, global_vertex_cache: Set[str]) -> Tuple[str, List[str]]:
+    def _process_path(self, path: Any, use_id_to_match: bool, v_cache: Set[str],
+                      e_cache: Set[str]) -> Tuple[str, List[str]]:
         flat_rel = ""
         raw_flat_rel = path["objects"]
         assert len(raw_flat_rel) % 2 == 1, "The length of raw_flat_rel should be odd."
@@ -218,19 +219,19 @@ class GraphRAGQuery:
                 # Process each vertex
                 flat_rel, prior_edge_str_len, depth = self._process_vertex(
                     item, flat_rel, node_cache, prior_edge_str_len, depth, nodes_with_degree, use_id_to_match,
-                    global_vertex_cache
+                    v_cache
                 )
             else:
                 # Process each edge
                 flat_rel, prior_edge_str_len = self._process_edge(
-                    item, flat_rel, prior_edge_str_len, raw_flat_rel, i,use_id_to_match
+                    item, flat_rel, prior_edge_str_len, raw_flat_rel, i,use_id_to_match, e_cache
                 )
 
         return flat_rel, nodes_with_degree
 
     def _process_vertex(self, item: Any, flat_rel: str, node_cache: Set[str],
                         prior_edge_str_len: int, depth: int, nodes_with_degree: List[str],
-                        use_id_to_match: bool, global_vertex_cache: Set[str]) -> Tuple[str, int, int]:
+                        use_id_to_match: bool, v_cache: Set[str]) -> Tuple[str, int, int]:
         matched_str = item["id"] if use_id_to_match else item["props"][self._prop_to_match]
         if matched_str in node_cache:
             flat_rel = flat_rel[:-prior_edge_str_len]
@@ -239,10 +240,10 @@ class GraphRAGQuery:
         node_cache.add(matched_str)
         props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items())
         # TODO: we may remove label id or replace with label name
-        if matched_str in global_vertex_cache:
+        if matched_str in v_cache:
             node_str = matched_str
         else:
-            global_vertex_cache.add(matched_str)
+            v_cache.add(matched_str)
             node_str = f"{item['id']}{{{props_str}}}"
         flat_rel += node_str
         nodes_with_degree.append(node_str)
@@ -251,15 +252,21 @@ class GraphRAGQuery:
         return flat_rel, prior_edge_str_len, depth
 
     def _process_edge(self, item: Any, flat_rel: str, prior_edge_str_len: int,
-                      raw_flat_rel: List[Any], i: int, use_id_to_match: bool) -> Tuple[str, int]:
+                      raw_flat_rel: List[Any], i: int, use_id_to_match: bool, e_cache: Set[str]) -> Tuple[str, int]:
         props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items())
         props_str = f"{{{props_str}}}" if len(props_str) > 0 else ""
         prev_matched_str = raw_flat_rel[i - 1]["id"] if use_id_to_match else raw_flat_rel[i - 1]["props"][self._prop_to_match]
 
-        if item["outV"] == prev_matched_str:
-            edge_str = f" --[{item['label']}{props_str}]--> "
+        if item["label"] in e_cache:
+            edge_str = f"{item['label']}"
         else:
-            edge_str = f" <--[{item['label']}{props_str}]-- "
+            e_cache.add(item["label"])
+            edge_str = f"{item['label']}{props_str}"
+
+        if item["outV"] == prev_matched_str:
+            edge_str = f" --[{edge_str}]--> "
+        else:
+            edge_str = f" <--[{edge_str}]-- "
 
         flat_rel += edge_str
         prior_edge_str_len = len(edge_str)
