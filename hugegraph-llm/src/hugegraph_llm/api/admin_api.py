@@ -22,13 +22,12 @@ from fastapi.responses import StreamingResponse
 from hugegraph_llm.api.exceptions.rag_exceptions import generate_response
 from hugegraph_llm.api.models.rag_requests import LogStreamRequest
 from hugegraph_llm.api.models.rag_response import RAGResponse
-from hugegraph_llm.config import settings
 
 
 def admin_http_api(router: APIRouter, log_stream):
     @router.post("/logs", status_code=status.HTTP_200_OK)
     async def log_stream_api(req: LogStreamRequest):
-        if settings.log_token != req.log_token:
+        if os.getenv('LOG_TOKEN') != req.log_token:
             raise generate_response(RAGResponse(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid log_token"))
         else:
             log_path = os.path.join("logs", req.log_file)

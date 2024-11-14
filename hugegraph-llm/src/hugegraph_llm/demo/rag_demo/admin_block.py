@@ -16,11 +16,11 @@
 # under the License.
 
 import asyncio
+import os
 
 import gradio as gr
 from gradio import Request
 
-from hugegraph_llm.config import settings
 from hugegraph_llm.utils.log import log
 
 
@@ -68,7 +68,7 @@ def clear_output_log():
 def check_password(password, request: Request = None):
     client_ip = request.client.host if request else "Unknown IP"
 
-    if password == settings.log_token:
+    if password == os.getenv('LOG_TOKEN'):
         # Return logs and update visibility
         llm_log = read_llm_server_log()
         # Log the successful access with the IP address
