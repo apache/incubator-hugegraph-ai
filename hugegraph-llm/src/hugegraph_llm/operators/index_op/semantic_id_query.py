@@ -17,7 +17,6 @@
 
 
 import os
-from copy import deepcopy
 from typing import Dict, Any, Literal, List, Tuple
 
 from hugegraph_llm.config import resource_path, settings
@@ -28,7 +27,8 @@ from pyhugegraph.client import PyHugeClient
 
 
 class SemanticIdQuery:
-    ID_QUERY_TEMPL = "g.V({vids_str})"
+    ID_QUERY_TEMPL = "g.V({vids_str}).limit(8)"
+
     def __init__(
             self,
             embedding: BaseEmbedding,
@@ -52,31 +52,39 @@ class SemanticIdQuery:
         )
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        graph_query_list = []
+        graph_query_list = set()
         if self.by == "query":
             query = context["query"]
             query_vector = self.embedding.get_text_embedding(query)
             results = self.vector_index.search(query_vector, top_k=self.topk_per_query)
             if results:
-                graph_query_list.extend(results[:self.topk_per_query])
+                graph_query_list.update(results[:self.topk_per_query])
         else:  # by keywords
-            exact_match_vids, unmatched_vids = self._exact_match_vids(context["keywords"])
-            graph_query_list.extend(exact_match_vids)
+            keywords = context.get("keywords", [])
+            if not keywords:
+                context["match_vids"] = []
+                return context
+
+            exact_match_vids, unmatched_vids = self._exact_match_vids(keywords)
+            graph_query_list.update(exact_match_vids)
             fuzzy_match_vids = self._fuzzy_match_vids(unmatched_vids)
             log.debug("Fuzzy match vids: %s", fuzzy_match_vids)
-            graph_query_list.extend(fuzzy_match_vids)
-        context["match_vids"] = list(set(graph_query_list))
+            graph_query_list.update(fuzzy_match_vids)
+        context["match_vids"] = list(graph_query_list)
         return context
 
     def _exact_match_vids(self, keywords: List[str]) -> Tuple[List[str], List[str]]:
+        assert keywords, "keywords can't be empty, please check the logic"
+        # TODO: we should add a global GraphSchemaCache to avoid calling the server every time
         vertex_label_num = len(self._client.schema().getVertexLabels())
-        possible_vids = deepcopy(keywords)
+        possible_vids = set(keywords)
         for i in range(vertex_label_num):
-            possible_vids.extend([f"{i+1}:{keyword}" for keyword in keywords])
+            possible_vids.update([f"{i + 1}:{keyword}" for keyword in keywords])
 
         vids_str = ",".join([f"'{vid}'" for vid in possible_vids])
         resp = self._client.gremlin().exec(SemanticIdQuery.ID_QUERY_TEMPL.format(vids_str=vids_str))
         searched_vids = [v['id'] for v in resp['data']]
+
         unsearched_keywords = set(keywords)
         for vid in searched_vids:
             for keyword in unsearched_keywords:
@@ -91,5 +99,6 @@ class SemanticIdQuery:
             keyword_vector = self.embedding.get_text_embedding(keyword)
             results = self.vector_index.search(keyword_vector, top_k=self.topk_per_keyword)
             if results:
+                # FIXME: type mismatch, got 'list[dict[str, Any]]' instead
                 fuzzy_match_result.extend(results[:self.topk_per_keyword])
-        return fuzzy_match_result # FIXME: type mismatch, got 'list[dict[str, Any]]' instead
+        return fuzzy_match_result
