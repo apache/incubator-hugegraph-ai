@@ -18,7 +18,7 @@
 import asyncio
 
 import gradio as gr
-from fastapi import Request
+from gradio import Request
 
 from hugegraph_llm.config import settings
 from hugegraph_llm.utils.log import log
@@ -67,6 +67,7 @@ def clear_output_log():
 # Function to validate password and control access to logs
 def check_password(password, request: Request = None):
     client_ip = request.client.host if request else "Unknown IP"
+
     if password == settings.log_token:
         # Return logs and update visibility
         llm_log = read_llm_server_log()
@@ -98,7 +99,7 @@ def create_admin_block():
         password_input = gr.Textbox(
             label="Enter Password",
             type="password",
-            placeholder="Enter password to access admin informations",
+            placeholder="Enter password to access admin information",
         )
 
         # Error message box, initially hidden
@@ -131,15 +132,15 @@ def create_admin_block():
                         clear_llm_server_button = gr.Button("Clear LLM Server Log", visible=False)
                     with gr.Column():
                         # Button to refresh LLM Server log manually
-                        refresh_llm_server_button = gr.Button("Refresh LLM Server Log", visible=False, variant="primary")
+                        refresh_llm_server_button = gr.Button("Refresh LLM Server Log", visible=False,
+                                                              variant="primary")
 
         # Define what happens when the password is submitted
         submit_button.click(
             fn=check_password,
             inputs=[password_input],
             outputs=[llm_server_log_output, hidden_row, clear_llm_server_button,
-                     refresh_llm_server_button, 
-                     error_message],
+                     refresh_llm_server_button, error_message],
         )
 
         # Define what happens when the Clear LLM Server Log button is clicked

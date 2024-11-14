@@ -91,7 +91,7 @@ def rag_answer(
 
 def create_rag_block():
     # pylint: disable=R0915 (too-many-statements)
-    gr.Markdown("""## 1. RAG with HugeGraph""")
+    gr.Markdown("""## 1. HugeGraph RAG Query""")
     with gr.Row():
         with gr.Column(scale=2):
             inp = gr.Textbox(value=prompt.default_question, label="Question", show_copy_button=True, lines=2)
@@ -122,7 +122,7 @@ def create_rag_block():
                         value="reranker" if online_rerank else "bleu",
                         label="Rerank method",
                     )
-                    graph_ratio = gr.Slider(0, 1, 0.5, label="Graph Ratio", step=0.1, interactive=False)
+                    graph_ratio = gr.Slider(0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False)
 
                 graph_vector_radio.change(
                     toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio
@@ -155,7 +155,7 @@ def create_rag_block():
         outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
     )
 
-    gr.Markdown("""## 2. User Functions (Back-testing)
+    gr.Markdown("""## 2. (Batch) Back-testing )
     > 1. Download the template file & fill in the questions you want to test.
     > 2. Upload the file & click the button to generate answers. (Preview shows the first 40 lines)
     > 3. The answer options are the same as the above RAG/Q&A frame 
@@ -200,17 +200,17 @@ def create_rag_block():
         return df
 
     def several_rag_answer(
-        is_raw_answer: bool,
-        is_vector_only_answer: bool,
-        is_graph_only_answer: bool,
-        is_graph_vector_answer: bool,
-        graph_ratio: float,
-        rerank_method: Literal["bleu", "reranker"],
-        near_neighbor_first: bool,
-        custom_related_information: str,
-        answer_prompt: str,
-        progress=gr.Progress(track_tqdm=True),
-        answer_max_line_count: int = 1,
+            is_raw_answer: bool,
+            is_vector_only_answer: bool,
+            is_graph_only_answer: bool,
+            is_graph_vector_answer: bool,
+            graph_ratio: float,
+            rerank_method: Literal["bleu", "reranker"],
+            near_neighbor_first: bool,
+            custom_related_information: str,
+            answer_prompt: str,
+            progress=gr.Progress(track_tqdm=True),
+            answer_max_line_count: int = 1,
     ):
         df = pd.read_excel(questions_path, dtype=str)
         total_rows = len(df)

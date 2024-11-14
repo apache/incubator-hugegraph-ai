@@ -25,9 +25,7 @@ from hugegraph_llm.api.models.rag_response import RAGResponse
 from hugegraph_llm.config import settings
 
 
-def admin_http_api(
-        router: APIRouter, log_stream
-):
+def admin_http_api(router: APIRouter, log_stream):
     @router.post("/logs", status_code=status.HTTP_200_OK)
     async def log_stream_api(req: LogStreamRequest):
         if settings.log_token != req.log_token:
@@ -37,4 +35,3 @@ def admin_http_api(
 
             # Create a StreamingResponse that reads from the log stream generator
             return StreamingResponse(log_stream(log_path), media_type="text/plain")
-    
