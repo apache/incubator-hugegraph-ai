@@ -105,25 +105,26 @@ class AnswerSynthesize:
                              graph_result_context: str):
         # pylint: disable=R0912 (too-many-branches)
         verbose = context.get("verbose") or False
-        # TODO: replace task_cache with a better name
-        task_cache = {}
+
+        # async_tasks stores the async tasks for different answer types
+        async_tasks = {}
         if self._raw_answer:
             final_prompt = self._question
-            task_cache["raw_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
+            async_tasks["raw_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
         if self._vector_only_answer:
             context_str = (f"{context_head_str}\n"
                            f"{vector_result_context}\n"
                            f"{context_tail_str}".strip("\n"))
 
             final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
-            task_cache["vector_only_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
+            async_tasks["vector_only_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
         if self._graph_only_answer:
             context_str = (f"{context_head_str}\n"
                            f"{graph_result_context}\n"
                            f"{context_tail_str}".strip("\n"))
 
             final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
-            task_cache["graph_only_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
+            async_tasks["graph_only_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
         if self._graph_vector_answer:
             context_body_str = f"{vector_result_context}\n{graph_result_context}"
             if context.get("graph_ratio", 0.5) < 0.5:
@@ -133,30 +134,30 @@ class AnswerSynthesize:
                            f"{context_tail_str}".strip("\n"))
 
             final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
-            task_cache["graph_vector_task"] = asyncio.create_task(
+            async_tasks["graph_vector_task"] = asyncio.create_task(
                 self._llm.agenerate(prompt=final_prompt)
             )
-        # TODO: use log.debug instead of print
-        if task_cache.get("raw_task"):
-            response = await task_cache["raw_task"]
+
+        if async_tasks.get("raw_task"):
+            response = await async_tasks["raw_task"]
             context["raw_answer"] = response
             if verbose:
-                print(f"\033[91mANSWER: {response}\033[0m")
-        if task_cache.get("vector_only_task"):
-            response = await task_cache["vector_only_task"]
+                log.debug(f"ANSWER: {response}")
+        if async_tasks.get("vector_only_task"):
+            response = await async_tasks["vector_only_task"]
             context["vector_only_answer"] = response
             if verbose:
-                print(f"\033[91mANSWER: {response}\033[0m")
-        if task_cache.get("graph_only_task"):
-            response = await task_cache["graph_only_task"]
+                log.debug(f"ANSWER: {response}")
+        if async_tasks.get("graph_only_task"):
+            response = await async_tasks["graph_only_task"]
             context["graph_only_answer"] = response
             if verbose:
-                print(f"\033[91mANSWER: {response}\033[0m")
-        if task_cache.get("graph_vector_task"):
-            response = await task_cache["graph_vector_task"]
+                log.debug(f"ANSWER: {response}")
+        if async_tasks.get("graph_vector_task"):
+            response = await async_tasks["graph_vector_task"]
             context["graph_vector_answer"] = response
             if verbose:
-                print(f"\033[91mANSWER: {response}\033[0m")
+                log.debug(f"ANSWER: {response}")
 
         ops = sum([self._raw_answer, self._vector_only_answer, self._graph_only_answer, self._graph_vector_answer])
         context['call_count'] = context.get('call_count', 0) + ops
