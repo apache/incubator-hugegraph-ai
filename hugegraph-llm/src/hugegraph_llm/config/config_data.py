@@ -73,8 +73,8 @@ class ConfigData:
 
     """Admin settings"""
     enable_login: Optional[str] = "False"
-    token: Optional[str] = "4321"
-    log_token: Optional[str] = "xxxx"
+    user_token: Optional[str] = "4321"
+    admin_token: Optional[str] = "xxxx"
 
 
 # Additional static content like PromptConfig

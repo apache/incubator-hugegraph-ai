@@ -45,7 +45,7 @@ sec = HTTPBearer()
 
 
 def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
-    correct_token = os.getenv("TOKEN")
+    correct_token = os.getenv("USER_TOKEN")
     if credentials.credentials != correct_token:
         from fastapi import HTTPException
 
