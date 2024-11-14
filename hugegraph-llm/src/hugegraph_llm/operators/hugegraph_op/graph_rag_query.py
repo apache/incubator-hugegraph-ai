@@ -255,7 +255,8 @@ class GraphRAGQuery:
                       raw_flat_rel: List[Any], i: int, use_id_to_match: bool, e_cache: Set[str]) -> Tuple[str, int]:
         props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items())
         props_str = f"{{{props_str}}}" if len(props_str) > 0 else ""
-        prev_matched_str = raw_flat_rel[i - 1]["id"] if use_id_to_match else raw_flat_rel[i - 1]["props"][self._prop_to_match]
+        prev_matched_str = raw_flat_rel[i - 1]["id"] if use_id_to_match else (
+            raw_flat_rel)[i - 1]["props"][self._prop_to_match]
 
         if item["label"] in e_cache:
             edge_str = f"{item['label']}"

@@ -56,9 +56,9 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
 
 def init_rag_ui() -> gr.Interface:
     with gr.Blocks(
-        theme="default",
-        title="HugeGraph RAG Platform",
-        css=CSS,
+            theme="default",
+            title="HugeGraph RAG Platform",
+            css=CSS,
     ) as hugegraph_llm_ui:
         gr.Markdown("# HugeGraph LLM RAG Demo")
 
@@ -84,7 +84,6 @@ def init_rag_ui() -> gr.Interface:
          = else if settings.reranker_type == siliconflow [settings.reranker_api_key, "BAAI/bge-reranker-v2-m3", ""]
          = else ["","",""]
         """
-        
 
         textbox_array_graph_config = create_configs_block()
 
@@ -94,7 +93,6 @@ def init_rag_ui() -> gr.Interface:
             textbox_inp, textbox_answer_prompt_input = create_rag_block()
         with gr.Tab(label="3. Others Tools 🚧"):
             create_other_block()
-        
 
         def refresh_ui_config_prompt() -> tuple:
             settings.from_env()
@@ -104,7 +102,6 @@ def init_rag_ui() -> gr.Interface:
                 settings.graph_pwd, settings.graph_space, prompt.graph_schema, prompt.extract_graph_prompt,
                 prompt.default_question, prompt.answer_prompt
             )
-
 
         hugegraph_llm_ui.load(fn=refresh_ui_config_prompt, outputs=[
             textbox_array_graph_config[0],
