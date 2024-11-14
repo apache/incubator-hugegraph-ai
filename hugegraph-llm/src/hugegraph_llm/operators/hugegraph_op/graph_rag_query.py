@@ -20,7 +20,8 @@ from hugegraph_llm.config import settings
 from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
 
-VERTEX_QUERY_TPL = "g.V({keywords}).as('subj').toList()"
+# TODO: remove 'as('subj)' step
+VERTEX_QUERY_TPL = "g.V({keywords}).limit(8).as('subj').toList()"
 
 # TODO: we could use a simpler query (like kneighbor-api to get the edges)
 # TODO: test with profile()/explain() to speed up the query
