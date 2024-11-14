@@ -91,7 +91,7 @@ def rag_answer(
 
 def create_rag_block():
     # pylint: disable=R0915 (too-many-statements)
-    gr.Markdown("""## 2. RAG with HugeGraph""")
+    gr.Markdown("""## 1. RAG with HugeGraph""")
     with gr.Row():
         with gr.Column(scale=2):
             inp = gr.Textbox(value=prompt.default_question, label="Question", show_copy_button=True, lines=2)
@@ -155,7 +155,7 @@ def create_rag_block():
         outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
     )
 
-    gr.Markdown("""## 3. User Functions (Back-testing)
+    gr.Markdown("""## 2. User Functions (Back-testing)
     > 1. Download the template file & fill in the questions you want to test.
     > 2. Upload the file & click the button to generate answers. (Preview shows the first 40 lines)
     > 3. The answer options are the same as the above RAG/Q&A frame 

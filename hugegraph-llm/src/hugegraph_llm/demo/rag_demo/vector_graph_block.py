@@ -43,7 +43,7 @@ def store_prompt(schema, example_prompt):
 def create_vector_graph_block():
     # pylint: disable=no-member
     gr.Markdown(
-        """## 1. Build Vector/Graph Index & Extract Knowledge Graph
+        """## Build Vector/Graph Index & Extract Knowledge Graph
 - Docs:
   - text: Build rag index from plain text
   - file: Upload file(s) which should be <u>TXT</u> or <u>.docx</u> (Multiple files can be selected together)

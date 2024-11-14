@@ -90,15 +90,15 @@ def check_password(password, request: Request = None):
         )
 
 
-def create_log_block():
+def create_admin_block():
     with gr.Blocks():
-        gr.Markdown("## 5. Logs Info - Password Protected")
+        gr.Markdown("## Admin Info - Password Protected")
 
         # Password input
         password_input = gr.Textbox(
             label="Enter Password",
             type="password",
-            placeholder="Enter password to access logs",
+            placeholder="Enter password to access admin informations",
         )
 
         # Error message box, initially hidden
