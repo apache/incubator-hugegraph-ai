@@ -192,7 +192,6 @@ def apply_llm_config(current_llm, arg1, arg2, arg3, arg4, origin_call=None) -> i
         status_code = config_qianfan_model(arg1, arg2, arg3, settings_prefix=current_llm, origin_call=origin_call)
     
     elif llm_option == "ollama/local":
-        log.debug("Exec to ollama/local config")
         setattr(settings, f"ollama_{current_llm}_host", arg1)
         setattr(settings, f"ollama_{current_llm}_port", int(arg2))
         setattr(settings, f"ollama_{current_llm}_language_model", arg3)
@@ -220,6 +219,7 @@ def create_configs_block() -> list:
         graph_config_button = gr.Button("Apply Configuration")
     graph_config_button.click(apply_graph_config, inputs=graph_config_input)  # pylint: disable=no-member
 
+    #TODO : use OOP to restruact
     with gr.Accordion("2. Set up the LLM.", open=False):
         gr.Markdown("> Tips: the openai sdk also support openai style api from other providers.")
         with gr.Tab(label='chat LLM'):
