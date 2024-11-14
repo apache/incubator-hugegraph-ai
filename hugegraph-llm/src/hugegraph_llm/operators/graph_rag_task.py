@@ -46,7 +46,9 @@ class RAGPipeline:
         :param llm: Optional LLM model to use.
         :param embedding: Optional embedding model to use.
         """
-        self._llm = llm or LLMs().get_llm()
+        self._chat_llm = llm or LLMs().get_chat_llm()
+        self._extract_llm = llm or LLMs().get_extract_llm()
+        self._text2gqlt_llm = llm or LLMs().get_text2gql_llm()
         self._embedding = embedding or Embeddings().get_embedding()
         self._operators: List[Any] = []
 

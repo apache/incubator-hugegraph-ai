@@ -33,11 +33,11 @@ class Embeddings:
                 api_key=settings.openai_embedding_api_key,
                 api_base=settings.openai_embedding_api_base
             )
-        if self.embedding_type == "ollama":
+        if self.embedding_type == "ollama/local":
             return OllamaEmbedding(
                 model=settings.ollama_embedding_model,
-                host=settings.ollama_host,
-                port=settings.ollama_port
+                host=settings.ollama_embedding_host,
+                port=settings.ollama_embedding_port
             )
         if self.embedding_type == "qianfan_wenxin":
             return QianFanEmbedding(

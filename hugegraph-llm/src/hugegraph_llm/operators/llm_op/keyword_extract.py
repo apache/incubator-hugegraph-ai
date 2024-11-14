@@ -65,7 +65,7 @@ class KeywordExtract:
             context["query"] = self._query
 
         if self._llm is None:
-            self._llm = LLMs().get_llm()
+            self._llm = LLMs().get_extract_llm()
             assert isinstance(self._llm, BaseLLM), "Invalid LLM Object."
 
         if isinstance(context.get("language"), str):
