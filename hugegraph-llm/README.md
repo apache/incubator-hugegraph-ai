@@ -46,21 +46,18 @@ graph systems and large language models.
     ```bash
     python3 -m hugegraph_llm.demo.rag_demo.app --host 127.0.0.1 --port 18001
     ```
-6. Or start the gradio interactive demo of **Text2Gremlin**, you can run with the following command, and open http://127.0.0.1:8002 after starting. You can also change the default host `0.0.0.0` and port `8002` as above. (🚧ing)
-    ```bash
-    python3 -m hugegraph_llm.demo.gremlin_generate_web_demo
-   ```
-7. After running the web demo, the config file `.env` will be automatically generated at the path `hugegraph-llm/.env`.    Additionally, a prompt-related configuration file `config_prompt.yaml` will also be generated at the path `hugegraph-llm/src/hugegraph_llm/resources/demo/config_prompt.yaml`.
+   
+6. After running the web demo, the config file `.env` will be automatically generated at the path `hugegraph-llm/.env`.    Additionally, a prompt-related configuration file `config_prompt.yaml` will also be generated at the path `hugegraph-llm/src/hugegraph_llm/resources/demo/config_prompt.yaml`.
     You can modify the content on the web page, and it will be automatically saved to the configuration file after the corresponding feature is triggered.  You can also modify the file directly without restarting the web application;  simply refresh the page to load your latest changes.  
     (Optional)To regenerate the config file, you can use `config.generate` with `-u` or `--update`.  
     ```bash
     python3 -m hugegraph_llm.config.generate --update
     ```
-8. (__Optional__) You could use 
+7. (__Optional__) You could use 
     [hugegraph-hubble](https://hugegraph.apache.org/docs/quickstart/hugegraph-hubble/#21-use-docker-convenient-for-testdev) 
     to visit the graph data, could run it via [Docker/Docker-Compose](https://hub.docker.com/r/hugegraph/hubble) 
     for guidance. (Hubble is a graph-analysis dashboard include data loading/schema management/graph traverser/display).
-9. (__Optional__) offline download NLTK stopwords  
+8. (__Optional__) offline download NLTK stopwords  
     ```bash
     python ./hugegraph_llm/operators/common_op/nltk_helper.py
     ```

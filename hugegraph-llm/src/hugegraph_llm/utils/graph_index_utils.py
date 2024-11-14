@@ -65,7 +65,7 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
             builder.import_schema(from_hugegraph=schema)
     else:
         return "ERROR: please input with correct schema/format."
-    builder.chunk_split(texts, "document", "zh").extract_info(example_prompt, "property_graph")
+    builder.chunk_split(texts, "document", "zh").extract_info(example_prompt, "triples")
 
     try:
         context = builder.run()
