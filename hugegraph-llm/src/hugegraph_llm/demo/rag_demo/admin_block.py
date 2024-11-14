@@ -58,12 +58,6 @@ def clear_llm_server_log():
     return "LLM Server log cleared."
 
 
-def clear_output_log():
-    with open("logs/output.log", "w") as f:
-        f.truncate(0)  # Clear the contents of the file
-    return "Output log cleared."
-
-
 # Function to validate password and control access to logs
 def check_password(password, request: Request = None):
     client_ip = request.client.host if request else "Unknown IP"
