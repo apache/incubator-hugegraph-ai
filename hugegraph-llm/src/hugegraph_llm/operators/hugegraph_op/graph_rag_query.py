@@ -170,11 +170,9 @@ class GraphRAGQuery:
             "`vertexA --[links]--> vertexB <--[links]-- vertexC ...`"
             "extracted based on key entities as subject:\n"
         )
-
-        verbose = context.get("verbose") or False
-        if verbose:
-            log.debug("\033[93mKnowledge from Graph:\033[0m")
-            log.debug("\033[93m" + "\n".join(context["graph_result"]) + "\033[0m")
+        # TODO: set color for ↓ "\033[93mKnowledge from Graph:\033[0m"
+        log.debug("Knowledge from Graph:")
+        log.debug("\n".join(context["graph_result"]))
 
         return context
 

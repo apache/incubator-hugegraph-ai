@@ -142,22 +142,22 @@ class AnswerSynthesize:
             response = await async_tasks["raw_task"]
             context["raw_answer"] = response
             if verbose:
-                log.debug(f"\033[91mANSWER: {response}\033[0m")
+                log.debug(f"ANSWER: {response}")
         if async_tasks.get("vector_only_task"):
             response = await async_tasks["vector_only_task"]
             context["vector_only_answer"] = response
             if verbose:
-                log.debug(f"\033[91mANSWER: {response}\033[0m")
+                log.debug(f"ANSWER: {response}")
         if async_tasks.get("graph_only_task"):
             response = await async_tasks["graph_only_task"]
             context["graph_only_answer"] = response
             if verbose:
-                log.debug(f"\033[91mANSWER: {response}\033[0m")
+                log.debug(f"ANSWER: {response}")
         if async_tasks.get("graph_vector_task"):
             response = await async_tasks["graph_vector_task"]
             context["graph_vector_answer"] = response
             if verbose:
-                log.debug(f"\033[91mANSWER: {response}\033[0m")
+                log.debug(f"ANSWER: {response}")
 
         ops = sum([self._raw_answer, self._vector_only_answer, self._graph_only_answer, self._graph_vector_answer])
         context['call_count'] = context.get('call_count', 0) + ops
