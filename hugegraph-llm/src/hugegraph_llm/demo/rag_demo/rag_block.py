@@ -105,10 +105,10 @@ def create_rag_block():
             )
         with gr.Column(scale=1):
             with gr.Row():
-                raw_radio = gr.Radio(choices=[True, False], value=True, label="Basic LLM Answer")
+                raw_radio = gr.Radio(choices=[True, False], value=False, label="Basic LLM Answer")
                 vector_only_radio = gr.Radio(choices=[True, False], value=False, label="Vector-only Answer")
             with gr.Row():
-                graph_only_radio = gr.Radio(choices=[True, False], value=False, label="Graph-only Answer")
+                graph_only_radio = gr.Radio(choices=[True, False], value=True, label="Graph-only Answer")
                 graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
 
             def toggle_slider(enable):

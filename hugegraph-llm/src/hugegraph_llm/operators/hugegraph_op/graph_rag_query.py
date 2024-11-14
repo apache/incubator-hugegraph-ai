@@ -266,6 +266,13 @@ class GraphRAGQuery:
             "`vertexA --[links]--> vertexB <--[links]-- vertexC ...`"
             "extracted based on key entities as subject:\n"
         )
+
+        # TODO: replace print to log
+        verbose = context.get("verbose") or False
+        if verbose:
+            print("\033[93mKnowledge from Graph:")
+            print("\n".join(context["graph_result"]) + "\033[0m")
+
         return context
 
     def _format_graph_from_vertex(self, query_result: List[Any]) -> Set[str]:
@@ -337,10 +344,8 @@ class GraphRAGQuery:
                       raw_flat_rel: List[Any], i: int, use_id_to_match: bool) -> Tuple[str, int]:
         props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items())
         props_str = f"{{{props_str}}}" if len(props_str) > 0 else ""
-        prev_matched_str = (
-            raw_flat_rel[i - 1]["id"] if use_id_to_match
-            else raw_flat_rel[i - 1]["props"][self._prop_to_match]
-        )
+        prev_matched_str = raw_flat_rel[i - 1]["id"] if use_id_to_match else (
+            raw_flat_rel)[i - 1]["props"][self._prop_to_match]
 
         if item["outV"] == prev_matched_str:
             edge_str = f" --[{item['label']}{props_str}]--> "
