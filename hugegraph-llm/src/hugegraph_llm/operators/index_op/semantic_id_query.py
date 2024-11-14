@@ -20,11 +20,11 @@ import os
 from copy import deepcopy
 from typing import Dict, Any, Literal, List, Tuple
 
-from hugegraph_llm.utils.log import log
-from pyhugegraph.client import PyHugeClient
 from hugegraph_llm.config import resource_path, settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from hugegraph_llm.utils.log import log
+from pyhugegraph.client import PyHugeClient
 
 
 class SemanticIdQuery:
