@@ -39,7 +39,7 @@ def read_dotenv() -> dict[str, Optional[str]]:
     log.info("Loading %s successfully!", env_path)
     for key, value in env_config.items():
         if key not in os.environ:
-            os.environ[key] = value or ""
+            os.environ[key] = value or "" # upper
     return env_config
 
 
@@ -50,10 +50,10 @@ class Config(ConfigData):
         if os.path.exists(env_path):
             env_config = read_dotenv()
             for key, value in env_config.items():
-                if key in self.__annotations__ and value:
-                    if self.__annotations__[key] in [int, Optional[int]]:
+                if key.lower() in self.__annotations__ and value:
+                    if self.__annotations__[key.lower()] in [int, Optional[int]]:
                         value = int(value)
-                    setattr(self, key, value)
+                    setattr(self, key.lower(), value)
         else:
             self.generate_env()
 
