@@ -91,6 +91,8 @@ The generated gremlin is:
 GREMLIN_GENERATE_TPL = """\
 Given the graph schema:
 {schema}
+Given the extracted vertex vid:
+{vertices}
 Generate gremlin from the following user input.
 {query}
 The generated gremlin is:"""
@@ -158,6 +160,7 @@ class GraphRAGQuery:
 
     def _gremlin_generate_query(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context["query"]
+        vertices = context.get("match_vids")
         query_embedding = context.get("query_embedding")
         if query_embedding is None:
             query_embedding = self._embedding.get_text_embedding(query)
@@ -171,6 +174,7 @@ class GraphRAGQuery:
             )
         prompt += GREMLIN_GENERATE_TPL.format(
             schema=json.dumps(context["schema"], ensure_ascii=False),
+            vertices="\n".join([f"- {vid}" for vid in vertices]),
             query=query
         )
 
