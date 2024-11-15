@@ -21,23 +21,29 @@ from pydantic import BaseModel
 
 
 class RAGRequest(BaseModel):
-    query: str
-    raw_llm: Optional[bool] = False
-    vector_only: Optional[bool] = False
-    graph_only: Optional[bool] = False
-    graph_vector: Optional[bool] = False
+    text: str = ""
+    raw_answer: bool = False
+    vector_only_answer: bool = False
+    graph_only_answer: bool = False
+    graph_vector_answer: bool = False
     graph_ratio: float = 0.5
     rerank_method: Literal["bleu", "reranker"] = "bleu"
     near_neighbor_first: bool = False
-    custom_related_information: str = None
-    answer_prompt: Optional[str] = None
+    custom_related_information: str = ""
+    answer_prompt: str = ""
 
 
 class GraphRAGRequest(BaseModel):
-    query: str
+    text: str = ""
+    raw_answer: bool = True
+    vector_only_answer: bool = False
+    graph_only_answer: bool = False
+    graph_vector_answer: bool = False
+    graph_ratio: float = 0.5
     rerank_method: Literal["bleu", "reranker"] = "bleu"
     near_neighbor_first: bool = False
-    custom_related_information: str = None
+    custom_related_information: str = ""
+    answer_prompt: str = ""
 
 
 class GraphConfigRequest(BaseModel):

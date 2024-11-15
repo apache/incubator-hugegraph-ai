@@ -53,11 +53,21 @@ def rag_http_api(
 ):
     @router.post("/rag", status_code=status.HTTP_200_OK)
     def rag_answer_api(req: RAGRequest):
-        result = rag_answer_func(req.query, req.raw_llm, req.vector_only, req.graph_only, req.graph_vector,
-                                 req.answer_prompt)
+        result = rag_answer_func(
+            req.text,
+            req.raw_answer,
+            req.vector_only_answer,
+            req.graph_only_answer,
+            req.graph_vector_answer,
+            req.graph_ratio,
+            req.rerank_method,
+            req.near_neighbor_first,
+            req.custom_related_information,
+            req.answer_prompt
+        )
         return {
             key: value
-            for key, value in zip(["raw_llm", "vector_only", "graph_only", "graph_vector"], result)
+            for key, value in zip(["raw_answer", "vector_only_answer", "graph_only_answer", "graph_vector_answer"], result)
             if getattr(req, key)
         }
 
