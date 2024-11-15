@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+
+
 """
 DeeperGCN
 
@@ -30,17 +32,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 from dgl.nn.functional import edge_softmax
 from dgl.nn.pytorch.glob import AvgPooling
-from ogb.graphproppred.mol_encoder import AtomEncoder, BondEncoder
 import torch
 
+# pylint: disable=E1101,E0401
 
 class DeeperGCN(nn.Module):
     r"""
 
     Description
     -----------
-    Introduced in "DeeperGCN: All You Need to Train Deeper GCNs <https://arxiv.org/abs/2006.07739>"
-
     Parameters
     ----------
     node_feat_dim: int
@@ -137,8 +137,6 @@ class GENConv(nn.Module):
 
     Description
     -----------
-    Generalized Message Aggregator was introduced in "DeeperGCN: All You Need to Train Deeper GCNs <https://arxiv.org/abs/2006.07739>"
-
     Parameters
     ----------
     in_dim: int
@@ -244,13 +242,6 @@ class GENConv(nn.Module):
 
 
 class MLP(nn.Sequential):
-    r"""
-
-    Description
-    -----------
-    From equation (5) in "DeeperGCN: All You Need to Train Deeper GCNs <https://arxiv.org/abs/2006.07739>"
-    """
-
     def __init__(self, channels, act="relu", dropout=0.0, bias=True):
         layers = []
 
@@ -269,8 +260,6 @@ class MessageNorm(nn.Module):
 
     Description
     -----------
-    Message normalization was introduced in "DeeperGCN: All You Need to Train Deeper GCNs <https://arxiv.org/abs/2006.07739>"
-
     Parameters
     ----------
     learn_scale: bool

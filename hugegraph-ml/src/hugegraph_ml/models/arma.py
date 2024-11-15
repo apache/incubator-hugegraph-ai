@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.right (c) 2024 by jinsong, All Rights Reserved.
 
+# pylint: disable=E1101
+
 """
 auto-regressive moving average (ARMA)
 
