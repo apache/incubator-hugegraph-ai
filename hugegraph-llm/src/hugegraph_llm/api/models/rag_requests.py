@@ -70,3 +70,8 @@ class RerankerConfigRequest(BaseModel):
     reranker_type: str
     api_key: str
     cohere_base_url: Optional[str] = None
+
+class LogStreamRequest(BaseModel):
+    admin_token: Optional[str] = None
+    log_file: Optional[str] = 'llm-server.log'
+    

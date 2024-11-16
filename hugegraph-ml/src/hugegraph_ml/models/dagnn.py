@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=E1101
+
 """
 Deep Adaptive Graph Neural Network (DAGNN)
 
@@ -26,12 +28,10 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/dagnn
 """
 
 import dgl.function as fn
-
-import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F, Parameter
-import random
+
 
 
 class DAGNNConv(nn.Module):

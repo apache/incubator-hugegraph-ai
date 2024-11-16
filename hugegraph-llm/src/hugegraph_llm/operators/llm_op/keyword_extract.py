@@ -83,6 +83,7 @@ class KeywordExtract:
             response=response, lowercase=False, start_token="KEYWORDS:"
         )
         keywords.union(self._expand_synonyms(keywords=keywords))
+        keywords = {k.replace("'", "") for k in keywords}
         context["keywords"] = list(keywords)
 
         verbose = context.get("verbose") or False
