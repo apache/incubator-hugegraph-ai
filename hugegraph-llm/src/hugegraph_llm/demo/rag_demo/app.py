@@ -138,8 +138,7 @@ if __name__ == "__main__":
 
     auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
     log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
-
-api_auth = APIRouter(dependencies=[Depends(authenticate)] if auth_enabled else [])
+    api_auth = APIRouter(dependencies=[Depends(authenticate)] if auth_enabled else [])
     
     hugegraph_llm = init_rag_ui()
     
