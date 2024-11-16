@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.right (c) 2024 by jinsong, All Rights Reserved.
 
+# pylint: disable=E1102
+
 """
 Bootstrapped Graph Latents (BGRL)
 
@@ -26,16 +28,14 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/bgrl
 """
 
 import copy
-
-import dgl
-
 import torch
-from dgl.nn.pytorch.conv import GraphConv, SAGEConv
 from torch import nn
-from torch.nn import BatchNorm1d, Parameter
-from torch.nn.init import ones_, zeros_
-from dgl.transforms import Compose, DropEdge, FeatMask
+from torch.nn import BatchNorm1d
 from torch.nn.functional import cosine_similarity
+import dgl
+from dgl.nn.pytorch.conv import GraphConv
+from dgl.transforms import Compose, DropEdge, FeatMask
+import numpy as np
 
 class MLP_Predictor(nn.Module):
     r"""MLP used for predictor. The MLP has one hidden layer.

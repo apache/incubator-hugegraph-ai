@@ -25,7 +25,7 @@ Author's code: https://github.com/klicperajo/ppnp
 DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/appnp
 """
 
-import torch.nn as nn
+from torch import nn
 
 from dgl.nn.pytorch.conv import APPNPConv
 
