@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=E1101
+
 """
 CAmouflage-REsistant GNN (CARE-GNN)
 

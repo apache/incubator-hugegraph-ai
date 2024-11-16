@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=E1101,E1102
+
 """
  Correct and Smooth (C&S)
 
@@ -27,7 +29,7 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/correct_and_s
 
 import dgl.function as fn
 import torch
-import torch.nn as nn
+from torch import nn
 import torch.nn.functional as F
 
 
@@ -98,8 +100,6 @@ class LabelPropagation(nn.Module):
 
     Description
     -----------
-    Introduced in `Learning from Labeled and Unlabeled Data with Label Propagation <https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.14.3864&rep=rep1&type=pdf>`_
-
     .. math::
         \mathbf{Y}^{\prime} = \alpha \cdot \mathbf{D}^{-1/2} \mathbf{A}
         \mathbf{D}^{-1/2} \mathbf{Y} + (1 - \alpha) \mathbf{Y},
@@ -166,7 +166,6 @@ class CorrectAndSmooth(nn.Module):
 
     Description
     -----------
-    Introduced in `Combining Label Propagation and Simple Models Out-performs Graph Neural Networks <https://arxiv.org/abs/2010.13993>`_
 
     Parameters
     ----------

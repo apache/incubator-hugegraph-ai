@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=E1101,E0401
+
 """
 Position-aware Graph Neural Networks (P-GNN)
 
@@ -27,7 +29,7 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/P-GNN
 
 import dgl.function as fn
 import torch
-import torch.nn as nn
+from torch import nn
 import torch.nn.functional as F
 import multiprocessing as mp
 import random

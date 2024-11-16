@@ -96,13 +96,13 @@ class TestHugegraph2DGL(unittest.TestCase):
 
     def test_bgnn_example(self):
         try:
-            bgnn_example(n_epochs=self.test_n_epochs)
+            bgnn_example()
         except ValueError:
             self.fail("model bgnn example failed")
 
     def test_bgrl_example(self):
         try:
-            bgrl_example(n_epochs=self.test_n_epochs)
+            bgrl_example(n_epochs_embed=self.test_n_epochs, n_epochs_clf=self.test_n_epochs)
         except ValueError:
             self.fail("model bgrl example failed")
 

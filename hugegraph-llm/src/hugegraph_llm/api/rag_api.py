@@ -14,10 +14,12 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+import os
 import json
 from typing import Literal
 
 from fastapi import status, APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 
 from hugegraph_llm.api.exceptions.rag_exceptions import generate_response
 from hugegraph_llm.api.models.rag_requests import (
@@ -25,6 +27,7 @@ from hugegraph_llm.api.models.rag_requests import (
     GraphConfigRequest,
     LLMConfigRequest,
     RerankerConfigRequest, GraphRAGRequest,
+    LogStreamRequest,
 )
 from hugegraph_llm.api.models.rag_response import RAGResponse
 from hugegraph_llm.config import settings
@@ -136,3 +139,4 @@ def rag_http_api(
         else:
             res = status.HTTP_501_NOT_IMPLEMENTED
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
+    

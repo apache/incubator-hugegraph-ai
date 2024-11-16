@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=E1102,E0401,E0711,E0606,E0602
+
 """
 Boost-GNN (BGNN)
 
@@ -28,7 +30,7 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/bgnn
 import itertools
 import time
 from collections import defaultdict as ddict
-
+import dgl
 import numpy as np
 import pandas as pd
 import torch
@@ -649,35 +651,6 @@ class GNNModelDGL(torch.nn.Module):
             logits = self.l2(graph, h)
 
         return logits
-
-
-def read_input(input_folder):
-    X = pd.read_csv(f"{input_folder}/X.csv")
-    y = pd.read_csv(f"{input_folder}/y.csv")
-
-    categorical_columns = []
-    if os.path.exists(f"{input_folder}/cat_features.txt"):
-        with open(f"{input_folder}/cat_features.txt") as f:
-            for line in f:
-                if line.strip():
-                    categorical_columns.append(line.strip())
-
-    cat_features = None
-    if categorical_columns:
-        columns = X.columns
-        cat_features = np.where(columns.isin(categorical_columns))[0]
-
-        for col in list(columns[cat_features]):
-            X[col] = X[col].astype(str)
-
-    gs, _ = load_graphs(f"{input_folder}/graph.dgl")
-    graph = gs[0]
-
-    with open(f"{input_folder}/masks.json") as f:
-        masks = json.load(f)
-
-    return graph, X, y, cat_features, masks
-
 
 def normalize_features(X, train_mask, val_mask, test_mask):
     min_max_scaler = preprocessing.MinMaxScaler()

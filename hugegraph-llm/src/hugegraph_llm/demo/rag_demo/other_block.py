@@ -21,7 +21,7 @@ from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_q
 
 
 def create_other_block():
-    gr.Markdown("""## 4. Other Tools """)
+    gr.Markdown("""## Other Tools """)
     with gr.Row():
         inp = gr.Textbox(value="g.V().limit(10)", label="Gremlin query", show_copy_button=True, lines=8)
         out = gr.Code(label="Output", language="json", elem_classes="code-container-show")
