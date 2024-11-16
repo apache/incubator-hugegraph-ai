@@ -46,6 +46,7 @@ async def log_stream(log_path: str):
 def read_llm_server_log():
     try:
         with open("logs/llm-server.log", "r") as f:
+            # TODO: avoid read the whole file (read latest N lines instead)
             return f.read()
     except FileNotFoundError:
         return "LLM Server log file not found."
