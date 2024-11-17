@@ -71,10 +71,14 @@ class ConfigData:
     graph_pwd: Optional[str] = "xxx"
     graph_space: Optional[str] = None
 
+    """Admin settings"""
+    enable_login: Optional[str] = "False"
+    user_token: Optional[str] = "4321"
+    admin_token: Optional[str] = "xxxx"
+
 
 # Additional static content like PromptConfig
 class PromptData:
-
     # Data is detached from llm_op/answer_synthesize.py
     answer_prompt = """You are an expert in knowledge graphs and natural language processing.
 Your task is to provide a precise and accurate answer based on the given context.

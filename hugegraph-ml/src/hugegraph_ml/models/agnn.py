@@ -25,10 +25,10 @@ Author's code:
 DGL code: https://github.com/dmlc/dgl/blob/master/python/dgl/nn/pytorch/conv/agnnconv.py
 """
 
-import dgl
-import torch
+
+
 from dgl.nn.pytorch.conv import AGNNConv
-import torch.nn as nn
+from torch import nn
 import torch.nn.functional as F
 
 
@@ -40,7 +40,7 @@ class AGNN(nn.Module):
 
         self.attention_layers = nn.ModuleList()
         # 2-layer AGNN
-        for i in range(self.num_layers):
+        for _ in range(self.num_layers):
             self.attention_layers.append(AGNNConv())
 
         self.output_layer = nn.Linear(hid_dim, out_dim, bias=False)
