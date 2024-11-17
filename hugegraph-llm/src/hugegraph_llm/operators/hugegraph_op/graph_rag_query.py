@@ -90,7 +90,9 @@ The generated gremlin is:
 
 GREMLIN_GENERATE_TPL = """\
 Given the graph schema:
+```json
 {schema}
+```
 Given the extracted vertex vid:
 {vertices}
 Generate gremlin from the following user input.
@@ -172,6 +174,8 @@ class GraphRAGQuery:
                 example_query=match_result[0]["query"],
                 example_gremlin=match_result[0]["gremlin"]
             )
+        else:
+            log.warning("No matching example found, generate gremlin with no example.")
         prompt += GREMLIN_GENERATE_TPL.format(
             schema=json.dumps(context["schema"], ensure_ascii=False),
             vertices="\n".join([f"- {vid}" for vid in vertices]),

@@ -37,8 +37,8 @@ class GremlinGenerator:
         self.operators.append(BuildGremlinExampleIndex(self.embedding, examples))
         return self
 
-    def example_index_query(self, query, num_examples):
-        self.operators.append(GremlinExampleIndexQuery(query, self.embedding, num_examples))
+    def example_index_query(self, num_examples):
+        self.operators.append(GremlinExampleIndexQuery(self.embedding, num_examples))
         return self
 
     def gremlin_generate(self, use_schema, use_example, schema):
@@ -51,8 +51,8 @@ class GremlinGenerator:
 
     @log_time("total time")
     @record_qps
-    def run(self):
-        context = {}
+    def run(self, **kwargs):
+        context = kwargs
         for operator in self.operators:
             context = self._run_operator(operator, context)
         return context

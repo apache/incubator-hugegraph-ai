@@ -46,14 +46,14 @@ def gremlin_generate(inp, use_schema, use_example, example_num, schema):
         llm=LLMs().get_llm(),
         embedding=Embeddings().get_embedding(),
     )
-    if use_example == "true":
-        generator.example_index_query(inp, example_num)
-    context = generator.gremlin_generate(use_schema, use_example, schema).run()
+    if use_example:
+        generator.example_index_query(example_num)
+    context = generator.gremlin_generate(use_schema, use_example, schema).run(query=inp)
     return context.get("match_result", "No Results"), context["result"]
 
 
 def create_text2gremlin_block() -> list:
-    gr.Markdown("""## 4. Text2gremlin Tools """)
+    gr.Markdown("""## Text2gremlin Tools """)
 
     gr.Markdown("## Build Example Vector Index")
     gr.Markdown("Uploaded json file should be in format below:\n"
@@ -89,9 +89,9 @@ def create_text2gremlin_block() -> list:
             match = gr.Textbox(label="Best-Matched Examples")
             out = gr.Textbox(label="Structured Query Language: Gremlin")
         with gr.Column(scale=1):
-            use_example_radio = gr.Radio(choices=["true", "false"], value="false",
+            use_example_radio = gr.Radio(choices=[True, False], value=False,
                                          label="Use example")
-            use_schema_radio = gr.Radio(choices=["true", "false"], value="false",
+            use_schema_radio = gr.Radio(choices=[True, False], value=False,
                                         label="Use schema")
             example_num_slider = gr.Slider(
                 minimum=1,

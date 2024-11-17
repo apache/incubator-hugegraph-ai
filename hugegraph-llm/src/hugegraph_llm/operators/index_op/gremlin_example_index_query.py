@@ -25,15 +25,15 @@ from hugegraph_llm.indices.vector_index import VectorIndex
 
 
 class GremlinExampleIndexQuery:
-    def __init__(self, query: str, embedding: BaseEmbedding, num_examples: int = 1):
-        self.query = query
+    def __init__(self, embedding: BaseEmbedding, num_examples: int = 1):
         self.embedding = embedding
         self.num_examples = num_examples
         self.index_dir = os.path.join(resource_path, "gremlin_examples")
         self.vector_index = VectorIndex.from_index_file(self.index_dir)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        context["query"] = self.query
-        query_embedding = self.embedding.get_text_embedding(self.query)
+        query = context.get("query")
+        assert query, "query is required"
+        query_embedding = self.embedding.get_text_embedding(query)
         context["match_result"] = self.vector_index.search(query_embedding, self.num_examples, dis_threshold=2)
         return context
