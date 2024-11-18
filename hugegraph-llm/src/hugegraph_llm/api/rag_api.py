@@ -27,7 +27,7 @@ from hugegraph_llm.api.models.rag_requests import (
     RerankerConfigRequest, GraphRAGRequest,
 )
 from hugegraph_llm.api.models.rag_response import RAGResponse
-from hugegraph_llm.config import settings
+from hugegraph_llm.config import settings, prompt
 from hugegraph_llm.utils.log import log
 
 
@@ -63,7 +63,7 @@ def rag_http_api(
             req.rerank_method,
             req.near_neighbor_first,
             req.custom_priority_info,
-            req.answer_prompt
+            req.answer_prompt or prompt.answer_prompt
         )
         return {
             key: value
