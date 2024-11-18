@@ -103,9 +103,6 @@ class AnswerSynthesize:
     async def async_generate(self, context: Dict[str, Any], context_head_str: str,
                              context_tail_str: str, vector_result_context: str,
                              graph_result_context: str):
-        # pylint: disable=R0912 (too-many-branches)
-        verbose = context.get("verbose") or False
-
         # async_tasks stores the async tasks for different answer types
         async_tasks = {}
         if self._raw_answer:
@@ -138,26 +135,18 @@ class AnswerSynthesize:
                 self._llm.agenerate(prompt=final_prompt)
             )
 
-        if async_tasks.get("raw_task"):
-            response = await async_tasks["raw_task"]
-            context["raw_answer"] = response
-            if verbose:
-                log.debug(f"ANSWER: {response}")
-        if async_tasks.get("vector_only_task"):
-            response = await async_tasks["vector_only_task"]
-            context["vector_only_answer"] = response
-            if verbose:
-                log.debug(f"ANSWER: {response}")
-        if async_tasks.get("graph_only_task"):
-            response = await async_tasks["graph_only_task"]
-            context["graph_only_answer"] = response
-            if verbose:
-                log.debug(f"ANSWER: {response}")
-        if async_tasks.get("graph_vector_task"):
-            response = await async_tasks["graph_vector_task"]
-            context["graph_vector_answer"] = response
-            if verbose:
-                log.debug(f"ANSWER: {response}")
+        async_tasks_mapping = {
+            "raw_task": "raw_answer",
+            "vector_only_task": "vector_only_answer",
+            "graph_only_task": "graph_only_answer",
+            "graph_vector_task": "graph_vector_answer"
+        }
+
+        for task_key, context_key in async_tasks_mapping.items():
+            if async_tasks.get(task_key):
+                response = await async_tasks[task_key]
+                context[context_key] = response
+                log.debug("Query Answer: %s", response)
 
         ops = sum([self._raw_answer, self._vector_only_answer, self._graph_only_answer, self._graph_vector_answer])
         context['call_count'] = context.get('call_count', 0) + ops

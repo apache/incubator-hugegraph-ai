@@ -57,12 +57,8 @@ class WordExtract:
         keywords = self._filter_keywords(keywords, lowercase=False)
 
         context["keywords"] = keywords
-
-        verbose = context.get("verbose") or False
-        if verbose:
-            from hugegraph_llm.utils.log import log
-            log.info("KEYWORDS: %s", context['keywords'])
-
+        from hugegraph_llm.utils.log import log
+        log.info("KEYWORDS: %s", context['keywords'])
         return context
 
     def _filter_keywords(
