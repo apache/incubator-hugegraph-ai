@@ -22,6 +22,7 @@ from typing import Set, Dict, Any, Optional
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.common_op.nltk_helper import NLTKHelper
+from hugegraph_llm.utils.log import log
 
 KEYWORDS_EXTRACT_TPL = """Extract {max_keywords} keywords from the text:
 {question}
@@ -85,8 +86,7 @@ class KeywordExtract:
         keywords.union(self._expand_synonyms(keywords=keywords))
         keywords = {k.replace("'", "") for k in keywords}
         context["keywords"] = list(keywords)
-        from hugegraph_llm.utils.log import log
-        log.info("KEYWORDS: %s", context['keywords'])
+        log.info("User Query: %s\nKeywords: %s", self._query, context["keywords"])
 
         # extracting keywords & expanding synonyms increase the call count by 2
         context["call_count"] = context.get("call_count", 0) + 2
