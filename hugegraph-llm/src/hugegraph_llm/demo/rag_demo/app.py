@@ -148,9 +148,10 @@ if __name__ == "__main__":
     admin_http_api(api_auth, log_stream)
     
     app.include_router(api_auth)
-    
+
     # TODO: support multi-user login when need
-    app = gr.mount_gradio_app(app, hugegraph_llm, path="/", auth=("rag", os.getenv("TOKEN")) if auth_enabled else None)
+    app = gr.mount_gradio_app(app, hugegraph_llm, path="/",
+                              auth=("rag", os.getenv("USER_TOKEN")) if auth_enabled else None)
 
     # TODO: we can't use reload now due to the config 'app' of uvicorn.run
     # ❎:f'{__name__}:app' / rag_web_demo:app / hugegraph_llm.demo.rag_web_demo:app
