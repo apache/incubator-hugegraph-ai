@@ -236,7 +236,7 @@ class GraphRAGQuery:
             return flat_rel, prior_edge_str_len, depth
 
         node_cache.add(matched_str)
-        props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items())
+        props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items() if v)
         # TODO: we may remove label id or replace with label name
         if matched_str in v_cache:
             node_str = matched_str
@@ -251,7 +251,7 @@ class GraphRAGQuery:
 
     def _process_edge(self, item: Any, flat_rel: str, prior_edge_str_len: int,
                       raw_flat_rel: List[Any], i: int, use_id_to_match: bool, e_cache: Set[str]) -> Tuple[str, int]:
-        props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items())
+        props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items() if v)
         props_str = f"{{{props_str}}}" if len(props_str) > 0 else ""
         prev_matched_str = raw_flat_rel[i - 1]["id"] if use_id_to_match else (
             raw_flat_rel)[i - 1]["props"][self._prop_to_match]
