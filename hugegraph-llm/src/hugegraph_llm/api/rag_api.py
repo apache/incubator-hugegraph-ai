@@ -14,12 +14,10 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-import os
 import json
 from typing import Literal
 
 from fastapi import status, APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
 
 from hugegraph_llm.api.exceptions.rag_exceptions import generate_response
 from hugegraph_llm.api.models.rag_requests import (
@@ -27,7 +25,6 @@ from hugegraph_llm.api.models.rag_requests import (
     GraphConfigRequest,
     LLMConfigRequest,
     RerankerConfigRequest, GraphRAGRequest,
-    LogStreamRequest,
 )
 from hugegraph_llm.api.models.rag_response import RAGResponse
 from hugegraph_llm.config import settings
@@ -57,20 +54,20 @@ def rag_http_api(
     @router.post("/rag", status_code=status.HTTP_200_OK)
     def rag_answer_api(req: RAGRequest):
         result = rag_answer_func(
-            req.text,
+            req.query,
             req.raw_answer,
-            req.vector_only_answer,
-            req.graph_only_answer,
+            req.vector_only,
+            req.graph_only,
             req.graph_vector_answer,
             req.graph_ratio,
             req.rerank_method,
             req.near_neighbor_first,
-            req.custom_related_information,
+            req.custom_priority_info,
             req.answer_prompt
         )
         return {
             key: value
-            for key, value in zip(["raw_answer", "vector_only_answer", "graph_only_answer", "graph_vector_answer"], result)
+            for key, value in zip(["raw_answer", "vector_only", "graph_only", "graph_vector_answer"], result)
             if getattr(req, key)
         }
 
@@ -81,7 +78,7 @@ def rag_http_api(
                 text=req.query,
                 rerank_method=req.rerank_method,
                 near_neighbor_first=req.near_neighbor_first,
-                custom_related_information=req.custom_related_information
+                custom_related_information=req.custom_priority_info
             )
 
             if isinstance(result, dict):
@@ -139,4 +136,3 @@ def rag_http_api(
         else:
             res = status.HTTP_501_NOT_IMPLEMENTED
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
-    
