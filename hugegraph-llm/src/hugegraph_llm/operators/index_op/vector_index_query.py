@@ -20,8 +20,9 @@ import os
 from typing import Dict, Any
 
 from hugegraph_llm.config import resource_path, settings
-from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.indices.vector_index import VectorIndex
+from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from hugegraph_llm.utils.log import log
 
 
 class VectorIndexQuery:
@@ -37,9 +38,5 @@ class VectorIndexQuery:
         results = self.vector_index.search(query_embedding, self.topk)
         # TODO: check format results
         context["vector_result"] = results
-
-        verbose = context.get("verbose") or False
-        if verbose:
-            print("\033[93mKNOWLEDGE FROM VECTOR:")
-            print("\n".join(rel for rel in context["vector_result"]) + "\033[0m")
+        log.debug("KNOWLEDGE FROM VECTOR:\n%s", "\n".join(rel for rel in context["vector_result"]))
         return context

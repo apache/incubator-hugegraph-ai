@@ -173,7 +173,6 @@ class GraphRAGQuery:
         # TODO: set color for ↓ "\033[93mKnowledge from Graph:\033[0m"
         log.debug("Knowledge from Graph:")
         log.debug("\n".join(context["graph_result"]))
-
         return context
 
     def _format_graph_from_vertex(self, query_result: List[Any]) -> Set[str]:
