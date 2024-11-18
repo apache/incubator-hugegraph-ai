@@ -134,21 +134,26 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8001, help="port")
     args = parser.parse_args()
     app = FastAPI()
-    api_auth = APIRouter(dependencies=[Depends(authenticate)])
-
+    
     settings.check_env()
     prompt.update_yaml_file()
 
+    auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
+    log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
+    api_auth = APIRouter(dependencies=[Depends(authenticate)] if auth_enabled else [])
+    
     hugegraph_llm = init_rag_ui()
+    
     rag_http_api(api_auth, rag_answer, apply_graph_config, apply_llm_config, apply_embedding_config,
                  apply_reranker_config)
+    
     admin_http_api(api_auth, log_stream)
 
     app.include_router(api_auth)
-    auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
-    log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
+
     # TODO: support multi-user login when need
-    app = gr.mount_gradio_app(app, hugegraph_llm, path="/", auth=("rag", os.getenv("TOKEN")) if auth_enabled else None)
+    app = gr.mount_gradio_app(app, hugegraph_llm, path="/",
+                              auth=("rag", os.getenv("USER_TOKEN")) if auth_enabled else None)
 
     # TODO: we can't use reload now due to the config 'app' of uvicorn.run
     # ❎:f'{__name__}:app' / rag_web_demo:app / hugegraph_llm.demo.rag_web_demo:app

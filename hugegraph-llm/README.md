@@ -31,8 +31,7 @@ graph systems and large language models.
 3. Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph_llm](src/hugegraph_llm)
     ```bash
     cd ./incubator-hugegraph-ai # better to use virtualenv (source venv/bin/activate) 
-    pip install ./hugegraph-python-client
-    pip install -r ./hugegraph-llm/requirements.txt
+    pip install ./hugegraph-python-client && pip install -r ./hugegraph-llm/requirements.txt
     ```
 4. Enter the project directory
     ```bash
