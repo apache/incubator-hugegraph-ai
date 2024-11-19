@@ -71,8 +71,8 @@ g.V().has('{prop}', within({keywords}))
 
 class GraphRAGQuery:
 
-    def __init__(self, max_deep: int = 2, max_items: int = 20, max_v_prop_length: int = 4096,
-                 max_e_prop_length: int = 4096, prop_to_match: Optional[str] = None):
+    def __init__(self, max_deep: int = 2, max_items: int = 20, max_v_prop_len: int = 4096,
+                 max_e_prop_len: int = 4096, prop_to_match: Optional[str] = None):
         self._client = PyHugeClient(
             settings.graph_ip,
             settings.graph_port,
@@ -85,9 +85,9 @@ class GraphRAGQuery:
         self._max_items = max_items
         self._prop_to_match = prop_to_match
         self._schema = ""
-        self._enable_prop_limit = settings.enable_prop_limit.lower() == "true"
-        self._max_v_prop_length = max_v_prop_length
-        self._max_e_prop_length = max_e_prop_length
+        self._limit_property = settings.limit_property.lower() == "true"
+        self._max_v_prop_len = max_v_prop_len
+        self._max_e_prop_len = max_e_prop_len
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         # pylint: disable=R0915 (too-many-statements)
@@ -322,10 +322,10 @@ class GraphRAGQuery:
         return self._schema
 
     def _limit_property_query(self, value: Optional[str], item_type: str) -> Optional[str]:
-        if (not self._enable_prop_limit) or (not type(value) == str):
+        if (not self._limit_property) or (not type(value) == str):
             return value
 
         if item_type == "vertex":
-            return value[:self._max_v_prop_length] if value else value
+            return value[:self._max_v_prop_len] if value else value
         if item_type == "edge":
-            return value[:self._max_e_prop_length] if value else value
+            return value[:self._max_e_prop_len] if value else value
