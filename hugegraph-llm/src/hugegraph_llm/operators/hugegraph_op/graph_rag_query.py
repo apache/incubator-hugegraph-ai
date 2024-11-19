@@ -71,7 +71,8 @@ g.V().has('{prop}', within({keywords}))
 
 class GraphRAGQuery:
 
-    def __init__(self, max_deep: int = 2, max_items: int = 20, prop_to_match: Optional[str] = None):
+    def __init__(self, max_deep: int = 2, max_items: int = 20, max_v_prop_length: int = 4096,
+                 max_e_prop_length: int = 4096, prop_to_match: Optional[str] = None):
         self._client = PyHugeClient(
             settings.graph_ip,
             settings.graph_port,
@@ -84,6 +85,9 @@ class GraphRAGQuery:
         self._max_items = max_items
         self._prop_to_match = prop_to_match
         self._schema = ""
+        self._enable_property_limit = settings.enable_property_limit.lower() == "true"
+        self._max_v_prop_length = max_v_prop_length
+        self._max_e_prop_length = max_e_prop_length
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         # pylint: disable=R0915 (too-many-statements)
@@ -236,7 +240,8 @@ class GraphRAGQuery:
             return flat_rel, prior_edge_str_len, depth
 
         node_cache.add(matched_str)
-        props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items() if v)
+        props_str = ", ".join(f"{k}: {self._limit_property_query(v, 'vertex')}"
+                              for k, v in item["props"].items())
         # TODO: we may remove label id or replace with label name
         if matched_str in v_cache:
             node_str = matched_str
@@ -252,7 +257,8 @@ class GraphRAGQuery:
     def _process_edge(self, item: Any, flat_rel: str, prior_edge_str_len: int,
                       raw_flat_rel: List[Any], i: int, use_id_to_match: bool,
                       e_cache: Set[Tuple[str, str, str]]) -> Tuple[str, int]:
-        props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items() if v)
+        props_str = ", ".join(f"{k}: {self._limit_property_query(v, 'edge')}"
+                              for k, v in item["props"].items())
         props_str = f"{{{props_str}}}" if len(props_str) > 0 else ""
         prev_matched_str = raw_flat_rel[i - 1]["id"] if use_id_to_match else (
             raw_flat_rel)[i - 1]["props"][self._prop_to_match]
@@ -314,3 +320,12 @@ class GraphRAGQuery:
         )
         log.debug("Link(Relation): %s", relationships)
         return self._schema
+
+    def _limit_property_query(self, value: Optional[str], item_type: str) -> Optional[str]:
+        if (not self._enable_property_limit) or (not type(value) == str):
+            return value
+
+        if item_type == "vertex":
+            return value[:self._max_v_prop_length] if value else value
+        if item_type == "edge":
+            return value[:self._max_e_prop_length] if value else value
