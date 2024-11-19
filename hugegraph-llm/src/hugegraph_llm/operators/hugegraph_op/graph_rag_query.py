@@ -189,7 +189,7 @@ class GraphRAGQuery:
         subgraph_with_degree = {}
         vertex_degree_list: List[Set[str]] = []
         v_cache: Set[str] = set()
-        e_cache: Set[str] = set()
+        e_cache: Set[Tuple[str, str, str]] = set()
 
         for path in query_paths:
             # 1. Process each path
@@ -202,7 +202,7 @@ class GraphRAGQuery:
         return subgraph, vertex_degree_list, subgraph_with_degree
 
     def _process_path(self, path: Any, use_id_to_match: bool, v_cache: Set[str],
-                      e_cache: Set[str]) -> Tuple[str, List[str]]:
+                      e_cache: Set[Tuple[str, str, str]]) -> Tuple[str, List[str]]:
         flat_rel = ""
         raw_flat_rel = path["objects"]
         assert len(raw_flat_rel) % 2 == 1, "The length of raw_flat_rel should be odd."
@@ -250,16 +250,17 @@ class GraphRAGQuery:
         return flat_rel, prior_edge_str_len, depth
 
     def _process_edge(self, item: Any, flat_rel: str, prior_edge_str_len: int,
-                      raw_flat_rel: List[Any], i: int, use_id_to_match: bool, e_cache: Set[str]) -> Tuple[str, int]:
+                      raw_flat_rel: List[Any], i: int, use_id_to_match: bool,
+                      e_cache: Set[Tuple[str, str, str]]) -> Tuple[str, int]:
         props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items() if v)
         props_str = f"{{{props_str}}}" if len(props_str) > 0 else ""
         prev_matched_str = raw_flat_rel[i - 1]["id"] if use_id_to_match else (
             raw_flat_rel)[i - 1]["props"][self._prop_to_match]
 
-        if item["label"] in e_cache:
+        if (item['inV'], item['label'], item['outV']) in e_cache:
             edge_str = f"{item['label']}"
         else:
-            e_cache.add(item["label"])
+            e_cache.add((item['inV'], item['label'], item['outV']))
             edge_str = f"{item['label']}{props_str}"
 
         if item["outV"] == prev_matched_str:
