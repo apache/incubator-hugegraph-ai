@@ -30,7 +30,7 @@ class RAGRequest(BaseModel):
     rerank_method: Literal["bleu", "reranker"] = "bleu"
     near_neighbor_first: bool = False
     custom_priority_info: str = ""
-    answer_prompt: str = ""
+    answer_prompt: Optional[str] = None
 
 
 class GraphRAGRequest(BaseModel):
@@ -43,7 +43,7 @@ class GraphRAGRequest(BaseModel):
     rerank_method: Literal["bleu", "reranker"] = "bleu"
     near_neighbor_first: bool = False
     custom_priority_info: str = ""
-    answer_prompt: str = ""
+    answer_prompt: Optional[str] = None
 
 
 class GraphConfigRequest(BaseModel):
