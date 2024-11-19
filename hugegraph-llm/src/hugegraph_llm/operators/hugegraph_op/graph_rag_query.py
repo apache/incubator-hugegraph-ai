@@ -85,7 +85,7 @@ class GraphRAGQuery:
         self._max_items = max_items
         self._prop_to_match = prop_to_match
         self._schema = ""
-        self._enable_property_limit = settings.enable_property_limit.lower() == "true"
+        self._enable_prop_limit = settings.enable_prop_limit.lower() == "true"
         self._max_v_prop_length = max_v_prop_length
         self._max_e_prop_length = max_e_prop_length
 
@@ -322,7 +322,7 @@ class GraphRAGQuery:
         return self._schema
 
     def _limit_property_query(self, value: Optional[str], item_type: str) -> Optional[str]:
-        if (not self._enable_property_limit) or (not type(value) == str):
+        if (not self._enable_prop_limit) or (not type(value) == str):
             return value
 
         if item_type == "vertex":
