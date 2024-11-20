@@ -20,6 +20,7 @@ import os
 import re
 from typing import Any, Dict, Optional, List, Set, Tuple
 
+import pandas as pd
 from hugegraph_llm.config import settings, resource_path
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
@@ -122,8 +123,6 @@ class GraphRAGQuery:
         self._max_items = max_items
         self._prop_to_match = prop_to_match
         self._schema = ""
-        self._index_dir = os.path.join(resource_path, "gremlin_examples")
-        self._vector_index = VectorIndex.from_index_file(self._index_dir)
         self._llm = llm
         self._embedding = embedding
 
@@ -167,7 +166,8 @@ class GraphRAGQuery:
         if query_embedding is None:
             query_embedding = self._embedding.get_text_embedding(query)
 
-        match_result = self._vector_index.search(query_embedding, top_k=1, dis_threshold=2)
+        vector_index = self._get_gremlin_example_index()
+        match_result = vector_index.search(query_embedding, top_k=1, dis_threshold=2)
         prompt = ""
         if match_result:
             prompt += GREMLIN_GENERATE_EXAMPLE_OPTION_TPL.format(
@@ -278,6 +278,21 @@ class GraphRAGQuery:
         log.debug("Knowledge from Graph:")
         log.debug("\n".join(context["graph_result"]))
         return context
+
+    def _get_gremlin_example_index(self) -> VectorIndex:
+        index_dir = os.path.join(resource_path, "gremlin_examples")
+        if not (os.path.exists(os.path.join(index_dir, "index.faiss"))
+                and os.path.exists(os.path.join(index_dir, "properties.pkl"))):
+            log.warning("No gremlin example index found, will generate one.")
+            properties = (pd.read_csv(os.path.join(resource_path, "demo", "text2gremlin.csv"))
+                          .to_dict(orient="records"))
+            embeddings = [self._embedding.get_text_embedding(row["query"]) for row in properties]
+            vector_index = VectorIndex(len(embeddings[0]))
+            vector_index.add(embeddings, properties)
+            vector_index.to_index_file(index_dir)
+        else:
+            vector_index = VectorIndex.from_index_file(index_dir)
+        return vector_index
 
     def _format_graph_from_vertex(self, query_result: List[Any]) -> Set[str]:
         knowledge = set()
