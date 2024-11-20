@@ -142,6 +142,8 @@ class GraphRAGQuery:
             graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_graph_query_result(
                 query_paths=paths
             )
+
+            # TODO: we may need to optimize the logic here with global deduplication
             if not graph_chain_knowledge:
                 graph_chain_knowledge.update(vertex_knowledge)
             if vertex_degree_list:
