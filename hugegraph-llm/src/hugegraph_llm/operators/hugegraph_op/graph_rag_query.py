@@ -71,8 +71,8 @@ g.V().has('{prop}', within({keywords}))
 
 class GraphRAGQuery:
 
-    def __init__(self, max_deep: int = 2, max_items: int = 20, max_v_prop_len: int = 4096,
-                 max_e_prop_len: int = 4096, prop_to_match: Optional[str] = None):
+    def __init__(self, max_deep: int = 2, max_items: int = 20, max_v_prop_len: int = 2048,
+                 max_e_prop_len: int = 256, prop_to_match: Optional[str] = None):
         self._client = PyHugeClient(
             settings.graph_ip,
             settings.graph_port,
@@ -143,7 +143,7 @@ class GraphRAGQuery:
                 query_paths=paths
             )
 
-            # TODO: we may need to optimize the logic here with global deduplication
+            # TODO: we may need to optimize the logic here with global deduplication (may lack some single vertex)
             if not graph_chain_knowledge:
                 graph_chain_knowledge.update(vertex_knowledge)
             if vertex_degree_list:
@@ -179,8 +179,7 @@ class GraphRAGQuery:
             "extracted based on key entities as subject:\n"
         )
         # TODO: set color for ↓ "\033[93mKnowledge from Graph:\033[0m"
-        log.debug("Knowledge from Graph:")
-        log.debug("\n".join(context["graph_result"]))
+        log.debug("Knowledge from Graph:\n%s", "\n".join(context["graph_result"]))
         return context
 
     def _format_graph_from_vertex(self, query_result: List[Any]) -> Set[str]:
@@ -201,11 +200,11 @@ class GraphRAGQuery:
 
         for path in query_paths:
             # 1. Process each path
-            flat_rel, nodes_with_degree = self._process_path(path, use_id_to_match, v_cache, e_cache)
-            subgraph.add(flat_rel)
-            subgraph_with_degree[flat_rel] = nodes_with_degree
+            path_str, vertex_with_degree = self._process_path(path, use_id_to_match, v_cache, e_cache)
+            subgraph.add(path_str)
+            subgraph_with_degree[path_str] = vertex_with_degree
             # 2. Update vertex degree list
-            self._update_vertex_degree_list(vertex_degree_list, nodes_with_degree)
+            self._update_vertex_degree_list(vertex_degree_list, vertex_with_degree)
 
         return subgraph, vertex_degree_list, subgraph_with_degree
 
@@ -230,7 +229,7 @@ class GraphRAGQuery:
             else:
                 # Process each edge
                 flat_rel, prior_edge_str_len = self._process_edge(
-                    item, flat_rel, prior_edge_str_len, raw_flat_rel, i,use_id_to_match, e_cache
+                    item, flat_rel, raw_flat_rel, i, use_id_to_match, e_cache
                 )
 
         return flat_rel, nodes_with_degree
@@ -244,43 +243,40 @@ class GraphRAGQuery:
             return flat_rel, prior_edge_str_len, depth
 
         node_cache.add(matched_str)
-        props_str = ", ".join(f"{k}: {self._limit_property_query(v, 'vertex')}"
-                              for k, v in item["props"].items())
+        props_str = ", ".join(f"{k}: {self._limit_property_query(v, 'v')}"
+                              for k, v in item["props"].items() if v)
+
         # TODO: we may remove label id or replace with label name
         if matched_str in v_cache:
             node_str = matched_str
         else:
             v_cache.add(matched_str)
             node_str = f"{item['id']}{{{props_str}}}"
+
         flat_rel += node_str
         nodes_with_degree.append(node_str)
         depth += 1
-
         return flat_rel, prior_edge_str_len, depth
 
-    def _process_edge(self, item: Any, flat_rel: str, prior_edge_str_len: int,
-                      raw_flat_rel: List[Any], i: int, use_id_to_match: bool,
+    def _process_edge(self, item: Any, path_str: str, raw_flat_rel: List[Any], i: int, use_id_to_match: bool,
                       e_cache: Set[Tuple[str, str, str]]) -> Tuple[str, int]:
-        props_str = ", ".join(f"{k}: {self._limit_property_query(v, 'edge')}"
-                              for k, v in item["props"].items())
-        props_str = f"{{{props_str}}}" if len(props_str) > 0 else ""
+        props_str = ", ".join(f"{k}: {self._limit_property_query(v, 'e')}"
+                              for k, v in item["props"].items() if v)
+        props_str = f"{{{props_str}}}" if props_str else ""
         prev_matched_str = raw_flat_rel[i - 1]["id"] if use_id_to_match else (
             raw_flat_rel)[i - 1]["props"][self._prop_to_match]
 
-        if (item['inV'], item['label'], item['outV']) in e_cache:
-            edge_str = f"{item['label']}"
+        edge_key = (item['inV'], item['label'], item['outV'])
+        if edge_key not in e_cache:
+            e_cache.add(edge_key)
+            edge_label = f"{item['label']}{props_str}"
         else:
-            e_cache.add((item['inV'], item['label'], item['outV']))
-            edge_str = f"{item['label']}{props_str}"
+            edge_label = item['label']
 
-        if item["outV"] == prev_matched_str:
-            edge_str = f" --[{edge_str}]--> "
-        else:
-            edge_str = f" <--[{edge_str}]-- "
-
-        flat_rel += edge_str
+        edge_str = f"--[{edge_label}]-->" if item["outV"] == prev_matched_str else f"<--[{edge_label}]--"
+        path_str += edge_str
         prior_edge_str_len = len(edge_str)
-        return flat_rel, prior_edge_str_len
+        return path_str, prior_edge_str_len
 
     def _update_vertex_degree_list(self, vertex_degree_list: List[Set[str]], nodes_with_degree: List[str]) -> None:
         for depth, node_str in enumerate(nodes_with_degree):
@@ -326,10 +322,9 @@ class GraphRAGQuery:
         return self._schema
 
     def _limit_property_query(self, value: Optional[str], item_type: str) -> Optional[str]:
-        if (not self._limit_property) or (not type(value) == str):
+        # NOTE: we skip the filter for list/set type (e.g., list of string, add it if needed)
+        if not self._limit_property or not isinstance(value, str):
             return value
 
-        if item_type == "vertex":
-            return value[:self._max_v_prop_len] if value else value
-        if item_type == "edge":
-            return value[:self._max_e_prop_len] if value else value
+        max_len = self._max_v_prop_len if item_type == "v" else self._max_e_prop_len
+        return value[:max_len] if value else value

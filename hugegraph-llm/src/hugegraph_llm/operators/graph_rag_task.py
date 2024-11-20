@@ -117,8 +117,8 @@ class RAGPipeline:
         self,
         max_deep: int = 2,
         max_items: int = 30,
-        max_v_prop_len: int = 4096,
-        max_e_prop_len: int = 4096,
+        max_v_prop_len: int = 2048,
+        max_e_prop_len: int = 256,
         prop_to_match: Optional[str] = None,
     ):
         """
