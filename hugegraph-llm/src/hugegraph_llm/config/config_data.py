@@ -79,9 +79,9 @@ class ConfigData:
     # 4.1 URL settings
     qianfan_url_prefix: Optional[str] = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
     qianfan_chat_url: Optional[str] = qianfan_url_prefix + "/chat/"
-    qianfan_chat_language_model: Optional[str] = "ERNIE-4.0-Turbo-8K"
-    qianfan_extract_language_model: Optional[str] = "ERNIE-4.0-Turbo-8K"
-    qianfan_text2gql_language_model: Optional[str] = "ERNIE-4.0-Turbo-8K"
+    qianfan_chat_language_model: Optional[str] = "ERNIE-Speed-128K"
+    qianfan_extract_language_model: Optional[str] = "ERNIE-Speed-128K"
+    qianfan_text2gql_language_model: Optional[str] = "ERNIE-Speed-128K"
     qianfan_embed_url: Optional[str] = qianfan_url_prefix + "/embeddings/"
     # refer https://cloud.baidu.com/doc/WENXINWORKSHOP/s/alj562vvu to get more details
     qianfan_embedding_model: Optional[str] = "embedding-v1"
