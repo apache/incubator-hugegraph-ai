@@ -117,6 +117,8 @@ class RAGPipeline:
         self,
         max_deep: int = 2,
         max_items: int = 30,
+        max_v_prop_len: int = 2048,
+        max_e_prop_len: int = 256,
         prop_to_match: Optional[str] = None,
     ):
         """
@@ -124,11 +126,14 @@ class RAGPipeline:
 
         :param max_deep: Maximum depth for the graph query.
         :param max_items: Maximum number of items to retrieve.
+        :param max_v_prop_len: Maximum length of vertex properties.
+        :param max_e_prop_len: Maximum length of edge properties.
         :param prop_to_match: Property to match in the graph.
         :return: Self-instance for chaining.
         """
         self._operators.append(
-            GraphRAGQuery(max_deep=max_deep, max_items=max_items, prop_to_match=prop_to_match)
+            GraphRAGQuery(max_deep=max_deep, max_items=max_items, max_v_prop_len=max_v_prop_len,
+                          max_e_prop_len=max_e_prop_len, prop_to_match=prop_to_match)
         )
         return self
 
