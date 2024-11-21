@@ -27,11 +27,6 @@ from hugegraph_llm.config import settings
 from hugegraph_llm.utils.log import log
 from functools import partial
 
-label_mapping = {
-    "chat LLM": "chat",
-    "extract LLM": "extract",
-    "text2gql LLM": "text2gql"
-}
 current_llm = "chat"
 
 
@@ -221,10 +216,10 @@ def create_configs_block() -> list:
 
     #TODO : use OOP to restruact
     with gr.Accordion("2. Set up the LLM.", open=False):
-        gr.Markdown("> Tips: the openai sdk also support openai style api from other providers.")
-        with gr.Tab(label='chat LLM'):
+        gr.Markdown("> Tips: the openai option also support openai style api from other providers.")
+        with gr.Tab(label='chat'):
             chat_llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama/local"],
-                            value=getattr(settings, f"chat_llm_type"), label=f"chat LLM")
+                            value=getattr(settings, f"chat_llm_type"), label=f"type")
             apply_llm_config_with_chat_op = partial(apply_llm_config, "chat")
             @gr.render(inputs=[chat_llm_dropdown])
             def chat_llm_settings(llm_type):
@@ -256,9 +251,9 @@ def create_configs_block() -> list:
                 llm_config_button = gr.Button("Apply configuration")
                 llm_config_button.click(apply_llm_config_with_chat_op, inputs=llm_config_input)
 
-        with gr.Tab(label='extract LLM'):
+        with gr.Tab(label='extract'):
             extract_llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama/local"],
-                        value=getattr(settings, f"extract_llm_type"), label=f"extract LLM")
+                        value=getattr(settings, f"extract_llm_type"), label=f"type")
             apply_llm_config_with_extract_op = partial(apply_llm_config, "extract")
 
             @gr.render(inputs=[extract_llm_dropdown])
@@ -290,9 +285,9 @@ def create_configs_block() -> list:
                     llm_config_input = [gr.Textbox(value="", visible=False) for _ in range(4)]
                 llm_config_button = gr.Button("Apply configuration")
                 llm_config_button.click(apply_llm_config_with_extract_op, inputs=llm_config_input)
-        with gr.Tab(label='text2gql LLM'):
+        with gr.Tab(label='text2gql'):
             text2gql_llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama/local"],
-                            value=getattr(settings, f"text2gql_llm_type"), label=f"text2gql LLM")
+                            value=getattr(settings, f"text2gql_llm_type"), label=f"type")
             apply_llm_config_with_text2gql_op = partial(apply_llm_config, "text2gql")
 
             @gr.render(inputs=[text2gql_llm_dropdown])
