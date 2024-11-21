@@ -60,7 +60,7 @@ class AnswerSynthesize:
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._llm is None:
-            self._llm = LLMs().get_llm()
+            self._llm = LLMs().get_chat_llm()
 
         if self._question is None:
             self._question = context.get("query") or None
