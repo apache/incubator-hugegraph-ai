@@ -104,6 +104,7 @@ class ConfigData:
     graph_user: Optional[str] = "admin"
     graph_pwd: Optional[str] = "xxx"
     graph_space: Optional[str] = None
+    limit_property: Optional[str] = "False"
 
     """Admin settings"""
     enable_login: Optional[str] = "False"
