@@ -1,4 +1,4 @@
-name: "3rd-party check"
+name: "License header & 3rd-party check"
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  dependency-review:
+  check-dependency:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout Repository'
@@ -20,10 +20,10 @@ jobs:
           fail-on-severity: low
           comment-summary-in-pr: on-failure
           # Action will fail if dependencies don't match the list (we could choose only one of the following)
-          allow-licenses: Apache-2.0, MIT
-          #deny-licenses: GPL-3.0, AGPL-1.0, AGPL-3.0, LGPL-2.0, CC-BY-3.0
+          deny-licenses: GPL-3.0, AGPL-1.0, AGPL-3.0, LGPL-2.0, CC-BY-3.0
+          #allow-licenses: Apache-2.0, MIT
 
-  check-license:
+  check-license-header:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
