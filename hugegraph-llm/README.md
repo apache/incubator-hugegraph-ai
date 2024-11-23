@@ -95,7 +95,7 @@ This can be obtained from the `LLMs` class.
     from hugegraph_llm.operators.kg_construction_task import KgBuilder
     
     TEXT = ""
-    builder = KgBuilder(LLMs().get_llm())
+    builder = KgBuilder(LLMs().get_chat_llm())
     (
         builder
         .import_schema(from_hugegraph="talent_graph").print_result()

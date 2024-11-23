@@ -121,4 +121,4 @@ class OllamaClient(BaseLLM):
 
     def get_llm_type(self) -> str:
         """Returns the type of the LLM"""
-        return "ollama"
+        return "ollama/local"
