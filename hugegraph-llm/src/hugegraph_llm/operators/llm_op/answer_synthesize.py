@@ -60,7 +60,7 @@ class AnswerSynthesize:
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._llm is None:
-            self._llm = LLMs().get_llm()
+            self._llm = LLMs().get_chat_llm()
 
         if self._question is None:
             self._question = context.get("query") or None
@@ -103,27 +103,25 @@ class AnswerSynthesize:
     async def async_generate(self, context: Dict[str, Any], context_head_str: str,
                              context_tail_str: str, vector_result_context: str,
                              graph_result_context: str):
-        # pylint: disable=R0912 (too-many-branches)
-        verbose = context.get("verbose") or False
-        # TODO: replace task_cache with a better name
-        task_cache = {}
+        # async_tasks stores the async tasks for different answer types
+        async_tasks = {}
         if self._raw_answer:
             final_prompt = self._question
-            task_cache["raw_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
+            async_tasks["raw_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
         if self._vector_only_answer:
             context_str = (f"{context_head_str}\n"
                            f"{vector_result_context}\n"
                            f"{context_tail_str}".strip("\n"))
 
             final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
-            task_cache["vector_only_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
+            async_tasks["vector_only_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
         if self._graph_only_answer:
             context_str = (f"{context_head_str}\n"
                            f"{graph_result_context}\n"
                            f"{context_tail_str}".strip("\n"))
 
             final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
-            task_cache["graph_only_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
+            async_tasks["graph_only_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
         if self._graph_vector_answer:
             context_body_str = f"{vector_result_context}\n{graph_result_context}"
             if context.get("graph_ratio", 0.5) < 0.5:
@@ -133,30 +131,22 @@ class AnswerSynthesize:
                            f"{context_tail_str}".strip("\n"))
 
             final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
-            task_cache["graph_vector_task"] = asyncio.create_task(
+            async_tasks["graph_vector_task"] = asyncio.create_task(
                 self._llm.agenerate(prompt=final_prompt)
             )
-        # TODO: use log.debug instead of print
-        if task_cache.get("raw_task"):
-            response = await task_cache["raw_task"]
-            context["raw_answer"] = response
-            if verbose:
-                print(f"\033[91mANSWER: {response}\033[0m")
-        if task_cache.get("vector_only_task"):
-            response = await task_cache["vector_only_task"]
-            context["vector_only_answer"] = response
-            if verbose:
-                print(f"\033[91mANSWER: {response}\033[0m")
-        if task_cache.get("graph_only_task"):
-            response = await task_cache["graph_only_task"]
-            context["graph_only_answer"] = response
-            if verbose:
-                print(f"\033[91mANSWER: {response}\033[0m")
-        if task_cache.get("graph_vector_task"):
-            response = await task_cache["graph_vector_task"]
-            context["graph_vector_answer"] = response
-            if verbose:
-                print(f"\033[91mANSWER: {response}\033[0m")
+
+        async_tasks_mapping = {
+            "raw_task": "raw_answer",
+            "vector_only_task": "vector_only_answer",
+            "graph_only_task": "graph_only_answer",
+            "graph_vector_task": "graph_vector_answer"
+        }
+
+        for task_key, context_key in async_tasks_mapping.items():
+            if async_tasks.get(task_key):
+                response = await async_tasks[task_key]
+                context[context_key] = response
+                log.debug("Query Answer: %s", response)
 
         ops = sum([self._raw_answer, self._vector_only_answer, self._graph_only_answer, self._graph_vector_answer])
         context['call_count'] = context.get('call_count', 0) + ops

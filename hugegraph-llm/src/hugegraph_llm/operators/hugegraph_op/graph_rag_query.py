@@ -20,7 +20,8 @@ from hugegraph_llm.config import settings
 from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
 
-VERTEX_QUERY_TPL = "g.V({keywords}).as('subj').toList()"
+# TODO: remove 'as('subj)' step
+VERTEX_QUERY_TPL = "g.V({keywords}).limit(8).as('subj').toList()"
 
 # TODO: we could use a simpler query (like kneighbor-api to get the edges)
 # TODO: test with profile()/explain() to speed up the query
@@ -70,7 +71,8 @@ g.V().has('{prop}', within({keywords}))
 
 class GraphRAGQuery:
 
-    def __init__(self, max_deep: int = 2, max_items: int = 20, prop_to_match: Optional[str] = None):
+    def __init__(self, max_deep: int = 2, max_items: int = 20, max_v_prop_len: int = 2048,
+                 max_e_prop_len: int = 256, prop_to_match: Optional[str] = None):
         self._client = PyHugeClient(
             settings.graph_ip,
             settings.graph_port,
@@ -83,6 +85,9 @@ class GraphRAGQuery:
         self._max_items = max_items
         self._prop_to_match = prop_to_match
         self._schema = ""
+        self._limit_property = settings.limit_property.lower() == "true"
+        self._max_v_prop_len = max_v_prop_len
+        self._max_e_prop_len = max_e_prop_len
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         # pylint: disable=R0915 (too-many-statements)
@@ -137,7 +142,10 @@ class GraphRAGQuery:
             graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_graph_query_result(
                 query_paths=paths
             )
-            graph_chain_knowledge.update(vertex_knowledge)
+
+            # TODO: we may need to optimize the logic here with global deduplication (may lack some single vertex)
+            if not graph_chain_knowledge:
+                graph_chain_knowledge.update(vertex_knowledge)
             if vertex_degree_list:
                 vertex_degree_list[0].update(vertex_knowledge)
             else:
@@ -170,13 +178,8 @@ class GraphRAGQuery:
             "`vertexA --[links]--> vertexB <--[links]-- vertexC ...`"
             "extracted based on key entities as subject:\n"
         )
-
-        # TODO: replace print to log
-        verbose = context.get("verbose") or False
-        if verbose:
-            print("\033[93mKnowledge from Graph:")
-            print("\n".join(context["graph_result"]) + "\033[0m")
-
+        # TODO: set color for ↓ "\033[93mKnowledge from Graph:\033[0m"
+        log.debug("Knowledge from Graph:\n%s", "\n".join(context["graph_result"]))
         return context
 
     def _format_graph_from_vertex(self, query_result: List[Any]) -> Set[str]:
@@ -192,18 +195,21 @@ class GraphRAGQuery:
         subgraph = set()
         subgraph_with_degree = {}
         vertex_degree_list: List[Set[str]] = []
+        v_cache: Set[str] = set()
+        e_cache: Set[Tuple[str, str, str]] = set()
 
         for path in query_paths:
             # 1. Process each path
-            flat_rel, nodes_with_degree = self._process_path(path, use_id_to_match)
-            subgraph.add(flat_rel)
-            subgraph_with_degree[flat_rel] = nodes_with_degree
+            path_str, vertex_with_degree = self._process_path(path, use_id_to_match, v_cache, e_cache)
+            subgraph.add(path_str)
+            subgraph_with_degree[path_str] = vertex_with_degree
             # 2. Update vertex degree list
-            self._update_vertex_degree_list(vertex_degree_list, nodes_with_degree)
+            self._update_vertex_degree_list(vertex_degree_list, vertex_with_degree)
 
         return subgraph, vertex_degree_list, subgraph_with_degree
 
-    def _process_path(self, path: Any, use_id_to_match: bool) -> Tuple[str, List[str]]:
+    def _process_path(self, path: Any, use_id_to_match: bool, v_cache: Set[str],
+                      e_cache: Set[Tuple[str, str, str]]) -> Tuple[str, List[str]]:
         flat_rel = ""
         raw_flat_rel = path["objects"]
         assert len(raw_flat_rel) % 2 == 1, "The length of raw_flat_rel should be odd."
@@ -217,47 +223,60 @@ class GraphRAGQuery:
             if i % 2 == 0:
                 # Process each vertex
                 flat_rel, prior_edge_str_len, depth = self._process_vertex(
-                    item, flat_rel, node_cache, prior_edge_str_len, depth, nodes_with_degree, use_id_to_match
+                    item, flat_rel, node_cache, prior_edge_str_len, depth, nodes_with_degree, use_id_to_match,
+                    v_cache
                 )
             else:
                 # Process each edge
                 flat_rel, prior_edge_str_len = self._process_edge(
-                    item, flat_rel, prior_edge_str_len, raw_flat_rel, i,use_id_to_match
+                    item, flat_rel, raw_flat_rel, i, use_id_to_match, e_cache
                 )
 
         return flat_rel, nodes_with_degree
 
     def _process_vertex(self, item: Any, flat_rel: str, node_cache: Set[str],
                         prior_edge_str_len: int, depth: int, nodes_with_degree: List[str],
-                        use_id_to_match: bool) -> Tuple[str, int, int]:
+                        use_id_to_match: bool, v_cache: Set[str]) -> Tuple[str, int, int]:
         matched_str = item["id"] if use_id_to_match else item["props"][self._prop_to_match]
         if matched_str in node_cache:
             flat_rel = flat_rel[:-prior_edge_str_len]
             return flat_rel, prior_edge_str_len, depth
 
         node_cache.add(matched_str)
-        props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items())
-        node_str = f"{item['id']}{{{props_str}}}"
+        props_str = ", ".join(f"{k}: {self._limit_property_query(v, 'v')}"
+                              for k, v in item["props"].items() if v)
+
+        # TODO: we may remove label id or replace with label name
+        if matched_str in v_cache:
+            node_str = matched_str
+        else:
+            v_cache.add(matched_str)
+            node_str = f"{item['id']}{{{props_str}}}"
+
         flat_rel += node_str
         nodes_with_degree.append(node_str)
         depth += 1
-
         return flat_rel, prior_edge_str_len, depth
 
-    def _process_edge(self, item: Any, flat_rel: str, prior_edge_str_len: int,
-                      raw_flat_rel: List[Any], i: int, use_id_to_match: bool) -> Tuple[str, int]:
-        props_str = ", ".join(f"{k}: {v}" for k, v in item["props"].items())
-        props_str = f"{{{props_str}}}" if len(props_str) > 0 else ""
-        prev_matched_str = raw_flat_rel[i - 1]["id"] if use_id_to_match else raw_flat_rel[i - 1]["props"][self._prop_to_match]
+    def _process_edge(self, item: Any, path_str: str, raw_flat_rel: List[Any], i: int, use_id_to_match: bool,
+                      e_cache: Set[Tuple[str, str, str]]) -> Tuple[str, int]:
+        props_str = ", ".join(f"{k}: {self._limit_property_query(v, 'e')}"
+                              for k, v in item["props"].items() if v)
+        props_str = f"{{{props_str}}}" if props_str else ""
+        prev_matched_str = raw_flat_rel[i - 1]["id"] if use_id_to_match else (
+            raw_flat_rel)[i - 1]["props"][self._prop_to_match]
 
-        if item["outV"] == prev_matched_str:
-            edge_str = f" --[{item['label']}{props_str}]--> "
+        edge_key = (item['inV'], item['label'], item['outV'])
+        if edge_key not in e_cache:
+            e_cache.add(edge_key)
+            edge_label = f"{item['label']}{props_str}"
         else:
-            edge_str = f" <--[{item['label']}{props_str}]-- "
+            edge_label = item['label']
 
-        flat_rel += edge_str
+        edge_str = f"--[{edge_label}]-->" if item["outV"] == prev_matched_str else f"<--[{edge_label}]--"
+        path_str += edge_str
         prior_edge_str_len = len(edge_str)
-        return flat_rel, prior_edge_str_len
+        return path_str, prior_edge_str_len
 
     def _update_vertex_degree_list(self, vertex_degree_list: List[Set[str]], nodes_with_degree: List[str]) -> None:
         for depth, node_str in enumerate(nodes_with_degree):
@@ -301,3 +320,11 @@ class GraphRAGQuery:
         )
         log.debug("Link(Relation): %s", relationships)
         return self._schema
+
+    def _limit_property_query(self, value: Optional[str], item_type: str) -> Optional[str]:
+        # NOTE: we skip the filter for list/set type (e.g., list of string, add it if needed)
+        if not self._limit_property or not isinstance(value, str):
+            return value
+
+        max_len = self._max_v_prop_len if item_type == "v" else self._max_e_prop_len
+        return value[:max_len] if value else value

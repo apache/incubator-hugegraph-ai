@@ -33,17 +33,17 @@ class Embeddings:
                 api_key=settings.openai_embedding_api_key,
                 api_base=settings.openai_embedding_api_base
             )
-        if self.embedding_type == "ollama":
+        if self.embedding_type == "ollama/local":
             return OllamaEmbedding(
                 model=settings.ollama_embedding_model,
-                host=settings.ollama_host,
-                port=settings.ollama_port
+                host=settings.ollama_embedding_host,
+                port=settings.ollama_embedding_port
             )
         if self.embedding_type == "qianfan_wenxin":
             return QianFanEmbedding(
                 model_name=settings.qianfan_embedding_model,
-                api_key=settings.qianfan_api_key,
-                secret_key=settings.qianfan_secret_key
+                api_key=settings.qianfan_embedding_api_key,
+                secret_key=settings.qianfan_embedding_secret_key
             )
 
         raise Exception("embedding type is not supported !")

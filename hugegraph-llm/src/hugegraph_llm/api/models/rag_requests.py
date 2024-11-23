@@ -21,23 +21,29 @@ from pydantic import BaseModel
 
 
 class RAGRequest(BaseModel):
-    query: str
-    raw_llm: Optional[bool] = False
-    vector_only: Optional[bool] = False
-    graph_only: Optional[bool] = False
-    graph_vector: Optional[bool] = False
+    query: str = ""
+    raw_answer: bool = False
+    vector_only: bool = False
+    graph_only: bool = False
+    graph_vector_answer: bool = False
     graph_ratio: float = 0.5
     rerank_method: Literal["bleu", "reranker"] = "bleu"
     near_neighbor_first: bool = False
-    custom_related_information: str = None
+    custom_priority_info: str = ""
     answer_prompt: Optional[str] = None
 
 
 class GraphRAGRequest(BaseModel):
-    query: str
+    query: str = ""
+    raw_answer: bool = True
+    vector_only: bool = False
+    graph_only: bool = False
+    graph_vector_answer: bool = False
+    graph_ratio: float = 0.5
     rerank_method: Literal["bleu", "reranker"] = "bleu"
     near_neighbor_first: bool = False
-    custom_related_information: str = None
+    custom_priority_info: str = ""
+    answer_prompt: Optional[str] = None
 
 
 class GraphConfigRequest(BaseModel):
@@ -70,3 +76,7 @@ class RerankerConfigRequest(BaseModel):
     reranker_type: str
     api_key: str
     cohere_base_url: Optional[str] = None
+
+class LogStreamRequest(BaseModel):
+    admin_token: Optional[str] = None
+    log_file: Optional[str] = 'llm-server.log'

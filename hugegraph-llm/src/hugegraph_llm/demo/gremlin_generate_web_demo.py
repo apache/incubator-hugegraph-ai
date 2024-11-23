@@ -34,7 +34,7 @@ def build_example_vector_index(temp_file):
     else:
         return "ERROR: please input json file."
     builder = GremlinGenerator(
-        llm=LLMs().get_llm(),
+        llm=LLMs().get_text2gql_llm(),
         embedding=Embeddings().get_embedding(),
     )
     return builder.example_index_build(examples).run()
@@ -42,7 +42,7 @@ def build_example_vector_index(temp_file):
 
 def gremlin_generate(inp, use_schema, use_example, example_num, schema):
     generator = GremlinGenerator(
-        llm=LLMs().get_llm(),
+        llm=LLMs().get_text2gql_llm(),
         embedding=Embeddings().get_embedding(),
     )
     if use_example == "true":
@@ -58,35 +58,35 @@ if __name__ == '__main__':
             """# HugeGraph LLM Text2Gremlin Demo"""
         )
         gr.Markdown("## Set up the LLM")
-        llm_dropdown = gr.Dropdown(["openai", "qianfan_wenxin", "ollama"], value=settings.llm_type,
+        llm_dropdown = gr.Dropdown(["openai", "qianfan_wenxin", "ollama/local"], value=settings.text2gql_llm_type,
                                    label="LLM")
 
 
         @gr.render(inputs=[llm_dropdown])
         def llm_settings(llm_type):
-            settings.llm_type = llm_type
+            settings.text2gql_llm_type = llm_type
             if llm_type == "openai":
                 with gr.Row():
                     llm_config_input = [
-                        gr.Textbox(value=settings.openai_api_key, label="api_key"),
-                        gr.Textbox(value=settings.openai_api_base, label="api_base"),
-                        gr.Textbox(value=settings.openai_language_model, label="model_name"),
-                        gr.Textbox(value=str(settings.openai_max_tokens), label="max_token"),
+                        gr.Textbox(value=settings.openai_text2gql_api_key, label="api_key"),
+                        gr.Textbox(value=settings.openai_text2gql_api_base, label="api_base"),
+                        gr.Textbox(value=settings.openai_text2gql_language_model, label="model_name"),
+                        gr.Textbox(value=str(settings.openai_text2gql_tokens), label="max_token"),
                     ]
             elif llm_type == "qianfan_wenxin":
                 with gr.Row():
                     llm_config_input = [
-                        gr.Textbox(value=settings.qianfan_api_key, label="api_key"),
-                        gr.Textbox(value=settings.qianfan_secret_key, label="secret_key"),
+                        gr.Textbox(value=settings.qianfan_text2gql_api_key, label="api_key"),
+                        gr.Textbox(value=settings.qianfan_text2gql_secret_key, label="secret_key"),
                         gr.Textbox(value=settings.qianfan_chat_url, label="chat_url"),
-                        gr.Textbox(value=settings.qianfan_language_model, label="model_name")
+                        gr.Textbox(value=settings.qianfan_text2gql_language_model, label="model_name")
                     ]
-            elif llm_type == "ollama":
+            elif llm_type == "ollama/local":
                 with gr.Row():
                     llm_config_input = [
-                        gr.Textbox(value=settings.ollama_host, label="host"),
-                        gr.Textbox(value=str(settings.ollama_port), label="port"),
-                        gr.Textbox(value=settings.ollama_language_model, label="model_name"),
+                        gr.Textbox(value=settings.ollama_text2gql_host, label="host"),
+                        gr.Textbox(value=str(settings.ollama_text2gql_port), label="port"),
+                        gr.Textbox(value=settings.ollama_text2gql_language_model, label="model_name"),
                         gr.Textbox(value="", visible=False)
                     ]
             else:
@@ -94,28 +94,28 @@ if __name__ == '__main__':
             llm_config_button = gr.Button("Apply Configuration")
 
             def apply_configuration(arg1, arg2, arg3, arg4):
-                llm_option = settings.llm_type
+                llm_option = settings.text2gql_llm_type
                 if llm_option == "openai":
-                    settings.openai_api_key = arg1
-                    settings.openai_api_base = arg2
-                    settings.openai_language_model = arg3
-                    settings.openai_max_tokens = int(arg4)
+                    settings.openai_text2gql_api_key = arg1
+                    settings.openai_text2gql_api_base = arg2
+                    settings.openai_text2gql_language_model = arg3
+                    settings.openai_text2gql_tokens = int(arg4)
                 elif llm_option == "qianfan_wenxin":
-                    settings.qianfan_api_key = arg1
-                    settings.qianfan_secret_key = arg2
+                    settings.qianfan_text2gql_api_key = arg1
+                    settings.qianfan_text2gql_secret_key = arg2
                     settings.qianfan_chat_url = arg3
-                    settings.qianfan_language_model = arg4
-                elif llm_option == "ollama":
-                    settings.ollama_host = arg1
-                    settings.ollama_port = int(arg2)
-                    settings.ollama_language_model = arg3
+                    settings.qianfan_text2gql_language_model = arg4
+                elif llm_option == "ollam/local":
+                    settings.ollama_text2gql_host = arg1
+                    settings.ollama_text2gql_port = int(arg2)
+                    settings.ollama_text2gql_language_model = arg3
                 gr.Info("configured!")
 
             llm_config_button.click(apply_configuration, inputs=llm_config_input)  # pylint: disable=no-member
 
         gr.Markdown("## Set up the Embedding")
         embedding_dropdown = gr.Dropdown(
-            choices=["openai", "ollama"],
+            choices=["openai", "ollama/local"],
             value=settings.embedding_type,
             label="Embedding"
         )
@@ -126,15 +126,15 @@ if __name__ == '__main__':
             if embedding_type == "openai":
                 with gr.Row():
                     embedding_config_input = [
-                        gr.Textbox(value=settings.openai_api_key, label="api_key"),
-                        gr.Textbox(value=settings.openai_api_base, label="api_base"),
+                        gr.Textbox(value=settings.openai_text2gql_api_key, label="api_key"),
+                        gr.Textbox(value=settings.openai_text2gql_api_base, label="api_base"),
                         gr.Textbox(value=settings.openai_embedding_model, label="model_name")
                     ]
-            elif embedding_type == "ollama":
+            elif embedding_type == "ollama/local":
                 with gr.Row():
                     embedding_config_input = [
-                        gr.Textbox(value=settings.ollama_host, label="host"),
-                        gr.Textbox(value=str(settings.ollama_port), label="port"),
+                        gr.Textbox(value=settings.ollama_text2gql_host, label="host"),
+                        gr.Textbox(value=str(settings.ollama_text2gql_port), label="port"),
                         gr.Textbox(value=settings.ollama_embedding_model, label="model_name"),
                     ]
             else:
@@ -144,12 +144,12 @@ if __name__ == '__main__':
             def apply_configuration(arg1, arg2, arg3):
                 embedding_option = settings.embedding_type
                 if embedding_option == "openai":
-                    settings.openai_api_key = arg1
-                    settings.openai_api_base = arg2
+                    settings.openai_text2gql_api_key = arg1
+                    settings.openai_text2gql_api_base = arg2
                     settings.openai_embedding_model = arg3
-                elif embedding_option == "ollama":
-                    settings.ollama_host = arg1
-                    settings.ollama_port = int(arg2)
+                elif embedding_option == "ollama/local":
+                    settings.ollama_text2gql_host = arg1
+                    settings.ollama_text2gql_port = int(arg2)
                     settings.ollama_embedding_model = arg3
                 gr.Info("configured!")
             # pylint: disable=no-member

@@ -25,6 +25,7 @@ from fastapi import FastAPI, Depends, APIRouter
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from hugegraph_llm.api.rag_api import rag_http_api
+from hugegraph_llm.api.admin_api import admin_http_api
 from hugegraph_llm.config import settings, prompt
 from hugegraph_llm.demo.rag_demo.configs_block import (
     create_configs_block,
@@ -36,6 +37,7 @@ from hugegraph_llm.demo.rag_demo.configs_block import (
 from hugegraph_llm.demo.rag_demo.other_block import create_other_block
 from hugegraph_llm.demo.rag_demo.rag_block import create_rag_block, rag_answer
 from hugegraph_llm.demo.rag_demo.vector_graph_block import create_vector_graph_block
+from hugegraph_llm.demo.rag_demo.admin_block import create_admin_block, log_stream
 from hugegraph_llm.resources.demo.css import CSS
 from hugegraph_llm.utils.log import log
 
@@ -43,7 +45,7 @@ sec = HTTPBearer()
 
 
 def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
-    correct_token = os.getenv("TOKEN")
+    correct_token = os.getenv("USER_TOKEN")
     if credentials.credentials != correct_token:
         from fastapi import HTTPException
 
@@ -56,9 +58,9 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
 
 def init_rag_ui() -> gr.Interface:
     with gr.Blocks(
-        theme="default",
-        title="HugeGraph RAG Platform",
-        css=CSS,
+            theme="default",
+            title="HugeGraph RAG Platform",
+            css=CSS,
     ) as hugegraph_llm_ui:
         gr.Markdown("# HugeGraph LLM RAG Demo")
 
@@ -84,7 +86,6 @@ def init_rag_ui() -> gr.Interface:
          = else if settings.reranker_type == siliconflow [settings.reranker_api_key, "BAAI/bge-reranker-v2-m3", ""]
          = else ["","",""]
         """
-        
 
         textbox_array_graph_config = create_configs_block()
 
@@ -92,8 +93,10 @@ def init_rag_ui() -> gr.Interface:
             textbox_input_schema, textbox_info_extract_template = create_vector_graph_block()
         with gr.Tab(label="2. (Graph)RAG & User Functions 📖"):
             textbox_inp, textbox_answer_prompt_input = create_rag_block()
-        with gr.Tab(label="3. Others Tools 🚧"):
+        with gr.Tab(label="3. Graph Tools 🚧"):
             create_other_block()
+        with gr.Tab(label="4. Admin Tools ⚙️"):
+            create_admin_block()
         
 
         def refresh_ui_config_prompt() -> tuple:
@@ -104,7 +107,6 @@ def init_rag_ui() -> gr.Interface:
                 settings.graph_pwd, settings.graph_space, prompt.graph_schema, prompt.extract_graph_prompt,
                 prompt.default_question, prompt.answer_prompt
             )
-
 
         hugegraph_llm_ui.load(fn=refresh_ui_config_prompt, outputs=[
             textbox_array_graph_config[0],
@@ -130,17 +132,26 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8001, help="port")
     args = parser.parse_args()
     app = FastAPI()
-    api_auth = APIRouter(dependencies=[Depends(authenticate)])
+    
+    settings.check_env()
+    prompt.update_yaml_file()
 
-    hugegraph_llm = init_rag_ui()
-    rag_http_api(api_auth, rag_answer, apply_graph_config, apply_llm_config, apply_embedding_config,
-                 apply_reranker_config)
-
-    app.include_router(api_auth)
     auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
     log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
+    api_auth = APIRouter(dependencies=[Depends(authenticate)] if auth_enabled else [])
+    
+    hugegraph_llm = init_rag_ui()
+    
+    rag_http_api(api_auth, rag_answer, apply_graph_config, apply_llm_config, apply_embedding_config,
+                 apply_reranker_config)
+    
+    admin_http_api(api_auth, log_stream)
+    
+    app.include_router(api_auth)
+
     # TODO: support multi-user login when need
-    app = gr.mount_gradio_app(app, hugegraph_llm, path="/", auth=("rag", os.getenv("TOKEN")) if auth_enabled else None)
+    app = gr.mount_gradio_app(app, hugegraph_llm, path="/",
+                              auth=("rag", os.getenv("USER_TOKEN")) if auth_enabled else None)
 
     # TODO: we can't use reload now due to the config 'app' of uvicorn.run
     # ❎:f'{__name__}:app' / rag_web_demo:app / hugegraph_llm.demo.rag_web_demo:app

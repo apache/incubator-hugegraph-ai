@@ -39,7 +39,7 @@ def read_dotenv() -> dict[str, Optional[str]]:
     log.info("Loading %s successfully!", env_path)
     for key, value in env_config.items():
         if key not in os.environ:
-            os.environ[key] = value or ""
+            os.environ[key] = value or "" # upper
     return env_config
 
 
@@ -50,10 +50,10 @@ class Config(ConfigData):
         if os.path.exists(env_path):
             env_config = read_dotenv()
             for key, value in env_config.items():
-                if key in self.__annotations__ and value:
-                    if self.__annotations__[key] in [int, Optional[int]]:
+                if key.lower() in self.__annotations__ and value:
+                    if self.__annotations__[key.lower()] in [int, Optional[int]]:
                         value = int(value)
-                    setattr(self, key, value)
+                    setattr(self, key.lower(), value)
         else:
             self.generate_env()
 
@@ -67,7 +67,7 @@ class Config(ConfigData):
         else:
             config_dict = {}
             for k, v in self.__dict__.items():
-                config_dict[k] = v
+                config_dict[k.upper()] = v
             with open(env_path, "w", encoding="utf-8") as f:
                 for k, v in config_dict.items():
                     if v is None:
@@ -76,10 +76,23 @@ class Config(ConfigData):
                         f.write(f"{k}={v}\n")
             log.info("Generate %s successfully!", env_path)
 
+
+    def check_env(self):
+        config_dict = {}
+        for k, v in self.__dict__.items():
+            config_dict[k.upper()] = str(v) if v else ""
+        env_config = dotenv_values(f"{env_path}")
+        for k, v in config_dict.items():
+            if k in env_config:
+                continue
+            log.info("Update %s: %s=%s", env_path, k, v)
+            set_key(env_path, k, v, quote_mode="never")
+
+
     def update_env(self):
         config_dict = {}
         for k, v in self.__dict__.items():
-            config_dict[k] = str(v) if v else ""
+            config_dict[k.upper()] = str(v) if v else ""
         env_config = dotenv_values(f"{env_path}")
         for k, v in config_dict.items():
             if k in env_config and env_config[k] == v:
