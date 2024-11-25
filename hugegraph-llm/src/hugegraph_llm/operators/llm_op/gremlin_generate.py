@@ -16,12 +16,13 @@
 # under the License.
 
 
-import re
 import json
+import re
 from typing import Optional, List, Dict, Any, Union
 
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
+from hugegraph_llm.utils.log import log
 
 
 def gremlin_generate_prompt(
@@ -71,23 +72,6 @@ class GremlinGenerate:
         self.schema = schema
         self.vertices = vertices
 
-    def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        query = context.get("query", "")
-        assert query, "query is required"
-        examples = context.get("match_result")
-        prompt = gremlin_generate_prompt(
-            query,
-            self.schema,
-            self._format_examples(examples),
-            self._format_vertices(self.vertices)
-        )
-
-        response = self.llm.generate(prompt=prompt)
-        context["result"] = self._extract_gremlin(response)
-
-        context["call_count"] = context.get("call_count", 0) + 1
-        return context
-
     def _extract_gremlin(self, response: str) -> str:
         match = re.search("```gremlin.*```", response, re.DOTALL)
         assert match is not None, f"No gremlin found in response: {response}"
@@ -107,3 +91,23 @@ class GremlinGenerate:
         if not vertices:
             return None
         return "\n".join([f"- {vid}" for vid in vertices])
+
+    def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        query = context.get("query", "")
+        if not query:
+                raise ValueError("query is required")
+
+        examples = context.get("match_result")
+        prompt = gremlin_generate_prompt(
+            query,
+            self.schema,
+            self._format_examples(examples),
+            self._format_vertices(self.vertices)
+        )
+
+        response = self.llm.generate(prompt=prompt)
+        log.debug("Text2Gremlin prompt:\n %s,\n LLM Response: %s", prompt, response)
+        context["result"] = self._extract_gremlin(response)
+
+        context["call_count"] = context.get("call_count", 0) + 1
+        return context

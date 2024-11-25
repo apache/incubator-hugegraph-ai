@@ -16,6 +16,7 @@
 # under the License.
 
 import json
+from typing import Tuple
 
 import gradio as gr
 import pandas as pd
@@ -27,7 +28,7 @@ from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.utils.log import log
 
 
-def build_example_vector_index(temp_file):
+def build_example_vector_index(temp_file) -> dict:
     full_path = temp_file.name
     if full_path.endswith(".json"):
         with open(full_path, "r", encoding="utf-8") as f:
@@ -44,18 +45,21 @@ def build_example_vector_index(temp_file):
     return builder.example_index_build(examples).run()
 
 
-def gremlin_generate(inp, example_num, schema):
-    generator = GremlinGenerator(
-        llm=LLMs().get_text2gql_llm(),
-        embedding=Embeddings().get_embedding(),
-    )
+def gremlin_generate(inp, example_num, schema) -> Tuple[str, str]:
+    generator = GremlinGenerator(llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding())
     if schema:
-        try:
-            schema = json.loads(schema.strip())
-            generator.import_schema(from_user_defined=schema)
-        except json.JSONDecodeError:
-            log.warning("Load schema failed, try to get schema from graph now!")
-            generator.import_schema(from_hugegraph=schema)
+            schema = schema.strip()
+            if not schema.startswith("{"):
+                log.info("Try to get schema from graph '%s'", schema)
+                generator.import_schema(from_hugegraph=schema)
+            else:
+                try:
+                    schema = json.loads(schema)
+                    generator.import_schema(from_user_defined=schema)
+                except json.JSONDecodeError as e:
+                    log.error("Invalid JSON schema provided: %s", e)
+                    return "Invalid JSON schema, please check the format carefully.", ""
+
     context = generator.example_index_query(example_num).gremlin_generate(schema).run(query=inp)
     return context.get("match_result", "No Results"), context["result"]
 
@@ -85,8 +89,8 @@ def create_text2gremlin_block():
                 minimum=0,
                 maximum=10,
                 step=1,
-                value=3,
-                label="Number of examples"
+                value=2,
+                label="Number of refer examples"
             )
             schema_box = gr.Textbox(value=prompt.graph_schema, label="Schema", lines=2)
             btn = gr.Button("Text2Gremlin", variant="primary")
