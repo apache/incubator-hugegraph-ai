@@ -21,105 +21,67 @@ import json
 from typing import Optional, List, Dict, Any, Union
 
 from hugegraph_llm.models.llms.base import BaseLLM
+from hugegraph_llm.models.llms.init_llm import LLMs
 
 
-def gremlin_examples(examples: List[Dict[str, str]]) -> str:
-    example_strings = []
-    for example in examples:
-        example_strings.append(
-            f"- query: {example['query']}\n"
-            f"- gremlin:\n```gremlin\n{example['gremlin']}\n```")
-    return "\n\n".join(example_strings)
-
-
-def gremlin_generate_prompt(query: str) -> str:
-    return f"""\
-Generate gremlin from the following user query.
-The output format must be like:
-```gremlin
-g.V().limit(10)
-```
-
-Generate gremlin from the following user query.
-{query}
-The generated gremlin is:"""
-
-
-def gremlin_generate_with_schema_prompt(schema: str, query: str) -> str:
-    return f"""\
-Given the graph schema:
-{schema}
-Generate gremlin from the following user query.
-The output format must be like:
-```gremlin
-g.V().limit(10)
-```
-
-Generate gremlin from the following user query.
-{query}
-The generated gremlin is:"""
-
-
-def gremlin_generate_with_example_prompt(example: str, query: str) -> str:
-    return f"""Given the example query-gremlin pairs:
-{example}
-
-Generate gremlin from the following user query.
-The output format must be like:
-```gremlin
-g.V().limit(10)
-```
-
-Generate gremlin from the following user query.
-{query}
-The generated gremlin is:"""
-
-
-def gremlin_generate_with_schema_and_example_prompt(schema: str, example: str, query: str) -> str:
-    return f"""\
+def gremlin_generate_prompt(
+        query: str,
+        schema: str,
+        example: Optional[str] = None,
+        vertices: Optional[List[str]] = None
+) -> str:
+    prompt = ""
+    if example:
+        prompt += f"""\
 Given the example query-gremlin pairs:
 {example}
-
+"""
+    prompt += f"""\
 Given the graph schema:
 ```json
 {schema}
 ```
+"""
+    if vertices:
+        prompt += f"""\
+Given the extracted vertex vid:
+{vertices}
+"""
+    prompt += f"""\
 Generate gremlin from the following user query.
 {query}
+The output format must be like:
+```gremlin
+g.V().limit(10)
+```
 The generated gremlin is:"""
+    return prompt
 
 
 class GremlinGenerate:
     def __init__(
             self,
-            llm: BaseLLM,
-            use_schema: bool = False,
-            use_example: bool = False,
-            schema: Optional[Union[dict, str]] = None
+            llm: BaseLLM = None,
+            schema: Optional[Union[dict, str]] = None,
+            vertices: Optional[List[str]] = None
     ) -> None:
-        self.llm = llm
-        self.use_schema = use_schema
-        self.use_example = use_example
+        self.llm = llm or LLMs().get_text2gql_llm()
         if isinstance(schema, dict):
-            schema = json.dumps(schema, encode='utf8')
+            schema = json.dumps(schema, ensure_ascii=False)
         self.schema = schema
+        self.vertices = vertices
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context.get("query", "")
         assert query, "query is required"
-        examples = context.get("match_result", [])
-        if not self.use_schema and not self.use_example:
-            prompt = gremlin_generate_prompt(query)
-        elif not self.use_schema and self.use_example:
-            prompt = gremlin_generate_with_example_prompt(gremlin_examples(examples), query)
-        elif self.use_schema and not self.use_example:
-            prompt = gremlin_generate_with_schema_prompt(self.schema, query)
-        else:
-            prompt = gremlin_generate_with_schema_and_example_prompt(
-                self.schema,
-                gremlin_examples(examples),
-                query
-            )
+        examples = context.get("match_result")
+        prompt = gremlin_generate_prompt(
+            query,
+            self.schema,
+            self._format_examples(examples),
+            self._format_vertices(self.vertices)
+        )
+
         response = self.llm.generate(prompt=prompt)
         context["result"] = self._extract_gremlin(response)
 
@@ -128,10 +90,20 @@ class GremlinGenerate:
 
     def _extract_gremlin(self, response: str) -> str:
         match = re.search("```gremlin.*```", response, re.DOTALL)
-        if match is None:
-            return "Unable to generate gremlin from your query."
+        assert match is not None, f"No gremlin found in response: {response}"
         return match.group()[len("```gremlin"):-len("```")].strip()
 
+    def _format_examples(self, examples: Optional[List[Dict[str, str]]]) -> Optional[str]:
+        if not examples:
+            return None
+        example_strings = []
+        for example in examples:
+            example_strings.append(
+                f"- query: {example['query']}\n"
+                f"- gremlin:\n```gremlin\n{example['gremlin']}\n```")
+        return "\n\n".join(example_strings)
 
-if __name__ == '__main__':
-    print(gremlin_examples([{"query": "hello", "gremlin": "g.V()"}]))
+    def _format_vertices(self, vertices: Optional[List[str]]) -> Optional[str]:
+        if not vertices:
+            return None
+        return "\n".join([f"- {vid}" for vid in vertices])

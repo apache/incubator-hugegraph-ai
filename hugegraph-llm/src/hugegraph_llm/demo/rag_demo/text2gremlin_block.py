@@ -20,9 +20,11 @@ import json
 import pandas as pd
 import gradio as gr
 
+from hugegraph_llm.config import prompt
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
+from hugegraph_llm.utils.log import log
 
 
 def build_example_vector_index(temp_file):
@@ -35,20 +37,25 @@ def build_example_vector_index(temp_file):
     else:
         return "ERROR: please input json file."
     builder = GremlinGenerator(
-        llm=LLMs().get_llm(),
+        llm=LLMs().get_text2gql_llm(),
         embedding=Embeddings().get_embedding(),
     )
     return builder.example_index_build(examples).run()
 
 
-def gremlin_generate(inp, use_schema, use_example, example_num, schema):
+def gremlin_generate(inp, example_num, schema):
     generator = GremlinGenerator(
-        llm=LLMs().get_llm(),
+        llm=LLMs().get_text2gql_llm(),
         embedding=Embeddings().get_embedding(),
     )
-    if use_example:
-        generator.example_index_query(example_num)
-    context = generator.gremlin_generate(use_schema, use_example, schema).run(query=inp)
+    if schema:
+        try:
+            schema = json.loads(schema.strip())
+            generator.import_schema(from_user_defined=schema)
+        except json.JSONDecodeError:
+            log.info("Get schema from graph!")
+            generator.import_schema(from_hugegraph=schema)
+    context = generator.example_index_query(example_num).gremlin_generate(schema).run(query=inp)
     return context.get("match_result", "No Results"), context["result"]
 
 
@@ -56,10 +63,10 @@ def create_text2gremlin_block() -> list:
     gr.Markdown("""## Text2gremlin Tools """)
 
     gr.Markdown("## Build Example Vector Index")
-    gr.Markdown("Uploaded json file should be in format below:\n"
-                "[{\"query\":\"who is peter\", \"gremlin\":\"g.V().has('name', 'peter')\"}]\n"
-                "Uploaded csv file should be in format below:\n"
-                "query,gremlin\n\"who is peter\",\"g.V().has('name', 'peter')\"")
+    gr.Markdown("Uploaded json file should be in format below:  \n"
+                "[{\"query\":\"who is peter\", \"gremlin\":\"g.V().has('name', 'peter')\"}]  \n"
+                "Uploaded csv file should be in format below:  \n"
+                "query,gremlin  \n\"who is peter\",\"g.V().has('name', 'peter')\"")
     with gr.Row():
         file = gr.File(label="Upload Example Query-Gremlin Pairs Json")
         out = gr.Textbox(label="Result Message")
@@ -67,34 +74,18 @@ def create_text2gremlin_block() -> list:
         btn = gr.Button("Build Example Vector Index")
     btn.click(build_example_vector_index, inputs=[file], outputs=[out])  # pylint: disable=no-member
     gr.Markdown("## Nature Language To Gremlin")
-    SCHEMA = """{
-        "vertices": [
-            {"vertex_label": "entity", "properties": []}
-        ],
-        "edges": [
-            {
-                "edge_label": "relation",
-                "source_vertex_label": "entity",
-                "target_vertex_label": "entity",
-                "properties": {}
-            }
-        ]
-    }"""
+
     with gr.Row():
         with gr.Column(scale=1):
-            schema_box = gr.Textbox(value=SCHEMA, label="Schema")
+            schema_box = gr.Textbox(value=prompt.graph_schema, label="Schema", lines=10)
         with gr.Column(scale=1):
             input_box = gr.Textbox(value="Tell me about Al Pacino.",
                                    label="Nature Language Query")
             match = gr.Textbox(label="Best-Matched Examples")
             out = gr.Textbox(label="Structured Query Language: Gremlin")
         with gr.Column(scale=1):
-            use_example_radio = gr.Radio(choices=[True, False], value=False,
-                                         label="Use example")
-            use_schema_radio = gr.Radio(choices=[True, False], value=False,
-                                        label="Use schema")
             example_num_slider = gr.Slider(
-                minimum=1,
+                minimum=0,
                 maximum=10,
                 step=1,
                 value=5,
@@ -103,6 +94,6 @@ def create_text2gremlin_block() -> list:
             btn = gr.Button("Text2Gremlin")
     btn.click(  # pylint: disable=no-member
         fn=gremlin_generate,
-        inputs=[input_box, use_schema_radio, use_example_radio, example_num_slider, schema_box],
+        inputs=[input_box, example_num_slider, schema_box],
         outputs=[match, out]
     )

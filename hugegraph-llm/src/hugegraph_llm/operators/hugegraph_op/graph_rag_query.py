@@ -16,17 +16,12 @@
 # under the License.
 
 import json
-import os
-import re
 from typing import Any, Dict, Optional, List, Set, Tuple
 
-import pandas as pd
-from hugegraph_llm.config import settings, resource_path
-from hugegraph_llm.indices.vector_index import VectorIndex
+from hugegraph_llm.config import settings
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.base import BaseLLM
-from hugegraph_llm.models.llms.init_llm import LLMs
+from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
 
@@ -78,28 +73,6 @@ g.V().has('{prop}', within({keywords}))
 .toList()
 """
 
-GREMLIN_GENERATE_EXAMPLE_OPTION_TPL = """\
-# Example
-Generate gremlin from the following user input.
-{example_query}
-The generated gremlin is:
-```gremlin
-{example_gremlin}
-```
-
-"""
-
-GREMLIN_GENERATE_TPL = """\
-Given the graph schema:
-```json
-{schema}
-```
-Given the extracted vertex vid:
-{vertices}
-Generate gremlin from the following user input.
-{query}
-The generated gremlin is:"""
-
 
 class GraphRAGQuery:
 
@@ -111,7 +84,8 @@ class GraphRAGQuery:
             llm: Optional[BaseLLM] = None,
             embedding: Optional[BaseEmbedding] = None,
             max_v_prop_len: int = 2048,
-            max_e_prop_len: int = 256
+            max_e_prop_len: int = 256,
+            num_gremlin_generate_example: int = 1
     ):
         self._client = PyHugeClient(
             settings.graph_ip,
@@ -125,18 +99,17 @@ class GraphRAGQuery:
         self._max_items = max_items
         self._prop_to_match = prop_to_match
         self._schema = ""
-        self._llm = llm
-        self._embedding = embedding
         self._limit_property = settings.limit_property.lower() == "true"
         self._max_v_prop_len = max_v_prop_len
         self._max_e_prop_len = max_e_prop_len
+        self._gremlin_generator = GremlinGenerator(
+            llm=llm,
+            embedding=embedding,
+        )
+        self._num_gremlin_generate_example = num_gremlin_generate_example
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         # pylint: disable=R0915 (too-many-statements)
-        if self._llm is None:
-            self._llm = LLMs().get_llm()
-        if self._embedding is None:
-            self._embedding = Embeddings().get_embedding()
         if self._client is None:
             if isinstance(context.get("graph_client"), PyHugeClient):
                 self._client = context["graph_client"]
@@ -150,17 +123,17 @@ class GraphRAGQuery:
                 self._client = PyHugeClient(ip, port, graph, user, pwd, gs)
         assert self._client is not None, "No valid graph to search."
 
+        # initial flag: -1 means no result, 0 means subgraph query, 1 means gremlin query
+        context["graph_result_flag"] = -1
         # 1. Try to perform a query based on the generated gremlin
         context = self._gremlin_generate_query(context)
         # 2. Try to perform a query based on subgraph-search if the previous query failed
         if not context.get("graph_result"):
             context = self._subgraph_query(context)
 
-        # TODO: replace print to log
         verbose = context.get("verbose") or False
         if verbose:
-            print("\033[93mKnowledge from Graph:")
-            print("\n".join(context["graph_result"]) + "\033[0m")
+            log.debug("\033[93mKnowledge from Graph:\n%s\033[0m", "\n".join(context["graph_result"]))
 
         return context
 
@@ -168,44 +141,31 @@ class GraphRAGQuery:
         query = context["query"]
         vertices = context.get("match_vids")
         query_embedding = context.get("query_embedding")
-        if query_embedding is None:
-            query_embedding = self._embedding.get_text_embedding(query)
 
-        vector_index = self._get_gremlin_example_index()
-        match_result = vector_index.search(query_embedding, top_k=1, dis_threshold=2)
-        prompt = ""
-        if match_result:
-            prompt += GREMLIN_GENERATE_EXAMPLE_OPTION_TPL.format(
-                example_query=match_result[0]["query"],
-                example_gremlin=match_result[0]["gremlin"]
-            )
-        else:
-            log.warning("No matching example found, generate gremlin with no example.")
-        prompt += GREMLIN_GENERATE_TPL.format(
-            schema=json.dumps(context["schema"], ensure_ascii=False),
-            vertices="\n".join([f"- {vid}" for vid in vertices]),
-            query=query
-        )
-
-        response = self._llm.generate(prompt=prompt)
-        match = re.search("```gremlin.*```", response, re.DOTALL)
-        if match:
-            gremlin = match.group()[len("```gremlin"):-len("```")]
-            log.info("Generated gremlin: %s", gremlin)
-            context["gremlin"] = gremlin
-            try:
-                result = self._client.gremlin().exec(gremlin=gremlin)["data"]
-                if result == [None]:
-                    result = []
-                context["graph_result"] = [json.dumps(item, ensure_ascii=False) for item in result]
+        self._gremlin_generator.clear()
+        self._gremlin_generator.example_index_query(num_examples=self._num_gremlin_generate_example)
+        gremlin = self._gremlin_generator.gremlin_generate(
+            schema=context["schema"],
+            vertices=vertices,
+        ).run(
+            query=query,
+            query_embedding=query_embedding
+        )["result"]
+        log.info("Generated gremlin: %s", gremlin)
+        context["gremlin"] = gremlin
+        try:
+            result = self._client.gremlin().exec(gremlin=gremlin)["data"]
+            if result == [None]:
+                result = []
+            context["graph_result"] = [json.dumps(item, ensure_ascii=False) for item in result]
+            if context["graph_result"]:
+                context["graph_result_flag"] = 1
                 context["graph_context_head"] = (
                     f"The following are graph query result "
                     f"from gremlin query `{gremlin}`.\n"
                 )
-            except Exception as e:
-                log.error(e)
-        else:
-            log.error("Failed to generate gremlin from the query.")
+        except Exception as e:
+            log.error(e)
         return context
 
     def _subgraph_query(self, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -276,31 +236,16 @@ class GraphRAGQuery:
             )
 
         context["graph_result"] = list(graph_chain_knowledge)
-        context["vertex_degree_list"] = [list(vertex_degree) for vertex_degree in vertex_degree_list]
-        context["knowledge_with_degree"] = knowledge_with_degree
-        context["graph_context_head"] = (
-            f"The following are graph knowledge in {self._max_deep} depth, e.g:\n"
-            "`vertexA --[links]--> vertexB <--[links]-- vertexC ...`"
-            "extracted based on key entities as subject:\n"
-        )
-        # TODO: set color for ↓ "\033[93mKnowledge from Graph:\033[0m"
-        log.debug("Knowledge from Graph:\n%s", "\n".join(context["graph_result"]))
+        if context["graph_result"]:
+            context["graph_result_flag"] = 0
+            context["vertex_degree_list"] = [list(vertex_degree) for vertex_degree in vertex_degree_list]
+            context["knowledge_with_degree"] = knowledge_with_degree
+            context["graph_context_head"] = (
+                f"The following are graph knowledge in {self._max_deep} depth, e.g:\n"
+                "`vertexA --[links]--> vertexB <--[links]-- vertexC ...`"
+                "extracted based on key entities as subject:\n"
+            )
         return context
-
-    def _get_gremlin_example_index(self) -> VectorIndex:
-        index_dir = os.path.join(resource_path, "gremlin_examples")
-        if not (os.path.exists(os.path.join(index_dir, "index.faiss"))
-                and os.path.exists(os.path.join(index_dir, "properties.pkl"))):
-            log.warning("No gremlin example index found, will generate one.")
-            properties = (pd.read_csv(os.path.join(resource_path, "demo", "text2gremlin.csv"))
-                          .to_dict(orient="records"))
-            embeddings = [self._embedding.get_text_embedding(row["query"]) for row in properties]
-            vector_index = VectorIndex(len(embeddings[0]))
-            vector_index.add(embeddings, properties)
-            vector_index.to_index_file(index_dir)
-        else:
-            vector_index = VectorIndex.from_index_file(index_dir)
-        return vector_index
 
     def _format_graph_from_vertex(self, query_result: List[Any]) -> Set[str]:
         knowledge = set()
