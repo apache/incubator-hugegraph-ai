@@ -98,7 +98,7 @@ def init_rag_ui() -> gr.Interface:
             create_text2gremlin_block()
         with gr.Tab(label="4. Graph Tools 🚧"):
             create_other_block()
-        with gr.Tab(label="5. Admin Tools ⚙️"):
+        with gr.Tab(label="5. Admin Tools 🛠"):
             create_admin_block()
 
         def refresh_ui_config_prompt() -> tuple:

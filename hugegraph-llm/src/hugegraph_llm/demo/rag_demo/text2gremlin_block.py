@@ -17,8 +17,8 @@
 
 import json
 
-import pandas as pd
 import gradio as gr
+import pandas as pd
 
 from hugegraph_llm.config import prompt
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
@@ -35,7 +35,8 @@ def build_example_vector_index(temp_file):
     elif full_path.endswith(".csv"):
         examples = pd.read_csv(full_path).to_dict('records')
     else:
-        return "ERROR: please input json file."
+        log.critical("Unsupported file format. Please input a JSON or CSV file.")
+        return {"error": "Unsupported file format. Please input a JSON or CSV file."}
     builder = GremlinGenerator(
         llm=LLMs().get_text2gql_llm(),
         embedding=Embeddings().get_embedding(),
@@ -53,45 +54,42 @@ def gremlin_generate(inp, example_num, schema):
             schema = json.loads(schema.strip())
             generator.import_schema(from_user_defined=schema)
         except json.JSONDecodeError:
-            log.info("Get schema from graph!")
+            log.warning("Load schema failed, try to get schema from graph now!")
             generator.import_schema(from_hugegraph=schema)
     context = generator.example_index_query(example_num).gremlin_generate(schema).run(query=inp)
     return context.get("match_result", "No Results"), context["result"]
 
 
-def create_text2gremlin_block() -> list:
-    gr.Markdown("""## Text2gremlin Tools """)
-
-    gr.Markdown("## Build Example Vector Index")
-    gr.Markdown("Uploaded json file should be in format below:  \n"
-                "[{\"query\":\"who is peter\", \"gremlin\":\"g.V().has('name', 'peter')\"}]  \n"
-                "Uploaded csv file should be in format below:  \n"
-                "query,gremlin  \n\"who is peter\",\"g.V().has('name', 'peter')\"")
+def create_text2gremlin_block():
+    gr.Markdown("""## Build Vector Template Index (Optional)  
+    > Uploaded CSV file should be in `query,gremlin` format below:    
+    > e.g. `who is peter?`,`g.V().has('name', 'peter')`    
+    > JSON file should be in format below:  
+    > e.g. `[{"query":"who is peter", "gremlin":"g.V().has('name', 'peter')"}]`
+    """)
     with gr.Row():
-        file = gr.File(label="Upload Example Query-Gremlin Pairs Json")
+        file = gr.File(label="Upload Text-Gremlin Pairs File")
         out = gr.Textbox(label="Result Message")
     with gr.Row():
-        btn = gr.Button("Build Example Vector Index")
+        btn = gr.Button("Build Example Vector Index", variant="primary")
     btn.click(build_example_vector_index, inputs=[file], outputs=[out])  # pylint: disable=no-member
     gr.Markdown("## Nature Language To Gremlin")
 
     with gr.Row():
         with gr.Column(scale=1):
-            schema_box = gr.Textbox(value=prompt.graph_schema, label="Schema", lines=10)
-        with gr.Column(scale=1):
-            input_box = gr.Textbox(value="Tell me about Al Pacino.",
-                                   label="Nature Language Query")
-            match = gr.Textbox(label="Best-Matched Examples")
-            out = gr.Textbox(label="Structured Query Language: Gremlin")
+            input_box = gr.Textbox(value="Tell me about Al Pacino.", label="Nature Language Query")
+            match = gr.Textbox(label="Best-Matched Examples", show_copy_button=True)
+            out = gr.Textbox(label="Structured Query Language: Gremlin", show_copy_button=True)
         with gr.Column(scale=1):
             example_num_slider = gr.Slider(
                 minimum=0,
                 maximum=10,
                 step=1,
-                value=5,
+                value=3,
                 label="Number of examples"
             )
-            btn = gr.Button("Text2Gremlin")
+            schema_box = gr.Textbox(value=prompt.graph_schema, label="Schema", lines=2)
+            btn = gr.Button("Text2Gremlin", variant="primary")
     btn.click(  # pylint: disable=no-member
         fn=gremlin_generate,
         inputs=[input_box, example_num_slider, schema_box],
