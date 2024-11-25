@@ -11,4 +11,5 @@ apache-release.sh export-ignore
 # ignored directory
 .github/ export-ignore
 .idea/ export-ignore
+style/ export-ignore
 scripts/ export-ignore
