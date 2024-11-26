@@ -124,6 +124,7 @@ class PromptConfig(PromptData):
             "\n".join([f"    {line}" for line in self.custom_rerank_info.splitlines()])
         )
         indented_default_answer_template = "\n".join([f"    {line}" for line in self.answer_prompt.splitlines()])
+        indented_keywords_extract_template = "\n".join([f"    {line}" for line in self.keywords_extract_prompt.splitlines()])
 
         # This can be extended to add storage fields according to the data needs to be stored
         yaml_content = f"""graph_schema: |
@@ -140,6 +141,9 @@ custom_rerank_info: |
 
 answer_prompt: |
 {indented_default_answer_template}
+
+keywords_extract_prompt: |
+{indented_keywords_extract_template}
 
 """
         with open(yaml_file_path, "w", encoding="utf-8") as file:
