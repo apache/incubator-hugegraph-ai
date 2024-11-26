@@ -17,28 +17,16 @@
 
 
 import re
+import time
 from typing import Set, Dict, Any, Optional
 
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.common_op.nltk_helper import NLTKHelper
 from hugegraph_llm.utils.log import log
+from hugegraph_llm.config import prompt
 
-KEYWORDS_EXTRACT_TPL = """Extract {max_keywords} keywords from the text:
-{question}
-
-1. Keywords can't contain meaningless/broad words(e.g action/relation/thing), must represent certain entities,  
-2. Better to extract subject/verb/object and don't extract particles, don't extend to synonyms/general categories.
-Provide keywords in the following comma-separated format: 'KEYWORDS: <keywords>'
-"""
-
-KEYWORDS_EXPAND_TPL = """Generate synonyms or possible form of keywords up to {max_keywords} in total,
-considering possible cases of capitalization, pluralization, common expressions, etc.
-Provide all synonyms of keywords in comma-separated format: 'SYNONYMS: <keywords>'
-Note, result should be in one-line with only one 'SYNONYMS: ' prefix
-----
-KEYWORDS: {question}
-----"""
+KEYWORDS_EXTRACT_TPL = prompt.keywords_extract_prompt
 
 
 class KeywordExtract:
@@ -48,7 +36,6 @@ class KeywordExtract:
         llm: Optional[BaseLLM] = None,
         max_keywords: int = 5,
         extract_template: Optional[str] = None,
-        expand_template: Optional[str] = None,
         language: str = "english",
     ):
         self._llm = llm
@@ -56,7 +43,6 @@ class KeywordExtract:
         self._language = language.lower()
         self._max_keywords = max_keywords
         self._extract_template = extract_template or KEYWORDS_EXTRACT_TPL
-        self._expand_template = expand_template or KEYWORDS_EXPAND_TPL
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._query is None:
@@ -78,27 +64,22 @@ class KeywordExtract:
             self._max_keywords = context["max_keywords"]
 
         prompt = self._extract_template.format(question=self._query, max_keywords=self._max_keywords)
+        start_time = time.perf_counter()
         response = self._llm.generate(prompt=prompt)
+        end_time = time.perf_counter()
+        log.debug("Keyword extraction inference time is %s", (end_time - start_time))
 
         keywords = self._extract_keywords_from_response(
             response=response, lowercase=False, start_token="KEYWORDS:"
         )
-        keywords.union(self._expand_synonyms(keywords=keywords))
         keywords = {k.replace("'", "") for k in keywords}
         context["keywords"] = list(keywords)
         log.info("User Query: %s\nKeywords: %s", self._query, context["keywords"])
 
-        # extracting keywords & expanding synonyms increase the call count by 2
-        context["call_count"] = context.get("call_count", 0) + 2
+        # extracting keywords & expanding synonyms increase the call count by 1
+        context["call_count"] = context.get("call_count", 0) + 1
         return context
 
-    def _expand_synonyms(self, keywords: Set[str]) -> Set[str]:
-        prompt = self._expand_template.format(question=str(keywords), max_keywords=self._max_keywords)
-        response = self._llm.generate(prompt=prompt)
-        keywords = self._extract_keywords_from_response(
-            response=response, lowercase=False, start_token="SYNONYMS:"
-        )
-        return keywords
 
     def _extract_keywords_from_response(
         self,
