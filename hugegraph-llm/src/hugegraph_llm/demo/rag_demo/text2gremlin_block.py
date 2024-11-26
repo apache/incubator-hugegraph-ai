@@ -25,6 +25,7 @@ from hugegraph_llm.config import prompt
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
+from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.utils.log import log
 
 
@@ -59,8 +60,9 @@ def gremlin_generate(inp, example_num, schema) -> Tuple[str, str]:
                 except json.JSONDecodeError as e:
                     log.error("Invalid JSON schema provided: %s", e)
                     return "Invalid JSON schema, please check the format carefully.", ""
-
-    context = generator.example_index_query(example_num).gremlin_generate(schema).run(query=inp)
+    # FIXME: schema is not used in gremlin_generate() step, no context for it (enhance the logic here)
+    updated_schema = SchemaManager(graph_name=schema).schema.getSchema()
+    context = generator.example_index_query(example_num).gremlin_generate(updated_schema).run(query=inp)
     return context.get("match_result", "No Results"), context["result"]
 
 

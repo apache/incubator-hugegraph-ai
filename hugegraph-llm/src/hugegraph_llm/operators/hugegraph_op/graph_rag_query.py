@@ -131,10 +131,7 @@ class GraphRAGQuery:
         if not context.get("graph_result"):
             context = self._subgraph_query(context)
 
-        verbose = context.get("verbose") or False
-        if verbose:
-            log.debug("\033[93mKnowledge from Graph:\n%s\033[0m", "\n".join(context["graph_result"]))
-
+        log.debug("\033[93mKnowledge from Graph:\n%s\033[0m", "\n".join(context["graph_result"]))
         return context
 
     def _gremlin_generate_query(self, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -242,7 +239,7 @@ class GraphRAGQuery:
             context["knowledge_with_degree"] = knowledge_with_degree
             context["graph_context_head"] = (
                 f"The following are graph knowledge in {self._max_deep} depth, e.g:\n"
-                "`vertexA --[links]--> vertexB <--[links]-- vertexC ...`"
+                "`vertexA--[links]-->vertexB<--[links]--vertexC ...`"
                 "extracted based on key entities as subject:\n"
             )
         return context
