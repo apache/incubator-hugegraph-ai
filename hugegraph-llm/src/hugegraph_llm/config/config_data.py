@@ -260,7 +260,7 @@ KEYWORDS:关键词1,关键词2,...,关键词n
 # Note:
 # - Only consider semantic synonyms and other words with similar meanings in the given context.
 # Output Format:
-# - Output only one line, prefixed with KEYWORDS:, followed by all keywords and synonyms, separated by commas.
+# - Output only one line, prefixed with KEYWORDS:, followed by all keywords and synonyms, separated by commas.No spaces or empty characters are allowed in the extracted keywords.
 # - Format example:
 # KEYWORDS: keyword1, keyword2, ..., keywordn, synonym1, synonym2, ..., synonymn
 # Text:
