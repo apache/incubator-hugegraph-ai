@@ -219,9 +219,8 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
 }
 """
 
-    # Data is extracted from hugegraph-llm/src/hugegraph_llm/operators/llm_op/keyword_extract.py
-    keywords_extract_prompt = """
-指令：
+    # Extracted from llm_op/keyword_extract.py
+    keywords_extract_prompt = """指令：
 请对以下文本执行以下任务：
 1. 提取关键词：
   - 从文本中提取最多 {max_keywords} 个关键词。
@@ -249,7 +248,7 @@ KEYWORDS: 关键词1,关键词2,...,关键词n
 {question}
 """
 
-    # keywords_extract_prompt = """
+    # keywords_extract_prompt_EN = """
 # Instruction:
 # Please perform the following tasks on the text below:
 # 1. Extract Keywords and Generate Synonyms:

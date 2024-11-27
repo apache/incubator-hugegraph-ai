@@ -20,23 +20,23 @@ import re
 import time
 from typing import Set, Dict, Any, Optional
 
+from hugegraph_llm.config import prompt
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.common_op.nltk_helper import NLTKHelper
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.config import prompt
 
 KEYWORDS_EXTRACT_TPL = prompt.keywords_extract_prompt
 
 
 class KeywordExtract:
     def __init__(
-        self,
-        text: Optional[str] = None,
-        llm: Optional[BaseLLM] = None,
-        max_keywords: int = 5,
-        extract_template: Optional[str] = None,
-        language: str = "english",
+            self,
+            text: Optional[str] = None,
+            llm: Optional[BaseLLM] = None,
+            max_keywords: int = 5,
+            extract_template: Optional[str] = None,
+            language: str = "english",
     ):
         self._llm = llm
         self._query = text
@@ -55,19 +55,14 @@ class KeywordExtract:
             self._llm = LLMs().get_extract_llm()
             assert isinstance(self._llm, BaseLLM), "Invalid LLM Object."
 
-        if isinstance(context.get("language"), str):
-            self._language = context["language"].lower()
-        else:
-            context["language"] = self._language
+        self._language = context.get("language", self._language).lower()
+        self._max_keywords = context.get("max_keywords", self._max_keywords)
 
-        if isinstance(context.get("max_keywords"), int):
-            self._max_keywords = context["max_keywords"]
-
-        prompt = self._extract_template.format(question=self._query, max_keywords=self._max_keywords)
+        prompt = f"{self._extract_template.format(question=self._query, max_keywords=self._max_keywords)}"
         start_time = time.perf_counter()
         response = self._llm.generate(prompt=prompt)
         end_time = time.perf_counter()
-        log.debug("Keyword extraction inference time is %s", (end_time - start_time))
+        log.debug("Keyword extraction time: %.2f seconds", end_time - start_time)
 
         keywords = self._extract_keywords_from_response(
             response=response, lowercase=False, start_token="KEYWORDS:"
@@ -80,31 +75,28 @@ class KeywordExtract:
         context["call_count"] = context.get("call_count", 0) + 1
         return context
 
-
     def _extract_keywords_from_response(
-        self,
-        response: str,
-        lowercase: bool = True,
-        start_token: str = "",
+            self,
+            response: str,
+            lowercase: bool = True,
+            start_token: str = "",
     ) -> Set[str]:
         keywords = []
+        # use re.escape(start_token) if start_token contains special chars like */&/^ etc.
         matches = re.findall(rf'{start_token}[^\n]+\n?', response)
 
         for match in matches:
-            match = match[len(start_token):]
-            for k in re.split(r"[,，]+", match):
-                k = k.strip()
-                if len(k) > 1:
-                    if lowercase:
-                        keywords.append(k.lower())
-                    else:
-                        keywords.append(k)
+            match = match[len(start_token):].strip()
+            keywords.extend(
+                k.lower() if lowercase else k
+                for k in re.split(r"[,，]+", match)
+                if len(k.strip()) > 1
+            )
 
         # if the keyword consists of multiple words, split into sub-words (removing stopwords)
-        results = set()
+        results = set(keywords)
         for token in keywords:
-            results.add(token)
             sub_tokens = re.findall(r"\w+", token)
             if len(sub_tokens) > 1:
-                results.update({w for w in sub_tokens if w not in NLTKHelper().stopwords(lang=self._language)})
+                results.update(w for w in sub_tokens if w not in NLTKHelper().stopwords(lang=self._language))
         return results
