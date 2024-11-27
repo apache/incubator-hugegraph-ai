@@ -33,7 +33,7 @@ class NLTKHelper:
         "chinese": None,
     }
 
-    def stopwords(self, lang: str = "english") -> List[str]:
+    def stopwords(self, lang: str = "chinese") -> List[str]:
         """Get stopwords."""
         nltk.data.path.append(os.path.join(resource_path, "nltk_data"))
         if self._stopwords.get(lang) is None:

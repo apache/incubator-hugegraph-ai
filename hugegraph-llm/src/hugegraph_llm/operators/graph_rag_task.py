@@ -69,7 +69,6 @@ class RAGPipeline:
             max_keywords: int = 5,
             language: str = "english",
             extract_template: Optional[str] = None,
-            expand_template: Optional[str] = None,
     ):
         """
         Add a keyword extraction operator to the pipeline.
@@ -78,7 +77,6 @@ class RAGPipeline:
         :param max_keywords: Maximum number of keywords to extract.
         :param language: Language of the text.
         :param extract_template: Template for keyword extraction.
-        :param expand_template: Template for keyword expansion.
         :return: Self-instance for chaining.
         """
         self._operators.append(
@@ -87,7 +85,6 @@ class RAGPipeline:
                 max_keywords=max_keywords,
                 language=language,
                 extract_template=extract_template,
-                expand_template=expand_template,
             )
         )
         return self
