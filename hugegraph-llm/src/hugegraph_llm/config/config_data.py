@@ -222,8 +222,8 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
     # Extracted from llm_op/keyword_extract.py
     keywords_extract_prompt = """指令：
 请对以下文本执行以下任务：
-1. 提取关键词：
-  - 从文本中提取最多 {max_keywords} 个关键词。
+1. 从文本中提取关键词：
+  - 最少 0 个，最多 {max_keywords} 个。
   - 关键词应为具有完整语义的词语或短语，确保信息完整。
 2. 识别需改写的关键词：
   - 从提取的关键词中，识别那些在原语境中具有歧义或存在信息缺失的关键词。
@@ -251,8 +251,8 @@ KEYWORDS: 关键词1,关键词2,...,关键词n
     # keywords_extract_prompt_EN = """
 # Instruction:
 # Please perform the following tasks on the text below:
-# 1. Extract Keywords and Generate Synonyms:
-#   - Extract up to {max_keywords} keywords from the text.
+# 1. Extract Keywords and Generate Synonyms from text:
+#   - At least 0, at most {max_keywords} keywords.
 #   - For each keyword, generate its synonyms or possible variant forms.
 # Requirements:
 # - Keywords should be meaningful and specific entities; avoid using meaningless or overly broad terms (e.g., “object,” “the,” “he”).
