@@ -40,6 +40,7 @@ def rag_answer(
         near_neighbor_first: bool,
         custom_related_information: str,
         answer_prompt: str,
+        keywords_extract_prompt: str,
 ) -> Tuple:
     """
     Generate an answer using the RAG (Retrieval-Augmented Generation) pipeline.
@@ -49,11 +50,12 @@ def rag_answer(
     4. Synthesize the final answer.
     5. Run the pipeline and return the results.
     """
-    should_update_prompt = prompt.default_question != text or prompt.answer_prompt != answer_prompt
+    should_update_prompt = prompt.default_question != text or prompt.answer_prompt != answer_prompt or prompt.keywords_extract_prompt != keywords_extract_prompt
     if should_update_prompt or prompt.custom_rerank_info != custom_related_information:
         prompt.custom_rerank_info = custom_related_information
         prompt.default_question = text
         prompt.answer_prompt = answer_prompt
+        prompt.keywords_extract_prompt = keywords_extract_prompt
         prompt.update_yaml_file()
 
     vector_search = vector_only_answer or graph_vector_answer
@@ -66,7 +68,7 @@ def rag_answer(
     if vector_search:
         rag.query_vector_index()
     if graph_search:
-        rag.extract_keywords().keywords_to_vid().import_schema(settings.graph_name).query_graphdb()
+        rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid().import_schema(settings.graph_name).query_graphdb()
     # TODO: add more user-defined search strategies
     rag.merge_dedup_rerank(graph_ratio, rerank_method, near_neighbor_first, custom_related_information)
     rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
@@ -101,7 +103,10 @@ def create_rag_block():
             graph_vector_out = gr.Textbox(label="Graph-Vector Answer", show_copy_button=True)
 
             answer_prompt_input = gr.Textbox(
-                value=prompt.answer_prompt, label="Custom Prompt", show_copy_button=True, lines=7
+                value=prompt.answer_prompt, label="Query Prompt", show_copy_button=True, lines=7
+            )
+            keywords_extract_prompt_input = gr.Textbox(
+                value=prompt.keywords_extract_prompt, label="Keywords Extraction Prompt", show_copy_button=True, lines=7
             )
         with gr.Column(scale=1):
             with gr.Row():
@@ -134,7 +139,7 @@ def create_rag_block():
                 )
                 custom_related_information = gr.Text(
                     prompt.custom_rerank_info,
-                    label="Custom related information(Optional)",
+                    label="Query related information(Optional)",
                 )
                 btn = gr.Button("Answer Question", variant="primary")
 
@@ -151,6 +156,7 @@ def create_rag_block():
             near_neighbor_first,
             custom_related_information,
             answer_prompt_input,
+            keywords_extract_prompt_input
         ],
         outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
     )
@@ -209,6 +215,7 @@ def create_rag_block():
             near_neighbor_first: bool,
             custom_related_information: str,
             answer_prompt: str,
+            keywords_extract_prompt: str,
             progress=gr.Progress(track_tqdm=True),
             answer_max_line_count: int = 1,
     ):
@@ -227,6 +234,7 @@ def create_rag_block():
                 near_neighbor_first,
                 custom_related_information,
                 answer_prompt,
+                keywords_extract_prompt,
             )
             df.at[index, "Basic LLM Answer"] = basic_llm_answer
             df.at[index, "Vector-only Answer"] = vector_only_answer
@@ -259,10 +267,11 @@ def create_rag_block():
             near_neighbor_first,
             custom_related_information,
             answer_prompt_input,
+            keywords_extract_prompt_input,
             answer_max_line_count,
         ],
         outputs=[qa_dataframe, gr.File(label="Download Answered File", min_width=40)],
     )
     questions_file.change(read_file_to_excel, questions_file, [qa_dataframe, answer_max_line_count])
     answer_max_line_count.change(change_showing_excel, answer_max_line_count, qa_dataframe)
-    return inp, answer_prompt_input
+    return inp, answer_prompt_input, keywords_extract_prompt_input

@@ -93,7 +93,7 @@ def init_rag_ui() -> gr.Interface:
         with gr.Tab(label="1. Build RAG Index 💡"):
             textbox_input_schema, textbox_info_extract_template = create_vector_graph_block()
         with gr.Tab(label="2. (Graph)RAG & User Functions 📖"):
-            textbox_inp, textbox_answer_prompt_input = create_rag_block()
+            textbox_inp, textbox_answer_prompt_input, textbox_keywords_extract_prompt_input = create_rag_block()
         with gr.Tab(label="3. Text2gremlin ⚙️"):
             create_text2gremlin_block()
         with gr.Tab(label="4. Graph Tools 🚧"):
@@ -107,7 +107,7 @@ def init_rag_ui() -> gr.Interface:
             return (
                 settings.graph_ip, settings.graph_port, settings.graph_name, settings.graph_user,
                 settings.graph_pwd, settings.graph_space, prompt.graph_schema, prompt.extract_graph_prompt,
-                prompt.default_question, prompt.answer_prompt
+                prompt.default_question, prompt.answer_prompt, prompt.keywords_extract_prompt
             )
 
         hugegraph_llm_ui.load(fn=refresh_ui_config_prompt, outputs=[
@@ -122,7 +122,8 @@ def init_rag_ui() -> gr.Interface:
             textbox_info_extract_template,
 
             textbox_inp,
-            textbox_answer_prompt_input
+            textbox_answer_prompt_input,
+            textbox_keywords_extract_prompt_input
         ])
 
     return hugegraph_llm_ui
