@@ -18,18 +18,22 @@
 import asyncio
 import os
 
+from collections import deque
 import gradio as gr
 from gradio import Request
 
 from hugegraph_llm.utils.log import log
 
 
-async def log_stream(log_path: str):
+async def log_stream(log_path: str, lines: int = 100):
     """
     Stream the content of a log file like `tail -f`.
     """
     try:
         with open(log_path, 'r') as file:
+            buffer = deque(file, maxlen=lines)
+            for line in buffer:
+                yield line  # Yield the initial lines
             while True:
                 line = file.readline()
                 if line:
@@ -43,10 +47,10 @@ async def log_stream(log_path: str):
 
 
 # Functions to read each log file
-def read_llm_server_log():
+def read_llm_server_log(lines=100):
     try:
         with open("logs/llm-server.log", "r") as f:
-            return f.read()
+            return ''.join(deque(f, maxlen=lines))  
     except FileNotFoundError:
         return "LLM Server log file not found."
 
@@ -114,7 +118,7 @@ def create_admin_block():
                 llm_server_log_output = gr.Textbox(
                     label="LLM Server Log (llm-server.log)",
                     lines=20,
-                    value=read_llm_server_log,  # Initial value using the function
+                    value=f"```\n{read_llm_server_log()}\n```",  # Initial value using the function
                     show_copy_button=True,
                     elem_classes="log-container",
                     every=60,  # Refresh every 60 second
