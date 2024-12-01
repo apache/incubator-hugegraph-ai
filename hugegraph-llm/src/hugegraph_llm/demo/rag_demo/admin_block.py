@@ -115,14 +115,12 @@ def create_admin_block():
             with gr.Column():
                 # LLM Server log display, refreshes every 1 second
                 gr.Markdown("### LLM Server Log")
-                llm_server_log_output = gr.Textbox(
+                llm_server_log_output = gr.Code(
                     label="LLM Server Log (llm-server.log)",
                     lines=20,
                     value=f"```\n{read_llm_server_log()}\n```",  # Initial value using the function
-                    show_copy_button=True,
-                    elem_classes="log-container",
+                    elem_classes="code-container-edit",
                     every=60,  # Refresh every 60 second
-                    autoscroll=True  # Enable auto-scroll
                 )
                 with gr.Row():
                     with gr.Column():
