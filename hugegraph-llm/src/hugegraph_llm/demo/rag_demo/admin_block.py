@@ -17,6 +17,7 @@
 
 import asyncio
 import os
+from collections import deque
 
 import gradio as gr
 from gradio import Request
@@ -24,12 +25,15 @@ from gradio import Request
 from hugegraph_llm.utils.log import log
 
 
-async def log_stream(log_path: str):
+async def log_stream(log_path: str, lines: int = 125):
     """
     Stream the content of a log file like `tail -f`.
     """
     try:
         with open(log_path, 'r') as file:
+            buffer = deque(file, maxlen=lines)
+            for line in buffer:
+                yield line  # Yield the initial lines
             while True:
                 line = file.readline()
                 if line:
@@ -43,37 +47,45 @@ async def log_stream(log_path: str):
 
 
 # Functions to read each log file
-def read_llm_server_log():
+def read_llm_server_log(lines=250):
+    log_path = "logs/llm-server.log"
     try:
-        with open("logs/llm-server.log", "r") as f:
-            # TODO: avoid read the whole file (read latest N lines instead)
-            return f.read()
+        with open(log_path, "r") as f:
+            return ''.join(deque(f, maxlen=lines))
     except FileNotFoundError:
+        log.critical(f"Log file not found: {log_path}")
         return "LLM Server log file not found."
 
 
 # Functions to clear each log file
 def clear_llm_server_log():
-    with open("logs/llm-server.log", "w") as f:
-        f.truncate(0)  # Clear the contents of the file
-    return "LLM Server log cleared."
+    log_path = "logs/llm-server.log"
+    try:
+        with open(log_path, "w") as f:
+            f.truncate(0)  # Clear the contents of the file
+        return "LLM Server log cleared."
+    except Exception as e:
+        log.error(f"An error occurred while clearing the log: {str(e)}")
+        return "Failed to clear LLM Server log."
 
 
 # Function to validate password and control access to logs
 def check_password(password, request: Request = None):
     client_ip = request.client.host if request else "Unknown IP"
+    admin_token = os.getenv('ADMIN_TOKEN')
 
-    if password == os.getenv('ADMIN_TOKEN'):
+    if password == admin_token:
         # Return logs and update visibility
         llm_log = read_llm_server_log()
         # Log the successful access with the IP address
         log.info(f"Logs accessed successfully from IP: {client_ip}")
         return (
-            llm_log, 
-            gr.update(visible=True), 
-            gr.update(visible=True), 
-            gr.update(visible=True), 
-            gr.update(visible=False))
+            llm_log,
+            gr.update(visible=True),
+            gr.update(visible=True),
+            gr.update(visible=True),
+            gr.update(visible=False)
+        )
     else:
         # Log the failed attempt with IP address
         log.error(f"Incorrect password attempt from IP: {client_ip}")
@@ -112,14 +124,12 @@ def create_admin_block():
             with gr.Column():
                 # LLM Server log display, refreshes every 1 second
                 gr.Markdown("### LLM Server Log")
-                llm_server_log_output = gr.Textbox(
+                llm_server_log_output = gr.Code(
                     label="LLM Server Log (llm-server.log)",
                     lines=20,
-                    value=read_llm_server_log,  # Initial value using the function
-                    show_copy_button=True,
-                    elem_classes="log-container",
+                    value=f"```\n{read_llm_server_log()}\n```",  # Initial value using the function
+                    elem_classes="code-container-edit",
                     every=60,  # Refresh every 60 second
-                    autoscroll=True  # Enable auto-scroll
                 )
                 with gr.Row():
                     with gr.Column():
