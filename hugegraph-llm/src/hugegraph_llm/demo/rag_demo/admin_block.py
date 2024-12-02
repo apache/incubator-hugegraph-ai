@@ -25,7 +25,7 @@ from gradio import Request
 from hugegraph_llm.utils.log import log
 
 
-async def log_stream(log_path: str, lines: int = 100):
+async def log_stream(log_path: str, lines: int = 125):
     """
     Stream the content of a log file like `tail -f`.
     """
@@ -47,36 +47,45 @@ async def log_stream(log_path: str, lines: int = 100):
 
 
 # Functions to read each log file
-def read_llm_server_log(lines=100):
+def read_llm_server_log(lines=250):
+    log_path = "logs/llm-server.log"
     try:
-        with open("logs/llm-server.log", "r") as f:
-            return ''.join(deque(f, maxlen=lines))  
+        with open(log_path, "r") as f:
+            return ''.join(deque(f, maxlen=lines))
     except FileNotFoundError:
+        log.critical(f"Log file not found: {log_path}")
         return "LLM Server log file not found."
 
 
 # Functions to clear each log file
 def clear_llm_server_log():
-    with open("logs/llm-server.log", "w") as f:
-        f.truncate(0)  # Clear the contents of the file
-    return "LLM Server log cleared."
+    log_path = "logs/llm-server.log"
+    try:
+        with open(log_path, "w") as f:
+            f.truncate(0)  # Clear the contents of the file
+        return "LLM Server log cleared."
+    except Exception as e:
+        log.error(f"An error occurred while clearing the log: {str(e)}")
+        return "Failed to clear LLM Server log."
 
 
 # Function to validate password and control access to logs
 def check_password(password, request: Request = None):
     client_ip = request.client.host if request else "Unknown IP"
+    admin_token = os.getenv('ADMIN_TOKEN')
 
-    if password == os.getenv('ADMIN_TOKEN'):
+    if password == admin_token:
         # Return logs and update visibility
         llm_log = read_llm_server_log()
         # Log the successful access with the IP address
         log.info(f"Logs accessed successfully from IP: {client_ip}")
         return (
-            llm_log, 
-            gr.update(visible=True), 
-            gr.update(visible=True), 
-            gr.update(visible=True), 
-            gr.update(visible=False))
+            llm_log,
+            gr.update(visible=True),
+            gr.update(visible=True),
+            gr.update(visible=True),
+            gr.update(visible=False)
+        )
     else:
         # Log the failed attempt with IP address
         log.error(f"Incorrect password attempt from IP: {client_ip}")
