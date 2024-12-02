@@ -28,7 +28,7 @@ def admin_http_api(router: APIRouter, log_stream):
     @router.post("/logs", status_code=status.HTTP_200_OK)
     async def log_stream_api(req: LogStreamRequest):
         if os.getenv('ADMIN_TOKEN') != req.admin_token:
-            raise generate_response(RAGResponse(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid admin_token"))
+            raise generate_response(RAGResponse(status_code=status.HTTP_403_FORBIDDEN, message="Invalid admin_token"))
         else:
             log_path = os.path.join("logs", req.log_file)
 
