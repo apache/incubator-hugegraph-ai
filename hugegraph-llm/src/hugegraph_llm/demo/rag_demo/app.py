@@ -92,7 +92,7 @@ def init_rag_ui() -> gr.Interface:
         with gr.Tab(label="1. Build RAG Index 💡"):
             textbox_input_schema, textbox_info_extract_template = create_vector_graph_block()
         with gr.Tab(label="2. (Graph)RAG & User Functions 📖"):
-            textbox_inp, textbox_answer_prompt_input = create_rag_block()
+            textbox_inp, textbox_answer_prompt_input, textbox_keywords_extract_prompt_input = create_rag_block()
         with gr.Tab(label="3. Graph Tools 🚧"):
             create_other_block()
         with gr.Tab(label="4. Admin Tools ⚙️"):
@@ -105,7 +105,7 @@ def init_rag_ui() -> gr.Interface:
             return (
                 settings.graph_ip, settings.graph_port, settings.graph_name, settings.graph_user,
                 settings.graph_pwd, settings.graph_space, prompt.graph_schema, prompt.extract_graph_prompt,
-                prompt.default_question, prompt.answer_prompt
+                prompt.default_question, prompt.answer_prompt, prompt.keywords_extract_prompt
             )
 
         hugegraph_llm_ui.load(fn=refresh_ui_config_prompt, outputs=[
@@ -120,7 +120,8 @@ def init_rag_ui() -> gr.Interface:
             textbox_info_extract_template,
 
             textbox_inp,
-            textbox_answer_prompt_input
+            textbox_answer_prompt_input,
+            textbox_keywords_extract_prompt_input
         ])
 
     return hugegraph_llm_ui
@@ -132,21 +133,25 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8001, help="port")
     args = parser.parse_args()
     app = FastAPI()
-    api_auth = APIRouter(dependencies=[Depends(authenticate)])
     
     settings.check_env()
     prompt.update_yaml_file()
 
+    auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
+    log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
+    api_auth = APIRouter(dependencies=[Depends(authenticate)] if auth_enabled else [])
+    
     hugegraph_llm = init_rag_ui()
+    
     rag_http_api(api_auth, rag_answer, apply_graph_config, apply_llm_config, apply_embedding_config,
                  apply_reranker_config)
     admin_http_api(api_auth, log_stream)
     
     app.include_router(api_auth)
-    auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
-    log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
+
     # TODO: support multi-user login when need
-    app = gr.mount_gradio_app(app, hugegraph_llm, path="/", auth=("rag", os.getenv("TOKEN")) if auth_enabled else None)
+    app = gr.mount_gradio_app(app, hugegraph_llm, path="/",
+                              auth=("rag", os.getenv("USER_TOKEN")) if auth_enabled else None)
 
     # TODO: we can't use reload now due to the config 'app' of uvicorn.run
     # ❎:f'{__name__}:app' / rag_web_demo:app / hugegraph_llm.demo.rag_web_demo:app

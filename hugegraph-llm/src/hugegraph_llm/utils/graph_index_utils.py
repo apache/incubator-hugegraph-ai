@@ -34,7 +34,7 @@ from ..operators.kg_construction_task import KgBuilder
 
 
 def get_graph_index_info():
-    builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
+    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     context = builder.fetch_graph_data().run()
     vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, settings.graph_name, "graph_vids")))
     context["vid_index"] = {
@@ -54,7 +54,7 @@ def clean_all_graph_index():
 def extract_graph(input_file, input_text, schema, example_prompt) -> str:
 
     texts = read_documents(input_file, input_text)
-    builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
+    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
 
     if schema:
         try:
@@ -77,7 +77,7 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
 
 
 def fit_vid_index():
-    builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
+    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     builder.fetch_graph_data().build_vertex_id_semantic_index()
     log.debug("Operators: %s", builder.operators)
     try:
@@ -94,7 +94,7 @@ def import_graph_data(data: str, schema: str) -> Union[str, Dict[str, Any]]:
     try:
         data_json = json.loads(data.strip())
         log.debug("Import graph data: %s", data)
-        builder = KgBuilder(LLMs().get_llm(), Embeddings().get_embedding(), get_hg_client())
+        builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
         if schema:
             try:
                 schema = json.loads(schema.strip())

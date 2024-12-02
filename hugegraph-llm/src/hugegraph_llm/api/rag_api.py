@@ -30,7 +30,7 @@ from hugegraph_llm.api.models.rag_requests import (
     LogStreamRequest,
 )
 from hugegraph_llm.api.models.rag_response import RAGResponse
-from hugegraph_llm.config import settings
+from hugegraph_llm.config import settings, prompt
 from hugegraph_llm.utils.log import log
 
 
@@ -56,11 +56,21 @@ def rag_http_api(
 ):
     @router.post("/rag", status_code=status.HTTP_200_OK)
     def rag_answer_api(req: RAGRequest):
-        result = rag_answer_func(req.query, req.raw_llm, req.vector_only, req.graph_only, req.graph_vector,
-                                 req.answer_prompt)
+        result = rag_answer_func(
+            req.query,
+            req.raw_answer,
+            req.vector_only,
+            req.graph_only,
+            req.graph_vector_answer,
+            req.graph_ratio,
+            req.rerank_method,
+            req.near_neighbor_first,
+            req.custom_priority_info,
+            req.answer_prompt or prompt.answer_prompt
+        )
         return {
             key: value
-            for key, value in zip(["raw_llm", "vector_only", "graph_only", "graph_vector"], result)
+            for key, value in zip(["raw_answer", "vector_only", "graph_only", "graph_vector_answer"], result)
             if getattr(req, key)
         }
 
@@ -71,7 +81,7 @@ def rag_http_api(
                 text=req.query,
                 rerank_method=req.rerank_method,
                 near_neighbor_first=req.near_neighbor_first,
-                custom_related_information=req.custom_related_information
+                custom_related_information=req.custom_priority_info
             )
 
             if isinstance(result, dict):
@@ -94,6 +104,7 @@ def rag_http_api(
         res = apply_graph_conf(req.ip, req.port, req.name, req.user, req.pwd, req.gs, origin_call="http")
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
 
+    #TODO: restructure the implement of llm to three types, like "/config/chat_llm"
     @router.post("/config/llm", status_code=status.HTTP_201_CREATED)
     def llm_config_api(req: LLMConfigRequest):
         settings.llm_type = req.llm_type

@@ -24,28 +24,17 @@ import argparse
 def cs_example(n_epochs=200):
     hg2d = HugeGraph2DGL()
     graph = hg2d.convert_graph(vertex_label="CORA_vertex", edge_label="CORA_edge")
-    if args.model == "mlp":
-        model = MLP(
-            in_dim=graph.ndata["feat"].shape[1],
-            hid_dim=64,
-            out_dim=graph.ndata["label"].unique().shape[0],
-            num_layers=3,
-            dropout=0.4,
-        )
-    elif args.model == "linear":
-        model = MLPLinear(
-            in_dim=graph.ndata["feat"].shape[1],
-            out_dim=graph.ndata["label"].unique().shape[0],
-        )
-    else:
-        raise NotImplementedError(f"Model {args.model} is not supported.")
+    model = MLP(
+        in_dim=graph.ndata["feat"].shape[1],
+        hid_dim=64,
+        out_dim=graph.ndata["label"].unique().shape[0],
+        num_layers=3,
+        dropout=0.4,
+    )
     node_clf_task = NodeClassify(graph, model)
     node_clf_task.train(lr=0.005, weight_decay=0.0005, n_epochs=n_epochs, patience=200)
     print(node_clf_task.evaluate())
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Base predictor(C&S)")
-    parser.add_argument("--model", type=str, default="mlp", choices=["mlp", "linear"])
-    args = parser.parse_args()
     cs_example()

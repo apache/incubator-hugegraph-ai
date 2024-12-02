@@ -69,7 +69,6 @@ header: # `header` section is configurations for source codes license header.
     - '**/logs/*.log'
     - '**/META-INF/**/*'
     - '**/target/*'
-    - 'style/*'
     - 'ChangeLog'
     - 'CONFIG.ini'
     - 'GROUPS'

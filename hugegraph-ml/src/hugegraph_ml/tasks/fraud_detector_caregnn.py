@@ -15,12 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import torch
-from dgl import DGLGraph
-from torch import nn
-from sklearn.metrics import recall_score, roc_auc_score
-from torch.nn.functional import softmax
+# pylint: disable=E0401
 
+import torch
+from torch import nn
+from torch.nn.functional import softmax
+from dgl import DGLGraph
+from sklearn.metrics import recall_score, roc_auc_score
 
 class DetectorCaregnn:
     def __init__(self, graph: DGLGraph, model: nn.Module):

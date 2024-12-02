@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.right (c) 2024 by jinsong, All Rights Reserved.
 
+# pylint: disable=E1101
+
 """
 General Attributed Multiplex HeTerogeneous Network Embedding (GATNE)
 
@@ -33,7 +35,7 @@ from collections import defaultdict
 
 import numpy as np
 import torch
-import torch.nn as nn
+from torch import nn
 import torch.nn.functional as F
 from numpy import random
 from torch.nn.parameter import Parameter

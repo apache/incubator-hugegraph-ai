@@ -39,7 +39,7 @@ def gatne_example(n_epochs=200):
         20,
     )
     gatne_task = HeteroSampleEmbedGATNE(graph, model)
-    embs = gatne_task.train_and_embed(lr=0.005, n_epochs=n_epochs)
+    gatne_task.train_and_embed(lr=0.005, n_epochs=n_epochs)
 
 
 if __name__ == "__main__":
