@@ -94,14 +94,13 @@ def rag_http_api(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred."
             ) from e
 
-
     @router.post("/config/graph", status_code=status.HTTP_201_CREATED)
     def graph_config_api(req: GraphConfigRequest):
         # Accept status code
         res = apply_graph_conf(req.ip, req.port, req.name, req.user, req.pwd, req.gs, origin_call="http")
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
 
-    #TODO: restructure the implement of llm to three types, like "/config/chat_llm"
+    # TODO: restructure the implement of llm to three types, like "/config/chat_llm"
     @router.post("/config/llm", status_code=status.HTTP_201_CREATED)
     def llm_config_api(req: LLMConfigRequest):
         settings.llm_type = req.llm_type

@@ -24,9 +24,10 @@ import uvicorn
 from fastapi import FastAPI, Depends, APIRouter
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from hugegraph_llm.api.rag_api import rag_http_api
 from hugegraph_llm.api.admin_api import admin_http_api
+from hugegraph_llm.api.rag_api import rag_http_api
 from hugegraph_llm.config import settings, prompt
+from hugegraph_llm.demo.rag_demo.admin_block import create_admin_block, log_stream
 from hugegraph_llm.demo.rag_demo.configs_block import (
     create_configs_block,
     apply_llm_config,
@@ -37,7 +38,6 @@ from hugegraph_llm.demo.rag_demo.configs_block import (
 from hugegraph_llm.demo.rag_demo.other_block import create_other_block
 from hugegraph_llm.demo.rag_demo.rag_block import create_rag_block, rag_answer
 from hugegraph_llm.demo.rag_demo.vector_graph_block import create_vector_graph_block
-from hugegraph_llm.demo.rag_demo.admin_block import create_admin_block, log_stream
 from hugegraph_llm.resources.demo.css import CSS
 from hugegraph_llm.utils.log import log
 
@@ -97,7 +97,6 @@ def init_rag_ui() -> gr.Interface:
             create_other_block()
         with gr.Tab(label="4. Admin Tools ⚙️"):
             create_admin_block()
-        
 
         def refresh_ui_config_prompt() -> tuple:
             settings.from_env()
@@ -115,10 +114,8 @@ def init_rag_ui() -> gr.Interface:
             textbox_array_graph_config[3],
             textbox_array_graph_config[4],
             textbox_array_graph_config[5],
-
             textbox_input_schema,
             textbox_info_extract_template,
-
             textbox_inp,
             textbox_answer_prompt_input,
             textbox_keywords_extract_prompt_input
@@ -133,21 +130,20 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8001, help="port")
     args = parser.parse_args()
     app = FastAPI()
-    
+
     settings.check_env()
     prompt.update_yaml_file()
 
     auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
     log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
     api_auth = APIRouter(dependencies=[Depends(authenticate)] if auth_enabled else [])
-    
+
     hugegraph_llm = init_rag_ui()
-    
+
     rag_http_api(api_auth, rag_answer, apply_graph_config, apply_llm_config, apply_embedding_config,
                  apply_reranker_config)
-    
     admin_http_api(api_auth, log_stream)
-    
+
     app.include_router(api_auth)
 
     # TODO: support multi-user login when need
