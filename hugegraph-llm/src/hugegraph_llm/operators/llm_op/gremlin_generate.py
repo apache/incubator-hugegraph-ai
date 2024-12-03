@@ -14,7 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
+import asyncio
 
 import json
 import re
@@ -59,7 +59,7 @@ The generated gremlin is:"""
     return prompt
 
 
-class GremlinGenerate:
+class GremlinGenerateSynthesize:
     def __init__(
             self,
             llm: BaseLLM = None,
@@ -92,22 +92,41 @@ class GremlinGenerate:
             return None
         return "\n".join([f"- {vid}" for vid in vertices])
 
-    def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        query = context.get("query", "")
-        if not query:
-                raise ValueError("query is required")
+    async def async_generate(self, context: Dict[str, Any]):
+        async_tasks = {}
+        query = context.get("query")
+        raw_example = [{'query':'who is peter', 'gremlin':"g.V().has('name', 'peter')"}]
+        raw_prompt = gremlin_generate_prompt(
+            query,
+            self.schema,
+            self._format_examples(examples=raw_example),
+            self._format_vertices(vertices=self.vertices)
+        )
+        async_tasks["raw_answer"] = asyncio.create_task(self.llm.agenerate(prompt = raw_prompt))
 
         examples = context.get("match_result")
         prompt = gremlin_generate_prompt(
             query,
             self.schema,
-            self._format_examples(examples),
-            self._format_vertices(self.vertices)
+            self._format_examples(examples=examples),
+            self._format_vertices(vertices=self.vertices)
         )
+        async_tasks["initilized_answer"] = asyncio.create_task(self.llm.agenerate(prompt = prompt))
+        
+        raw_response = await async_tasks["raw_answer"]
+        initialized_response = await async_tasks["initilized_answer"]
 
-        response = self.llm.generate(prompt=prompt)
-        log.debug("Text2Gremlin prompt:\n %s,\n LLM Response: %s", prompt, response)
-        context["result"] = self._extract_gremlin(response)
+        context["result"] = self._extract_gremlin(response=initialized_response)
+        context["raw_result"] = self._extract_gremlin(response=raw_response)
+        context["call_count"] = context.get("call_count", 0) + 2
 
-        context["call_count"] = context.get("call_count", 0) + 1
+
+        return context
+
+    def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        query = context.get("query", "")
+        if not query:
+                raise ValueError("query is required")
+
+        context = asyncio.run(self.async_generate(context))
         return context

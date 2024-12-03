@@ -81,6 +81,7 @@ class GraphRAGQuery:
             max_deep: int = 2,
             max_items: int = 20,
             prop_to_match: Optional[str] = None,
+            with_gremlin_template: bool = True,
             llm: Optional[BaseLLM] = None,
             embedding: Optional[BaseEmbedding] = None,
             max_v_prop_len: int = 2048,
@@ -107,6 +108,7 @@ class GraphRAGQuery:
             embedding=embedding,
         )
         self._num_gremlin_generate_example = num_gremlin_generate_example
+        self._with_gremlin_template = with_gremlin_template
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         # pylint: disable=R0915 (too-many-statements)
@@ -141,13 +143,17 @@ class GraphRAGQuery:
 
         self._gremlin_generator.clear()
         self._gremlin_generator.example_index_query(num_examples=self._num_gremlin_generate_example)
-        gremlin = self._gremlin_generator.gremlin_generate(
+        gremlin_response = self._gremlin_generator.gremlin_generate_synthesize(
             schema=context["schema"],
             vertices=vertices,
         ).run(
             query=query,
             query_embedding=query_embedding
-        )["result"]
+        )
+        if self._with_gremlin_template:
+            gremlin = gremlin_response["result"]
+        else:
+            gremlin = gremlin_response["raw_result"]
         log.info("Generated gremlin: %s", gremlin)
         context["gremlin"] = gremlin
         try:
