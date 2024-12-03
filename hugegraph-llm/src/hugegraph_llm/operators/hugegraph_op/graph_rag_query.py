@@ -131,7 +131,7 @@ class GraphRAGQuery:
         if not context.get("graph_result"):
             context = self._subgraph_query(context)
 
-        log.debug("\033[93mKnowledge from Graph:\n%s\033[0m", "\n".join(context["graph_result"]))
+        log.debug("Knowledge from Graph:\n%s", "\n".join(context["graph_result"]))
         return context
 
     def _gremlin_generate_query(self, context: Dict[str, Any]) -> Dict[str, Any]:

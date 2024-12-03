@@ -20,6 +20,7 @@ import json
 import traceback
 
 import requests
+
 from pyhugegraph.utils.exceptions import (
     NotAuthorizedError,
     NotFoundError,
@@ -29,39 +30,34 @@ from pyhugegraph.utils.log import log
 
 
 def create_exception(response_content):
-    data = json.loads(response_content)
-    if "ServiceUnavailableException" in data["exception"]:
-        raise ServiceUnavailableException(
-            f'ServiceUnavailableException, "message": "{data["message"]}",'
-            f' "cause": "{data["cause"]}"'
-        )
+    try:
+        data = json.loads(response_content)
+        if "ServiceUnavailableException" in data.get("exception", ""):
+            raise ServiceUnavailableException(
+                f'ServiceUnavailableException, "message": "{data["message"]}",'
+                f' "cause": "{data["cause"]}"'
+            )
+    except (json.JSONDecodeError, KeyError) as e:
+        raise Exception(f"Error parsing response content: {response_content}") from e
     raise Exception(response_content)
 
 
 def check_if_authorized(response):
     if response.status_code == 401:
-        raise NotAuthorizedError(
-            f"Please check your username and password. {str(response.content)}"
-        )
+        raise NotAuthorizedError(f"Please check your username and password. {str(response.content)}")
     return True
 
 
 def check_if_success(response, error=None):
-    if (not str(response.status_code).startswith("20")) and check_if_authorized(
-            response
-    ):
+    if (not str(response.status_code).startswith("20")) and check_if_authorized(response):
         if error is None:
             error = NotFoundError(response.content)
 
         req = response.request
         req_body = req.body if req.body else "Empty body"
         response_body = response.text if response.text else "Empty body"
-        # Log the detailed information
-        print(
-            f"\033[93mError-Client:\n"
-            f"Request URL: {req.url}, Request Body: {req_body}\nResponse Body: "
-            f"{response_body}\033[0m"
-        )
+        log.error("Error-Client: Request URL: %s, Request Body: %s, Response Body: %s",
+                  req.url, req_body, response_body)
         raise error
     return True
 
@@ -95,7 +91,7 @@ class ResponseValidation:
                 elif self._content_type == "text":
                     result = response.text
                 else:
-                    raise ValueError(f"Unknown content type: {self._content_type}")
+                    raise ValueError("Unknown content type: %s" % self._content_type)
 
         except requests.exceptions.HTTPError as e:
             if not self._strict and response.status_code == 404:
@@ -108,18 +104,15 @@ class ResponseValidation:
 
                 req_body = response.request.body if response.request.body else "Empty body"
                 req_body = req_body.encode('utf-8').decode('unicode_escape')
-                log.error(  # pylint: disable=logging-fstring-interpolation
-                    f"{method}: {e}\n[Body]: {req_body}\n[Server Exception]: {details}"
-                )
+                log.error("%s: %s\n[Body]: %s\n[Server Exception]: %s",
+                          method, str(e).encode('utf-8').decode('unicode_escape'), req_body, details)
 
                 if response.status_code == 404:
                     raise NotFoundError(response.content) from e
                 raise e
 
         except Exception:  # pylint: disable=broad-exception-caught
-            log.error(  # pylint: disable=logging-fstring-interpolation
-                f"Unhandled exception occurred: {traceback.format_exc()}"
-            )
+            log.error("Unhandled exception occurred: %s", traceback.format_exc())
 
         return result
 
