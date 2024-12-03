@@ -15,22 +15,30 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import os
 import json
 from typing import Tuple
 
 import gradio as gr
 import pandas as pd
 
-from hugegraph_llm.config import prompt
+from hugegraph_llm.config import prompt, resource_path
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.utils.log import log
+from hugegraph_llm.utils.hugegraph_utils import run_gremlin_query
+
+from pyhugegraph.utils.exceptions import NotFoundError
+
 
 
 def build_example_vector_index(temp_file) -> dict:
-    full_path = temp_file.name
+    if temp_file == None:
+        full_path = os.path.join(resource_path, "demo", "text2gremlin.csv")
+    else:
+        full_path = temp_file.name
     if full_path.endswith(".json"):
         with open(full_path, "r", encoding="utf-8") as f:
             examples = json.load(f)
@@ -62,8 +70,16 @@ def gremlin_generate(inp, example_num, schema) -> Tuple[str, str]:
                     return "Invalid JSON schema, please check the format carefully.", ""
     # FIXME: schema is not used in gremlin_generate() step, no context for it (enhance the logic here)
     updated_schema = SchemaManager(graph_name=schema).schema.getSchema()
-    context = generator.example_index_query(example_num).gremlin_generate(updated_schema).run(query=inp)
-    return context.get("match_result", "No Results"), context["result"]
+    context = generator.example_index_query(example_num).gremlin_generate_synthesize(updated_schema).run(query=inp)
+    try :
+        context["template_exec_res"] = run_gremlin_query(query=context["result"])
+    except NotFoundError as e:
+        context["template_exec_res"] = "Query Execution Error"
+    try :
+        context["raw_exec_res"] = run_gremlin_query(query=context["raw_result"])
+    except NotFoundError as e:
+        context["raw_exec_res"] = "Query Execution Error"
+    return context.get("match_result", "No Results"), context["result"], context["raw_result"], context["template_exec_res"], context["raw_exec_res"]
 
 
 def create_text2gremlin_block():
@@ -85,7 +101,11 @@ def create_text2gremlin_block():
         with gr.Column(scale=1):
             input_box = gr.Textbox(value="Tell me about Al Pacino.", label="Nature Language Query")
             match = gr.Textbox(label="Best-Matched Examples", show_copy_button=True)
-            out = gr.Textbox(label="Structured Query Language: Gremlin", show_copy_button=True)
+            initialized_out = gr.Textbox(label="Gremlin With Template", show_copy_button=True)
+            raw_out = gr.Textbox(label="Gremlin Without Template", show_copy_button=True)
+            initilized_exec_out = gr.Code(label="Query With Template Output", language="json", elem_classes="code-container-show")
+            raw_exec_out = gr.Code(label="Query Without Template Output", language="json", elem_classes="code-container-show")
+
         with gr.Column(scale=1):
             example_num_slider = gr.Slider(
                 minimum=0,
@@ -99,5 +119,5 @@ def create_text2gremlin_block():
     btn.click(  # pylint: disable=no-member
         fn=gremlin_generate,
         inputs=[input_box, example_num_slider, schema_box],
-        outputs=[match, out]
+        outputs=[match, initialized_out, raw_out, initilized_exec_out, raw_exec_out]
     )

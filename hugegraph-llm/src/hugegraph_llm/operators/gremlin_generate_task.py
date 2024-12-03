@@ -23,7 +23,7 @@ from hugegraph_llm.operators.common_op.print_result import PrintResult
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.operators.index_op.build_gremlin_example_index import BuildGremlinExampleIndex
 from hugegraph_llm.operators.index_op.gremlin_example_index_query import GremlinExampleIndexQuery
-from hugegraph_llm.operators.llm_op.gremlin_generate import GremlinGenerate
+from hugegraph_llm.operators.llm_op.gremlin_generate import GremlinGenerateSynthesize
 from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_qps
 
 
@@ -58,8 +58,8 @@ class GremlinGenerator:
         self.operators.append(GremlinExampleIndexQuery(self.embedding, num_examples))
         return self
 
-    def gremlin_generate(self, schema, vertices: Optional[List[str]] = None):
-        self.operators.append(GremlinGenerate(self.llm, schema, vertices))
+    def gremlin_generate_synthesize(self, schema, vertices: Optional[List[str]] = None):
+        self.operators.append(GremlinGenerateSynthesize(self.llm, schema, vertices))
         return self
 
     def print_result(self):
