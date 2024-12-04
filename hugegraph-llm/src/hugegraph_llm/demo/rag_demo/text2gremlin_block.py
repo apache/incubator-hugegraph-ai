@@ -54,7 +54,7 @@ def build_example_vector_index(temp_file) -> dict:
     return builder.example_index_build(examples).run()
 
 
-def gremlin_generate(inp, example_num, schema) -> Tuple[str, str]:
+def gremlin_generate(inp, example_num, schema) -> Tuple[str, str, str, str, str]:
     generator = GremlinGenerator(llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding())
     if schema:
             schema = schema.strip()
@@ -73,12 +73,12 @@ def gremlin_generate(inp, example_num, schema) -> Tuple[str, str]:
     context = generator.example_index_query(example_num).gremlin_generate_synthesize(updated_schema).run(query=inp)
     try :
         context["template_exec_res"] = run_gremlin_query(query=context["result"])
-    except NotFoundError as e:
-        context["template_exec_res"] = "Query Execution Error"
+    except Exception as e:
+        context["template_exec_res"] = f"{e}"
     try :
         context["raw_exec_res"] = run_gremlin_query(query=context["raw_result"])
-    except NotFoundError as e:
-        context["raw_exec_res"] = "Query Execution Error"
+    except Exception as e:
+        context["raw_exec_res"] = f"{e}"
 
     match_result = json.dumps(context.get("match_result", "No Results"), ensure_ascii=False, indent=2)
     return match_result, context["result"], context["raw_result"], context["template_exec_res"], context["raw_exec_res"]

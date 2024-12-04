@@ -109,6 +109,8 @@ class ResponseValidation:
 
                 if response.status_code == 404:
                     raise NotFoundError(response.content) from e
+                elif response.status_code == 400:
+                    raise Exception(f"Server Exception: {details}") from e
                 raise e
 
         except Exception:  # pylint: disable=broad-exception-caught
