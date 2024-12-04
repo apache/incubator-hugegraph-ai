@@ -28,8 +28,15 @@ from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.utils.hugegraph_utils import run_gremlin_query
+
 from hugegraph_llm.utils.log import log
 
+
+def store_schema(schema, question):
+    if prompt.text2gql_graph_schema != schema or prompt.default_question != question:
+        prompt.text2gql_graph_schema = schema
+        prompt.default_question = question
+        prompt.update_yaml_file()
 
 def build_example_vector_index(temp_file) -> dict:
     if temp_file == None:
@@ -101,7 +108,7 @@ def create_text2gremlin_block():
 
     with gr.Row():
         with gr.Column(scale=1):
-            input_box = gr.Textbox(value="Tell me about Al Pacino.", label="Nature Language Query")
+            input_box = gr.Textbox(value=prompt.default_question, label="Nature Language Query")
             match = gr.Code(label="Best-Matched Examples", language="javascript", elem_classes="code-container-show")
             initialized_out = gr.Textbox(label="Gremlin With Template", show_copy_button=True)
             raw_out = gr.Textbox(label="Gremlin Without Template", show_copy_button=True)
@@ -118,10 +125,10 @@ def create_text2gremlin_block():
                 value=2,
                 label="Number of refer examples"
             )
-            schema_box = gr.Textbox(value=prompt.graph_schema, label="Schema", lines=2)
+            schema_box = gr.Textbox(value=prompt.text2gql_graph_schema, label="Schema", lines=2)
             btn = gr.Button("Text2Gremlin", variant="primary")
     btn.click(  # pylint: disable=no-member
         fn=gremlin_generate,
         inputs=[input_box, example_num_slider, schema_box],
         outputs=[match, initialized_out, raw_out, tmpl_exec_out, raw_exec_out]
-    )
+    ).then(store_schema, inputs=[schema_box, input_box],)
