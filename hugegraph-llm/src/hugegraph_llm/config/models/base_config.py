@@ -28,6 +28,7 @@ env_path = os.path.join(package_path, ".env")
 
 
 
+
 class BaseConfig(BaseSettings):
     class Config:
         env_file = env_path
