@@ -16,9 +16,9 @@
 # under the License.
 
 
-from .base_prompt_config import BasePromptConfig
+from hugegraph_llm.config.models.base_prompt_config import BasePromptConfig
 
-class PromptData(BasePromptConfig):
+class PromptConfig(BasePromptConfig):
     # Data is detached from llm_op/answer_synthesize.py
     answer_prompt: str = """You are an expert in knowledge graphs and natural language processing.
 Your task is to provide a precise and accurate answer based on the given context.
@@ -171,7 +171,3 @@ KEYWORDS:关键词1,关键词2,...,关键词n
 # Text:
 # {question}
 # """
-
-
-# config = ConfigData()
-# print(config.model_dump())
