@@ -219,54 +219,8 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
 }
 """
 
-    text2gql_graph_schema = """{
-"vertexlabels": [
-    {
-    "id": 1,
-    "name": "person",
-    "id_strategy": "PRIMARY_KEY",
-    "primary_keys": [
-        "name"
-    ],
-    "properties": [
-        "name",
-        "age",
-        "occupation"
-    ]
-    },
-    {
-    "id": 2,
-    "name": "webpage",
-    "id_strategy": "PRIMARY_KEY",
-    "primary_keys": [
-        "name"
-    ],
-    "properties": [
-        "name",
-        "url"
-    ]
-    }
-],
-"edgelabels": [
-    {
-    "id": 1,
-    "name": "roommate",
-    "source_label": "person",
-    "target_label": "person",
-    "properties": [
-        "date"
-    ]
-    },
-    {
-    "id": 2,
-    "name": "link",
-    "source_label": "webpage",
-    "target_label": "person",
-    "properties": []
-    }
-]
-}
-"""
+    # TODO: we should provide a better example to reduce the useless information
+    text2gql_graph_schema = """hugegraph"""
 
     # Extracted from llm_op/keyword_extract.py
     keywords_extract_prompt = """指令：

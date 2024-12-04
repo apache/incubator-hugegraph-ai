@@ -109,7 +109,7 @@ def create_text2gremlin_block():
     with gr.Row():
         with gr.Column(scale=1):
             input_box = gr.Textbox(value=prompt.default_question, label="Nature Language Query")
-            match = gr.Code(label="Best-Matched Examples", language="javascript", elem_classes="code-container-show")
+            match = gr.Code(label="Similar Template (TopN)", language="javascript", elem_classes="code-container-show")
             initialized_out = gr.Textbox(label="Gremlin With Template", show_copy_button=True)
             raw_out = gr.Textbox(label="Gremlin Without Template", show_copy_button=True)
             tmpl_exec_out = gr.Code(label="Query With Template Output", language="json",
