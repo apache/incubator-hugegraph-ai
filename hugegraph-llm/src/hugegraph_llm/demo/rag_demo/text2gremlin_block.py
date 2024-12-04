@@ -15,9 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import os
 import json
-from typing import Tuple
+import os
+from typing import Any
 
 import gradio as gr
 import pandas as pd
@@ -27,11 +27,8 @@ from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
-from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.hugegraph_utils import run_gremlin_query
-
-from pyhugegraph.utils.exceptions import NotFoundError
-
+from hugegraph_llm.utils.log import log
 
 
 def build_example_vector_index(temp_file) -> dict:
@@ -54,28 +51,28 @@ def build_example_vector_index(temp_file) -> dict:
     return builder.example_index_build(examples).run()
 
 
-def gremlin_generate(inp, example_num, schema) -> Tuple[str, str, str, str, str]:
+def gremlin_generate(inp, example_num, schema) -> tuple[str, str] | tuple[str, Any, Any, Any, Any]:
     generator = GremlinGenerator(llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding())
     if schema:
-            schema = schema.strip()
-            if not schema.startswith("{"):
-                log.info("Try to get schema from graph '%s'", schema)
-                generator.import_schema(from_hugegraph=schema)
-            else:
-                try:
-                    schema = json.loads(schema)
-                    generator.import_schema(from_user_defined=schema)
-                except json.JSONDecodeError as e:
-                    log.error("Invalid JSON schema provided: %s", e)
-                    return "Invalid JSON schema, please check the format carefully.", ""
+        schema = schema.strip()
+        if not schema.startswith("{"):
+            log.info("Try to get schema from graph '%s'", schema)
+            generator.import_schema(from_hugegraph=schema)
+        else:
+            try:
+                schema = json.loads(schema)
+                generator.import_schema(from_user_defined=schema)
+            except json.JSONDecodeError as e:
+                log.error("Invalid JSON schema provided: %s", e)
+                return "Invalid JSON schema, please check the format carefully.", ""
     # FIXME: schema is not used in gremlin_generate() step, no context for it (enhance the logic here)
     updated_schema = SchemaManager(graph_name=schema).schema.getSchema()
     context = generator.example_index_query(example_num).gremlin_generate_synthesize(updated_schema).run(query=inp)
-    try :
+    try:
         context["template_exec_res"] = run_gremlin_query(query=context["result"])
     except Exception as e:
         context["template_exec_res"] = f"{e}"
-    try :
+    try:
         context["raw_exec_res"] = run_gremlin_query(query=context["raw_result"])
     except Exception as e:
         context["raw_exec_res"] = f"{e}"
@@ -108,8 +105,10 @@ def create_text2gremlin_block():
             match = gr.Code(label="Best-Matched Examples", language="javascript", elem_classes="code-container-show")
             initialized_out = gr.Textbox(label="Gremlin With Template", show_copy_button=True)
             raw_out = gr.Textbox(label="Gremlin Without Template", show_copy_button=True)
-            initilized_exec_out = gr.Code(label="Query With Template Output", language="json", elem_classes="code-container-show")
-            raw_exec_out = gr.Code(label="Query Without Template Output", language="json", elem_classes="code-container-show")
+            tmpl_exec_out = gr.Code(label="Query With Template Output", language="json",
+                                    elem_classes="code-container-show")
+            raw_exec_out = gr.Code(label="Query Without Template Output", language="json",
+                                   elem_classes="code-container-show")
 
         with gr.Column(scale=1):
             example_num_slider = gr.Slider(
@@ -124,5 +123,5 @@ def create_text2gremlin_block():
     btn.click(  # pylint: disable=no-member
         fn=gremlin_generate,
         inputs=[input_box, example_num_slider, schema_box],
-        outputs=[match, initialized_out, raw_out, initilized_exec_out, raw_exec_out]
+        outputs=[match, initialized_out, raw_out, tmpl_exec_out, raw_exec_out]
     )

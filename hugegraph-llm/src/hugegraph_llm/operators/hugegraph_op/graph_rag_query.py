@@ -208,7 +208,7 @@ class GraphRAGQuery:
                 edge_limit=edge_limit_amount,
                 max_items=self._max_items,
             )
-            log.debug("Kneighbor gremlin query: %s", gremlin_query)
+            log.debug("Kneighbor gremlin query: %s", gremlin_query.replace("\n", "").replace(" ", ""))
             paths = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
 
             graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_graph_query_result(
