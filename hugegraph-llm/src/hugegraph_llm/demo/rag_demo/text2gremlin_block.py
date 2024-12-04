@@ -92,7 +92,10 @@ def create_text2gremlin_block():
     > e.g. `[{"query":"who is peter", "gremlin":"g.V().has('name', 'peter')"}]`
     """)
     with gr.Row():
-        file = gr.File(label="Upload Text-Gremlin Pairs File")
+        file = gr.File(
+            value=os.path.join(resource_path, "demo", "text2gremlin.csv"),
+            label="Upload Text-Gremlin Pairs File"
+        )
         out = gr.Textbox(label="Result Message")
     with gr.Row():
         btn = gr.Button("Build Example Vector Index", variant="primary")
