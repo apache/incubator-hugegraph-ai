@@ -132,8 +132,9 @@ class GraphRAGQuery:
         # 2. Try to perform a query based on subgraph-search if the previous query failed
         if not context.get("graph_result"):
             context = self._subgraph_query(context)
-
-        log.debug("Knowledge from Graph:\n%s", "\n".join(context["graph_result"]))
+            log.debug("No Knowledge Extracted from Graph")
+        else: 
+            log.debug("Knowledge from Graph:\n%s", "\n".join(context["graph_result"]))
         return context
 
     def _gremlin_generate_query(self, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -169,6 +170,7 @@ class GraphRAGQuery:
                 )
         except Exception as e:
             log.error(e)
+            context["graph_result"] = ""
         return context
 
     def _subgraph_query(self, context: Dict[str, Any]) -> Dict[str, Any]:
