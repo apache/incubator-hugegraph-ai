@@ -79,7 +79,9 @@ def gremlin_generate(inp, example_num, schema) -> Tuple[str, str]:
         context["raw_exec_res"] = run_gremlin_query(query=context["raw_result"])
     except NotFoundError as e:
         context["raw_exec_res"] = "Query Execution Error"
-    return context.get("match_result", "No Results"), context["result"], context["raw_result"], context["template_exec_res"], context["raw_exec_res"]
+
+    match_result = json.dumps(context.get("match_result", "No Results"), ensure_ascii=False, indent=2)
+    return match_result, context["result"], context["raw_result"], context["template_exec_res"], context["raw_exec_res"]
 
 
 def create_text2gremlin_block():
@@ -100,7 +102,7 @@ def create_text2gremlin_block():
     with gr.Row():
         with gr.Column(scale=1):
             input_box = gr.Textbox(value="Tell me about Al Pacino.", label="Nature Language Query")
-            match = gr.Textbox(label="Best-Matched Examples", show_copy_button=True)
+            match = gr.Code(label="Best-Matched Examples", language="javascript", elem_classes="code-container-show")
             initialized_out = gr.Textbox(label="Gremlin With Template", show_copy_button=True)
             raw_out = gr.Textbox(label="Gremlin Without Template", show_copy_button=True)
             initilized_exec_out = gr.Code(label="Query With Template Output", language="json", elem_classes="code-container-show")
