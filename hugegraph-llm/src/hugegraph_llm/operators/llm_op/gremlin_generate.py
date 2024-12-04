@@ -14,8 +14,8 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-import asyncio
 
+import asyncio
 import json
 import re
 from typing import Optional, List, Dict, Any, Union
@@ -95,14 +95,14 @@ class GremlinGenerateSynthesize:
     async def async_generate(self, context: Dict[str, Any]):
         async_tasks = {}
         query = context.get("query")
-        raw_example = [{'query':'who is peter', 'gremlin':"g.V().has('name', 'peter')"}]
+        raw_example = [{'query': 'who is peter', 'gremlin': "g.V().has('name', 'peter')"}]
         raw_prompt = gremlin_generate_prompt(
             query,
             self.schema,
             self._format_examples(examples=raw_example),
             self._format_vertices(vertices=self.vertices)
         )
-        async_tasks["raw_answer"] = asyncio.create_task(self.llm.agenerate(prompt = raw_prompt))
+        async_tasks["raw_answer"] = asyncio.create_task(self.llm.agenerate(prompt=raw_prompt))
 
         examples = context.get("match_result")
         prompt = gremlin_generate_prompt(
@@ -111,22 +111,22 @@ class GremlinGenerateSynthesize:
             self._format_examples(examples=examples),
             self._format_vertices(vertices=self.vertices)
         )
-        async_tasks["initilized_answer"] = asyncio.create_task(self.llm.agenerate(prompt = prompt))
-        
+        async_tasks["initialized_answer"] = asyncio.create_task(self.llm.agenerate(prompt=prompt))
+
         raw_response = await async_tasks["raw_answer"]
-        initialized_response = await async_tasks["initilized_answer"]
+        initialized_response = await async_tasks["initialized_answer"]
+        log.debug("Text2Gremlin with tmpl prompt:\n %s,\n LLM Response: %s", prompt, initialized_response)
 
         context["result"] = self._extract_gremlin(response=initialized_response)
         context["raw_result"] = self._extract_gremlin(response=raw_response)
         context["call_count"] = context.get("call_count", 0) + 2
-
 
         return context
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context.get("query", "")
         if not query:
-                raise ValueError("query is required")
+            raise ValueError("query is required")
 
         context = asyncio.run(self.async_generate(context))
         return context
