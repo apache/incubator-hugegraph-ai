@@ -269,3 +269,24 @@ KEYWORDS:关键词1,关键词2,...,关键词n
 # Text:
 # {question}
 # """
+
+    gremlin_generate_prompt = """\
+Given the example query-gremlin pairs:
+{example}
+
+Given the graph schema:
+```json
+{schema}
+```
+
+Given the extracted vertex vid:
+{vertices}
+
+Generate gremlin from the following user query.
+{query}
+The output format must be like:
+```gremlin
+g.V().limit(10)
+```
+The generated gremlin is:
+"""

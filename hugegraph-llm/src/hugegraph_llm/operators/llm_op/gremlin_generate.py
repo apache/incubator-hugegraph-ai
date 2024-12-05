@@ -23,40 +23,7 @@ from typing import Optional, List, Dict, Any, Union
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.utils.log import log
-
-
-def gremlin_generate_prompt(
-        query: str,
-        schema: str,
-        example: Optional[str] = None,
-        vertices: Optional[List[str]] = None
-) -> str:
-    prompt = ""
-    if example:
-        prompt += f"""\
-Given the example query-gremlin pairs:
-{example}
-"""
-    prompt += f"""\
-Given the graph schema:
-```json
-{schema}
-```
-"""
-    if vertices:
-        prompt += f"""\
-Given the extracted vertex vid:
-{vertices}
-"""
-    prompt += f"""\
-Generate gremlin from the following user query.
-{query}
-The output format must be like:
-```gremlin
-g.V().limit(10)
-```
-The generated gremlin is:"""
-    return prompt
+from hugegraph_llm.config import prompt
 
 
 class GremlinGenerateSynthesize:
@@ -64,13 +31,15 @@ class GremlinGenerateSynthesize:
             self,
             llm: BaseLLM = None,
             schema: Optional[Union[dict, str]] = None,
-            vertices: Optional[List[str]] = None
+            vertices: Optional[List[str]] = None,
+            gremlin_prompt: Optional[str] = prompt.gremlin_generate_prompt
     ) -> None:
         self.llm = llm or LLMs().get_text2gql_llm()
         if isinstance(schema, dict):
             schema = json.dumps(schema, ensure_ascii=False)
         self.schema = schema
         self.vertices = vertices
+        self.gremlin_prompt = gremlin_prompt
 
     def _extract_gremlin(self, response: str) -> str:
         match = re.search("```gremlin.*```", response, re.DOTALL)
@@ -96,22 +65,22 @@ class GremlinGenerateSynthesize:
         async_tasks = {}
         query = context.get("query")
         raw_example = [{'query': 'who is peter', 'gremlin': "g.V().has('name', 'peter')"}]
-        raw_prompt = gremlin_generate_prompt(
-            query,
-            self.schema,
-            self._format_examples(examples=raw_example),
-            self._format_vertices(vertices=self.vertices)
+        raw_prompt = self.gremlin_prompt.format(
+            query=query,
+            schema=self.schema,
+            example=self._format_examples(examples=raw_example),
+            vertices=self._format_vertices(vertices=self.vertices)
         )
         async_tasks["raw_answer"] = asyncio.create_task(self.llm.agenerate(prompt=raw_prompt))
 
         examples = context.get("match_result")
-        prompt = gremlin_generate_prompt(
-            query,
-            self.schema,
-            self._format_examples(examples=examples),
-            self._format_vertices(vertices=self.vertices)
+        init_prompt = self.gremlin_prompt.format(
+            query=query,
+            schema=self.schema,
+            example=self._format_examples(examples=examples),
+            vertices=self._format_vertices(vertices=self.vertices)
         )
-        async_tasks["initialized_answer"] = asyncio.create_task(self.llm.agenerate(prompt=prompt))
+        async_tasks["initialized_answer"] = asyncio.create_task(self.llm.agenerate(prompt=init_prompt))
 
         raw_response = await async_tasks["raw_answer"]
         initialized_response = await async_tasks["initialized_answer"]
