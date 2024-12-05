@@ -105,6 +105,9 @@ class ConfigData:
     graph_pwd: Optional[str] = "xxx"
     graph_space: Optional[str] = None
     limit_property: Optional[str] = "False"
+    max_items: Optional[int] = 20
+    edge_limit_per_label: Optional[int] = 10
+    dis_threshold: Optional[float] = 0.9
 
     """Admin settings"""
     enable_login: Optional[str] = "False"
