@@ -62,7 +62,7 @@ class BaseConfig(BaseSettings):
             if k in env_config and env_config[k] == v:
                 continue
             log.info("Update %s: %s=%s", env_path, k, v)
-            set_key(env_path, k, v, quote_mode="never")
+            set_key(env_path, k, v if v else "", quote_mode="never")
 
     def check_env(self):
         config_dict = self.model_dump()
@@ -72,10 +72,12 @@ class BaseConfig(BaseSettings):
             if k in env_config:
                 continue
             log.info("Update %s: %s=%s", env_path, k, v)
-            set_key(env_path, k, v, quote_mode="never")
+            set_key(env_path, k, v if v else "", quote_mode="never")
 
     def __init__(self, **data):
         super().__init__(**data)
         if not os.path.exists(env_path):
             self.generate_env()
+        else:
+            self.check_env()
         log.info("Loading %s successfully!", env_path)
