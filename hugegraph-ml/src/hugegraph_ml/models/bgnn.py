@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# pylint: disable=E1102,E0401,E0711,E0606,E0602
+# pylint: disable=E1102,E0401,E0711,E0606,E0602,C0103,C0206,W0612,C0209,R1705,C0200,R1735,W0201
 
 """
 Boost-GNN (BGNN)
@@ -335,14 +335,7 @@ class BGNNPredictor:
         train_metric, val_metric, test_metric = metrics[metric_name][-1]
         if epoch and epoch % logging_epochs == 0:
             pbar.set_description(
-                "Epoch {:05d} | Loss {:.3f} | Loss {:.3f}/{:.3f}/{:.3f} | Time {:.4f}".format(
-                    epoch,
-                    loss,
-                    train_metric,
-                    val_metric,
-                    test_metric,
-                    epoch_time,
-                )
+                f"Epoch {epoch:05d} | Loss {loss:.3f} | Loss {train_metric:.3f}/{val_metric:.3f}/{test_metric:.3f} | Time {epoch_time:.4f}"
             )
 
     def fit(

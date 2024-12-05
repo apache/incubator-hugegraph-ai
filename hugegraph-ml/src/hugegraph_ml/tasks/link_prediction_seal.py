@@ -15,20 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=R1728
 
-from typing import Literal
-
-import torch
-from dgl import DGLGraph, NID, EID
-from torch import nn
-from tqdm import tqdm
-from dgl.dataloading import GraphDataLoader
-from torch.nn import BCEWithLogitsLoss
 import time
+import torch
+from torch.nn import BCEWithLogitsLoss
+from dgl import DGLGraph, NID, EID
+from dgl.dataloading import GraphDataLoader
+from tqdm import tqdm
 import numpy as np
-from hugegraph_ml.models.seal import SEALData, DGCNN, evaluate_hits
-from hugegraph_ml.utils.early_stopping import EarlyStopping
-
+from hugegraph_ml.models.seal import SEALData, evaluate_hits
 
 class LinkPredictionSeal:
     def __init__(self, graph: DGLGraph, split_edge, model):
@@ -55,8 +51,6 @@ class LinkPredictionSeal:
             num_workers=32,
             print_fn=print,
         )
-        node_attribute = seal_data.ndata["feat"]
-        edge_weight = seal_data.edata["weight"].float()
         train_data = seal_data("train")
         val_data = seal_data("valid")
         test_data = seal_data("test")
@@ -103,9 +97,7 @@ class LinkPredictionSeal:
         optimizer = torch.optim.Adam(parameters, lr=lr)
         loss_fn = BCEWithLogitsLoss()
         print(
-            "Total parameters: {}".format(
-                sum([p.numel() for p in self._model.parameters()])
-            )
+            f"Total parameters: {sum([p.numel() for p in self._model.parameters()])}"
         )
 
         # train and evaluate loop
@@ -135,16 +127,7 @@ class LinkPredictionSeal:
                 )
                 evaluate_time = time.time()
                 print(
-                    "Epoch-{}, train loss: {:.4f}, hits@{}: val-{:.4f}, test-{:.4f}, "
-                    "cost time: train-{:.1f}s, total-{:.1f}s".format(
-                        epoch,
-                        loss,
-                        50,
-                        val_metric,
-                        test_metric,
-                        train_time - start_time,
-                        evaluate_time - start_time,
-                    )
+                    f"Epoch-{epoch}, train loss: {loss:.4f}, hits@{50}: val-{val_metric:.4f}, test-{test_metric:.4f}, cost time: train-{train_time - start_time:.1f}s, total-{evaluate_time - start_time:.1f}s"
                 )
                 summary_val.append(val_metric)
                 summary_test.append(test_metric)
@@ -152,9 +135,7 @@ class LinkPredictionSeal:
 
         print("Experiment Results:")
         print(
-            "Best hits@{}: {:.4f}, epoch: {}".format(
-                50, np.max(summary_test), np.argmax(summary_test)
-            )
+            f"Best hits@{50}: {np.max(summary_test):.4f}, epoch: {np.argmax(summary_test)}"
         )
 
     @torch.no_grad()

@@ -17,7 +17,7 @@
 
 
 from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
-from hugegraph_ml.models.gatne import DGLGATNE, NeighborSampler
+from hugegraph_ml.models.gatne import DGLGATNE
 from hugegraph_ml.tasks.hetero_sample_embed_gatne import HeteroSampleEmbedGATNE
 
 

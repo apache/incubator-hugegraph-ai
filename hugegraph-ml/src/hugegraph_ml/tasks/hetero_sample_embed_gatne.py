@@ -16,11 +16,11 @@
 # under the License.
 
 
+import random
 import dgl
 import torch
 from torch import nn
 from tqdm.auto import tqdm
-import random
 from hugegraph_ml.models.gatne import (
     construct_typenodes_from_graph,
     generate_pairs,
@@ -58,7 +58,7 @@ class HeteroSampleEmbedGATNE:
         all_walks = []
         for i in range(edge_type_count):
             nodes = torch.LongTensor(type_nodes[i] * num_walks).to(self._device)
-            traces, types = dgl.sampling.random_walk(
+            traces, _ = dgl.sampling.random_walk(
                 self.graph,
                 nodes,
                 metapath=[self.graph.etypes[i]] * (neighbor_samples - 1),
@@ -84,14 +84,13 @@ class HeteroSampleEmbedGATNE:
             lr=lr,
         )
 
-        tensors = []
         for epoch in range(n_epochs):
             self._model.train()
             random.shuffle(train_pairs)
 
             data_iter = tqdm(
                 train_dataloader,
-                desc="epoch %d" % (epoch),
+                desc=f"epoch {epoch}",
                 total=(len(train_pairs) + (batch_size - 1)) // batch_size,
             )
             avg_loss = 0.0

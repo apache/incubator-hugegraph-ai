@@ -18,8 +18,6 @@
 import torch
 import dgl
 from torch import nn
-from tqdm import trange
-import numpy as np
 from hugegraph_ml.models.pgnn import (
     get_dataset,
     preselect_anchor,
@@ -85,10 +83,10 @@ class LinkPredictionPGNN:
             if epoch % 100 == 0:
                 print(
                     epoch,
-                    "Loss {:.4f}".format(loss_train),
-                    "Train AUC: {:.4f}".format(auc_train),
-                    "Val AUC: {:.4f}".format(auc_val),
-                    "Test AUC: {:.4f}".format(auc_test),
-                    "Best Val AUC: {:.4f}".format(best_auc_val),
-                    "Best Test AUC: {:.4f}".format(best_auc_test),
+                    f"Loss {loss_train:.4f}",
+                    f"Train AUC: {auc_train:.4f}",
+                    f"Val AUC: {auc_val:.4f}",
+                    f"Test AUC: {auc_test:.4f}",
+                    f"Best Val AUC: {best_auc_val:.4f}",
+                    f"Best Test AUC: {best_auc_test:.4f}",
                 )

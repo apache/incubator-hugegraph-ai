@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=C0301
 
 from typing import Literal
 
@@ -140,7 +141,7 @@ class NodeClassifyWithSample:
         test_labels = []
         total_loss = 0
         with torch.no_grad():
-            for it, sg in enumerate(self.dataloader):
+            for _, sg in enumerate(self.dataloader):
                 sg_feats = feats[sg.ndata["_ID"]]
                 sg_labels = labels[sg.ndata["_ID"]]
                 sg_test_msak = test_mask[sg.ndata["_ID"]].bool()

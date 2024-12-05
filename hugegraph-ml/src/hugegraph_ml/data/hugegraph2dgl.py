@@ -16,6 +16,7 @@
 # under the License.
 
 # pylint: disable=too-many-branches
+# pylint: disable=C0304
 
 import warnings
 from typing import Optional, List
