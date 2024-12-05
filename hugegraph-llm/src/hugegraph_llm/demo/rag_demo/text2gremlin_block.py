@@ -17,7 +17,7 @@
 
 import json
 import os
-from typing import Any
+from typing import Any, Tuple
 
 import gradio as gr
 import pandas as pd
@@ -91,7 +91,7 @@ def gremlin_generate(inp, example_num, schema) -> tuple[str, str] | tuple[str, A
     return match_result, context["result"], context["raw_result"], context["template_exec_res"], context["raw_exec_res"]
 
 
-def create_text2gremlin_block():
+def create_text2gremlin_block() -> Tuple:
     gr.Markdown("""## Build Vector Template Index (Optional)  
     > Uploaded CSV file should be in `query,gremlin` format below:    
     > e.g. `who is peter?`,`g.V().has('name', 'peter')`    
@@ -111,7 +111,7 @@ def create_text2gremlin_block():
 
     with gr.Row():
         with gr.Column(scale=1):
-            input_box = gr.Textbox(value=prompt.default_question, label="Nature Language Query")
+            input_box = gr.Textbox(value=prompt.default_question, label="Nature Language Query", show_copy_button=True)
             match = gr.Code(label="Similar Template (TopN)", language="javascript", elem_classes="code-container-show")
             initialized_out = gr.Textbox(label="Gremlin With Template", show_copy_button=True)
             raw_out = gr.Textbox(label="Gremlin Without Template", show_copy_button=True)
@@ -128,10 +128,12 @@ def create_text2gremlin_block():
                 value=2,
                 label="Number of refer examples"
             )
-            schema_box = gr.Textbox(value=prompt.text2gql_graph_schema, label="Schema", lines=2)
+            schema_box = gr.Textbox(value=prompt.text2gql_graph_schema, label="Schema", lines=2, show_copy_button=True)
             btn = gr.Button("Text2Gremlin", variant="primary")
     btn.click(  # pylint: disable=no-member
         fn=gremlin_generate,
         inputs=[input_box, example_num_slider, schema_box],
         outputs=[match, initialized_out, raw_out, tmpl_exec_out, raw_exec_out]
     ).then(store_schema, inputs=[schema_box, input_box],)
+
+    return input_box, schema_box

@@ -220,7 +220,7 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
 """
 
     # TODO: we should provide a better example to reduce the useless information
-    text2gql_graph_schema = """hugegraph"""
+    text2gql_graph_schema = ConfigData.graph_name
 
     # Extracted from llm_op/keyword_extract.py
     keywords_extract_prompt = """指令：
