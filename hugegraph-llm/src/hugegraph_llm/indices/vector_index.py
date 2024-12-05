@@ -19,10 +19,10 @@ import os
 import pickle as pkl
 from copy import deepcopy
 from typing import List, Dict, Any, Set, Union
-from hugegraph_llm.config import settings
 import faiss
 import numpy as np
 from hugegraph_llm.utils.log import log
+from hugegraph_llm.config import settings
 
 INDEX_FILE_NAME = "index.faiss"
 PROPERTIES_FILE_NAME = "properties.pkl"
@@ -85,7 +85,7 @@ class VectorIndex:
         return remove_num
 
     def search(self, query_vector: List[float], top_k: int) -> List[Dict[str, Any]]:
-        dis_threshold = settings.dis_threshold
+        dis_threshold = float(settings.dis_threshold)
         if self.index.ntotal == 0:
             return []
 
