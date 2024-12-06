@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.right (c) 2024 by jinsong, All Rights Reserved.
 
-# pylint: disable=E1102
+# pylint: disable=E1102,C0103,R1705.R1734
 
 """
 Bootstrapped Graph Latents (BGRL)
@@ -143,7 +143,6 @@ class BGRL(nn.Module):
         target_x = transform_2(graph)
         online_x, target_x = dgl.add_self_loop(online_x), dgl.add_self_loop(target_x)
         online_feats, target_feats = online_x.ndata["feat"], target_x.ndata["feat"]
-        
         # forward online network
         online_y1 = self.online_encoder(online_x, online_feats)
         # prediction
@@ -151,7 +150,6 @@ class BGRL(nn.Module):
         # forward target network
         with torch.no_grad():
             target_y1 = self.target_encoder(target_x, target_feats).detach()
-            
         # forward online network 2
         online_y2 = self.online_encoder(target_x, target_feats)
         # prediction
@@ -159,7 +157,6 @@ class BGRL(nn.Module):
         # forward target network
         with torch.no_grad():
             target_y2 = self.target_encoder(online_x, online_feats).detach()
-        
         loss = (
             2
             - cosine_similarity(online_q1, target_y1.detach(), dim=-1).mean()
@@ -238,9 +235,7 @@ class CosineDecayScheduler:
             )
         else:
             raise ValueError(
-                "Step ({}) > total number of steps ({}).".format(
-                    step, self.total_steps
-                )
+                f"Step ({step}) > total number of steps ({self.total_steps})."
             )
 
 def get_graph_drop_transform(drop_edge_p, feat_mask_p):

@@ -27,9 +27,10 @@ Author's code: https://github.com/google-research/google-research/tree/master/cl
 DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/cluster_gcn
 """
 
-import dgl.nn as dglnn
-import torch.nn as nn
+from torch import nn
 import torch.nn.functional as F
+
+import dgl.nn as dglnn
 
 class SAGE(nn.Module):
     def __init__(self, in_feats, n_hidden, n_classes):

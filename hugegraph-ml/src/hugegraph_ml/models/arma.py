@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.right (c) 2024 by jinsong, All Rights Reserved.
 
-# pylint: disable=E1101
+# pylint: disable=E1101,C0103
 
 """
 auto-regressive moving average (ARMA)
@@ -28,11 +28,9 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/arma
 """
 
 import math
-
 import dgl.function as fn
-
 import torch
-import torch.nn as nn
+from torch import nn
 import torch.nn.functional as F
 
 

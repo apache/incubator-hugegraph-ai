@@ -17,10 +17,11 @@
 
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-statements
+# pylint: disable=E0401,C0302,C0103,W1514,R1735,R1734,C0206
 
 import os
 from typing import Optional
-
+import json
 import dgl
 import numpy as np
 import scipy
@@ -31,7 +32,6 @@ from dgl.data.utils import _get_dgl_url, download, load_graphs
 import networkx as nx
 from ogb.linkproppred import DglLinkPropPredDataset
 import pandas as pd
-import json
 from pyhugegraph.api.graph import GraphManager
 from pyhugegraph.api.schema import SchemaManager
 from pyhugegraph.client import PyHugeClient
@@ -381,7 +381,6 @@ def import_graph_from_nx(
     # create property schema
     # check props and create vertex label
     vertex_label = f"{dataset_name}_vertex"
-    props_value = {}
     client_schema.vertexLabel(vertex_label).useAutomaticId().ifNotExist().create()
     # add vertices for batch (note MAX_BATCH_NUM)
     idx_to_vertex_id = {}
@@ -532,7 +531,6 @@ def import_graph_from_ogb(
     else:
         raise ValueError("dataset not supported")
     graph_dgl = dataset_dgl[0]
-    split_edges = dataset_dgl.get_edge_split()
 
     client: PyHugeClient = PyHugeClient(
         ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace

@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=C0103
+
 from hugegraph_ml.models.bgnn import (
     GNNModelDGL,
     BGNNPredictor,
@@ -48,7 +50,7 @@ def bgnn_example():
         gbdt_depth=6,
         gbdt_lr=0.1,
     )
-    metrics = bgnn.fit(
+    _ = bgnn.fit(
         g,
         encoded_X,
         y,
