@@ -19,7 +19,7 @@
 import os
 
 from dotenv import dotenv_values, set_key
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from hugegraph_llm.utils.log import log
 
 dir_name = os.path.dirname
@@ -56,9 +56,15 @@ class BaseConfig(BaseSettings):
         config_dict = self.model_dump()
         config_dict = {k.upper(): v for k, v in config_dict.items()}
         env_config = dotenv_values(f"{env_path}")
+
+        # dotenv_values make None to '', while pydantic make None to None
+        # dotenv_values make integer to string, while pydantic make integer to integer
         for k, v in config_dict.items():
-            if k in env_config and env_config[k] == v:
-                continue
+            if k in env_config:
+                if not (env_config[k] or v):
+                    continue
+                if env_config[k] == str(v):
+                    continue
             log.info("Update %s: %s=%s", env_path, k, v)
             set_key(env_path, k, v if v else "", quote_mode="never")
 
