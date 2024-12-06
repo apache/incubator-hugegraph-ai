@@ -22,7 +22,6 @@ from typing import Optional, Dict
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils import huge_router as router
 
-# test CI, SoJ, 2024.12.6
 class AuthManager(HugeParamsBase):
 
     @router.http("GET", "auth/users")
