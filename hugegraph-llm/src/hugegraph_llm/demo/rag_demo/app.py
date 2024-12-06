@@ -26,7 +26,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from hugegraph_llm.api.admin_api import admin_http_api
 from hugegraph_llm.api.rag_api import rag_http_api
-from hugegraph_llm.config import settings, prompt
+from hugegraph_llm.config import huge_settings, prompt
 from hugegraph_llm.demo.rag_demo.admin_block import create_admin_block, log_stream
 from hugegraph_llm.demo.rag_demo.configs_block import (
     create_configs_block,
@@ -99,11 +99,13 @@ def init_rag_ui() -> gr.Interface:
             create_admin_block()
 
         def refresh_ui_config_prompt() -> tuple:
-            settings.from_env()
+            # we can use its __init__() for in-place reload
+            # settings.from_env()
+            huge_settings.__init__()
             prompt.ensure_yaml_file_exists()
             return (
-                settings.graph_ip, settings.graph_port, settings.graph_name, settings.graph_user,
-                settings.graph_pwd, settings.graph_space, prompt.graph_schema, prompt.extract_graph_prompt,
+                huge_settings.graph_ip, huge_settings.graph_port, huge_settings.graph_name, huge_settings.graph_user,
+                huge_settings.graph_pwd, huge_settings.graph_space, prompt.graph_schema, prompt.extract_graph_prompt,
                 prompt.default_question, prompt.answer_prompt, prompt.keywords_extract_prompt
             )
 
@@ -131,7 +133,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     app = FastAPI()
 
-    settings.check_env()
+    # we don't need to manually check the env now
+    # settings.check_env()
     prompt.update_yaml_file()
 
     auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"

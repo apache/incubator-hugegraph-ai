@@ -26,7 +26,7 @@ import gradio as gr
 from .hugegraph_utils import get_hg_client, clean_hg_data
 from .log import log
 from .vector_index_utils import read_documents
-from ..config import resource_path, settings
+from ..config import resource_path, huge_settings
 from ..indices.vector_index import VectorIndex
 from ..models.embeddings.init_embedding import Embeddings
 from ..models.llms.init_llm import LLMs
@@ -36,7 +36,7 @@ from ..operators.kg_construction_task import KgBuilder
 def get_graph_index_info():
     builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     context = builder.fetch_graph_data().run()
-    vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, settings.graph_name, "graph_vids")))
+    vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
     context["vid_index"] = {
         "embed_dim": vector_index.index.d,
         "num_vectors": vector_index.index.ntotal,
@@ -47,7 +47,7 @@ def get_graph_index_info():
 
 def clean_all_graph_index():
     clean_hg_data()
-    VectorIndex.clean(str(os.path.join(resource_path, settings.graph_name, "graph_vids")))
+    VectorIndex.clean(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
     gr.Info("Clean graph index successfully!")
 
 

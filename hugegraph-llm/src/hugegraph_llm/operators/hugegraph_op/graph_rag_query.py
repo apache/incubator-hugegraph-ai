@@ -16,7 +16,7 @@
 # under the License.
 from typing import Any, Dict, Optional, List, Set, Tuple
 
-from hugegraph_llm.config import settings
+from hugegraph_llm.config import huge_settings
 from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
 
@@ -74,18 +74,18 @@ class GraphRAGQuery:
     def __init__(self, max_deep: int = 2, max_items: int = 20, max_v_prop_len: int = 2048,
                  max_e_prop_len: int = 256, prop_to_match: Optional[str] = None):
         self._client = PyHugeClient(
-            settings.graph_ip,
-            settings.graph_port,
-            settings.graph_name,
-            settings.graph_user,
-            settings.graph_pwd,
-            settings.graph_space,
+            huge_settings.graph_ip,
+            huge_settings.graph_port,
+            huge_settings.graph_name,
+            huge_settings.graph_user,
+            huge_settings.graph_pwd,
+            huge_settings.graph_space,
         )
         self._max_deep = max_deep
         self._max_items = max_items
         self._prop_to_match = prop_to_match
         self._schema = ""
-        self._limit_property = settings.limit_property.lower() == "true"
+        self._limit_property = huge_settings.limit_property.lower() == "true"
         self._max_v_prop_len = max_v_prop_len
         self._max_e_prop_len = max_e_prop_len
 
