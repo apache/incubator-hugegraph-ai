@@ -51,28 +51,6 @@ class SemanticIdQuery:
             settings.graph_space,
         )
 
-    def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        graph_query_list = set()
-        if self.by == "query":
-            query = context["query"]
-            query_vector = self.embedding.get_text_embedding(query)
-            results = self.vector_index.search(query_vector, top_k=self.topk_per_query)
-            if results:
-                graph_query_list.update(results[:self.topk_per_query])
-        else:  # by keywords
-            keywords = context.get("keywords", [])
-            if not keywords:
-                context["match_vids"] = []
-                return context
-
-            exact_match_vids, unmatched_vids = self._exact_match_vids(keywords)
-            graph_query_list.update(exact_match_vids)
-            fuzzy_match_vids = self._fuzzy_match_vids(unmatched_vids)
-            log.debug("Fuzzy match vids: %s", fuzzy_match_vids)
-            graph_query_list.update(fuzzy_match_vids)
-        context["match_vids"] = list(graph_query_list)
-        return context
-
     def _exact_match_vids(self, keywords: List[str]) -> Tuple[List[str], List[str]]:
         assert keywords, "keywords can't be empty, please check the logic"
         # TODO: we should add a global GraphSchemaCache to avoid calling the server every time
@@ -99,6 +77,27 @@ class SemanticIdQuery:
             keyword_vector = self.embedding.get_text_embedding(keyword)
             results = self.vector_index.search(keyword_vector, top_k=self.topk_per_keyword)
             if results:
-                # FIXME: type mismatch, got 'list[dict[str, Any]]' instead
                 fuzzy_match_result.extend(results[:self.topk_per_keyword])
         return fuzzy_match_result
+
+    def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        graph_query_list = set()
+        if self.by == "query":
+            query = context["query"]
+            query_vector = self.embedding.get_text_embedding(query)
+            results = self.vector_index.search(query_vector, top_k=self.topk_per_query)
+            if results:
+                graph_query_list.update(results[:self.topk_per_query])
+        else:  # by keywords
+            keywords = context.get("keywords", [])
+            if not keywords:
+                context["match_vids"] = []
+                return context
+
+            exact_match_vids, unmatched_vids = self._exact_match_vids(keywords)
+            graph_query_list.update(exact_match_vids)
+            fuzzy_match_vids = self._fuzzy_match_vids(unmatched_vids)
+            log.debug("Fuzzy match vids: %s", fuzzy_match_vids)
+            graph_query_list.update(fuzzy_match_vids)
+        context["match_vids"] = list(graph_query_list)
+        return context

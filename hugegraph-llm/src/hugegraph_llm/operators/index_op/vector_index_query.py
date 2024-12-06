@@ -35,7 +35,8 @@ class VectorIndexQuery:
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context.get("query")
         query_embedding = self.embedding.get_text_embedding(query)
-        results = self.vector_index.search(query_embedding, self.topk)
+        # TODO: why set dis_threshold=2?
+        results = self.vector_index.search(query_embedding, self.topk, dis_threshold=2)
         # TODO: check format results
         context["vector_result"] = results
         log.debug("KNOWLEDGE FROM VECTOR:\n%s", "\n".join(rel for rel in context["vector_result"]))
