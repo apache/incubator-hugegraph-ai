@@ -27,8 +27,6 @@ package_path = dir_name(dir_name(dir_name(dir_name(dir_name(os.path.abspath(__fi
 env_path = os.path.join(package_path, ".env")
 
 
-
-
 class BaseConfig(BaseSettings):
     class Config:
         env_file = env_path
@@ -80,4 +78,4 @@ class BaseConfig(BaseSettings):
             self.generate_env()
         else:
             self.check_env()
-        log.info("Loading %s successfully!", env_path)
+        log.info("Loading %s successfully for %s!", env_path, self.__class__.__name__)
