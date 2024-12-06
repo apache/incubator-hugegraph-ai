@@ -27,7 +27,6 @@ class AuthManager(HugeParamsBase):
     @router.http("GET", "auth/users")
     def list_users(self, limit=None):
         params = {"limit": limit} if limit is not None else {}
-        print("ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttest")
         return self._invoke_request(params=params)
 
     @router.http("POST", "auth/users")
