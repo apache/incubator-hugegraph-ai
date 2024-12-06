@@ -27,7 +27,6 @@ from pyhugegraph.utils.exceptions import (
 )
 from pyhugegraph.utils.log import log
 
-# test CI
 def create_exception(response_content):
     data = json.loads(response_content)
     if "ServiceUnavailableException" in data["exception"]:
