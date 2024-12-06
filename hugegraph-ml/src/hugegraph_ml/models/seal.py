@@ -776,7 +776,7 @@ class LightLogging(object):
                 ],
             )
             logging.info("Start Logging")
-            logging.info(f"Log file path: {log_name}")
+            logging.info("Log file path: %s", log_name)
 
         else:
             logging.basicConfig(
