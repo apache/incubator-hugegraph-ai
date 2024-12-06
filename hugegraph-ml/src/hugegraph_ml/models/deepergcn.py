@@ -27,12 +27,12 @@ Author's code: https://github.com/lightaime/deep_gcns_torch
 DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/deepergcn
 """
 
-import dgl.function as fn
-import torch.nn as nn
-import torch.nn.functional as F
-from dgl.nn.functional import edge_softmax
-from dgl.nn.pytorch.glob import AvgPooling
 import torch
+from torch import nn
+import torch.nn.functional as F
+
+import dgl.function as fn
+from dgl.nn.functional import edge_softmax
 
 # pylint: disable=E1101,E0401
 

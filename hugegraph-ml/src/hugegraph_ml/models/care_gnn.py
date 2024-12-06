@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# pylint: disable=E1101
+# pylint: disable=E1101,C0103
 
 """
 CAmouflage-REsistant GNN (CARE-GNN)
@@ -30,7 +30,7 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/caregnn
 import dgl.function as fn
 import numpy as np
 import torch as th
-import torch.nn as nn
+from torch import nn
 
 
 class CAREConv(nn.Module):
@@ -100,7 +100,7 @@ class CAREConv(nn.Module):
             g.ndata["h"] = feat
 
             hr = {}
-            for i, etype in enumerate(g.canonical_etypes):
+            for _, etype in enumerate(g.canonical_etypes):
                 g.apply_edges(self._calc_distance, etype=etype)
                 self.dist[etype] = g.edges[etype].data["d"]
                 sampled_edges = self._top_p_sampling(g[etype], self.p[etype])
@@ -109,10 +109,10 @@ class CAREConv(nn.Module):
                 g.send_and_recv(
                     sampled_edges,
                     fn.copy_u("h", "m"),
-                    fn.mean("m", "h_%s" % etype[1]),
+                    fn.mean("m", f"h_{etype[1]}"),
                     etype=etype,
                 )
-                hr[etype] = g.ndata["h_%s" % etype[1]]
+                hr[etype] = g.ndata[f"h_{etype[1]}"]
                 if self.activation is not None:
                     hr[etype] = self.activation(hr[etype])
 
@@ -175,7 +175,7 @@ class CAREGNN(nn.Module):
             )
 
             # Hidden layers with n - 2 layers
-            for i in range(self.num_layers - 2):
+            for _ in range(self.num_layers - 2):
                 self.layers.append(
                     CAREConv(
                         self.hid_dim,
