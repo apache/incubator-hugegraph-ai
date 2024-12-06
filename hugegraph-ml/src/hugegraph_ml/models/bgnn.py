@@ -335,7 +335,9 @@ class BGNNPredictor:
         train_metric, val_metric, test_metric = metrics[metric_name][-1]
         if epoch and epoch % logging_epochs == 0:
             pbar.set_description(
-                f"Epoch {epoch:05d} | Loss {loss:.3f} | Loss {train_metric:.3f}/{val_metric:.3f}/{test_metric:.3f} | Time {epoch_time:.4f}"
+                f"Epoch {epoch:05d} | Loss {loss:.3f} | \\"
+                f"Loss {train_metric:.3f}/{val_metric:.3f}/{test_metric:.3f} \\"
+                f" | Time {epoch_time:.4f}"
             )
 
     def fit(

@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# pylint: disable=E0401,R1719,C0103,R0205,R1721.R1705,R0205
+# pylint: disable=E0401,R1719,C0103,R0205,R1721.R1705,R0205,W0612
 
 """
 SEAL
@@ -28,10 +28,10 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/seal
 """
 
 import argparse
+import os
 import os.path as osp
 from copy import deepcopy
 import logging
-import os
 import time
 
 import torch
@@ -708,7 +708,7 @@ class SEALData(object):
         )
 
         if osp.exists(path):
-            self.print_fn("Load existing processed {} files".format(split_type))
+            self.print_fn(f"Load existing processed {split_type} files")
             graph_list, data = dgl.load_graphs(path)
             dataset = GraphDataSet(graph_list, data["labels"])
 
@@ -776,7 +776,7 @@ class LightLogging(object):
                 ],
             )
             logging.info("Start Logging")
-            logging.info("Log file path: {}".format(log_name))
+            logging.info("Log file path: %s", log_name)
 
         else:
             logging.basicConfig(
