@@ -31,7 +31,7 @@ from dgl.nn.pytorch.conv import AGNNConv
 from torch import nn
 import torch.nn.functional as F
 
-print("-----------------------------------------------------------------------------------------------------------------------------------------")
+print("------------------------------------------------------------------------------asdasd-----------------------------------------------------------")
 
 class AGNN(nn.Module):
     def __init__(self, num_layers, in_dim, hid_dim, out_dim, dropout):
