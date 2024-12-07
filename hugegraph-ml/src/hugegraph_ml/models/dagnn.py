@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# pylint: disable=E1101,C0103
+# pylint: disable=C0103
 
 """
 Deep Adaptive Graph Neural Network (DAGNN)

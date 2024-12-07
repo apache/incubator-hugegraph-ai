@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# pylint: disable=E0401,R1719,C0103,R0205,R1721.R1705,R0205,W0612
+# pylint: disable=R1719,C0103,R0205,R1721.R1705,R0205,W0612
 
 """
 SEAL

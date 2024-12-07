@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# pylint: disable=E1102,E0401,E0711,E0606,E0602,C0103,C0206,W0612,C0209,R1705,C0200,R1735,W0201
+# pylint: disable=C0103,C0206,W0612,C0209,R1705,C0200,R1735,W0201
 
 """
 Boost-GNN (BGNN)

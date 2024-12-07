@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# pylint: disable=E1101,E0401,C0103,R1732,C0200,R1705
+# pylint: disable=C0103,R1732,C0200,R1705
 
 """
 Position-aware Graph Neural Networks (P-GNN)

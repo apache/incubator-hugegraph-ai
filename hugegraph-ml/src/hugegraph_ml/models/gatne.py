@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.right (c) 2024 by jinsong, All Rights Reserved.
 
-# pylint: disable=E1101,R0205,C0200,R1732
+# pylint: disable=R0205,C0200,R1732
 
 """
 General Attributed Multiplex HeTerogeneous Network Embedding (GATNE)
