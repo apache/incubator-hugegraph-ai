@@ -103,12 +103,6 @@ class GraphRAGQuery:
         self._limit_property = settings.limit_property.lower() == "true"
         self._max_v_prop_len = max_v_prop_len
         self._max_e_prop_len = max_e_prop_len
-        self._gremlin_generator = GremlinGenerator(
-            llm=llm,
-            embedding=embedding,
-        )
-        self._num_gremlin_generate_example = num_gremlin_generate_example
-        self._with_gremlin_template = with_gremlin_template
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         # pylint: disable=R0915 (too-many-statements)
@@ -125,15 +119,10 @@ class GraphRAGQuery:
                 self._client = PyHugeClient(ip, port, graph, user, pwd, gs)
         assert self._client is not None, "No valid graph to search."
 
-        # initial flag: -1 means no result, 0 means subgraph query, 1 means gremlin query
-        context["graph_result_flag"] = -1
-        # 1. Try to perform a query based on the generated gremlin
-        context = self._gremlin_generate_query(context)
-        # 2. Try to perform a query based on subgraph-search if the previous query failed
-        if not context.get("graph_result"):
-            context = self._subgraph_query(context)
+        context = self._subgraph_query(context)
 
         if context.get("graph_result"):
+            context["graph_result_flag"] = 2
             log.debug("Knowledge from Graph:\n%s", "\n".join(context["graph_result"]))
         else:
             log.debug("No Knowledge Extracted from Graph")

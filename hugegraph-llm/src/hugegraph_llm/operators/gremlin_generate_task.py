@@ -16,10 +16,13 @@
 # under the License.
 from typing import Optional, List
 
+from hugegraph_llm.config import prompt
+
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.common_op.check_schema import CheckSchema
 from hugegraph_llm.operators.common_op.print_result import PrintResult
+from hugegraph_llm.operators.hugegraph_op.gremlin_execute import GremlinExecute
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.operators.index_op.build_gremlin_example_index import BuildGremlinExampleIndex
 from hugegraph_llm.operators.index_op.gremlin_example_index_query import GremlinExampleIndexQuery
@@ -28,7 +31,7 @@ from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_q
 
 
 class GremlinGenerator:
-    def __init__(self, llm: BaseLLM, embedding: BaseEmbedding):
+    def __init__(self, llm: BaseLLM = None, embedding: BaseEmbedding = None):
         self.embedding = []
         self.llm = llm
         self.embedding = embedding
@@ -58,8 +61,17 @@ class GremlinGenerator:
         self.operators.append(GremlinExampleIndexQuery(self.embedding, num_examples))
         return self
 
-    def gremlin_generate_synthesize(self, schema, gremlin_prompt, vertices: Optional[List[str]] = None):
+    def gremlin_generate_synthesize(
+            self,
+            schema=None,
+            gremlin_prompt=prompt.gremlin_generate_prompt,
+            vertices: Optional[List[str]] = None
+    ):
         self.operators.append(GremlinGenerateSynthesize(self.llm, schema, vertices, gremlin_prompt))
+        return self
+
+    def gremlin_execute(self):
+        self.operators.append(GremlinExecute())
         return self
 
     def print_result(self):
