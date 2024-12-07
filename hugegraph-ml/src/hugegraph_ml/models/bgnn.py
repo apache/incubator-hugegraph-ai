@@ -106,7 +106,7 @@ class BGNNPredictor:
         gbdt_alpha=1,
         random_seed=0,
     ):
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cpu")
 
         self.model = gnn_model.to(self.device)
         self.task = task
