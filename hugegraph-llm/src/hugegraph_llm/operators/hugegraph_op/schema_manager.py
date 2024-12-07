@@ -16,7 +16,7 @@
 # under the License.
 from typing import Dict, Any, Optional
 
-from hugegraph_llm.config import settings
+from hugegraph_llm.config import huge_settings
 from pyhugegraph.client import PyHugeClient
 
 
@@ -24,12 +24,12 @@ class SchemaManager:
     def __init__(self, graph_name: str):
         self.graph_name = graph_name
         self.client = PyHugeClient(
-            settings.graph_ip,
-            settings.graph_port,
+            huge_settings.graph_ip,
+            huge_settings.graph_port,
             self.graph_name,
-            settings.graph_user,
-            settings.graph_pwd,
-            settings.graph_space,
+            huge_settings.graph_user,
+            huge_settings.graph_pwd,
+            huge_settings.graph_space,
         )
         self.schema = self.client.schema()
 
