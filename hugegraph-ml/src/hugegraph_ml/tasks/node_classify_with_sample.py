@@ -34,7 +34,7 @@ class NodeClassifyWithSample:
         self.graph = graph
         self._model = model
         self.gpu = -1
-        self._device = ("cpu")
+        self._device = "cpu"
         self._early_stopping = None
         self._is_trained = False
         self.num_partitions = 100
@@ -151,3 +151,4 @@ class NodeClassifyWithSample:
             _, predicted = torch.max(test_logits, dim=1)
             accuracy = (predicted == test_labels[0]).sum().item() / len(test_labels[0])
         return {"accuracy": accuracy, "total_loss": total_loss.item()}
+        

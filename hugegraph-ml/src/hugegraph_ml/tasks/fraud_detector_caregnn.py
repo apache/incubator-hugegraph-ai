@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# pylint: disable=E0401,C0301
+# pylint: disable=C0301
 
 import torch
 from torch import nn
