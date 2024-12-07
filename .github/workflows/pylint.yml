@@ -25,9 +25,9 @@ jobs:
         pip install -r ./hugegraph-llm/requirements.txt
         pip install -r ./hugegraph-ml/requirements.txt
         pip install -r ./hugegraph-python-client/requirements.txt
-    - name: Analysing the code with pylint
-      run: |
-        bash ./style/code_format_and_analysis.sh -p
     - name: Check DGL version
       run: |
         python -c "import dgl; print(dgl.__version__)"  # 确保 DGL 版本匹配
+    - name: Analysing the code with pylint
+      run: |
+        bash ./style/code_format_and_analysis.sh -p
