@@ -105,7 +105,7 @@ class ARMAConv(nn.Module):
                 for t in range(self.T):
                     feats = feats * norm
                     g.ndata["h"] = feats
-                    g.update_all(fn.copy_u("h", "m"), fn.sum("m", "h"))
+                    g.update_all(fn.copy_u("h", "m"), fn.sum("m", "h")) # pylint: disable=E1101
                     feats = g.ndata.pop("h")
                     feats = feats * norm
 
