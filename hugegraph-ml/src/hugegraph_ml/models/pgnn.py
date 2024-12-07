@@ -59,8 +59,8 @@ class PGNN_layer(nn.Module):
             graph.srcdata.update({"u_feat": u_feat})
             graph.dstdata.update({"v_feat": v_feat})
 
-            graph.apply_edges(fn.u_mul_e("u_feat", "sp_dist", "u_message"))
-            graph.apply_edges(fn.v_add_e("v_feat", "u_message", "message"))
+            graph.apply_edges(fn.u_mul_e("u_feat", "sp_dist", "u_message")) # pylint: disable=E1101
+            graph.apply_edges(fn.v_add_e("v_feat", "u_message", "message")) # pylint: disable=E1101
 
             messages = torch.index_select(
                 graph.edata["message"],

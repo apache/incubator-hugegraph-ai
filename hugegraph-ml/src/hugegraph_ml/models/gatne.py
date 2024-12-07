@@ -118,7 +118,7 @@ class DGLGATNE(nn.Module):
                 block.dstdata[edge_type] = self.node_type_embeddings[output_nodes, i]
                 block.update_all(
                     fn.copy_u(edge_type, "m"),
-                    fn.sum("m", edge_type),
+                    fn.sum("m", edge_type), # pylint: disable=E1101
                     etype=edge_type,
                 )
                 node_type_embed.append(block.dstdata[edge_type])

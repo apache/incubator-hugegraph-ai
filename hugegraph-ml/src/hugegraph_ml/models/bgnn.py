@@ -239,7 +239,7 @@ class BGNNPredictor:
             elif self.task == "classification":
                 loss = F.cross_entropy(pred, y.long())
             else:
-                raise NotImplemented(
+                raise NotImplementedError(
                     "Unknown task. Supported tasks: classification, regression."
                 )
 
@@ -619,6 +619,7 @@ class GNNModelDGL(torch.nn.Module):
 
     def forward(self, graph, features):
         h = features
+        logits = None
         if self.use_mlp:
             if self.join_with_mlp:
                 h = torch.cat((h, self.mlp(features)), 1)

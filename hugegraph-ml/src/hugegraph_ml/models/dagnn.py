@@ -58,7 +58,7 @@ class DAGNNConv(nn.Module):
             for _ in range(self.k):
                 feats = feats * norm
                 graph.ndata["h"] = feats
-                graph.update_all(fn.copy_u("h", "m"), fn.sum("m", "h"))
+                graph.update_all(fn.copy_u("h", "m"), fn.sum("m", "h")) # pylint: disable=E1101
                 feats = graph.ndata["h"]
                 feats = feats * norm
                 results.append(feats)

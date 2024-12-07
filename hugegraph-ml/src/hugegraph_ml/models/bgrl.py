@@ -159,8 +159,8 @@ class BGRL(nn.Module):
             target_y2 = self.target_encoder(online_x, online_feats).detach()
         loss = (
             2
-            - cosine_similarity(online_q1, target_y1.detach(), dim=-1).mean()
-            - cosine_similarity(online_q2, target_y2.detach(), dim=-1).mean()
+            - cosine_similarity(online_q1, target_y1.detach(), dim=-1).mean() # pylint: disable=E1102
+            - cosine_similarity(online_q2, target_y2.detach(), dim=-1).mean() # pylint: disable=E1102
         )
         return loss
 

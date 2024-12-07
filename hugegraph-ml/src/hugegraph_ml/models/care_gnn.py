@@ -109,7 +109,7 @@ class CAREConv(nn.Module):
                 g.send_and_recv(
                     sampled_edges,
                     fn.copy_u("h", "m"),
-                    fn.mean("m", f"h_{etype[1]}"),
+                    fn.mean("m", f"h_{etype[1]}"), # pylint: disable=E1101
                     etype=etype,
                 )
                 hr[etype] = g.ndata[f"h_{etype[1]}"]
