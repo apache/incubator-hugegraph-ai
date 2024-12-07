@@ -19,7 +19,7 @@
 import os
 
 from dotenv import dotenv_values, set_key
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 from hugegraph_llm.utils.log import log
 
 dir_name = os.path.dirname
