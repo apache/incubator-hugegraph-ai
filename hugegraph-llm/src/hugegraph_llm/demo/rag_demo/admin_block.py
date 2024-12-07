@@ -30,7 +30,7 @@ async def log_stream(log_path: str, lines: int = 125):
     Stream the content of a log file like `tail -f`.
     """
     try:
-        with open(log_path, 'r') as file:
+        with open(log_path, 'r', encoding='utf-8') as file:
             buffer = deque(file, maxlen=lines)
             for line in buffer:
                 yield line  # Yield the initial lines
@@ -40,20 +40,20 @@ async def log_stream(log_path: str, lines: int = 125):
                     yield line
                 else:
                     await asyncio.sleep(0.1)  # Non-blocking sleep
-    except FileNotFoundError:
-        raise Exception(f"Log file not found: {log_path}")
+    except FileNotFoundError as exc:
+        raise Exception(f"Log file not found: {log_path}") from exc
     except Exception as e:
-        raise Exception(f"An error occurred while reading the log: {str(e)}")
+        raise Exception(f"An error occurred while reading the log: {str(e)}") from e
 
 
 # Functions to read each log file
 def read_llm_server_log(lines=250):
     log_path = "logs/llm-server.log"
     try:
-        with open(log_path, "r") as f:
+        with open(log_path, "r", encoding='utf-8') as f:
             return ''.join(deque(f, maxlen=lines))
     except FileNotFoundError:
-        log.critical(f"Log file not found: {log_path}")
+        log.critical("Log file not found: %s", log_path)
         return "LLM Server log file not found."
 
 
@@ -61,11 +61,11 @@ def read_llm_server_log(lines=250):
 def clear_llm_server_log():
     log_path = "logs/llm-server.log"
     try:
-        with open(log_path, "w") as f:
+        with open(log_path, "w", encoding='utf-8') as f:
             f.truncate(0)  # Clear the contents of the file
         return "LLM Server log cleared."
     except Exception as e:
-        log.error(f"An error occurred while clearing the log: {str(e)}")
+        log.error("An error occurred while clearing the log: %s", str(e))
         return "Failed to clear LLM Server log."
 
 
@@ -78,7 +78,7 @@ def check_password(password, request: Request = None):
         # Return logs and update visibility
         llm_log = read_llm_server_log()
         # Log the successful access with the IP address
-        log.info(f"Logs accessed successfully from IP: {client_ip}")
+        log.info("Logs accessed successfully from IP: %s", client_ip)
         return (
             llm_log,
             gr.update(visible=True),
@@ -86,16 +86,15 @@ def check_password(password, request: Request = None):
             gr.update(visible=True),
             gr.update(visible=False)
         )
-    else:
-        # Log the failed attempt with IP address
-        log.error(f"Incorrect password attempt from IP: {client_ip}")
-        return (
-            "",
-            gr.update(visible=False),
-            gr.update(visible=False),
-            gr.update(visible=False),
-            gr.update(value="Incorrect password. Access denied.", visible=True)
-        )
+    # Log the failed attempt with IP address
+    log.error("Incorrect password attempt from IP: %s", client_ip)
+    return (
+        "",
+        gr.update(visible=False),
+        gr.update(visible=False),
+        gr.update(visible=False),
+        gr.update(value="Incorrect password. Access denied.", visible=True)
+    )
 
 
 def create_admin_block():

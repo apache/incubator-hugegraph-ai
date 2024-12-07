@@ -42,6 +42,7 @@ def store_prompt(schema, example_prompt):
 
 def create_vector_graph_block():
     # pylint: disable=no-member
+    # pylint: disable=C0301
     gr.Markdown(
         """## Build Vector/Graph Index & Extract Knowledge Graph
 - Docs:

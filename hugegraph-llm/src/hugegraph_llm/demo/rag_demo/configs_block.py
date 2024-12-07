@@ -166,13 +166,13 @@ def apply_llm_config(current_llm, arg1, arg2, arg3, arg4, origin_call=None) -> i
     llm_option = getattr(settings, f"{current_llm}_llm_type")
     log.debug("llm option in apply_llm_config is %s", llm_option)
     status_code = -1
-    
+
     if llm_option == "openai":
         setattr(settings, f"openai_{current_llm}_api_key", arg1)
         setattr(settings, f"openai_{current_llm}_api_base", arg2)
         setattr(settings, f"openai_{current_llm}_language_model", arg3)
         setattr(settings, f"openai_{current_llm}_tokens", int(arg4))
-        
+
         test_url = getattr(settings, f"openai_{current_llm}_api_base") + "/chat/completions"
         log.debug(f"Type of openai {current_llm} max token is %s", type(arg4))
         data = {
@@ -182,10 +182,10 @@ def apply_llm_config(current_llm, arg1, arg2, arg3, arg4, origin_call=None) -> i
         }
         headers = {"Authorization": f"Bearer {arg1}"}
         status_code = test_api_connection(test_url, method="POST", headers=headers, body=data, origin_call=origin_call)
-    
+
     elif llm_option == "qianfan_wenxin":
         status_code = config_qianfan_model(arg1, arg2, arg3, settings_prefix=current_llm, origin_call=origin_call)
-    
+
     elif llm_option == "ollama/local":
         setattr(settings, f"ollama_{current_llm}_host", arg1)
         setattr(settings, f"ollama_{current_llm}_port", int(arg2))
@@ -194,11 +194,12 @@ def apply_llm_config(current_llm, arg1, arg2, arg3, arg4, origin_call=None) -> i
 
     gr.Info("Configured!")
     settings.update_env()
-    
+
     return status_code
 
 
 # TODO: refactor the function to reduce the number of statements & separate the logic
+#pylint: disable=C0301
 def create_configs_block() -> list:
     # pylint: disable=R0915 (too-many-statements)
     with gr.Accordion("1. Set up the HugeGraph server.", open=False):
@@ -262,7 +263,7 @@ def create_configs_block() -> list:
                 llm_config_input = []
                 if llm_type == "openai":
                     llm_config_input = [
-                        gr.Textbox(value=getattr(settings, f"openai_extract_api_key"), label="api_key", type="password"),
+                        gr.Textbox(value=getattr(settings, f"openai_extract_api_key"), label="api_key", type="password"), 
                         gr.Textbox(value=getattr(settings, f"openai_extract_api_base"), label="api_base"),
                         gr.Textbox(value=getattr(settings, f"openai_extract_language_model"), label="model_name"),
                         gr.Textbox(value=getattr(settings, f"openai_extract_tokens"), label="max_token"),
