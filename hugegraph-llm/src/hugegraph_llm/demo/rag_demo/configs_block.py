@@ -263,7 +263,7 @@ def create_configs_block() -> list:
                 llm_config_input = []
                 if llm_type == "openai":
                     llm_config_input = [
-                        gr.Textbox(value=getattr(settings, "openai_extract_api_key"), label="api_key", type="password"), 
+                        gr.Textbox(value=getattr(settings, "openai_extract_api_key"), label="api_key", type="password"),
                         gr.Textbox(value=getattr(settings, "openai_extract_api_base"), label="api_base"),
                         gr.Textbox(value=getattr(settings, "openai_extract_language_model"), label="model_name"),
                         gr.Textbox(value=getattr(settings, "openai_extract_tokens"), label="max_token"),
