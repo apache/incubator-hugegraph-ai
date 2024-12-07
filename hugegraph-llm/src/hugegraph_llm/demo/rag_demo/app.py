@@ -92,7 +92,7 @@ def init_rag_ui() -> gr.Interface:
         with gr.Tab(label="1. Build RAG Index 💡"):
             textbox_input_schema, textbox_info_extract_template = create_vector_graph_block()
         with gr.Tab(label="2. (Graph)RAG & User Functions 📖"):
-            textbox_inp, textbox_answer_prompt_input, textbox_keywords_extract_prompt_input = create_rag_block()
+            textbox_inp, textbox_answer_prompt_input, textbox_keywords_extract_prompt_input, textbox_custom_related_information = create_rag_block()
         with gr.Tab(label="3. Graph Tools 🚧"):
             create_other_block()
         with gr.Tab(label="4. Admin Tools ⚙️"):
@@ -106,7 +106,7 @@ def init_rag_ui() -> gr.Interface:
             return (
                 huge_settings.graph_ip, huge_settings.graph_port, huge_settings.graph_name, huge_settings.graph_user,
                 huge_settings.graph_pwd, huge_settings.graph_space, prompt.graph_schema, prompt.extract_graph_prompt,
-                prompt.default_question, prompt.answer_prompt, prompt.keywords_extract_prompt
+                prompt.default_question, prompt.answer_prompt, prompt.keywords_extract_prompt, prompt.custom_rerank_info
             )
 
         hugegraph_llm_ui.load(fn=refresh_ui_config_prompt, outputs=[
@@ -120,7 +120,8 @@ def init_rag_ui() -> gr.Interface:
             textbox_info_extract_template,
             textbox_inp,
             textbox_answer_prompt_input,
-            textbox_keywords_extract_prompt_input
+            textbox_keywords_extract_prompt_input,
+            textbox_custom_related_information
         ])
 
     return hugegraph_llm_ui

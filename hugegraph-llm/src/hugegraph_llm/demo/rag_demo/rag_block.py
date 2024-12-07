@@ -274,4 +274,4 @@ def create_rag_block():
     )
     questions_file.change(read_file_to_excel, questions_file, [qa_dataframe, answer_max_line_count])
     answer_max_line_count.change(change_showing_excel, answer_max_line_count, qa_dataframe)
-    return inp, answer_prompt_input, keywords_extract_prompt_input
+    return inp, answer_prompt_input, keywords_extract_prompt_input, custom_related_information
