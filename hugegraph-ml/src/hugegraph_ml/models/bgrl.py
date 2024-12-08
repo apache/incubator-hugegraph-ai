@@ -163,7 +163,7 @@ class BGRL(nn.Module):
             - cosine_similarity(online_q2, target_y2.detach(), dim=-1).mean()
         )
         return loss
-    
+
     def get_embedding(self, graph, feats):
         """
         Get the node embeddings from the encoder without computing gradients.
@@ -253,3 +253,4 @@ def get_graph_drop_transform(drop_edge_p, feat_mask_p):
         transforms.append(FeatMask(feat_mask_p, node_feat_names=["feat"]))
 
     return Compose(transforms)
+    

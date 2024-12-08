@@ -165,7 +165,7 @@ def split_edges(p, edges, data, non_train_ratio=0.2):
         {
             f"{p}_edges_train": edges[:, :split1],  # 80%
             f"{p}_edges_val": edges[:, split1:split2],  # 10%
-            f"p{}_edges_test": edges[:, split2:],  # 10%
+            f"{p}_edges_test": edges[:, split2:],  # 10%
         }
     )
 
