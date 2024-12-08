@@ -58,9 +58,9 @@ class KeywordExtract:
         self._language = context.get("language", self._language).lower()
         self._max_keywords = context.get("max_keywords", self._max_keywords)
 
-        prompt = f"{self._extract_template.format(question=self._query, max_keywords=self._max_keywords)}"
+        prompt_run = f"{self._extract_template.format(question=self._query, max_keywords=self._max_keywords)}"
         start_time = time.perf_counter()
-        response = self._llm.generate(prompt=prompt)
+        response = self._llm.generate(prompt=prompt_run)
         end_time = time.perf_counter()
         log.debug("Keyword extraction time: %.2f seconds", end_time - start_time)
 

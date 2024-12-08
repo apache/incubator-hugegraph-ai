@@ -50,7 +50,11 @@ def rag_answer(
     4. Synthesize the final answer.
     5. Run the pipeline and return the results.
     """
-    should_update_prompt = prompt.default_question != text or prompt.answer_prompt != answer_prompt or prompt.keywords_extract_prompt != keywords_extract_prompt
+    should_update_prompt = (
+        prompt.default_question != text or
+        prompt.answer_prompt != answer_prompt or
+        prompt.keywords_extract_prompt != keywords_extract_prompt
+    )
     if should_update_prompt or prompt.custom_rerank_info != custom_related_information:
         prompt.custom_rerank_info = custom_related_information
         prompt.default_question = text

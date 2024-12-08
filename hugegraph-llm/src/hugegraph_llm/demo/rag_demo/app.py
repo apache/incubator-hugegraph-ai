@@ -55,7 +55,7 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-
+# pylint: disable=C0301
 def init_rag_ui() -> gr.Interface:
     with gr.Blocks(
             theme="default",
@@ -67,7 +67,7 @@ def init_rag_ui() -> gr.Interface:
         """
         TODO: leave a general idea of the unresolved part
         graph_config_input = textbox_array_graph_config
-         = [settings.graph_ip, settings.graph_port, settings.graph_name, graph_user, settings.graph_pwd, settings.graph_space]
+         = [settings.graph_ip, settings.graph_port, settings.graph_name, graph_user, settings.graph_pwd, settings.graph_space] 
         
         llm_config_input = textbox_array_llm_config
          = if settings.llm_type == openai [settings.openai_api_key, settings.openai_api_base, settings.openai_language_model, settings.openai_max_tokens]

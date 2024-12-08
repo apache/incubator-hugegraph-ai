@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.right (c) 2024 by jinsong, All Rights Reserved.
 
-# pylint: disable=E1101,C0103
+# pylint: disable=C0103
 
 """
 auto-regressive moving average (ARMA)
@@ -105,7 +105,7 @@ class ARMAConv(nn.Module):
                 for t in range(self.T):
                     feats = feats * norm
                     g.ndata["h"] = feats
-                    g.update_all(fn.copy_u("h", "m"), fn.sum("m", "h"))
+                    g.update_all(fn.copy_u("h", "m"), fn.sum("m", "h")) # pylint: disable=E1101
                     feats = g.ndata.pop("h")
                     feats = feats * norm
 

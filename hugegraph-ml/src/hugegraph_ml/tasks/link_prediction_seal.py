@@ -127,7 +127,9 @@ class LinkPredictionSeal:
                 )
                 evaluate_time = time.time()
                 print(
-                    f"Epoch-{epoch}, train loss: {loss:.4f}, hits@{50}: val-{val_metric:.4f}, test-{test_metric:.4f}, cost time: train-{train_time - start_time:.1f}s, total-{evaluate_time - start_time:.1f}s"
+                    f"Epoch-{epoch}, train loss: {loss:.4f}, hits@{50}: val-{val_metric:.4f}, \\"
+                    f"test-{test_metric:.4f}, cost time: train-{train_time - start_time:.1f}s, \\"
+                    f"total-{evaluate_time - start_time:.1f}s"
                 )
                 summary_val.append(val_metric)
                 summary_test.append(test_metric)

@@ -17,7 +17,7 @@
 
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-statements
-# pylint: disable=E0401,C0302,C0103,W1514,R1735,R1734,C0206
+# pylint: disable=C0302,C0103,W1514,R1735,R1734,C0206
 
 import os
 from typing import Optional

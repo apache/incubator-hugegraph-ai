@@ -46,7 +46,6 @@ class DetectorCaregnn:
         feat = self.graph.ndata["feature"].to(self._device)
         train_mask = self.graph.ndata["train_mask"]
         val_mask = self.graph.ndata["val_mask"]
-        test_mask = self.graph.ndata["test_mask"]
         train_idx = (
             torch.nonzero(train_mask, as_tuple=False).squeeze(1).to(self._device)
         )
