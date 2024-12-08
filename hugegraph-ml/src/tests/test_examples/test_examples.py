@@ -29,6 +29,7 @@ from hugegraph_ml.examples.arma_example import arma_example
 from hugegraph_ml.examples.bgnn_example import bgnn_example
 from hugegraph_ml.examples.bgrl_example import bgrl_example
 from hugegraph_ml.examples.cluster_gcn_example import cluster_gcn_example
+from hugegraph_ml.examples.correct_and_smooth_example import cs_example
 from hugegraph_ml.examples.dagnn_example import dagnn_example
 from hugegraph_ml.examples.deepergcn_example import deepergcn_example
 from hugegraph_ml.examples.pgnn_example import pgnn_example
@@ -109,7 +110,13 @@ class TestHugegraph2DGL(unittest.TestCase):
             cluster_gcn_example(n_epochs=self.test_n_epochs)
         except ValueError:
             self.fail("model cluster-gcn example failed")
-
+            
+    def test_correct_and_smooth_example(self):
+        try:
+            cs_example(n_epochs=self.test_n_epochs)
+        except ValueError:
+            self.fail("model correct and smooth example failed")
+            
     def test_dagnn_example(self):
         try:
             dagnn_example(n_epochs=self.test_n_epochs)
@@ -133,3 +140,4 @@ class TestHugegraph2DGL(unittest.TestCase):
             seal_example(n_epochs=self.test_n_epochs)
         except ValueError:
             self.fail("model seal example failed")
+            
