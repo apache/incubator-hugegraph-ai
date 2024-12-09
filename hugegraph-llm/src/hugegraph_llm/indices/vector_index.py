@@ -24,6 +24,7 @@ import faiss
 import numpy as np
 
 from hugegraph_llm.utils.log import log
+from hugegraph_llm.config import settings
 
 INDEX_FILE_NAME = "index.faiss"
 PROPERTIES_FILE_NAME = "properties.pkl"
@@ -95,7 +96,7 @@ class VectorIndex:
         distances, indices = self.index.search(np.array([query_vector]), top_k)
         results = []
         for dist, i in zip(distances[0], indices[0]):
-            if dist < dis_threshold: # Smaller distances indicate higher similarity
+            if dist < dis_threshold:  # Smaller distances indicate higher similarity
                 results.append(deepcopy(self.properties[i]))
                 log.debug("[✓] Add valid distance %s to results.", dist)
             else:
