@@ -64,7 +64,7 @@ def clear_llm_server_log():
         with open(log_path, "w", encoding='utf-8') as f:
             f.truncate(0)  # Clear the contents of the file
         return "LLM Server log cleared."
-    except Exception as e:
+    except Exception as e: #pylint: disable=W0718
         log.error("An error occurred while clearing the log: %s", str(e))
         return "Failed to clear LLM Server log."
 
@@ -140,7 +140,7 @@ def create_admin_block():
                                                               variant="primary")
 
         # Define what happens when the password is submitted
-        submit_button.click(
+        submit_button.click( #pylint: disable=C0301
             fn=check_password,
             inputs=[password_input],
             outputs=[llm_server_log_output, hidden_row, clear_llm_server_button,
@@ -148,14 +148,14 @@ def create_admin_block():
         )
 
         # Define what happens when the Clear LLM Server Log button is clicked
-        clear_llm_server_button.click(
+        clear_llm_server_button.click( #pylint: disable=C0301
             fn=clear_llm_server_log,
             inputs=[],
             outputs=[llm_server_log_output],
         )
 
         # Define what happens when the Refresh LLM Server Log button is clicked
-        refresh_llm_server_button.click(
+        refresh_llm_server_button.click( #pylint: disable=C0301
             fn=read_llm_server_log,
             inputs=[],
             outputs=[llm_server_log_output],

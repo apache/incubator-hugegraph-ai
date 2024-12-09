@@ -161,20 +161,20 @@ def apply_graph_config(ip, port, name, user, pwd, gs, origin_call=None) -> int:
 
 
 # Different llm models have different parameters, so no meaningful argument names are given here
-def apply_llm_config(current_llm, arg1, arg2, arg3, arg4, origin_call=None) -> int:
-    log.debug("current llm in apply_llm_config is %s", current_llm)
-    llm_option = getattr(settings, f"{current_llm}_llm_type")
+def apply_llm_config(current_llm_config, arg1, arg2, arg3, arg4, origin_call=None) -> int:
+    log.debug("current llm in apply_llm_config is %s", current_llm_config)
+    llm_option = getattr(settings, f"{current_llm_config}_llm_type")
     log.debug("llm option in apply_llm_config is %s", llm_option)
     status_code = -1
 
     if llm_option == "openai":
-        setattr(settings, f"openai_{current_llm}_api_key", arg1)
-        setattr(settings, f"openai_{current_llm}_api_base", arg2)
-        setattr(settings, f"openai_{current_llm}_language_model", arg3)
-        setattr(settings, f"openai_{current_llm}_tokens", int(arg4))
+        setattr(settings, f"openai_{current_llm_config}_api_key", arg1)
+        setattr(settings, f"openai_{current_llm_config}_api_base", arg2)
+        setattr(settings, f"openai_{current_llm_config}_language_model", arg3)
+        setattr(settings, f"openai_{current_llm_config}_tokens", int(arg4))
 
-        test_url = getattr(settings, f"openai_{current_llm}_api_base") + "/chat/completions"
-        log.debug(f"Type of openai {current_llm} max token is %s", type(arg4))
+        test_url = getattr(settings, f"openai_{current_llm_config}_api_base") + "/chat/completions"
+        log.debug(f"Type of openai {current_llm_config} max token is %s", type(arg4))
         data = {
             "model": arg3,
             "temperature": 0.0,
@@ -184,12 +184,12 @@ def apply_llm_config(current_llm, arg1, arg2, arg3, arg4, origin_call=None) -> i
         status_code = test_api_connection(test_url, method="POST", headers=headers, body=data, origin_call=origin_call)
 
     elif llm_option == "qianfan_wenxin":
-        status_code = config_qianfan_model(arg1, arg2, arg3, settings_prefix=current_llm, origin_call=origin_call)
+        status_code = config_qianfan_model(arg1, arg2, arg3, settings_prefix=current_llm_config, origin_call=origin_call)
 
     elif llm_option == "ollama/local":
-        setattr(settings, f"ollama_{current_llm}_host", arg1)
-        setattr(settings, f"ollama_{current_llm}_port", int(arg2))
-        setattr(settings, f"ollama_{current_llm}_language_model", arg3)
+        setattr(settings, f"ollama_{current_llm_config}_host", arg1)
+        setattr(settings, f"ollama_{current_llm_config}_port", int(arg2))
+        setattr(settings, f"ollama_{current_llm_config}_language_model", arg3)
         status_code = test_api_connection(f"http://{arg1}:{arg2}", origin_call=origin_call)
 
     gr.Info("Configured!")
@@ -250,7 +250,7 @@ def create_configs_block() -> list:
                 else:
                     llm_config_input = [gr.Textbox(value="", visible=False) for _ in range(4)]
                 llm_config_button = gr.Button("Apply configuration")
-                llm_config_button.click(apply_llm_config_with_chat_op, inputs=llm_config_input)
+                llm_config_button.click(apply_llm_config_with_chat_op, inputs=llm_config_input) #pylint: disable=E1101
 
         with gr.Tab(label='mini_tasks'):
             extract_llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama/local"],
@@ -285,7 +285,7 @@ def create_configs_block() -> list:
                 else:
                     llm_config_input = [gr.Textbox(value="", visible=False) for _ in range(4)]
                 llm_config_button = gr.Button("Apply configuration")
-                llm_config_button.click(apply_llm_config_with_extract_op, inputs=llm_config_input)
+                llm_config_button.click(apply_llm_config_with_extract_op, inputs=llm_config_input) #pylint: disable=E1101
         with gr.Tab(label='text2gql'):
             text2gql_llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama/local"],
                             value=getattr(settings, "text2gql_llm_type"), label="type")
@@ -319,7 +319,7 @@ def create_configs_block() -> list:
                 else:
                     llm_config_input = [gr.Textbox(value="", visible=False) for _ in range(4)]
                 llm_config_button = gr.Button("Apply configuration")
-                llm_config_button.click(apply_llm_config_with_text2gql_op, inputs=llm_config_input)
+                llm_config_button.click(apply_llm_config_with_text2gql_op, inputs=llm_config_input) #pylint: disable=E1101
 
 
     with gr.Accordion("3. Set up the Embedding.", open=False):

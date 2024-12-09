@@ -110,13 +110,13 @@ class TestHugegraph2DGL(unittest.TestCase):
             cluster_gcn_example(n_epochs=self.test_n_epochs)
         except ValueError:
             self.fail("model cluster-gcn example failed")
-            
+ 
     def test_correct_and_smooth_example(self):
         try:
             cs_example(n_epochs=self.test_n_epochs)
         except ValueError:
             self.fail("model correct and smooth example failed")
-            
+
     def test_dagnn_example(self):
         try:
             dagnn_example(n_epochs=self.test_n_epochs)
@@ -139,5 +139,4 @@ class TestHugegraph2DGL(unittest.TestCase):
         try:
             seal_example(n_epochs=self.test_n_epochs)
         except ValueError:
-            self.fail("model seal example failed")
-            
+            self.fail("model seal example failed")  

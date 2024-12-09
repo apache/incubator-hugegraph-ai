@@ -107,7 +107,7 @@ def init_rag_ui() -> gr.Interface:
                 prompt.default_question, prompt.answer_prompt, prompt.keywords_extract_prompt
             )
 
-        hugegraph_llm_ui.load(fn=refresh_ui_config_prompt, outputs=[
+        hugegraph_llm_ui.load(fn=refresh_ui_config_prompt, outputs=[ #pylint: disable=E1101
             textbox_array_graph_config[0],
             textbox_array_graph_config[1],
             textbox_array_graph_config[2],
