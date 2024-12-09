@@ -86,14 +86,13 @@ class VectorIndex:
         self.properties = [p for i, p in enumerate(self.properties) if i not in indices]
         return remove_num
 
-    def search(self, query_vector: List[float], top_k: int) -> List[Any]:
+    def search(self, query_vector: List[float], top_k: int, dis_threshold: float = 0.9) -> List[Any]:
         if self.index.ntotal == 0:
             return []
 
         if len(query_vector) != self.index.d:
             raise ValueError("Query vector dimension does not match index dimension!")
 
-        dis_threshold = float(settings.dis_threshold)
         distances, indices = self.index.search(np.array([query_vector]), top_k)
         results = []
         for dist, i in zip(distances[0], indices[0]):
