@@ -22,11 +22,10 @@ graph systems and large language models.
 
 ## 3. Preparation
 
-1. Start the HugeGraph database, you can run it via [Docker](https://hub.docker.com/r/hugegraph/hugegraph)/[Binary Package](https://hugegraph.apache.org/docs/download/download/).  
-    Refer to detailed [doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance
+1. Start the HugeGraph database, you can contact HugeGraph Team for the environment.
 2. Clone this project
     ```bash
-    git clone https://github.com/apache/incubator-hugegraph-ai.git
+    git clone https://{username}@icode.baidu.com/baidu/starhugegraph/hugegraph-ai
     ```
 3. Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph_llm](src/hugegraph_llm)
     ```bash
@@ -52,10 +51,6 @@ graph systems and large language models.
     ```bash
     python3 -m hugegraph_llm.config.generate --update
     ```
-7. (__Optional__) You could use 
-    [hugegraph-hubble](https://hugegraph.apache.org/docs/quickstart/hugegraph-hubble/#21-use-docker-convenient-for-testdev) 
-    to visit the graph data, could run it via [Docker/Docker-Compose](https://hub.docker.com/r/hugegraph/hubble) 
-    for guidance. (Hubble is a graph-analysis dashboard include data loading/schema management/graph traverser/display).
 8. (__Optional__) offline download NLTK stopwords  
     ```bash
     python ./hugegraph_llm/operators/common_op/nltk_helper.py
@@ -72,8 +67,8 @@ graph systems and large language models.
 - Docs:
   - text: Build rag index from plain text
   - file: Upload file(s) which should be <u>TXT</u> or <u>.docx</u> (Multiple files can be selected together)
-- [Schema](https://hugegraph.apache.org/docs/clients/restful-api/schema/): (Except **2 types**)
-  - User-defined Schema (JSON format, follow the [template](https://github.com/apache/incubator-hugegraph-ai/blob/aff3bbe25fa91c3414947a196131be812c20ef11/hugegraph-llm/src/hugegraph_llm/config/config_data.py#L125) 
+- [Schema](https://starhugegraph.github.io/hugegraph-doc/clients/restful-api-v3/schema.html): (Accept **2 types**)
+  - User-defined Schema (JSON format, follow the [template](https://console.cloud.baidu-int.com/devops/icode/repos/baidu/starhugegraph/hugegraph-ai/blob/master/hugegraph-llm/src/hugegraph_llm/config/config_data.py#L173) 
   to modify it)
   - Specify the name of the HugeGraph graph instance, it will automatically get the schema from it (like 
   **"hugegraph"**)
