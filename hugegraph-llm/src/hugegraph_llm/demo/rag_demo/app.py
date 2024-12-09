@@ -36,6 +36,7 @@ from hugegraph_llm.demo.rag_demo.configs_block import (
     apply_graph_config,
 )
 from hugegraph_llm.demo.rag_demo.other_block import create_other_block
+from hugegraph_llm.demo.rag_demo.text2gremlin_block import create_text2gremlin_block
 from hugegraph_llm.demo.rag_demo.rag_block import create_rag_block, rag_answer
 from hugegraph_llm.demo.rag_demo.vector_graph_block import create_vector_graph_block
 from hugegraph_llm.resources.demo.css import CSS
@@ -56,6 +57,7 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
         )
 
 
+# pylint: disable=C0301
 def init_rag_ui() -> gr.Interface:
     with gr.Blocks(
             theme="default",
@@ -67,7 +69,7 @@ def init_rag_ui() -> gr.Interface:
         """
         TODO: leave a general idea of the unresolved part
         graph_config_input = textbox_array_graph_config
-         = [settings.graph_ip, settings.graph_port, settings.graph_name, graph_user, settings.graph_pwd, settings.graph_space]
+         = [settings.graph_ip, settings.graph_port, settings.graph_name, graph_user, settings.graph_pwd, settings.graph_space] 
         
         llm_config_input = textbox_array_llm_config
          = if settings.llm_type == openai [settings.openai_api_key, settings.openai_api_base, settings.openai_language_model, settings.openai_max_tokens]
@@ -93,9 +95,11 @@ def init_rag_ui() -> gr.Interface:
             textbox_input_schema, textbox_info_extract_template = create_vector_graph_block()
         with gr.Tab(label="2. (Graph)RAG & User Functions 📖"):
             textbox_inp, textbox_answer_prompt_input, textbox_keywords_extract_prompt_input = create_rag_block()
-        with gr.Tab(label="3. Graph Tools 🚧"):
+        with gr.Tab(label="3. Text2gremlin ⚙️"):
+            textbox_gremlin_inp, textbox_gremlin_schema, textbox_gremlin_prompt = create_text2gremlin_block()
+        with gr.Tab(label="4. Graph Tools 🚧"):
             create_other_block()
-        with gr.Tab(label="4. Admin Tools ⚙️"):
+        with gr.Tab(label="5. Admin Tools 🛠"):
             create_admin_block()
 
         def refresh_ui_config_prompt() -> tuple:
@@ -104,10 +108,11 @@ def init_rag_ui() -> gr.Interface:
             return (
                 settings.graph_ip, settings.graph_port, settings.graph_name, settings.graph_user,
                 settings.graph_pwd, settings.graph_space, prompt.graph_schema, prompt.extract_graph_prompt,
-                prompt.default_question, prompt.answer_prompt, prompt.keywords_extract_prompt
+                prompt.default_question, prompt.answer_prompt, prompt.keywords_extract_prompt,
+                prompt.default_question, settings.graph_name, prompt.gremlin_generate_prompt
             )
 
-        hugegraph_llm_ui.load(fn=refresh_ui_config_prompt, outputs=[
+        hugegraph_llm_ui.load(fn=refresh_ui_config_prompt, outputs=[  # pylint: disable=E1101
             textbox_array_graph_config[0],
             textbox_array_graph_config[1],
             textbox_array_graph_config[2],
@@ -118,7 +123,10 @@ def init_rag_ui() -> gr.Interface:
             textbox_info_extract_template,
             textbox_inp,
             textbox_answer_prompt_input,
-            textbox_keywords_extract_prompt_input
+            textbox_keywords_extract_prompt_input,
+            textbox_gremlin_inp,
+            textbox_gremlin_schema,
+            textbox_gremlin_prompt
         ])
 
     return hugegraph_llm_ui

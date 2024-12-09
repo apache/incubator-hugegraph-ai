@@ -16,7 +16,7 @@
 # under the License.
 
 
-__all__ = ["settings", "resource_path"]
+__all__ = ["settings", "prompt", "resource_path"]
 
 import os
 from .config import Config, PromptConfig

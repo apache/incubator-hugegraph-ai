@@ -18,7 +18,7 @@
 import os
 import pickle as pkl
 from copy import deepcopy
-from typing import List, Dict, Any, Set, Union
+from typing import List, Any, Set, Union
 
 import faiss
 import numpy as np
@@ -86,7 +86,7 @@ class VectorIndex:
         self.properties = [p for i, p in enumerate(self.properties) if i not in indices]
         return remove_num
 
-    def search(self, query_vector: List[float], top_k: int) -> List[Dict[str, Any]]:
+    def search(self, query_vector: List[float], top_k: int) -> List[Any]:
         if self.index.ntotal == 0:
             return []
 

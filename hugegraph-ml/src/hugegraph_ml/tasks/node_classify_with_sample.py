@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=C0301
 
 from typing import Literal
 
@@ -33,11 +34,7 @@ class NodeClassifyWithSample:
         self.graph = graph
         self._model = model
         self.gpu = -1
-        self._device = (
-            f"cuda:{self.gpu}"
-            if self.gpu != -1 and torch.cuda.is_available()
-            else "cpu"
-        )
+        self._device = "cpu"
         self._early_stopping = None
         self._is_trained = False
         self.num_partitions = 100
@@ -55,7 +52,7 @@ class NodeClassifyWithSample:
             shuffle=True,
             drop_last=False,
             num_workers=0,
-            use_uva=True,
+            use_uva=False,
         )
         self._check_graph()
 
@@ -140,7 +137,7 @@ class NodeClassifyWithSample:
         test_labels = []
         total_loss = 0
         with torch.no_grad():
-            for it, sg in enumerate(self.dataloader):
+            for _, sg in enumerate(self.dataloader):
                 sg_feats = feats[sg.ndata["_ID"]]
                 sg_labels = labels[sg.ndata["_ID"]]
                 sg_test_msak = test_mask[sg.ndata["_ID"]].bool()
@@ -154,3 +151,4 @@ class NodeClassifyWithSample:
             _, predicted = torch.max(test_logits, dim=1)
             accuracy = (predicted == test_labels[0]).sum().item() / len(test_labels[0])
         return {"accuracy": accuracy, "total_loss": total_loss.item()}
+        

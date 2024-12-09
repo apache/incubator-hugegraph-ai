@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# pylint: disable=E1101,E0401
+# pylint: disable=C0103,R1732,C0200,R1705
 
 """
 Position-aware Graph Neural Networks (P-GNN)
@@ -27,19 +27,20 @@ Author's code: https://github.com/JiaxuanYou/P-GNN
 DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/P-GNN
 """
 
-import dgl.function as fn
-import torch
-from torch import nn
-import torch.nn.functional as F
 import multiprocessing as mp
 import random
 from multiprocessing import get_context
+
+import torch
+from torch import nn
+import torch.nn.functional as F
 
 import networkx as nx
 import numpy as np
 from tqdm.auto import tqdm
 from sklearn.metrics import roc_auc_score
 
+import dgl.function as fn
 
 class PGNN_layer(nn.Module):
     def __init__(self, input_dim, output_dim):
@@ -58,8 +59,8 @@ class PGNN_layer(nn.Module):
             graph.srcdata.update({"u_feat": u_feat})
             graph.dstdata.update({"v_feat": v_feat})
 
-            graph.apply_edges(fn.u_mul_e("u_feat", "sp_dist", "u_message"))
-            graph.apply_edges(fn.v_add_e("v_feat", "u_message", "message"))
+            graph.apply_edges(fn.u_mul_e("u_feat", "sp_dist", "u_message")) # pylint: disable=E1101
+            graph.apply_edges(fn.v_add_e("v_feat", "u_message", "message")) # pylint: disable=E1101
 
             messages = torch.index_select(
                 graph.edata["message"],
@@ -162,9 +163,9 @@ def split_edges(p, edges, data, non_train_ratio=0.2):
 
     data.update(
         {
-            "{}_edges_train".format(p): edges[:, :split1],  # 80%
-            "{}_edges_val".format(p): edges[:, split1:split2],  # 10%
-            "{}_edges_test".format(p): edges[:, split2:],  # 10%
+            f"{p}_edges_train": edges[:, :split1],  # 80%
+            f"{p}_edges_val": edges[:, split1:split2],  # 10%
+            f"{p}_edges_test": edges[:, split2:],  # 10%
         }
     )
 
@@ -393,8 +394,8 @@ def preselect_anchor(data, num_workers=4):
 def get_loss(p, data, out, loss_func, device, get_auc=True):
     edge_mask = np.concatenate(
         (
-            data["positive_edges_{}".format(p)],
-            data["negative_edges_{}".format(p)],
+            data[f"positive_edges_{p}"],
+            data[f"negative_edges_{p}"],
         ),
         axis=-1,
     )
@@ -410,13 +411,13 @@ def get_loss(p, data, out, loss_func, device, get_auc=True):
 
     label_positive = torch.ones(
         [
-            data["positive_edges_{}".format(p)].shape[1],
+            data[f"positive_edges_{p}"].shape[1],
         ],
         dtype=pred.dtype,
     )
     label_negative = torch.zeros(
         [
-            data["negative_edges_{}".format(p)].shape[1],
+            data[f"negative_edges_{p}"].shape[1],
         ],
         dtype=pred.dtype,
     )

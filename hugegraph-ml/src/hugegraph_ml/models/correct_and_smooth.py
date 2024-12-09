@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# pylint: disable=E1101,E1102
+# pylint: disable=E1101,E1102,W0223,R1705
 
 """
  Correct and Smooth (C&S)

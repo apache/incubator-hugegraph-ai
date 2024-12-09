@@ -15,7 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# pylint: disable=E1101,E0401
 
 """
 Cluster-GCN
@@ -27,11 +26,13 @@ Author's code: https://github.com/google-research/google-research/tree/master/cl
 DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/cluster_gcn
 """
 
-import dgl.nn as dglnn
-import torch.nn as nn
+from torch import nn
 import torch.nn.functional as F
 
+import dgl.nn as dglnn
+
 class SAGE(nn.Module):
+    # pylint: disable=E1101
     def __init__(self, in_feats, n_hidden, n_classes):
         super().__init__()
         self.layers = nn.ModuleList()

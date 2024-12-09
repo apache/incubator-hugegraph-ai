@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.right (c) 2024 by jinsong, All Rights Reserved.
 
-# pylint: disable=E1101
+# pylint: disable=R0205,C0200,R1732
 
 """
 General Attributed Multiplex HeTerogeneous Network Embedding (GATNE)
@@ -28,24 +28,19 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/GATNE-T
 """
 
 import math
-import os
-import sys
 import time
-from collections import defaultdict
+import multiprocessing
+from functools import partial, reduce
 
 import numpy as np
+
 import torch
 from torch import nn
 import torch.nn.functional as F
-from numpy import random
 from torch.nn.parameter import Parameter
-from tqdm.auto import tqdm
 
 import dgl
 import dgl.function as fn
-import multiprocessing
-from functools import partial, reduce, wraps
-
 
 class NeighborSampler(object):
     def __init__(self, g, num_fanouts):
@@ -123,7 +118,7 @@ class DGLGATNE(nn.Module):
                 block.dstdata[edge_type] = self.node_type_embeddings[output_nodes, i]
                 block.update_all(
                     fn.copy_u(edge_type, "m"),
-                    fn.sum("m", edge_type),
+                    fn.sum("m", edge_type), # pylint: disable=E1101
                     etype=edge_type,
                 )
                 node_type_embed.append(block.dstdata[edge_type])
@@ -232,7 +227,7 @@ def generate_pairs(all_walks, window_size, num_workers):
     # for each node, choose the first neighbor and second neighbor of it to form pairs
     # Get all worker processes
     start_time = time.time()
-    print("We are generating pairs with {} cores.".format(num_workers))
+    print(f"We are generating pairs with {num_workers} cores.")
 
     # Start all worker processes
     pool = multiprocessing.Pool(processes=num_workers)
@@ -259,7 +254,7 @@ def generate_pairs(all_walks, window_size, num_workers):
 
     pool.close()
     end_time = time.time()
-    print("Generate pairs end, use {}s.".format(end_time - start_time))
+    print(f"Generate pairs end, use {end_time - start_time}s.")
     return np.array([list(pair) for pair in set(pairs)])
 
 

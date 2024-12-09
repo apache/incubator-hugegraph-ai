@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# pylint: disable=E0401
+# pylint: disable=R1719,C0103,R0205,R1721.R1705,R0205,W0612
 
 """
 SEAL
@@ -27,32 +27,27 @@ Author's code: https://github.com/muhanzhang/SEAL
 DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/seal
 """
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-
-from dgl.nn.pytorch import GraphConv, SAGEConv, SortPooling, SumPooling
 import argparse
-
-import dgl
-
-import numpy as np
-import pandas as pd
-from ogb.linkproppred import DglLinkPropPredDataset, Evaluator
-from scipy.sparse.csgraph import shortest_path
-
+import os
 import os.path as osp
 from copy import deepcopy
-
-from dgl import add_self_loop, DGLGraph, NID
-from dgl.dataloading.negative_sampler import Uniform
-from torch.utils.data import DataLoader, Dataset
-from tqdm import tqdm
-
 import logging
-import os
 import time
 
+import torch
+from torch import nn
+import torch.nn.functional as F
+from torch.utils.data import DataLoader, Dataset
+
+import dgl
+from dgl import add_self_loop, NID
+from dgl.dataloading.negative_sampler import Uniform
+from dgl.nn.pytorch import GraphConv, SAGEConv, SortPooling, SumPooling
+
+import numpy as np
+from ogb.linkproppred import DglLinkPropPredDataset, Evaluator
+from scipy.sparse.csgraph import shortest_path
+from tqdm import tqdm
 
 class GCN(nn.Module):
     """
@@ -581,7 +576,7 @@ class SEALSampler(object):
         sample_nodes = [target_nodes]
         frontiers = target_nodes
 
-        for i in range(self.hop):
+        for _ in range(self.hop):
             frontiers = self.graph.out_edges(frontiers)[1]
             frontiers = torch.unique(frontiers)
             sample_nodes.append(frontiers)
@@ -622,7 +617,7 @@ class SEALSampler(object):
         subgraph_list = []
         labels_list = []
         edge_dataset = EdgeDataSet(edges, labels, transform=self.sample_subgraph)
-        self.print_fn("Using {} workers in sampling job.".format(self.num_workers))
+        self.print_fn(f"Using {self.num_workers} workers in sampling job.")
         sampler = DataLoader(
             edge_dataset,
             batch_size=32,
@@ -709,26 +704,24 @@ class SEALData(object):
 
         path = osp.join(
             self.save_dir or "",
-            "{}_{}_{}-hop_{}-subsample.bin".format(
-                self.prefix, split_type, self.hop, subsample_ratio
-            ),
+            "f{self.prefix}_{split_type}_{self.hop}-hop_{subsample_ratio}-subsample.bin"
         )
 
         if osp.exists(path):
-            self.print_fn("Load existing processed {} files".format(split_type))
+            self.print_fn(f"Load existing processed {split_type} files")
             graph_list, data = dgl.load_graphs(path)
             dataset = GraphDataSet(graph_list, data["labels"])
 
         else:
-            self.print_fn("Processed {} files not exist.".format(split_type))
+            self.print_fn(f"Processed {split_type} files not exist.")
 
             edges, labels = self.generator(split_type)
-            self.print_fn("Generate {} edges totally.".format(edges.size(0)))
+            self.print_fn(f"Generate {edges.size(0)} edges totally.")
 
             graph_list, labels = self.sampler(edges, labels)
             dataset = GraphDataSet(graph_list, labels)
             dgl.save_graphs(path, graph_list, {"labels": labels})
-            self.print_fn("Save preprocessed subgraph to {}".format(path))
+            self.print_fn(f"Save preprocessed subgraph to {path}")
         return dataset
 
 
@@ -783,7 +776,7 @@ class LightLogging(object):
                 ],
             )
             logging.info("Start Logging")
-            logging.info("Log file path: {}".format(log_name))
+            logging.info("Log file path: %s", log_name)
 
         else:
             logging.basicConfig(

@@ -29,4 +29,13 @@ footer {
     max-height: 250px;
     overflow-y: auto; /* enable scroll */
 }
+
+/* FIXME: wrap code is not work as expected now */
+.wrap-code {
+    white-space: pre-wrap; /* CSS3 */
+    white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+    white-space: -pre-wrap; /* Opera 4-6 */
+    white-space: -o-pre-wrap; /* Opera 7 */
+    word-wrap: break-word; /* Internet Explorer 5.5+ */
+}
 """
