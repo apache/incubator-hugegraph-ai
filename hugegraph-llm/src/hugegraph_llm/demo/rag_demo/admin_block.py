@@ -140,7 +140,7 @@ def create_admin_block():
                                                               variant="primary")
 
         # Define what happens when the password is submitted
-        submit_button.click( #pylint: disable=C0301
+        submit_button.click( #pylint: disable=E1101
             fn=check_password,
             inputs=[password_input],
             outputs=[llm_server_log_output, hidden_row, clear_llm_server_button,
@@ -148,14 +148,14 @@ def create_admin_block():
         )
 
         # Define what happens when the Clear LLM Server Log button is clicked
-        clear_llm_server_button.click( #pylint: disable=C0301
+        clear_llm_server_button.click( #pylint: disable=E1101
             fn=clear_llm_server_log,
             inputs=[],
             outputs=[llm_server_log_output],
         )
 
         # Define what happens when the Refresh LLM Server Log button is clicked
-        refresh_llm_server_button.click( #pylint: disable=C0301
+        refresh_llm_server_button.click( #pylint: disable=E1101
             fn=read_llm_server_log,
             inputs=[],
             outputs=[llm_server_log_output],
