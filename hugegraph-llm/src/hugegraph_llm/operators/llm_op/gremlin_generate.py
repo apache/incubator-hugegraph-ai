@@ -84,7 +84,7 @@ class GremlinGenerateSynthesize:
 
         raw_response = await async_tasks["raw_answer"]
         initialized_response = await async_tasks["initialized_answer"]
-        log.debug("Text2Gremlin with tmpl prompt:\n %s,\n LLM Response: %s", prompt, initialized_response)
+        log.debug("Text2Gremlin with tmpl prompt:\n %s,\n LLM Response: %s", init_prompt, initialized_response)
 
         context["result"] = self._extract_gremlin(response=initialized_response)
         context["raw_result"] = self._extract_gremlin(response=raw_response)
