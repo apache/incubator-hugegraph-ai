@@ -253,4 +253,3 @@ def get_graph_drop_transform(drop_edge_p, feat_mask_p):
         transforms.append(FeatMask(feat_mask_p, node_feat_names=["feat"]))
 
     return Compose(transforms)
-    
