@@ -20,7 +20,7 @@ import os
 import docx
 import gradio as gr
 
-from hugegraph_llm.config import resource_path, settings
+from hugegraph_llm.config import resource_path, huge_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.init_llm import LLMs
@@ -56,7 +56,7 @@ def read_documents(input_file, input_text):
 
 
 def get_vector_index_info():
-    vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, settings.graph_name, "chunks")))
+    vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "chunks")))
     return json.dumps({
         "embed_dim": vector_index.index.d,
         "num_vectors": vector_index.index.ntotal,
@@ -65,7 +65,7 @@ def get_vector_index_info():
 
 
 def clean_vector_index():
-    VectorIndex.clean(str(os.path.join(resource_path, settings.graph_name, "chunks")))
+    VectorIndex.clean(str(os.path.join(resource_path, huge_settings.graph_name, "chunks")))
     gr.Info("Clean vector index successfully!")
 
 
