@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.right (c) 2024 by jinsong, All Rights Reserved.
 
-# pylint: disable=E1102,C0103,R1705.R1734
+# pylint: disable=C0103,R1705.R1734
 
 """
 Bootstrapped Graph Latents (BGRL)
@@ -159,11 +159,11 @@ class BGRL(nn.Module):
             target_y2 = self.target_encoder(online_x, online_feats).detach()
         loss = (
             2
-            - cosine_similarity(online_q1, target_y1.detach(), dim=-1).mean()
-            - cosine_similarity(online_q2, target_y2.detach(), dim=-1).mean()
+            - cosine_similarity(online_q1, target_y1.detach(), dim=-1).mean() # pylint: disable=E1102
+            - cosine_similarity(online_q2, target_y2.detach(), dim=-1).mean() # pylint: disable=E1102
         )
         return loss
-    
+
     def get_embedding(self, graph, feats):
         """
         Get the node embeddings from the encoder without computing gradients.
