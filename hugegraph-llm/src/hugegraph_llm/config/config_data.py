@@ -249,7 +249,7 @@ KEYWORDS:关键词1,关键词2,...,关键词n
 文本：
 {question}
 """
-
+#pylint: disable=C0301
     # keywords_extract_prompt_EN = """
 # Instruction:
 # Please perform the following tasks on the text below:
