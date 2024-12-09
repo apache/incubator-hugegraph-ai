@@ -71,8 +71,8 @@ g.V().has('{prop}', within({keywords}))
 
 class GraphRAGQuery:
 
-    def __init__(self, max_deep: int = 2, max_items: int = 20, max_v_prop_len: int = 2048,
-                 max_e_prop_len: int = 256, prop_to_match: Optional[str] = None):
+    def __init__(self, max_deep: int = 2, max_v_prop_len: int = 2048, max_e_prop_len: int = 256,
+                 prop_to_match: Optional[str] = None):
         self._client = PyHugeClient(
             settings.graph_ip,
             settings.graph_port,
@@ -82,7 +82,7 @@ class GraphRAGQuery:
             settings.graph_space,
         )
         self._max_deep = max_deep
-        self._max_items = max_items
+        self._max_items = settings.max_items
         self._prop_to_match = prop_to_match
         self._schema = ""
         self._limit_property = settings.limit_property.lower() == "true"
@@ -105,7 +105,7 @@ class GraphRAGQuery:
         _, edge_labels = self._extract_labels_from_schema()
         edge_labels_str = ",".join("'" + label + "'" for label in edge_labels)
         # TODO: enhance the limit logic later
-        edge_limit_amount = len(edge_labels) * 10
+        edge_limit_amount = len(edge_labels) * settings.edge_limit_pre_label
 
         use_id_to_match = self._prop_to_match is None
         if use_id_to_match:
