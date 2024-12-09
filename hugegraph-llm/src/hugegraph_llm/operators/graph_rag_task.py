@@ -26,6 +26,7 @@ from hugegraph_llm.operators.common_op.merge_dedup_rerank import MergeDedupReran
 from hugegraph_llm.operators.common_op.print_result import PrintResult
 from hugegraph_llm.operators.document_op.word_extract import WordExtract
 from hugegraph_llm.operators.hugegraph_op.graph_rag_query import GraphRAGQuery
+from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
@@ -89,6 +90,10 @@ class RAGPipeline:
         )
         return self
 
+    def import_schema(self, graph_name: str):
+        self._operators.append(SchemaManager(graph_name))
+        return self
+
     def keywords_to_vid(
         self,
         by: Literal["query", "keywords"] = "keywords",
@@ -119,6 +124,7 @@ class RAGPipeline:
         max_v_prop_len: int = 2048,
         max_e_prop_len: int = 256,
         prop_to_match: Optional[str] = None,
+        with_gremlin_template: bool = True,
     ):
         """
         Add a graph RAG query operator to the pipeline.
@@ -132,7 +138,8 @@ class RAGPipeline:
         """
         self._operators.append(
             GraphRAGQuery(max_deep=max_deep, max_items=max_items, max_v_prop_len=max_v_prop_len,
-                          max_e_prop_len=max_e_prop_len, prop_to_match=prop_to_match)
+                          max_e_prop_len=max_e_prop_len, prop_to_match=prop_to_match,
+                          with_gremlin_template=with_gremlin_template)
         )
         return self
 

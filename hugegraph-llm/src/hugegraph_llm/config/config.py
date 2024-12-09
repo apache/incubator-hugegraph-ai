@@ -118,6 +118,8 @@ class PromptConfig(PromptData):
 
     def save_to_yaml(self):
         indented_schema = "\n".join([f"  {line}" for line in self.graph_schema.splitlines()])
+        indented_text2gql_schema = "\n".join([f"  {line}" for line in self.text2gql_graph_schema.splitlines()])
+        indented_gremlin_prompt = "\n".join([f"  {line}" for line in self.gremlin_generate_prompt.splitlines()])
         indented_example_prompt = "\n".join([f"    {line}" for line in self.extract_graph_prompt.splitlines()])
         indented_question = "\n".join([f"    {line}" for line in self.default_question.splitlines()])
         indented_custom_related_information = (
@@ -131,6 +133,9 @@ class PromptConfig(PromptData):
         # This can be extended to add storage fields according to the data needs to be stored
         yaml_content = f"""graph_schema: |
 {indented_schema}
+
+text2gql_graph_schema: |
+{indented_text2gql_schema}
 
 extract_graph_prompt: |
 {indented_example_prompt}
@@ -146,6 +151,9 @@ answer_prompt: |
 
 keywords_extract_prompt: |
 {indented_keywords_extract_template}
+
+gremlin_generate_prompt: |
+{indented_gremlin_prompt}
 
 """
         with open(yaml_file_path, "w", encoding="utf-8") as file:

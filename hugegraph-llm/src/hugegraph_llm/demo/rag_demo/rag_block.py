@@ -24,7 +24,7 @@ import gradio as gr
 import pandas as pd
 from gradio.utils import NamedString
 
-from hugegraph_llm.config import resource_path, prompt
+from hugegraph_llm.config import resource_path, prompt, settings
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.utils.log import log
 
@@ -35,6 +35,7 @@ def rag_answer(
         vector_only_answer: bool,
         graph_only_answer: bool,
         graph_vector_answer: bool,
+        with_gremlin_template: bool,
         graph_ratio: float,
         rerank_method: Literal["bleu", "reranker"],
         near_neighbor_first: bool,
@@ -72,9 +73,10 @@ def rag_answer(
     if vector_search:
         rag.query_vector_index()
     if graph_search:
-        rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid().query_graphdb()
+        rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid().import_schema(
+            settings.graph_name).query_graphdb(with_gremlin_template=with_gremlin_template)
     # TODO: add more user-defined search strategies
-    rag.merge_dedup_rerank(graph_ratio, rerank_method, near_neighbor_first, custom_related_information)
+    rag.merge_dedup_rerank(graph_ratio, rerank_method, near_neighbor_first, )
     rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
 
     try:
@@ -119,7 +121,8 @@ def create_rag_block():
             with gr.Row():
                 graph_only_radio = gr.Radio(choices=[True, False], value=True, label="Graph-only Answer")
                 graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
-
+            with gr.Row():
+                with_gremlin_template_radio = gr.Radio(choices=[True, False], value=True, label="With Gremlin Template")
             def toggle_slider(enable):
                 return gr.update(interactive=enable)
 
@@ -155,6 +158,7 @@ def create_rag_block():
             vector_only_radio,
             graph_only_radio,
             graph_vector_radio,
+            with_gremlin_template_radio,
             graph_ratio,
             rerank_method,
             near_neighbor_first,
