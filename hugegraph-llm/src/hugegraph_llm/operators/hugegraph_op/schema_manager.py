@@ -33,6 +33,26 @@ class SchemaManager:
         )
         self.schema = self.client.schema()
 
+    def simple_schema(self, schema: Dict[str, Any]) -> Dict[str, Any]:
+        mini_schema = {}
+
+        # Add necessary vertexlabels items (3)
+        if "vertexlabels" in schema:
+            mini_schema["vertexlabels"] = []
+            for vertex in schema["vertexlabels"]:
+                new_vertex = {key: vertex[key] for key in ["id", "name", "properties"] if key in vertex}
+                mini_schema["vertexlabels"].append(new_vertex)
+
+        # Add necessary edgelabels items (4)
+        if "edgelabels" in schema:
+            mini_schema["edgelabels"] = []
+            for edge in schema["edgelabels"]:
+                new_edge = {key: edge[key] for key in
+                            ["name", "source_label", "target_label", "properties"] if key in edge}
+                mini_schema["edgelabels"].append(new_edge)
+
+        return mini_schema
+
     def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         if context is None:
             context = {}
@@ -41,4 +61,6 @@ class SchemaManager:
             raise Exception(f"Can not get {self.graph_name}'s schema from HugeGraph!")
 
         context.update({"schema": schema})
+        # TODO: enhance the logic here
+        context["simple_schema"] = self.simple_schema(schema)
         return context

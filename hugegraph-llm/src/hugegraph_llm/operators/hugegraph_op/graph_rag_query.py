@@ -14,9 +14,14 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
+import json
 from typing import Any, Dict, Optional, List, Set, Tuple
 
 from hugegraph_llm.config import huge_settings
+from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from hugegraph_llm.models.llms.base import BaseLLM
+from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
 
@@ -25,7 +30,7 @@ VERTEX_QUERY_TPL = "g.V({keywords}).limit(8).as('subj').toList()"
 
 # TODO: we could use a simpler query (like kneighbor-api to get the edges)
 # TODO: test with profile()/explain() to speed up the query
-VID_QUERY_NEIGHBOR_TPL = """
+VID_QUERY_NEIGHBOR_TPL = """\
 g.V({keywords})
 .repeat(
    bothE({edge_labels}).limit({edge_limit}).otherV().dedup()
@@ -47,7 +52,7 @@ g.V({keywords})
 .toList()
 """
 
-PROPERTY_QUERY_NEIGHBOR_TPL = """
+PROPERTY_QUERY_NEIGHBOR_TPL = """\
 g.V().has('{prop}', within({keywords}))
 .repeat(
    bothE({edge_labels}).limit({edge_limit}).otherV().dedup()
@@ -71,8 +76,18 @@ g.V().has('{prop}', within({keywords}))
 
 class GraphRAGQuery:
 
-    def __init__(self, max_deep: int = 2, max_items: int = 20, max_v_prop_len: int = 2048,
-                 max_e_prop_len: int = 256, prop_to_match: Optional[str] = None):
+    def __init__(
+            self,
+            max_deep: int = 2,
+            max_items: int = 20,
+            prop_to_match: Optional[str] = None,
+            with_gremlin_template: bool = True,
+            llm: Optional[BaseLLM] = None,
+            embedding: Optional[BaseEmbedding] = None,
+            max_v_prop_len: int = 2048,
+            max_e_prop_len: int = 256,
+            num_gremlin_generate_example: int = 1
+    ):
         self._client = PyHugeClient(
             huge_settings.graph_ip,
             huge_settings.graph_port,
@@ -88,6 +103,12 @@ class GraphRAGQuery:
         self._limit_property = huge_settings.limit_property.lower() == "true"
         self._max_v_prop_len = max_v_prop_len
         self._max_e_prop_len = max_e_prop_len
+        self._gremlin_generator = GremlinGenerator(
+            llm=llm,
+            embedding=embedding,
+        )
+        self._num_gremlin_generate_example = num_gremlin_generate_example
+        self._with_gremlin_template = with_gremlin_template
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         # pylint: disable=R0915 (too-many-statements)
@@ -104,7 +125,58 @@ class GraphRAGQuery:
                 self._client = PyHugeClient(ip, port, graph, user, pwd, gs)
         assert self._client is not None, "No valid graph to search."
 
-        # 2. Extract params from context
+        # initial flag: -1 means no result, 0 means subgraph query, 1 means gremlin query
+        context["graph_result_flag"] = -1
+        # 1. Try to perform a query based on the generated gremlin
+        context = self._gremlin_generate_query(context)
+        # 2. Try to perform a query based on subgraph-search if the previous query failed
+        if not context.get("graph_result"):
+            context = self._subgraph_query(context)
+
+        if context.get("graph_result"):
+            log.debug("Knowledge from Graph:\n%s", "\n".join(context["graph_result"]))
+        else:
+            log.debug("No Knowledge Extracted from Graph")
+        return context
+
+    def _gremlin_generate_query(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        query = context["query"]
+        vertices = context.get("match_vids")
+        query_embedding = context.get("query_embedding")
+
+        self._gremlin_generator.clear()
+        self._gremlin_generator.example_index_query(num_examples=self._num_gremlin_generate_example)
+        gremlin_response = self._gremlin_generator.gremlin_generate_synthesize(
+            context["simple_schema"],
+            vertices=vertices,
+        ).run(
+            query=query,
+            query_embedding=query_embedding
+        )
+        if self._with_gremlin_template:
+            gremlin = gremlin_response["result"]
+        else:
+            gremlin = gremlin_response["raw_result"]
+        log.info("Generated gremlin: %s", gremlin)
+        context["gremlin"] = gremlin
+        try:
+            result = self._client.gremlin().exec(gremlin=gremlin)["data"]
+            if result == [None]:
+                result = []
+            context["graph_result"] = [json.dumps(item, ensure_ascii=False) for item in result]
+            if context["graph_result"]:
+                context["graph_result_flag"] = 1
+                context["graph_context_head"] = (
+                    f"The following are graph query result "
+                    f"from gremlin query `{gremlin}`.\n"
+                )
+        except Exception as e: # pylint: disable=broad-except
+            log.error(e)
+            context["graph_result"] = ""
+        return context
+
+    def _subgraph_query(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        # 1. Extract params from context
         matched_vids = context.get("match_vids")
         if isinstance(context.get("max_deep"), int):
             self._max_deep = context["max_deep"]
@@ -113,7 +185,7 @@ class GraphRAGQuery:
         if isinstance(context.get("prop_to_match"), str):
             self._prop_to_match = context["prop_to_match"]
 
-        # 3. Extract edge_labels from graph schema
+        # 2. Extract edge_labels from graph schema
         _, edge_labels = self._extract_labels_from_schema()
         edge_labels_str = ",".join("'" + label + "'" for label in edge_labels)
         # TODO: enhance the limit logic later
@@ -136,7 +208,7 @@ class GraphRAGQuery:
                 edge_limit=edge_limit_amount,
                 max_items=self._max_items,
             )
-            log.debug("Kneighbor gremlin query: %s", gremlin_query)
+            log.debug("Kneighbor gremlin query: %s", gremlin_query.replace("\n", "").replace(" ", ""))
             paths = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
 
             graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_graph_query_result(
@@ -171,15 +243,15 @@ class GraphRAGQuery:
             )
 
         context["graph_result"] = list(graph_chain_knowledge)
-        context["vertex_degree_list"] = [list(vertex_degree) for vertex_degree in vertex_degree_list]
-        context["knowledge_with_degree"] = knowledge_with_degree
-        context["graph_context_head"] = (
-            f"The following are graph knowledge in {self._max_deep} depth, e.g:\n"
-            "`vertexA --[links]--> vertexB <--[links]-- vertexC ...`"
-            "extracted based on key entities as subject:\n"
-        )
-        # TODO: set color for ↓ "\033[93mKnowledge from Graph:\033[0m"
-        log.debug("Knowledge from Graph:\n%s", "\n".join(context["graph_result"]))
+        if context["graph_result"]:
+            context["graph_result_flag"] = 0
+            context["vertex_degree_list"] = [list(vertex_degree) for vertex_degree in vertex_degree_list]
+            context["knowledge_with_degree"] = knowledge_with_degree
+            context["graph_context_head"] = (
+                f"The following are graph knowledge in {self._max_deep} depth, e.g:\n"
+                "`vertexA--[links]-->vertexB<--[links]--vertexC ...`"
+                "extracted based on key entities as subject:\n"
+            )
         return context
 
     def _format_graph_from_vertex(self, query_result: List[Any]) -> Set[str]:

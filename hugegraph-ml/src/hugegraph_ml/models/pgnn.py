@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# pylint: disable=E1101,E0401,C0103,R1732,C0200,R1705
+# pylint: disable=C0103,R1732,C0200,R1705
 
 """
 Position-aware Graph Neural Networks (P-GNN)
@@ -59,8 +59,8 @@ class PGNN_layer(nn.Module):
             graph.srcdata.update({"u_feat": u_feat})
             graph.dstdata.update({"v_feat": v_feat})
 
-            graph.apply_edges(fn.u_mul_e("u_feat", "sp_dist", "u_message"))
-            graph.apply_edges(fn.v_add_e("v_feat", "u_message", "message"))
+            graph.apply_edges(fn.u_mul_e("u_feat", "sp_dist", "u_message")) # pylint: disable=E1101
+            graph.apply_edges(fn.v_add_e("v_feat", "u_message", "message")) # pylint: disable=E1101
 
             messages = torch.index_select(
                 graph.edata["message"],
@@ -165,7 +165,7 @@ def split_edges(p, edges, data, non_train_ratio=0.2):
         {
             f"{p}_edges_train": edges[:, :split1],  # 80%
             f"{p}_edges_val": edges[:, split1:split2],  # 10%
-            f"p{}_edges_test": edges[:, split2:],  # 10%
+            f"{p}_edges_test": edges[:, split2:],  # 10%
         }
     )
 

@@ -72,8 +72,10 @@ class Commit2Graph:
             return func(*args, **kwargs)
         except NotFoundError as e:
             log.error(e)
+            return None
         except CreateError as e:
             log.error("Error on creating: %s, %s", args, e)
+            return None
 
     def load_into_graph(self, vertices, edges, schema):  # pylint: disable=too-many-statements
         # pylint: disable=R0912 (too-many-branches)

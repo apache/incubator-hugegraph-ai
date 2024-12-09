@@ -124,6 +124,9 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
 }
 """
 
+    # TODO: we should provide a better example to reduce the useless information
+    text2gql_graph_schema = ConfigData.graph_name
+
     # Extracted from llm_op/keyword_extract.py
     keywords_extract_prompt: str = """指令：
 请对以下文本执行以下任务：
@@ -151,7 +154,7 @@ KEYWORDS:关键词1,关键词2,...,关键词n
 文本：
 {question}
 """
-
+#pylint: disable=C0301
     # keywords_extract_prompt_EN = """
 # Instruction:
 # Please perform the following tasks on the text below:
@@ -171,3 +174,24 @@ KEYWORDS:关键词1,关键词2,...,关键词n
 # Text:
 # {question}
 # """
+
+    gremlin_generate_prompt = """\
+Given the example query-gremlin pairs:
+{example}
+
+Given the graph schema:
+```json
+{schema}
+```
+
+Given the extracted vertex vid:
+{vertices}
+
+Generate gremlin from the following user query.
+{query}
+The output format must be like:
+```gremlin
+g.V().limit(10)
+```
+The generated gremlin is:
+"""
