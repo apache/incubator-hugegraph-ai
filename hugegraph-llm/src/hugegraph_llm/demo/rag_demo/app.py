@@ -56,6 +56,7 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+
 # pylint: disable=C0301
 def init_rag_ui() -> gr.Interface:
     with gr.Blocks(
@@ -107,11 +108,11 @@ def init_rag_ui() -> gr.Interface:
             return (
                 settings.graph_ip, settings.graph_port, settings.graph_name, settings.graph_user,
                 settings.graph_pwd, settings.graph_space, prompt.graph_schema, prompt.extract_graph_prompt,
-                prompt.default_question, prompt.answer_prompt, prompt.keywords_extract_prompt, 
+                prompt.default_question, prompt.answer_prompt, prompt.keywords_extract_prompt,
                 prompt.default_question, settings.graph_name, prompt.gremlin_generate_prompt
             )
 
-        hugegraph_llm_ui.load(fn=refresh_ui_config_prompt, outputs=[ #pylint: disable=E1101
+        hugegraph_llm_ui.load(fn=refresh_ui_config_prompt, outputs=[  # pylint: disable=E1101
             textbox_array_graph_config[0],
             textbox_array_graph_config[1],
             textbox_array_graph_config[2],

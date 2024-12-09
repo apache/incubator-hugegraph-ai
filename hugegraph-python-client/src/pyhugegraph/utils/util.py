@@ -91,7 +91,7 @@ class ResponseValidation:
                 elif self._content_type == "text":
                     result = response.text
                 else:
-                    raise ValueError("Unknown content type: %s" % self._content_type)
+                    raise ValueError(f"Unknown content type: {self._content_type}")
 
         except requests.exceptions.HTTPError as e:
             if not self._strict and response.status_code == 404:
@@ -109,7 +109,7 @@ class ResponseValidation:
 
                 if response.status_code == 404:
                     raise NotFoundError(response.content) from e
-                elif response.status_code == 400:
+                if response.status_code == 400:
                     raise Exception(f"Server Exception: {details}") from e
                 raise e
 

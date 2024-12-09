@@ -170,7 +170,7 @@ class GraphRAGQuery:
                     f"The following are graph query result "
                     f"from gremlin query `{gremlin}`.\n"
                 )
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-except
             log.error(e)
             context["graph_result"] = ""
         return context

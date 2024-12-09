@@ -76,7 +76,7 @@ def rag_answer(
         rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid().import_schema(
             settings.graph_name).query_graphdb(with_gremlin_template=with_gremlin_template)
     # TODO: add more user-defined search strategies
-    rag.merge_dedup_rerank(graph_ratio, rerank_method, near_neighbor_first, custom_related_information)
+    rag.merge_dedup_rerank(graph_ratio, rerank_method, near_neighbor_first, )
     rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
 
     try:

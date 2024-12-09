@@ -28,12 +28,12 @@ from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.utils.hugegraph_utils import run_gremlin_query
-
 from hugegraph_llm.utils.log import log
 
 
 def store_schema(schema, question, gremlin_prompt):
-    if prompt.text2gql_graph_schema != schema or prompt.default_question != question or prompt.gremlin_generate_prompt != gremlin_prompt:
+    if (prompt.text2gql_graph_schema != schema or prompt.default_question != question or
+            prompt.gremlin_generate_prompt != gremlin_prompt):
         prompt.text2gql_graph_schema = schema
         prompt.default_question = question
         prompt.gremlin_generate_prompt = gremlin_prompt
@@ -41,7 +41,7 @@ def store_schema(schema, question, gremlin_prompt):
 
 
 def build_example_vector_index(temp_file) -> dict:
-    if temp_file == None:
+    if temp_file is None:
         full_path = os.path.join(resource_path, "demo", "text2gremlin.csv")
     else:
         full_path = temp_file.name
@@ -86,11 +86,11 @@ def gremlin_generate(inp, example_num, schema, gremlin_prompt) -> tuple[str, str
                                                                                      gremlin_prompt).run(query=inp)
     try:
         context["template_exec_res"] = run_gremlin_query(query=context["result"])
-    except Exception as e:
+    except Exception as e: # pylint: disable=broad-except
         context["template_exec_res"] = f"{e}"
     try:
         context["raw_exec_res"] = run_gremlin_query(query=context["raw_result"])
-    except Exception as e:
+    except Exception as e: # pylint: disable=broad-except
         context["raw_exec_res"] = f"{e}"
 
     match_result = json.dumps(context.get("match_result", "No Results"), ensure_ascii=False, indent=2)
