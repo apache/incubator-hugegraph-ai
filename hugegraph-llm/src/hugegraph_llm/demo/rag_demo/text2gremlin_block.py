@@ -62,6 +62,7 @@ def build_example_vector_index(temp_file) -> dict:
 
 def gremlin_generate(inp, example_num, schema, gremlin_prompt) -> tuple[str, str] | tuple[str, Any, Any, Any, Any]:
     generator = GremlinGenerator(llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding())
+    sm = SchemaManager(graph_name="schema")
     short_schema = False
 
     if schema:
@@ -71,7 +72,7 @@ def gremlin_generate(inp, example_num, schema, gremlin_prompt) -> tuple[str, str
             log.info("Try to get schema from graph '%s'", schema)
             generator.import_schema(from_hugegraph=schema)
             # FIXME: update the logic here
-            schema = SchemaManager(graph_name=schema).schema.getSchema()
+            schema = sm.schema.getSchema()
         else:
             try:
                 schema = json.loads(schema)
@@ -80,7 +81,7 @@ def gremlin_generate(inp, example_num, schema, gremlin_prompt) -> tuple[str, str
                 log.error("Invalid JSON schema provided: %s", e)
                 return "Invalid JSON schema, please check the format carefully.", ""
     # FIXME: schema is not used in gremlin_generate() step, no context for it (enhance the logic here)
-    updated_schema = simple_schema(schema) if short_schema else schema
+    updated_schema = sm.simple_schema(schema) if short_schema else schema
     context = generator.example_index_query(example_num).gremlin_generate_synthesize(updated_schema,
                                                                                      gremlin_prompt).run(query=inp)
     try:

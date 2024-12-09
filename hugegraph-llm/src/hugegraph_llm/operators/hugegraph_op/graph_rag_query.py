@@ -147,7 +147,7 @@ class GraphRAGQuery:
         self._gremlin_generator.clear()
         self._gremlin_generator.example_index_query(num_examples=self._num_gremlin_generate_example)
         gremlin_response = self._gremlin_generator.gremlin_generate_synthesize(
-            schema=context["schema"],
+            context["simple_schema"],
             vertices=vertices,
         ).run(
             query=query,
