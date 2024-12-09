@@ -16,7 +16,7 @@
 # under the License.
 
 from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
-from hugegraph_ml.models.bgrl import BGRL, GCN, MLP_Predictor, CosineDecayScheduler, get_graph_drop_transform
+from hugegraph_ml.models.bgrl import BGRL, GCN, MLP_Predictor
 from hugegraph_ml.models.mlp import MLPClassifier
 from hugegraph_ml.tasks.node_classify import NodeClassify
 from hugegraph_ml.tasks.node_embed import NodeEmbed

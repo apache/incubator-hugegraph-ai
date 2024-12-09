@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# pylint: disable=E0401
+# pylint: disable=E0401,C0301
 
 import torch
 from torch import nn
@@ -51,7 +51,6 @@ class DetectorCaregnn:
             torch.nonzero(train_mask, as_tuple=False).squeeze(1).to(self._device)
         )
         val_idx = torch.nonzero(val_mask, as_tuple=False).squeeze(1).to(self._device)
-        test_idx = torch.nonzero(test_mask, as_tuple=False).squeeze(1).to(self._device)
         rl_idx = torch.nonzero(
             train_mask.to(self._device) & labels.bool(), as_tuple=False
         ).squeeze(1)
@@ -89,15 +88,7 @@ class DetectorCaregnn:
             tr_loss.backward()
             optimizer.step()
             print(
-                "Epoch {}, Train: Recall: {:.4f} AUC: {:.4f} Loss: {:.4f} | Val: Recall: {:.4f} AUC: {:.4f} Loss: {:.4f}".format(
-                    epoch,
-                    tr_recall,
-                    tr_auc,
-                    tr_loss.item(),
-                    val_recall,
-                    val_auc,
-                    val_loss.item(),
-                )
+                f"Epoch {epoch}, Train: Recall: {tr_recall:.4f} AUC: {tr_auc:.4f} Loss: {tr_loss.item():.4f} | Val: Recall: {val_recall:.4f} AUC: {val_auc:.4f} Loss: {val_loss.item():.4f}"
             )
         self._model.RLModule(self.graph, epoch, rl_idx)
 

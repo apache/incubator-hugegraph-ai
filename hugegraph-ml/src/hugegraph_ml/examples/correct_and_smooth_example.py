@@ -16,10 +16,8 @@
 # under the License.
 
 from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
-from hugegraph_ml.models.correct_and_smooth import MLP, MLPLinear
+from hugegraph_ml.models.correct_and_smooth import MLP
 from hugegraph_ml.tasks.node_classify import NodeClassify
-import argparse
-
 
 def cs_example(n_epochs=200):
     hg2d = HugeGraph2DGL()
