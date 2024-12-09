@@ -58,7 +58,7 @@ class GremlinGenerator:
         self.operators.append(GremlinExampleIndexQuery(self.embedding, num_examples))
         return self
 
-    def gremlin_generate_synthesize(self, schema, gremlin_prompt, vertices: Optional[List[str]] = None):
+    def gremlin_generate_synthesize(self, schema, gremlin_prompt: Optional[str] = None, vertices: Optional[List[str]] = None):
         self.operators.append(GremlinGenerateSynthesize(self.llm, schema, vertices, gremlin_prompt))
         return self
 

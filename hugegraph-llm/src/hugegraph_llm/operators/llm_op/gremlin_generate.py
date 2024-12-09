@@ -32,14 +32,14 @@ class GremlinGenerateSynthesize:
             llm: BaseLLM = None,
             schema: Optional[Union[dict, str]] = None,
             vertices: Optional[List[str]] = None,
-            gremlin_prompt: Optional[str] = prompt.gremlin_generate_prompt
+            gremlin_prompt: Optional[str] = None
     ) -> None:
         self.llm = llm or LLMs().get_text2gql_llm()
         if isinstance(schema, dict):
             schema = json.dumps(schema, ensure_ascii=False)
         self.schema = schema
         self.vertices = vertices
-        self.gremlin_prompt = gremlin_prompt
+        self.gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
 
     def _extract_gremlin(self, response: str) -> str:
         match = re.search("```gremlin.*```", response, re.DOTALL)
