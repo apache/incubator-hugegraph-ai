@@ -259,7 +259,6 @@ def create_configs_block() -> list:
             @gr.render(inputs=[extract_llm_dropdown])
             def extract_llm_settings(llm_type):
                 llm_settings.extract_llm_type = llm_type
-                llm_config_input = []
                 if llm_type == "openai":
                     llm_config_input = [
                         gr.Textbox(value=getattr(llm_settings, "openai_extract_api_key"), label="api_key", type="password"),
