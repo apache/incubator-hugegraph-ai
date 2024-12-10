@@ -24,7 +24,6 @@ import faiss
 import numpy as np
 
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.config import settings
 
 INDEX_FILE_NAME = "index.faiss"
 PROPERTIES_FILE_NAME = "properties.pkl"
@@ -32,6 +31,7 @@ PROPERTIES_FILE_NAME = "properties.pkl"
 
 class VectorIndex:
     """Comment"""
+
     def __init__(self, embed_dim: int = 1024):
         self.index = faiss.IndexFlatL2(embed_dim)
         self.properties = []

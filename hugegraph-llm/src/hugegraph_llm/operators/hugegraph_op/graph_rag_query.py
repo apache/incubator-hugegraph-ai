@@ -95,7 +95,7 @@ class GraphRAGQuery:
             settings.graph_space,
         )
         self._max_deep = max_deep
-        self._max_items = settings.max_items
+        self._max_items = settings.max_graph_path
         self._prop_to_match = prop_to_match
         self._schema = ""
         self._limit_property = settings.limit_property.lower() == "true"
@@ -188,7 +188,7 @@ class GraphRAGQuery:
 
             vertex_knowledge = self._format_graph_from_vertex(query_result=vertexes)
             paths: List[Any] = []
-            # TODO: 这里后续改为使用生成器 or 异步 asycnio 处理以提高性能
+            # TODO: use generator or asyncio to speed up the query logic
             for matched_vid in matched_vids:
                 gremlin_query = VID_QUERY_NEIGHBOR_TPL.format(
                     keywords="'{}'".format(matched_vid),
