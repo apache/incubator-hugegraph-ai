@@ -27,7 +27,8 @@ class Rerankers:
     def get_reranker(self):
         if self.reranker_type == "cohere":
             return CohereReranker(
-                api_key=huge_settings.reranker_api_key, base_url=huge_settings.cohere_base_url, model=huge_settings.reranker_model
+                api_key=huge_settings.reranker_api_key, base_url=huge_settings.cohere_base_url,
+                model=huge_settings.reranker_model
             )
         if self.reranker_type == "siliconflow":
             return SiliconReranker(api_key=huge_settings.reranker_api_key, model=huge_settings.reranker_model)
