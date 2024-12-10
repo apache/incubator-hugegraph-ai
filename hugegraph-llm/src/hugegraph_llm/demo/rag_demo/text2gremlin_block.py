@@ -63,7 +63,7 @@ def build_example_vector_index(temp_file) -> dict:
 def gremlin_generate(inp, example_num, schema, gremlin_prompt) -> Union[
     tuple[str, str], tuple[str, Any, Any, Any, Any]]:
     generator = GremlinGenerator(llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding())
-    sm = SchemaManager(graph_name="schema")
+    sm = SchemaManager(graph_name=schema)
     short_schema = False
 
     if schema:
