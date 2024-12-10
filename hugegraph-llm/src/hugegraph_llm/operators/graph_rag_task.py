@@ -137,7 +137,7 @@ class RAGPipeline:
         :return: Self-instance for chaining.
         """
         self._operators.append(
-            GraphRAGQuery(max_deep=max_deep, max_v_prop_len=max_v_prop_len,
+            GraphRAGQuery(max_deep=max_deep, max_items=max_items, max_v_prop_len=max_v_prop_len,
                           max_e_prop_len=max_e_prop_len, prop_to_match=prop_to_match,
                           with_gremlin_template=with_gremlin_template)
         )

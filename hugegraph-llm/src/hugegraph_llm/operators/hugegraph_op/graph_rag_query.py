@@ -80,11 +80,11 @@ class GraphRAGQuery:
             max_deep: int = 2,
             max_items: int = int(settings.max_items),
             prop_to_match: Optional[str] = None,
-            with_gremlin_template: bool = True,
             llm: Optional[BaseLLM] = None,
             embedding: Optional[BaseEmbedding] = None,
             max_v_prop_len: int = 2048,
             max_e_prop_len: int = 256,
+            with_gremlin_template: bool = True,
             num_gremlin_generate_example: int = 1
     ):
         self._client = PyHugeClient(
