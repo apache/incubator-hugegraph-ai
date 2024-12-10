@@ -78,6 +78,7 @@ class GraphRAGQuery:
     def __init__(
             self,
             max_deep: int = 2,
+            max_items: int = int(settings.max_items),
             prop_to_match: Optional[str] = None,
             with_gremlin_template: bool = True,
             llm: Optional[BaseLLM] = None,
@@ -95,7 +96,7 @@ class GraphRAGQuery:
             settings.graph_space,
         )
         self._max_deep = max_deep
-        self._max_items = settings.max_graph_path
+        self._max_items = max_items
         self._prop_to_match = prop_to_match
         self._schema = ""
         self._limit_property = settings.limit_property.lower() == "true"
