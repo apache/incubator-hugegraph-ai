@@ -27,7 +27,7 @@ from hugegraph_llm.api.models.rag_requests import (
     RerankerConfigRequest, GraphRAGRequest,
 )
 from hugegraph_llm.api.models.rag_response import RAGResponse
-from hugegraph_llm.config import llm_settings, prompt
+from hugegraph_llm.config import llm_settings, huge_settings, prompt
 from hugegraph_llm.utils.log import log
 
 
@@ -40,7 +40,7 @@ def graph_rag_recall(
     from hugegraph_llm.operators.graph_rag_task import RAGPipeline
     rag = RAGPipeline()
 
-    rag.extract_keywords().keywords_to_vid().import_schema(settings.graph_name).query_graphdb().merge_dedup_rerank(
+    rag.extract_keywords().keywords_to_vid().import_schema(huge_settings.graph_name).query_graphdb().merge_dedup_rerank(
         rerank_method=rerank_method,
         near_neighbor_first=near_neighbor_first,
         custom_related_information=custom_related_information,

@@ -59,11 +59,11 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
 
 # pylint: disable=C0301
 def init_rag_ui() -> gr.Interface:
-    with gr.Blocks(
+    with (gr.Blocks(
             theme="default",
             title="HugeGraph RAG Platform",
             css=CSS,
-    ) as hugegraph_llm_ui:
+    ) as hugegraph_llm_ui):
         gr.Markdown("# HugeGraph LLM RAG Demo")
 
         """
@@ -94,7 +94,8 @@ def init_rag_ui() -> gr.Interface:
         with gr.Tab(label="1. Build RAG Index 💡"):
             textbox_input_schema, textbox_info_extract_template = create_vector_graph_block()
         with gr.Tab(label="2. (Graph)RAG & User Functions 📖"):
-            textbox_inp, textbox_answer_prompt_input, textbox_keywords_extract_prompt_input = create_rag_block()
+            textbox_inp, textbox_answer_prompt_input, textbox_keywords_extract_prompt_input, \
+            textbox_custom_related_information = create_rag_block()
         with gr.Tab(label="3. Text2gremlin ⚙️"):
             textbox_gremlin_inp, textbox_gremlin_schema, textbox_gremlin_prompt = create_text2gremlin_block()
         with gr.Tab(label="4. Graph Tools 🚧"):
@@ -105,13 +106,14 @@ def init_rag_ui() -> gr.Interface:
         def refresh_ui_config_prompt() -> tuple:
             # we can use its __init__() for in-place reload
             # settings.from_env()
-            huge_settings.__init__()
+            huge_settings.__init__() # pylint: disable=C2801
             prompt.ensure_yaml_file_exists()
             return (
                 huge_settings.graph_ip, huge_settings.graph_port, huge_settings.graph_name, huge_settings.graph_user,
                 huge_settings.graph_pwd, huge_settings.graph_space, prompt.graph_schema, prompt.extract_graph_prompt,
                 prompt.default_question, prompt.answer_prompt, prompt.keywords_extract_prompt,
-                prompt.default_question, huge_settings.graph_name, prompt.gremlin_generate_prompt
+                prompt.custom_rerank_info, prompt.default_question, huge_settings.graph_name,
+                prompt.gremlin_generate_prompt
             )
 
         hugegraph_llm_ui.load(fn=refresh_ui_config_prompt, outputs=[  # pylint: disable=E1101
@@ -126,6 +128,7 @@ def init_rag_ui() -> gr.Interface:
             textbox_inp,
             textbox_answer_prompt_input,
             textbox_keywords_extract_prompt_input,
+            textbox_custom_related_information,
             textbox_gremlin_inp,
             textbox_gremlin_schema,
             textbox_gremlin_prompt

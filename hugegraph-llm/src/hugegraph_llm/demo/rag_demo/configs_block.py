@@ -24,9 +24,8 @@ import gradio as gr
 import requests
 from requests.auth import HTTPBasicAuth
 
-from hugegraph_llm.config import huge_settings, admin_settings, llm_settings
+from hugegraph_llm.config import huge_settings, llm_settings
 from hugegraph_llm.utils.log import log
-from functools import partial
 
 current_llm = "chat"
 
@@ -195,7 +194,6 @@ def apply_llm_config(current_llm_config, arg1, arg2, arg3, arg4, origin_call=Non
 
     gr.Info("Configured!")
     llm_settings.update_env()
-    
     return status_code
 
 

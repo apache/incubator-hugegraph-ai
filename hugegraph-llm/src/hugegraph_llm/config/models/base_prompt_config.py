@@ -33,6 +33,8 @@ class BasePromptConfig:
     custom_rerank_info: str = ''
     answer_prompt: str = ''
     keywords_extract_prompt: str = ''
+    text2gql_graph_schema: str = ''
+    gremlin_generate_prompt: str = ''
 
     def ensure_yaml_file_exists(self):
         if os.path.exists(yaml_file_path):
