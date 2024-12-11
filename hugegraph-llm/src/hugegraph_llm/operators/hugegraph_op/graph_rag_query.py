@@ -192,7 +192,7 @@ class GraphRAGQuery:
             # TODO: use generator or asyncio to speed up the query logic
             for matched_vid in matched_vids:
                 gremlin_query = VID_QUERY_NEIGHBOR_TPL.format(
-                    keywords="'{}'".format(matched_vid),
+                    keywords=f"'{matched_vid}'",
                     max_deep=self._max_deep,
                     edge_labels=edge_labels_str,
                     edge_limit=edge_limit_amount,
