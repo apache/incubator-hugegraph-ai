@@ -16,7 +16,7 @@
 # under the License.
 import json
 
-from hugegraph_llm.config import settings
+from hugegraph_llm.config import huge_settings
 from pyhugegraph.client import PyHugeClient
 
 
@@ -27,12 +27,12 @@ def run_gremlin_query(query, fmt=True):
 
 def get_hg_client():
     return PyHugeClient(
-        settings.graph_ip,
-        settings.graph_port,
-        settings.graph_name,
-        settings.graph_user,
-        settings.graph_pwd,
-        settings.graph_space,
+        huge_settings.graph_ip,
+        huge_settings.graph_port,
+        huge_settings.graph_name,
+        huge_settings.graph_user,
+        huge_settings.graph_pwd,
+        huge_settings.graph_space,
     )
 
 

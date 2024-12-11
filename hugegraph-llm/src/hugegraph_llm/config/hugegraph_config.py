@@ -15,21 +15,20 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from hugegraph_llm.config import huge_settings
-from hugegraph_llm.models.rerankers.cohere import CohereReranker
-from hugegraph_llm.models.rerankers.siliconflow import SiliconReranker
+from typing import Optional
+from .models import BaseConfig
 
 
-class Rerankers:
-    def __init__(self):
-        self.reranker_type = huge_settings.reranker_type
-
-    def get_reranker(self):
-        if self.reranker_type == "cohere":
-            return CohereReranker(
-                api_key=huge_settings.reranker_api_key, base_url=huge_settings.cohere_base_url,
-                model=huge_settings.reranker_model
-            )
-        if self.reranker_type == "siliconflow":
-            return SiliconReranker(api_key=huge_settings.reranker_api_key, model=huge_settings.reranker_model)
-        raise Exception("Reranker type is not supported!")
+class HugeGraphConfig(BaseConfig):
+    """HugeGraph settings"""
+    graph_ip: Optional[str] = "127.0.0.1"
+    graph_port: Optional[str] = "8080"
+    graph_name: Optional[str] = "hugegraph"
+    graph_user: Optional[str] = "admin"
+    graph_pwd: Optional[str] = "xxx"
+    graph_space: Optional[str] = None
+    limit_property: Optional[str] = "False"
+    max_graph_path: Optional[int] = 10
+    max_items: Optional[int] = 30
+    edge_limit_pre_label: Optional[int] = 8
+    vector_dis_threshold: Optional[float] = 0.9

@@ -27,7 +27,7 @@ from hugegraph_llm.api.models.rag_requests import (
     RerankerConfigRequest, GraphRAGRequest,
 )
 from hugegraph_llm.api.models.rag_response import RAGResponse
-from hugegraph_llm.config import settings, prompt
+from hugegraph_llm.config import llm_settings, huge_settings, prompt
 from hugegraph_llm.utils.log import log
 
 
@@ -40,7 +40,7 @@ def graph_rag_recall(
     from hugegraph_llm.operators.graph_rag_task import RAGPipeline
     rag = RAGPipeline()
 
-    rag.extract_keywords().keywords_to_vid().import_schema(settings.graph_name).query_graphdb().merge_dedup_rerank(
+    rag.extract_keywords().keywords_to_vid().import_schema(huge_settings.graph_name).query_graphdb().merge_dedup_rerank(
         rerank_method=rerank_method,
         near_neighbor_first=near_neighbor_first,
         custom_related_information=custom_related_information,
@@ -104,7 +104,7 @@ def rag_http_api(
     # TODO: restructure the implement of llm to three types, like "/config/chat_llm"
     @router.post("/config/llm", status_code=status.HTTP_201_CREATED)
     def llm_config_api(req: LLMConfigRequest):
-        settings.llm_type = req.llm_type
+        llm_settings.llm_type = req.llm_type
 
         if req.llm_type == "openai":
             res = apply_llm_conf(req.api_key, req.api_base, req.language_model, req.max_tokens, origin_call="http")
@@ -116,7 +116,7 @@ def rag_http_api(
 
     @router.post("/config/embedding", status_code=status.HTTP_201_CREATED)
     def embedding_config_api(req: LLMConfigRequest):
-        settings.embedding_type = req.llm_type
+        llm_settings.embedding_type = req.llm_type
 
         if req.llm_type == "openai":
             res = apply_embedding_conf(req.api_key, req.api_base, req.language_model, origin_call="http")
@@ -128,7 +128,7 @@ def rag_http_api(
 
     @router.post("/config/rerank", status_code=status.HTTP_201_CREATED)
     def rerank_config_api(req: RerankerConfigRequest):
-        settings.reranker_type = req.reranker_type
+        llm_settings.reranker_type = req.reranker_type
 
         if req.reranker_type == "cohere":
             res = apply_reranker_conf(req.api_key, req.reranker_model, req.cohere_base_url, origin_call="http")

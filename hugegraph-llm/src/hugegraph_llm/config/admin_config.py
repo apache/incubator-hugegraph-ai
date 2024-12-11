@@ -15,21 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from hugegraph_llm.config import huge_settings
-from hugegraph_llm.models.rerankers.cohere import CohereReranker
-from hugegraph_llm.models.rerankers.siliconflow import SiliconReranker
+from typing import Optional
+from .models import BaseConfig
 
-
-class Rerankers:
-    def __init__(self):
-        self.reranker_type = huge_settings.reranker_type
-
-    def get_reranker(self):
-        if self.reranker_type == "cohere":
-            return CohereReranker(
-                api_key=huge_settings.reranker_api_key, base_url=huge_settings.cohere_base_url,
-                model=huge_settings.reranker_model
-            )
-        if self.reranker_type == "siliconflow":
-            return SiliconReranker(api_key=huge_settings.reranker_api_key, model=huge_settings.reranker_model)
-        raise Exception("Reranker type is not supported!")
+class AdminConfig(BaseConfig):
+    """Admin settings"""
+    enable_login: Optional[str] = "False"
+    user_token: Optional[str] = "4321"
+    admin_token: Optional[str] = "xxxx"

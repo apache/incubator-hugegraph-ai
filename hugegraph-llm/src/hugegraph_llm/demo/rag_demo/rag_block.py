@@ -24,7 +24,7 @@ import gradio as gr
 import pandas as pd
 from gradio.utils import NamedString
 
-from hugegraph_llm.config import resource_path, prompt, settings
+from hugegraph_llm.config import resource_path, prompt, huge_settings
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.utils.log import log
 
@@ -74,7 +74,7 @@ def rag_answer(
         rag.query_vector_index()
     if graph_search:
         rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid().import_schema(
-            settings.graph_name).query_graphdb(with_gremlin_template=with_gremlin_template)
+            huge_settings.graph_name).query_graphdb(with_gremlin_template=with_gremlin_template)
     # TODO: add more user-defined search strategies
     rag.merge_dedup_rerank(graph_ratio, rerank_method, near_neighbor_first, )
     rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
@@ -282,4 +282,4 @@ def create_rag_block():
     )
     questions_file.change(read_file_to_excel, questions_file, [qa_dataframe, answer_max_line_count])
     answer_max_line_count.change(change_showing_excel, answer_max_line_count, qa_dataframe)
-    return inp, answer_prompt_input, keywords_extract_prompt_input
+    return inp, answer_prompt_input, keywords_extract_prompt_input, custom_related_information

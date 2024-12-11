@@ -16,15 +16,21 @@
 # under the License.
 
 
-__all__ = ["settings", "prompt", "resource_path"]
+__all__ = ["huge_settings", "admin_settings", "llm_settings", "resource_path"]
 
 import os
-from .config import Config, PromptConfig
 
-settings = Config()
-settings.from_env()
+from .prompt_config import PromptConfig
+from .hugegraph_config import HugeGraphConfig
+from .admin_config import AdminConfig
+from .llm_config import LLMConfig
+
 prompt = PromptConfig()
 prompt.ensure_yaml_file_exists()
+
+huge_settings = HugeGraphConfig()
+admin_settings = AdminConfig()
+llm_settings = LLMConfig()
 
 package_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 resource_path = os.path.join(package_path, "resources")
