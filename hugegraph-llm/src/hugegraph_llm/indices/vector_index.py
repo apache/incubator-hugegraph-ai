@@ -31,6 +31,7 @@ PROPERTIES_FILE_NAME = "properties.pkl"
 
 class VectorIndex:
     """Comment"""
+
     def __init__(self, embed_dim: int = 1024):
         self.index = faiss.IndexFlatL2(embed_dim)
         self.properties = []
@@ -95,7 +96,7 @@ class VectorIndex:
         distances, indices = self.index.search(np.array([query_vector]), top_k)
         results = []
         for dist, i in zip(distances[0], indices[0]):
-            if dist < dis_threshold: # Smaller distances indicate higher similarity
+            if dist < dis_threshold:  # Smaller distances indicate higher similarity
                 results.append(deepcopy(self.properties[i]))
                 log.debug("[✓] Add valid distance %s to results.", dist)
             else:

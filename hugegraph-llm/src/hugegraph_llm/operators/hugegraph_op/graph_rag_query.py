@@ -75,17 +75,16 @@ g.V().has('{prop}', within({keywords}))
 
 
 class GraphRAGQuery:
-
     def __init__(
             self,
             max_deep: int = 2,
-            max_items: int = 20,
+            max_items: int = int(huge_settings.max_items),
             prop_to_match: Optional[str] = None,
-            with_gremlin_template: bool = True,
             llm: Optional[BaseLLM] = None,
             embedding: Optional[BaseEmbedding] = None,
             max_v_prop_len: int = 2048,
             max_e_prop_len: int = 256,
+            with_gremlin_template: bool = True,
             num_gremlin_generate_example: int = 1
     ):
         self._client = PyHugeClient(
@@ -111,19 +110,7 @@ class GraphRAGQuery:
         self._with_gremlin_template = with_gremlin_template
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        # pylint: disable=R0915 (too-many-statements)
-        if self._client is None:
-            if isinstance(context.get("graph_client"), PyHugeClient):
-                self._client = context["graph_client"]
-            else:
-                ip = context.get("ip") or "localhost"
-                port = context.get("port") or "8080"
-                graph = context.get("graph") or "hugegraph"
-                user = context.get("user") or "admin"
-                pwd = context.get("pwd") or "admin"
-                gs = context.get("graphspace") or None
-                self._client = PyHugeClient(ip, port, graph, user, pwd, gs)
-        assert self._client is not None, "No valid graph to search."
+        self._init_client(context)
 
         # initial flag: -1 means no result, 0 means subgraph query, 1 means gremlin query
         context["graph_result_flag"] = -1
@@ -189,7 +176,7 @@ class GraphRAGQuery:
         _, edge_labels = self._extract_labels_from_schema()
         edge_labels_str = ",".join("'" + label + "'" for label in edge_labels)
         # TODO: enhance the limit logic later
-        edge_limit_amount = len(edge_labels) * 10
+        edge_limit_amount = len(edge_labels) * huge_settings.edge_limit_pre_label
 
         use_id_to_match = self._prop_to_match is None
         if use_id_to_match:
@@ -201,15 +188,18 @@ class GraphRAGQuery:
             log.debug("Vids gremlin query: %s", gremlin_query)
 
             vertex_knowledge = self._format_graph_from_vertex(query_result=vertexes)
-            gremlin_query = VID_QUERY_NEIGHBOR_TPL.format(
-                keywords=matched_vids,
-                max_deep=self._max_deep,
-                edge_labels=edge_labels_str,
-                edge_limit=edge_limit_amount,
-                max_items=self._max_items,
-            )
-            log.debug("Kneighbor gremlin query: %s", gremlin_query.replace("\n", "").replace(" ", ""))
-            paths = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
+            paths: List[Any] = []
+            # TODO: use generator or asyncio to speed up the query logic
+            for matched_vid in matched_vids:
+                gremlin_query = VID_QUERY_NEIGHBOR_TPL.format(
+                    keywords="'{}'".format(matched_vid),
+                    max_deep=self._max_deep,
+                    edge_labels=edge_labels_str,
+                    edge_limit=edge_limit_amount,
+                    max_items=self._max_items,
+                )
+                log.debug("Kneighbor gremlin query: %s", gremlin_query)
+                paths.extend(self._client.gremlin().exec(gremlin=gremlin_query)["data"])
 
             graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_graph_query_result(
                 query_paths=paths
@@ -253,6 +243,21 @@ class GraphRAGQuery:
                 "extracted based on key entities as subject:\n"
             )
         return context
+
+    def _init_client(self, context):
+        # pylint: disable=R0915 (too-many-statements)
+        if self._client is None:
+            if isinstance(context.get("graph_client"), PyHugeClient):
+                self._client = context["graph_client"]
+            else:
+                ip = context.get("ip") or "localhost"
+                port = context.get("port") or "8080"
+                graph = context.get("graph") or "hugegraph"
+                user = context.get("user") or "admin"
+                pwd = context.get("pwd") or "admin"
+                gs = context.get("graphspace") or None
+                self._client = PyHugeClient(ip, port, graph, user, pwd, gs)
+        assert self._client is not None, "No valid graph to search."
 
     def _format_graph_from_vertex(self, query_result: List[Any]) -> Set[str]:
         knowledge = set()
