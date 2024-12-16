@@ -19,7 +19,7 @@
 import os
 from typing import Dict, Any, Literal, List, Tuple
 
-from hugegraph_llm.config import resource_path, settings
+from hugegraph_llm.config import resource_path, huge_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.utils.log import log
@@ -36,19 +36,19 @@ class SemanticIdQuery:
             topk_per_query: int = 10,
             topk_per_keyword: int = 1
     ):
-        self.index_dir = str(os.path.join(resource_path, settings.graph_name, "graph_vids"))
+        self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids"))
         self.vector_index = VectorIndex.from_index_file(self.index_dir)
         self.embedding = embedding
         self.by = by
         self.topk_per_query = topk_per_query
         self.topk_per_keyword = topk_per_keyword
         self._client = PyHugeClient(
-            settings.graph_ip,
-            settings.graph_port,
-            settings.graph_name,
-            settings.graph_user,
-            settings.graph_pwd,
-            settings.graph_space,
+            huge_settings.graph_ip,
+            huge_settings.graph_port,
+            huge_settings.graph_name,
+            huge_settings.graph_user,
+            huge_settings.graph_pwd,
+            huge_settings.graph_space,
         )
 
     def _exact_match_vids(self, keywords: List[str]) -> Tuple[List[str], List[str]]:
@@ -75,7 +75,8 @@ class SemanticIdQuery:
         fuzzy_match_result = []
         for keyword in keywords:
             keyword_vector = self.embedding.get_text_embedding(keyword)
-            results = self.vector_index.search(keyword_vector, top_k=self.topk_per_keyword)
+            results = self.vector_index.search(keyword_vector, top_k=self.topk_per_keyword,
+                                               dis_threshold=float(huge_settings.vector_dis_threshold))
             if results:
                 fuzzy_match_result.extend(results[:self.topk_per_keyword])
         return fuzzy_match_result
