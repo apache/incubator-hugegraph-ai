@@ -17,8 +17,8 @@
 
 import json
 import os
-from typing import Optional
 from functools import partial
+from typing import Optional
 
 import gradio as gr
 import requests
@@ -104,10 +104,10 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
 
 
 def apply_reranker_config(
-    reranker_api_key: Optional[str] = None,
-    reranker_model: Optional[str] = None,
-    cohere_base_url: Optional[str] = None,
-    origin_call=None,
+        reranker_api_key: Optional[str] = None,
+        reranker_model: Optional[str] = None,
+        cohere_base_url: Optional[str] = None,
+        origin_call=None,
 ) -> int:
     status_code = -1
     reranker_option = llm_settings.reranker_type
@@ -174,7 +174,7 @@ def apply_llm_config(current_llm_config, arg1, arg2, arg3, arg4, origin_call=Non
         setattr(llm_settings, f"openai_{current_llm_config}_tokens", int(arg4))
 
         test_url = getattr(llm_settings, f"openai_{current_llm_config}_api_base") + "/chat/completions"
-        log.debug(f"Type of openai {current_llm_config} max token is %s", type(arg4))
+        log.debug("Type of OpenAI %s max_token is %s", current_llm_config, type(arg4))
         data = {
             "model": arg3,
             "temperature": 0.0,
@@ -184,7 +184,8 @@ def apply_llm_config(current_llm_config, arg1, arg2, arg3, arg4, origin_call=Non
         status_code = test_api_connection(test_url, method="POST", headers=headers, body=data, origin_call=origin_call)
 
     elif llm_option == "qianfan_wenxin":
-        status_code = config_qianfan_model(arg1, arg2, arg3, settings_prefix=current_llm_config, origin_call=origin_call) #pylint: disable=C0301
+        status_code = config_qianfan_model(arg1, arg2, arg3, settings_prefix=current_llm_config,
+                                           origin_call=origin_call)  # pylint: disable=C0301
 
     elif llm_option == "ollama/local":
         setattr(llm_settings, f"ollama_{current_llm_config}_host", arg1)
@@ -198,7 +199,7 @@ def apply_llm_config(current_llm_config, arg1, arg2, arg3, arg4, origin_call=Non
 
 
 # TODO: refactor the function to reduce the number of statements & separate the logic
-#pylint: disable=C0301
+# pylint: disable=C0301,E1101
 def create_configs_block() -> list:
     # pylint: disable=R0915 (too-many-statements)
     with gr.Accordion("1. Set up the HugeGraph server.", open=False):
@@ -214,24 +215,25 @@ def create_configs_block() -> list:
         graph_config_button = gr.Button("Apply Configuration")
     graph_config_button.click(apply_graph_config, inputs=graph_config_input)  # pylint: disable=no-member
 
-    #TODO : use OOP to restruact
+    # TODO : use OOP to refactor the following code
     with gr.Accordion("2. Set up the LLM.", open=False):
         gr.Markdown("> Tips: the openai option also support openai style api from other providers.")
         with gr.Tab(label='chat'):
             chat_llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama/local"],
-                            value=getattr(llm_settings, "chat_llm_type"), label="type")
+                                            value=getattr(llm_settings, "chat_llm_type"), label="type")
             apply_llm_config_with_chat_op = partial(apply_llm_config, "chat")
+
             @gr.render(inputs=[chat_llm_dropdown])
             def chat_llm_settings(llm_type):
                 llm_settings.chat_llm_type = llm_type
-                llm_config_input = []
                 if llm_type == "openai":
                     llm_config_input = [
-                        gr.Textbox(value=getattr(llm_settings, "openai_chat_api_key"), label="api_key", type="password"),
+                        gr.Textbox(value=getattr(llm_settings, "openai_chat_api_key"), label="api_key",
+                                   type="password"),
                         gr.Textbox(value=getattr(llm_settings, "openai_chat_api_base"), label="api_base"),
                         gr.Textbox(value=getattr(llm_settings, "openai_chat_language_model"), label="model_name"),
                         gr.Textbox(value=getattr(llm_settings, "openai_chat_tokens"), label="max_token"),
-                ]
+                    ]
                 elif llm_type == "ollama/local":
                     llm_config_input = [
                         gr.Textbox(value=getattr(llm_settings, "ollama_chat_host"), label="host"),
@@ -241,19 +243,21 @@ def create_configs_block() -> list:
                     ]
                 elif llm_type == "qianfan_wenxin":
                     llm_config_input = [
-                        gr.Textbox(value=getattr(llm_settings, "qianfan_chat_api_key"), label="api_key", type="password"),
-                        gr.Textbox(value=getattr(llm_settings, "qianfan_chat_secret_key"), label="secret_key", type="password"),
+                        gr.Textbox(value=getattr(llm_settings, "qianfan_chat_api_key"), label="api_key",
+                                   type="password"),
+                        gr.Textbox(value=getattr(llm_settings, "qianfan_chat_secret_key"), label="secret_key",
+                                   type="password"),
                         gr.Textbox(value=getattr(llm_settings, "qianfan_chat_language_model"), label="model_name"),
                         gr.Textbox(value="", visible=False),
                     ]
                 else:
                     llm_config_input = [gr.Textbox(value="", visible=False) for _ in range(4)]
                 llm_config_button = gr.Button("Apply configuration")
-                llm_config_button.click(apply_llm_config_with_chat_op, inputs=llm_config_input) #pylint: disable=E1101
+                llm_config_button.click(apply_llm_config_with_chat_op, inputs=llm_config_input)
 
         with gr.Tab(label='mini_tasks'):
             extract_llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama/local"],
-                        value=getattr(llm_settings, "extract_llm_type"), label="type")
+                                               value=getattr(llm_settings, "extract_llm_type"), label="type")
             apply_llm_config_with_extract_op = partial(apply_llm_config, "extract")
 
             @gr.render(inputs=[extract_llm_dropdown])
@@ -261,11 +265,12 @@ def create_configs_block() -> list:
                 llm_settings.extract_llm_type = llm_type
                 if llm_type == "openai":
                     llm_config_input = [
-                        gr.Textbox(value=getattr(llm_settings, "openai_extract_api_key"), label="api_key", type="password"),
+                        gr.Textbox(value=getattr(llm_settings, "openai_extract_api_key"), label="api_key",
+                                   type="password"),
                         gr.Textbox(value=getattr(llm_settings, "openai_extract_api_base"), label="api_base"),
                         gr.Textbox(value=getattr(llm_settings, "openai_extract_language_model"), label="model_name"),
                         gr.Textbox(value=getattr(llm_settings, "openai_extract_tokens"), label="max_token"),
-                ]
+                    ]
                 elif llm_type == "ollama/local":
                     llm_config_input = [
                         gr.Textbox(value=getattr(llm_settings, "ollama_extract_host"), label="host"),
@@ -275,27 +280,29 @@ def create_configs_block() -> list:
                     ]
                 elif llm_type == "qianfan_wenxin":
                     llm_config_input = [
-                        gr.Textbox(value=getattr(llm_settings, "qianfan_extract_api_key"), label="api_key", type="password"),
-                        gr.Textbox(value=getattr(llm_settings, "qianfan_extract_secret_key"), label="secret_key", type="password"),
+                        gr.Textbox(value=getattr(llm_settings, "qianfan_extract_api_key"), label="api_key",
+                                   type="password"),
+                        gr.Textbox(value=getattr(llm_settings, "qianfan_extract_secret_key"), label="secret_key",
+                                   type="password"),
                         gr.Textbox(value=getattr(llm_settings, "qianfan_extract_language_model"), label="model_name"),
                         gr.Textbox(value="", visible=False),
                     ]
                 else:
                     llm_config_input = [gr.Textbox(value="", visible=False) for _ in range(4)]
                 llm_config_button = gr.Button("Apply configuration")
-                llm_config_button.click(apply_llm_config_with_extract_op, inputs=llm_config_input) #pylint: disable=E1101
+                llm_config_button.click(apply_llm_config_with_extract_op, inputs=llm_config_input)
         with gr.Tab(label='text2gql'):
             text2gql_llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama/local"],
-                            value=getattr(llm_settings, "text2gql_llm_type"), label="type")
+                                                value=getattr(llm_settings, "text2gql_llm_type"), label="type")
             apply_llm_config_with_text2gql_op = partial(apply_llm_config, "text2gql")
 
             @gr.render(inputs=[text2gql_llm_dropdown])
             def text2gql_llm_settings(llm_type):
                 llm_settings.text2gql_llm_type = llm_type
-                llm_config_input = []
                 if llm_type == "openai":
                     llm_config_input = [
-                        gr.Textbox(value=getattr(llm_settings, "openai_text2gql_api_key"), label="api_key", type="password"),
+                        gr.Textbox(value=getattr(llm_settings, "openai_text2gql_api_key"), label="api_key",
+                                   type="password"),
                         gr.Textbox(value=getattr(llm_settings, "openai_text2gql_api_base"), label="api_base"),
                         gr.Textbox(value=getattr(llm_settings, "openai_text2gql_language_model"), label="model_name"),
                         gr.Textbox(value=getattr(llm_settings, "openai_text2gql_tokens"), label="max_token"),
@@ -309,16 +316,17 @@ def create_configs_block() -> list:
                     ]
                 elif llm_type == "qianfan_wenxin":
                     llm_config_input = [
-                        gr.Textbox(value=getattr(llm_settings, "qianfan_text2gql_api_key"), label="api_key", type="password"),
-                        gr.Textbox(value=getattr(llm_settings, "qianfan_text2gql_secret_key"), label="secret_key", type="password"),
+                        gr.Textbox(value=getattr(llm_settings, "qianfan_text2gql_api_key"), label="api_key",
+                                   type="password"),
+                        gr.Textbox(value=getattr(llm_settings, "qianfan_text2gql_secret_key"), label="secret_key",
+                                   type="password"),
                         gr.Textbox(value=getattr(llm_settings, "qianfan_text2gql_language_model"), label="model_name"),
                         gr.Textbox(value="", visible=False),
                     ]
                 else:
                     llm_config_input = [gr.Textbox(value="", visible=False) for _ in range(4)]
                 llm_config_button = gr.Button("Apply configuration")
-                llm_config_button.click(apply_llm_config_with_text2gql_op, inputs=llm_config_input) #pylint: disable=E1101
-
+                llm_config_button.click(apply_llm_config_with_text2gql_op, inputs=llm_config_input)
 
     with gr.Accordion("3. Set up the Embedding.", open=False):
         embedding_dropdown = gr.Dropdown(
@@ -346,7 +354,8 @@ def create_configs_block() -> list:
                 with gr.Row():
                     embedding_config_input = [
                         gr.Textbox(value=llm_settings.qianfan_embedding_api_key, label="api_key", type="password"),
-                        gr.Textbox(value=llm_settings.qianfan_embedding_secret_key, label="secret_key", type="password"),
+                        gr.Textbox(value=llm_settings.qianfan_embedding_secret_key, label="secret_key",
+                                   type="password"),
                         gr.Textbox(value=llm_settings.qianfan_embedding_model, label="model_name"),
                     ]
             else:

@@ -29,5 +29,5 @@ class FetchGraphData:
         if context is None:
             context = {}
         if "vertices" not in context:
-            context["vertices"] = self.graph.gremlin().exec("g.V().id()")["data"]
+            context["vertices"] = self.graph.gremlin().exec("g.V().id().limit(10000)")["data"]
         return context

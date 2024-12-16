@@ -17,8 +17,8 @@
 
 
 import os
-
 from typing import Optional, Literal
+
 from .models import BaseConfig
 
 
@@ -43,8 +43,8 @@ class LLMConfig(BaseConfig):
     openai_embedding_api_base: Optional[str] = os.environ.get("OPENAI_EMBEDDING_BASE_URL", "https://api.openai.com/v1")
     openai_embedding_api_key: Optional[str] = os.environ.get("OPENAI_EMBEDDING_API_KEY")
     openai_embedding_model: Optional[str] = "text-embedding-3-small"
-    openai_chat_tokens: int = 4096
-    openai_extract_tokens: int = 4096
+    openai_chat_tokens: int = 8192
+    openai_extract_tokens: int = 256
     openai_text2gql_tokens: int = 4096
     # 2. Rerank settings
     cohere_base_url: Optional[str] = os.environ.get("CO_API_URL", "https://api.cohere.com/v1/rerank")
