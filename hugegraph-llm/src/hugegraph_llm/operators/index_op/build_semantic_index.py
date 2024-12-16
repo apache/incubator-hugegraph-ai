@@ -20,7 +20,7 @@ import os
 from typing import Any, Dict
 
 from tqdm import tqdm
-from hugegraph_llm.config import resource_path, settings
+from hugegraph_llm.config import resource_path, huge_settings
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.utils.log import log
@@ -28,7 +28,7 @@ from hugegraph_llm.utils.log import log
 
 class BuildSemanticIndex:
     def __init__(self, embedding: BaseEmbedding):
-        self.index_dir = str(os.path.join(resource_path, settings.graph_name, "graph_vids"))
+        self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids"))
         self.vid_index = VectorIndex.from_index_file(self.index_dir)
         self.embedding = embedding
 

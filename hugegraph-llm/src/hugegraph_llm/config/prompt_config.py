@@ -13,113 +13,14 @@
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
-# under the License.\
+# under the License.
 
 
-import os
-from dataclasses import dataclass
-from typing import Literal, Optional
+from hugegraph_llm.config.models.base_prompt_config import BasePromptConfig
 
-
-@dataclass
-class ConfigData:
-    """LLM settings"""
-
-    # env_path: Optional[str] = ".env"
-    chat_llm_type: Literal["openai", "ollama/local", "qianfan_wenxin", "zhipu"] = "openai"
-    extract_llm_type: Literal["openai", "ollama/local", "qianfan_wenxin", "zhipu"] = "openai"
-    text2gql_llm_type: Literal["openai", "ollama/local", "qianfan_wenxin", "zhipu"] = "openai"
-    embedding_type: Optional[Literal["openai", "ollama/local", "qianfan_wenxin", "zhipu"]] = "openai"
-    reranker_type: Optional[Literal["cohere", "siliconflow"]] = None
-    # 1. OpenAI settings
-    openai_chat_api_base: Optional[str] = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
-    openai_chat_api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
-    openai_chat_language_model: Optional[str] = "gpt-4o-mini"
-    openai_extract_api_base: Optional[str] = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
-    openai_extract_api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
-    openai_extract_language_model: Optional[str] = "gpt-4o-mini"
-    openai_text2gql_api_base: Optional[str] = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
-    openai_text2gql_api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
-    openai_text2gql_language_model: Optional[str] = "gpt-4o-mini"
-    openai_embedding_api_base: Optional[str] = os.environ.get("OPENAI_EMBEDDING_BASE_URL", "https://api.openai.com/v1")
-    openai_embedding_api_key: Optional[str] = os.environ.get("OPENAI_EMBEDDING_API_KEY")
-    openai_embedding_model: Optional[str] = "text-embedding-3-small"
-    openai_chat_tokens: int = 4096
-    openai_extract_tokens: int = 4096
-    openai_text2gql_tokens: int = 4096
-    # 2. Rerank settings
-    cohere_base_url: Optional[str] = os.environ.get("CO_API_URL", "https://api.cohere.com/v1/rerank")
-    reranker_api_key: Optional[str] = None
-    reranker_model: Optional[str] = None
-    # 3. Ollama settings
-    ollama_chat_host: Optional[str] = "127.0.0.1"
-    ollama_chat_port: Optional[int] = 11434
-    ollama_chat_language_model: Optional[str] = None
-    ollama_extract_host: Optional[str] = "127.0.0.1"
-    ollama_extract_port: Optional[int] = 11434
-    ollama_extract_language_model: Optional[str] = None
-    ollama_text2gql_host: Optional[str] = "127.0.0.1"
-    ollama_text2gql_port: Optional[int] = 11434
-    ollama_text2gql_language_model: Optional[str] = None
-    ollama_embedding_host: Optional[str] = "127.0.0.1"
-    ollama_embedding_port: Optional[int] = 11434
-    ollama_embedding_model: Optional[str] = None
-    # 4. QianFan/WenXin settings
-    qianfan_chat_api_key: Optional[str] = None
-    qianfan_chat_secret_key: Optional[str] = None
-    qianfan_chat_access_token: Optional[str] = None
-    qianfan_extract_api_key: Optional[str] = None
-    qianfan_extract_secret_key: Optional[str] = None
-    qianfan_extract_access_token: Optional[str] = None
-    qianfan_text2gql_api_key: Optional[str] = None
-    qianfan_text2gql_secret_key: Optional[str] = None
-    qianfan_text2gql_access_token: Optional[str] = None
-    qianfan_embedding_api_key: Optional[str] = None
-    qianfan_embedding_secret_key: Optional[str] = None
-    # 4.1 URL settings
-    qianfan_url_prefix: Optional[str] = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
-    qianfan_chat_url: Optional[str] = qianfan_url_prefix + "/chat/"
-    qianfan_chat_language_model: Optional[str] = "ERNIE-Speed-128K"
-    qianfan_extract_language_model: Optional[str] = "ERNIE-Speed-128K"
-    qianfan_text2gql_language_model: Optional[str] = "ERNIE-Speed-128K"
-    qianfan_embed_url: Optional[str] = qianfan_url_prefix + "/embeddings/"
-    # refer https://cloud.baidu.com/doc/WENXINWORKSHOP/s/alj562vvu to get more details
-    qianfan_embedding_model: Optional[str] = "embedding-v1"
-    # TODO: To be confirmed, whether to configure
-    # 5. ZhiPu(GLM) settings
-    zhipu_chat_api_key: Optional[str] = None
-    zhipu_chat_language_model: Optional[str] = "glm-4"
-    zhipu_chat_embedding_model: Optional[str] = "embedding-2"
-    zhipu_extract_api_key: Optional[str] = None
-    zhipu_extract_language_model: Optional[str] = "glm-4"
-    zhipu_extract_embedding_model: Optional[str] = "embedding-2"
-    zhipu_text2gql_api_key: Optional[str] = None
-    zhipu_text2gql_language_model: Optional[str] = "glm-4"
-    zhipu_text2gql_embedding_model: Optional[str] = "embedding-2"
-
-    """HugeGraph settings"""
-    graph_ip: Optional[str] = "127.0.0.1"
-    graph_port: Optional[str] = "8080"
-    graph_name: Optional[str] = "hugegraph"
-    graph_user: Optional[str] = "admin"
-    graph_pwd: Optional[str] = "xxx"
-    graph_space: Optional[str] = None
-    limit_property: Optional[str] = "False"
-    max_graph_path: Optional[int] = 10
-    max_items: Optional[int] = 30
-    edge_limit_pre_label: Optional[int] = 8
-    vector_dis_threshold: Optional[float] = 0.9
-
-    """Admin settings"""
-    enable_login: Optional[str] = "False"
-    user_token: Optional[str] = "4321"
-    admin_token: Optional[str] = "xxxx"
-
-
-# Additional static content like PromptConfig
-class PromptData:
+class PromptConfig(BasePromptConfig):
     # Data is detached from llm_op/answer_synthesize.py
-    answer_prompt = """You are an expert in knowledge graphs and natural language processing.
+    answer_prompt: str = """You are an expert in knowledge graphs and natural language processing.
 Your task is to provide a precise and accurate answer based on the given context.
 
 Context information is below.
@@ -133,12 +34,12 @@ Query: {query_str}
 Answer:
 """
 
-    custom_rerank_info = """"""
+    custom_rerank_info: str = """"""
 
-    default_question = """Tell me about Sarah."""
+    default_question: str = """Tell me about Sarah."""
 
     # Data is detached from hugegraph-llm/src/hugegraph_llm/operators/llm_op/property_graph_extract.py
-    extract_graph_prompt = """## Main Task
+    extract_graph_prompt: str = """## Main Task
 Given the following graph schema and a piece of text, your task is to analyze the text and extract information that fits into the schema's structure, formatting the information into vertices and edges as specified.
 
 ## Basic Rules
@@ -174,7 +75,7 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
 [{"id":"1:Sarah","label":"person","type":"vertex","properties":{"name":"Sarah","age":30,"occupation":"attorney"}},{"id":"1:James","label":"person","type":"vertex","properties":{"name":"James","occupation":"journalist"}},{"label":"roommate","type":"edge","outV":"1:Sarah","outVLabel":"person","inV":"1:James","inVLabel":"person","properties":{"date":"2010"}}]
 """
 
-    graph_schema = """{
+    graph_schema: str = """{
 "vertexlabels": [
     {
     "id": 1,
@@ -224,10 +125,10 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
 """
 
     # TODO: we should provide a better example to reduce the useless information
-    text2gql_graph_schema = ConfigData.graph_name
+    text2gql_graph_schema: str = "hugegraph"
 
     # Extracted from llm_op/keyword_extract.py
-    keywords_extract_prompt = """指令：
+    keywords_extract_prompt: str = """指令：
 请对以下文本执行以下任务：
 1. 从文本中提取关键词：
   - 最少 0 个，最多 {max_keywords} 个。

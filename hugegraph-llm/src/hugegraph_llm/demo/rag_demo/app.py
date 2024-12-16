@@ -26,7 +26,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from hugegraph_llm.api.admin_api import admin_http_api
 from hugegraph_llm.api.rag_api import rag_http_api
-from hugegraph_llm.config import settings, prompt
+from hugegraph_llm.config import huge_settings, prompt
 from hugegraph_llm.demo.rag_demo.admin_block import create_admin_block, log_stream
 from hugegraph_llm.demo.rag_demo.configs_block import (
     create_configs_block,
@@ -59,11 +59,11 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
 
 # pylint: disable=C0301
 def init_rag_ui() -> gr.Interface:
-    with gr.Blocks(
+    with (gr.Blocks(
             theme="default",
             title="HugeGraph RAG Platform",
             css=CSS,
-    ) as hugegraph_llm_ui:
+    ) as hugegraph_llm_ui):
         gr.Markdown("# HugeGraph LLM RAG Demo")
 
         """
@@ -94,7 +94,8 @@ def init_rag_ui() -> gr.Interface:
         with gr.Tab(label="1. Build RAG Index 💡"):
             textbox_input_schema, textbox_info_extract_template = create_vector_graph_block()
         with gr.Tab(label="2. (Graph)RAG & User Functions 📖"):
-            textbox_inp, textbox_answer_prompt_input, textbox_keywords_extract_prompt_input = create_rag_block()
+            textbox_inp, textbox_answer_prompt_input, textbox_keywords_extract_prompt_input, \
+            textbox_custom_related_information = create_rag_block()
         with gr.Tab(label="3. Text2gremlin ⚙️"):
             textbox_gremlin_inp, textbox_gremlin_schema, textbox_gremlin_prompt = create_text2gremlin_block()
         with gr.Tab(label="4. Graph Tools 🚧"):
@@ -103,13 +104,16 @@ def init_rag_ui() -> gr.Interface:
             create_admin_block()
 
         def refresh_ui_config_prompt() -> tuple:
-            settings.from_env()
+            # we can use its __init__() for in-place reload
+            # settings.from_env()
+            huge_settings.__init__() # pylint: disable=C2801
             prompt.ensure_yaml_file_exists()
             return (
-                settings.graph_ip, settings.graph_port, settings.graph_name, settings.graph_user,
-                settings.graph_pwd, settings.graph_space, prompt.graph_schema, prompt.extract_graph_prompt,
+                huge_settings.graph_ip, huge_settings.graph_port, huge_settings.graph_name, huge_settings.graph_user,
+                huge_settings.graph_pwd, huge_settings.graph_space, prompt.graph_schema, prompt.extract_graph_prompt,
                 prompt.default_question, prompt.answer_prompt, prompt.keywords_extract_prompt,
-                prompt.default_question, settings.graph_name, prompt.gremlin_generate_prompt
+                prompt.custom_rerank_info, prompt.default_question, huge_settings.graph_name,
+                prompt.gremlin_generate_prompt
             )
 
         hugegraph_llm_ui.load(fn=refresh_ui_config_prompt, outputs=[  # pylint: disable=E1101
@@ -124,6 +128,7 @@ def init_rag_ui() -> gr.Interface:
             textbox_inp,
             textbox_answer_prompt_input,
             textbox_keywords_extract_prompt_input,
+            textbox_custom_related_information,
             textbox_gremlin_inp,
             textbox_gremlin_schema,
             textbox_gremlin_prompt
@@ -139,7 +144,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     app = FastAPI()
 
-    settings.check_env()
+    # we don't need to manually check the env now
+    # settings.check_env()
     prompt.update_yaml_file()
 
     auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"

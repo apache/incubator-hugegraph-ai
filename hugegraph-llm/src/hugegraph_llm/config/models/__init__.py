@@ -15,19 +15,5 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
-from typing import Optional, Dict, Any
-
-from pyhugegraph.client import PyHugeClient
-
-
-class FetchGraphData:
-    def __init__(self, graph: PyHugeClient):
-        self.graph = graph
-
-    def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        if context is None:
-            context = {}
-        if "vertices" not in context:
-            context["vertices"] = self.graph.gremlin().exec("g.V().id().limit(10000)")["data"]
-        return context
+from .base_config import BaseConfig
+from .base_prompt_config import BasePromptConfig

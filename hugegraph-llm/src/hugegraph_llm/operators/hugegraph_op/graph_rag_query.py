@@ -18,7 +18,7 @@
 import json
 from typing import Any, Dict, Optional, List, Set, Tuple
 
-from hugegraph_llm.config import settings
+from hugegraph_llm.config import huge_settings
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
@@ -78,7 +78,7 @@ class GraphRAGQuery:
     def __init__(
             self,
             max_deep: int = 2,
-            max_items: int = int(settings.max_items),
+            max_items: int = int(huge_settings.max_items),
             prop_to_match: Optional[str] = None,
             llm: Optional[BaseLLM] = None,
             embedding: Optional[BaseEmbedding] = None,
@@ -88,18 +88,18 @@ class GraphRAGQuery:
             num_gremlin_generate_example: int = 1
     ):
         self._client = PyHugeClient(
-            settings.graph_ip,
-            settings.graph_port,
-            settings.graph_name,
-            settings.graph_user,
-            settings.graph_pwd,
-            settings.graph_space,
+            huge_settings.graph_ip,
+            huge_settings.graph_port,
+            huge_settings.graph_name,
+            huge_settings.graph_user,
+            huge_settings.graph_pwd,
+            huge_settings.graph_space,
         )
         self._max_deep = max_deep
         self._max_items = max_items
         self._prop_to_match = prop_to_match
         self._schema = ""
-        self._limit_property = settings.limit_property.lower() == "true"
+        self._limit_property = huge_settings.limit_property.lower() == "true"
         self._max_v_prop_len = max_v_prop_len
         self._max_e_prop_len = max_e_prop_len
         self._gremlin_generator = GremlinGenerator(
@@ -176,7 +176,7 @@ class GraphRAGQuery:
         _, edge_labels = self._extract_labels_from_schema()
         edge_labels_str = ",".join("'" + label + "'" for label in edge_labels)
         # TODO: enhance the limit logic later
-        edge_limit_amount = len(edge_labels) * settings.edge_limit_pre_label
+        edge_limit_amount = len(edge_labels) * huge_settings.edge_limit_pre_label
 
         use_id_to_match = self._prop_to_match is None
         if use_id_to_match:
@@ -192,7 +192,7 @@ class GraphRAGQuery:
             # TODO: use generator or asyncio to speed up the query logic
             for matched_vid in matched_vids:
                 gremlin_query = VID_QUERY_NEIGHBOR_TPL.format(
-                    keywords="'{}'".format(matched_vid),
+                    keywords=f"'{matched_vid}'",
                     max_deep=self._max_deep,
                     edge_labels=edge_labels_str,
                     edge_limit=edge_limit_amount,

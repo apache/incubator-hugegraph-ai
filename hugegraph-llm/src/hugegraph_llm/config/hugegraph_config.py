@@ -15,19 +15,20 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
-from typing import Optional, Dict, Any
-
-from pyhugegraph.client import PyHugeClient
+from typing import Optional
+from .models import BaseConfig
 
 
-class FetchGraphData:
-    def __init__(self, graph: PyHugeClient):
-        self.graph = graph
-
-    def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        if context is None:
-            context = {}
-        if "vertices" not in context:
-            context["vertices"] = self.graph.gremlin().exec("g.V().id().limit(10000)")["data"]
-        return context
+class HugeGraphConfig(BaseConfig):
+    """HugeGraph settings"""
+    graph_ip: Optional[str] = "127.0.0.1"
+    graph_port: Optional[str] = "8080"
+    graph_name: Optional[str] = "hugegraph"
+    graph_user: Optional[str] = "admin"
+    graph_pwd: Optional[str] = "xxx"
+    graph_space: Optional[str] = None
+    limit_property: Optional[str] = "False"
+    max_graph_path: Optional[int] = 10
+    max_items: Optional[int] = 30
+    edge_limit_pre_label: Optional[int] = 8
+    vector_dis_threshold: Optional[float] = 0.9

@@ -15,19 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from typing import Optional
+from .models import BaseConfig
 
-from typing import Optional, Dict, Any
-
-from pyhugegraph.client import PyHugeClient
-
-
-class FetchGraphData:
-    def __init__(self, graph: PyHugeClient):
-        self.graph = graph
-
-    def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        if context is None:
-            context = {}
-        if "vertices" not in context:
-            context["vertices"] = self.graph.gremlin().exec("g.V().id().limit(10000)")["data"]
-        return context
+class AdminConfig(BaseConfig):
+    """Admin settings"""
+    enable_login: Optional[str] = "False"
+    user_token: Optional[str] = "4321"
+    admin_token: Optional[str] = "xxxx"

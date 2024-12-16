@@ -17,7 +17,7 @@
 
 from typing import Dict, Any
 
-from hugegraph_llm.config import settings
+from hugegraph_llm.config import huge_settings
 from hugegraph_llm.enums.property_cardinality import PropertyCardinality
 from hugegraph_llm.enums.property_data_type import PropertyDataType, default_value_map
 from hugegraph_llm.utils.log import log
@@ -28,12 +28,12 @@ from pyhugegraph.utils.exceptions import NotFoundError, CreateError
 class Commit2Graph:
     def __init__(self):
         self.client = PyHugeClient(
-            settings.graph_ip,
-            settings.graph_port,
-            settings.graph_name,
-            settings.graph_user,
-            settings.graph_pwd,
-            settings.graph_space,
+            huge_settings.graph_ip,
+            huge_settings.graph_port,
+            huge_settings.graph_name,
+            huge_settings.graph_user,
+            huge_settings.graph_pwd,
+            huge_settings.graph_space,
         )
         self.schema = self.client.schema()
 

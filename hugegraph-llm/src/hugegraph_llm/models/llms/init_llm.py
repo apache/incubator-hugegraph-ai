@@ -19,78 +19,78 @@
 from hugegraph_llm.models.llms.ollama import OllamaClient
 from hugegraph_llm.models.llms.openai import OpenAIClient
 from hugegraph_llm.models.llms.qianfan import QianfanClient
-from hugegraph_llm.config import settings
+from hugegraph_llm.config import llm_settings
 
 
 class LLMs:
     def __init__(self):
-        self.chat_llm_type = settings.chat_llm_type
-        self.extract_llm_type = settings.extract_llm_type
-        self.text2gql_llm_type = settings.text2gql_llm_type
+        self.chat_llm_type = llm_settings.chat_llm_type
+        self.extract_llm_type = llm_settings.extract_llm_type
+        self.text2gql_llm_type = llm_settings.text2gql_llm_type
 
     def get_chat_llm(self):
         if self.chat_llm_type == "qianfan_wenxin":
             return QianfanClient(
-                model_name=settings.qianfan_chat_language_model,
-                api_key=settings.qianfan_chat_api_key,
-                secret_key=settings.qianfan_chat_secret_key
+                model_name=llm_settings.qianfan_chat_language_model,
+                api_key=llm_settings.qianfan_chat_api_key,
+                secret_key=llm_settings.qianfan_chat_secret_key
             )
         if self.chat_llm_type == "openai":
             return OpenAIClient(
-                api_key=settings.openai_chat_api_key,
-                api_base=settings.openai_chat_api_base,
-                model_name=settings.openai_chat_language_model,
-                max_tokens=settings.openai_chat_tokens,
+                api_key=llm_settings.openai_chat_api_key,
+                api_base=llm_settings.openai_chat_api_base,
+                model_name=llm_settings.openai_chat_language_model,
+                max_tokens=llm_settings.openai_chat_tokens,
             )
         if self.chat_llm_type == "ollama/local":
             return OllamaClient(
-                model=settings.ollama_chat_language_model,
-                host=settings.ollama_chat_host,
-                port=settings.ollama_chat_port,
+                model=llm_settings.ollama_chat_language_model,
+                host=llm_settings.ollama_chat_host,
+                port=llm_settings.ollama_chat_port,
             )
         raise Exception("chat llm type is not supported !")
 
     def get_extract_llm(self):
         if self.extract_llm_type == "qianfan_wenxin":
             return QianfanClient(
-                model_name=settings.qianfan_extract_language_model,
-                api_key=settings.qianfan_extract_api_key,
-                secret_key=settings.qianfan_extract_secret_key
+                model_name=llm_settings.qianfan_extract_language_model,
+                api_key=llm_settings.qianfan_extract_api_key,
+                secret_key=llm_settings.qianfan_extract_secret_key
             )
         if self.extract_llm_type == "openai":
             return OpenAIClient(
-                api_key=settings.openai_extract_api_key,
-                api_base=settings.openai_extract_api_base,
-                model_name=settings.openai_extract_language_model,
-                max_tokens=settings.openai_extract_tokens,
+                api_key=llm_settings.openai_extract_api_key,
+                api_base=llm_settings.openai_extract_api_base,
+                model_name=llm_settings.openai_extract_language_model,
+                max_tokens=llm_settings.openai_extract_tokens,
             )
         if self.extract_llm_type == "ollama/local":
             return OllamaClient(
-                model=settings.ollama_extract_language_model,
-                host=settings.ollama_extract_host,
-                port=settings.ollama_extract_port,
+                model=llm_settings.ollama_extract_language_model,
+                host=llm_settings.ollama_extract_host,
+                port=llm_settings.ollama_extract_port,
             )
         raise Exception("extract llm type is not supported !")
 
     def get_text2gql_llm(self):
         if self.text2gql_llm_type == "qianfan_wenxin":
             return QianfanClient(
-                model_name=settings.qianfan_text2gql_language_model,
-                api_key=settings.qianfan_text2gql_api_key,
-                secret_key=settings.qianfan_text2gql_secret_key
+                model_name=llm_settings.qianfan_text2gql_language_model,
+                api_key=llm_settings.qianfan_text2gql_api_key,
+                secret_key=llm_settings.qianfan_text2gql_secret_key
             )
         if self.text2gql_llm_type == "openai":
             return OpenAIClient(
-                api_key=settings.openai_text2gql_api_key,
-                api_base=settings.openai_text2gql_api_base,
-                model_name=settings.openai_text2gql_language_model,
-                max_tokens=settings.openai_text2gql_tokens,
+                api_key=llm_settings.openai_text2gql_api_key,
+                api_base=llm_settings.openai_text2gql_api_base,
+                model_name=llm_settings.openai_text2gql_language_model,
+                max_tokens=llm_settings.openai_text2gql_tokens,
             )
         if self.text2gql_llm_type == "ollama/local":
             return OllamaClient(
-                model=settings.ollama_text2gql_language_model,
-                host=settings.ollama_text2gql_host,
-                port=settings.ollama_text2gql_port,
+                model=llm_settings.ollama_text2gql_language_model,
+                host=llm_settings.ollama_text2gql_host,
+                port=llm_settings.ollama_text2gql_port,
             )
         raise Exception("text2gql llm type is not supported !")
 
