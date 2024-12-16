@@ -95,7 +95,7 @@ def gremlin_generate(inp, example_num, schema, gremlin_prompt) -> Union[
         context["raw_exec_res"] = f"{e}"
 
     match_result = json.dumps(context.get("match_result", "No Results"), ensure_ascii=False, indent=2)
-    return match_result, context["result"], context["raw_result"], context["template_exec_res"], context["raw_exec_res"]
+    return match_result, context["gremlin_result"], context["raw_gremlin_result"], context["template_exec_res"], context["raw_exec_res"]
 
 
 def simple_schema(schema: Dict[str, Any]) -> Dict[str, Any]:

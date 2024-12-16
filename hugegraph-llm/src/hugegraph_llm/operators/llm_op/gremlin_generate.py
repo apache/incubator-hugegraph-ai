@@ -86,14 +86,15 @@ class GremlinGenerateSynthesize:
         initialized_response = await async_tasks["initialized_answer"]
         log.debug("Text2Gremlin with tmpl prompt:\n %s,\n LLM Response: %s", init_prompt, initialized_response)
 
-        context["result"] = self._extract_gremlin(response=initialized_response)
-        context["raw_result"] = self._extract_gremlin(response=raw_response)
+        context["gremlin_result"] = self._extract_gremlin(response=initialized_response)
+        context["raw_gremlin_result"] = self._extract_gremlin(response=raw_response)
         context["call_count"] = context.get("call_count", 0) + 2
 
         return context
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context.get("query", "")
+        self.schema = context.get("schema")
         if not query:
             raise ValueError("query is required")
 
