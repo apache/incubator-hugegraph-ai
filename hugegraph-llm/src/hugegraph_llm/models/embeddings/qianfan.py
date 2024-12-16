@@ -18,8 +18,9 @@
 
 from typing import Optional, List
 
-import os
 import qianfan
+
+from hugegraph_llm.config import llm_settings
 
 """
 "QianFan" platform can be understood as a unified LLM platform that encompasses the 
@@ -37,8 +38,8 @@ class QianFanEmbedding:
             api_key: Optional[str] = None,
             secret_key: Optional[str] = None
     ):
-        qianfan.get_config().AK = api_key or os.getenv("QIANFAN_ACCESS_KEY")
-        qianfan.get_config().SK = secret_key or os.getenv("QIANFAN_SECRET_KEY")
+        qianfan.get_config().AK = api_key or llm_settings.qianfan_embedding_api_key
+        qianfan.get_config().SK = secret_key or llm_settings.qianfan_embedding_secret_key
         self.embedding_model_name = model_name
         self.client = qianfan.Embedding()
 
