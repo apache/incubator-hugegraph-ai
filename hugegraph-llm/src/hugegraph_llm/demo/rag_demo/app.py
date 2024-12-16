@@ -17,7 +17,6 @@
 
 
 import argparse
-import os
 
 import gradio as gr
 import uvicorn
@@ -26,7 +25,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from hugegraph_llm.api.admin_api import admin_http_api
 from hugegraph_llm.api.rag_api import rag_http_api
-from hugegraph_llm.config import huge_settings, prompt
+from hugegraph_llm.config import admin_settings, huge_settings, prompt
 from hugegraph_llm.demo.rag_demo.admin_block import create_admin_block, log_stream
 from hugegraph_llm.demo.rag_demo.configs_block import (
     create_configs_block,
@@ -46,7 +45,7 @@ sec = HTTPBearer()
 
 
 def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
-    correct_token = os.getenv("USER_TOKEN")
+    correct_token = admin_settings.user_token
     if credentials.credentials != correct_token:
         from fastapi import HTTPException
 
@@ -148,7 +147,7 @@ if __name__ == "__main__":
     # settings.check_env()
     prompt.update_yaml_file()
 
-    auth_enabled = os.getenv("ENABLE_LOGIN", "False").lower() == "true"
+    auth_enabled = admin_settings.enable_login.lower() == "true"
     log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
     api_auth = APIRouter(dependencies=[Depends(authenticate)] if auth_enabled else [])
 
@@ -162,7 +161,7 @@ if __name__ == "__main__":
 
     # TODO: support multi-user login when need
     app = gr.mount_gradio_app(app, hugegraph_llm, path="/",
-                              auth=("rag", os.getenv("USER_TOKEN")) if auth_enabled else None)
+                              auth=("rag", admin_settings.user_token) if auth_enabled else None)
 
     # TODO: we can't use reload now due to the config 'app' of uvicorn.run
     # ❎:f'{__name__}:app' / rag_web_demo:app / hugegraph_llm.demo.rag_web_demo:app

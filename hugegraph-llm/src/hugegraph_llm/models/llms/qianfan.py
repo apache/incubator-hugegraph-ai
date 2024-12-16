@@ -15,13 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import os
 import json
 from typing import Optional, List, Dict, Any, Callable
 
 import qianfan
 from retry import retry
 
+from hugegraph_llm.config import llm_settings
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
 
@@ -29,8 +29,8 @@ from hugegraph_llm.utils.log import log
 class QianfanClient(BaseLLM):
     def __init__(self, model_name: Optional[str] = "ERNIE-4.0-Turbo-8K",
                  api_key: Optional[str] = None, secret_key: Optional[str] = None):
-        qianfan.get_config().AK = api_key or os.getenv("QIANFAN_ACCESS_KEY")
-        qianfan.get_config().SK = secret_key or os.getenv("QIANFAN_SECRET_KEY")
+        qianfan.get_config().AK = api_key or llm_settings.qianfan_chat_api_key
+        qianfan.get_config().SK = secret_key or llm_settings.qianfan_chat_secret_key
         self.chat_model = model_name
         self.chat_comp = qianfan.ChatCompletion()
 

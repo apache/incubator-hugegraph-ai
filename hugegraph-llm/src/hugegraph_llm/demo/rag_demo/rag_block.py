@@ -24,7 +24,7 @@ import gradio as gr
 import pandas as pd
 from gradio.utils import NamedString
 
-from hugegraph_llm.config import resource_path, prompt, huge_settings
+from hugegraph_llm.config import resource_path, prompt, huge_settings, llm_settings
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.utils.log import log
 
@@ -128,7 +128,7 @@ def create_rag_block():
 
             with gr.Column():
                 with gr.Row():
-                    online_rerank = os.getenv("reranker_type")
+                    online_rerank = llm_settings.reranker_type
                     rerank_method = gr.Dropdown(
                         choices=["bleu", ("rerank (online)", "reranker")] if online_rerank else ["bleu"],
                         value="reranker" if online_rerank else "bleu",

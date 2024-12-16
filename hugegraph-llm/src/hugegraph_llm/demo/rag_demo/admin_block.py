@@ -16,12 +16,12 @@
 # under the License.
 
 import asyncio
-import os
 from collections import deque
 
 import gradio as gr
 from gradio import Request
 
+from hugegraph_llm.config import admin_settings
 from hugegraph_llm.utils.log import log
 
 
@@ -72,7 +72,7 @@ def clear_llm_server_log():
 # Function to validate password and control access to logs
 def check_password(password, request: Request = None):
     client_ip = request.client.host if request else "Unknown IP"
-    admin_token = os.getenv('ADMIN_TOKEN')
+    admin_token = admin_settings.admin_token
 
     if password == admin_token:
         # Return logs and update visibility

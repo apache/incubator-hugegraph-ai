@@ -16,7 +16,6 @@
 # under the License.
 
 import json
-import os
 from functools import partial
 from typing import Optional
 
@@ -376,7 +375,7 @@ def create_configs_block() -> list:
     with gr.Accordion("4. Set up the Reranker.", open=False):
         reranker_dropdown = gr.Dropdown(
             choices=["cohere", "siliconflow", ("default/offline", "None")],
-            value=os.getenv("reranker_type") or "None",
+            value=llm_settings.reranker_type or "None",
             label="Reranker",
         )
 
