@@ -129,9 +129,9 @@ def init_rag_ui() -> gr.Interface:
                 prompt.gremlin_generate_prompt,
             )
 
-        hugegraph_llm_ui.load(
+        hugegraph_llm_ui.load(  # pylint: disable=E1101
             fn=refresh_ui_config_prompt,
-            outputs=[  # pylint: disable=E1101
+            outputs=[
                 textbox_array_graph_config[0],
                 textbox_array_graph_config[1],
                 textbox_array_graph_config[2],
