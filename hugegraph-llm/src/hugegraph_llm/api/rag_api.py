@@ -24,7 +24,8 @@ from hugegraph_llm.api.models.rag_requests import (
     RAGRequest,
     GraphConfigRequest,
     LLMConfigRequest,
-    RerankerConfigRequest, GraphRAGRequest,
+    RerankerConfigRequest,
+    GraphRAGRequest,
 )
 from hugegraph_llm.api.models.rag_response import RAGResponse
 from hugegraph_llm.config import llm_settings, huge_settings, prompt
@@ -32,19 +33,19 @@ from hugegraph_llm.utils.log import log
 
 
 def graph_rag_recall(
-        text: str,
-        rerank_method: Literal["bleu", "reranker"],
-        near_neighbor_first: bool,
-        with_gremlin_template: bool,
-        custom_related_information: str,
-        num_gremlin_generate_example: int
+    text: str,
+    rerank_method: Literal["bleu", "reranker"],
+    near_neighbor_first: bool,
+    with_gremlin_template: bool,
+    custom_related_information: str,
+    num_gremlin_generate_example: int,
 ) -> dict:
     from hugegraph_llm.operators.graph_rag_task import RAGPipeline
+
     rag = RAGPipeline()
 
     rag.extract_keywords().keywords_to_vid().import_schema(huge_settings.graph_name).query_graphdb(
-        with_gremlin_template=with_gremlin_template, 
-        num_gremlin_generate_example=num_gremlin_generate_example
+        with_gremlin_template=with_gremlin_template, num_gremlin_generate_example=num_gremlin_generate_example
     ).merge_dedup_rerank(
         rerank_method=rerank_method,
         near_neighbor_first=near_neighbor_first,
@@ -55,7 +56,7 @@ def graph_rag_recall(
 
 
 def rag_http_api(
-        router: APIRouter, rag_answer_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf, apply_reranker_conf
+    router: APIRouter, rag_answer_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf, apply_reranker_conf
 ):
     @router.post("/rag", status_code=status.HTTP_200_OK)
     def rag_answer_api(req: RAGRequest):
@@ -71,7 +72,7 @@ def rag_http_api(
             req.near_neighbor_first,
             req.custom_priority_info,
             req.answer_prompt or prompt.answer_prompt,
-            req.keywords_extract_prompt or prompt.keywords_extract_prompt
+            req.keywords_extract_prompt or prompt.keywords_extract_prompt,
         )
         return {
             key: value
@@ -88,7 +89,7 @@ def rag_http_api(
                 near_neighbor_first=req.near_neighbor_first,
                 with_gremlin_template=req.with_gremlin_template,
                 custom_related_information=req.custom_priority_info,
-                num_gremlin_generate_example=req.num_gremlin_generate_example
+                num_gremlin_generate_example=req.num_gremlin_generate_example,
             )
 
             if isinstance(result, dict):
