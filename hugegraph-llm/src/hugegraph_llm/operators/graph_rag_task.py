@@ -125,6 +125,7 @@ class RAGPipeline:
         max_e_prop_len: int = 256,
         prop_to_match: Optional[str] = None,
         with_gremlin_template: bool = True,
+        num_gremlin_generate_example: int = 1,
     ):
         """
         Add a graph RAG query operator to the pipeline.
@@ -139,7 +140,7 @@ class RAGPipeline:
         self._operators.append(
             GraphRAGQuery(max_deep=max_deep, max_items=max_items, max_v_prop_len=max_v_prop_len,
                           max_e_prop_len=max_e_prop_len, prop_to_match=prop_to_match,
-                          with_gremlin_template=with_gremlin_template)
+                          with_gremlin_template=with_gremlin_template, num_gremlin_generate_example = num_gremlin_generate_example)
         )
         return self
 

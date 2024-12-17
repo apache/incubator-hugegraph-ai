@@ -35,13 +35,17 @@ def graph_rag_recall(
         text: str,
         rerank_method: Literal["bleu", "reranker"],
         near_neighbor_first: bool,
-        with_template: bool,
-        custom_related_information: str
+        with_gremlin_template: bool,
+        custom_related_information: str,
+        num_gremlin_generate_example: int
 ) -> dict:
     from hugegraph_llm.operators.graph_rag_task import RAGPipeline
     rag = RAGPipeline()
 
-    rag.extract_keywords().keywords_to_vid().import_schema(huge_settings.graph_name).query_graphdb(with_gremlin_template=with_template).merge_dedup_rerank(
+    rag.extract_keywords().keywords_to_vid().import_schema(huge_settings.graph_name).query_graphdb(
+        with_gremlin_template=with_gremlin_template, 
+        num_gremlin_generate_example=num_gremlin_generate_example
+    ).merge_dedup_rerank(
         rerank_method=rerank_method,
         near_neighbor_first=near_neighbor_first,
         custom_related_information=custom_related_information,
@@ -61,11 +65,13 @@ def rag_http_api(
             req.vector_only,
             req.graph_only,
             req.graph_vector_answer,
+            req.with_gremlin_template,
             req.graph_ratio,
             req.rerank_method,
             req.near_neighbor_first,
             req.custom_priority_info,
-            req.answer_prompt or prompt.answer_prompt
+            req.answer_prompt or prompt.answer_prompt,
+            req.keywords_extract_prompt or prompt.keywords_extract_prompt
         )
         return {
             key: value
@@ -80,8 +86,9 @@ def rag_http_api(
                 text=req.query,
                 rerank_method=req.rerank_method,
                 near_neighbor_first=req.near_neighbor_first,
-                with_template=req.with_template,
-                custom_related_information=req.custom_priority_info
+                with_gremlin_template=req.with_gremlin_template,
+                custom_related_information=req.custom_priority_info,
+                num_gremlin_generate_example=req.num_gremlin_generate_example
             )
 
             if isinstance(result, dict):

@@ -29,23 +29,22 @@ class RAGRequest(BaseModel):
     graph_ratio: float = 0.5
     rerank_method: Literal["bleu", "reranker"] = "bleu"
     near_neighbor_first: bool = False
-    with_template: bool = True
+    with_gremlin_template: bool = True
     custom_priority_info: str = ""
     answer_prompt: Optional[str] = None
+    num_gremlin_generate_example: int = 1
+    keywords_extract_prompt: Optional[str] = None
 
 
 class GraphRAGRequest(BaseModel):
     query: str = ""
-    raw_answer: bool = True
-    vector_only: bool = False
-    graph_only: bool = False
-    graph_vector_answer: bool = False
     graph_ratio: float = 0.5
     rerank_method: Literal["bleu", "reranker"] = "bleu"
     near_neighbor_first: bool = False
-    with_template: bool = True
+    with_gremlin_template: bool = True
     custom_priority_info: str = ""
     answer_prompt: Optional[str] = None
+    num_gremlin_generate_example: int = 1
 
 
 class GraphConfigRequest(BaseModel):
