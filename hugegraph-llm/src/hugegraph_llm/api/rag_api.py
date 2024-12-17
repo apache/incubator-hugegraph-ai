@@ -35,12 +35,13 @@ def graph_rag_recall(
         text: str,
         rerank_method: Literal["bleu", "reranker"],
         near_neighbor_first: bool,
+        with_template: bool,
         custom_related_information: str
 ) -> dict:
     from hugegraph_llm.operators.graph_rag_task import RAGPipeline
     rag = RAGPipeline()
 
-    rag.extract_keywords().keywords_to_vid().import_schema(huge_settings.graph_name).query_graphdb().merge_dedup_rerank(
+    rag.extract_keywords().keywords_to_vid().import_schema(huge_settings.graph_name).query_graphdb(with_gremlin_template=with_template).merge_dedup_rerank(
         rerank_method=rerank_method,
         near_neighbor_first=near_neighbor_first,
         custom_related_information=custom_related_information,
@@ -79,6 +80,7 @@ def rag_http_api(
                 text=req.query,
                 rerank_method=req.rerank_method,
                 near_neighbor_first=req.near_neighbor_first,
+                with_template=req.with_template,
                 custom_related_information=req.custom_priority_info
             )
 

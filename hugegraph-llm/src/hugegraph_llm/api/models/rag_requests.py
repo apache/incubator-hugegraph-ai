@@ -29,6 +29,7 @@ class RAGRequest(BaseModel):
     graph_ratio: float = 0.5
     rerank_method: Literal["bleu", "reranker"] = "bleu"
     near_neighbor_first: bool = False
+    with_template: bool = True
     custom_priority_info: str = ""
     answer_prompt: Optional[str] = None
 
@@ -42,6 +43,7 @@ class GraphRAGRequest(BaseModel):
     graph_ratio: float = 0.5
     rerank_method: Literal["bleu", "reranker"] = "bleu"
     near_neighbor_first: bool = False
+    with_template: bool = True
     custom_priority_info: str = ""
     answer_prompt: Optional[str] = None
 
