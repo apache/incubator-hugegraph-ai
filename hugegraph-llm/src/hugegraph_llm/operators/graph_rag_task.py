@@ -18,7 +18,6 @@
 
 from typing import Dict, Any, Optional, List, Literal
 
-from hugegraph_llm.operators.index_op.gremlin_example_index_query import GremlinExampleIndexQuery
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.base import BaseLLM

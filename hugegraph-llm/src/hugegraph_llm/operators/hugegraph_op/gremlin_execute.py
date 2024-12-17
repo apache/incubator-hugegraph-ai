@@ -18,8 +18,8 @@
 import json
 from typing import Any, Dict
 
-from hugegraph_llm.utils.log import log
 from hugegraph_llm.config import huge_settings
+from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
 
 
@@ -36,14 +36,19 @@ class GremlinExecute:
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         gremlin = context.get("gremlin_result")
+        import requests
 
         try:
             result = self._client.gremlin().exec(gremlin=gremlin)["data"]
             if result == [None]:
                 result = []
             context["graph_result"] = [json.dumps(item, ensure_ascii=False) for item in result]
+        except requests.exceptions.RequestException as e:
+            log.error(f"RequestException: {e}")
+        except json.JSONDecodeError as e:
+            log.error(f"JSONDecodeError: {e}")
         except Exception as e:
-            log.error(e)
+            log.error(f"Unexpected error: {e}")
 
         if context.get("graph_result"):
             context["graph_result_flag"] = 1

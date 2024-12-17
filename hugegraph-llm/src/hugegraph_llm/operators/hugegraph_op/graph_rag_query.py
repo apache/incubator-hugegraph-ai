@@ -21,7 +21,6 @@ from typing import Any, Dict, Optional, List, Set, Tuple
 from hugegraph_llm.config import huge_settings
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.llms.base import BaseLLM
-from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
 
@@ -102,6 +101,7 @@ class GraphRAGQuery:
         self._limit_property = huge_settings.limit_property.lower() == "true"
         self._max_v_prop_len = max_v_prop_len
         self._max_e_prop_len = max_e_prop_len
+        self._gremlin_generator = None # FIXME: merge gap?
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         self._init_client(context)
