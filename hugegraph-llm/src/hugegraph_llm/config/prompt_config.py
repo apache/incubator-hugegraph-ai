@@ -184,9 +184,6 @@ Given the graph schema:
 {schema}
 ```
 
-Given the extracted vertex vid:
-{vertices}
-
 Generate gremlin from the following user query.
 {query}
 The output format must be like:
