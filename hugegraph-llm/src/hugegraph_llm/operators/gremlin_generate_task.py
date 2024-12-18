@@ -15,7 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from hugegraph_llm.config import prompt
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.common_op.check_schema import CheckSchema
