@@ -112,54 +112,13 @@ class GraphRAGQuery:
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         self._init_client(context)
 
-        # initial flag: -1 means no result, 0 means subgraph query, 1 means gremlin query
-        context["graph_result_flag"] = -1
-        # 1. Try to perform a query based on the generated gremlin
-        context = self._gremlin_generate_query(context)
-        # 2. Try to perform a query based on subgraph-search if the previous query failed
-        if not context.get("graph_result"):
-            context = self._subgraph_query(context)
+        context = self._subgraph_query(context)
 
         if context.get("graph_result"):
+            context["graph_result_flag"] = 2
             log.debug("Knowledge from Graph:\n%s", "\n".join(context["graph_result"]))
         else:
             log.debug("No Knowledge Extracted from Graph")
-        return context
-
-    def _gremlin_generate_query(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        query = context["query"]
-        vertices = context.get("match_vids")
-        query_embedding = context.get("query_embedding")
-
-        self._gremlin_generator.clear()
-        self._gremlin_generator.example_index_query(num_examples=self._num_gremlin_generate_example)
-        gremlin_response = self._gremlin_generator.gremlin_generate_synthesize(
-            context["simple_schema"],
-            vertices=vertices,
-        ).run(
-            query=query,
-            query_embedding=query_embedding
-        )
-        if self._with_gremlin_template:
-            gremlin = gremlin_response["result"]
-        else:
-            gremlin = gremlin_response["raw_result"]
-        log.info("Generated gremlin: %s", gremlin)
-        context["gremlin"] = gremlin
-        try:
-            result = self._client.gremlin().exec(gremlin=gremlin)["data"]
-            if result == [None]:
-                result = []
-            context["graph_result"] = [json.dumps(item, ensure_ascii=False) for item in result]
-            if context["graph_result"]:
-                context["graph_result_flag"] = 1
-                context["graph_context_head"] = (
-                    f"The following are graph query result "
-                    f"from gremlin query `{gremlin}`.\n"
-                )
-        except Exception as e: # pylint: disable=broad-except
-            log.error(e)
-            context["graph_result"] = ""
         return context
 
     def _subgraph_query(self, context: Dict[str, Any]) -> Dict[str, Any]:
