@@ -32,6 +32,7 @@ from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
 from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_qps
+from hugegraph_llm.config import prompt
 
 
 class RAGPipeline:
@@ -126,6 +127,7 @@ class RAGPipeline:
         prop_to_match: Optional[str] = None,
         with_gremlin_template: bool = True,
         num_gremlin_generate_example: int = 1,
+        gremlin_prompt: Optional[str] = prompt.gremlin_generate_prompt,
     ):
         """
         Add a graph RAG query operator to the pipeline.
@@ -146,6 +148,7 @@ class RAGPipeline:
                 prop_to_match=prop_to_match,
                 with_gremlin_template=with_gremlin_template,
                 num_gremlin_generate_example=num_gremlin_generate_example,
+                gremlin_prompt=gremlin_prompt,
             )
         )
         return self

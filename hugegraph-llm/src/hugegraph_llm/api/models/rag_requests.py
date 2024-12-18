@@ -29,21 +29,23 @@ class RAGRequest(BaseModel):
     graph_ratio: float = 0.5
     rerank_method: Literal["bleu", "reranker"] = "bleu"
     near_neighbor_first: bool = False
-    with_gremlin_template: bool = True
+    with_gremlin_tmpl: bool = True
     custom_priority_info: str = ""
     answer_prompt: Optional[str] = None
-    num_gremlin_generate_example: int = 1
     keywords_extract_prompt: Optional[str] = None
+    gremlin_tmpl_num: int = 1
+    gremlin_prompt: Optional[str] = ""
 
 
 class GraphRAGRequest(BaseModel):
     query: str = ""
     gremlin_tmpl_num: int = 1
     with_gremlin_tmpl: bool = True
-    answer_prompt: Optional[str] = "" # FIXME: read from prompt_settings?
+    answer_prompt: Optional[str] = ""  # FIXME: read from prompt_settings?
     rerank_method: Literal["bleu", "reranker"] = "bleu"
     near_neighbor_first: bool = False
     custom_priority_info: str = ""
+    gremlin_prompt: Optional[str] = ""
 
 
 class GraphConfigRequest(BaseModel):
@@ -80,4 +82,4 @@ class RerankerConfigRequest(BaseModel):
 
 class LogStreamRequest(BaseModel):
     admin_token: Optional[str] = None
-    log_file: Optional[str] = 'llm-server.log'
+    log_file: Optional[str] = "llm-server.log"

@@ -15,9 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 import json
-from typing import Literal
+from typing import Literal, Optional
 
-from fastapi import status, APIRouter, HTTPException
+from fastapi import status, APIRouter, HTTPException, Query
 
 from hugegraph_llm.api.exceptions.rag_exceptions import generate_response
 from hugegraph_llm.api.models.rag_requests import (
@@ -36,17 +36,20 @@ def graph_rag_recall(
     query: str,
     gremlin_tmpl_num: int,
     with_gremlin_tmpl: bool,
-    answer_prompt: str, # FIXME: text2gremlin should use it
+    answer_prompt: str,
     rerank_method: Literal["bleu", "reranker"],
     near_neighbor_first: bool,
     custom_related_information: str,
+    gremlin_prompt: str,
 ) -> dict:
     from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 
     rag = RAGPipeline()
 
     rag.extract_keywords().keywords_to_vid().import_schema(huge_settings.graph_name).query_graphdb(
-        with_gremlin_template=with_gremlin_tmpl, num_gremlin_generate_example=gremlin_tmpl_num
+        with_gremlin_template=with_gremlin_tmpl,
+        num_gremlin_generate_example=gremlin_tmpl_num,
+        gremlin_prompt=gremlin_prompt,
     ).merge_dedup_rerank(
         rerank_method=rerank_method,
         near_neighbor_first=near_neighbor_first,
@@ -60,20 +63,44 @@ def rag_http_api(
     router: APIRouter, rag_answer_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf, apply_reranker_conf
 ):
     @router.post("/rag", status_code=status.HTTP_200_OK)
-    def rag_answer_api(req: RAGRequest):
+    def rag_answer_api(
+        req: RAGRequest,
+        query_param: str = Query("", description="Query you want to ask"),
+        raw_answer_param: bool = Query(False, description="Use LLM to generate answer directly"),
+        vector_only_param: bool = Query(False, description="Use LLM to generate answer with vector"),
+        graph_only_param: bool = Query(False, description="Use LLM to generate answer with graph RAG only"),
+        graph_vector_answer_param: bool = Query(False, description="Use LLM to generate answer with vector & GraphRAG"),
+        with_gremlin_tmpl_param: bool = Query(True, description="Use exapmle template in text2gremlin"),
+        graph_ratio_param: float = Query(0.5, description="The ratio of GraphRAG ans & vector ans"),
+        rerank_method_param: Literal["bleu", "reranker"] = Query("bleu", description="Method to rerank the results."),
+        near_neighbor_first_param: bool = Query(False, description="Prioritize near neighbors in the search results."),
+        custom_priority_info_param: str = Query("", description="Custom information to prioritize certain results."),
+        answer_prompt_param: Optional[str] = Query(
+            prompt.answer_prompt, description="Prompt to guide the answer generation."
+        ),
+        keywords_extract_prompt_param: Optional[str] = Query(
+            prompt.keywords_extract_prompt, description="Prompt for extracting keywords from the query."
+        ),
+        gremlin_tmpl_num_param: int = Query(1, description="Number of Gremlin templates to use."),
+        gremlin_prompt_param: Optional[str] = Query(
+            prompt.gremlin_generate_prompt, description="Prompt for the Gremlin query. Don't change it casually"
+        ),
+    ):
         result = rag_answer_func(
             req.query,
             req.raw_answer,
             req.vector_only,
             req.graph_only,
             req.graph_vector_answer,
-            req.with_gremlin_template,
+            req.with_gremlin_tmpl,
             req.graph_ratio,
             req.rerank_method,
             req.near_neighbor_first,
             req.custom_priority_info,
             req.answer_prompt or prompt.answer_prompt,
             req.keywords_extract_prompt or prompt.keywords_extract_prompt,
+            req.gremlin_tmpl_num,
+            req.gremlin_prompt or prompt.gremlin_generate_prompt,
         )
         return {
             key: value
@@ -82,16 +109,31 @@ def rag_http_api(
         }
 
     @router.post("/rag/graph", status_code=status.HTTP_200_OK)
-    def graph_rag_recall_api(req: GraphRAGRequest):
+    def graph_rag_recall_api(
+        req: GraphRAGRequest,
+        query_param: str = Query("", description="Query you want to ask"),
+        with_gremlin_templ_param: bool = Query(True, description="Use exapmle template in text2gremlin"),
+        rerank_method_param: Literal["bleu", "reranker"] = Query("bleu", description="Method to rerank the results."),
+        near_neighbor_first_param: bool = Query(False, description="Prioritize near neighbors in the search results."),
+        custom_priority_info_param: str = Query("", description="Custom information to prioritize certain results."),
+        answer_prompt_param: Optional[str] = Query(
+            prompt.answer_prompt, description="Prompt to guide the answer generation."
+        ),
+        gremlin_tmpl_num_param: int = Query(1, description="Number of Gremlin templates to use."),
+        gremlin_prompt_param: Optional[str] = Query(
+            prompt.gremlin_generate_prompt, description="Prompt for the Gremlin query. Don't change it casually"
+        ),
+    ):
         try:
             result = graph_rag_recall(
                 query=req.query,
                 gremlin_tmpl_num=req.gremlin_tmpl_num,
                 with_gremlin_tmpl=req.with_gremlin_tmpl,
-                answer_prompt=req.answer_prompt,
+                answer_prompt=req.answer_prompt or prompt.answer_prompt,
                 rerank_method=req.rerank_method,
                 near_neighbor_first=req.near_neighbor_first,
                 custom_related_information=req.custom_priority_info,
+                gremlin_prompt=req.gremlin_prompt or prompt.gremlin_generate_prompt,
             )
 
             if isinstance(result, dict):
