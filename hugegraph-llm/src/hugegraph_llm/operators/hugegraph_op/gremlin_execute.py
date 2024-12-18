@@ -42,7 +42,7 @@ class GremlinExecute:
             if result == [None]:
                 result = []
             context["graph_result"] = [json.dumps(item, ensure_ascii=False) for item in result]
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             log.error(e)
 
         if context.get("graph_result"):

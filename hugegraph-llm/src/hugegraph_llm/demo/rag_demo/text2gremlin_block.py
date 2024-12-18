@@ -126,7 +126,7 @@ def simple_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def create_text2gremlin_block() -> Tuple:
-    gr.Markdown("""## Build Vector Template Index (Optional)  
+    gr.Markdown("""## Build Vector Template Index (Optional)
     > Uploaded CSV file should be in `query,gremlin` format below:  
     > e.g. `who is peter?`,`g.V().has('name', 'peter')`  
     > JSON file should be in format below:  
