@@ -63,37 +63,7 @@ def rag_http_api(
     router: APIRouter, rag_answer_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf, apply_reranker_conf
 ):
     @router.post("/rag", status_code=status.HTTP_200_OK)
-    def rag_answer_api(  # pylint: disable=W0101
-        req: RAGRequest = Body(...),
-        query: Optional[str] = Query("", description="Query you want to ask"),
-        raw_answer: Optional[bool] = Query(False, description="Use LLM to generate answer directly"),
-        vector_only: Optional[bool] = Query(False, description="Use LLM to generate answer with vector"),
-        graph_only: Optional[bool] = Query(False, description="Use LLM to generate answer with graph RAG only"),
-        graph_vector_answer: Optional[bool] = Query(
-            True, description="Use LLM to generate answer with vector & GraphRAG"
-        ),
-        with_gremlin_tmpl: Optional[bool] = Query(True, description="Use example template in text2gremlin"),
-        graph_ratio: Optional[float] = Query(0.5, description="The ratio of GraphRAG ans & vector ans"),
-        rerank_method: Optional[Literal["bleu", "reranker"]] = Query(
-            "bleu", description="Method to rerank the results."
-        ),
-        near_neighbor_first: Optional[bool] = Query(
-            True, description="Prioritize near neighbors in the search results."
-        ),
-        custom_priority_info: Optional[str] = Query(
-            "", description="Custom information to prioritize certain results."
-        ),
-        answer_prompt: Optional[str] = Query(
-            prompt.answer_prompt, description="Prompt to guide the answer generation."
-        ),
-        keywords_extract_prompt: Optional[str] = Query(
-            prompt.keywords_extract_prompt, description="Prompt for extracting keywords from query."
-        ),
-        gremlin_tmpl_num: Optional[int] = Query(1, description="Number of Gremlin templates to use."),
-        gremlin_prompt: Optional[str] = Query(
-            prompt.gremlin_generate_prompt, description="Prompt for the Gremlin query."
-        ),
-    ):
+    def rag_answer_api(req: RAGRequest):
         result = rag_answer_func(
             req.query,
             req.raw_answer,
@@ -115,34 +85,9 @@ def rag_http_api(
             for key, value in zip(["raw_answer", "vector_only", "graph_only", "graph_vector_answer"], result)
             if getattr(req, key)
         }
-        return {
-            key: value
-            for key, value in zip(["raw_answer", "vector_only", "graph_only", "graph_vector_answer"], result)
-            if getattr(req, key)
-        }
 
     @router.post("/rag/graph", status_code=status.HTTP_200_OK)
-    def graph_rag_recall_api(  # pylint: disable=W0101
-        req: GraphRAGRequest,
-        query: Optional[str] = Query("", description="Query you want to ask"),
-        with_gremlin_tmpl: Optional[bool] = Query(True, description="Use exapmle template in text2gremlin"),
-        rerank_method: Optional[Literal["bleu", "reranker"]] = Query(
-            "bleu", description="Method to rerank the results."
-        ),
-        near_neighbor_first: Optional[bool] = Query(
-            False, description="Prioritize near neighbors in the search results."
-        ),
-        custom_priority_info: Optional[str] = Query(
-            "", description="Custom information to prioritize certain results."
-        ),
-        answer_prompt: Optional[str] = Query(
-            prompt.answer_prompt, description="Prompt to guide the answer generation."
-        ),
-        gremlin_tmpl_num: Optional[int] = Query(1, description="Number of Gremlin templates to use."),
-        gremlin_prompt: Optional[str] = Query(
-            prompt.gremlin_generate_prompt, description="Prompt for the Gremlin query. Don't change it casually"
-        ),
-    ):
+    def graph_rag_recall_api(req: GraphRAGRequest):
         try:
             result = graph_rag_recall(
                 query=req.query,
