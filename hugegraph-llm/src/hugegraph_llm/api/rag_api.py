@@ -63,7 +63,7 @@ def rag_http_api(
     router: APIRouter, rag_answer_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf, apply_reranker_conf
 ):
     @router.post("/rag", status_code=status.HTTP_200_OK)
-    def rag_answer_api(
+    def rag_answer_api(  # pylint: disable=W0101
         req: RAGRequest = Body(...),
         query: Optional[str] = Query("", description="Query you want to ask"),
         raw_answer: Optional[bool] = Query(False, description="Use LLM to generate answer directly"),
@@ -122,7 +122,7 @@ def rag_http_api(
         }
 
     @router.post("/rag/graph", status_code=status.HTTP_200_OK)
-    def graph_rag_recall_api(
+    def graph_rag_recall_api(  # pylint: disable=W0101
         req: GraphRAGRequest,
         query: Optional[str] = Query("", description="Query you want to ask"),
         with_gremlin_tmpl: Optional[bool] = Query(True, description="Use exapmle template in text2gremlin"),
