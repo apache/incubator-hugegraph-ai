@@ -19,19 +19,19 @@ import json
 from typing import Any, Dict
 
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.config import settings
+from hugegraph_llm.config import huge_settings
 from pyhugegraph.client import PyHugeClient
 
 
 class GremlinExecute:
     def __init__(self):
         self._client = PyHugeClient(
-            settings.graph_ip,
-            settings.graph_port,
-            settings.graph_name,
-            settings.graph_user,
-            settings.graph_pwd,
-            settings.graph_space,
+            huge_settings.graph_ip,
+            huge_settings.graph_port,
+            huge_settings.graph_name,
+            huge_settings.graph_user,
+            huge_settings.graph_pwd,
+            huge_settings.graph_space,
         )
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:

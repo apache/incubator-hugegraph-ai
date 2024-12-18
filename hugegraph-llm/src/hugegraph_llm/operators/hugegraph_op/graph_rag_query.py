@@ -15,13 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
 from typing import Any, Dict, Optional, List, Set, Tuple
 
 from hugegraph_llm.config import huge_settings
-from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.models.llms.base import BaseLLM
-from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
 
@@ -80,12 +76,8 @@ class GraphRAGQuery:
             max_deep: int = 2,
             max_items: int = int(huge_settings.max_items),
             prop_to_match: Optional[str] = None,
-            llm: Optional[BaseLLM] = None,
-            embedding: Optional[BaseEmbedding] = None,
             max_v_prop_len: int = 2048,
             max_e_prop_len: int = 256,
-            with_gremlin_template: bool = True,
-            num_gremlin_generate_example: int = 1
     ):
         self._client = PyHugeClient(
             huge_settings.graph_ip,
@@ -102,12 +94,6 @@ class GraphRAGQuery:
         self._limit_property = huge_settings.limit_property.lower() == "true"
         self._max_v_prop_len = max_v_prop_len
         self._max_e_prop_len = max_e_prop_len
-        self._gremlin_generator = GremlinGenerator(
-            llm=llm,
-            embedding=embedding,
-        )
-        self._num_gremlin_generate_example = num_gremlin_generate_example
-        self._with_gremlin_template = with_gremlin_template
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         self._init_client(context)

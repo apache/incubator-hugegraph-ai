@@ -31,15 +31,15 @@ class GremlinGenerateSynthesize:
             self,
             llm: BaseLLM = None,
             schema: Optional[Union[dict, str]] = None,
-            vertices: Optional[List[str]] = None,
+            with_gremlin_template: bool = True,
             gremlin_prompt: Optional[str] = None
     ) -> None:
         self.llm = llm or LLMs().get_text2gql_llm()
         if isinstance(schema, dict):
             schema = json.dumps(schema, ensure_ascii=False)
-        self.schema = schema
-        self.vertices = vertices
-        self.gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
+        self._schema = schema
+        self._with_gremlin_template = with_gremlin_template
+        self._gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
 
     def _extract_gremlin(self, response: str) -> str:
         match = re.search("```gremlin.*```", response, re.DOTALL)
@@ -56,29 +56,22 @@ class GremlinGenerateSynthesize:
                 f"- gremlin:\n```gremlin\n{example['gremlin']}\n```")
         return "\n\n".join(example_strings)
 
-    def _format_vertices(self, vertices: Optional[List[str]]) -> Optional[str]:
-        if not vertices:
-            return None
-        return "\n".join([f"- {vid}" for vid in vertices])
-
     async def async_generate(self, context: Dict[str, Any]):
         async_tasks = {}
         query = context.get("query")
         raw_example = [{'query': 'who is peter', 'gremlin': "g.V().has('name', 'peter')"}]
-        raw_prompt = self.gremlin_prompt.format(
+        raw_prompt = self._gremlin_prompt.format(
             query=query,
-            schema=self.schema,
+            schema=self._schema,
             example=self._format_examples(examples=raw_example),
-            vertices=self._format_vertices(vertices=self.vertices)
         )
         async_tasks["raw_answer"] = asyncio.create_task(self.llm.agenerate(prompt=raw_prompt))
 
         examples = context.get("match_result")
-        init_prompt = self.gremlin_prompt.format(
+        init_prompt = self._gremlin_prompt.format(
             query=query,
-            schema=self.schema,
+            schema=self._schema,
             example=self._format_examples(examples=examples),
-            vertices=self._format_vertices(vertices=self.vertices)
         )
         async_tasks["initialized_answer"] = asyncio.create_task(self.llm.agenerate(prompt=init_prompt))
 
@@ -86,9 +79,14 @@ class GremlinGenerateSynthesize:
         initialized_response = await async_tasks["initialized_answer"]
         log.debug("Text2Gremlin with tmpl prompt:\n %s,\n LLM Response: %s", init_prompt, initialized_response)
 
-        context["gremlin_result"] = self._extract_gremlin(response=initialized_response)
+        context["initialized_gremlin_result"] = self._extract_gremlin(response=initialized_response)
         context["raw_gremlin_result"] = self._extract_gremlin(response=raw_response)
         context["call_count"] = context.get("call_count", 0) + 2
+
+        if self._with_gremlin_template:
+            context["gremlin_result"] = context["initialized_gremlin_result"]
+        else:
+            context["gremlin_result"] = context["raw_gremlin_result"]
 
         return context
 

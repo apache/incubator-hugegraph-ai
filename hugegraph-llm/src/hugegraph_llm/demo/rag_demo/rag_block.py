@@ -85,8 +85,8 @@ def rag_answer(
         try:
             context = (text2gremlin_worker
                        .import_schema(from_hugegraph=huge_settings.graph_name)
-                       .example_index_query(num_examples=1)
-                       .gremlin_generate_synthesize()
+                       .example_index_query()
+                       .gremlin_generate_synthesize(with_gremlin_template=with_gremlin_template)
                        .gremlin_execute()
                        .run(**context))
         except ValueError as e:
@@ -97,7 +97,7 @@ def rag_answer(
             raise gr.Error(f"An unexpected error occurred: {str(e)}")
         if context["graph_result_flag"] == 0:
             rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid().import_schema(
-                huge_settings.graph_name).query_graphdb(with_gremlin_template=with_gremlin_template)
+                huge_settings.graph_name).query_graphdb()
     # TODO: add more user-defined search strategies
     rag.merge_dedup_rerank(graph_ratio, rerank_method, near_neighbor_first, )
     rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)

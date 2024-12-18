@@ -14,10 +14,8 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from typing import Optional, List
 
 from hugegraph_llm.config import prompt
-
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.common_op.check_schema import CheckSchema
@@ -57,17 +55,17 @@ class GremlinGenerator:
             raise ValueError("No input data / invalid schema type")
         return self
 
-    def example_index_query(self, num_examples):
+    def example_index_query(self, num_examples: int = 1):
         self.operators.append(GremlinExampleIndexQuery(self.embedding, num_examples))
         return self
 
     def gremlin_generate_synthesize(
             self,
             schema=None,
-            gremlin_prompt=prompt.gremlin_generate_prompt,
-            vertices: Optional[List[str]] = None
+            gremlin_prompt=None,
+            with_gremlin_template: bool = True,
     ):
-        self.operators.append(GremlinGenerateSynthesize(self.llm, schema, vertices, gremlin_prompt))
+        self.operators.append(GremlinGenerateSynthesize(self.llm, schema, with_gremlin_template, gremlin_prompt))
         return self
 
     def gremlin_execute(self):
