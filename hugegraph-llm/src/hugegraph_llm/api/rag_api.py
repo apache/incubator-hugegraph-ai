@@ -33,25 +33,26 @@ from hugegraph_llm.utils.log import log
 
 
 def graph_rag_recall(
-    text: str,
+    query: str,
+    gremlin_tmpl_num: int,
+    with_gremlin_tmpl: bool,
+    answer_prompt: str, # FIXME: text2gremlin should use it
     rerank_method: Literal["bleu", "reranker"],
     near_neighbor_first: bool,
-    with_gremlin_template: bool,
     custom_related_information: str,
-    num_gremlin_generate_example: int,
 ) -> dict:
     from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 
     rag = RAGPipeline()
 
     rag.extract_keywords().keywords_to_vid().import_schema(huge_settings.graph_name).query_graphdb(
-        with_gremlin_template=with_gremlin_template, num_gremlin_generate_example=num_gremlin_generate_example
+        with_gremlin_template=with_gremlin_tmpl, num_gremlin_generate_example=gremlin_tmpl_num
     ).merge_dedup_rerank(
         rerank_method=rerank_method,
         near_neighbor_first=near_neighbor_first,
         custom_related_information=custom_related_information,
     )
-    context = rag.run(verbose=True, query=text, graph_search=True)
+    context = rag.run(verbose=True, query=query, graph_search=True)
     return context
 
 
@@ -84,12 +85,13 @@ def rag_http_api(
     def graph_rag_recall_api(req: GraphRAGRequest):
         try:
             result = graph_rag_recall(
-                text=req.query,
+                query=req.query,
+                gremlin_tmpl_num=req.gremlin_tmpl_num,
+                with_gremlin_tmpl=req.with_gremlin_tmpl,
+                answer_prompt=req.answer_prompt,
                 rerank_method=req.rerank_method,
                 near_neighbor_first=req.near_neighbor_first,
-                with_gremlin_template=req.with_gremlin_template,
                 custom_related_information=req.custom_priority_info,
-                num_gremlin_generate_example=req.num_gremlin_generate_example,
             )
 
             if isinstance(result, dict):

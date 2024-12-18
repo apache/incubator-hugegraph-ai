@@ -38,13 +38,12 @@ class RAGRequest(BaseModel):
 
 class GraphRAGRequest(BaseModel):
     query: str = ""
-    graph_ratio: float = 0.5
+    gremlin_tmpl_num: int = 1
+    with_gremlin_tmpl: bool = True
+    answer_prompt: Optional[str] = "" # FIXME: read from prompt_settings?
     rerank_method: Literal["bleu", "reranker"] = "bleu"
     near_neighbor_first: bool = False
-    with_gremlin_template: bool = True
     custom_priority_info: str = ""
-    answer_prompt: Optional[str] = None
-    num_gremlin_generate_example: int = 1
 
 
 class GraphConfigRequest(BaseModel):
