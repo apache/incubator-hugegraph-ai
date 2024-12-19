@@ -16,8 +16,10 @@
 # under the License.
 
 from typing import Optional, Literal
+
 from fastapi import Query
 from pydantic import BaseModel
+
 from hugegraph_llm.config import prompt
 
 

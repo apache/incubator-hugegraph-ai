@@ -36,7 +36,7 @@ def graph_rag_recall(
     query: str,
     gremlin_tmpl_num: int,
     with_gremlin_tmpl: bool,
-    answer_prompt: str,
+    answer_prompt: str, # FIXME: should be used in the query
     rerank_method: Literal["bleu", "reranker"],
     near_neighbor_first: bool,
     custom_related_information: str,
