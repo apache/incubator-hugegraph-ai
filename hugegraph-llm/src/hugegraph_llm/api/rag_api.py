@@ -14,10 +14,11 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-import json
-from typing import Literal, Optional
 
-from fastapi import status, APIRouter, HTTPException, Query, Body
+import json
+from typing import Literal
+
+from fastapi import status, APIRouter, HTTPException
 
 from hugegraph_llm.api.exceptions.rag_exceptions import generate_response
 from hugegraph_llm.api.models.rag_requests import (
@@ -36,7 +37,7 @@ def graph_rag_recall(
     query: str,
     gremlin_tmpl_num: int,
     with_gremlin_tmpl: bool,
-    answer_prompt: str, # FIXME: should be used in the query
+    answer_prompt: str,  # FIXME: should be used in the query
     rerank_method: Literal["bleu", "reranker"],
     near_neighbor_first: bool,
     custom_related_information: str,
