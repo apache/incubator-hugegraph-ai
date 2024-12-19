@@ -16,7 +16,6 @@
 # under the License.
 
 import json
-from typing import Literal
 
 from fastapi import status, APIRouter, HTTPException
 
@@ -29,57 +28,36 @@ from hugegraph_llm.api.models.rag_requests import (
     GraphRAGRequest,
 )
 from hugegraph_llm.api.models.rag_response import RAGResponse
-from hugegraph_llm.config import llm_settings, huge_settings, prompt
+from hugegraph_llm.config import llm_settings, prompt
 from hugegraph_llm.utils.log import log
 
 
-def graph_rag_recall(
-    query: str,
-    gremlin_tmpl_num: int,
-    with_gremlin_tmpl: bool,
-    answer_prompt: str,  # FIXME: should be used in the query
-    rerank_method: Literal["bleu", "reranker"],
-    near_neighbor_first: bool,
-    custom_related_information: str,
-    gremlin_prompt: str,
-) -> dict:
-    from hugegraph_llm.operators.graph_rag_task import RAGPipeline
-
-    rag = RAGPipeline()
-
-    rag.extract_keywords().keywords_to_vid().import_schema(huge_settings.graph_name).query_graphdb(
-        with_gremlin_template=with_gremlin_tmpl,
-        num_gremlin_generate_example=gremlin_tmpl_num,
-        gremlin_prompt=gremlin_prompt,
-    ).merge_dedup_rerank(
-        rerank_method=rerank_method,
-        near_neighbor_first=near_neighbor_first,
-        custom_related_information=custom_related_information,
-    )
-    context = rag.run(verbose=True, query=query, graph_search=True)
-    return context
-
-
 def rag_http_api(
-    router: APIRouter, rag_answer_func, apply_graph_conf, apply_llm_conf, apply_embedding_conf, apply_reranker_conf
+    router: APIRouter,
+    rag_answer_func,
+    graph_rag_recall_func,
+    apply_graph_conf,
+    apply_llm_conf,
+    apply_embedding_conf,
+    apply_reranker_conf,
 ):
     @router.post("/rag", status_code=status.HTTP_200_OK)
     def rag_answer_api(req: RAGRequest):
         result = rag_answer_func(
-            req.query,
-            req.raw_answer,
-            req.vector_only,
-            req.graph_only,
-            req.graph_vector_answer,
-            req.with_gremlin_tmpl,
-            req.graph_ratio,
-            req.rerank_method,
-            req.near_neighbor_first,
-            req.custom_priority_info,
-            req.answer_prompt or prompt.answer_prompt,
-            req.keywords_extract_prompt or prompt.keywords_extract_prompt,
-            req.gremlin_tmpl_num,
-            req.gremlin_prompt or prompt.gremlin_generate_prompt,
+            text=req.query,
+            raw_answer=req.raw_answer,
+            vector_only_answer=req.vector_only,
+            graph_only_answer=req.graph_only,
+            graph_vector_answer=req.graph_vector_answer,
+            with_gremlin_template=req.with_gremlin_tmpl,
+            graph_ratio=req.graph_ratio,
+            rerank_method=req.rerank_method,
+            near_neighbor_first=req.near_neighbor_first,
+            custom_related_information=req.custom_priority_info,
+            answer_prompt=req.answer_prompt or prompt.answer_prompt,
+            keywords_extract_prompt=req.keywords_extract_prompt or prompt.keywords_extract_prompt,
+            gremlin_tmpl_num=req.gremlin_tmpl_num,
+            gremlin_prompt=req.gremlin_prompt or prompt.gremlin_generate_prompt,
         )
         return {
             key: value
@@ -90,11 +68,10 @@ def rag_http_api(
     @router.post("/rag/graph", status_code=status.HTTP_200_OK)
     def graph_rag_recall_api(req: GraphRAGRequest):
         try:
-            result = graph_rag_recall(
+            result = graph_rag_recall_func(
                 query=req.query,
                 gremlin_tmpl_num=req.gremlin_tmpl_num,
                 with_gremlin_tmpl=req.with_gremlin_tmpl,
-                answer_prompt=req.answer_prompt or prompt.answer_prompt,
                 rerank_method=req.rerank_method,
                 near_neighbor_first=req.near_neighbor_first,
                 custom_related_information=req.custom_priority_info,
@@ -102,8 +79,15 @@ def rag_http_api(
             )
 
             if isinstance(result, dict):
-                params = ["query", "keywords", "match_vids", "graph_result_flag", "gremlin", "graph_result",
-                          "vertex_degree_list"]
+                params = [
+                    "query",
+                    "keywords",
+                    "match_vids",
+                    "graph_result_flag",
+                    "gremlin",
+                    "graph_result",
+                    "vertex_degree_list",
+                ]
                 user_result = {key: result[key] for key in params if key in result}
                 return {"graph_recall": user_result}
             # Note: Maybe only for qianfan/wenxin
