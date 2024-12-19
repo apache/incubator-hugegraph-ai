@@ -101,7 +101,11 @@ def rag_http_api(
             )
 
             if isinstance(result, dict):
-                return {"graph_recall": result}
+                params = ["query", "keywords", "match_vids", "graph_result_flag", "gremlin", "graph_result",
+                          "vertex_degree_list"]
+                user_result = {key: result[key] for key in params if key in result}
+                return {"graph_recall": user_result}
+            # Note: Maybe only for qianfan/wenxin
             return {"graph_recall": json.dumps(result)}
 
         except TypeError as e:
