@@ -17,33 +17,47 @@
 
 from typing import Optional, Literal
 
+from fastapi import Query
 from pydantic import BaseModel
+
+from hugegraph_llm.config import prompt
 
 
 class RAGRequest(BaseModel):
-    query: str = ""
-    raw_answer: bool = False
-    vector_only: bool = False
-    graph_only: bool = False
-    graph_vector_answer: bool = False
-    graph_ratio: float = 0.5
-    rerank_method: Literal["bleu", "reranker"] = "bleu"
-    near_neighbor_first: bool = False
-    custom_priority_info: str = ""
-    answer_prompt: Optional[str] = None
+    query: str = Query("", description="Query you want to ask")
+    raw_answer: bool = Query(False, description="Use LLM to generate answer directly")
+    vector_only: bool = Query(False, description="Use LLM to generate answer with vector")
+    graph_only: bool = Query(True, description="Use LLM to generate answer with graph RAG only")
+    graph_vector_answer: bool = Query(False, description="Use LLM to generate answer with vector & GraphRAG")
+    graph_ratio: float = Query(0.5, description="The ratio of GraphRAG ans & vector ans")
+    rerank_method: Literal["bleu", "reranker"] = Query("bleu", description="Method to rerank the results.")
+    near_neighbor_first: bool = Query(False, description="Prioritize near neighbors in the search results.")
+    with_gremlin_tmpl: bool = Query(True, description="Use example template in text2gremlin")
+    custom_priority_info: str = Query("", description="Custom information to prioritize certain results.")
+    answer_prompt: Optional[str] = Query(prompt.answer_prompt, description="Prompt to guide the answer generation.")
+    keywords_extract_prompt: Optional[str] = Query(
+        prompt.keywords_extract_prompt,
+        description="Prompt for extracting keywords from query.",
+    )
+    gremlin_tmpl_num: int = Query(1, description="Number of Gremlin templates to use.")
+    gremlin_prompt: Optional[str] = Query(
+        prompt.gremlin_generate_prompt,
+        description="Prompt for the Text2Gremlin query.",
+    )
 
 
 class GraphRAGRequest(BaseModel):
-    query: str = ""
-    raw_answer: bool = True
-    vector_only: bool = False
-    graph_only: bool = False
-    graph_vector_answer: bool = False
-    graph_ratio: float = 0.5
-    rerank_method: Literal["bleu", "reranker"] = "bleu"
-    near_neighbor_first: bool = False
-    custom_priority_info: str = ""
-    answer_prompt: Optional[str] = None
+    query: str = Query("", description="Query you want to ask")
+    gremlin_tmpl_num: int = Query(1, description="Number of Gremlin templates to use.")
+    with_gremlin_tmpl: bool = Query(True, description="Use example template in text2gremlin")
+    answer_prompt: Optional[str] = Query(prompt.answer_prompt, description="Prompt to guide the answer generation.")
+    rerank_method: Literal["bleu", "reranker"] = Query("bleu", description="Method to rerank the results.")
+    near_neighbor_first: bool = Query(False, description="Prioritize near neighbors in the search results.")
+    custom_priority_info: str = Query("", description="Custom information to prioritize certain results.")
+    gremlin_prompt: Optional[str] = Query(
+        prompt.gremlin_generate_prompt,
+        description="Prompt for the Text2Gremlin query.",
+    )
 
 
 class GraphConfigRequest(BaseModel):
@@ -80,4 +94,4 @@ class RerankerConfigRequest(BaseModel):
 
 class LogStreamRequest(BaseModel):
     admin_token: Optional[str] = None
-    log_file: Optional[str] = 'llm-server.log'
+    log_file: Optional[str] = "llm-server.log"
