@@ -18,18 +18,19 @@
 
 from hugegraph_llm.config.models.base_prompt_config import BasePromptConfig
 
+
 class PromptConfig(BasePromptConfig):
     # Data is detached from llm_op/answer_synthesize.py
     answer_prompt: str = """You are an expert in knowledge graphs and natural language processing.
 Your task is to provide a precise and accurate answer based on the given context.
 
+Given the context information and without using fictive knowledge, 
+answer the following query in a concise and professional manner.
+
 Context information is below.
 ---------------------
 {context_str}
 ---------------------
-
-Given the context information and without using fictive knowledge, 
-answer the following query in a concise and professional manner.
 Query: {query_str}
 Answer:
 """
@@ -131,7 +132,7 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
     keywords_extract_prompt: str = """指令：
 请对以下文本执行以下任务：
 1. 从文本中提取关键词：
-  - 最少 0 个，最多 {max_keywords} 个。
+  - 最少 0 个，最多 MAX_KEYWORDS 个。
   - 关键词应为具有完整语义的词语或短语，确保信息完整。
 2. 识别需改写的关键词：
   - 从提取的关键词中，识别那些在原语境中具有歧义或存在信息缺失的关键词。
@@ -151,47 +152,55 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
 - 仅输出一行内容, 以 KEYWORDS: 为前缀，后跟所有关键词或对应的同义词，之间用逗号分隔。抽取的关键词中不允许出现空格或空字符
 - 格式示例：
 KEYWORDS:关键词1,关键词2,...,关键词n
+
+MAX_KEYWORDS: {max_keywords}
 文本：
 {question}
 """
-#pylint: disable=C0301
+    # pylint: disable=C0301
     # keywords_extract_prompt_EN = """
-# Instruction:
-# Please perform the following tasks on the text below:
-# 1. Extract Keywords and Generate Synonyms from text:
-#   - At least 0, at most {max_keywords} keywords.
-#   - For each keyword, generate its synonyms or possible variant forms.
-# Requirements:
-# - Keywords should be meaningful and specific entities; avoid using meaningless or overly broad terms (e.g., “object,” “the,” “he”).
-# - Prioritize extracting subjects, verbs, and objects; avoid extracting function words or auxiliary words.
-# - Do not expand into unrelated generalized categories.
-# Note:
-# - Only consider semantic synonyms and other words with similar meanings in the given context.
-# Output Format:
-# - Output only one line, prefixed with KEYWORDS:, followed by all keywords and synonyms, separated by commas.No spaces or empty characters are allowed in the extracted keywords.
-# - Format example:
-# KEYWORDS: keyword1, keyword2, ..., keywordn, synonym1, synonym2, ..., synonymn
-# Text:
-# {question}
-# """
+    # Instruction:
+    # Please perform the following tasks on the text below:
+    # 1. Extract Keywords and Generate Synonyms from the text:
+    #   - At least 0, at most {max_keywords} keywords.
+    #   - For each keyword, generate its synonyms or possible variant forms.
+    # Requirements:
+    # - Keywords should be meaningful and specific entities; avoid using meaningless or overly broad terms (e.g., “object,” “the,” “he”).
+    # - Prioritize extracting subjects, verbs, and objects; avoid extracting function words or auxiliary words.
+    # - Do not expand into unrelated generalized categories.
+    # Note:
+    # - Only consider semantic synonyms and other words with similar meanings in the given context.
+    # Output Format:
+    # - Output only one line, prefixed with KEYWORDS:, followed by all keywords and synonyms, separated by commas.No spaces or empty characters are allowed in the extracted keywords.
+    # - Format example:
+    # KEYWORDS: keyword1, keyword2, ..., keywordN, synonym1, synonym2, ..., synonymN
+    # Text:
+    # {question}
+    # """
 
-    gremlin_generate_prompt = """\
-Given the example query-gremlin pairs:
-{example}
+    gremlin_generate_prompt = """
+You are an expert in graph query language(Gremlin), your role is to understand the schema of the graph and generate 
+accurate Gremlin code based on the given instructions.
 
-Given the graph schema:
+# Graph Schema:
 ```json
 {schema}
 ```
-
-Given the extracted vertex vid:
-{vertices}
-
-Generate gremlin from the following user query.
-{query}
-The output format must be like:
+# Rule:
+1. Could use the vertex ID directly if it's given in the context.
+2. The output format must be like:
 ```gremlin
 g.V().limit(10)
 ```
+
+# Extracted vertex vid:
+{vertices}
+
+# Given the example query-gremlin pairs:
+{example}
+
+# Generate  gremlin from the following user query.
+{query}
+
 The generated gremlin is:
 """
