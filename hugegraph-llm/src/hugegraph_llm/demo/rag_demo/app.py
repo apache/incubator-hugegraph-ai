@@ -64,7 +64,7 @@ def schedule_fit_vid_index():
         log.info("Executing fit_vid_index function...")
         fit_vid_index()
         log.info("fit_vid_index function executed successfully.")
-    except Exception as e:
+    except Exception as e: #pylint: disable=W0718
         log.error(e)
 
 scheduler = BackgroundScheduler()
@@ -77,14 +77,12 @@ scheduler.add_job(
 )
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup event
+async def lifespan(app: FastAPI): #pylint: disable=W0621
     if not scheduler.running:
         scheduler.start()
         log.info("Scheduler started successfully.")
 
-    # Shutdown event
-    yield  # This marks the point where FastAPI waits for shutdown
+    yield
 
     scheduler.shutdown()
     log.info("Scheduler shut down.")
