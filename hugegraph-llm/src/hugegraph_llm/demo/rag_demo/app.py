@@ -17,6 +17,7 @@
 
 
 import argparse
+from contextlib import asynccontextmanager
 
 import gradio as gr
 import uvicorn
@@ -25,9 +26,6 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from apscheduler.executors.asyncio import AsyncIOExecutor
-from apscheduler.jobstores.memory import MemoryJobStore
-from contextlib import asynccontextmanager
 
 from hugegraph_llm.api.admin_api import admin_http_api
 from hugegraph_llm.api.rag_api import rag_http_api
