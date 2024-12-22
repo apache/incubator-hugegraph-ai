@@ -85,9 +85,9 @@ def create_vector_graph_block():
                 graph_index_btn1 = gr.Button("Clear Graph Data & Index", size="sm")
 
         vector_import_bt = gr.Button("Import into Vector", variant="primary")
-        graph_index_rebuild_bt = gr.Button("Rebuild vid Index")
         graph_extract_bt = gr.Button("Extract Graph Data (1)", variant="primary")
         graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=True)
+        graph_index_rebuild_bt = gr.Button("Rebuild vid Index")
 
     vector_index_btn0.click(get_vector_index_info, outputs=out).then(
         store_prompt,
