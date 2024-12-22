@@ -168,7 +168,7 @@ def create_text2gremlin_block() -> Tuple:
             example_num_slider = gr.Slider(minimum=0, maximum=10, step=1, value=2, label="Number of refer examples")
             schema_box = gr.Textbox(value=prompt.text2gql_graph_schema, label="Schema", lines=2, show_copy_button=True)
             prompt_box = gr.Textbox(
-                value=prompt.gremlin_generate_prompt, label="Prompt", lines=2, show_copy_button=True
+                value=prompt.gremlin_generate_prompt, label="Prompt", lines=20, show_copy_button=True
             )
             btn = gr.Button("Text2Gremlin", variant="primary")
     btn.click(  # pylint: disable=no-member

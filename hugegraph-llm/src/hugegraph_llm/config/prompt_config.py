@@ -187,7 +187,8 @@ accurate Gremlin code based on the given instructions.
 {schema}
 ```
 # Rule:
-The output format must be like:
+1. Could use the vertex ID directly if it's given in the context.
+2. The output format must be like:
 ```gremlin
 g.V().limit(10)
 ```
