@@ -59,10 +59,12 @@ def rag_http_api(
             gremlin_tmpl_num=req.gremlin_tmpl_num,
             gremlin_prompt=req.gremlin_prompt or prompt.gremlin_generate_prompt,
         )
+        # TODO: we need more info in the response for users to understand the query logic
         return {
-            key: value
-            for key, value in zip(["raw_answer", "vector_only", "graph_only", "graph_vector_answer"], result)
-            if getattr(req, key)
+            "query": req.query,
+            **{key: value
+               for key, value in zip(["raw_answer", "vector_only", "graph_only", "graph_vector_answer"], result)
+               if getattr(req, key)}
         }
 
     @router.post("/rag/graph", status_code=status.HTTP_200_OK)

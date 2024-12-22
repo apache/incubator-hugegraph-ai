@@ -25,8 +25,8 @@ import pandas as pd
 from hugegraph_llm.config import prompt, resource_path, huge_settings
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.init_llm import LLMs
-from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
+from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.utils.hugegraph_utils import run_gremlin_query
 from hugegraph_llm.utils.log import log
@@ -34,9 +34,9 @@ from hugegraph_llm.utils.log import log
 
 def store_schema(schema, question, gremlin_prompt):
     if (
-        prompt.text2gql_graph_schema != schema
-        or prompt.default_question != question
-        or prompt.gremlin_generate_prompt != gremlin_prompt
+        prompt.text2gql_graph_schema != schema or
+        prompt.default_question != question or
+        prompt.gremlin_generate_prompt != gremlin_prompt
     ):
         prompt.text2gql_graph_schema = schema
         prompt.default_question = question
@@ -90,8 +90,7 @@ def gremlin_generate(
     updated_schema = sm.simple_schema(schema) if short_schema else schema
     store_schema(str(updated_schema), inp, gremlin_prompt)
     context = (
-        generator.example_index_query(example_num)
-        .gremlin_generate_synthesize(updated_schema, gremlin_prompt)
+        generator.example_index_query(example_num).gremlin_generate_synthesize(updated_schema, gremlin_prompt)
         .run(query=inp)
     )
     try:

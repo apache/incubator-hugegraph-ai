@@ -153,8 +153,7 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
 - 格式示例：
 KEYWORDS:关键词1,关键词2,...,关键词n
 
-MAX_KEYWORDS:
-{max_keywords}
+MAX_KEYWORDS: {max_keywords}
 文本：
 {question}
 """
@@ -162,7 +161,7 @@ MAX_KEYWORDS:
     # keywords_extract_prompt_EN = """
     # Instruction:
     # Please perform the following tasks on the text below:
-    # 1. Extract Keywords and Generate Synonyms from text:
+    # 1. Extract Keywords and Generate Synonyms from the text:
     #   - At least 0, at most {max_keywords} keywords.
     #   - For each keyword, generate its synonyms or possible variant forms.
     # Requirements:
@@ -174,29 +173,33 @@ MAX_KEYWORDS:
     # Output Format:
     # - Output only one line, prefixed with KEYWORDS:, followed by all keywords and synonyms, separated by commas.No spaces or empty characters are allowed in the extracted keywords.
     # - Format example:
-    # KEYWORDS: keyword1, keyword2, ..., keywordn, synonym1, synonym2, ..., synonymn
+    # KEYWORDS: keyword1, keyword2, ..., keywordN, synonym1, synonym2, ..., synonymN
     # Text:
     # {question}
     # """
 
     gremlin_generate_prompt = """
-Given the graph schema:
+You are an expert in graph query language(Gremlin), your role is to understand the schema of the graph and generate 
+accurate Gremlin code based on the given instructions.
+
+# Graph Schema:
 ```json
 {schema}
 ```
-
-Given the extracted vertex vid:
-{vertices}
-
-Given the example query-gremlin pairs:
-{example}
-
-Generate gremlin from the following user query.
-{query}
-
+# Rule:
 The output format must be like:
 ```gremlin
 g.V().limit(10)
 ```
+
+# Extracted vertex vid:
+{vertices}
+
+# Given the example query-gremlin pairs:
+{example}
+
+# Generate  gremlin from the following user query.
+{query}
+
 The generated gremlin is:
 """
