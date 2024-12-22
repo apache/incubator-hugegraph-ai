@@ -122,6 +122,9 @@ def create_vector_graph_block():
     graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(
         store_prompt,
         inputs=[input_schema, info_extract_template],
+    ).then(fit_vid_index).then(
+        store_prompt,
+        inputs=[input_schema, info_extract_template],
     )
 
     def on_tab_select(input_f, input_t, evt: gr.SelectData):
