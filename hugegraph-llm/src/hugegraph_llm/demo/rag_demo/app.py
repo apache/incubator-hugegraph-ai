@@ -23,6 +23,12 @@ import uvicorn
 from fastapi import FastAPI, Depends, APIRouter
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+from apscheduler.executors.asyncio import AsyncIOExecutor
+from apscheduler.jobstores.memory import MemoryJobStore
+from contextlib import asynccontextmanager
+
 from hugegraph_llm.api.admin_api import admin_http_api
 from hugegraph_llm.api.rag_api import rag_http_api
 from hugegraph_llm.config import admin_settings, huge_settings, prompt
@@ -40,9 +46,9 @@ from hugegraph_llm.demo.rag_demo.rag_block import create_rag_block, rag_answer
 from hugegraph_llm.demo.rag_demo.vector_graph_block import create_vector_graph_block
 from hugegraph_llm.resources.demo.css import CSS
 from hugegraph_llm.utils.log import log
+from hugegraph_llm.utils.graph_index_utils import fit_vid_index
 
 sec = HTTPBearer()
-
 
 def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
     correct_token = admin_settings.user_token
@@ -55,6 +61,35 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+def schedule_fit_vid_index():
+    try:
+        log.info("Executing fit_vid_index function...")
+        fit_vid_index()
+        log.info("fit_vid_index function executed successfully.")
+    except Exception as e:
+        log.error(e)
+
+scheduler = BackgroundScheduler()
+
+scheduler.add_job(
+    schedule_fit_vid_index,
+    CronTrigger(hour=2, minute=0),
+    id="fit_vid_index_job",
+    replace_existing=True,
+)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup event
+    if not scheduler.running:
+        scheduler.start()
+        log.info("Scheduler started successfully.")
+
+    # Shutdown event
+    yield  # This marks the point where FastAPI waits for shutdown
+
+    scheduler.shutdown()
+    log.info("Scheduler shut down.")
 
 # pylint: disable=C0301
 def init_rag_ui() -> gr.Interface:
@@ -158,7 +193,7 @@ if __name__ == "__main__":
     parser.add_argument("--host", type=str, default="0.0.0.0", help="host")
     parser.add_argument("--port", type=int, default=8001, help="port")
     args = parser.parse_args()
-    app = FastAPI()
+    app = FastAPI(lifespan=lifespan)
 
     # we don't need to manually check the env now
     # settings.check_env()

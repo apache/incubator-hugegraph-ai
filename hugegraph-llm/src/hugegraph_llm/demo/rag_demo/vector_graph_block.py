@@ -85,9 +85,9 @@ def create_vector_graph_block():
                 graph_index_btn1 = gr.Button("Clear Graph Data & Index", size="sm")
 
         vector_import_bt = gr.Button("Import into Vector", variant="primary")
-        graph_index_rebuild_bt = gr.Button("Rebuild vid Index")
         graph_extract_bt = gr.Button("Extract Graph Data (1)", variant="primary")
         graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=True)
+        graph_index_rebuild_bt = gr.Button("Rebuild vid Index")
 
     vector_index_btn0.click(get_vector_index_info, outputs=out).then(
         store_prompt,
@@ -120,6 +120,9 @@ def create_vector_graph_block():
     ).then(store_prompt, inputs=[input_schema, info_extract_template], )
 
     graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(
+        store_prompt,
+        inputs=[input_schema, info_extract_template],
+    ).then(fit_vid_index).then(
         store_prompt,
         inputs=[input_schema, info_extract_template],
     )
