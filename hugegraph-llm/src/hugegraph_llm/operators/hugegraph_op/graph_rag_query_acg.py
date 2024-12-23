@@ -19,7 +19,7 @@ import json
 import requests
 from typing import Any, Dict, Optional, List, Set, Tuple
 
-from hugegraph_llm.config import settings
+from hugegraph_llm.config import huge_settings
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
@@ -51,10 +51,10 @@ g.V({keywords}).bothE({edge_labels}).otherV().dedup()
 
 def get_paths_vertex_id(sources, targets, depth=2, capacity=100, limit=100):
     log.debug(f"Get_Paths: {sources}, {targets}")
-    graph_ip = settings.graph_ip
-    graph_port = settings.graph_port
-    graph_space = settings.graph_space
-    graph_name = settings.graph_name
+    graph_ip = huge_settings.graph_ip
+    graph_port = huge_settings.graph_port
+    graph_space = huge_settings.graph_space
+    graph_name = huge_settings.graph_name
     # 定义请求 URL 和头部
     url = f'http://{graph_ip}:{graph_port}/graphspaces/{graph_space}/graphs/{graph_name}/traversers/paths'
     headers = {
@@ -102,17 +102,17 @@ class GraphRAGACGQuery:
             num_gremlin_generate_example: int = 1
     ):
         self._client = PyHugeClient(
-            settings.graph_ip,
-            settings.graph_port,
-            settings.graph_name,
-            settings.graph_user,
-            settings.graph_pwd,
-            settings.graph_space,
+            huge_settings.graph_ip,
+            huge_settings.graph_port,
+            huge_settings.graph_name,
+            huge_settings.graph_user,
+            huge_settings.graph_pwd,
+            huge_settings.graph_space,
         )
         self._max_deep = max_deep
         self._prop_to_match = prop_to_match
         self._schema = ""
-        self._limit_property = settings.limit_property.lower() == "true"
+        self._limit_property = huge_settings.limit_property.lower() == "true"
         self._max_v_prop_len = max_v_prop_len
         self._max_e_prop_len = max_e_prop_len
         self._gremlin_generator = GremlinGenerator(

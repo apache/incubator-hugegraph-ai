@@ -17,7 +17,7 @@
 
 
 from typing import Dict, Any, Optional, List, Literal
-from hugegraph_llm.config import settings
+from hugegraph_llm.config import huge_settings
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.base import BaseLLM
@@ -140,11 +140,15 @@ class RAGPipeline:
         :param prop_to_match: Property to match in the graph.
         :return: Self-instance for chaining.
         """
-        if settings.graph_space == "acgraggs":
+        if huge_settings.graph_space == "acgraggs":
             self._operators.append(
-                GraphRAGACGQuery(max_deep=max_deep, max_v_prop_len=max_v_prop_len,
-                                 max_e_prop_len=max_e_prop_len, prop_to_match=prop_to_match,
-                                 with_gremlin_template=with_gremlin_template)
+                GraphRAGACGQuery(
+                    max_deep=max_deep,
+                    max_v_prop_len=max_v_prop_len,
+                    max_e_prop_len=max_e_prop_len,
+                    prop_to_match=prop_to_match,
+                    with_gremlin_template=with_gremlin_template
+                )
             )
         else:
             self._operators.append(
