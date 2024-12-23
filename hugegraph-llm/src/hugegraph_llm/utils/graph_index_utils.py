@@ -19,7 +19,7 @@
 import json
 import os
 import traceback
-from typing import Dict, Any, Union
+from typing import Dict, Any, Union, Optional
 
 import gradio as gr
 
@@ -51,20 +51,31 @@ def clean_all_graph_index():
     gr.Info("Clean graph index successfully!")
 
 
+def parse_schema(schema: str, builder: KgBuilder) -> Optional[str]:
+    schema = schema.strip()
+    if schema.startswith('{'):
+        try:
+            schema = json.loads(schema)
+            builder.import_schema(from_user_defined=schema)
+        except json.JSONDecodeError:
+            log.error("Invalid JSON format in schema. Please check it again.")
+            return "ERROR: Invalid JSON format in schema. Please check it carefully."
+    else:
+        log.info("Get schema '%s' from graphdb.", schema)
+        builder.import_schema(from_hugegraph=schema)
+    return None
+
+
 def extract_graph(input_file, input_text, schema, example_prompt) -> str:
 
     texts = read_documents(input_file, input_text)
     builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
-
-    if schema:
-        try:
-            schema = json.loads(schema.strip())
-            builder.import_schema(from_user_defined=schema)
-        except json.JSONDecodeError:
-            log.info("Get schema from graph!")
-            builder.import_schema(from_hugegraph=schema)
-    else:
+    if not schema:
         return "ERROR: please input with correct schema/format."
+
+    error_message = parse_schema(schema, builder)
+    if error_message:
+        return error_message
     builder.chunk_split(texts, "document", "zh").extract_info(example_prompt, "triples")
 
     try:
@@ -96,12 +107,9 @@ def import_graph_data(data: str, schema: str) -> Union[str, Dict[str, Any]]:
         log.debug("Import graph data: %s", data)
         builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
         if schema:
-            try:
-                schema = json.loads(schema.strip())
-                builder.import_schema(from_user_defined=schema)
-            except json.JSONDecodeError:
-                log.info("Get schema from graph!")
-                builder.import_schema(from_hugegraph=schema)
+            error_message = parse_schema(schema, builder)
+            if error_message:
+                return error_message
 
         context = builder.commit_to_hugegraph().run(data_json)
         gr.Info("Import graph data successfully!")
