@@ -65,14 +65,14 @@ async def schedule_fit_vid_index():
                 await asyncio.to_thread(fit_vid_index)
                 log.info("fit_vid_index function executed successfully.")
             except Exception as e:
-                log.error(f"Error executing fit_vid_index: {e}")
-                raise Exception(f"Terminating task due to an error: {e}")
+                log.error("Error executing fit_vid_index: %s", e, exc_info=True)
+                raise Exception("Error executing fit_vid_index")
             await asyncio.sleep(3600)
-    except asyncio.CancelledError:
-        log.info("Periodic task has been cancelled.")
+    except asyncio.CancelledError as ce:
+        log.info("Periodic task has been cancelled due to: %s", ce)
     except Exception as e:
-        log.error(f"Error in schedule_fit_vid_index: {e}")
-        raise Exception(f"Terminating task due to an error: {e}")
+        log.error("Unexpected error in schedule_fit_vid_index: %s", e, exc_info=True)
+        raise Exception("Unexpected error in schedule_fit_vid_index")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI): #pylint: disable=W0621
