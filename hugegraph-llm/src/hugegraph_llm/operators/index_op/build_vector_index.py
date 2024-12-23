@@ -20,7 +20,7 @@ import os
 from typing import Dict, Any
 
 from tqdm import tqdm
-from hugegraph_llm.config import settings, resource_path
+from hugegraph_llm.config import huge_settings, resource_path
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.utils.log import log
@@ -29,7 +29,7 @@ from hugegraph_llm.utils.log import log
 class BuildVectorIndex:
     def __init__(self, embedding: BaseEmbedding):
         self.embedding = embedding
-        self.index_dir = str(os.path.join(resource_path, settings.graph_name, "chunks"))
+        self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "chunks"))
         self.vector_index = VectorIndex.from_index_file(self.index_dir)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:

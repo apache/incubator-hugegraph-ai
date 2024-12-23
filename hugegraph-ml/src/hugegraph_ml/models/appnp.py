@@ -13,7 +13,7 @@
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
-# under the License.right (c) 2024 by jinsong, All Rights Reserved.
+# under the License.
 
 """
 Approximate personalized propagation of neural predictions (APPNP)

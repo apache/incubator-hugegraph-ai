@@ -15,93 +15,26 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
 import os
-from dataclasses import dataclass
-from typing import Optional
-
 import yaml
-from dotenv import dotenv_values, set_key
 
-from hugegraph_llm.config.config_data import ConfigData, PromptData
 from hugegraph_llm.utils.log import log
 
 dir_name = os.path.dirname
-package_path = dir_name(dir_name(dir_name(dir_name(os.path.abspath(__file__)))))
-env_path = os.path.join(package_path, ".env")
+package_path = dir_name(dir_name(dir_name(dir_name(dir_name(os.path.abspath(__file__))))))
 F_NAME = "config_prompt.yaml"
 yaml_file_path = os.path.join(package_path, f"src/hugegraph_llm/resources/demo/{F_NAME}")
 
 
-def read_dotenv() -> dict[str, Optional[str]]:
-    """Read a .env file in the given root path."""
-    env_config = dotenv_values(f"{env_path}")
-    log.info("Loading %s successfully!", env_path)
-    for key, value in env_config.items():
-        if key not in os.environ:
-            os.environ[key] = value or "" # upper
-    return env_config
-
-
-@dataclass
-class Config(ConfigData):
-
-    def from_env(self):
-        if os.path.exists(env_path):
-            env_config = read_dotenv()
-            for key, value in env_config.items():
-                if key.lower() in self.__annotations__ and value:
-                    if self.__annotations__[key.lower()] in [int, Optional[int]]:
-                        value = int(value)
-                    setattr(self, key.lower(), value)
-        else:
-            self.generate_env()
-
-    def generate_env(self):
-        if os.path.exists(env_path):
-            log.info("%s already exists, do you want to override with the default configuration? (y/n)", env_path)
-            update = input()
-            if update.lower() != "y":
-                return
-            self.update_env()
-        else:
-            config_dict = {}
-            for k, v in self.__dict__.items():
-                config_dict[k.upper()] = v
-            with open(env_path, "w", encoding="utf-8") as f:
-                for k, v in config_dict.items():
-                    if v is None:
-                        f.write(f"{k}=\n")
-                    else:
-                        f.write(f"{k}={v}\n")
-            log.info("Generate %s successfully!", env_path)
-
-
-    def check_env(self):
-        config_dict = {}
-        for k, v in self.__dict__.items():
-            config_dict[k.upper()] = str(v) if v else ""
-        env_config = dotenv_values(f"{env_path}")
-        for k, v in config_dict.items():
-            if k in env_config:
-                continue
-            log.info("Update %s: %s=%s", env_path, k, v)
-            set_key(env_path, k, v, quote_mode="never")
-
-
-    def update_env(self):
-        config_dict = {}
-        for k, v in self.__dict__.items():
-            config_dict[k.upper()] = str(v) if v else ""
-        env_config = dotenv_values(f"{env_path}")
-        for k, v in config_dict.items():
-            if k in env_config and env_config[k] == v:
-                continue
-            log.info("Update %s: %s=%s", env_path, k, v)
-            set_key(env_path, k, v, quote_mode="never")
-
-
-class PromptConfig(PromptData):
+class BasePromptConfig:
+    graph_schema: str = ''
+    extract_graph_prompt: str = ''
+    default_question: str = ''
+    custom_rerank_info: str = ''
+    answer_prompt: str = ''
+    keywords_extract_prompt: str = ''
+    text2gql_graph_schema: str = ''
+    gremlin_generate_prompt: str = ''
 
     def ensure_yaml_file_exists(self):
         if os.path.exists(yaml_file_path):
@@ -114,7 +47,6 @@ class PromptConfig(PromptData):
         else:
             self.generate_yaml_file()
             log.info("Prompt file '%s' doesn't exist, create it.", yaml_file_path)
-
 
     def save_to_yaml(self):
         indented_schema = "\n".join([f"  {line}" for line in self.graph_schema.splitlines()])
