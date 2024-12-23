@@ -17,15 +17,13 @@
 
 
 import argparse
+import asyncio
 from contextlib import asynccontextmanager
 
 import gradio as gr
 import uvicorn
 from fastapi import FastAPI, Depends, APIRouter
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
 
 from hugegraph_llm.api.admin_api import admin_http_api
 from hugegraph_llm.api.rag_api import rag_http_api
@@ -59,33 +57,29 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-def schedule_fit_vid_index():
+async def schedule_fit_vid_index():
     try:
-        log.info("Executing fit_vid_index function...")
-        fit_vid_index()
-        log.info("fit_vid_index function executed successfully.")
+        while True:
+            log.info("Executing fit_vid_index function...")
+            await asyncio.to_thread(fit_vid_index)
+            log.info("fit_vid_index function executed successfully.")
+            await asyncio.sleep(3600)
     except Exception as e: #pylint: disable=W0718
         log.error(e)
 
-scheduler = BackgroundScheduler()
-
-scheduler.add_job(
-    schedule_fit_vid_index,
-    CronTrigger(hour=2, minute=0),
-    id="fit_vid_index_job",
-    replace_existing=True,
-)
-
 @asynccontextmanager
 async def lifespan(app: FastAPI): #pylint: disable=W0621
-    if not scheduler.running:
-        scheduler.start()
-        log.info("Scheduler started successfully.")
+    log.info("Starting periodic task...")
+    task = asyncio.create_task(schedule_fit_vid_index())
 
     yield
 
-    scheduler.shutdown()
-    log.info("Scheduler shut down.")
+    log.info("Stopping periodic task...")
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        log.info("Periodic task has been cancelled.")
 
 # pylint: disable=C0301
 def init_rag_ui() -> gr.Interface:
