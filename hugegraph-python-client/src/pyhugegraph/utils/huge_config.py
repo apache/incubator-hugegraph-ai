@@ -32,7 +32,7 @@ class HGraphConfig:
     password: str
     graph_name: str
     graphspace: Optional[str] = None
-    timeout: int = 10
+    timeout: tuple[float, float] = (0.5, 15.0)
     gs_supported: bool = field(default=False, init=False)
     version: List[int] = field(default_factory=list)
 
@@ -44,7 +44,7 @@ class HGraphConfig:
         else:
             try:
                 response = requests.get(
-                    f"http://{self.ip}:{self.port}/versions", timeout=1
+                    f"http://{self.ip}:{self.port}/versions", timeout=0.5
                 )
                 core = response.json()["versions"]["core"]
                 log.info(  # pylint: disable=logging-fstring-interpolation
