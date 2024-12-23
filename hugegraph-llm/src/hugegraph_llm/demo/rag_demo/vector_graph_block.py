@@ -119,10 +119,7 @@ def create_vector_graph_block():
         extract_graph, inputs=[input_file, input_text, input_schema, info_extract_template], outputs=[out]
     ).then(store_prompt, inputs=[input_schema, info_extract_template], )
 
-    graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(
-        store_prompt,
-        inputs=[input_schema, info_extract_template],
-    ).then(fit_vid_index).then(
+    graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(fit_vid_index).then(
         store_prompt,
         inputs=[input_schema, info_extract_template],
     )
