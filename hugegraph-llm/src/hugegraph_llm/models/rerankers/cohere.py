@@ -52,7 +52,7 @@ class CohereReranker:
             "top_n": top_n,
             "documents": documents,
         }
-        response = requests.post(url, headers=headers, json=payload, timeout=60)
+        response = requests.post(url, headers=headers, json=payload, timeout=(1.0, 10.0))
         response.raise_for_status()  # Raise an error for bad status codes
         results = response.json()["results"]
         sorted_docs = [documents[item["index"]] for item in results]
