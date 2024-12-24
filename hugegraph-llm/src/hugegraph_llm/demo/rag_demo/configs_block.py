@@ -34,9 +34,9 @@ def test_api_connection(url, method="GET", headers=None, params=None, body=None,
     log.debug("Request URL: %s", url)
     try:
         if method.upper() == "GET":
-            resp = requests.get(url, headers=headers, params=params, timeout=5, auth=auth)
+            resp = requests.get(url, headers=headers, params=params, timeout=(1.0, 5.0), auth=auth)
         elif method.upper() == "POST":
-            resp = requests.post(url, headers=headers, params=params, json=body, timeout=5, auth=auth)
+            resp = requests.post(url, headers=headers, params=params, json=body, timeout=(1.0, 5.0), auth=auth)
         else:
             raise ValueError("Unsupported HTTP method, please use GET/POST instead")
     except requests.exceptions.RequestException as e:
