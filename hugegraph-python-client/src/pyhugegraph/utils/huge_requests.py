@@ -33,8 +33,8 @@ class HGraphSession:
     def __init__(
         self,
         cfg: HGraphConfig,
-        retries: int = 5,
-        backoff_factor: int = 1,
+        retries: int = 3,
+        backoff_factor: int = 0.1,
         status_forcelist=(500, 502, 504),
         session: Optional[requests.Session] = None,
     ):
