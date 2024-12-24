@@ -23,10 +23,10 @@ from typing import Tuple, Literal, Optional
 import gradio as gr
 import pandas as pd
 from gradio.utils import NamedString
-from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 
 from hugegraph_llm.config import resource_path, prompt, huge_settings, llm_settings
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
+from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.utils.log import log
 
 
@@ -43,7 +43,7 @@ def rag_answer(
     custom_related_information: str,
     answer_prompt: str,
     keywords_extract_prompt: str,
-    gremlin_tmpl_num: Optional[int] = 2,
+    gremlin_tmpl_num: Optional[int] = 1,
     gremlin_prompt: Optional[str] = prompt.gremlin_generate_prompt,
 ) -> Tuple:
     """
@@ -75,12 +75,12 @@ def rag_answer(
         return "", "", "", ""
 
     context = {
-        "verbose": True,
         "query": text,
         "vector_search": vector_search,
         "graph_search": graph_search,
         "graph_result_flag": 0
     }
+
     rag = RAGPipeline()
     if vector_search:
         rag.query_vector_index()
@@ -89,8 +89,9 @@ def rag_answer(
         try:
             context = (text2gremlin_worker
                        .import_schema(from_hugegraph=huge_settings.graph_name)
-                       .example_index_query()
-                       .gremlin_generate_synthesize(with_gremlin_template=with_gremlin_template)
+                       .example_index_query(num_examples=gremlin_tmpl_num)
+                       .gremlin_generate_synthesize(gremlin_prompt=gremlin_prompt,
+                                                    with_gremlin_template=with_gremlin_template)
                        .gremlin_execute()
                        .run(**context))
         except ValueError as e:

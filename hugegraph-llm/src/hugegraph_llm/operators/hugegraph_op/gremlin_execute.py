@@ -18,8 +18,8 @@
 import json
 from typing import Any, Dict
 
-from hugegraph_llm.utils.log import log
 from hugegraph_llm.config import huge_settings
+from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
 
 
@@ -47,8 +47,5 @@ class GremlinExecute:
 
         if context.get("graph_result"):
             context["graph_result_flag"] = 1
-            context["graph_context_head"] = (
-                f"The following are graph query result "
-                f"from gremlin query `{gremlin}`.\n"
-            )
+            context["graph_context_head"] = f"The following are graph query result from gremlin query `{gremlin}`.\n"
         return context

@@ -31,7 +31,7 @@ class GremlinGenerateSynthesize:
         self,
         llm: BaseLLM = None,
         schema: Optional[Union[dict, str]] = None,
-        with_gremlin_template: bool = True, # TODO: ensure useful
+        with_gremlin_template: bool = True,
         gremlin_prompt: Optional[str] = None
     ) -> None:
         self.llm = llm or LLMs().get_text2gql_llm()

@@ -193,8 +193,8 @@ accurate Gremlin code based on the given instructions.
 g.V().limit(10)
 ```
 
-Generate gremlin from the following user query.
+# Generate gremlin from the query.
 {query}
 
-The generated gremlin is:
+Generated gremlin is:
 """

@@ -200,5 +200,5 @@ def graph_rag_recall(
         near_neighbor_first=near_neighbor_first,
         custom_related_information=custom_related_information,
     )
-    context = rag.run(verbose=True, query=query, graph_search=True)
+    context = rag.run(query=query, graph_search=True)
     return context
