@@ -87,7 +87,7 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
         raise gr.Error(str(e))
 
 
-def fit_vid_index():
+def update_vid_embedding():
     builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     builder.fetch_graph_data().build_vertex_id_semantic_index()
     log.debug("Operators: %s", builder.operators)
