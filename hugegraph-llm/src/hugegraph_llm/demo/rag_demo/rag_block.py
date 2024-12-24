@@ -31,18 +31,20 @@ from hugegraph_llm.utils.log import log
 
 
 def rag_answer(
-        text: str,
-        raw_answer: bool,
-        vector_only_answer: bool,
-        graph_only_answer: bool,
-        graph_vector_answer: bool,
-        with_gremlin_template: bool,
-        graph_ratio: float,
-        rerank_method: Literal["bleu", "reranker"],
-        near_neighbor_first: bool,
-        custom_related_information: str,
-        answer_prompt: str,
-        keywords_extract_prompt: str,
+    text: str,
+    raw_answer: bool,
+    vector_only_answer: bool,
+    graph_only_answer: bool,
+    graph_vector_answer: bool,
+    with_gremlin_template: bool,
+    graph_ratio: float,
+    rerank_method: Literal["bleu", "reranker"],
+    near_neighbor_first: bool,
+    custom_related_information: str,
+    answer_prompt: str,
+    keywords_extract_prompt: str,
+    gremlin_tmpl_num: Optional[int] = 2,
+    gremlin_prompt: Optional[str] = prompt.gremlin_generate_prompt,
 ) -> Tuple:
     """
     Generate an answer using the RAG (Retrieval-Augmented Generation) pipeline.
@@ -53,15 +55,17 @@ def rag_answer(
     5. Run the pipeline and return the results.
     """
     should_update_prompt = (
-        prompt.default_question != text or
-        prompt.answer_prompt != answer_prompt or
-        prompt.keywords_extract_prompt != keywords_extract_prompt
+        prompt.default_question != text
+        or prompt.answer_prompt != answer_prompt
+        or prompt.keywords_extract_prompt != keywords_extract_prompt
+        or prompt.gremlin_generate_prompt != gremlin_prompt
     )
     if should_update_prompt or prompt.custom_rerank_info != custom_related_information:
         prompt.custom_rerank_info = custom_related_information
         prompt.default_question = text
         prompt.answer_prompt = answer_prompt
         prompt.keywords_extract_prompt = keywords_extract_prompt
+        prompt.gremlin_generate_prompt = gremlin_prompt
         prompt.update_yaml_file()
 
     vector_search = vector_only_answer or graph_vector_answer
@@ -99,7 +103,11 @@ def rag_answer(
             rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid().import_schema(
                 huge_settings.graph_name).query_graphdb()
     # TODO: add more user-defined search strategies
-    rag.merge_dedup_rerank(graph_ratio, rerank_method, near_neighbor_first, )
+    rag.merge_dedup_rerank(
+        graph_ratio,
+        rerank_method,
+        near_neighbor_first,
+    )
     rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
 
     try:
@@ -146,6 +154,7 @@ def create_rag_block():
                 graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
             with gr.Row():
                 with_gremlin_template_radio = gr.Radio(choices=[True, False], value=True, label="With Gremlin Template")
+
             def toggle_slider(enable):
                 return gr.update(interactive=enable)
 
@@ -187,16 +196,18 @@ def create_rag_block():
             near_neighbor_first,
             custom_related_information,
             answer_prompt_input,
-            keywords_extract_prompt_input
+            keywords_extract_prompt_input,
         ],
         outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
     )
 
-    gr.Markdown("""## 2. (Batch) Back-testing )
+    gr.Markdown(
+        """## 2. (Batch) Back-testing )
     > 1. Download the template file & fill in the questions you want to test.
     > 2. Upload the file & click the button to generate answers. (Preview shows the first 40 lines)
     > 3. The answer options are the same as the above RAG/Q&A frame 
-    """)
+    """
+    )
     tests_df_headers = [
         "Question",
         "Expected Answer",
@@ -237,18 +248,19 @@ def create_rag_block():
         return df
 
     def several_rag_answer(
-            is_raw_answer: bool,
-            is_vector_only_answer: bool,
-            is_graph_only_answer: bool,
-            is_graph_vector_answer: bool,
-            graph_ratio: float,
-            rerank_method: Literal["bleu", "reranker"],
-            near_neighbor_first: bool,
-            custom_related_information: str,
-            answer_prompt: str,
-            keywords_extract_prompt: str,
-            progress=gr.Progress(track_tqdm=True),
-            answer_max_line_count: int = 1,
+        is_raw_answer: bool,
+        is_vector_only_answer: bool,
+        is_graph_only_answer: bool,
+        is_graph_vector_answer: bool,
+        graph_ratio: float,
+        rerank_method: Literal["bleu", "reranker"],
+        near_neighbor_first: bool,
+        with_gremlin_template: bool,
+        custom_related_information: str,
+        answer_prompt: str,
+        keywords_extract_prompt: str,
+        answer_max_line_count: int = 1,
+        progress=gr.Progress(track_tqdm=True),
     ):
         df = pd.read_excel(questions_path, dtype=str)
         total_rows = len(df)
@@ -263,6 +275,7 @@ def create_rag_block():
                 graph_ratio,
                 rerank_method,
                 near_neighbor_first,
+                with_gremlin_template,
                 custom_related_information,
                 answer_prompt,
                 keywords_extract_prompt,
@@ -296,6 +309,7 @@ def create_rag_block():
             graph_ratio,
             rerank_method,
             near_neighbor_first,
+            with_gremlin_template_radio,
             custom_related_information,
             answer_prompt_input,
             keywords_extract_prompt_input,

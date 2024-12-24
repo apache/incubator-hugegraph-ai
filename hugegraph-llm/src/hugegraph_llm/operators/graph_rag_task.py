@@ -32,6 +32,7 @@ from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
 from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_qps
+from hugegraph_llm.config import prompt
 
 
 class RAGPipeline:
@@ -65,11 +66,11 @@ class RAGPipeline:
         return self
 
     def extract_keywords(
-            self,
-            text: Optional[str] = None,
-            max_keywords: int = 5,
-            language: str = "english",
-            extract_template: Optional[str] = None,
+        self,
+        text: Optional[str] = None,
+        max_keywords: int = 5,
+        language: str = "english",
+        extract_template: Optional[str] = None,
     ):
         """
         Add a keyword extraction operator to the pipeline.
@@ -124,6 +125,9 @@ class RAGPipeline:
         max_v_prop_len: int = 2048,
         max_e_prop_len: int = 256,
         prop_to_match: Optional[str] = None,
+        with_gremlin_template: Optional[bool] = True,
+        num_gremlin_generate_example: Optional[int] = 1,
+        gremlin_prompt: Optional[str] = prompt.gremlin_generate_prompt,
     ):
         """
         Add a graph RAG query operator to the pipeline.
@@ -136,8 +140,16 @@ class RAGPipeline:
         :return: Self-instance for chaining.
         """
         self._operators.append(
-            GraphRAGQuery(max_deep=max_deep, max_items=max_items, prop_to_match=prop_to_match,
-                          max_v_prop_len=max_v_prop_len, max_e_prop_len=max_e_prop_len)
+            GraphRAGQuery(
+                max_deep=max_deep,
+                max_items=max_items,
+                max_v_prop_len=max_v_prop_len,
+                max_e_prop_len=max_e_prop_len,
+                prop_to_match=prop_to_match,
+                with_gremlin_template=with_gremlin_template,
+                num_gremlin_generate_example=num_gremlin_generate_example,
+                gremlin_prompt=gremlin_prompt,
+            )
         )
         return self
 
@@ -149,7 +161,10 @@ class RAGPipeline:
         :return: Self-instance for chaining.
         """
         self._operators.append(
-            VectorIndexQuery(embedding=self._embedding, topk=max_items, )
+            VectorIndexQuery(
+                embedding=self._embedding,
+                topk=max_items,
+            )
         )
         return self
 
@@ -177,12 +192,12 @@ class RAGPipeline:
         return self
 
     def synthesize_answer(
-            self,
-            raw_answer: bool = False,
-            vector_only_answer: bool = True,
-            graph_only_answer: bool = False,
-            graph_vector_answer: bool = False,
-            answer_prompt: Optional[str] = None,
+        self,
+        raw_answer: bool = False,
+        vector_only_answer: bool = True,
+        graph_only_answer: bool = False,
+        graph_vector_answer: bool = False,
+        answer_prompt: Optional[str] = None,
     ):
         """
         Add an answer synthesis operator to the pipeline.

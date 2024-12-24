@@ -20,19 +20,19 @@ import json
 import re
 from typing import Optional, List, Dict, Any, Union
 
+from hugegraph_llm.config import prompt
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.config import prompt
 
 
 class GremlinGenerateSynthesize:
     def __init__(
-            self,
-            llm: BaseLLM = None,
-            schema: Optional[Union[dict, str]] = None,
-            with_gremlin_template: bool = True,
-            gremlin_prompt: Optional[str] = None
+        self,
+        llm: BaseLLM = None,
+        schema: Optional[Union[dict, str]] = None,
+        with_gremlin_template: bool = True, # TODO: ensure useful
+        gremlin_prompt: Optional[str] = None
     ) -> None:
         self.llm = llm or LLMs().get_text2gql_llm()
         if isinstance(schema, dict):
@@ -55,6 +55,11 @@ class GremlinGenerateSynthesize:
                 f"- query: {example['query']}\n"
                 f"- gremlin:\n```gremlin\n{example['gremlin']}\n```")
         return "\n\n".join(example_strings)
+
+    def _format_vertices(self, vertices: Optional[List[str]]) -> Optional[str]:
+        if not vertices:
+            return None
+        return "\n".join([f"- '{vid}'" for vid in vertices])
 
     async def async_generate(self, context: Dict[str, Any]):
         async_tasks = {}

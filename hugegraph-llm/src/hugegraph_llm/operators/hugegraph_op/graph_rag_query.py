@@ -17,7 +17,10 @@
 
 from typing import Any, Dict, Optional, List, Set, Tuple
 
-from hugegraph_llm.config import huge_settings
+from hugegraph_llm.config import huge_settings, prompt
+from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from hugegraph_llm.models.llms.base import BaseLLM
+from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
 
@@ -72,12 +75,17 @@ g.V().has('{prop}', within({keywords}))
 
 class GraphRAGQuery:
     def __init__(
-            self,
-            max_deep: int = 2,
-            max_items: int = int(huge_settings.max_items),
-            prop_to_match: Optional[str] = None,
-            max_v_prop_len: int = 2048,
-            max_e_prop_len: int = 256,
+        self,
+        max_deep: int = 2,
+        max_items: int = int(huge_settings.max_items),
+        prop_to_match: Optional[str] = None,
+        llm: Optional[BaseLLM] = None,
+        embedding: Optional[BaseEmbedding] = None,
+        max_v_prop_len: int = 2048,
+        max_e_prop_len: int = 256,
+        with_gremlin_template: bool = True,
+        num_gremlin_generate_example: int = 1,
+        gremlin_prompt: Optional[str] = None,
     ):
         self._client = PyHugeClient(
             huge_settings.graph_ip,
@@ -94,6 +102,13 @@ class GraphRAGQuery:
         self._limit_property = huge_settings.limit_property.lower() == "true"
         self._max_v_prop_len = max_v_prop_len
         self._max_e_prop_len = max_e_prop_len
+        self._gremlin_generator = GremlinGenerator(
+            llm=llm,
+            embedding=embedding,
+        )
+        self._num_gremlin_generate_example = num_gremlin_generate_example
+        self._with_gremlin_template = with_gremlin_template
+        self._gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         self._init_client(context)
@@ -105,6 +120,37 @@ class GraphRAGQuery:
             log.debug("Knowledge from Graph:\n%s", "\n".join(context["graph_result"]))
         else:
             log.debug("No Knowledge Extracted from Graph")
+        return context
+
+    def _gremlin_generate_query(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        query = context["query"]
+        vertices = context.get("match_vids")
+        query_embedding = context.get("query_embedding")
+
+        self._gremlin_generator.clear()
+        self._gremlin_generator.example_index_query(num_examples=self._num_gremlin_generate_example)
+        gremlin_response = self._gremlin_generator.gremlin_generate_synthesize(
+            context["simple_schema"], vertices=vertices, gremlin_prompt=self._gremlin_prompt
+        ).run(query=query, query_embedding=query_embedding)
+        if self._with_gremlin_template:
+            gremlin = gremlin_response["result"]
+        else:
+            gremlin = gremlin_response["raw_result"]
+        log.info("Generated gremlin: %s", gremlin)
+        context["gremlin"] = gremlin
+        try:
+            result = self._client.gremlin().exec(gremlin=gremlin)["data"]
+            if result == [None]:
+                result = []
+            context["graph_result"] = [json.dumps(item, ensure_ascii=False) for item in result]
+            if context["graph_result"]:
+                context["graph_result_flag"] = 1
+                context["graph_context_head"] = (
+                    f"The following are graph query result " f"from gremlin query `{gremlin}`.\n"
+                )
+        except Exception as e:  # pylint: disable=broad-except
+            log.error(e)
+            context["graph_result"] = ""
         return context
 
     def _subgraph_query(self, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -230,8 +276,9 @@ class GraphRAGQuery:
 
         return subgraph, vertex_degree_list, subgraph_with_degree
 
-    def _process_path(self, path: Any, use_id_to_match: bool, v_cache: Set[str],
-                      e_cache: Set[Tuple[str, str, str]]) -> Tuple[str, List[str]]:
+    def _process_path(
+        self, path: Any, use_id_to_match: bool, v_cache: Set[str], e_cache: Set[Tuple[str, str, str]]
+    ) -> Tuple[str, List[str]]:
         flat_rel = ""
         raw_flat_rel = path["objects"]
         assert len(raw_flat_rel) % 2 == 1, "The length of raw_flat_rel should be odd."
@@ -245,8 +292,7 @@ class GraphRAGQuery:
             if i % 2 == 0:
                 # Process each vertex
                 flat_rel, prior_edge_str_len, depth = self._process_vertex(
-                    item, flat_rel, node_cache, prior_edge_str_len, depth, nodes_with_degree, use_id_to_match,
-                    v_cache
+                    item, flat_rel, node_cache, prior_edge_str_len, depth, nodes_with_degree, use_id_to_match, v_cache
                 )
             else:
                 # Process each edge
@@ -256,17 +302,24 @@ class GraphRAGQuery:
 
         return flat_rel, nodes_with_degree
 
-    def _process_vertex(self, item: Any, flat_rel: str, node_cache: Set[str],
-                        prior_edge_str_len: int, depth: int, nodes_with_degree: List[str],
-                        use_id_to_match: bool, v_cache: Set[str]) -> Tuple[str, int, int]:
+    def _process_vertex(
+        self,
+        item: Any,
+        flat_rel: str,
+        node_cache: Set[str],
+        prior_edge_str_len: int,
+        depth: int,
+        nodes_with_degree: List[str],
+        use_id_to_match: bool,
+        v_cache: Set[str],
+    ) -> Tuple[str, int, int]:
         matched_str = item["id"] if use_id_to_match else item["props"][self._prop_to_match]
         if matched_str in node_cache:
             flat_rel = flat_rel[:-prior_edge_str_len]
             return flat_rel, prior_edge_str_len, depth
 
         node_cache.add(matched_str)
-        props_str = ", ".join(f"{k}: {self._limit_property_query(v, 'v')}"
-                              for k, v in item["props"].items() if v)
+        props_str = ", ".join(f"{k}: {self._limit_property_query(v, 'v')}" for k, v in item["props"].items() if v)
 
         # TODO: we may remove label id or replace with label name
         if matched_str in v_cache:
@@ -280,20 +333,27 @@ class GraphRAGQuery:
         depth += 1
         return flat_rel, prior_edge_str_len, depth
 
-    def _process_edge(self, item: Any, path_str: str, raw_flat_rel: List[Any], i: int, use_id_to_match: bool,
-                      e_cache: Set[Tuple[str, str, str]]) -> Tuple[str, int]:
-        props_str = ", ".join(f"{k}: {self._limit_property_query(v, 'e')}"
-                              for k, v in item["props"].items() if v)
+    def _process_edge(
+        self,
+        item: Any,
+        path_str: str,
+        raw_flat_rel: List[Any],
+        i: int,
+        use_id_to_match: bool,
+        e_cache: Set[Tuple[str, str, str]],
+    ) -> Tuple[str, int]:
+        props_str = ", ".join(f"{k}: {self._limit_property_query(v, 'e')}" for k, v in item["props"].items() if v)
         props_str = f"{{{props_str}}}" if props_str else ""
-        prev_matched_str = raw_flat_rel[i - 1]["id"] if use_id_to_match else (
-            raw_flat_rel)[i - 1]["props"][self._prop_to_match]
+        prev_matched_str = (
+            raw_flat_rel[i - 1]["id"] if use_id_to_match else (raw_flat_rel)[i - 1]["props"][self._prop_to_match]
+        )
 
-        edge_key = (item['inV'], item['label'], item['outV'])
+        edge_key = (item["inV"], item["label"], item["outV"])
         if edge_key not in e_cache:
             e_cache.add(edge_key)
             edge_label = f"{item['label']}{props_str}"
         else:
-            edge_label = item['label']
+            edge_label = item["label"]
 
         edge_str = f"--[{edge_label}]-->" if item["outV"] == prev_matched_str else f"<--[{edge_label}]--"
         path_str += edge_str
@@ -310,8 +370,8 @@ class GraphRAGQuery:
         schema = self._get_graph_schema()
         vertex_props_str, edge_props_str = schema.split("\n")[:2]
         # TODO: rename to vertex (also need update in the schema)
-        vertex_props_str = vertex_props_str[len("Vertex properties: "):].strip("[").strip("]")
-        edge_props_str = edge_props_str[len("Edge properties: "):].strip("[").strip("]")
+        vertex_props_str = vertex_props_str[len("Vertex properties: ") :].strip("[").strip("]")
+        edge_props_str = edge_props_str[len("Edge properties: ") :].strip("[").strip("]")
         vertex_labels = self._extract_label_names(vertex_props_str)
         edge_labels = self._extract_label_names(edge_props_str)
         return vertex_labels, edge_labels
