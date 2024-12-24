@@ -26,6 +26,7 @@ from gradio.utils import NamedString
 
 from hugegraph_llm.config import resource_path, prompt, huge_settings, llm_settings
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
+from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.utils.log import log
 
 
@@ -42,7 +43,7 @@ def rag_answer(
     custom_related_information: str,
     answer_prompt: str,
     keywords_extract_prompt: str,
-    gremlin_tmpl_num: Optional[int] = 2,
+    gremlin_tmpl_num: Optional[int] = 1,
     gremlin_prompt: Optional[str] = prompt.gremlin_generate_prompt,
 ) -> Tuple:
     """
@@ -73,17 +74,35 @@ def rag_answer(
         gr.Warning("Please select at least one generate mode.")
         return "", "", "", ""
 
+    context = {
+        "query": text,
+        "vector_search": vector_search,
+        "graph_search": graph_search,
+        "graph_result_flag": 0
+    }
+
     rag = RAGPipeline()
     if vector_search:
         rag.query_vector_index()
     if graph_search:
-        rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid().import_schema(
-            huge_settings.graph_name
-        ).query_graphdb(
-            with_gremlin_template=with_gremlin_template,
-            num_gremlin_generate_example=gremlin_tmpl_num,
-            gremlin_prompt=gremlin_prompt,
-        )
+        text2gremlin_worker = GremlinGenerator()
+        try:
+            context = (text2gremlin_worker
+                       .import_schema(from_hugegraph=huge_settings.graph_name)
+                       .example_index_query(num_examples=gremlin_tmpl_num)
+                       .gremlin_generate_synthesize(gremlin_prompt=gremlin_prompt,
+                                                    with_gremlin_template=with_gremlin_template)
+                       .gremlin_execute()
+                       .run(**context))
+        except ValueError as e:
+            log.critical(e)
+            raise gr.Error(str(e))
+        except Exception as e:
+            log.critical(e)
+            raise gr.Error(f"An unexpected error occurred: {str(e)}")
+        if context["graph_result_flag"] == 0:
+            rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid().import_schema(
+                huge_settings.graph_name).query_graphdb()
     # TODO: add more user-defined search strategies
     rag.merge_dedup_rerank(
         graph_ratio,
@@ -93,7 +112,7 @@ def rag_answer(
     rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
 
     try:
-        context = rag.run(verbose=True, query=text, vector_search=vector_search, graph_search=graph_search)
+        context = rag.run(**context)
         if context.get("switch_to_bleu"):
             gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
         return (

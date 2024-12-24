@@ -125,8 +125,8 @@ class RAGPipeline:
         max_v_prop_len: int = 2048,
         max_e_prop_len: int = 256,
         prop_to_match: Optional[str] = None,
-        with_gremlin_template: bool = True,
-        num_gremlin_generate_example: int = 1,
+        with_gremlin_template: Optional[bool] = True,
+        num_gremlin_generate_example: Optional[int] = 1,
         gremlin_prompt: Optional[str] = prompt.gremlin_generate_prompt,
     ):
         """
