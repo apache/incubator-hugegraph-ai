@@ -35,5 +35,5 @@ class FetchGraphData:
         if "vertices" not in context:
             context["vertices"] = self.graph.gremlin().exec("g.V().id().limit(10000)")["data"]
         if "edges" not in context:
-            context["edges"] = self.graph.gremlin().exec("g.E().id().limit(10000)")["data"]
+            context["edges"] = self.graph.gremlin().exec("g.E().id().limit(100)")["data"]
         return context
