@@ -81,7 +81,6 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
     try:
         context = builder.run()
         graph_elements = {"vertices": context["vertices"], "edges": context["edges"]}
-        log.info("graph_elements: %s", graph_elements)
         return json.dumps(graph_elements, ensure_ascii=False, indent=2)
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
