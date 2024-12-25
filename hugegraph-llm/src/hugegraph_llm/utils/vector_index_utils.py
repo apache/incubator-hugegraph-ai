@@ -56,13 +56,16 @@ def read_documents(input_file, input_text):
 
 
 def get_vector_index_info():
-    vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "chunks")))
+    chunk_vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "chunks")))
+    graph_vid_vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
     return json.dumps({
-        "embed_dim": vector_index.index.d,
-        "num_vectors": vector_index.index.ntotal,
-        "num_properties": len(vector_index.properties)
+        "embed_dim": chunk_vector_index.index.d,
+        "vector_info": {
+            "chunk_vector_num": chunk_vector_index.index.ntotal,
+            "graph_vid_vector_num": graph_vid_vector_index.index.ntotal,
+            "graph_properties_vector_num": len(chunk_vector_index.properties)
+        }
     }, ensure_ascii=False, indent=2)
-
 
 def clean_vector_index():
     VectorIndex.clean(str(os.path.join(resource_path, huge_settings.graph_name, "chunks")))

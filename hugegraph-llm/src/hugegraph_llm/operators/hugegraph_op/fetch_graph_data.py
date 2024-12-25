@@ -28,6 +28,12 @@ class FetchGraphData:
     def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         if context is None:
             context = {}
+        if "num_vertices" not in context:
+            context["num_vertices"] = self.graph.gremlin().exec("g.V().id().count()")["data"]
+        if "num_edges" not in context:
+            context["num_edges"] = self.graph.gremlin().exec("g.E().id().count()")["data"]
         if "vertices" not in context:
             context["vertices"] = self.graph.gremlin().exec("g.V().id().limit(10000)")["data"]
+        if "edges" not in context:
+            context["edges"] = self.graph.gremlin().exec("g.E().id().limit(10000)")["data"]
         return context
