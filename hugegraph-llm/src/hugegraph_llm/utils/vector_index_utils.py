@@ -55,7 +55,7 @@ def read_documents(input_file, input_text):
     return texts
 
 
-#pylint disable=C0301
+#pylint: disable=C0301
 def get_vector_index_info():
     chunk_vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "chunks")))
     graph_vid_vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
