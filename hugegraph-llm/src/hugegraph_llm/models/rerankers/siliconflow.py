@@ -53,7 +53,7 @@ class SiliconReranker:
             "content-type": Constants.HEADER_CONTENT_TYPE,
             "authorization": f"Bearer {self.api_key}",
         }
-        response = requests.post(url, json=payload, headers=headers, timeout=60)
+        response = requests.post(url, json=payload, headers=headers, timeout=(1.0, 10.0))
         response.raise_for_status()  # Raise an error for bad status codes
         results = response.json()["results"]
         sorted_docs = [documents[item["index"]] for item in results]

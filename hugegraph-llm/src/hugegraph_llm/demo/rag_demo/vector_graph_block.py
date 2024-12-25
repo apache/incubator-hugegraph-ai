@@ -25,7 +25,7 @@ from hugegraph_llm.config import resource_path, prompt
 from hugegraph_llm.utils.graph_index_utils import (
     get_graph_index_info,
     clean_all_graph_index,
-    fit_vid_index,
+    update_vid_embedding,
     extract_graph,
     import_graph_data,
 )
@@ -87,7 +87,7 @@ def create_vector_graph_block():
         vector_import_bt = gr.Button("Import into Vector", variant="primary")
         graph_extract_bt = gr.Button("Extract Graph Data (1)", variant="primary")
         graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=True)
-        graph_index_rebuild_bt = gr.Button("Rebuild vid Index")
+        graph_index_rebuild_bt = gr.Button("Update Vid Embedding")
 
     vector_index_btn0.click(get_vector_index_info, outputs=out).then(
         store_prompt,
@@ -109,7 +109,7 @@ def create_vector_graph_block():
         store_prompt,
         inputs=[input_schema, info_extract_template],
     )
-    graph_index_rebuild_bt.click(fit_vid_index, outputs=out).then(
+    graph_index_rebuild_bt.click(update_vid_embedding, outputs=out).then(
         store_prompt,
         inputs=[input_schema, info_extract_template],
     )
@@ -119,7 +119,7 @@ def create_vector_graph_block():
         extract_graph, inputs=[input_file, input_text, input_schema, info_extract_template], outputs=[out]
     ).then(store_prompt, inputs=[input_schema, info_extract_template], )
 
-    graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(
+    graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(update_vid_embedding).then(
         store_prompt,
         inputs=[input_schema, info_extract_template],
     ).then(fit_vid_index).then(
