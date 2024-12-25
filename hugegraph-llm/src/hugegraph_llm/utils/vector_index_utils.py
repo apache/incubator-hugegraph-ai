@@ -55,6 +55,7 @@ def read_documents(input_file, input_text):
     return texts
 
 
+#pylint disable=C0301
 def get_vector_index_info():
     chunk_vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "chunks")))
     graph_vid_vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
@@ -74,6 +75,8 @@ def clean_vector_index():
 
 
 def build_vector_index(input_file, input_text):
+    if input_file and input_text:
+        raise gr.Error("Please only choose one between file and text.")
     texts = read_documents(input_file, input_text)
     builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     context = builder.chunk_split(texts, "paragraph", "zh").build_vector_index().run()
