@@ -76,7 +76,7 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
     error_message = parse_schema(schema, builder)
     if error_message:
         return error_message
-    builder.chunk_split(texts, "document", "zh").extract_info(example_prompt, "triples")
+    builder.chunk_split(texts, "document", "zh").extract_info(example_prompt, "property_graph")
 
     try:
         context = builder.run()
