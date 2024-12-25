@@ -76,11 +76,12 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
     error_message = parse_schema(schema, builder)
     if error_message:
         return error_message
-    builder.chunk_split(texts, "document", "zh").extract_info(example_prompt, "triples")
+    builder.chunk_split(texts, "document", "zh").extract_info(example_prompt, "property_graph")
 
     try:
         context = builder.run()
         graph_elements = {"vertices": context["vertices"], "edges": context["edges"]}
+        log.info("graph_elements: %s", graph_elements)
         return json.dumps(graph_elements, ensure_ascii=False, indent=2)
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
