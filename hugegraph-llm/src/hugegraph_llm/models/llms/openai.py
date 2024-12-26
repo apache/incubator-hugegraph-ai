@@ -19,8 +19,13 @@ from typing import Callable, List, Optional, Dict, Any
 
 import openai
 import tiktoken
-from openai import OpenAI, AsyncOpenAI
-from retry import retry
+from openai import OpenAI, AsyncOpenAI, RateLimitError, APITimeoutError, APIConnectionError
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_exponential,
+    retry_if_exception_type,
+)
 
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
@@ -43,7 +48,11 @@ class OpenAIClient(BaseLLM):
         self.max_tokens = max_tokens
         self.temperature = temperature
 
-    @retry(tries=3, delay=1)
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+        retry=retry_if_exception_type((RateLimitError, APIConnectionError, APITimeoutError)),
+    )
     def generate(
         self,
         messages: Optional[List[Dict[str, Any]]] = None,
@@ -74,7 +83,11 @@ class OpenAIClient(BaseLLM):
             log.error("Retrying LLM call %s", e)
             raise e
 
-    @retry(tries=3, delay=1)
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+        retry=retry_if_exception_type((RateLimitError, APIConnectionError, APITimeoutError)),
+    )
     async def agenerate(
             self,
             messages: Optional[List[Dict[str, Any]]] = None,
