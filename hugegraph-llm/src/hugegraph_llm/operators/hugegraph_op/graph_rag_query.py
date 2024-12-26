@@ -15,7 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
 from typing import Any, Dict, Optional, List, Set, Tuple
 
 from hugegraph_llm.config import huge_settings, prompt
@@ -114,15 +113,10 @@ class GraphRAGQuery:
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         self._init_client(context)
 
-        # initial flag: -1 means no result, 0 means subgraph query, 1 means gremlin query
-        context["graph_result_flag"] = -1
-        # 1. Try to perform a query based on the generated gremlin
-        context = self._gremlin_generate_query(context)
-        # 2. Try to perform a query based on subgraph-search if the previous query failed
-        if not context.get("graph_result"):
-            context = self._subgraph_query(context)
+        context = self._subgraph_query(context)
 
         if context.get("graph_result"):
+            context["graph_result_flag"] = 2
             log.debug("Knowledge from Graph:\n%s", "\n".join(context["graph_result"]))
         else:
             log.debug("No Knowledge Extracted from Graph")

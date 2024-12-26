@@ -105,10 +105,10 @@ def gremlin_generate(
     match_result = json.dumps(context.get("match_result", "No Results"), ensure_ascii=False, indent=2)
     return (
         match_result,
-        context["result"],
-        context["raw_result"],
+        context["initialized_gremlin_result"],
+        context["raw_gremlin_result"],
         context["template_exec_res"],
-        context["raw_exec_res"],
+        context["raw_exec_res"]
     )
 
 
@@ -133,10 +133,9 @@ def simple_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def create_text2gremlin_block() -> Tuple:
-    gr.Markdown(
-        """## Build Vector Template Index (Optional)
-    > Uploaded CSV file should be in `query,gremlin` format below:    
-    > e.g. `who is peter?`,`g.V().has('name', 'peter')`    
+    gr.Markdown("""## Build Vector Template Index (Optional)
+    > Uploaded CSV file should be in `query,gremlin` format below:  
+    > e.g. `who is peter?`,`g.V().has('name', 'peter')`  
     > JSON file should be in format below:  
     > e.g. `[{"query":"who is peter", "gremlin":"g.V().has('name', 'peter')"}]`
     """
@@ -201,5 +200,5 @@ def graph_rag_recall(
         near_neighbor_first=near_neighbor_first,
         custom_related_information=custom_related_information,
     )
-    context = rag.run(verbose=True, query=query, graph_search=True)
+    context = rag.run(query=query, graph_search=True)
     return context
