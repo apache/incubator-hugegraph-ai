@@ -17,7 +17,7 @@
 
 
 from typing import Dict, Any, Optional, List, Literal
-
+from hugegraph_llm.config import huge_settings
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.base import BaseLLM
@@ -26,6 +26,7 @@ from hugegraph_llm.operators.common_op.merge_dedup_rerank import MergeDedupReran
 from hugegraph_llm.operators.common_op.print_result import PrintResult
 from hugegraph_llm.operators.document_op.word_extract import WordExtract
 from hugegraph_llm.operators.hugegraph_op.graph_rag_query import GraphRAGQuery
+from hugegraph_llm.operators.hugegraph_op.graph_rag_query_acg import GraphRAGACGQuery
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
@@ -96,10 +97,10 @@ class RAGPipeline:
         return self
 
     def keywords_to_vid(
-        self,
-        by: Literal["query", "keywords"] = "keywords",
-        topk_per_keyword: int = 1,
-        topk_per_query: int = 10,
+            self,
+            by: Literal["query", "keywords"] = "keywords",
+            topk_per_keyword: int = 1,
+            topk_per_query: int = 10,
     ):
         """
         Add a semantic ID query operator to the pipeline.
@@ -139,18 +140,29 @@ class RAGPipeline:
         :param prop_to_match: Property to match in the graph.
         :return: Self-instance for chaining.
         """
-        self._operators.append(
-            GraphRAGQuery(
-                max_deep=max_deep,
-                max_items=max_items,
-                max_v_prop_len=max_v_prop_len,
-                max_e_prop_len=max_e_prop_len,
-                prop_to_match=prop_to_match,
-                with_gremlin_template=with_gremlin_template,
-                num_gremlin_generate_example=num_gremlin_generate_example,
-                gremlin_prompt=gremlin_prompt,
+        if huge_settings.graph_space == "acgraggs":
+            self._operators.append(
+                GraphRAGACGQuery(
+                    max_deep=max_deep,
+                    max_v_prop_len=max_v_prop_len,
+                    max_e_prop_len=max_e_prop_len,
+                    prop_to_match=prop_to_match,
+                    with_gremlin_template=with_gremlin_template
+                )
             )
-        )
+        else:
+            self._operators.append(
+                GraphRAGQuery(
+                    max_deep=max_deep,
+                    max_items=max_items,
+                    max_v_prop_len=max_v_prop_len,
+                    max_e_prop_len=max_e_prop_len,
+                    prop_to_match=prop_to_match,
+                    with_gremlin_template=with_gremlin_template,
+                    num_gremlin_generate_example=num_gremlin_generate_example,
+                    gremlin_prompt=gremlin_prompt,
+                )
+            )
         return self
 
     def query_vector_index(self, max_items: int = 3):
@@ -169,11 +181,11 @@ class RAGPipeline:
         return self
 
     def merge_dedup_rerank(
-        self,
-        graph_ratio: float = 0.5,
-        rerank_method: Literal["bleu", "reranker"] = "bleu",
-        near_neighbor_first: bool = False,
-        custom_related_information: str = "",
+            self,
+            graph_ratio: float = 0.5,
+            rerank_method: Literal["bleu", "reranker"] = "bleu",
+            near_neighbor_first: bool = False,
+            custom_related_information: str = "",
     ):
         """
         Add a merge, deduplication, and rerank operator to the pipeline.
