@@ -41,7 +41,7 @@ def rag_answer(
     custom_related_information: str,
     answer_prompt: str,
     keywords_extract_prompt: str,
-    gremlin_tmpl_num: Optional[int] = 2,
+    gremlin_tmpl_num: int = 2,
     gremlin_prompt: Optional[str] = prompt.gremlin_generate_prompt,
 ) -> Tuple:
     """
@@ -123,7 +123,10 @@ def create_rag_block():
                 value=prompt.answer_prompt, label="Query Prompt", show_copy_button=True, lines=7
             )
             keywords_extract_prompt_input = gr.Textbox(
-                value=prompt.keywords_extract_prompt, label="Keywords Extraction Prompt", show_copy_button=True, lines=7
+                value=prompt.keywords_extract_prompt,
+                label="Keywords Extraction Prompt",
+                show_copy_button=True,
+                lines=7,
             )
         with gr.Column(scale=1):
             with gr.Row():
@@ -144,6 +147,7 @@ def create_rag_block():
                         value="reranker" if online_rerank else "bleu",
                         label="Rerank method",
                     )
+                    example_num = gr.Number(value=2, label="Num of ref examples", precision=0)
                     graph_ratio = gr.Slider(0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False)
 
                 graph_vector_radio.change(
@@ -174,6 +178,7 @@ def create_rag_block():
             custom_related_information,
             answer_prompt_input,
             keywords_extract_prompt_input,
+            example_num,
         ],
         outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
     )
