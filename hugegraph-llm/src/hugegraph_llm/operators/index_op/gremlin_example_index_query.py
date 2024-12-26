@@ -38,13 +38,15 @@ class GremlinExampleIndexQuery:
         self.vector_index = VectorIndex.from_index_file(self.index_dir)
 
     def _ensure_index_exists(self):
-        if not (os.path.exists(os.path.join(self.index_dir, "index.faiss"))
-                and os.path.exists(os.path.join(self.index_dir, "properties.pkl"))):
+        if not (
+            os.path.exists(os.path.join(self.index_dir, "index.faiss"))
+            and os.path.exists(os.path.join(self.index_dir, "properties.pkl"))
+        ):
             log.warning("No gremlin example index found, will generate one.")
             self._build_default_example_index()
 
     def _get_match_result(self, context: Dict[str, Any], query: str) -> List[Dict[str, Any]]:
-        if self.num_examples == 0:
+        if self.num_examples <= 0:
             return []
 
         query_embedding = context.get("query_embedding")
@@ -53,8 +55,7 @@ class GremlinExampleIndexQuery:
         return self.vector_index.search(query_embedding, self.num_examples, dis_threshold=1.8)
 
     def _build_default_example_index(self):
-        properties = pd.read_csv(os.path.join(resource_path, "demo",
-                                              "text2gremlin.csv")).to_dict(orient="records")
+        properties = pd.read_csv(os.path.join(resource_path, "demo", "text2gremlin.csv")).to_dict(orient="records")
         embeddings = [self.embedding.get_text_embedding(row["query"]) for row in tqdm(properties)]
         vector_index = VectorIndex(len(embeddings[0]))
         vector_index.add(embeddings, properties)

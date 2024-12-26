@@ -35,7 +35,6 @@ def rag_answer(
     vector_only_answer: bool,
     graph_only_answer: bool,
     graph_vector_answer: bool,
-    with_gremlin_template: bool,
     graph_ratio: float,
     rerank_method: Literal["bleu", "reranker"],
     near_neighbor_first: bool,
@@ -80,7 +79,6 @@ def rag_answer(
         rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid().import_schema(
             huge_settings.graph_name
         ).query_graphdb(
-            with_gremlin_template=with_gremlin_template,
             num_gremlin_generate_example=gremlin_tmpl_num,
             gremlin_prompt=gremlin_prompt,
         )
@@ -134,8 +132,6 @@ def create_rag_block():
             with gr.Row():
                 graph_only_radio = gr.Radio(choices=[True, False], value=True, label="Graph-only Answer")
                 graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
-            with gr.Row():
-                with_gremlin_template_radio = gr.Radio(choices=[True, False], value=True, label="With Gremlin Template")
 
             def toggle_slider(enable):
                 return gr.update(interactive=enable)
@@ -172,7 +168,6 @@ def create_rag_block():
             vector_only_radio,
             graph_only_radio,
             graph_vector_radio,
-            with_gremlin_template_radio,
             graph_ratio,
             rerank_method,
             near_neighbor_first,
@@ -237,7 +232,6 @@ def create_rag_block():
         graph_ratio: float,
         rerank_method: Literal["bleu", "reranker"],
         near_neighbor_first: bool,
-        with_gremlin_template: bool,
         custom_related_information: str,
         answer_prompt: str,
         keywords_extract_prompt: str,
@@ -257,7 +251,6 @@ def create_rag_block():
                 graph_ratio,
                 rerank_method,
                 near_neighbor_first,
-                with_gremlin_template,
                 custom_related_information,
                 answer_prompt,
                 keywords_extract_prompt,
@@ -291,7 +284,6 @@ def create_rag_block():
             graph_ratio,
             rerank_method,
             near_neighbor_first,
-            with_gremlin_template_radio,
             custom_related_information,
             answer_prompt_input,
             keywords_extract_prompt_input,
