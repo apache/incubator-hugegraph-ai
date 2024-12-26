@@ -61,10 +61,22 @@ def create_vector_graph_block():
     with gr.Row():
         with gr.Column():
             with gr.Tab("text") as tab_upload_text:
-                input_text = gr.Textbox(value="", label="Doc(s)", lines=20, show_copy_button=True)
+                input_text = gr.Textbox(
+                    value=(
+                        "Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with since 2010. "
+                        "James, in his professional life, works as a journalist. Additionally, Sarah is the proud owner of the website "
+                        "www.sarahsplace.com, while James manages his own webpage, though the specific URL is not mentioned here. "
+                        "These two individuals, Sarah and James, have not only forged a strong personal bond as roommates but have also "
+                        "carved out their distinctive digital presence through their respective webpages, showcasing their varied interests "
+                        "and experiences."
+                    ),
+                    label="Doc(s)",
+                    lines=20,
+                    show_copy_button=True
+                )
             with gr.Tab("file") as tab_upload_file:
                 input_file = gr.File(
-                    value=[os.path.join(resource_path, "demo", "test.txt")],
+                    value=None,
                     label="Docs (multi-files can be selected together)",
                     file_count="multiple",
                 )

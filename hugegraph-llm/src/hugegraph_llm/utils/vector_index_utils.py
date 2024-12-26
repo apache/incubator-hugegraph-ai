@@ -29,7 +29,9 @@ from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 
 
 def read_documents(input_file, input_text):
-    if input_file:
+    if input_text:
+        texts = [input_text]
+    elif input_file:
         texts = []
         for file in input_file:
             full_path = file.name
@@ -48,8 +50,6 @@ def read_documents(input_file, input_text):
                 raise gr.Error("PDF will be supported later! Try to upload text/docx now")
             else:
                 raise gr.Error("Please input txt or docx file.")
-    elif input_text:
-        texts = [input_text]
     else:
         raise gr.Error("Please input text or upload file.")
     return texts
