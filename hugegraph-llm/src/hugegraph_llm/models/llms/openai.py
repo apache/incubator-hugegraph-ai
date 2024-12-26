@@ -19,7 +19,7 @@ from typing import Callable, List, Optional, Dict, Any
 
 import openai
 import tiktoken
-from openai import OpenAI, AsyncOpenAI, RateLimitError, Timeout, APIConnectionError
+from openai import OpenAI, AsyncOpenAI, RateLimitError, APITimeoutError, APIConnectionError
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -51,7 +51,7 @@ class OpenAIClient(BaseLLM):
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=4, max=10),
-        retry=retry_if_exception_type((RateLimitError, APIConnectionError, Timeout)),
+        retry=retry_if_exception_type((RateLimitError, APIConnectionError, APITimeoutError)),
     )
     def generate(
         self,
@@ -86,7 +86,7 @@ class OpenAIClient(BaseLLM):
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=4, max=10),
-        retry=retry_if_exception_type((RateLimitError, APIConnectionError, Timeout)),
+        retry=retry_if_exception_type((RateLimitError, APIConnectionError, APITimeoutError)),
     )
     async def agenerate(
             self,
