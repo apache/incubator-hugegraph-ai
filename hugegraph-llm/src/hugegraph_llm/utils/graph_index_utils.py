@@ -83,7 +83,11 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
         if not context["vertices"] and not context["edges"]:
             log.info("Please check the schema.(The schema may not match the Doc)")
             return json.dumps(
-                {"vertices": context["vertices"], "edges": context["edges"], "warning": "The schema may not match the Doc"},
+                {
+                    "vertices": context["vertices"],
+                    "edges": context["edges"],
+                    "warning": "The schema may not match the Doc"
+                    },
                 ensure_ascii=False,
                 indent=2
             )
