@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "hugegraph-llm"
+version = "0.1.0"
+description = ""
+authors = ["Hongjun Li <returntoinnocencegeek@outlook.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+openai = "~1.47.1"
+ollama = "~0.2.1"
+qianfan = "~0.3.18"
+retry = "~0.9.2"
+tiktoken = ">=0.7.0"
+nltk = "~3.8.1"
+gradio = "~4.44.1"
+jieba = ">=0.42.1"
+numpy = "~1.24.4"
+python-docx = "~1.1.2"
+langchain-text-splitters = "~0.2.2"
+faiss-cpu = "~1.8.0"
+python-dotenv = ">=1.0.1"
+pyarrow = "~17.0.0"
+pandas = "<2.2.2"
+openpyxl = "~3.1.5"
+pydantic-settings = "~2.6.1"
+decorator = "~5.1.1"
+requests = "~2.32.0"
+setuptools = "~70.0.0"
+urllib3 = "~2.2.2"
+rich = "~13.9.4"
+hugegraph-python = { path = "../hugegraph-python-client/", develop = true }
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
