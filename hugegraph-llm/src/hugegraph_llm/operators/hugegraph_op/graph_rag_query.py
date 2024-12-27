@@ -82,9 +82,9 @@ class GraphRAGQuery:
         prop_to_match: Optional[str] = None,
         llm: Optional[BaseLLM] = None,
         embedding: Optional[BaseEmbedding] = None,
-        max_v_prop_len: int = 2048,
-        max_e_prop_len: int = 256,
-        num_gremlin_generate_example: int = 1,
+        max_v_prop_len: Optional[int] = 2048,
+        max_e_prop_len: Optional[int] = 256,
+        num_gremlin_generate_example: Optional[int] = 1,
         gremlin_prompt: Optional[str] = None,
     ):
         self._client = PyHugeClient(

@@ -41,7 +41,7 @@ def rag_answer(
     custom_related_information: str,
     answer_prompt: str,
     keywords_extract_prompt: str,
-    gremlin_tmpl_num: int = 2,
+    gremlin_tmpl_num: Optional[int] = 2,
     gremlin_prompt: Optional[str] = prompt.gremlin_generate_prompt,
 ) -> Tuple:
     """
@@ -147,7 +147,7 @@ def create_rag_block():
                         value="reranker" if online_rerank else "bleu",
                         label="Rerank method",
                     )
-                    example_num = gr.Number(value=2, label="Num of ref examples", precision=0)
+                    example_num = gr.Number(value=2, label="Template Num (0 to disable it) ", precision=0)
                     graph_ratio = gr.Slider(0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False)
 
                 graph_vector_radio.change(
