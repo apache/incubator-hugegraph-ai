@@ -34,9 +34,9 @@ from hugegraph_llm.utils.log import log
 
 def store_schema(schema, question, gremlin_prompt):
     if (
-        prompt.text2gql_graph_schema != schema or
-        prompt.default_question != question or
-        prompt.gremlin_generate_prompt != gremlin_prompt
+        prompt.text2gql_graph_schema != schema
+        or prompt.default_question != question
+        or prompt.gremlin_generate_prompt != gremlin_prompt
     ):
         prompt.text2gql_graph_schema = schema
         prompt.default_question = question
@@ -90,7 +90,8 @@ def gremlin_generate(
     updated_schema = sm.simple_schema(schema) if short_schema else schema
     store_schema(str(updated_schema), inp, gremlin_prompt)
     context = (
-        generator.example_index_query(example_num).gremlin_generate_synthesize(updated_schema, gremlin_prompt)
+        generator.example_index_query(example_num)
+        .gremlin_generate_synthesize(updated_schema, gremlin_prompt)
         .run(query=inp)
     )
     try:
@@ -183,7 +184,6 @@ def create_text2gremlin_block() -> Tuple:
 def graph_rag_recall(
     query: str,
     gremlin_tmpl_num: int,
-    with_gremlin_tmpl: bool,
     rerank_method: Literal["bleu", "reranker"],
     near_neighbor_first: bool,
     custom_related_information: str,
@@ -193,7 +193,6 @@ def graph_rag_recall(
     rag = RAGPipeline()
 
     rag.extract_keywords().keywords_to_vid().import_schema(huge_settings.graph_name).query_graphdb(
-        with_gremlin_template=with_gremlin_tmpl,
         num_gremlin_generate_example=gremlin_tmpl_num,
         gremlin_prompt=gremlin_prompt,
     ).merge_dedup_rerank(

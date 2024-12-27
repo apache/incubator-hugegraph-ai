@@ -35,7 +35,6 @@ def rag_answer(
     vector_only_answer: bool,
     graph_only_answer: bool,
     graph_vector_answer: bool,
-    with_gremlin_template: bool,
     graph_ratio: float,
     rerank_method: Literal["bleu", "reranker"],
     near_neighbor_first: bool,
@@ -80,7 +79,6 @@ def rag_answer(
         rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid().import_schema(
             huge_settings.graph_name
         ).query_graphdb(
-            with_gremlin_template=with_gremlin_template,
             num_gremlin_generate_example=gremlin_tmpl_num,
             gremlin_prompt=gremlin_prompt,
         )
@@ -125,7 +123,10 @@ def create_rag_block():
                 value=prompt.answer_prompt, label="Query Prompt", show_copy_button=True, lines=7
             )
             keywords_extract_prompt_input = gr.Textbox(
-                value=prompt.keywords_extract_prompt, label="Keywords Extraction Prompt", show_copy_button=True, lines=7
+                value=prompt.keywords_extract_prompt,
+                label="Keywords Extraction Prompt",
+                show_copy_button=True,
+                lines=7,
             )
         with gr.Column(scale=1):
             with gr.Row():
@@ -134,8 +135,6 @@ def create_rag_block():
             with gr.Row():
                 graph_only_radio = gr.Radio(choices=[True, False], value=True, label="Graph-only Answer")
                 graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
-            with gr.Row():
-                with_gremlin_template_radio = gr.Radio(choices=[True, False], value=True, label="With Gremlin Template")
 
             def toggle_slider(enable):
                 return gr.update(interactive=enable)
@@ -148,6 +147,7 @@ def create_rag_block():
                         value="reranker" if online_rerank else "bleu",
                         label="Rerank method",
                     )
+                    example_num = gr.Number(value=2, label="Template Num (0 to disable it) ", precision=0)
                     graph_ratio = gr.Slider(0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False)
 
                 graph_vector_radio.change(
@@ -172,13 +172,13 @@ def create_rag_block():
             vector_only_radio,
             graph_only_radio,
             graph_vector_radio,
-            with_gremlin_template_radio,
             graph_ratio,
             rerank_method,
             near_neighbor_first,
             custom_related_information,
             answer_prompt_input,
             keywords_extract_prompt_input,
+            example_num,
         ],
         outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
     )
@@ -237,7 +237,6 @@ def create_rag_block():
         graph_ratio: float,
         rerank_method: Literal["bleu", "reranker"],
         near_neighbor_first: bool,
-        with_gremlin_template: bool,
         custom_related_information: str,
         answer_prompt: str,
         keywords_extract_prompt: str,
@@ -257,7 +256,6 @@ def create_rag_block():
                 graph_ratio,
                 rerank_method,
                 near_neighbor_first,
-                with_gremlin_template,
                 custom_related_information,
                 answer_prompt,
                 keywords_extract_prompt,
@@ -291,7 +289,6 @@ def create_rag_block():
             graph_ratio,
             rerank_method,
             near_neighbor_first,
-            with_gremlin_template_radio,
             custom_related_information,
             answer_prompt_input,
             keywords_extract_prompt_input,

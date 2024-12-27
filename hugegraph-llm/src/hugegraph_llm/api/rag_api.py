@@ -49,7 +49,6 @@ def rag_http_api(
             vector_only_answer=req.vector_only,
             graph_only_answer=req.graph_only,
             graph_vector_answer=req.graph_vector_answer,
-            with_gremlin_template=req.with_gremlin_tmpl,
             graph_ratio=req.graph_ratio,
             rerank_method=req.rerank_method,
             near_neighbor_first=req.near_neighbor_first,
@@ -62,9 +61,11 @@ def rag_http_api(
         # TODO: we need more info in the response for users to understand the query logic
         return {
             "query": req.query,
-            **{key: value
-               for key, value in zip(["raw_answer", "vector_only", "graph_only", "graph_vector_answer"], result)
-               if getattr(req, key)}
+            **{
+                key: value
+                for key, value in zip(["raw_answer", "vector_only", "graph_only", "graph_vector_answer"], result)
+                if getattr(req, key)
+            },
         }
 
     @router.post("/rag/graph", status_code=status.HTTP_200_OK)
@@ -73,7 +74,6 @@ def rag_http_api(
             result = graph_rag_recall_func(
                 query=req.query,
                 gremlin_tmpl_num=req.gremlin_tmpl_num,
-                with_gremlin_tmpl=req.with_gremlin_tmpl,
                 rerank_method=req.rerank_method,
                 near_neighbor_first=req.near_neighbor_first,
                 custom_related_information=req.custom_priority_info,

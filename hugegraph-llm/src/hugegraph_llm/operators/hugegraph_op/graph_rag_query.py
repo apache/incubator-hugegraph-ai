@@ -82,10 +82,9 @@ class GraphRAGQuery:
         prop_to_match: Optional[str] = None,
         llm: Optional[BaseLLM] = None,
         embedding: Optional[BaseEmbedding] = None,
-        max_v_prop_len: int = 2048,
-        max_e_prop_len: int = 256,
-        with_gremlin_template: bool = True,
-        num_gremlin_generate_example: int = 1,
+        max_v_prop_len: Optional[int] = 2048,
+        max_e_prop_len: Optional[int] = 256,
+        num_gremlin_generate_example: Optional[int] = 1,
         gremlin_prompt: Optional[str] = None,
     ):
         self._client = PyHugeClient(
@@ -108,7 +107,6 @@ class GraphRAGQuery:
             embedding=embedding,
         )
         self._num_gremlin_generate_example = num_gremlin_generate_example
-        self._with_gremlin_template = with_gremlin_template
         self._gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -138,7 +136,7 @@ class GraphRAGQuery:
         gremlin_response = self._gremlin_generator.gremlin_generate_synthesize(
             context["simple_schema"], vertices=vertices, gremlin_prompt=self._gremlin_prompt
         ).run(query=query, query_embedding=query_embedding)
-        if self._with_gremlin_template:
+        if self._num_gremlin_generate_example > 0:
             gremlin = gremlin_response["result"]
         else:
             gremlin = gremlin_response["raw_result"]
