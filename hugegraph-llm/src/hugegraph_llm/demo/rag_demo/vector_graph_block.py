@@ -17,9 +17,12 @@
 
 # pylint: disable=E1101
 
+import os
+import yaml
+
 import gradio as gr
 
-from hugegraph_llm.config import prompt
+from hugegraph_llm.config import resource_path, prompt
 from hugegraph_llm.utils.graph_index_utils import (
     get_graph_index_info,
     clean_all_graph_index,
@@ -29,6 +32,7 @@ from hugegraph_llm.utils.graph_index_utils import (
 )
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index, build_vector_index, get_vector_index_info
 
+input_yaml_file_path = os.path.join(resource_path, "demo", "config_input_text.yaml")
 
 def store_prompt(schema, example_prompt):
     # update env variables: schema and example_prompt
@@ -59,15 +63,10 @@ def create_vector_graph_block():
     with gr.Row():
         with gr.Column():
             with gr.Tab("text") as tab_upload_text:
+                with open(input_yaml_file_path, 'r', encoding="utf-8") as file:
+                    config = yaml.safe_load(file)
                 input_text = gr.Textbox(
-                    value=(
-                        "Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with since 2010. "
-                        "James, in his professional life, works as a journalist. Additionally, Sarah is the proud owner of the website "
-                        "www.sarahsplace.com, while James manages his own webpage, though the specific URL is not mentioned here. "
-                        "These two individuals, Sarah and James, have not only forged a strong personal bond as roommates but have also "
-                        "carved out their distinctive digital presence through their respective webpages, showcasing their varied interests "
-                        "and experiences."
-                    ),
+                    value=config["text"],
                     label="Doc(s)",
                     lines=20,
                     show_copy_button=True
