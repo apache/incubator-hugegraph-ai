@@ -17,11 +17,9 @@
 
 # pylint: disable=E1101
 
-import os
-
 import gradio as gr
 
-from hugegraph_llm.config import resource_path, prompt
+from hugegraph_llm.config import prompt
 from hugegraph_llm.utils.graph_index_utils import (
     get_graph_index_info,
     clean_all_graph_index,
