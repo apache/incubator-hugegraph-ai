@@ -138,4 +138,4 @@ def create_vector_graph_block():
     tab_upload_file.select(fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text])
     tab_upload_text.select(fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text])
 
-    return input_schema, info_extract_template
+    return input_text, input_schema, info_extract_template

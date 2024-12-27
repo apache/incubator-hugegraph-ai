@@ -25,15 +25,15 @@ class FetchGraphData:
     def __init__(self, graph: PyHugeClient):
         self.graph = graph
 
-    def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        if context is None:
-            context = {}
-        if "num_vertices" not in context:
-            context["num_vertices"] = self.graph.gremlin().exec("g.V().id().count()")["data"]
-        if "num_edges" not in context:
-            context["num_edges"] = self.graph.gremlin().exec("g.E().id().count()")["data"]
-        if "vertices" not in context:
-            context["vertices"] = self.graph.gremlin().exec("g.V().id().limit(10000)")["data"]
-        if "edges" not in context:
-            context["edges"] = self.graph.gremlin().exec("g.E().id().limit(100)")["data"]
-        return context
+    def run(self, graph_summary_info: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        if graph_summary_info is None:
+            graph_summary_info = {}
+        if "num_vertices" not in graph_summary_info:
+            graph_summary_info["num_vertices"] = self.graph.gremlin().exec("g.V().id().count()")["data"]
+        if "num_edges" not in graph_summary_info:
+            graph_summary_info["num_edges"] = self.graph.gremlin().exec("g.E().id().count()")["data"]
+        if "vertices" not in graph_summary_info:
+            graph_summary_info["vertices"] = self.graph.gremlin().exec("g.V().id().limit(10000)")["data"]
+        if "edges" not in graph_summary_info:
+            graph_summary_info["edges"] = self.graph.gremlin().exec("g.E().id().limit(100)")["data"]
+        return graph_summary_info

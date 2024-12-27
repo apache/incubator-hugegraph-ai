@@ -80,8 +80,14 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
 
     try:
         context = builder.run()
-        graph_elements = {"vertices": context["vertices"], "edges": context["edges"]}
-        return json.dumps(graph_elements, ensure_ascii=False, indent=2)
+        if not context["vertices"] and not context["edges"]:
+            log.info("Please check the schema.(The schema may not match the Doc)")
+            return json.dumps(
+                {"vertices": context["vertices"], "edges": context["edges"], "warning": "The schema may not match the Doc"},
+                ensure_ascii=False,
+                indent=2
+            )
+        return json.dumps({"vertices": context["vertices"], "edges": context["edges"]}, ensure_ascii=False, indent=2)
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
         raise gr.Error(str(e))

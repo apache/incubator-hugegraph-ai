@@ -120,7 +120,7 @@ def init_rag_ui() -> gr.Interface:
         textbox_array_graph_config = create_configs_block()
 
         with gr.Tab(label="1. Build RAG Index 💡"):
-            textbox_input_schema, textbox_info_extract_template = create_vector_graph_block()
+           textbox_input_text, textbox_input_schema, textbox_info_extract_template = create_vector_graph_block()
         with gr.Tab(label="2. (Graph)RAG & User Functions 📖"):
             (
                 textbox_inp,
@@ -147,6 +147,7 @@ def init_rag_ui() -> gr.Interface:
                 huge_settings.graph_user,
                 huge_settings.graph_pwd,
                 huge_settings.graph_space,
+                prompt.doc_input_text,
                 prompt.graph_schema,
                 prompt.extract_graph_prompt,
                 prompt.default_question,
@@ -155,7 +156,7 @@ def init_rag_ui() -> gr.Interface:
                 prompt.custom_rerank_info,
                 prompt.default_question,
                 huge_settings.graph_name,
-                prompt.gremlin_generate_prompt,
+                prompt.gremlin_generate_prompt
             )
 
         hugegraph_llm_ui.load(  # pylint: disable=E1101
@@ -167,6 +168,7 @@ def init_rag_ui() -> gr.Interface:
                 textbox_array_graph_config[3],
                 textbox_array_graph_config[4],
                 textbox_array_graph_config[5],
+                textbox_input_text,
                 textbox_input_schema,
                 textbox_info_extract_template,
                 textbox_inp,
