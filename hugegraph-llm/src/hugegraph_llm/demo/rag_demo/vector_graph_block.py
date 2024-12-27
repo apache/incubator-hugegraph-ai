@@ -17,12 +17,9 @@
 
 # pylint: disable=E1101
 
-import os
-import yaml
-
 import gradio as gr
 
-from hugegraph_llm.config import resource_path, prompt
+from hugegraph_llm.config import prompt
 from hugegraph_llm.utils.graph_index_utils import (
     get_graph_index_info,
     clean_all_graph_index,
@@ -32,11 +29,10 @@ from hugegraph_llm.utils.graph_index_utils import (
 )
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index, build_vector_index, get_vector_index_info
 
-input_yaml_file_path = os.path.join(resource_path, "demo", "config_input_text.yaml")
-
-def store_prompt(schema, example_prompt):
-    # update env variables: schema and example_prompt
-    if prompt.graph_schema != schema or prompt.extract_graph_prompt != example_prompt:
+def store_prompt(doc, schema, example_prompt):
+    # update env variables: doc, schema and example_prompt
+    if prompt.doc_input_text != doc or prompt.graph_schema != schema or prompt.extract_graph_prompt != example_prompt:
+        prompt.doc_input_text = doc
         prompt.graph_schema = schema
         prompt.extract_graph_prompt = example_prompt
         prompt.update_yaml_file()
@@ -63,10 +59,8 @@ def create_vector_graph_block():
     with gr.Row():
         with gr.Column():
             with gr.Tab("text") as tab_upload_text:
-                with open(input_yaml_file_path, 'r', encoding="utf-8") as file:
-                    config = yaml.safe_load(file)
                 input_text = gr.Textbox(
-                    value=config["text"],
+                    value=prompt.doc_input_text,
                     label="Doc(s)",
                     lines=20,
                     show_copy_button=True
@@ -100,37 +94,37 @@ def create_vector_graph_block():
 
     vector_index_btn0.click(get_vector_index_info, outputs=out).then(
         store_prompt,
-        inputs=[input_schema, info_extract_template],
+        inputs=[input_text, input_schema, info_extract_template],
     )
     vector_index_btn1.click(clean_vector_index).then(
         store_prompt,
-        inputs=[input_schema, info_extract_template],
+        inputs=[input_text, input_schema, info_extract_template],
     )
     vector_import_bt.click(build_vector_index, inputs=[input_file, input_text], outputs=out).then(
         store_prompt,
-        inputs=[input_schema, info_extract_template],
+        inputs=[input_text, input_schema, info_extract_template],
     )
     graph_index_btn0.click(get_graph_index_info, outputs=out).then(
         store_prompt,
-        inputs=[input_schema, info_extract_template],
+        inputs=[input_text, input_schema, info_extract_template],
     )
     graph_index_btn1.click(clean_all_graph_index).then(
         store_prompt,
-        inputs=[input_schema, info_extract_template],
+        inputs=[input_text, input_schema, info_extract_template],
     )
     graph_index_rebuild_bt.click(update_vid_embedding, outputs=out).then(
         store_prompt,
-        inputs=[input_schema, info_extract_template],
+        inputs=[input_text, input_schema, info_extract_template],
     )
 
     # origin_out = gr.Textbox(visible=False)
     graph_extract_bt.click(
         extract_graph, inputs=[input_file, input_text, input_schema, info_extract_template], outputs=[out]
-    ).then(store_prompt, inputs=[input_schema, info_extract_template], )
+    ).then(store_prompt, inputs=[input_text, input_schema, info_extract_template], )
 
     graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(update_vid_embedding).then(
         store_prompt,
-        inputs=[input_schema, info_extract_template],
+        inputs=[input_text, input_schema, info_extract_template],
     )
 
     def on_tab_select(input_f, input_t, evt: gr.SelectData):
