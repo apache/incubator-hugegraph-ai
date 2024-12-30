@@ -17,8 +17,10 @@
 
 
 from typing import Optional, Dict, Any
+import gradio as gr
 
 from pyhugegraph.client import PyHugeClient
+from hugegraph_llm.utils.log import log
 
 
 class FetchGraphData:
@@ -26,6 +28,10 @@ class FetchGraphData:
         self.graph = graph
 
     def run(self, graph_summary_info: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        limit_vertices = 10000
+        limit_edges = 100
+        gr.Info(f"Returning a maximum of {limit_vertices} vertices. \n Returning a maximum of {limit_edges} edges.")
+        
         if graph_summary_info is None:
             graph_summary_info = {}
         if "num_vertices" not in graph_summary_info:
@@ -33,7 +39,7 @@ class FetchGraphData:
         if "num_edges" not in graph_summary_info:
             graph_summary_info["num_edges"] = self.graph.gremlin().exec("g.E().id().count()")["data"]
         if "vertices" not in graph_summary_info:
-            graph_summary_info["vertices"] = self.graph.gremlin().exec("g.V().id().limit(10000)")["data"]
+            graph_summary_info["vertices"] = self.graph.gremlin().exec(f"g.V().id().limit({limit_vertices})")["data"]
         if "edges" not in graph_summary_info:
-            graph_summary_info["edges"] = self.graph.gremlin().exec("g.E().id().limit(100)")["data"]
+            graph_summary_info["edges"] = self.graph.gremlin().exec(f"g.E().id().limit({limit_edges})")["data"]
         return graph_summary_info

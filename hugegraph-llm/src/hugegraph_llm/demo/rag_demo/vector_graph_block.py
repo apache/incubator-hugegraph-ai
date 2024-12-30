@@ -51,7 +51,7 @@ def create_vector_graph_block():
   to modify it)
   - Specify the name of the HugeGraph graph instance, it will automatically get the schema from it (like 
   **"hugegraph"**)
-- Graph extract head: The user-defined prompt of graph extracting
+- Graph Extract Prompt Header: The user-defined prompt of graph extracting
 - If already exist the graph data, you should click "**Rebuild vid Index**" to update the index
 """
     )
@@ -73,7 +73,7 @@ def create_vector_graph_block():
                 )
         input_schema = gr.Textbox(value=prompt.graph_schema, label="Schema", lines=15, show_copy_button=True)
         info_extract_template = gr.Textbox(
-            value=prompt.extract_graph_prompt, label="Graph extract head", lines=15, show_copy_button=True
+            value=prompt.extract_graph_prompt, label="Graph Extract Prompt Header", lines=15, show_copy_button=True
         )
         out = gr.Code(label="Output", language="json", elem_classes="code-container-edit")
 
