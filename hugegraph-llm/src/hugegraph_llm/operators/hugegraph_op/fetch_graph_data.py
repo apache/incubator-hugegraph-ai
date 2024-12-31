@@ -17,28 +17,36 @@
 
 
 from typing import Optional, Dict, Any
-import gradio as gr
 
 from pyhugegraph.client import PyHugeClient
 
 
 class FetchGraphData:
+
     def __init__(self, graph: PyHugeClient):
         self.graph = graph
 
-    def run(self, graph_summary_info: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        limit_vertices = 10000
-        limit_edges = 100
-        gr.Info(f"Returning a maximum of {limit_vertices} vertices. \n Returning a maximum of {limit_edges} edges.")
+    def run(self, graph_summary: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        if graph_summary is None:
+            graph_summary = {}
+            
+        # TODO: v_limit will influence the vid embedding logic in build_semantic_index.py
+        v_limit = 10000
+        e_limit = 200
+        keys = ["vertex_num", "edge_num", "vertices", "edges", "note"]
 
-        if graph_summary_info is None:
-            graph_summary_info = {}
-        if "num_vertices" not in graph_summary_info:
-            graph_summary_info["num_vertices"] = self.graph.gremlin().exec("g.V().id().count()")["data"]
-        if "num_edges" not in graph_summary_info:
-            graph_summary_info["num_edges"] = self.graph.gremlin().exec("g.E().id().count()")["data"]
-        if "vertices" not in graph_summary_info:
-            graph_summary_info["vertices"] = self.graph.gremlin().exec(f"g.V().id().limit({limit_vertices})")["data"]
-        if "edges" not in graph_summary_info:
-            graph_summary_info["edges"] = self.graph.gremlin().exec(f"g.E().id().limit({limit_edges})")["data"]
-        return graph_summary_info
+        groovy_code = f"""
+        def res = [:];
+        res.{keys[0]} = g.V().count().next();
+        res.{keys[1]} = g.E().count().next();
+        res.{keys[2]} = g.V().id().limit({v_limit}).toList();
+        res.{keys[3]} = g.E().id().limit({e_limit}).toList();
+        res.{keys[4]} = "Only ≤{v_limit} VIDs and ≤ {e_limit} EIDs for brief overview .";
+        return res;
+        """
+
+        result = self.graph.gremlin().exec(groovy_code)["data"]
+
+        if isinstance(result, list) and len(result) > 0:
+            graph_summary.update({key: result[i].get(key) for i, key in enumerate(keys)})
+        return graph_summary
