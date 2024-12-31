@@ -15,10 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
+import os
+import shutil
+from datetime import datetime, timedelta
 import argparse
 import asyncio
 from contextlib import asynccontextmanager
+import json
 
 import gradio as gr
 import uvicorn
@@ -27,7 +30,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from hugegraph_llm.api.admin_api import admin_http_api
 from hugegraph_llm.api.rag_api import rag_http_api
-from hugegraph_llm.config import admin_settings, huge_settings, prompt
+from hugegraph_llm.config import admin_settings, huge_settings, prompt, resource_path
 from hugegraph_llm.demo.rag_demo.admin_block import create_admin_block, log_stream
 from hugegraph_llm.demo.rag_demo.configs_block import (
     create_configs_block,
@@ -43,7 +46,13 @@ from hugegraph_llm.demo.rag_demo.vector_graph_block import create_vector_graph_b
 from hugegraph_llm.resources.demo.css import CSS
 from hugegraph_llm.utils.graph_index_utils import update_vid_embedding
 from hugegraph_llm.utils.log import log
+from pyhugegraph.client import PyHugeClient
 
+MAX_BACKUP_DIRS = 7
+MAX_VERTICES = 100000
+MAX_EDGES = 200000
+BACKUP_DIR = str(os.path.join(resource_path, huge_settings.graph_name, "backup"))
+backup_lock = asyncio.Lock()
 sec = HTTPBearer()
 
 def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
@@ -71,19 +80,104 @@ async def timely_update_vid_embedding():
             raise Exception("Failed to execute rebuild_vid_index") from e
         await asyncio.sleep(3600)
 
+def backup_data():
+    try:
+        client = PyHugeClient(
+            huge_settings.graph_ip,
+            huge_settings.graph_port,
+            huge_settings.graph_name,
+            huge_settings.graph_user,
+            huge_settings.graph_pwd,
+            huge_settings.graph_space,
+        )
+        
+        if not os.path.exists(BACKUP_DIR):
+            os.makedirs(BACKUP_DIR)
+
+        date_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_subdir = os.path.join(BACKUP_DIR, f"backup_{date_str}")
+        os.makedirs(backup_subdir)
+
+        vertices_file = os.path.join(backup_subdir, "vertices.json")
+        edges_file = os.path.join(backup_subdir, "edges.json")
+
+        with open(vertices_file, "w") as vf:
+            vertices = client.gremlin().exec(f"g.V().limit({MAX_VERTICES})")["data"]
+            json.dump(vertices, vf)
+
+        with open(edges_file, "w") as ef:
+            edges = client.gremlin().exec(f"g.E().id().limit({MAX_EDGES})")["data"]
+            json.dump(edges, ef)
+
+        schema_file = os.path.join(backup_subdir, "schema.json")
+        with open(schema_file, "w") as sf:
+            schema = client.schema().getSchema()
+            json.dump(schema, sf)
+
+        log.info("Backup completed successfully in %s.", backup_subdir)
+
+        manage_backup_retention()
+
+    except Exception as e:
+        log.error(f"Backup failed: %s", e, exc_info=True)
+        raise Exception("Failed to execute backup") from e
+
+def manage_backup_retention():
+    try:
+        backup_dirs = [
+            os.path.join(BACKUP_DIR, d)
+            for d in os.listdir(BACKUP_DIR)
+            if os.path.isdir(os.path.join(BACKUP_DIR, d))
+        ]
+        backup_dirs.sort(key=os.path.getctime)
+
+        while len(backup_dirs) > MAX_BACKUP_DIRS:
+            old_backup = backup_dirs.pop(0)
+            shutil.rmtree(old_backup)
+            log.info(f"Deleted old backup: %s", old_backup)
+    except Exception as e:
+        log.error(f"Failed to manage backup retention: %s", e, exc_info=True)
+        raise Exception("Failed to manage backup retention") from e
+
+async def scheduled_backup():
+    while True:
+        try:
+            async with backup_lock:
+                await asyncio.to_thread(backup_data)
+                log.info("backup executed successfully.")
+        except asyncio.CancelledError as ce:
+            log.info("Periodic task has been cancelled due to: %s", ce)
+            break
+        except Exception as e:
+            log.error(f"Scheduled backup failed: %s", e, exc_info=True)
+            raise Exception("Failed to execute backup") from e
+
+        now = datetime.now()
+        next_run = (now.replace(hour=1, minute=10, second=0, microsecond=0) + timedelta(days=0))
+        await asyncio.sleep((next_run - now).total_seconds())
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):  # pylint: disable=W0621
-    log.info("Starting periodic task...")
-    task = asyncio.create_task(timely_update_vid_embedding())
+async def lifespan(app: FastAPI):
+    log.info("Starting backup task...")
+    backup_task = asyncio.create_task(scheduled_backup())
+    log.info("Starting vid embedding update task...")
+    embedding_task = asyncio.create_task(timely_update_vid_embedding())
+
     yield
 
-    log.info("Stopping periodic task...")
-    task.cancel()
+    log.info("Stopping backup task...")
+    backup_task.cancel()
     try:
-        await task
+        await backup_task
     except asyncio.CancelledError:
-        log.info("Periodic task has been cancelled.")
+        log.info("Backup task has been cancelled.")
+
+    log.info("Stopping vid embedding update task...")
+    embedding_task.cancel()
+    try:
+        await embedding_task
+    except asyncio.CancelledError:
+        log.info("Vid embedding update task cancelled.")
 
 # pylint: disable=C0301
 def init_rag_ui() -> gr.Interface:
