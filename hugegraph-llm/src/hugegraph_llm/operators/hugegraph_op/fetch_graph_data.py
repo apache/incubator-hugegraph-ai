@@ -29,7 +29,7 @@ class FetchGraphData:
     def run(self, graph_summary: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         if graph_summary is None:
             graph_summary = {}
-            
+
         # TODO: v_limit will influence the vid embedding logic in build_semantic_index.py
         v_limit = 10000
         e_limit = 200
