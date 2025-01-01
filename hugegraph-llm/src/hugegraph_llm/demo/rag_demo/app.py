@@ -57,7 +57,6 @@ MAX_EDGES = 200000
 BACKUP_DIR = str(os.path.join(resource_path, huge_settings.graph_name, "backup"))
 
 sec = HTTPBearer()
-scheduler = AsyncIOScheduler()
 
 def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
     correct_token = admin_settings.user_token
@@ -69,7 +68,6 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
             detail=f"Invalid token {credentials.credentials}, please contact the admin",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
 
 async def timely_update_vid_embedding():
     while True:
@@ -94,7 +92,7 @@ def backup_data():
             huge_settings.graph_pwd,
             huge_settings.graph_space,
         )
-        
+
         if not os.path.exists(BACKUP_DIR):
             os.makedirs(BACKUP_DIR)
 
@@ -105,16 +103,16 @@ def backup_data():
         vertices_file = os.path.join(backup_subdir, "vertices.json")
         edges_file = os.path.join(backup_subdir, "edges.json")
 
-        with open(vertices_file, "w") as vf:
+        with open(vertices_file, "w", encoding="utf-8") as vf:
             vertices = client.gremlin().exec(f"g.V().limit({MAX_VERTICES})")["data"]
             json.dump(vertices, vf)
 
-        with open(edges_file, "w") as ef:
+        with open(edges_file, "w", encoding="utf-8") as ef:
             edges = client.gremlin().exec(f"g.E().id().limit({MAX_EDGES})")["data"]
             json.dump(edges, ef)
 
         schema_file = os.path.join(backup_subdir, "schema.json")
-        with open(schema_file, "w") as sf:
+        with open(schema_file, "w", encoding="utf-8") as sf:
             schema = client.schema().getSchema()
             json.dump(schema, sf)
 
@@ -123,7 +121,7 @@ def backup_data():
         manage_backup_retention()
 
     except Exception as e:
-        log.error(f"Backup failed: %s", e, exc_info=True)
+        log.error("Backup failed: %s", e, exc_info=True)
         raise Exception("Failed to execute backup") from e
 
 def manage_backup_retention():
@@ -138,18 +136,18 @@ def manage_backup_retention():
         while len(backup_dirs) > MAX_BACKUP_DIRS:
             old_backup = backup_dirs.pop(0)
             shutil.rmtree(old_backup)
-            log.info(f"Deleted old backup: %s", old_backup)
+            log.info("Deleted old backup: %s", old_backup)
     except Exception as e:
-        log.error(f"Failed to manage backup retention: %s", e, exc_info=True)
+        log.error("Failed to manage backup retention: %s", e, exc_info=True)
         raise Exception("Failed to manage backup retention") from e
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI): # pylint: disable=W0621
     log.info("Starting APScheduler...")
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
         backup_data,
-        trigger=CronTrigger(hour=1, minute=0),
+        trigger=CronTrigger(hour=14, minute=16),
         id="daily_backup",
         replace_existing=True
     )
