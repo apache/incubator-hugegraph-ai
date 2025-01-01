@@ -17,7 +17,7 @@
 
 import os
 import shutil
-from datetime import datetime, timedelta
+from datetime import datetime
 import argparse
 import asyncio
 from contextlib import asynccontextmanager
@@ -27,6 +27,9 @@ import gradio as gr
 import uvicorn
 from fastapi import FastAPI, Depends, APIRouter
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 from hugegraph_llm.api.admin_api import admin_http_api
 from hugegraph_llm.api.rag_api import rag_http_api
@@ -52,8 +55,9 @@ MAX_BACKUP_DIRS = 7
 MAX_VERTICES = 100000
 MAX_EDGES = 200000
 BACKUP_DIR = str(os.path.join(resource_path, huge_settings.graph_name, "backup"))
-backup_lock = asyncio.Lock()
+
 sec = HTTPBearer()
+scheduler = AsyncIOScheduler()
 
 def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
     correct_token = admin_settings.user_token
@@ -95,7 +99,7 @@ def backup_data():
             os.makedirs(BACKUP_DIR)
 
         date_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_subdir = os.path.join(BACKUP_DIR, f"backup_{date_str}")
+        backup_subdir = os.path.join(BACKUP_DIR, f"{date_str}")
         os.makedirs(backup_subdir)
 
         vertices_file = os.path.join(backup_subdir, "vertices.json")
@@ -139,38 +143,22 @@ def manage_backup_retention():
         log.error(f"Failed to manage backup retention: %s", e, exc_info=True)
         raise Exception("Failed to manage backup retention") from e
 
-async def scheduled_backup():
-    while True:
-        try:
-            async with backup_lock:
-                await asyncio.to_thread(backup_data)
-                log.info("backup executed successfully.")
-        except asyncio.CancelledError as ce:
-            log.info("Periodic task has been cancelled due to: %s", ce)
-            break
-        except Exception as e:
-            log.error(f"Scheduled backup failed: %s", e, exc_info=True)
-            raise Exception("Failed to execute backup") from e
-
-        now = datetime.now()
-        next_run = (now.replace(hour=1, minute=10, second=0, microsecond=0) + timedelta(days=0))
-        await asyncio.sleep((next_run - now).total_seconds())
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    log.info("Starting backup task...")
-    backup_task = asyncio.create_task(scheduled_backup())
+    log.info("Starting APScheduler...")
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(
+        backup_data,
+        trigger=CronTrigger(hour=1, minute=0),
+        id="daily_backup",
+        replace_existing=True
+    )
+    scheduler.start()
+
     log.info("Starting vid embedding update task...")
     embedding_task = asyncio.create_task(timely_update_vid_embedding())
 
     yield
-
-    log.info("Stopping backup task...")
-    backup_task.cancel()
-    try:
-        await backup_task
-    except asyncio.CancelledError:
-        log.info("Backup task has been cancelled.")
 
     log.info("Stopping vid embedding update task...")
     embedding_task.cancel()
@@ -178,6 +166,9 @@ async def lifespan(app: FastAPI):
         await embedding_task
     except asyncio.CancelledError:
         log.info("Vid embedding update task cancelled.")
+
+    log.info("Shutting down APScheduler...")
+    scheduler.shutdown()
 
 # pylint: disable=C0301
 def init_rag_ui() -> gr.Interface:
