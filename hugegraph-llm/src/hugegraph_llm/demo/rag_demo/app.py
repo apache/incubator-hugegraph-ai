@@ -15,10 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
 import argparse
-import asyncio
-from contextlib import asynccontextmanager
 
 import gradio as gr
 import uvicorn
@@ -37,14 +34,15 @@ from hugegraph_llm.demo.rag_demo.configs_block import (
     apply_graph_config,
 )
 from hugegraph_llm.demo.rag_demo.other_block import create_other_block
+from hugegraph_llm.demo.rag_demo.other_block import lifespan
 from hugegraph_llm.demo.rag_demo.rag_block import create_rag_block, rag_answer
 from hugegraph_llm.demo.rag_demo.text2gremlin_block import create_text2gremlin_block, graph_rag_recall
 from hugegraph_llm.demo.rag_demo.vector_graph_block import create_vector_graph_block
 from hugegraph_llm.resources.demo.css import CSS
-from hugegraph_llm.utils.graph_index_utils import update_vid_embedding
 from hugegraph_llm.utils.log import log
 
 sec = HTTPBearer()
+
 
 def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
     correct_token = admin_settings.user_token
@@ -57,33 +55,6 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
- # TODO: move the logic to a separate file
-async def timely_update_vid_embedding():
-    while True:
-        try:
-            await asyncio.to_thread(update_vid_embedding)
-            log.info("rebuild_vid_index timely executed successfully.")
-        except asyncio.CancelledError as ce:
-            log.info("Periodic task has been cancelled due to: %s", ce)
-            break
-        except Exception as e:
-            log.error("Failed to execute rebuild_vid_index: %s", e, exc_info=True)
-            raise Exception("Failed to execute rebuild_vid_index") from e
-        await asyncio.sleep(3600)
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):  # pylint: disable=W0621
-    log.info("Starting periodic task...")
-    task = asyncio.create_task(timely_update_vid_embedding())
-    yield
-
-    log.info("Stopping periodic task...")
-    task.cancel()
-    try:
-        await task
-    except asyncio.CancelledError:
-        log.info("Periodic task has been cancelled.")
 
 # pylint: disable=C0301
 def init_rag_ui() -> gr.Interface:
