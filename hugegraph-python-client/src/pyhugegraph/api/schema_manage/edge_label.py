@@ -87,6 +87,15 @@ class EdgeLabel(HugeParamsBase):
             self._parameter_holder.set("not_exist", False)
         return self
 
+    @decorator_params
+    def enableLabelIndex(self, flag) -> "EdgeLabel":
+        """
+        Set whether to enable label indexing. If enabled, you can use `edge_labels[label]` to access the edge's label.
+        Default is False.
+        """
+        self._parameter_holder.set("enable_label_index", flag)
+        return self
+
     @decorator_create
     def create(self):
         dic = self._parameter_holder.get_dic()
