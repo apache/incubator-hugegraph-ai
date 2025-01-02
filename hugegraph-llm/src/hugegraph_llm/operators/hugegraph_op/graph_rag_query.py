@@ -137,8 +137,6 @@ class GraphRAGQuery:
             .regex_gremlin_generate()
             .run(query=query, query_embedding=query_embedding)
         )
-
-        log.debug("Skip llm gremlin is %s", regex_res["skip_llm_gremlin"])
         if not regex_res["skip_llm_gremlin"]:
             self._gremlin_generator.clear()
             self._gremlin_generator.example_index_query(num_examples=self._num_gremlin_generate_example)
@@ -159,7 +157,7 @@ class GraphRAGQuery:
                 if context["graph_result"]:
                     context["graph_result_flag"] = 1
                     context["graph_context_head"] = (
-                        f"The following are graph query result " f"from gremlin query `{gremlin}`.\n"
+                        "The following are graph query result " f"from gremlin query `{gremlin}`.\n"
                     )
             except Exception as e:  # pylint: disable=broad-except
                 log.error(e)
@@ -168,7 +166,6 @@ class GraphRAGQuery:
             context["graph_result"] = regex_res["graph_result"]
         if context["graph_result"]:
             context["graph_result_flag"] = 1
-            context["graph_context_head"] = f"The following are graph query result " f"from regex gremlin.\n"
         return context
 
     def _subgraph_query(self, context: Dict[str, Any]) -> Dict[str, Any]:
