@@ -34,7 +34,8 @@ class BuildSemanticIndex:
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         past_vids = self.vid_index.properties
-        present_vids = context["vertices"]
+        # TODO: We should build vid vector index separately, especially when the vertices may be very large
+        present_vids = context["vertices"] # Warning: data truncated by fetch_graph_data.py
         removed_vids = set(past_vids) - set(present_vids)
         removed_num = self.vid_index.remove(removed_vids)
         added_vids = list(set(present_vids) - set(past_vids))

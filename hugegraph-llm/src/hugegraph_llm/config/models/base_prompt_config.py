@@ -35,6 +35,7 @@ class BasePromptConfig:
     keywords_extract_prompt: str = ''
     text2gql_graph_schema: str = ''
     gremlin_generate_prompt: str = ''
+    doc_input_text: str = ''
 
     def ensure_yaml_file_exists(self):
         if os.path.exists(yaml_file_path):
@@ -61,6 +62,7 @@ class BasePromptConfig:
         indented_keywords_extract_template = (
             "\n".join([f"    {line}" for line in self.keywords_extract_prompt.splitlines()])
         )
+        indented_doc_input_text = "\n".join([f"  {line}" for line in self.doc_input_text.splitlines()])
 
         # This can be extended to add storage fields according to the data needs to be stored
         yaml_content = f"""graph_schema: |
@@ -86,6 +88,9 @@ keywords_extract_prompt: |
 
 gremlin_generate_prompt: |
 {indented_gremlin_prompt}
+
+doc_input_text: |
+{indented_doc_input_text}
 
 """
         with open(yaml_file_path, "w", encoding="utf-8") as file:
