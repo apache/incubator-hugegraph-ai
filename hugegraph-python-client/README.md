@@ -1,6 +1,8 @@
 # hugegraph-python-client
 
-The `hugegraph-python-client` is a Python client for HugeGraph. It is used to define graph structures, perform CRUD operations on graph data, manage schemas, and execute Gremlin queries. Both the `hugegraph-llm` and `hugegraph-ml` modules depend on this foundational library.
+The `hugegraph-python-client` is a Python client(SDK( for HugeGraph. 
+
+It is used to define graph structures, perform CRUD operations on graph data, manage schemas, and execute Gremlin queries. Both the `hugegraph-llm` and `hugegraph-ml` modules depend on this foundational library.
 
 ## Installation
 
@@ -10,7 +12,7 @@ To install the `hugegraph-python-client`, you can use pip:
 pip3 install hugegraph-python
 ```
 
-### Install from Source
+### Install from Source (Latest Code)
 
 To install from the source, clone the repository and install the required dependencies:
 
@@ -56,7 +58,7 @@ print(schema.getVertexLabels())
 print(schema.getEdgeLabels())
 print(schema.getRelations())
 
-# Initialize graph
+# Init Graph
 g = client.graph()
 g.addVertex("Person", {"name": "Al Pacino", "birthDate": "1940-04-25"})
 g.addVertex("Person", {"name": "Robert De Niro", "birthDate": "1943-08-17"})
@@ -164,16 +166,14 @@ res = g.exec("g.V().limit(5)")
 print(res)
 ```
 
+Other info are under 🚧 (Welcome to add more docs for it, users could refer [java-client-doc]([url](https://hugegraph.apache.org/docs/clients/hugegraph-client/)) for similar usage)
+
 ## Contributing
 
 * Welcome to contribute to `hugegraph-python-client`. Please see the [Guidelines](https://hugegraph.apache.org/docs/contribution-guidelines/) for more information.
 * Code format: Please run `./style/code_format_and_analysis.sh` to format your code before submitting a PR.
 
 Thank you to all the people who already contributed to `hugegraph-python-client`!
-
-## License
-
-The `hugegraph-python-client` is licensed under [Apache 2.0 License]().
 
 ## Contact Us
 
