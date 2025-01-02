@@ -29,7 +29,9 @@ from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 
 
 def read_documents(input_file, input_text):
-    if input_file:
+    if input_text:
+        texts = [input_text]
+    elif input_file:
         texts = []
         for file in input_file:
             full_path = file.name
@@ -48,19 +50,22 @@ def read_documents(input_file, input_text):
                 raise gr.Error("PDF will be supported later! Try to upload text/docx now")
             else:
                 raise gr.Error("Please input txt or docx file.")
-    elif input_text:
-        texts = [input_text]
     else:
         raise gr.Error("Please input text or upload file.")
     return texts
 
 
+#pylint: disable=C0301
 def get_vector_index_info():
-    vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "chunks")))
+    chunk_vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "chunks")))
+    graph_vid_vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
     return json.dumps({
-        "embed_dim": vector_index.index.d,
-        "num_vectors": vector_index.index.ntotal,
-        "num_properties": len(vector_index.properties)
+        "embed_dim": chunk_vector_index.index.d,
+        "vector_info": {
+            "chunk_vector_num": chunk_vector_index.index.ntotal,
+            "graph_vid_vector_num": graph_vid_vector_index.index.ntotal,
+            "graph_properties_vector_num": len(chunk_vector_index.properties)
+        }
     }, ensure_ascii=False, indent=2)
 
 
@@ -70,6 +75,8 @@ def clean_vector_index():
 
 
 def build_vector_index(input_file, input_text):
+    if input_file and input_text:
+        raise gr.Error("Please only choose one between file and text.")
     texts = read_documents(input_file, input_text)
     builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     context = builder.chunk_split(texts, "paragraph", "zh").build_vector_index().run()
