@@ -57,7 +57,7 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-
+ # TODO: move the logic to a separate file
 async def timely_update_vid_embedding():
     while True:
         try:
