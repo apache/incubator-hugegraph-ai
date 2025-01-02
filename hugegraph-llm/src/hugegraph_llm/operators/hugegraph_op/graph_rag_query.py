@@ -132,29 +132,43 @@ class GraphRAGQuery:
         query_embedding = context.get("query_embedding")
 
         self._gremlin_generator.clear()
-        self._gremlin_generator.example_index_query(num_examples=self._num_gremlin_generate_example)
-        gremlin_response = self._gremlin_generator.gremlin_generate_synthesize(
-            context["simple_schema"], vertices=vertices, gremlin_prompt=self._gremlin_prompt
-        ).run(query=query, query_embedding=query_embedding)
-        if self._num_gremlin_generate_example > 0:
-            gremlin = gremlin_response["result"]
+        regex_res = (
+            self._gremlin_generator.example_index_query(num_examples=self._num_gremlin_generate_example)
+            .regex_gremlin_generate()
+            .run(query=query, query_embedding=query_embedding)
+        )
+
+        log.debug("Skip llm gremlin is %s", regex_res["skip_llm_gremlin"])
+        if not regex_res["skip_llm_gremlin"]:
+            self._gremlin_generator.clear()
+            self._gremlin_generator.example_index_query(num_examples=self._num_gremlin_generate_example)
+            gremlin_response = self._gremlin_generator.gremlin_generate_synthesize(
+                context["simple_schema"], vertices=vertices, gremlin_prompt=self._gremlin_prompt
+            ).run(query=query, query_embedding=query_embedding)
+            if self._num_gremlin_generate_example > 0:
+                gremlin = gremlin_response["result"]
+            else:
+                gremlin = gremlin_response["raw_result"]
+            log.info("Generated gremlin: %s", gremlin)
+            context["gremlin"] = gremlin
+            try:
+                result = self._client.gremlin().exec(gremlin=gremlin)["data"]
+                if result == [None]:
+                    result = []
+                context["graph_result"] = [json.dumps(item, ensure_ascii=False) for item in result]
+                if context["graph_result"]:
+                    context["graph_result_flag"] = 1
+                    context["graph_context_head"] = (
+                        f"The following are graph query result " f"from gremlin query `{gremlin}`.\n"
+                    )
+            except Exception as e:  # pylint: disable=broad-except
+                log.error(e)
+                context["graph_result"] = ""
         else:
-            gremlin = gremlin_response["raw_result"]
-        log.info("Generated gremlin: %s", gremlin)
-        context["gremlin"] = gremlin
-        try:
-            result = self._client.gremlin().exec(gremlin=gremlin)["data"]
-            if result == [None]:
-                result = []
-            context["graph_result"] = [json.dumps(item, ensure_ascii=False) for item in result]
-            if context["graph_result"]:
-                context["graph_result_flag"] = 1
-                context["graph_context_head"] = (
-                    f"The following are graph query result " f"from gremlin query `{gremlin}`.\n"
-                )
-        except Exception as e:  # pylint: disable=broad-except
-            log.error(e)
-            context["graph_result"] = ""
+            context["graph_result"] = regex_res["graph_result"]
+        if context["graph_result"]:
+            context["graph_result_flag"] = 1
+            context["graph_context_head"] = f"The following are graph query result " f"from regex gremlin.\n"
         return context
 
     def _subgraph_query(self, context: Dict[str, Any]) -> Dict[str, Any]:

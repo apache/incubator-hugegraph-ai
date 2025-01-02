@@ -20,6 +20,7 @@ from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.common_op.check_schema import CheckSchema
 from hugegraph_llm.operators.common_op.print_result import PrintResult
+from hugegraph_llm.operators.common_op.regex_based_gremlin_generate import RegexGremlinGenerate
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.operators.index_op.build_gremlin_example_index import BuildGremlinExampleIndex
 from hugegraph_llm.operators.index_op.gremlin_example_index_query import GremlinExampleIndexQuery
@@ -56,6 +57,10 @@ class GremlinGenerator:
 
     def example_index_query(self, num_examples):
         self.operators.append(GremlinExampleIndexQuery(self.embedding, num_examples))
+        return self
+
+    def regex_gremlin_generate(self):
+        self.operators.append(RegexGremlinGenerate())
         return self
 
     def gremlin_generate_synthesize(
