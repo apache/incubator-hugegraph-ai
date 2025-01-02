@@ -15,25 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import os
-import shutil
-from datetime import datetime
 import argparse
-import asyncio
-from contextlib import asynccontextmanager
-import json
 
 import gradio as gr
 import uvicorn
 from fastapi import FastAPI, Depends, APIRouter
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
-
 from hugegraph_llm.api.admin_api import admin_http_api
 from hugegraph_llm.api.rag_api import rag_http_api
-from hugegraph_llm.config import admin_settings, huge_settings, prompt, resource_path
+from hugegraph_llm.config import admin_settings, huge_settings, prompt
 from hugegraph_llm.demo.rag_demo.admin_block import create_admin_block, log_stream
 from hugegraph_llm.demo.rag_demo.configs_block import (
     create_configs_block,
@@ -43,20 +34,15 @@ from hugegraph_llm.demo.rag_demo.configs_block import (
     apply_graph_config,
 )
 from hugegraph_llm.demo.rag_demo.other_block import create_other_block
+from hugegraph_llm.demo.rag_demo.other_block import lifespan
 from hugegraph_llm.demo.rag_demo.rag_block import create_rag_block, rag_answer
 from hugegraph_llm.demo.rag_demo.text2gremlin_block import create_text2gremlin_block, graph_rag_recall
 from hugegraph_llm.demo.rag_demo.vector_graph_block import create_vector_graph_block
 from hugegraph_llm.resources.demo.css import CSS
-from hugegraph_llm.utils.graph_index_utils import update_vid_embedding
 from hugegraph_llm.utils.log import log
-from pyhugegraph.client import PyHugeClient
-
-MAX_BACKUP_DIRS = 7
-MAX_VERTICES = 100000
-MAX_EDGES = 200000
-BACKUP_DIR = str(os.path.join(resource_path, huge_settings.graph_name, "backup"))
 
 sec = HTTPBearer()
+
 
 def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
     correct_token = admin_settings.user_token
@@ -69,105 +55,6 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
- # TODO: move the logic to a separate file
-async def timely_update_vid_embedding():
-    while True:
-        try:
-            await asyncio.to_thread(update_vid_embedding)
-            log.info("rebuild_vid_index timely executed successfully.")
-        except asyncio.CancelledError as ce:
-            log.info("Periodic task has been cancelled due to: %s", ce)
-            break
-        except Exception as e:
-            log.error("Failed to execute rebuild_vid_index: %s", e, exc_info=True)
-            raise Exception("Failed to execute rebuild_vid_index") from e
-        await asyncio.sleep(3600)
-
-def backup_data():
-    try:
-        client = PyHugeClient(
-            huge_settings.graph_ip,
-            huge_settings.graph_port,
-            huge_settings.graph_name,
-            huge_settings.graph_user,
-            huge_settings.graph_pwd,
-            huge_settings.graph_space,
-        )
-
-        if not os.path.exists(BACKUP_DIR):
-            os.makedirs(BACKUP_DIR)
-
-        date_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_subdir = os.path.join(BACKUP_DIR, f"{date_str}")
-        os.makedirs(backup_subdir)
-
-        vertices_file = os.path.join(backup_subdir, "vertices.json")
-        edges_file = os.path.join(backup_subdir, "edges.json")
-
-        with open(vertices_file, "w", encoding="utf-8") as vf:
-            vertices = client.gremlin().exec(f"g.V().limit({MAX_VERTICES})")["data"]
-            json.dump(vertices, vf)
-
-        with open(edges_file, "w", encoding="utf-8") as ef:
-            edges = client.gremlin().exec(f"g.E().id().limit({MAX_EDGES})")["data"]
-            json.dump(edges, ef)
-
-        schema_file = os.path.join(backup_subdir, "schema.json")
-        with open(schema_file, "w", encoding="utf-8") as sf:
-            schema = client.schema().getSchema()
-            json.dump(schema, sf)
-
-        log.info("Backup completed successfully in %s.", backup_subdir)
-
-        manage_backup_retention()
-
-    except Exception as e:
-        log.error("Backup failed: %s", e, exc_info=True)
-        raise Exception("Failed to execute backup") from e
-
-def manage_backup_retention():
-    try:
-        backup_dirs = [
-            os.path.join(BACKUP_DIR, d)
-            for d in os.listdir(BACKUP_DIR)
-            if os.path.isdir(os.path.join(BACKUP_DIR, d))
-        ]
-        backup_dirs.sort(key=os.path.getctime)
-
-        while len(backup_dirs) > MAX_BACKUP_DIRS:
-            old_backup = backup_dirs.pop(0)
-            shutil.rmtree(old_backup)
-            log.info("Deleted old backup: %s", old_backup)
-    except Exception as e:
-        log.error("Failed to manage backup retention: %s", e, exc_info=True)
-        raise Exception("Failed to manage backup retention") from e
-
-@asynccontextmanager
-async def lifespan(app: FastAPI): # pylint: disable=W0621
-    log.info("Starting APScheduler...")
-    scheduler = AsyncIOScheduler()
-    scheduler.add_job(
-        backup_data,
-        trigger=CronTrigger(hour=14, minute=16),
-        id="daily_backup",
-        replace_existing=True
-    )
-    scheduler.start()
-
-    log.info("Starting vid embedding update task...")
-    embedding_task = asyncio.create_task(timely_update_vid_embedding())
-
-    yield
-
-    log.info("Stopping vid embedding update task...")
-    embedding_task.cancel()
-    try:
-        await embedding_task
-    except asyncio.CancelledError:
-        log.info("Vid embedding update task cancelled.")
-
-    log.info("Shutting down APScheduler...")
-    scheduler.shutdown()
 
 # pylint: disable=C0301
 def init_rag_ui() -> gr.Interface:
