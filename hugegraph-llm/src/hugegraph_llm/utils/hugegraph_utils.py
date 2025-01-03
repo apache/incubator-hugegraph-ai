@@ -120,7 +120,7 @@ def backup_data():
         return f"Backup completed successfully in {backup_subdir} \n{del_info}"
     except Exception as e:  #pylint: disable=W0718
         log.critical("Backup failed: %s", e, exc_info=True)
-        return f"Backup failed: {str(e)}"
+        raise Exception("Failed to execute backup") from e
 
 
 def manage_backup_retention():
@@ -131,12 +131,12 @@ def manage_backup_retention():
             if os.path.isdir(os.path.join(BACKUP_DIR, d))
         ]
         backup_dirs.sort(key=os.path.getctime)
-
-        while len(backup_dirs) > MAX_BACKUP_DIRS:
+        if len(backup_dirs) > MAX_BACKUP_DIRS:
             old_backup = backup_dirs.pop(0)
             shutil.rmtree(old_backup)
             log.info("Deleted old backup: %s", old_backup)
             return f"Deleted old backup: {old_backup}"
-    except Exception as e:
+        return f"The current number of backup files <= {MAX_BACKUP_DIRS}, so no files are deleted"
+    except Exception as e: #pylint: disable=W0718
         log.error("Failed to manage backup retention: %s", e, exc_info=True)
-        return f"manage backup retention failed: {str(e)}"
+        raise Exception("Failed to manage backup retention") from e
