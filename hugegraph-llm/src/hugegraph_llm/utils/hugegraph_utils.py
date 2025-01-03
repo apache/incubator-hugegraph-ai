@@ -26,7 +26,7 @@ from pyhugegraph.client import PyHugeClient
 MAX_BACKUP_DIRS = 7
 MAX_VERTICES = 100000
 MAX_EDGES = 200000
-BACKUP_DIR = str(os.path.join(resource_path, "backup-4020", huge_settings.graph_name))
+BACKUP_DIR = str(os.path.join(resource_path, "backup-graph-data-4020", huge_settings.graph_name))
 
 def run_gremlin_query(query, fmt=True):
     res = get_hg_client().gremlin().exec(query)
