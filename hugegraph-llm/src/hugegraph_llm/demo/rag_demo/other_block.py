@@ -23,10 +23,9 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from fastapi import FastAPI
 
-from hugegraph_llm.utils.graph_index_utils import update_vid_embedding
 from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, backup_data
 from hugegraph_llm.utils.log import log
-
+from hugegraph_llm.demo.rag_demo.vector_graph_block import timely_update_vid_embedding
 
 def create_other_block():
     gr.Markdown("""## Other Tools """)
@@ -49,21 +48,6 @@ def create_other_block():
             out = gr.Textbox(label="Backup Graph Result", show_copy_button=True)
         btn = gr.Button("Backup Graph")
         btn.click(fn=backup_data, inputs=inp, outputs=out)
-
-
-async def timely_update_vid_embedding():
-    while True:
-        try:
-            await asyncio.to_thread(update_vid_embedding)
-            log.info("rebuild_vid_index timely executed successfully.")
-        except asyncio.CancelledError as ce:
-            log.info("Periodic task has been cancelled due to: %s", ce)
-            break
-        except Exception as e:
-            log.error("Failed to execute rebuild_vid_index: %s", e, exc_info=True)
-            raise Exception("Failed to execute rebuild_vid_index") from e
-        await asyncio.sleep(3600)
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # pylint: disable=W0621
