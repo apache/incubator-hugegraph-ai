@@ -16,27 +16,16 @@
 # under the License.
 
 import asyncio
-import json
-import os
-import shutil
 from contextlib import asynccontextmanager
-from datetime import datetime
 
 import gradio as gr
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from fastapi import FastAPI
 
-from hugegraph_llm.config import huge_settings, resource_path
 from hugegraph_llm.utils.graph_index_utils import update_vid_embedding
-from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query
+from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_query, backup_data
 from hugegraph_llm.utils.log import log
-from pyhugegraph.client import PyHugeClient
-
-MAX_BACKUP_DIRS = 7
-MAX_VERTICES = 100000
-MAX_EDGES = 200000
-BACKUP_DIR = str(os.path.join(resource_path, huge_settings.graph_name, "backup"))
 
 
 def create_other_block():
@@ -54,64 +43,12 @@ def create_other_block():
             out = gr.Textbox(label="Init Graph Demo Result", show_copy_button=True)
         btn = gr.Button("(BETA) Init HugeGraph test data (🚧)")
         btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
-
-
-def create_dir_safely(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-# TODO: move the logic to a separate file
-def backup_data():
-    try:
-        client = PyHugeClient(
-            huge_settings.graph_ip,
-            huge_settings.graph_port,
-            huge_settings.graph_name,
-            huge_settings.graph_user,
-            huge_settings.graph_pwd,
-            huge_settings.graph_space,
-        )
-
-        create_dir_safely(BACKUP_DIR)
-
-        date_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_subdir = os.path.join(BACKUP_DIR, f"{date_str}")
-        create_dir_safely(backup_subdir)
-
-        files = {
-            "vertices.json": f"g.V().limit({MAX_VERTICES})",
-            "edges.json": f"g.E().id().limit({MAX_EDGES})",
-            "schema.json": client.schema().getSchema()
-        }
-
-        for filename, query in files.items():
-            with open(os.path.join(backup_subdir, filename), "w", encoding="utf-8") as f:
-                data = client.gremlin().exec(query)["data"] if "schema" not in filename else query
-                json.dump(data, f)
-
-        log.info("Backup completed successfully in %s.", backup_subdir)
-        manage_backup_retention()
-    except Exception as e:
-        log.critical("Backup failed: %s", e, exc_info=True)
-        raise Exception("Failed to execute backup") from e
-
-
-def manage_backup_retention():
-    try:
-        backup_dirs = [
-            os.path.join(BACKUP_DIR, d)
-            for d in os.listdir(BACKUP_DIR)
-            if os.path.isdir(os.path.join(BACKUP_DIR, d))
-        ]
-        backup_dirs.sort(key=os.path.getctime)
-
-        while len(backup_dirs) > MAX_BACKUP_DIRS:
-            old_backup = backup_dirs.pop(0)
-            shutil.rmtree(old_backup)
-            log.info("Deleted old backup: %s", old_backup)
-    except Exception as e:
-        log.error("Failed to manage backup retention: %s", e, exc_info=True)
-        raise Exception("Failed to manage backup retention") from e
+    with gr.Accordion("Backup Graph", open=False):
+        with gr.Row():
+            inp = []
+            out = gr.Textbox(label="Backup Graph Result", show_copy_button=True)
+        btn = gr.Button("Backup Graph")
+        btn.click(fn=backup_data, inputs=inp, outputs=out)
 
 
 async def timely_update_vid_embedding():
@@ -134,7 +71,7 @@ async def lifespan(app: FastAPI):  # pylint: disable=W0621
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
         backup_data,
-        trigger=CronTrigger(hour=14, minute=16),
+        trigger=CronTrigger(hour=1, minute=0),
         id="daily_backup",
         replace_existing=True
     )
