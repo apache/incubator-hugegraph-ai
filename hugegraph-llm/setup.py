@@ -34,7 +34,7 @@ setuptools.setup(
     description="Integrating Apache HugeGraph with LLM.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/apache/incubator-hugegraph-ai",
+    url="https://icode.baidu.com/baidu/starhugegraph/hugegraph-ai",
     packages=setuptools.find_packages(where="src", exclude=["tests"]),
     package_dir={"": "src"},
     classifiers=[

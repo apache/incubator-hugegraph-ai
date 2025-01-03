@@ -48,8 +48,8 @@ def create_vector_graph_block():
 - Docs:
   - text: Build rag index from plain text
   - file: Upload file(s) which should be <u>TXT</u> or <u>.docx</u> (Multiple files can be selected together)
-- [Schema](https://hugegraph.apache.org/docs/clients/restful-api/schema/): (Accept **2 types**)
-  - User-defined Schema (JSON format, follow the [template](https://github.com/apache/incubator-hugegraph-ai/blob/aff3bbe25fa91c3414947a196131be812c20ef11/hugegraph-llm/src/hugegraph_llm/config/config_data.py#L125) 
+- [Schema](https://starhugegraph.github.io/hugegraph-doc/clients/restful-api-v3/schema.html): (Accept **2 types**)
+  - User-defined Schema (JSON format, follow the [template](https://console.cloud.baidu-int.com/devops/icode/repos/baidu/starhugegraph/hugegraph-ai/blob/master/hugegraph-llm/src/hugegraph_llm/config/config_data.py#L173) 
   to modify it)
   - Specify the name of the HugeGraph graph instance, it will automatically get the schema from it (like 
   **"hugegraph"**)
