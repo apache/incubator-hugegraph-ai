@@ -14,3 +14,4 @@ hugegraph-ml/ export-ignore
 .idea/ export-ignore
 style/ export-ignore
 scripts/ export-ignore
+hugegraph-llm/src/hugegraph_llm/resources/backup/ export-ignore

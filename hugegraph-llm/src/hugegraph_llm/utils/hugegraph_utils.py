@@ -113,7 +113,7 @@ def backup_data():
         for filename, query in files.items():
             with open(os.path.join(backup_subdir, filename), "w", encoding="utf-8") as f:
                 data = client.gremlin().exec(query)["data"] if "schema" not in filename else query
-                json.dump(data, f)
+                json.dump(data, f, ensure_ascii=False)
 
         log.info("Backup completed successfully in %s.", backup_subdir)
         del_info = manage_backup_retention()
