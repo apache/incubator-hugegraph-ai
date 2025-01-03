@@ -198,6 +198,7 @@ def create_rag_block():
         "Graph-only Answer",
         "Graph-Vector Answer",
     ]
+    # TODO: "demo" might conflict with the graph name, it should be modified.
     answers_path = os.path.join(resource_path, "demo", "questions_answers.xlsx")
     questions_path = os.path.join(resource_path, "demo", "questions.xlsx")
     questions_template_path = os.path.join(resource_path, "demo", "questions_template.xlsx")
