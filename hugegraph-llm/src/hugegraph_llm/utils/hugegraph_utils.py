@@ -14,10 +14,20 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-import json
 
-from hugegraph_llm.config import huge_settings
+import json
+import os
+import shutil
+from datetime import datetime
+
+from hugegraph_llm.config import huge_settings, resource_path
+from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
+
+MAX_BACKUP_DIRS = 7
+MAX_VERTICES = 100000
+MAX_EDGES = 200000
+BACKUP_DIR = str(os.path.join(resource_path, "backup-graph-data-4020", huge_settings.graph_name))
 
 
 def run_gremlin_query(query, fmt=True):
@@ -81,3 +91,58 @@ def init_hg_test_data():
 def clean_hg_data():
     client = get_hg_client()
     client.graphs().clear_graph_all_data()
+
+
+def create_dir_safely(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+
+def backup_data():
+    try:
+        client = get_hg_client()
+
+        create_dir_safely(BACKUP_DIR)
+
+        date_str = datetime.now().strftime("%Y%m%d")
+        backup_subdir = os.path.join(BACKUP_DIR, f"{date_str}")
+        create_dir_safely(backup_subdir)
+
+
+        files = {
+            "vertices.json": f"g.V().limit({MAX_VERTICES})"
+                             f".aggregate('vertices').count().as('count').select('count','vertices')",
+            "edges.json": f"g.E().limit({MAX_EDGES}).aggregate('edges').count().as('count').select('count','edges')",
+            "schema.json": client.schema().getSchema()
+        }
+
+        for filename, query in files.items():
+            with open(os.path.join(backup_subdir, filename), "w", encoding="utf-8") as f:
+                data = client.gremlin().exec(query)["data"] if "schema" not in filename else query
+                json.dump(data, f, ensure_ascii=False)
+
+        log.info("Backup completed successfully in %s.", backup_subdir)
+        del_info = manage_backup_retention()
+        return f"Backup completed successfully in {backup_subdir} \n{del_info}"
+    except Exception as e:  # pylint: disable=W0718
+        log.critical("Backup failed: %s", e, exc_info=True)
+        raise Exception("Failed to execute backup") from e
+
+
+def manage_backup_retention():
+    try:
+        backup_dirs = [
+            os.path.join(BACKUP_DIR, d)
+            for d in os.listdir(BACKUP_DIR)
+            if os.path.isdir(os.path.join(BACKUP_DIR, d))
+        ]
+        backup_dirs.sort(key=os.path.getctime)
+        if len(backup_dirs) > MAX_BACKUP_DIRS:
+            old_backup = backup_dirs.pop(0)
+            shutil.rmtree(old_backup)
+            log.info("Deleted old backup: %s", old_backup)
+            return f"Deleted old backup: {old_backup}"
+        return f"The current number of backup files <= {MAX_BACKUP_DIRS}, so no files are deleted"
+    except Exception as e:  # pylint: disable=W0718
+        log.error("Failed to manage backup retention: %s", e, exc_info=True)
+        raise Exception("Failed to manage backup retention") from e
