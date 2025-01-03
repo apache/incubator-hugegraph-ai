@@ -120,7 +120,7 @@ def backup_data():
         return f"Backup completed successfully in {backup_subdir} \n{del_info}"
     except Exception as e:
         log.critical("Backup failed: %s", e, exc_info=True)
-        raise Exception("Failed to execute backup") from e
+        return f"Backup failed: {str(e)}" 
 
 
 def manage_backup_retention():

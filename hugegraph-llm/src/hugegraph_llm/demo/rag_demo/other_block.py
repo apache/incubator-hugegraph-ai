@@ -47,7 +47,7 @@ def create_other_block():
             inp = []
             out = gr.Textbox(label="Backup Graph Result", show_copy_button=True)
         btn = gr.Button("Backup Graph")
-        btn.click(fn=backup_data, inputs=inp, outputs=out)
+        btn.click(fn=backup_data, inputs=inp, outputs=out)  # pylint: disable=no-member
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # pylint: disable=W0621
