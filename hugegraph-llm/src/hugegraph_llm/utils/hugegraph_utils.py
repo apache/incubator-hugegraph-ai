@@ -100,7 +100,7 @@ def backup_data():
 
         create_dir_safely(BACKUP_DIR)
 
-        date_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+        date_str = datetime.now().strftime("%Y%m%d")
         backup_subdir = os.path.join(BACKUP_DIR, f"{date_str}")
         create_dir_safely(backup_subdir)
 
