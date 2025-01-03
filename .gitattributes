@@ -9,6 +9,7 @@ apache-release.sh export-ignore
 *.docx export-ignore
 
 # ignored directory
+hugegraph-ml/ export-ignore
 .github/ export-ignore
 .idea/ export-ignore
 style/ export-ignore

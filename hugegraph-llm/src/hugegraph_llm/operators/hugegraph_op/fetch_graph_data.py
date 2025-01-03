@@ -22,12 +22,31 @@ from pyhugegraph.client import PyHugeClient
 
 
 class FetchGraphData:
+
     def __init__(self, graph: PyHugeClient):
         self.graph = graph
 
-    def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        if context is None:
-            context = {}
-        if "vertices" not in context:
-            context["vertices"] = self.graph.gremlin().exec("g.V().id().limit(10000)")["data"]
-        return context
+    def run(self, graph_summary: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        if graph_summary is None:
+            graph_summary = {}
+
+        # TODO: v_limit will influence the vid embedding logic in build_semantic_index.py
+        v_limit = 10000
+        e_limit = 200
+        keys = ["vertex_num", "edge_num", "vertices", "edges", "note"]
+
+        groovy_code = f"""
+        def res = [:];
+        res.{keys[0]} = g.V().count().next();
+        res.{keys[1]} = g.E().count().next();
+        res.{keys[2]} = g.V().id().limit({v_limit}).toList();
+        res.{keys[3]} = g.E().id().limit({e_limit}).toList();
+        res.{keys[4]} = "Only ≤{v_limit} VIDs and ≤ {e_limit} EIDs for brief overview .";
+        return res;
+        """
+
+        result = self.graph.gremlin().exec(groovy_code)["data"]
+
+        if isinstance(result, list) and len(result) > 0:
+            graph_summary.update({key: result[i].get(key) for i, key in enumerate(keys)})
+        return graph_summary
