@@ -118,9 +118,9 @@ def backup_data():
         log.info("Backup completed successfully in %s.", backup_subdir)
         del_info = manage_backup_retention()
         return f"Backup completed successfully in {backup_subdir} \n{del_info}"
-    except Exception as e:
+    except Exception as e:  #pylint: disable=W0718
         log.critical("Backup failed: %s", e, exc_info=True)
-        return f"Backup failed: {str(e)}" 
+        return f"Backup failed: {str(e)}"
 
 
 def manage_backup_retention():
@@ -139,4 +139,4 @@ def manage_backup_retention():
             return f"Deleted old backup: {old_backup}"
     except Exception as e:
         log.error("Failed to manage backup retention: %s", e, exc_info=True)
-        raise Exception("Failed to manage backup retention") from e
+        return f"manage backup retention failed: {str(e)}"
