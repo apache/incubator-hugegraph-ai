@@ -27,6 +27,7 @@ from hugegraph_llm.utils.hugegraph_utils import init_hg_test_data, run_gremlin_q
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.demo.rag_demo.vector_graph_block import timely_update_vid_embedding
 
+
 def create_other_block():
     gr.Markdown("""## Other Tools """)
     with gr.Row():
@@ -36,18 +37,18 @@ def create_other_block():
     btn.click(fn=run_gremlin_query, inputs=[inp], outputs=out)  # pylint: disable=no-member
 
     gr.Markdown("---")
+    with gr.Row():
+        inp = []
+        out = gr.Textbox(label="Backup Graph Manually (Auto backup at 1:00 AM everyday)", show_copy_button=True)
+    btn = gr.Button("Backup Graph Data")
+    btn.click(fn=backup_data, inputs=inp, outputs=out)  # pylint: disable=no-member
     with gr.Accordion("Init HugeGraph test data (🚧)", open=False):
         with gr.Row():
             inp = []
             out = gr.Textbox(label="Init Graph Demo Result", show_copy_button=True)
         btn = gr.Button("(BETA) Init HugeGraph test data (🚧)")
         btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
-    with gr.Accordion("Backup Graph", open=False):
-        with gr.Row():
-            inp = []
-            out = gr.Textbox(label="Backup Graph Result", show_copy_button=True)
-        btn = gr.Button("Backup Graph")
-        btn.click(fn=backup_data, inputs=inp, outputs=out)  # pylint: disable=no-member
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # pylint: disable=W0621
