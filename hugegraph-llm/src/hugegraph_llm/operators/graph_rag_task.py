@@ -98,13 +98,11 @@ class RAGPipeline:
     def keywords_to_vid(
         self,
         by: Literal["query", "keywords"] = "keywords",
-        topk_per_keyword: int = 1,
         topk_per_query: int = 10,
     ):
         """
         Add a semantic ID query operator to the pipeline.
         :param by: Match by query or keywords.
-        :param topk_per_keyword: Top K results per keyword.
         :param topk_per_query: Top K results per query.
         :return: Self-instance for chaining.
         """
@@ -112,7 +110,6 @@ class RAGPipeline:
             SemanticIdQuery(
                 embedding=self._embedding,
                 by=by,
-                topk_per_keyword=topk_per_keyword,
                 topk_per_query=topk_per_query,
             )
         )

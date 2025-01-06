@@ -32,3 +32,4 @@ class HugeGraphConfig(BaseConfig):
     max_items: Optional[int] = 30
     edge_limit_pre_label: Optional[int] = 8
     vector_dis_threshold: Optional[float] = 0.9
+    topk_per_keyword: Optional[int] = 1

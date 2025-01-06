@@ -33,15 +33,13 @@ class SemanticIdQuery:
             self,
             embedding: BaseEmbedding,
             by: Literal["query", "keywords"] = "keywords",
-            topk_per_query: int = 10,
-            topk_per_keyword: int = 1
+            topk_per_query: int = 10
     ):
         self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids"))
         self.vector_index = VectorIndex.from_index_file(self.index_dir)
         self.embedding = embedding
         self.by = by
         self.topk_per_query = topk_per_query
-        self.topk_per_keyword = topk_per_keyword
         self._client = PyHugeClient(
             huge_settings.graph_ip,
             huge_settings.graph_port,
@@ -75,10 +73,10 @@ class SemanticIdQuery:
         fuzzy_match_result = []
         for keyword in keywords:
             keyword_vector = self.embedding.get_text_embedding(keyword)
-            results = self.vector_index.search(keyword_vector, top_k=self.topk_per_keyword,
+            results = self.vector_index.search(keyword_vector, top_k=huge_settings.topk_per_keyword,
                                                dis_threshold=float(huge_settings.vector_dis_threshold))
             if results:
-                fuzzy_match_result.extend(results[:self.topk_per_keyword])
+                fuzzy_match_result.extend(results[:huge_settings.topk_per_keyword])
         return fuzzy_match_result
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
