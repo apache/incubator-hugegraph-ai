@@ -46,6 +46,7 @@ requests = "~2.32.0"
 setuptools = "~70.0.0"
 urllib3 = "~2.2.2"
 rich = "~13.9.4"
+apscheduler= "~3.10.4"
 hugegraph-python = { path = "../hugegraph-python-client/", develop = true }
 
 [build-system]
