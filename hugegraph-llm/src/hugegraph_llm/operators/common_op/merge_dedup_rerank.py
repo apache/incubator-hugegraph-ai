@@ -25,7 +25,7 @@ from nltk.translate.bleu_score import sentence_bleu
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.rerankers.init_reranker import Rerankers
 from hugegraph_llm.utils.log import log
-
+from hugegraph_llm.config import huge_settings
 
 def get_bleu_score(query: str, content: str) -> float:
     query_tokens = jieba.lcut(query)
@@ -43,7 +43,6 @@ class MergeDedupRerank:
     def __init__(
         self,
         embedding: BaseEmbedding,
-        topk: int = 20,
         graph_ratio: float = 0.5,
         method: Literal["bleu", "reranker"] = "bleu",
         near_neighbor_first: bool = False,
@@ -53,7 +52,6 @@ class MergeDedupRerank:
         assert method in ["bleu", "reranker"], f"Unimplemented rerank method '{method}'."
         self.embedding = embedding
         self.graph_ratio = graph_ratio
-        self.topk = topk
         self.method = method
         self.near_neighbor_first = near_neighbor_first
         self.custom_related_information = custom_related_information
@@ -69,11 +67,11 @@ class MergeDedupRerank:
         vector_search = context.get("vector_search", False)
         graph_search = context.get("graph_search", False)
         if graph_search and vector_search:
-            graph_length = int(self.topk * self.graph_ratio)
-            vector_length = self.topk - graph_length
+            graph_length = int(huge_settings.topk_return_results * self.graph_ratio)
+            vector_length = huge_settings.topk_return_results - graph_length
         else:
-            graph_length = self.topk
-            vector_length = self.topk
+            graph_length = huge_settings.topk_return_results
+            vector_length = huge_settings.topk_return_results
 
         vector_result = context.get("vector_result", [])
         vector_length = min(len(vector_result), vector_length)
