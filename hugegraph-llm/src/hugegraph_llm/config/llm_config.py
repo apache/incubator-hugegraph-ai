@@ -31,14 +31,14 @@ class LLMConfig(BaseConfig):
     embedding_type: Optional[Literal["openai", "ollama/local", "qianfan_wenxin", "zhipu"]] = "openai"
     reranker_type: Optional[Literal["cohere", "siliconflow"]] = None
     # 1. OpenAI settings
-    openai_chat_api_base: Optional[str] = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
-    openai_chat_api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
+    openai_chat_api_base: Optional[str] = os.environ.get("OPENAI_CHAT_API_BASE", "https://api.openai.com/v1")
+    openai_chat_api_key: Optional[str] = os.environ.get("OPENAI_CHAT_API_KEY")
     openai_chat_language_model: Optional[str] = "gpt-4o-mini"
-    openai_extract_api_base: Optional[str] = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
-    openai_extract_api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
+    openai_extract_api_base: Optional[str] = os.environ.get("OPENAI_EXTRACT_API_BASE", "https://api.openai.com/v1")
+    openai_extract_api_key: Optional[str] = os.environ.get("OPENAI_EXTRACT_API_KEY")
     openai_extract_language_model: Optional[str] = "gpt-4o-mini"
-    openai_text2gql_api_base: Optional[str] = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
-    openai_text2gql_api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
+    openai_text2gql_api_base: Optional[str] = os.environ.get("OPENAI_TEXT2GQL_API_BASE", "https://api.openai.com/v1")
+    openai_text2gql_api_key: Optional[str] = os.environ.get("OPENAI_TEXT2GQL_API_KEY")
     openai_text2gql_language_model: Optional[str] = "gpt-4o-mini"
     openai_embedding_api_base: Optional[str] = os.environ.get("OPENAI_EMBEDDING_BASE_URL", "https://api.openai.com/v1")
     openai_embedding_api_key: Optional[str] = os.environ.get("OPENAI_EMBEDDING_API_KEY")
