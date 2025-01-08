@@ -42,6 +42,7 @@ class OpenAIClient(BaseLLM):
         max_tokens: int = 4096,
         temperature: float = 0.0,
     ) -> None:
+        api_key = api_key or ''
         self.client = OpenAI(api_key=api_key, base_url=api_base)
         self.aclient = AsyncOpenAI(api_key=api_key, base_url=api_base)
         self.model = model_name
