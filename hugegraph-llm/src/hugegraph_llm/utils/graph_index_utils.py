@@ -48,11 +48,15 @@ def get_graph_index_info():
 def clean_all_graph_index():
     VectorIndex.clean(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
     VectorIndex.clean(str(os.path.join(resource_path, "gremlin_examples")))
-    gr.Info("Clean graph index and text2gql index successfully!")
+    log.warning("Clear graph index and text2gql index successfully!")
+    gr.Info("Clear graph index and text2gql index successfully!")
+
 
 def clean_all_graph_data():
     clean_hg_data()
-    gr.Info("Clean graph data successfully!")
+    log.warning("Clear graph data successfully!")
+    gr.Info("Clear graph data successfully!")
+
 
 def parse_schema(schema: str, builder: KgBuilder) -> Optional[str]:
     schema = schema.strip()
@@ -70,7 +74,6 @@ def parse_schema(schema: str, builder: KgBuilder) -> Optional[str]:
 
 
 def extract_graph(input_file, input_text, schema, example_prompt) -> str:
-
     texts = read_documents(input_file, input_text)
     builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     if not schema:
@@ -90,7 +93,7 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
                     "vertices": context["vertices"],
                     "edges": context["edges"],
                     "warning": "The schema may not match the Doc"
-                    },
+                },
                 ensure_ascii=False,
                 indent=2
             )
