@@ -46,10 +46,13 @@ def get_graph_index_info():
 
 
 def clean_all_graph_index():
-    clean_hg_data()
     VectorIndex.clean(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
-    gr.Info("Clean graph index successfully!")
+    VectorIndex.clean(str(os.path.join(resource_path, "gremlin_examples")))
+    gr.Info("Clean graph index and text2gql index successfully!")
 
+def clean_all_graph_data():
+    clean_hg_data()
+    gr.Info("Clean graph data successfully!")
 
 def parse_schema(schema: str, builder: KgBuilder) -> Optional[str]:
     schema = schema.strip()

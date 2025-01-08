@@ -24,6 +24,7 @@ from hugegraph_llm.config import prompt
 from hugegraph_llm.utils.graph_index_utils import (
     get_graph_index_info,
     clean_all_graph_index,
+    clean_all_graph_data,
     update_vid_embedding,
     extract_graph,
     import_graph_data,
@@ -86,8 +87,9 @@ def create_vector_graph_block():
                 graph_index_btn0 = gr.Button("Get Graph Index Info", size="sm")
         with gr.Accordion("Clear RAG Info", open=False):
             with gr.Column():
-                vector_index_btn1 = gr.Button("Clear Vector Index", size="sm")
-                graph_index_btn1 = gr.Button("Clear Graph Data & Index", size="sm")
+                vector_index_btn1 = gr.Button("Clear Chunks Vector Index", size="sm")
+                graph_index_btn1 = gr.Button("Clear Graph Vid Vector Index", size="sm")
+                graph_data_btn0 = gr.Button("Clear Graph Data", size="sm")
 
         vector_import_bt = gr.Button("Import into Vector", variant="primary")
         graph_extract_bt = gr.Button("Extract Graph Data (1)", variant="primary")
@@ -111,6 +113,10 @@ def create_vector_graph_block():
         inputs=[input_text, input_schema, info_extract_template],
     )
     graph_index_btn1.click(clean_all_graph_index).then(
+        store_prompt,
+        inputs=[input_text, input_schema, info_extract_template],
+    )
+    graph_data_btn0.click(clean_all_graph_data).then(
         store_prompt,
         inputs=[input_text, input_schema, info_extract_template],
     )
