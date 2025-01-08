@@ -131,6 +131,8 @@ class RAGPipeline:
         :param max_v_prop_len: Maximum length of vertex properties.
         :param max_e_prop_len: Maximum length of edge properties.
         :param prop_to_match: Property to match in the graph.
+        :param num_gremlin_generate_example: Number of examples to generate.
+        :param gremlin_prompt: Gremlin prompt for generating examples.
         :return: Self-instance for chaining.
         """
         self._operators.append(

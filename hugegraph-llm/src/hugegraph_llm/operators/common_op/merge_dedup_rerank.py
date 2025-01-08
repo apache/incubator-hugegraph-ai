@@ -22,10 +22,11 @@ import jieba
 import requests
 from nltk.translate.bleu_score import sentence_bleu
 
+from hugegraph_llm.config import huge_settings
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.rerankers.init_reranker import Rerankers
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.config import huge_settings
+
 
 def get_bleu_score(query: str, content: str) -> float:
     query_tokens = jieba.lcut(query)
