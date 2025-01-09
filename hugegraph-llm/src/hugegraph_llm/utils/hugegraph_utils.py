@@ -101,13 +101,11 @@ def create_dir_safely(path):
 def backup_data():
     try:
         client = get_hg_client()
-
         create_dir_safely(BACKUP_DIR)
 
         date_str = datetime.now().strftime("%Y%m%d")
         backup_subdir = os.path.join(BACKUP_DIR, f"{date_str}")
         create_dir_safely(backup_subdir)
-
 
         files = {
             "vertices.json": f"g.V().limit({MAX_VERTICES})"
@@ -121,9 +119,10 @@ def backup_data():
                 data = client.gremlin().exec(query)["data"] if "schema" not in filename else query
                 json.dump(data, f, ensure_ascii=False)
 
-        log.info("Backup completed successfully in %s.", backup_subdir)
+        log.info("Backup successfully in %s.", backup_subdir)
+        relative_backup_subdir = os.path.relpath(backup_subdir, start=resource_path)
         del_info = manage_backup_retention()
-        return f"Backup completed successfully in {backup_subdir} \n{del_info}"
+        return f"Backup successfully in '{relative_backup_subdir}' \n{del_info}"
     except Exception as e:  # pylint: disable=W0718
         log.critical("Backup failed: %s", e, exc_info=True)
         raise Exception("Failed to execute backup") from e
@@ -141,7 +140,8 @@ def manage_backup_retention():
             old_backup = backup_dirs.pop(0)
             shutil.rmtree(old_backup)
             log.info("Deleted old backup: %s", old_backup)
-            return f"Deleted old backup: {old_backup}"
+            relative_old_backup = os.path.relpath(old_backup, start=resource_path)
+            return f"Deleted old backup: {relative_old_backup}"
         return f"The current number of backup files <= {MAX_BACKUP_DIRS}, so no files are deleted"
     except Exception as e:  # pylint: disable=W0718
         log.error("Failed to manage backup retention: %s", e, exc_info=True)
