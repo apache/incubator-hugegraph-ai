@@ -78,7 +78,7 @@ class GraphRAGQuery:
     def __init__(
         self,
         max_deep: int = 2,
-        max_graph_items: int = int(huge_settings.max_graph_items),
+        max_graph_items: int = huge_settings.max_graph_items,
         prop_to_match: Optional[str] = None,
         llm: Optional[BaseLLM] = None,
         embedding: Optional[BaseEmbedding] = None,

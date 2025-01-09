@@ -34,7 +34,7 @@ class SemanticIdQuery:
             embedding: BaseEmbedding,
             by: Literal["query", "keywords"] = "keywords",
             topk_per_query: int = 10,
-            topk_per_keyword: int = int(huge_settings.topk_per_keyword)
+            topk_per_keyword: int = huge_settings.topk_per_keyword
     ):
         self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids"))
         self.vector_index = VectorIndex.from_index_file(self.index_dir)

@@ -44,7 +44,7 @@ class MergeDedupRerank:
     def __init__(
         self,
         embedding: BaseEmbedding,
-        topk: int = int(huge_settings.topk_return_results),
+        topk: int = huge_settings.topk_return_results,
         graph_ratio: float = 0.5,
         method: Literal["bleu", "reranker"] = "bleu",
         near_neighbor_first: bool = False,

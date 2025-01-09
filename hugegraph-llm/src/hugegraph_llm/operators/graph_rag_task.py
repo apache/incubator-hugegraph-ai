@@ -98,7 +98,7 @@ class RAGPipeline:
     def keywords_to_vid(
         self,
         by: Literal["query", "keywords"] = "keywords",
-        topk_per_keyword: int = int(huge_settings.topk_per_keyword),
+        topk_per_keyword: int = huge_settings.topk_per_keyword,
         topk_per_query: int = 10,
     ):
         """
@@ -121,7 +121,7 @@ class RAGPipeline:
     def query_graphdb(
         self,
         max_deep: int = 2,
-        max_graph_items: int = int(huge_settings.max_graph_items),
+        max_graph_items: int = huge_settings.max_graph_items,
         max_v_prop_len: int = 2048,
         max_e_prop_len: int = 256,
         prop_to_match: Optional[str] = None,
