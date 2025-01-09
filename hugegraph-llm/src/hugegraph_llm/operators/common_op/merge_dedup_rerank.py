@@ -22,6 +22,7 @@ import jieba
 import requests
 from nltk.translate.bleu_score import sentence_bleu
 
+from hugegraph_llm.config import huge_settings
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.rerankers.init_reranker import Rerankers
 from hugegraph_llm.utils.log import log
@@ -43,7 +44,7 @@ class MergeDedupRerank:
     def __init__(
         self,
         embedding: BaseEmbedding,
-        topk: int = 20,
+        topk: int = huge_settings.topk_return_results,
         graph_ratio: float = 0.5,
         method: Literal["bleu", "reranker"] = "bleu",
         near_neighbor_first: bool = False,
