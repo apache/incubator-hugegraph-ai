@@ -17,7 +17,7 @@ graph systems and large language models.
 
 ## 2. Environment Requirements
 
-- python 3.9+ (better to use `3.10`)
+- python 3.10+(Gradio 5 requires Python 3.10 or higher)
 - hugegraph-server 1.3+
 
 ## 3. Preparation

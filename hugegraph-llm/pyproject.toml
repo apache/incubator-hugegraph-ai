@@ -17,9 +17,9 @@
 
 [tool.poetry]
 name = "hugegraph-llm"
-version = "0.1.0"
-description = ""
-authors = ["Hongjun Li <returntoinnocencegeek@outlook.com>"]
+version = "1.5.0"
+description = "A tool for the implementation and research related to large language models."
+authors = ["Apache HugeGraph Contributors<dev@hugegraph.apache.org>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
