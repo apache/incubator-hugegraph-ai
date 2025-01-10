@@ -63,7 +63,7 @@ def init_rag_ui() -> gr.Interface:
         title="HugeGraph RAG Platform",
         css=CSS,
     ) as hugegraph_llm_ui:
-        gr.Markdown("# HugeGraph LLM RAG Demo")
+        gr.Markdown("# HugeGraph RAG Platform 🚀")
 
         """
         TODO: leave a general idea of the unresolved part

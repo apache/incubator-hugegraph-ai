@@ -32,7 +32,7 @@ from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
 from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_qps
-from hugegraph_llm.config import prompt
+from hugegraph_llm.config import prompt, huge_settings
 
 
 class RAGPipeline:
@@ -98,7 +98,7 @@ class RAGPipeline:
     def keywords_to_vid(
         self,
         by: Literal["query", "keywords"] = "keywords",
-        topk_per_keyword: int = 1,
+        topk_per_keyword: int = huge_settings.topk_per_keyword,
         topk_per_query: int = 10,
     ):
         """
@@ -121,7 +121,7 @@ class RAGPipeline:
     def query_graphdb(
         self,
         max_deep: int = 2,
-        max_items: int = 30,
+        max_graph_items: int = huge_settings.max_graph_items,
         max_v_prop_len: int = 2048,
         max_e_prop_len: int = 256,
         prop_to_match: Optional[str] = None,
@@ -132,16 +132,18 @@ class RAGPipeline:
         Add a graph RAG query operator to the pipeline.
 
         :param max_deep: Maximum depth for the graph query.
-        :param max_items: Maximum number of items to retrieve.
+        :param max_graph_items: Maximum number of items to retrieve.
         :param max_v_prop_len: Maximum length of vertex properties.
         :param max_e_prop_len: Maximum length of edge properties.
         :param prop_to_match: Property to match in the graph.
+        :param num_gremlin_generate_example: Number of examples to generate.
+        :param gremlin_prompt: Gremlin prompt for generating examples.
         :return: Self-instance for chaining.
         """
         self._operators.append(
             GraphRAGQuery(
                 max_deep=max_deep,
-                max_items=max_items,
+                max_graph_items=max_graph_items,
                 max_v_prop_len=max_v_prop_len,
                 max_e_prop_len=max_e_prop_len,
                 prop_to_match=prop_to_match,
