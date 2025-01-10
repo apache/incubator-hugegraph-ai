@@ -154,7 +154,7 @@ Here is a brief usage guide:
     ```
 3. **Query Graph for Rag**: Retrieve the corresponding keywords and their multi-degree associated relationships from HugeGraph.
      ```python
-     graph_rag.query_graphdb(max_deep=2, max_items=30).print_result()
+     graph_rag.query_graphdb(max_deep=2, max_graph_items=30).print_result()
      ```
 4. **Rerank Searched Result**: Rerank the searched results based on the similarity between the question and the results.
      ```python

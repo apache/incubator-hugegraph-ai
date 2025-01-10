@@ -24,6 +24,7 @@ from hugegraph_llm.config import prompt
 from hugegraph_llm.utils.graph_index_utils import (
     get_graph_index_info,
     clean_all_graph_index,
+    clean_all_graph_data,
     update_vid_embedding,
     extract_graph,
     import_graph_data,
@@ -63,7 +64,7 @@ def create_vector_graph_block():
             with gr.Tab("text") as tab_upload_text:
                 input_text = gr.Textbox(
                     value=prompt.doc_input_text,
-                    label="Doc(s)",
+                    label="Input Doc(s)",
                     lines=20,
                     show_copy_button=True
                 )
@@ -73,21 +74,22 @@ def create_vector_graph_block():
                     label="Docs (multi-files can be selected together)",
                     file_count="multiple",
                 )
-        input_schema = gr.Textbox(value=prompt.graph_schema, label="Schema", lines=15, show_copy_button=True)
+        input_schema = gr.Textbox(value=prompt.graph_schema, label="Graph Schema", lines=15, show_copy_button=True)
         info_extract_template = gr.Textbox(
             value=prompt.extract_graph_prompt, label="Graph Extract Prompt Header", lines=15, show_copy_button=True
         )
-        out = gr.Code(label="Output", language="json", elem_classes="code-container-edit")
+        out = gr.Code(label="Output Info", language="json", elem_classes="code-container-edit")
 
     with gr.Row():
         with gr.Accordion("Get RAG Info", open=False):
             with gr.Column():
                 vector_index_btn0 = gr.Button("Get Vector Index Info", size="sm")
                 graph_index_btn0 = gr.Button("Get Graph Index Info", size="sm")
-        with gr.Accordion("Clear RAG Info", open=False):
+        with gr.Accordion("Clear RAG Data", open=False):
             with gr.Column():
-                vector_index_btn1 = gr.Button("Clear Vector Index", size="sm")
-                graph_index_btn1 = gr.Button("Clear Graph Data & Index", size="sm")
+                vector_index_btn1 = gr.Button("Clear Chunks Vector Index", size="sm")
+                graph_index_btn1 = gr.Button("Clear Graph Vid Vector Index", size="sm")
+                graph_data_btn0 = gr.Button("Clear Graph Data", size="sm")
 
         vector_import_bt = gr.Button("Import into Vector", variant="primary")
         graph_extract_bt = gr.Button("Extract Graph Data (1)", variant="primary")
@@ -111,6 +113,10 @@ def create_vector_graph_block():
         inputs=[input_text, input_schema, info_extract_template],
     )
     graph_index_btn1.click(clean_all_graph_index).then(
+        store_prompt,
+        inputs=[input_text, input_schema, info_extract_template],
+    )
+    graph_data_btn0.click(clean_all_graph_data).then(
         store_prompt,
         inputs=[input_text, input_schema, info_extract_template],
     )
