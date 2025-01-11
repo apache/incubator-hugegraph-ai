@@ -2,10 +2,10 @@ name: "License header & 3rd-party check"
 
 on:
   pull_request:
-
+    
 permissions:
   contents: read
-  # pull-requests: write
+  pull-requests: write
 
 jobs:
   check-dependency:
