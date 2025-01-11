@@ -19,6 +19,7 @@ graph systems and large language models.
 
 - python 3.10+(Gradio 5 requires Python 3.10 or higher)
 - hugegraph-server 1.3+
+- poetry(use `pip install poetry`, See the [poetry documentation](https://poetry.pythonlang.cn/docs/#installing-with-pipx) for other installation methods)
 
 ## 3. Preparation
 
@@ -30,8 +31,8 @@ graph systems and large language models.
     ```
 3. Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph_llm](src/hugegraph_llm)
     ```bash
-    cd ./incubator-hugegraph-ai # better to use virtualenv (source venv/bin/activate) 
-    pip install ./hugegraph-python-client && pip install -r ./hugegraph-llm/requirements.txt
+    cd ./incubator-hugegraph-ai/hugegraph-llm
+    poetry install
     ```
 4. Enter the project directory
     ```bash
