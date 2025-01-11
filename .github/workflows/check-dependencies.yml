@@ -5,7 +5,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
+  # pull-requests: write
 
 jobs:
   check-dependency:
@@ -16,8 +16,6 @@ jobs:
       - name: 'Dependency Review'
         uses: actions/dependency-review-action@v4
         # Refer: https://github.com/actions/dependency-review-action
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           fail-on-severity: low
           comment-summary-in-pr: on-failure
