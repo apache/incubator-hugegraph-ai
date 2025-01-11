@@ -34,9 +34,9 @@ graph systems and large language models.
     cd ./incubator-hugegraph-ai/hugegraph-llm
     poetry install
     ```
-4. Enter the project directory
+4. Enter the project directory(`./incubator-hugegraph-ai/hugegraph-llm/src`)
     ```bash
-    cd ./hugegraph-llm/src
+    cd ./src
     ```
 5. Start the gradio interactive demo of **Graph RAG**, you can run with the following command, and open http://127.0.0.1:8001 after starting
     ```bash
