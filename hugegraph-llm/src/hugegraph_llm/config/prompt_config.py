@@ -26,6 +26,7 @@ Your task is to provide a precise and accurate answer based on the given context
 
 Given the context information and without using fictive knowledge, 
 answer the following query in a concise and professional manner.
+Please write your answer using Markdown with MathJax syntax, where inline math is wrapped with `$...$`
 
 Context information is below.
 ---------------------
