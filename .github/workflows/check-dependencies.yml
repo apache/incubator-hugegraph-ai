@@ -2,7 +2,6 @@ name: "License header & 3rd-party check"
 
 on:
   pull_request:
-    
 permissions:
   contents: read
   pull-requests: write
@@ -22,7 +21,6 @@ jobs:
           # Action will fail if dependencies don't match the list (we could choose only one of the following)
           deny-licenses: GPL-3.0, AGPL-1.0, AGPL-3.0, LGPL-2.0, CC-BY-3.0
           #allow-licenses: Apache-2.0, MIT
-        
 
   check-license-header:
     runs-on: ubuntu-latest

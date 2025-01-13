@@ -17,8 +17,8 @@ graph systems and large language models.
 
 ## 2. Environment Requirements
 
-- python 3.10+(Gradio 5 requires Python 3.10 or higher)
-- hugegraph-server 1.3+
+- python 3.10+ (not tested in 3.12)
+- hugegraph-server 1.3+ (better to use 1.5+)
 - poetry(use `pip install poetry`, See the [poetry documentation](https://poetry.pythonlang.cn/docs/#installing-with-pipx) for other installation methods)
 
 ## 3. Preparation
