@@ -32,6 +32,9 @@ class BuildSemanticIndex:
         self.vid_index = VectorIndex.from_index_file(self.index_dir)
         self.embedding = embedding
 
+    def extract_names(self, vertices: list[str]) -> list[str]:
+        return [v.split(":")[1] for v in vertices]
+
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         past_vids = self.vid_index.properties
         # TODO: We should build vid vector index separately, especially when the vertices may be very large
@@ -40,8 +43,10 @@ class BuildSemanticIndex:
         removed_num = self.vid_index.remove(removed_vids)
         added_vids = list(set(present_vids) - set(past_vids))
         if len(added_vids) > 0:
-            log.debug("Building vector index for %s vertices...", len(added_vids))
-            added_embeddings = [self.embedding.get_text_embedding(v) for v in tqdm(added_vids)]
+            # TODO: We should use multi value map. (When [1:tom, 2:tom])
+            extract_added_vids = self.extract_names(added_vids)
+            log.debug("Building vector index for %s vertices...", len(extract_added_vids))
+            added_embeddings = [self.embedding.get_text_embedding(v) for v in tqdm(extract_added_vids)]
             log.debug("Vector index built for %s vertices.", len(added_embeddings))
             self.vid_index.add(added_embeddings, added_vids)
             self.vid_index.to_index_file(self.index_dir)
