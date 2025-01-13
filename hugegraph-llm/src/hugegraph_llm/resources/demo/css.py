@@ -42,7 +42,6 @@ footer {
 .output-box {
     border: 1px solid #ccc;
     border-radius: 5px;
-    background-color: #ffffff;
     padding: 8px;
     box-sizing: border-box;
     min-height: 50px;
@@ -58,6 +57,5 @@ footer {
     font-size: 14px;
     font-weight: bold;
     margin-bottom: -5px;
-    color: #333;
 }
 """

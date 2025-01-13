@@ -40,8 +40,6 @@ Answer:
 
     default_question: str = """Tell me about Sarah."""
 
-    formula_prompt: str = """Please write your answer using Markdown with MathJax syntax, where inline math is wrapped with `$...$`"""
-
     # Data is detached from hugegraph-llm/src/hugegraph_llm/operators/llm_op/property_graph_extract.py
     extract_graph_prompt: str = """## Main Task
 Given the following graph schema and a piece of text, your task is to analyze the text and extract information that fits into the schema's structure, formatting the information into vertices and edges as specified.
