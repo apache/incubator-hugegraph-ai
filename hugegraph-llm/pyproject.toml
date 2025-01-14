@@ -21,6 +21,10 @@ version = "1.5.0"
 description = "A tool for the implementation and research related to large language models."
 authors = ["Apache HugeGraph Contributors <dev@hugegraph.apache.org>"]
 readme = "README.md"
+license = "Apache-2.0"
+
+[tool.poetry.urls]
+"Source" = "https://github.com/apache/incubator-hugegraph-ai"
 
 [tool.poetry.dependencies]
 python = "^3.10"
