@@ -52,7 +52,6 @@ class BuildSemanticIndex:
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         flag_extract_names = self.check_primary_key(self.schema.getSchema()["vertexlabels"])
-        log.info("++++++_________++++++++%s", flag_extract_names)
         past_vids = self.vid_index.properties
         # TODO: We should build vid vector index separately, especially when the vertices may be very large
         present_vids = context["vertices"] # Warning: data truncated by fetch_graph_data.py
