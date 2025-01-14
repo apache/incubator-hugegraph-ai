@@ -42,7 +42,7 @@ def rag_answer(
     answer_prompt: str,
     keywords_extract_prompt: str,
     gremlin_tmpl_num: Optional[int] = 2,
-    gremlin_prompt: Optional[str] = prompt.gremlin_generate_prompt,
+    gremlin_prompt: Optional[str] = None,
 ) -> Tuple:
     """
     Generate an answer using the RAG (Retrieval-Augmented Generation) pipeline.
@@ -52,13 +52,16 @@ def rag_answer(
     4. Synthesize the final answer.
     5. Run the pipeline and return the results.
     """
+
+    gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
     should_update_prompt = (
         prompt.default_question != text
         or prompt.answer_prompt != answer_prompt
         or prompt.keywords_extract_prompt != keywords_extract_prompt
         or prompt.gremlin_generate_prompt != gremlin_prompt
+        or prompt.custom_rerank_info != custom_related_information
     )
-    if should_update_prompt or prompt.custom_rerank_info != custom_related_information:
+    if should_update_prompt:
         prompt.custom_rerank_info = custom_related_information
         prompt.default_question = text
         prompt.answer_prompt = answer_prompt
