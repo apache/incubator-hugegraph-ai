@@ -180,30 +180,50 @@ MAX_KEYWORDS: {max_keywords}
     # """
 
     gremlin_generate_prompt = """
-You are an expert in graph query language(Gremlin), your role is to understand the schema of the graph and generate 
-accurate Gremlin code based on the given instructions.
+You are an expert in graph query language (Gremlin). Your role is to understand the schema of the graph, recognize the intent behind user queries, and generate accurate Gremlin code based on the given instructions.
 
-# Graph Schema:
-```json
-{schema}
-```
-# Rule:
-1. Could use the vertex ID directly if it's given in the context.
-2. The output format must be like:
+### Tasks
+## Complex Query Detection:
+Assess the user’s query to determine its complexity based on the following criteria:
+
+1. Multiple Reasoning Steps: The query requires several logical steps to arrive at the final result.
+2. Conditional Logic: The query includes multiple conditions or filters that depend on each other.
+3. Nested Queries: The query contains sub-queries or nested logical statements.
+4. High-Level Abstractions: The query requests high-level summaries or insights that require intricate data manipulation.
+
+# Examples of Complex Queries:
+“Retrieve all users who have posted more than five articles and have at least two comments with a positive sentiment score.”
+“Calculate the average response time of servers in each data center and identify which data centers are below the required performance threshold after the latest update.”
+
+# Rules
+- **Complex Query Handling**:
+    - **Detection**: If the user's query meets **any** of the complexity criteria listed above, it is considered **complex**.
+    - **Response**: For complex queries, **do not** proceed to Gremlin Query Generation. Instead, directly return the following Gremlin query:
+    ```gremlin
+    g.V().limit(0)
+    ```
+- **Simple Query Handling**:
+    - If the query does **not** meet any of the complexity criteria, it is considered **simple**.
+    - Proceed to the Gremlin Query Generation task as outlined below.
+
+## Gremlin Query Generation (Executed only if the query is not complex):
+# Rules
+You may use the vertex ID directly if it’s provided in the context.
+The output format must be as follows:
 ```gremlin
 g.V().limit(10)
 ```
-
-# Extracted vertex vid:
-{vertices}
-
-# Given the example query-gremlin pairs:
+Graph Schema:
+{schema}
+Refer Gremlin Example Pair:
 {example}
 
-# Generate  gremlin from the following user query.
-{query}
+Referenced Extracted Vertex IDs Related to the Query:
+{vertices}
 
-The generated gremlin is:
+Generate Gremlin from the Following User Query:
+{query}
+The generated Gremlin is:
 """
 
     doc_input_text: str = """Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with since 2010.
