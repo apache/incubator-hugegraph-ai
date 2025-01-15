@@ -19,7 +19,7 @@ graph systems and large language models.
 
 - python 3.10+ (not tested in 3.12)
 - hugegraph-server 1.3+ (better to use 1.5+)
-- poetry 
+- poetry 2.0+
 
 ## 3. Preparation
 
