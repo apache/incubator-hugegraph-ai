@@ -20,11 +20,13 @@ import os
 from typing import Any, Dict
 
 from tqdm import tqdm
+
 from hugegraph_llm.config import resource_path, huge_settings
-from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.indices.vector_index import VectorIndex
+from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
+
 
 class BuildSemanticIndex:
     def __init__(self, embedding: BaseEmbedding):
@@ -41,36 +43,37 @@ class BuildSemanticIndex:
         )
         self.schema = self.client.schema()
 
-    def extract_names(self, vertices: list[str]) -> list[str]:
+    def _extract_names(self, vertices: list[str]) -> list[str]:
         return [v.split(":")[1] for v in vertices]
 
-    def check_primary_key(self, vertexlabels):
+    def _check_primary_key(self, vertexlabels):
         for data in vertexlabels:
             if data.get('id_strategy') != 'PRIMARY_KEY':
                 return False
         return True
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        flag_extract_names = self.check_primary_key(self.schema.getSchema()["vertexlabels"])
+        flag_extract_names = self._check_primary_key(self.schema.getSchema()["vertexlabels"])
         past_vids = self.vid_index.properties
         # TODO: We should build vid vector index separately, especially when the vertices may be very large
         present_vids = context["vertices"] # Warning: data truncated by fetch_graph_data.py
         removed_vids = set(past_vids) - set(present_vids)
         removed_num = self.vid_index.remove(removed_vids)
         added_vids = list(set(present_vids) - set(past_vids))
+
         if len(added_vids) > 0:
-            # TODO: We should use multi value map. (When [1:tom, 2:tom])
+            # TODO: We should use multi value map when meet same value. (e.g [1:tom, 2:tom, tom] in one graph)
             if flag_extract_names:
-                extract_added_vids = self.extract_names(added_vids)
+                extract_added_vids = self._extract_names(added_vids)
                 added_embeddings = [self.embedding.get_text_embedding(v) for v in tqdm(extract_added_vids)]
             else:
                 added_embeddings = [self.embedding.get_text_embedding(v) for v in tqdm(added_vids)]
-            log.debug("Building vector index for %s vertices...", len(added_vids))
-            log.debug("Vector index built for %s vertices.", len(added_embeddings))
+            log.info("Building vector index for %s vertices...", len(added_vids))
+            log.info("Vector index built for %s vertices.", len(added_embeddings))
             self.vid_index.add(added_embeddings, added_vids)
             self.vid_index.to_index_file(self.index_dir)
         else:
-            log.debug("No vertices to build vector index.")
+            log.debug("No update vertices to build vector index.")
         context.update({
             "removed_vid_vector_num": removed_num,
             "added_vid_vector_num": len(added_vids)
