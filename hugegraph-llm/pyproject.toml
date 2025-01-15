@@ -15,16 +15,26 @@
 # specific language governing permissions and limitations
 # under the License.
 
-[tool.poetry]
+[project]
 name = "hugegraph-llm"
 version = "1.5.0"
 description = "A tool for the implementation and research related to large language models."
-authors = ["Apache HugeGraph Contributors <dev@hugegraph.apache.org>"]
+authors = [
+    { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
+]
 readme = "README.md"
 license = "Apache-2.0"
+requires-python = "^3.10"
+maintainers = [
+    { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
+]
 
-[tool.poetry.urls]
-"Source" = "https://github.com/apache/incubator-hugegraph-ai"
+[project.urls]
+homepage = "https://hugegraph.apache.org/"
+repository = "https://github.com/apache/incubator-hugegraph-ai"
+documentation = "https://hugegraph.apache.org/docs/quickstart/hugegraph-ai/"
+"Bug Tracker" = "https://github.com/apache/incubator-hugegraph-ai/issues"
+
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -56,3 +66,13 @@ hugegraph-python = { path = "../hugegraph-python-client/", develop = true }
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple/"
+priority = "primary"
+
+[[tool.poetry.source]]
+name = "PyPI"
+url = "https://pypi.org/simple/"
+priority = "primary"
