@@ -40,7 +40,7 @@ graph systems and large language models.
     cd ./incubator-hugegraph-ai/hugegraph-llm
     poetry install
     ```  
-    If `poetry install` fails due to network issues, it is recommended to modify `tool.poetry.source` of `hugegraph-llm/pyproject.toml`
+    If `poetry install` fails or too slow due to network issues, it is recommended to modify `tool.poetry.source` of `hugegraph-llm/pyproject.toml`
 4. Enter the project directory(`./incubator-hugegraph-ai/hugegraph-llm/src`)
     ```bash
     cd ./src
