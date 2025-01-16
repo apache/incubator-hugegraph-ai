@@ -37,7 +37,7 @@ documentation = "https://hugegraph.apache.org/docs/quickstart/hugegraph-ai/"
 
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.10,<3.12"
 openai = "~1.47.1"
 ollama = "~0.2.1"
 qianfan = "~0.3.18"
@@ -85,5 +85,3 @@ priority = "supplemental"
 name = "tsinghua"
 url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/"
 priority = "supplemental"
-
-
