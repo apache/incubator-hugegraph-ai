@@ -56,7 +56,12 @@ class GremlinExampleIndexQuery:
 
     def _build_default_example_index(self):
         properties = pd.read_csv(os.path.join(resource_path, "demo", "text2gremlin.csv")).to_dict(orient="records")
-        embeddings = [self.embedding.get_text_embedding(row["query"]) for row in tqdm(properties)]
+        from concurrent.futures import ThreadPoolExecutor
+        # TODO: use asyncio for IO tasks
+        with ThreadPoolExecutor() as executor:
+            embeddings = list(
+                tqdm(executor.map(self.embedding.get_text_embedding, [row["query"] for row in properties]),
+                     total=len(properties)))
         vector_index = VectorIndex(len(embeddings[0]))
         vector_index.add(embeddings, properties)
         vector_index.to_index_file(self.index_dir)

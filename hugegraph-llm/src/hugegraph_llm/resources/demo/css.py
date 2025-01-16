@@ -38,4 +38,24 @@ footer {
     white-space: -o-pre-wrap; /* Opera 7 */
     word-wrap: break-word; /* Internet Explorer 5.5+ */
 }
+
+.output-box {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 8px;
+    box-sizing: border-box;
+    min-height: 50px;
+    font-family: Arial, sans-serif;
+    line-height: 1.5;
+    margin-top: -5px;
+    width: 99.5%;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.output-box-label {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: -5px;
+}
 """
