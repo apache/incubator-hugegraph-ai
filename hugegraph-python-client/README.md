@@ -6,10 +6,10 @@ It is used to define graph structures, perform CRUD operations on graph data, ma
 
 ## Installation
 
-To install the `hugegraph-python-client`, you can use pip:
+To install the `hugegraph-python-client`, you can use pip/poetry/source building:
 
 ```bash
-pip3 install hugegraph-python
+pip3 install hugegraph-python # Note: may not the latest version, recommend to install from source
 ```
 
 ### Install from Source (Latest Code)
@@ -17,7 +17,7 @@ pip3 install hugegraph-python
 To install from the source, clone the repository and install the required dependencies:
 
 ```bash
-git clone https://github.com/apache/incubator-hugegraph-ai.git
+git clone xxxx # clone current repo
 cd path/to/hugegraph-python-client
 
 # Normal install 
