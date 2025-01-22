@@ -124,7 +124,7 @@ def backup_data():
                     json.dump(data, f, ensure_ascii=False)
                 elif filename == "vertices.json":
                     data_full = client.gremlin().exec(query)["data"][0]["vertices"]
-                    data = [{key: value for key, value in vertex.items() if key != "id"} for vertex in data_full] if all_pk_flag else data_full
+                    data = [{key: value for key, value in vertex.items() if key != "id"} for vertex in data_full] if all_pk_flag else data_full #pylint: disable=C0301
                     json.dump(data, f, ensure_ascii=False)
                 elif filename == "schema.json":
                     data_full = query
