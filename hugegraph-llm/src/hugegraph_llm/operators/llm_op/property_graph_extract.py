@@ -106,9 +106,12 @@ class PropertyGraphExtract:
         items = []
         for chunk in chunks:
             proceeded_chunk = self.extract_property_graph_by_llm(schema, chunk)
+            log.info("proceeded_chunk: %s", proceeded_chunk)
             log.debug("[LLM] %s input: %s \n output:%s", self.__class__.__name__, chunk, proceeded_chunk)
             items.extend(self._extract_and_filter_label(schema, proceeded_chunk))
+        log.info("Before filter, items: %s", items)
         items = filter_item(schema, items)
+        log.info("After filter, items: %s", items)
         for item in items:
             if item["type"] == "vertex":
                 context["vertices"].append(item)
