@@ -111,13 +111,14 @@ def backup_data():
             "vertices.json": f"g.V().limit({MAX_VERTICES})"
                              f".aggregate('vertices').count().as('count').select('count','vertices')",
             "edges.json": f"g.E().limit({MAX_EDGES}).aggregate('edges').count().as('count').select('count','edges')",
-            "schema.json": client.schema().getSchema()
+            "schema.json": client.schema().getSchema(_format="groovy")
         }
 
+        vertexlabels = client.schema().getSchema()["vertexlabels"]
+        all_pk_flag = all(data.get('id_strategy') == 'PRIMARY_KEY' for data in vertexlabels)
+
         for filename, query in files.items():
-            with open(os.path.join(backup_subdir, filename), "w", encoding="utf-8") as f:
-                data = client.gremlin().exec(query)["data"] if "schema" not in filename else query
-                json.dump(data, f, ensure_ascii=False)
+            write_backup_file(client, backup_subdir, filename, query, all_pk_flag)
 
         log.info("Backup successfully in %s.", backup_subdir)
         relative_backup_subdir = os.path.relpath(backup_subdir, start=resource_path)
@@ -126,6 +127,27 @@ def backup_data():
     except Exception as e:  # pylint: disable=W0718
         log.critical("Backup failed: %s", e, exc_info=True)
         raise Exception("Failed to execute backup") from e
+
+
+def write_backup_file(client, backup_subdir, filename, query, all_pk_flag):
+    with open(os.path.join(backup_subdir, filename), "w", encoding="utf-8") as f:
+        if filename == "edges.json":
+            data = client.gremlin().exec(query)["data"][0]["edges"]
+            json.dump(data, f, ensure_ascii=False)
+        elif filename == "vertices.json":
+            data_full = client.gremlin().exec(query)["data"][0]["vertices"]
+            data = [{key: value for key, value in vertex.items() if key != "id"}
+                    for vertex in data_full] if all_pk_flag else data_full
+            json.dump(data, f, ensure_ascii=False)
+        elif filename == "schema.json":
+            data_full = query
+            if isinstance(data_full, dict) and "schema" in data_full:
+                groovy_filename = filename.replace(".json", ".groovy")
+                with open(os.path.join(backup_subdir, groovy_filename), "w", encoding="utf-8") as groovy_file:
+                    groovy_file.write(str(data_full["schema"]))
+            else:
+                data = data_full
+                json.dump(data, f, ensure_ascii=False)
 
 
 def manage_backup_retention():
