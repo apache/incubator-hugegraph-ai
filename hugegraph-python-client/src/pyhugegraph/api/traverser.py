@@ -114,6 +114,26 @@ class TraverserManager(HugeParamsBase):
     def paths(self, source_id, target_id, max_depth):  # pylint: disable=unused-argument
         return self._invoke_request()
 
+    @router.http("POST", 'traversers/paths')
+    def advanced_paths(
+        self, sources, targets, step, max_depth, nearest=True, capacity=10000000, limit=10, with_vertex=False
+    ):
+        return self._invoke_request(
+            data=json.dumps(
+                {
+                    "sources": sources,
+                    "targets": targets,
+                    "step": step,
+                    "max_depth": max_depth,
+                    "nearest": nearest,
+                    "capacity": capacity,
+                    "limit": limit,
+                    "with_vertex": with_vertex,
+                }
+            )
+        )
+
+
     @router.http("POST", "traversers/customizedpaths")
     def customized_paths(
         self, sources, steps, sort_by="INCR", with_vertex=True, capacity=-1, limit=-1
