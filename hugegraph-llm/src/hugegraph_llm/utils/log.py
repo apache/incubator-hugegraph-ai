@@ -15,16 +15,48 @@
 
 import logging
 import os
-
+from logging.handlers import RotatingFileHandler
 from pyhugegraph.utils import log
 
-# TODO: unify the log format in the project (include gradle(fastapi) frame)
-# Configure log file path and maximum size
+# Configure log directory and file
 LOG_DIR = "logs"
-if not os.path.exists(LOG_DIR):
-    os.makedirs(LOG_DIR)
+os.makedirs(LOG_DIR, exist_ok=True)
 LOG_FILE = os.path.join(LOG_DIR, "llm-server.log")
 
-# Create a logger
-log = log.init_logger(log_output=LOG_FILE, log_level=logging.DEBUG, logger_name="rag",
-                      max_log_size=20 * 1024 * 1024)
+# Common log format
+LOG_FORMAT = "[%(asctime)s] %(levelname)s %(name)s %(message)s"
+DATE_FORMAT = "%m/%d/%y %H:%M:%S"
+
+# Initialize custom logger
+log = log.init_logger(
+    log_output=LOG_FILE,
+    log_level=logging.DEBUG,  # Adjust level if needed
+    logger_name="rag",
+    max_log_size=20 * 1024 * 1024
+)
+
+# Create a common file handler for all logs
+file_handler = RotatingFileHandler(LOG_FILE, maxBytes=20 * 1024 * 1024, backupCount=5)
+file_handler.setFormatter(logging.Formatter(LOG_FORMAT, DATE_FORMAT))
+
+# Configure Uvicorn (FastAPI) logging
+uvicorn_logger = logging.getLogger("uvicorn")
+uvicorn_logger.setLevel(logging.INFO)
+uvicorn_logger.addHandler(file_handler)
+
+# Configure Gradio logging
+gradio_logger = logging.getLogger("gradio")
+gradio_logger.setLevel(logging.INFO)
+gradio_logger.addHandler(file_handler)
+
+
+# Suppress `watchfiles` logging
+watchfiles_logger = logging.getLogger("watchfiles")
+watchfiles_logger.setLevel(logging.ERROR)  # Only log errors
+
+# Attach file handler to root logger to catch all logs
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+root_logger.addHandler(file_handler)
+
+

@@ -16,7 +16,6 @@
 # under the License.
 
 import argparse
-import logging
 import gradio as gr
 import uvicorn
 from fastapi import FastAPI, Depends, APIRouter
@@ -187,19 +186,12 @@ def create_app():
 
     return app
 
-# def start(host,port):
-#     uvicorn.run("app:create_app", host=host, port=port, reload=False)
-
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="0.0.0.0", help="host")
     parser.add_argument("--port", type=int, default=8001, help="port")
     args = parser.parse_args()
-
-    
-    logging.getLogger("uvicorn.access").propagate = False
 
     uvicorn.run("hugegraph_llm.demo.rag_demo.app:create_app", host=args.host, port=args.port, reload=True)
 
