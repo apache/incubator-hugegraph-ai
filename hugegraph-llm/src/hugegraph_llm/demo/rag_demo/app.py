@@ -16,7 +16,8 @@
 # under the License.
 
 import argparse
-
+import logging
+from watchfiles import run_process
 import gradio as gr
 import uvicorn
 from fastapi import FastAPI, Depends, APIRouter
@@ -155,17 +156,12 @@ def init_rag_ui() -> gr.Interface:
     return hugegraph_llm_ui
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--host", type=str, default="0.0.0.0", help="host")
-    parser.add_argument("--port", type=int, default=8001, help="port")
-    args = parser.parse_args()
-    app = FastAPI(lifespan=lifespan)
 
+def create_app():
+    app = FastAPI(lifespan=lifespan)
     # we don't need to manually check the env now
     # settings.check_env()
     prompt.update_yaml_file()
-
     auth_enabled = admin_settings.enable_login.lower() == "true"
     log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
     api_auth = APIRouter(dependencies=[Depends(authenticate)] if auth_enabled else [])
@@ -184,13 +180,29 @@ if __name__ == "__main__":
     admin_http_api(api_auth, log_stream)
 
     app.include_router(api_auth)
-
+    # Mount Gradio inside FastAPI
     # TODO: support multi-user login when need
     app = gr.mount_gradio_app(
         app, hugegraph_llm, path="/", auth=("rag", admin_settings.user_token) if auth_enabled else None
     )
 
-    # TODO: we can't use reload now due to the config 'app' of uvicorn.run
-    # ❎:f'{__name__}:app' / rag_web_demo:app / hugegraph_llm.demo.rag_web_demo:app
-    # TODO: merge unicorn log to avoid duplicate log output (should be unified/fixed later)
-    uvicorn.run(app, host=args.host, port=args.port, reload=False)
+    return app
+
+# def start(host,port):
+#     uvicorn.run("app:create_app", host=host, port=port, reload=False)
+
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="host")
+    parser.add_argument("--port", type=int, default=8001, help="port")
+    args = parser.parse_args()
+
+    
+    logging.getLogger("uvicorn.access").propagate = False
+
+    uvicorn.run("hugegraph_llm.demo.rag_demo.app:create_app", host=args.host, port=args.port, reload=True)
+
+    
+
