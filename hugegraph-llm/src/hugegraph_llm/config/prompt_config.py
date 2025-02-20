@@ -208,7 +208,10 @@ Assess the user’s query to determine its complexity based on the following cri
 
 ## Gremlin Query Generation (Executed only if the query is not complex):
 # Rules
-You may use the vertex ID directly if it’s provided in the context.
+- You may use the vertex ID directly if it’s provided in the context.
+- If the provided question contains entity names that are very similar to the Vertices IDs, then in the generated Gremlin statement, replace the approximate entities from the original question. 
+For example, if the question includes the name ABC, and the provided VerticesIDs do not contain ABC but only abC, then use abC instead of ABC from the original question when generating the gremlin.
+
 The output format must be as follows:
 ```gremlin
 g.V().limit(10)
