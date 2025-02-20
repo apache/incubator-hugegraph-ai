@@ -58,5 +58,3 @@ watchfiles_logger.setLevel(logging.ERROR)  # Only log errors
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.INFO)
 root_logger.addHandler(file_handler)
-
-

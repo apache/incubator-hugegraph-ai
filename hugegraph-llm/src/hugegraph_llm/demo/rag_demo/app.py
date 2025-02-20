@@ -154,7 +154,6 @@ def init_rag_ui() -> gr.Interface:
     return hugegraph_llm_ui
 
 
-
 def create_app():
     app = FastAPI(lifespan=lifespan)
     # we don't need to manually check the env now
@@ -194,6 +193,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     uvicorn.run("hugegraph_llm.demo.rag_demo.app:create_app", host=args.host, port=args.port, reload=True)
-
-    
-
