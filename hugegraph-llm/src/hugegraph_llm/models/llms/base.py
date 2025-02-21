@@ -48,6 +48,14 @@ class BaseLLM(ABC):
         """Comment"""
 
     @abstractmethod
+    def agenerate_streaming(
+            self,
+            messages: Optional[List[Dict[str, Any]]] = None,
+            prompt: Optional[str] = None,
+    ) -> List[Any]:
+        """Comment"""
+
+    @abstractmethod
     def num_tokens_from_string(
             self,
             string: str,
