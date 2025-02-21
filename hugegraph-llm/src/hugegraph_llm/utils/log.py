@@ -31,7 +31,7 @@ DATE_FORMAT = "%m/%d/%y %H:%M:%S"
 log = log.init_logger(
     log_output=LOG_FILE,
     log_level=logging.DEBUG,  # Adjust level if needed
-    logger_name="rag",
+    logger_name="llm",
     max_log_size=20 * 1024 * 1024
 )
 
