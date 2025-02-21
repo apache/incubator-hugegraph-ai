@@ -151,3 +151,48 @@ class AnswerSynthesize:
         ops = sum([self._raw_answer, self._vector_only_answer, self._graph_only_answer, self._graph_vector_answer])
         context['call_count'] = context.get('call_count', 0) + ops
         return context
+
+    def run_streaming(self, context: Dict[str, Any], prompt_template: Optional[str] = None) -> Dict[str, Any]:
+        if self._llm is None:
+            self._llm = LLMs().get_chat_llm()
+
+        if self._question is None:
+            self._question = context.get("query") or None
+        assert self._question is not None, "No question for synthesizing."
+
+        context_head_str = context.get("synthesize_context_head") or self._context_head or ""
+        context_tail_str = context.get("synthesize_context_tail") or self._context_tail or ""
+
+        if self._context_body is not None:
+            context_str = (f"{context_head_str}\n"
+                           f"{self._context_body}\n"
+                           f"{context_tail_str}".strip("\n"))
+
+            final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
+            response = self._llm.generate_streaming(prompt=final_prompt)
+            return {"answer": response}
+
+        graph_result = context.get("graph_result")
+        if graph_result:
+            graph_context_head = context.get("graph_context_head", "Knowledge from graphdb for the query:\n")
+            graph_result_context = graph_context_head + "\n".join(
+                f"{i + 1}. {res}" for i, res in enumerate(graph_result)
+            )
+        else:
+            graph_result_context = "No related graph data found for current query."
+            log.warning(graph_result_context)
+
+        for content in self.generate_streaming(context_head_str, context_tail_str,
+                                               graph_result_context, prompt_template):
+            yield content
+
+    def generate_streaming(self, context_head_str: str, context_tail_str: str,
+                             graph_result_context: str, prompt_template: Optional[str] = None) -> Dict[str, Any]:
+        context_str = (f"{context_head_str}\n"
+                       f"{graph_result_context}\n"
+                       f"{context_tail_str}".strip("\n"))
+
+        final_prompt = prompt_template.format(context_str=context_str, query_str=self._question)
+
+        for content in self._llm.generate_streaming(prompt=final_prompt):
+            yield content

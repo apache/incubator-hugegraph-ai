@@ -139,33 +139,10 @@ class OpenAIClient(BaseLLM):
         result = ""
         for message in completions:
             # Process the streamed messages or perform any other desired action
-            delta = message["choices"][0]["delta"]
-            if "content" in delta:
-                result += delta["content"]
-            on_token_callback(message)
-        return result
-
-    async def agenerate_streaming(
-        self,
-        messages: Optional[List[Dict[str, Any]]] = None,
-        prompt: Optional[str] = None
-    ) -> str:
-        """Generate a response to the query messages/prompt in streaming mode."""
-        if messages is None:
-            assert prompt is not None, "Messages or prompt must be provided."
-            messages = [{"role": "user", "content": prompt}]
-        completions = await self.aclient.chat.completions.create(
-            model=self.model,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-            messages=messages,
-            stream=True,
-        )
-        async for message in completions:
-            # Process the streamed messages or perform any other desired action
-            delta = message["choices"][0]["delta"]
-            if "content" in delta:
-                yield delta["content"]
+            delta = message.choices[0].delta
+            if delta.content:
+                result += delta.content
+                yield result
 
     def num_tokens_from_string(self, string: str) -> int:
         """Get token count from string."""
