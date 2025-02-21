@@ -192,5 +192,4 @@ class AnswerSynthesize:
 
         final_prompt = prompt_template.format(context_str=context_str, query_str=self._question)
 
-        for content in self._llm.generate_streaming(prompt=final_prompt):
-            yield content
+        yield from self._llm.generate_streaming(prompt=final_prompt)
