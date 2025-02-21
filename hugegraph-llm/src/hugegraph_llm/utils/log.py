@@ -15,46 +15,45 @@
 
 import logging
 import os
-from logging.handlers import RotatingFileHandler
-from pyhugegraph.utils import log
 
-# Configure log directory and file
+from pyhugegraph.utils.log import init_logger
+
+# Configure common settings
 LOG_DIR = "logs"
 os.makedirs(LOG_DIR, exist_ok=True)
 LOG_FILE = os.path.join(LOG_DIR, "llm-server.log")
+INFO = logging.INFO
 
-# Common log format
-LOG_FORMAT = "[%(asctime)s] %(levelname)s %(name)s %(message)s"
-DATE_FORMAT = "%m/%d/%y %H:%M:%S"
+# Initialize the root logger first with Rich handler
+root_logger = init_logger(
+    log_output=LOG_FILE,
+    log_level=INFO,
+    logger_name="root",
+    propagate_logs=True,
+    stdout_logging=True
+)
 
 # Initialize custom logger
-log = log.init_logger(
+log = init_logger(
     log_output=LOG_FILE,
     log_level=logging.DEBUG,  # Adjust level if needed
     logger_name="llm",
-    max_log_size=20 * 1024 * 1024
 )
-
-# Create a common file handler for all logs
-file_handler = RotatingFileHandler(LOG_FILE, maxBytes=20 * 1024 * 1024, backupCount=5)
-file_handler.setFormatter(logging.Formatter(LOG_FORMAT, DATE_FORMAT))
 
 # Configure Uvicorn (FastAPI) logging
 uvicorn_logger = logging.getLogger("uvicorn")
-uvicorn_logger.setLevel(logging.INFO)
-uvicorn_logger.addHandler(file_handler)
+uvicorn_logger.handlers.clear()
+uvicorn_logger.handlers.extend(root_logger.handlers)
+uvicorn_logger.setLevel(INFO)
 
 # Configure Gradio logging
 gradio_logger = logging.getLogger("gradio")
-gradio_logger.setLevel(logging.INFO)
-gradio_logger.addHandler(file_handler)
-
+gradio_logger.handlers.clear()  # remove default handlers
+gradio_logger.handlers.extend(root_logger.handlers)
+gradio_logger.setLevel(INFO)
 
 # Suppress `watchfiles` logging
 watchfiles_logger = logging.getLogger("watchfiles")
-watchfiles_logger.setLevel(logging.ERROR)  # Only log errors
-
-# Attach file handler to root logger to catch all logs
-root_logger = logging.getLogger()
-root_logger.setLevel(logging.INFO)
-root_logger.addHandler(file_handler)
+watchfiles_logger.handlers.clear()
+watchfiles_logger.handlers.extend(root_logger.handlers)
+watchfiles_logger.setLevel(logging.ERROR)
