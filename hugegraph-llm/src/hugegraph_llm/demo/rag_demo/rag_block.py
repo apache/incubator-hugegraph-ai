@@ -42,7 +42,7 @@ def rag_answer(
     answer_prompt: str,
     keywords_extract_prompt: str,
     gremlin_tmpl_num: Optional[int] = 2,
-    gremlin_prompt: Optional[str] = prompt.gremlin_generate_prompt,
+    gremlin_prompt: Optional[str] = None,
 ) -> Tuple:
     """
     Generate an answer using the RAG (Retrieval-Augmented Generation) pipeline.
@@ -52,13 +52,16 @@ def rag_answer(
     4. Synthesize the final answer.
     5. Run the pipeline and return the results.
     """
+
+    gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
     should_update_prompt = (
         prompt.default_question != text
         or prompt.answer_prompt != answer_prompt
         or prompt.keywords_extract_prompt != keywords_extract_prompt
         or prompt.gremlin_generate_prompt != gremlin_prompt
+        or prompt.custom_rerank_info != custom_related_information
     )
-    if should_update_prompt or prompt.custom_rerank_info != custom_related_information:
+    if should_update_prompt:
         prompt.custom_rerank_info = custom_related_information
         prompt.default_question = text
         prompt.answer_prompt = answer_prompt
@@ -109,15 +112,21 @@ def rag_answer(
 
 
 def create_rag_block():
-    # pylint: disable=R0915 (too-many-statements)
+    # pylint: disable=R0915 (too-many-statements),C0301
     gr.Markdown("""## 1. HugeGraph RAG Query""")
     with gr.Row():
         with gr.Column(scale=2):
-            inp = gr.Textbox(value=prompt.default_question, label="Question", show_copy_button=True, lines=2)
-            raw_out = gr.Textbox(label="Basic LLM Answer", show_copy_button=True)
-            vector_only_out = gr.Textbox(label="Vector-only Answer", show_copy_button=True)
-            graph_only_out = gr.Textbox(label="Graph-only Answer", show_copy_button=True)
-            graph_vector_out = gr.Textbox(label="Graph-Vector Answer", show_copy_button=True)
+            inp = gr.Textbox(value=prompt.default_question, label="Question", show_copy_button=True, lines=3)
+
+            # TODO: Only support inline formula now. Should support block formula
+            gr.Markdown("Basic LLM Answer", elem_classes="output-box-label")
+            raw_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
+            gr.Markdown("Vector-only Answer", elem_classes="output-box-label")
+            vector_only_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
+            gr.Markdown("Graph-only Answer", elem_classes="output-box-label")
+            graph_only_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
+            gr.Markdown("Graph-Vector Answer", elem_classes="output-box-label")
+            graph_vector_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
 
             answer_prompt_input = gr.Textbox(
                 value=prompt.answer_prompt, label="Query Prompt", show_copy_button=True, lines=7
