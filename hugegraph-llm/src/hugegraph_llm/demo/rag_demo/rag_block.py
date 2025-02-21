@@ -135,8 +135,7 @@ def rag_answer_streaming(text: str, answer_prompt: str, keywords_extract_prompt:
 
         from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 
-        for content in AnswerSynthesize().run_streaming(context, answer_prompt):
-            yield content
+        yield from AnswerSynthesize().run_streaming(context, answer_prompt)
 
     except ValueError as e:
         log.critical(e)
