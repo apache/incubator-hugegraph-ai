@@ -40,10 +40,11 @@ jobs:
         path: |
           .venv
           ~/.cache/uv
+          ~/.cache/pip
         key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('hugegraph-python-client/requirements.txt') }}
-        #restore-keys: |
-        #  ${{ runner.os }}-venv-${{ matrix.python-version }}-
-        #  ${{ runner.os }}-venv-
+        restore-keys: |
+          ${{ runner.os }}-venv-${{ matrix.python-version }}-
+          ${{ runner.os }}-venv-
 
     # TODO: use pyproject.toml later
     - name: Install dependencies
