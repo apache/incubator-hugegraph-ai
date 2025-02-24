@@ -15,9 +15,10 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
 
     steps:
+    # TODO: upgrade to HugeGraph 1.5.0 (need to update the test cases)
     - name: Prepare HugeGraph Server Environment
       run: |
-        docker run -d --name=graph -p 8080:8080 -e PASSWORD=admin hugegraph/hugegraph:1.5.0
+        docker run -d --name=graph -p 8080:8080 -e PASSWORD=admin hugegraph/hugegraph:1.3.0
         #sleep 5
 
     - uses: actions/checkout@v4
@@ -49,21 +50,20 @@ jobs:
     - name: Install dependencies
       if: steps.cache-deps.outputs.cache-hit != 'true'
       run: |
-        pwd && uv venv
+        uv venv
         source .venv/bin/activate
         uv pip install pytest
         uv pip install -r ./hugegraph-python-client/requirements.txt
 
     - name: Test example
       run: |
-        ls && source .venv/bin/activate
+        ls -al && source .venv/bin/activate
         export PYTHONPATH=$(pwd)/hugegraph-python-client/src
         echo ${PYTHONPATH}
         python hugegraph-python-client/src/pyhugegraph/example/hugegraph_example.py
 
     - name: Test with pytest
       run: |
-        pwd && ls && ls -al ../
-        source ../.venv/bin/activate
+        ls -al ../ && source ../.venv/bin/activate
         pytest
       working-directory: hugegraph-python-client
