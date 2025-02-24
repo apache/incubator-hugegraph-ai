@@ -129,8 +129,8 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
     # TODO: we should provide a better example to reduce the useless information
     text2gql_graph_schema: str = "hugegraph"
 
-    # Extracted from llm_op/keyword_extract.py
-    keywords_extract_prompt: str = """指令：
+    # TODO: we should switch the prompt automatically based on the language
+    keywords_extract_prompt_CN: str = """指令：
 请对以下文本执行以下任务：
 1. 从文本中提取关键词：
   - 最少 0 个，最多 MAX_KEYWORDS 个。
@@ -158,33 +158,46 @@ MAX_KEYWORDS: {max_keywords}
 文本：
 {question}
 """
-    # pylint: disable=C0301
-    # keywords_extract_prompt_EN = """
-    # Instruction:
-    # Please perform the following tasks on the text below:
-    # 1. Extract Keywords and Generate Synonyms from the text:
-    #   - At least 0, at most {max_keywords} keywords.
-    #   - For each keyword, generate its synonyms or possible variant forms.
-    # Requirements:
-    # - Keywords should be meaningful and specific entities; avoid using meaningless or overly broad terms (e.g., “object,” “the,” “he”).
-    # - Prioritize extracting subjects, verbs, and objects; avoid extracting function words or auxiliary words.
-    # - Do not expand into unrelated generalized categories.
-    # Note:
-    # - Only consider semantic synonyms and other words with similar meanings in the given context.
-    # Output Format:
-    # - Output only one line, prefixed with KEYWORDS:, followed by all keywords and synonyms, separated by commas.No spaces or empty characters are allowed in the extracted keywords.
-    # - Format example:
-    # KEYWORDS: keyword1, keyword2, ..., keywordN, synonym1, synonym2, ..., synonymN
-    # Text:
-    # {question}
-    # """
+
+    # Extracted from llm_op/keyword_extract.py
+    keywords_extract_prompt: str = """Instructions:
+    Please perform the following tasks on the text below:
+    1. Extract keywords from the text:
+       - Minimum 0, maximum MAX_KEYWORDS keywords.
+       - Keywords should be complete semantic words or phrases, ensuring information completeness.
+    2. Identify keywords that need rewriting:
+       - From the extracted keywords, identify those that are ambiguous or lack information in the original context.
+    3. Generate synonyms:
+       - For these keywords that need rewriting, generate synonyms or similar terms in the given context.
+       - Replace the corresponding keywords in the original text with generated synonyms.
+       - If no suitable synonym exists for a keyword, keep the original keyword unchanged.
+    
+    Requirements:
+    - Keywords should be meaningful and specific entities; avoid meaningless or overly broad terms, or single-character words (e.g., "items", "actions", "effects", "functions", "the", "he").
+    - Prioritize extracting subjects, verbs, and objects; avoid function words or auxiliary words.
+    - Maintain semantic integrity: Extracted keywords should preserve their semantic and informational completeness in the original context (e.g., "Apple computer" should be extracted as a whole, not split into "Apple" and "computer").
+    - Avoid generalization: Do not expand into unrelated generalized categories.
+    
+    Notes:
+    - Only consider context-relevant synonyms: Only consider semantic synonyms and words with similar meanings in the given context.
+    - Adjust keyword length: If keywords are relatively broad, you can appropriately increase individual keyword length based on context (e.g., "illegal behavior" can be extracted as a single keyword, or as "illegal", but should not be split into "illegal" and "behavior").
+    
+    Output Format:
+    - Output only one line, prefixed with KEYWORDS:, followed by all keywords or corresponding synonyms, separated by commas. No spaces or empty characters are allowed in the extracted keywords.
+    - Format example:
+    KEYWORDS:keyword1,keyword2,...,keywordN
+    
+    MAX_KEYWORDS: {max_keywords}
+    Text:
+    {question}
+    """
 
     gremlin_generate_prompt = """
 You are an expert in graph query language (Gremlin). Your role is to understand the schema of the graph, recognize the intent behind user queries, and generate accurate Gremlin code based on the given instructions.
 
 ### Tasks
 ## Complex Query Detection:
-Assess the user’s query to determine its complexity based on the following criteria:
+Assess the user's query to determine its complexity based on the following criteria:
 
 1. Multiple Reasoning Steps: The query requires several logical steps to arrive at the final result.
 2. Conditional Logic: The query includes multiple conditions or filters that depend on each other.
@@ -209,7 +222,7 @@ Assess the user’s query to determine its complexity based on the following cri
 ## Gremlin Query Generation (Executed only if the query is not complex):
 # Rules
 - You may use the vertex ID directly if it’s provided in the context.
-- If the provided question contains entity names that are very similar to the Vertices IDs, then in the generated Gremlin statement, replace the approximate entities from the original question. 
+- If the provided question contains entity names that are very similar to the Vertices IDs, then in the generated Gremlin statement, replace the approximate entities from the original question.
 For example, if the question includes the name ABC, and the provided VerticesIDs do not contain ABC but only abC, then use abC instead of ABC from the original question when generating the gremlin.
 
 The output format must be as follows:
@@ -230,9 +243,9 @@ The generated Gremlin is:
 """
 
     doc_input_text: str = """Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with since 2010.
-James, in his professional life, works as a journalist. Additionally, Sarah is the proud owner of the website 
-www.sarahsplace.com, while James manages his own webpage, though the specific URL is not mentioned here. 
-These two individuals, Sarah and James, have not only forged a strong personal bond as roommates but have also 
-carved out their distinctive digital presence through their respective webpages, showcasing their varied interests 
+James, in his professional life, works as a journalist. Additionally, Sarah is the proud owner of the website
+www.sarahsplace.com, while James manages his own webpage, though the specific URL is not mentioned here.
+These two individuals, Sarah and James, have not only forged a strong personal bond as roommates but have also
+carved out their distinctive digital presence through their respective webpages, showcasing their varied interests
 and experiences.
 """
