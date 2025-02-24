@@ -36,7 +36,10 @@ jobs:
           .venv
           ~/.cache/uv
           ~/.cache/pip
-        key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
+        key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt', '**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-venv-${{ matrix.python-version }}-
+          ${{ runner.os }}-venv-
 
     - name: Install dependencies
       if: steps.cache-deps.outputs.cache-hit != 'true'
@@ -44,9 +47,9 @@ jobs:
         uv venv
         source .venv/bin/activate
         uv pip install pylint pytest
-        uv pip install -e ./hugegraph-llm
-        uv pip install -e ./hugegraph-ml
-        uv pip install -e ./hugegraph-python-client
+        uv pip install -r ./hugegraph-llm/requirements.txt
+        uv pip install -r ./hugegraph-ml/requirements.txt
+        uv pip install -r ./hugegraph-python-client/requirements.txt
 
     - name: Check DGL version
       run: |
