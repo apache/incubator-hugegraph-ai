@@ -49,21 +49,21 @@ jobs:
     - name: Install dependencies
       if: steps.cache-deps.outputs.cache-hit != 'true'
       run: |
-        uv venv
+        pwd && uv venv
         source .venv/bin/activate
         uv pip install pytest
         uv pip install -r ./hugegraph-python-client/requirements.txt
 
     - name: Test example
       run: |
-        ls & source .venv/bin/activate
+        ls && source .venv/bin/activate
         export PYTHONPATH=$(pwd)/hugegraph-python-client/src
         echo ${PYTHONPATH}
         python hugegraph-python-client/src/pyhugegraph/example/hugegraph_example.py
 
     - name: Test with pytest
       run: |
-        cd ../ & ls
+        cd ../../ && ls
         source .venv/bin/activate
         pytest
       working-directory: hugegraph-python-client
