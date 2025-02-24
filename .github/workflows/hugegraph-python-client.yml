@@ -18,7 +18,6 @@ jobs:
     - name: Prepare HugeGraph Server Environment
       run: |
         docker run -d --name=graph -p 8080:8080 -e PASSWORD=admin hugegraph/hugegraph:1.5.0
-        #sleep 5
 
     - uses: actions/checkout@v4
 
@@ -41,9 +40,6 @@ jobs:
           ~/.cache/uv
           ~/.cache/pip
         key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('hugegraph-python-client/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-venv-${{ matrix.python-version }}-
-          ${{ runner.os }}-venv-
 
     # TODO: use pyproject.toml later
     - name: Install dependencies
@@ -63,6 +59,7 @@ jobs:
 
     - name: Test with pytest
       run: |
-        cd ../ & ls
+        cd ../
+        source .venv/bin/activate
         pytest
       working-directory: hugegraph-python-client
