@@ -64,6 +64,6 @@ jobs:
 
     - name: Test with pytest
       run: |
-        source .venv/bin/activate
+        pwd && ls
         pytest
       working-directory: hugegraph-python-client
