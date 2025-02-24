@@ -18,7 +18,7 @@
 
 from hugegraph_llm.config.models.base_prompt_config import BasePromptConfig
 
-
+# pylint: disable=C0301
 class PromptConfig(BasePromptConfig):
     # Data is detached from llm_op/answer_synthesize.py
     answer_prompt: str = """You are an expert in knowledge graphs and natural language processing.
