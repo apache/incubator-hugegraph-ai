@@ -47,6 +47,7 @@ jobs:
         uv venv
         source .venv/bin/activate
         uv pip install pylint pytest
+        # TODO: use pyproject.toml later (unify all projects)
         uv pip install -r ./hugegraph-llm/requirements.txt
         uv pip install -r ./hugegraph-ml/requirements.txt
         uv pip install -r ./hugegraph-python-client/requirements.txt
