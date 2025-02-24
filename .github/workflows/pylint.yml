@@ -17,21 +17,43 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
     - name: Setup Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-        cache: 'pip'
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Cache dependencies
+      id: cache-deps
+      uses: actions/cache@v4
+      with:
+        path: |
+          .venv
+          ~/.cache/uv
+          ~/.cache/pip
+        key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
 
     - name: Install dependencies
+      if: steps.cache-deps.outputs.cache-hit != 'true'
       run: |
-        pip install pylint pytest
-        pip install -r ./hugegraph-llm/requirements.txt
-        pip install -r ./hugegraph-ml/requirements.txt
-        pip install -r ./hugegraph-python-client/requirements.txt
+        uv venv
+        source .venv/bin/activate
+        uv pip install pylint pytest
+        uv pip install -e ./hugegraph-llm
+        uv pip install -e ./hugegraph-ml
+        uv pip install -e ./hugegraph-python-client
+
     - name: Check DGL version
       run: |
+        source .venv/bin/activate
         python -c "import dgl; print(dgl.__version__)"
+
     - name: Analysing the code with pylint
       run: |
+        source .venv/bin/activate
         bash ./style/code_format_and_analysis.sh -p
