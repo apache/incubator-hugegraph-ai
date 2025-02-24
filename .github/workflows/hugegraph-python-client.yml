@@ -59,11 +59,11 @@ jobs:
         ls && source .venv/bin/activate
         export PYTHONPATH=$(pwd)/hugegraph-python-client/src
         echo ${PYTHONPATH}
-        python hugegraph-python-client/src/pyhugegraph/example/hugegraph_example.py
+        python hugegraph-python-client/src/pyhugegraph/example/hugegraph_example.py && cd -
 
     - name: Test with pytest
       run: |
-        cd ../../ && ls
+        pwd && ls
         source .venv/bin/activate
         pytest
       working-directory: hugegraph-python-client
