@@ -58,7 +58,7 @@ class LiteLLMEmbedding(BaseEmbedding):
                 api_base=self.api_base,
             )
             log.info("Token usage: %s", response.usage)
-            return response.data[0].embedding
+            return response.data[0]["embedding"]
         except Exception as e:
             log.error("Error in LiteLLM embedding call: %s", e)
             # Return zero vector as fallback
@@ -74,7 +74,7 @@ class LiteLLMEmbedding(BaseEmbedding):
                 api_base=self.api_base,
             )
             log.info("Token usage: %s", response.usage)
-            return [data.embedding for data in response.data]
+            return [data["embedding"] for data in response.data]
         except Exception as e:
             log.error("Error in LiteLLM batch embedding call: %s", e)
             # Return zero vectors as fallback
@@ -90,7 +90,7 @@ class LiteLLMEmbedding(BaseEmbedding):
                 api_base=self.api_base,
             )
             log.info("Token usage: %s", response.usage)
-            return response.data[0].embedding
+            return response.data[0]["embedding"]
         except Exception as e:
             log.error("Error in async LiteLLM embedding call: %s", e)
             # Return zero vector as fallback
