@@ -218,7 +218,7 @@ def create_configs_block() -> list:
     with gr.Accordion("2. Set up the LLM.", open=False):
         gr.Markdown("> Tips: the openai option also support openai style api from other providers.")
         with gr.Tab(label='chat'):
-            chat_llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama/local"],
+            chat_llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama/local", "litellm"],
                                             value=getattr(llm_settings, "chat_llm_type"), label="type")
             apply_llm_config_with_chat_op = partial(apply_llm_config, "chat")
 
@@ -255,7 +255,7 @@ def create_configs_block() -> list:
                 llm_config_button.click(apply_llm_config_with_chat_op, inputs=llm_config_input)
 
         with gr.Tab(label='mini_tasks'):
-            extract_llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama/local"],
+            extract_llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama/local", "litellm"],
                                                value=getattr(llm_settings, "extract_llm_type"), label="type")
             apply_llm_config_with_extract_op = partial(apply_llm_config, "extract")
 
@@ -291,7 +291,7 @@ def create_configs_block() -> list:
                 llm_config_button = gr.Button("Apply configuration")
                 llm_config_button.click(apply_llm_config_with_extract_op, inputs=llm_config_input)
         with gr.Tab(label='text2gql'):
-            text2gql_llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama/local"],
+            text2gql_llm_dropdown = gr.Dropdown(choices=["openai", "qianfan_wenxin", "ollama/local", "litellm"],
                                                 value=getattr(llm_settings, "text2gql_llm_type"), label="type")
             apply_llm_config_with_text2gql_op = partial(apply_llm_config, "text2gql")
 
@@ -329,7 +329,7 @@ def create_configs_block() -> list:
 
     with gr.Accordion("3. Set up the Embedding.", open=False):
         embedding_dropdown = gr.Dropdown(
-            choices=["openai", "qianfan_wenxin", "ollama/local"], value=llm_settings.embedding_type, label="Embedding"
+            choices=["openai", "qianfan_wenxin", "ollama/local", "litellm"], value=llm_settings.embedding_type, label="Embedding"
         )
 
         @gr.render(inputs=[embedding_dropdown])
