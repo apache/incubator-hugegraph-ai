@@ -1,3 +1,5 @@
 src/hugegraph_llm/resources/demo/questions_answers.xlsx
 src/hugegraph_llm/resources/demo/questions.xlsx
 src/hugegraph_llm/resources/backup-graph-data-4020/
+
+uv.lock
