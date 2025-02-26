@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import List, Optional
+from typing import List, Optional, Union
 import numpy as np
 
 from litellm import embedding, RateLimitError, APIError, APIConnectionError, aembedding
@@ -59,9 +59,17 @@ class LiteLLMEmbedding(BaseEmbedding):
             )
             log.info("Token usage: %s", response.usage)
             return response.data[0]["embedding"]
-        except Exception as e:
+        except RateLimitError as e:
             log.error("Error in LiteLLM embedding call: %s", e)
-            # Return zero vector as fallback
+            return [0.0] * 1536  # Most common embedding dimension
+        except APIConnectionError as e:
+            log.error("Error in LiteLLM embedding call: %s", e)
+            return [0.0] * 1536  # Most common embedding dimension
+        except APIError as e:
+            log.error("Error in LiteLLM embedding call: %s", e)
+            return [0.0] * 1536  # Most common embedding dimension
+        except Exception as e:
+            log.error("Unexpected error: %s", e)
             return [0.0] * 1536  # Most common embedding dimension
 
     def get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
@@ -75,9 +83,17 @@ class LiteLLMEmbedding(BaseEmbedding):
             )
             log.info("Token usage: %s", response.usage)
             return [data["embedding"] for data in response.data]
-        except Exception as e:
+        except RateLimitError as e:
             log.error("Error in LiteLLM batch embedding call: %s", e)
-            # Return zero vectors as fallback
+            return [[0.0] * 1536 for _ in texts]  # Most common embedding dimension
+        except APIConnectionError as e:
+            log.error("Error in LiteLLM batch embedding call: %s", e)
+            return [[0.0] * 1536 for _ in texts]  # Most common embedding dimension
+        except APIError as e:
+            log.error("Error in LiteLLM batch embedding call: %s", e)
+            return [[0.0] * 1536 for _ in texts]  # Most common embedding dimension
+        except Exception as e:
+            log.error("Unexpected error: %s", e)
             return [[0.0] * 1536 for _ in texts]  # Most common embedding dimension
 
     async def async_get_text_embedding(self, text: str) -> List[float]:
@@ -91,18 +107,15 @@ class LiteLLMEmbedding(BaseEmbedding):
             )
             log.info("Token usage: %s", response.usage)
             return response.data[0]["embedding"]
-        except Exception as e:
+        except RateLimitError as e:
             log.error("Error in async LiteLLM embedding call: %s", e)
-            # Return zero vector as fallback
             return [0.0] * 1536  # Most common embedding dimension
-
-    def similarity(self, embedding1: List[float], embedding2: List[float]) -> float:
-        """Calculate cosine similarity between two embeddings."""
-        # Convert to numpy arrays
-        emb1 = np.array(embedding1)
-        emb2 = np.array(embedding2)
-        # Handle zero vectors
-        if np.all(emb1 == 0) or np.all(emb2 == 0):
-            return 0.0
-        # Calculate cosine similarity
-        return float(np.dot(emb1, emb2) / (np.linalg.norm(emb1) * np.linalg.norm(emb2)))
+        except APIConnectionError as e:
+            log.error("Error in async LiteLLM embedding call: %s", e)
+            return [0.0] * 1536  # Most common embedding dimension
+        except APIError as e:
+            log.error("Error in async LiteLLM embedding call: %s", e)
+            return [0.0] * 1536  # Most common embedding dimension
+        except Exception as e:
+            log.error("Unexpected error: %s", e)
+            return [0.0] * 1536  # Most common embedding dimension
