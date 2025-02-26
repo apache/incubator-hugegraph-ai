@@ -68,11 +68,11 @@ graph systems and large language models.
     python -m hugegraph_llm.config.generate --update
     ```
     If you use litellm for LLM provider, please refer to [litellm.ai](https://docs.litellm.ai/docs/providers) 
-1. (__Optional__) You could use 
+7. (__Optional__) You could use 
     [hugegraph-hubble](https://hugegraph.apache.org/docs/quickstart/hugegraph-hubble/#21-use-docker-convenient-for-testdev) 
     to visit the graph data, could run it via [Docker/Docker-Compose](https://hub.docker.com/r/hugegraph/hubble) 
     for guidance. (Hubble is a graph-analysis dashboard include data loading/schema management/graph traverser/display).
-2. (__Optional__) offline download NLTK stopwords  
+8. (__Optional__) offline download NLTK stopwords  
     ```bash
     python ./hugegraph_llm/operators/common_op/nltk_helper.py
     ```
