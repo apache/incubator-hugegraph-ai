@@ -41,7 +41,7 @@ def test_litellm_embedding(api_key, api_base, model_name) -> int:
         response = llm_client.get_text_embedding("test")
         assert len(response) > 0
     except Exception as e:
-        raise gr.Error("Error in litellm embedding call: %s" % e) from e
+        raise gr.Error(f"Error in litellm embedding call: {e}") from e
     return 200
 
 def test_litellm_chat(api_key, api_base, model_name, max_tokens) -> int:
@@ -55,7 +55,7 @@ def test_litellm_chat(api_key, api_base, model_name, max_tokens) -> int:
         response = llm_client.generate(messages=[{"role": "user", "content": "hi"}])
         assert len(response) > 0
     except Exception as e:
-        raise gr.Error("Error in litellm chat call: %s" % e) from e
+        raise gr.Error(f"Error in litellm chat call: {e}") from e
     return 200
 
 def test_api_connection(url, method="GET", headers=None, params=None, body=None, auth=None, origin_call=None) -> int:
