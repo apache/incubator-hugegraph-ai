@@ -192,6 +192,22 @@ def apply_llm_config(current_llm_config, arg1, arg2, arg3, arg4, origin_call=Non
         setattr(llm_settings, f"ollama_{current_llm_config}_language_model", arg3)
         status_code = test_api_connection(f"http://{arg1}:{arg2}", origin_call=origin_call)
 
+    elif llm_option == "litellm":
+        setattr(llm_settings, f"litellm_{current_llm_config}_api_key", arg1)
+        setattr(llm_settings, f"litellm_{current_llm_config}_api_base", arg2)
+        setattr(llm_settings, f"litellm_{current_llm_config}_language_model", arg3)
+        setattr(llm_settings, f"litellm_{current_llm_config}_tokens", int(arg4))
+
+        test_url = getattr(llm_settings, f"litellm_{current_llm_config}_api_base") + "/chat/completions"
+        log.debug("Type of litellm %s max_token is %s", current_llm_config, type(arg4))
+        data = {
+            "model": arg3,
+            "temperature": 0.0,
+            "messages": [{"role": "user", "content": "test"}],
+        }
+        headers = {"Authorization": f"Bearer {arg1}"}
+        status_code = test_api_connection(test_url, method="POST", headers=headers, body=data, origin_call=origin_call)
+
     gr.Info("Configured!")
     llm_settings.update_env()
     return status_code
@@ -249,6 +265,13 @@ def create_configs_block() -> list:
                         gr.Textbox(value=getattr(llm_settings, "qianfan_chat_language_model"), label="model_name"),
                         gr.Textbox(value="", visible=False),
                     ]
+                elif llm_type == "litellm":
+                    llm_config_input = [
+                        gr.Textbox(value=getattr(llm_settings, "litellm_chat_api_key"), label="api_key", type="password"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_chat_api_base"), label="api_base"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_chat_language_model"), label="model_name"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_chat_tokens"), label="max_token"),
+                    ]
                 else:
                     llm_config_input = [gr.Textbox(value="", visible=False) for _ in range(4)]
                 llm_config_button = gr.Button("Apply configuration")
@@ -286,6 +309,13 @@ def create_configs_block() -> list:
                         gr.Textbox(value=getattr(llm_settings, "qianfan_extract_language_model"), label="model_name"),
                         gr.Textbox(value="", visible=False),
                     ]
+                elif llm_type == "litellm":
+                    llm_config_input = [
+                        gr.Textbox(value=getattr(llm_settings, "litellm_extract_api_key"), label="api_key", type="password"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_extract_api_base"), label="api_base"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_extract_language_model"), label="model_name"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_extract_tokens"), label="max_token"),
+                    ]
                 else:
                     llm_config_input = [gr.Textbox(value="", visible=False) for _ in range(4)]
                 llm_config_button = gr.Button("Apply configuration")
@@ -322,6 +352,13 @@ def create_configs_block() -> list:
                         gr.Textbox(value=getattr(llm_settings, "qianfan_text2gql_language_model"), label="model_name"),
                         gr.Textbox(value="", visible=False),
                     ]
+                elif llm_type == "litellm":
+                    llm_config_input = [
+                        gr.Textbox(value=getattr(llm_settings, "litellm_text2gql_api_key"), label="api_key", type="password"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_text2gql_api_base"), label="api_base"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_text2gql_language_model"), label="model_name"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_text2gql_tokens"), label="max_token"),
+                    ]
                 else:
                     llm_config_input = [gr.Textbox(value="", visible=False) for _ in range(4)]
                 llm_config_button = gr.Button("Apply configuration")
@@ -356,6 +393,13 @@ def create_configs_block() -> list:
                         gr.Textbox(value=llm_settings.qianfan_embedding_secret_key, label="secret_key",
                                    type="password"),
                         gr.Textbox(value=llm_settings.qianfan_embedding_model, label="model_name"),
+                    ]
+            elif embedding_type == "litellm":
+                with gr.Row():
+                    embedding_config_input = [
+                        gr.Textbox(value=getattr(llm_settings, "litellm_embedding_api_key"), label="api_key", type="password"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_embedding_api_base"), label="api_base"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_embedding_model"), label="model_name"),
                     ]
             else:
                 embedding_config_input = [
