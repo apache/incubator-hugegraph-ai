@@ -24,10 +24,39 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from hugegraph_llm.config import huge_settings, llm_settings
+from hugegraph_llm.models.embeddings.litellm import LiteLLMEmbedding
+from hugegraph_llm.models.llms.litellm import LiteLLMClient
 from hugegraph_llm.utils.log import log
 
 current_llm = "chat"
 
+
+def test_litellm_embedding(api_key, api_base, model_name) -> int:
+    llm_client = LiteLLMEmbedding(
+            api_key = api_key,
+            api_base = api_base,
+            model_name = model_name,
+        )
+    try:
+        response = llm_client.get_text_embedding("test")
+        assert len(response) > 0
+    except Exception as e:
+        raise gr.Error("Error in litellm embedding call: %s" % e) from e
+    return 200
+
+def test_litellm_chat(api_key, api_base, model_name, max_tokens) -> int:
+    llm_client = LiteLLMClient(
+            api_key = api_key,
+            api_base = api_base,
+            model_name = model_name,
+            max_tokens = max_tokens,
+        )
+    try:
+        response = llm_client.generate(messages=[{"role": "user", "content": "hi"}])
+        assert len(response) > 0
+    except Exception as e:
+        raise gr.Error("Error in litellm chat call: %s" % e) from e
+    return 200
 
 def test_api_connection(url, method="GET", headers=None, params=None, body=None, auth=None, origin_call=None) -> int:
     # TODO: use fastapi.request / starlette instead?
@@ -97,6 +126,11 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
         llm_settings.ollama_embedding_port = int(arg2)
         llm_settings.ollama_embedding_model = arg3
         status_code = test_api_connection(f"http://{arg1}:{arg2}", origin_call=origin_call)
+    elif embedding_option == "litellm":
+        llm_settings.litellm_embedding_api_key = arg1
+        llm_settings.litellm_embedding_api_base = arg2
+        llm_settings.litellm_embedding_model = arg3
+        status_code = test_litellm_embedding(arg1, arg2, arg3)
     llm_settings.update_env()
     gr.Info("Configured!")
     return status_code
@@ -198,15 +232,7 @@ def apply_llm_config(current_llm_config, arg1, arg2, arg3, arg4, origin_call=Non
         setattr(llm_settings, f"litellm_{current_llm_config}_language_model", arg3)
         setattr(llm_settings, f"litellm_{current_llm_config}_tokens", int(arg4))
 
-        test_url = getattr(llm_settings, f"litellm_{current_llm_config}_api_base") + "/chat/completions"
-        log.debug("Type of litellm %s max_token is %s", current_llm_config, type(arg4))
-        data = {
-            "model": arg3,
-            "temperature": 0.0,
-            "messages": [{"role": "user", "content": "test"}],
-        }
-        headers = {"Authorization": f"Bearer {arg1}"}
-        status_code = test_api_connection(test_url, method="POST", headers=headers, body=data, origin_call=origin_call)
+        status_code = test_litellm_chat(arg1, arg2, arg3, arg4)
 
     gr.Info("Configured!")
     llm_settings.update_env()
@@ -268,8 +294,8 @@ def create_configs_block() -> list:
                 elif llm_type == "litellm":
                     llm_config_input = [
                         gr.Textbox(value=getattr(llm_settings, "litellm_chat_api_key"), label="api_key", type="password"),
-                        gr.Textbox(value=getattr(llm_settings, "litellm_chat_api_base"), label="api_base"),
-                        gr.Textbox(value=getattr(llm_settings, "litellm_chat_language_model"), label="model_name"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_chat_api_base"), label="api_base", info = "If you want to use the default api_base, please keep it blank"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_chat_language_model"), label="model_name", info="Please refer to https://docs.litellm.ai/docs/providers"),
                         gr.Textbox(value=getattr(llm_settings, "litellm_chat_tokens"), label="max_token"),
                     ]
                 else:
@@ -312,8 +338,8 @@ def create_configs_block() -> list:
                 elif llm_type == "litellm":
                     llm_config_input = [
                         gr.Textbox(value=getattr(llm_settings, "litellm_extract_api_key"), label="api_key", type="password"),
-                        gr.Textbox(value=getattr(llm_settings, "litellm_extract_api_base"), label="api_base"),
-                        gr.Textbox(value=getattr(llm_settings, "litellm_extract_language_model"), label="model_name"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_extract_api_base"), label="api_base", info = "If you want to use the default api_base, please keep it blank"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_extract_language_model"), label="model_name", info="Please refer to https://docs.litellm.ai/docs/providers"),
                         gr.Textbox(value=getattr(llm_settings, "litellm_extract_tokens"), label="max_token"),
                     ]
                 else:
@@ -355,8 +381,8 @@ def create_configs_block() -> list:
                 elif llm_type == "litellm":
                     llm_config_input = [
                         gr.Textbox(value=getattr(llm_settings, "litellm_text2gql_api_key"), label="api_key", type="password"),
-                        gr.Textbox(value=getattr(llm_settings, "litellm_text2gql_api_base"), label="api_base"),
-                        gr.Textbox(value=getattr(llm_settings, "litellm_text2gql_language_model"), label="model_name"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_text2gql_api_base"), label="api_base",  info = "If you want to use the default api_base, please keep it blank"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_text2gql_language_model"), label="model_name", info = "Please refer to https://docs.litellm.ai/docs/providers"),
                         gr.Textbox(value=getattr(llm_settings, "litellm_text2gql_tokens"), label="max_token"),
                     ]
                 else:
@@ -398,8 +424,8 @@ def create_configs_block() -> list:
                 with gr.Row():
                     embedding_config_input = [
                         gr.Textbox(value=getattr(llm_settings, "litellm_embedding_api_key"), label="api_key", type="password"),
-                        gr.Textbox(value=getattr(llm_settings, "litellm_embedding_api_base"), label="api_base"),
-                        gr.Textbox(value=getattr(llm_settings, "litellm_embedding_model"), label="model_name"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_embedding_api_base"), label="api_base", info = "If you want to use the default api_base, please keep it blank"),
+                        gr.Textbox(value=getattr(llm_settings, "litellm_embedding_model"), label="model_name", info = "Please refer to https://docs.litellm.ai/docs/embedding/supported_embedding"),
                     ]
             else:
                 embedding_config_input = [

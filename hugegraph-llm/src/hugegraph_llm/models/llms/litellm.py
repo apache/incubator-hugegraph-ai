@@ -64,7 +64,6 @@ class LiteLLMClient(BaseLLM):
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
         try:
-            print("base_url:" + self.api_base)
             response = completion(
                 model=self.model,
                 messages=messages,
