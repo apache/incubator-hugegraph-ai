@@ -15,8 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import List, Optional, Union
-import numpy as np
+from typing import List, Optional, Dict, Any, Tuple
 
 from litellm import embedding, RateLimitError, APIError, APIConnectionError, aembedding
 from tenacity import (
@@ -59,18 +58,9 @@ class LiteLLMEmbedding(BaseEmbedding):
             )
             log.info("Token usage: %s", response.usage)
             return response.data[0]["embedding"]
-        except RateLimitError as e:
+        except (RateLimitError, APIConnectionError, APIError) as e:
             log.error("Error in LiteLLM embedding call: %s", e)
-            return [0.0] * 1536  # Most common embedding dimension
-        except APIConnectionError as e:
-            log.error("Error in LiteLLM embedding call: %s", e)
-            return [0.0] * 1536  # Most common embedding dimension
-        except APIError as e:
-            log.error("Error in LiteLLM embedding call: %s", e)
-            return [0.0] * 1536  # Most common embedding dimension
-        except Exception as e:
-            log.error("Unexpected error: %s", e)
-            return [0.0] * 1536  # Most common embedding dimension
+            raise
 
     def get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Get embeddings for multiple texts."""
@@ -83,18 +73,9 @@ class LiteLLMEmbedding(BaseEmbedding):
             )
             log.info("Token usage: %s", response.usage)
             return [data["embedding"] for data in response.data]
-        except RateLimitError as e:
+        except (RateLimitError, APIConnectionError, APIError) as e:
             log.error("Error in LiteLLM batch embedding call: %s", e)
-            return [[0.0] * 1536 for _ in texts]  # Most common embedding dimension
-        except APIConnectionError as e:
-            log.error("Error in LiteLLM batch embedding call: %s", e)
-            return [[0.0] * 1536 for _ in texts]  # Most common embedding dimension
-        except APIError as e:
-            log.error("Error in LiteLLM batch embedding call: %s", e)
-            return [[0.0] * 1536 for _ in texts]  # Most common embedding dimension
-        except Exception as e:
-            log.error("Unexpected error: %s", e)
-            return [[0.0] * 1536 for _ in texts]  # Most common embedding dimension
+            raise
 
     async def async_get_text_embedding(self, text: str) -> List[float]:
         """Get embedding for a single text asynchronously."""
@@ -107,15 +88,6 @@ class LiteLLMEmbedding(BaseEmbedding):
             )
             log.info("Token usage: %s", response.usage)
             return response.data[0]["embedding"]
-        except RateLimitError as e:
+        except (RateLimitError, APIConnectionError, APIError) as e:
             log.error("Error in async LiteLLM embedding call: %s", e)
-            return [0.0] * 1536  # Most common embedding dimension
-        except APIConnectionError as e:
-            log.error("Error in async LiteLLM embedding call: %s", e)
-            return [0.0] * 1536  # Most common embedding dimension
-        except APIError as e:
-            log.error("Error in async LiteLLM embedding call: %s", e)
-            return [0.0] * 1536  # Most common embedding dimension
-        except Exception as e:
-            log.error("Unexpected error: %s", e)
-            return [0.0] * 1536  # Most common embedding dimension
+            raise

@@ -145,7 +145,7 @@ class LiteLLMClient(BaseLLM):
             encoding = tiktoken.encoding_for_model(self.model)
             num_tokens = len(encoding.encode(string))
             return num_tokens
-        except (ValueError, TypeError) as e:
+        except (ValueError, TypeError) as _:  # Handle unused variable
             # Fallback for models not supported by tiktoken
             # Rough estimate: 1 token ≈ 4 characters
             return len(string) // 4
@@ -155,5 +155,5 @@ class LiteLLMClient(BaseLLM):
         return 4096  # Default to 4096 if model not found
 
     def get_llm_type(self) -> str:
-        return "litellm" 
+        return "litellm"
     
