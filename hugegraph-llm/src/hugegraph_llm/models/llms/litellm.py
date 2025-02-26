@@ -75,7 +75,7 @@ class LiteLLMClient(BaseLLM):
             )
             log.info("Token usage: %s", response.usage)
             return response.choices[0].message.content
-        except Exception as e:
+        except (RateLimitError, BudgetExceededError, APIError) as e:
             log.error("Error in LiteLLM call: %s", e)
             return f"Error: {str(e)}"
 
@@ -104,7 +104,7 @@ class LiteLLMClient(BaseLLM):
             )
             log.info("Token usage: %s", response.usage)
             return response.choices[0].message.content
-        except Exception as e:
+        except (RateLimitError, BudgetExceededError, APIError) as e:
             log.error("Error in async LiteLLM call: %s", e)
             return f"Error: {str(e)}"
 
@@ -135,7 +135,7 @@ class LiteLLMClient(BaseLLM):
                 if on_token_callback:
                     on_token_callback(chunk)
             return result
-        except Exception as e:
+        except (RateLimitError, BudgetExceededError, APIError) as e:
             log.error("Error in streaming LiteLLM call: %s", e)
             return f"Error: {str(e)}"
 
@@ -156,3 +156,4 @@ class LiteLLMClient(BaseLLM):
 
     def get_llm_type(self) -> str:
         return "litellm" 
+    

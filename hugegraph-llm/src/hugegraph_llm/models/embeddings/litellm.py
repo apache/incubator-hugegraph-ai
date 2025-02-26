@@ -105,4 +105,4 @@ class LiteLLMEmbedding(BaseEmbedding):
         if np.all(emb1 == 0) or np.all(emb2 == 0):
             return 0.0
         # Calculate cosine similarity
-        return float(np.dot(emb1, emb2) / (np.linalg.norm(emb1) * np.linalg.norm(emb2))) 
+        return float(np.dot(emb1, emb2) / (np.linalg.norm(emb1) * np.linalg.norm(emb2)))
