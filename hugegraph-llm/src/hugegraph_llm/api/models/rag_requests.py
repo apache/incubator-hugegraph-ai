@@ -43,6 +43,7 @@ class RAGRequest(BaseModel):
         prompt.gremlin_generate_prompt,
         description="Prompt for the Text2Gremlin query.",
     )
+    stream: bool = Query(False, description="Enable streaming response")
 
 
 # TODO: import the default value of prompt.* dynamically
@@ -58,6 +59,7 @@ class GraphRAGRequest(BaseModel):
         prompt.gremlin_generate_prompt,
         description="Prompt for the Text2Gremlin query.",
     )
+    stream: bool = Query(False, description="Enable streaming response")
 
 
 class GraphConfigRequest(BaseModel):
