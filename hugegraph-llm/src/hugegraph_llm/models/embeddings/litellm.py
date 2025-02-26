@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import List, Optional, Dict, Any, Tuple
+from typing import List, Optional
 
 from litellm import embedding, RateLimitError, APIError, APIConnectionError, aembedding
 from tenacity import (
