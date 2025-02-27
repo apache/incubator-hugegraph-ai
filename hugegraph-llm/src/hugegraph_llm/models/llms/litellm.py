@@ -20,7 +20,6 @@ from typing import Callable, List, Optional, Dict, Any
 import tiktoken
 from litellm import completion, acompletion
 from litellm.exceptions import RateLimitError, BudgetExceededError, APIError
-
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -39,7 +38,7 @@ class LiteLLMClient(BaseLLM):
         self,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
-        model_name: str = "gpt-4",  # Can be any model supported by LiteLLM
+        model_name: str = "openai/gpt-4o",  # Can be any model supported by LiteLLM
         max_tokens: int = 4096,
         temperature: float = 0.0,
     ) -> None:
@@ -155,4 +154,3 @@ class LiteLLMClient(BaseLLM):
 
     def get_llm_type(self) -> str:
         return "litellm"
-    
