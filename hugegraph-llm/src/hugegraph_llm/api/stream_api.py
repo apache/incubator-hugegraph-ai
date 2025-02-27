@@ -55,7 +55,8 @@ async def stream_http_api(
                         near_neighbor_first=req.near_neighbor_first,
                         custom_related_information=req.custom_priority_info,
                         answer_prompt=req.answer_prompt or prompt.answer_prompt,
-                        keywords_extract_prompt=req.keywords_extract_prompt or prompt.keywords_extract_prompt,
+                        keywords_extract_prompt=req.keywords_extract_prompt
+                                                or prompt.keywords_extract_prompt,
                         gremlin_tmpl_num=req.gremlin_tmpl_num,
                         gremlin_prompt=req.gremlin_prompt or prompt.gremlin_generate_prompt,
                 ):
@@ -96,7 +97,8 @@ async def stream_http_api(
                         rerank_method=req.rerank_method,
                         near_neighbor_first=req.near_neighbor_first,
                         custom_related_information=req.custom_priority_info,
-                        gremlin_prompt=req.gremlin_prompt or prompt.gremlin_generate_prompt,
+                        gremlin_prompt=req.gremlin_prompt or
+                                       prompt.gremlin_generate_prompt,
                 ):
                     if isinstance(chunk, dict):
                         params = [

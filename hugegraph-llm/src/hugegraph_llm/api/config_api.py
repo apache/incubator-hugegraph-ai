@@ -36,7 +36,8 @@ async def config_http_api(
 ):
     @router.post("/config/graph", status_code=status.HTTP_201_CREATED)
     async def graph_config_api(req: GraphConfigRequest):
-        res = await apply_graph_conf(req.ip, req.port, req.name, req.user, req.pwd, req.gs, origin_call="http")
+        res = await apply_graph_conf(req.ip, req.port, req.name,
+                                     req.user, req.pwd, req.gs, origin_call="http")
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
 
     @router.post("/config/llm", status_code=status.HTTP_201_CREATED)
@@ -44,11 +45,14 @@ async def config_http_api(
         llm_settings.llm_type = req.llm_type
 
         if req.llm_type == "openai":
-            res = await apply_llm_conf(req.api_key, req.api_base, req.language_model, req.max_tokens, origin_call="http")
+            res = await apply_llm_conf(req.api_key, req.api_base, req.language_model,
+                                       req.max_tokens, origin_call="http")
         elif req.llm_type == "qianfan_wenxin":
-            res = await apply_llm_conf(req.api_key, req.secret_key, req.language_model, None, origin_call="http")
+            res = await apply_llm_conf(req.api_key, req.secret_key, req.language_model,
+                                       None, origin_call="http")
         else:
-            res = await apply_llm_conf(req.host, req.port, req.language_model, None, origin_call="http")
+            res = await apply_llm_conf(req.host, req.port, req.language_model,
+                                       None, origin_call="http")
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
 
     @router.post("/config/embedding", status_code=status.HTTP_201_CREATED)
@@ -56,11 +60,14 @@ async def config_http_api(
         llm_settings.embedding_type = req.llm_type
 
         if req.llm_type == "openai":
-            res = await apply_embedding_conf(req.api_key, req.api_base, req.language_model, origin_call="http")
+            res = await apply_embedding_conf(req.api_key, req.api_base,
+                                             req.language_model, origin_call="http")
         elif req.llm_type == "qianfan_wenxin":
-            res = await apply_embedding_conf(req.api_key, req.api_base, None, origin_call="http")
+            res = await apply_embedding_conf(req.api_key, req.api_base,
+                                             None, origin_call="http")
         else:
-            res = await apply_embedding_conf(req.host, req.port, req.language_model, origin_call="http")
+            res = await apply_embedding_conf(req.host, req.port, req.language_model,
+                                             origin_call="http")
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
 
     @router.post("/config/rerank", status_code=status.HTTP_201_CREATED)
@@ -68,9 +75,11 @@ async def config_http_api(
         llm_settings.reranker_type = req.reranker_type
 
         if req.reranker_type == "cohere":
-            res = await apply_reranker_conf(req.api_key, req.reranker_model, req.cohere_base_url, origin_call="http")
+            res = await apply_reranker_conf(req.api_key, req.reranker_model,
+                                            req.cohere_base_url, origin_call="http")
         elif req.reranker_type == "siliconflow":
-            res = await apply_reranker_conf(req.api_key, req.reranker_model, None, origin_call="http")
+            res = await apply_reranker_conf(req.api_key, req.reranker_model,
+                                            None, origin_call="http")
         else:
             res = status.HTTP_501_NOT_IMPLEMENTED
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
