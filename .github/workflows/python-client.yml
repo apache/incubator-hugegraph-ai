@@ -3,6 +3,7 @@ name: HG-Python-Client CI
 on:
   push:
     branches:
+      - 'main'
       - 'release-*'
   pull_request:
 
@@ -19,7 +20,8 @@ jobs:
     - name: Prepare HugeGraph Server Environment
       run: |
         docker run -d --name=graph -p 8080:8080 -e PASSWORD=admin hugegraph/hugegraph:1.3.0
-        #sleep 5
+        # wait server init-done (avoid some test error:)
+        sleep 5
 
     - uses: actions/checkout@v4
 
