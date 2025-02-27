@@ -36,7 +36,7 @@ class LiteLLMEmbedding(BaseEmbedding):
         self,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
-        model_name: str = "text-embedding-3-small",  # Can be any embedding model supported by LiteLLM
+        model_name: str = "openai/text-embedding-3-small",  # Can be any embedding model supported by LiteLLM
     ) -> None:
         self.api_key = api_key
         self.api_base = api_base
