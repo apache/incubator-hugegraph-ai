@@ -67,7 +67,7 @@ graph systems and large language models.
     ```bash
     python -m hugegraph_llm.config.generate --update
     ```
-    If you use litellm for LLM provider, please refer to [litellm.ai](https://docs.litellm.ai/docs/providers) 
+    Note: `Litellm` support multi-LLM provider, refer [litellm.ai](https://docs.litellm.ai/docs/providers) to config it
 7. (__Optional__) You could use 
     [hugegraph-hubble](https://hugegraph.apache.org/docs/quickstart/hugegraph-hubble/#21-use-docker-convenient-for-testdev) 
     to visit the graph data, could run it via [Docker/Docker-Compose](https://hub.docker.com/r/hugegraph/hubble) 
