@@ -45,11 +45,8 @@ def test_litellm_embedding(api_key, api_base, model_name) -> int:
     gr.Info("Test connection successful~")
     return 200
 
+
 def test_litellm_chat(api_key, api_base, model_name, max_tokens: int) -> int:
-    llm_client = LiteLLMClient(
-            api_key = api_key,
-            api_base = api_base,
-            model_name = model_name,
     try:
         llm_client = LiteLLMClient(
             api_key=api_key,
