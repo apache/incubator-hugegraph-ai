@@ -44,7 +44,7 @@ def test_litellm_embedding(api_key, api_base, model_name) -> int:
         raise gr.Error(f"Error in litellm embedding call: {e}") from e
     return 200
 
-def test_litellm_chat(api_key, api_base, model_name, max_tokens) -> int:
+def test_litellm_chat(api_key, api_base, model_name, max_tokens: int) -> int:
     llm_client = LiteLLMClient(
             api_key = api_key,
             api_base = api_base,
@@ -232,7 +232,7 @@ def apply_llm_config(current_llm_config, arg1, arg2, arg3, arg4, origin_call=Non
         setattr(llm_settings, f"litellm_{current_llm_config}_language_model", arg3)
         setattr(llm_settings, f"litellm_{current_llm_config}_tokens", int(arg4))
 
-        status_code = test_litellm_chat(arg1, arg2, arg3, arg4)
+        status_code = test_litellm_chat(arg1, arg2, arg3, int(arg4))
 
     gr.Info("Configured!")
     llm_settings.update_env()
