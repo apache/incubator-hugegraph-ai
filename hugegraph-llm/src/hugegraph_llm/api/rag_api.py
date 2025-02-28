@@ -81,7 +81,6 @@ def rag_http_api(
             },
         }
 
-    # TODO: add a bool param "get_vid_only" to return only keywords & vid (early stop)
     @router.post("/rag/graph", status_code=status.HTTP_200_OK)
     def graph_rag_recall_api(req: GraphRAGRequest):
         try:
@@ -104,6 +103,7 @@ def rag_http_api(
                 near_neighbor_first=req.near_neighbor_first,
                 custom_related_information=req.custom_priority_info,
                 gremlin_prompt=req.gremlin_prompt or prompt.gremlin_generate_prompt,
+                get_vid_only=req.get_vid_only
             )
 
             if isinstance(result, dict):

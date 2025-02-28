@@ -84,7 +84,8 @@ def rag_answer(
         rag.query_vector_index()
     if graph_search:
         rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid(
-            topk_per_keyword=topk_per_keyword
+            vector_dis_threshold=vector_dis_threshold,
+            topk_per_keyword=topk_per_keyword,
         ).import_schema(
             huge_settings.graph_name
         ).query_graphdb(
