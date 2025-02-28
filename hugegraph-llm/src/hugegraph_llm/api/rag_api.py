@@ -81,6 +81,7 @@ def rag_http_api(
             },
         }
 
+    # TODO: add a bool param "get_vid_only" to return only keywords & vid (early stop)
     @router.post("/rag/graph", status_code=status.HTTP_200_OK)
     def graph_rag_recall_api(req: GraphRAGRequest):
         try:
@@ -91,6 +92,7 @@ def rag_http_api(
                 huge_settings.graph_user = req.client_config.user
                 huge_settings.graph_pwd = req.client_config.pwd
                 huge_settings.graph_space = req.client_config.gs
+
             result = graph_rag_recall_func(
                 query=req.query,
                 max_graph_items=req.max_graph_items,

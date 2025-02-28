@@ -100,12 +100,14 @@ class RAGPipeline:
         by: Literal["query", "keywords"] = "keywords",
         topk_per_keyword: int = huge_settings.topk_per_keyword,
         topk_per_query: int = 10,
+        vector_dis_threshold: float = huge_settings.vector_dis_threshold,
     ):
         """
         Add a semantic ID query operator to the pipeline.
         :param by: Match by query or keywords.
         :param topk_per_keyword: Top K results per keyword.
         :param topk_per_query: Top K results per query.
+        :param vector_dis_threshold: Vector distance threshold.
         :return: Self-instance for chaining.
         """
         self._operators.append(
@@ -114,6 +116,7 @@ class RAGPipeline:
                 by=by,
                 topk_per_keyword=topk_per_keyword,
                 topk_per_query=topk_per_query,
+                vector_dis_threshold=vector_dis_threshold,
             )
         )
         return self

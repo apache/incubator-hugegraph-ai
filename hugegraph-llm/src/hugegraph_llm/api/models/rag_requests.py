@@ -27,13 +27,13 @@ class GraphConfigRequest(BaseModel):
     ip: str = Query('127.0.0.1', description="hugegraph client ip.")
     port: str = Query('8080', description="hugegraph client port.")
     name: str = Query('hugegraph', description="hugegraph client name.")
-    user: str = Query('xxx', description="hugegraph client user.")
-    pwd: str = Query('xxx', description="hugegraph client pwd.")
+    user: str = Query('', description="hugegraph client user.")
+    pwd: str = Query('', description="hugegraph client pwd.")
     gs: str = None
 
 
 class RAGRequest(BaseModel):
-    query: str = Query("", description="Query you want to ask")
+    query: str = Query(..., description="Query you want to ask")
     raw_answer: bool = Query(False, description="Use LLM to generate answer directly")
     vector_only: bool = Query(False, description="Use LLM to generate answer with vector")
     graph_only: bool = Query(True, description="Use LLM to generate answer with graph RAG only")
@@ -49,13 +49,8 @@ class RAGRequest(BaseModel):
                                          (results greater than this will be ignored).")
     topk_per_keyword : int = Query(1, description="TopK results returned for each keyword \
                                    extracted from the query, by default only the most similar one is returned.")
+    client_config: Optional[GraphConfigRequest] = Query(None, description="hugegraph server config.")
 
-    ip: str = Query('127.0.0.1', description="graph server ip.")
-    port: str = Query('8080', description="graph server port.")
-    name: str = Query('hugegraph', description="graph name.")
-    user: str = Query('xxx', description="graph server username.")
-    pwd: str = Query('xxx', description="graph server pwd.")
-    gs: str = Query('', description="graphspace.")
     # Keep prompt params in the end
     answer_prompt: Optional[str] = Query(prompt.answer_prompt, description="Prompt to guide the answer generation.")
     keywords_extract_prompt: Optional[str] = Query(
@@ -67,13 +62,6 @@ class RAGRequest(BaseModel):
         prompt.gremlin_generate_prompt,
         description="Prompt for the Text2Gremlin query.",
     )
-    max_graph_items: int = Query(30, description="Maximum number of items for GQL queries in graph.")
-    topk_return_results: int = Query(20, description="Number of sorted results to return finally.")
-    vector_dis_threshold: float = Query(0.9, description="Threshold for vector similarity\
-                                         (results greater than this will be ignored).")
-    topk_per_keyword : int = Query(1, description="TopK results returned for each keyword \
-                                   extracted from the query, by default only the most similar one is returned.")
-    client_config: Optional[GraphConfigRequest] = Query(None, description="hugegraph client config.")
 
 
 # TODO: import the default value of prompt.* dynamically
@@ -87,14 +75,7 @@ class GraphRAGRequest(BaseModel):
     topk_per_keyword : int = Query(1, description="TopK results returned for each keyword extracted\
                                     from the query, by default only the most similar one is returned.")
 
-    ip: str = Query('127.0.0.1', description="graph server ip.")
-    port: str = Query('8080', description="graph server port.")
-    name: str = Query('hugegraph', description="graph name.")
-    user: str = Query('xxx', description="graph server username.")
-    pwd: str = Query('xxx', description="graph server pwd.")
-    gs: str = Query('', description="graphspace.")
-
-    client_cfg : Optional[GraphConfigRequest] = Query(None, description="Graph client config.")
+    client_config : Optional[GraphConfigRequest] = Query(None, description="hugegraph server config.")
 
     gremlin_tmpl_num: int = Query(
         1, description="Number of Gremlin templates to use. If num <=0 means template is not provided"
@@ -106,13 +87,6 @@ class GraphRAGRequest(BaseModel):
         prompt.gremlin_generate_prompt,
         description="Prompt for the Text2Gremlin query.",
     )
-    max_graph_items: int = Query(30, description="Maximum number of items for GQL queries in graph.")
-    topk_return_results: int = Query(20, description="Number of sorted results to return finally.")
-    vector_dis_threshold: float = Query(0.9, description="Threshold for vector similarity \
-                                        (results greater than this will be ignored).")
-    topk_per_keyword : int = Query(1, description="TopK results returned for each keyword extracted\
-                                    from the query, by default only the most similar one is returned.")
-    client_config: Optional[GraphConfigRequest] = Query(None, description="hugegraph client config.")
 
 
 class LLMConfigRequest(BaseModel):
