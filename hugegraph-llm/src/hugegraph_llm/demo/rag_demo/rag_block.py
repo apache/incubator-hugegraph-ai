@@ -18,9 +18,10 @@
 # pylint: disable=E1101
 
 import os
-from typing import Tuple, Literal, Optional
+from typing import AsyncGenerator, Tuple, Literal, Optional
 
 import gradio as gr
+from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 import pandas as pd
 from gradio.utils import NamedString
 
@@ -29,7 +30,7 @@ from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.utils.log import log
 
 
-def rag_answer(
+async def rag_answer(
     text: str,
     raw_answer: bool,
     vector_only_answer: bool,
@@ -43,7 +44,7 @@ def rag_answer(
     keywords_extract_prompt: str,
     gremlin_tmpl_num: Optional[int] = 2,
     gremlin_prompt: Optional[str] = None,
-) -> Tuple:
+) -> AsyncGenerator[Tuple[str, str, str, str], None]:
     """
     Generate an answer using the RAG (Retrieval-Augmented Generation) pipeline.
     1. Initialize the RAGPipeline.
@@ -73,7 +74,8 @@ def rag_answer(
     graph_search = graph_only_answer or graph_vector_answer
     if raw_answer is False and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
-        return "", "", "", ""
+        yield "", "", "", ""
+        return
 
     rag = RAGPipeline()
     if vector_search:
@@ -91,18 +93,28 @@ def rag_answer(
         rerank_method,
         near_neighbor_first,
     )
-    rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
+    # rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
 
     try:
         context = rag.run(verbose=True, query=text, vector_search=vector_search, graph_search=graph_search)
         if context.get("switch_to_bleu"):
             gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
-        return (
-            context.get("raw_answer", ""),
-            context.get("vector_only_answer", ""),
-            context.get("graph_only_answer", ""),
-            context.get("graph_vector_answer", ""),
+        generator = AnswerSynthesize(
+            raw_answer=raw_answer,
+            vector_only_answer=vector_only_answer,
+            graph_only_answer=graph_only_answer,
+            graph_vector_answer=graph_vector_answer,
+            prompt_template=answer_prompt,
         )
+        async for context in generator.run_streaming(context):
+            if context.get("switch_to_bleu"):
+                gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
+            yield (
+                context.get("raw_answer", ""),
+                context.get("vector_only_answer", ""),
+                context.get("graph_only_answer", ""),
+                context.get("graph_vector_answer", ""),
+            )
     except ValueError as e:
         log.critical(e)
         raise gr.Error(str(e))
