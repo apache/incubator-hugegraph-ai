@@ -34,7 +34,7 @@ graph systems and large language models.
 
 2. Clone this project
     ```bash
-    git clone https://{username}@icode.baidu.com/baidu/starhugegraph/hugegraph-ai
+    git clone https://github.com/apache/incubator-hugegraph-ai.git
     ```
 3. Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph_llm](src/hugegraph_llm), poetry officially recommends using virtual environments
     ```bash
@@ -67,6 +67,11 @@ graph systems and large language models.
     ```bash
     python -m hugegraph_llm.config.generate --update
     ```
+    Note: `Litellm` support multi-LLM provider, refer [litellm.ai](https://docs.litellm.ai/docs/providers) to config it
+7. (__Optional__) You could use 
+    [hugegraph-hubble](https://hugegraph.apache.org/docs/quickstart/hugegraph-hubble/#21-use-docker-convenient-for-testdev) 
+    to visit the graph data, could run it via [Docker/Docker-Compose](https://hub.docker.com/r/hugegraph/hubble) 
+    for guidance. (Hubble is a graph-analysis dashboard include data loading/schema management/graph traverser/display).
 8. (__Optional__) offline download NLTK stopwords  
     ```bash
     python ./hugegraph_llm/operators/common_op/nltk_helper.py
@@ -83,8 +88,8 @@ graph systems and large language models.
 - Docs:
   - text: Build rag index from plain text
   - file: Upload file(s) which should be <u>TXT</u> or <u>.docx</u> (Multiple files can be selected together)
-- [Schema](https://starhugegraph.github.io/hugegraph-doc/clients/restful-api-v3/schema.html): (Accept **2 types**)
-  - User-defined Schema (JSON format, follow the [template](https://console.cloud.baidu-int.com/devops/icode/repos/baidu/starhugegraph/hugegraph-ai/blob/master/hugegraph-llm/src/hugegraph_llm/config/config_data.py#L173) 
+- [Schema](https://hugegraph.apache.org/docs/clients/restful-api/schema/): (Except **2 types**)
+  - User-defined Schema (JSON format, follow the [template](https://github.com/apache/incubator-hugegraph-ai/blob/aff3bbe25fa91c3414947a196131be812c20ef11/hugegraph-llm/src/hugegraph_llm/config/config_data.py#L125) 
   to modify it)
   - Specify the name of the HugeGraph graph instance, it will automatically get the schema from it (like 
   **"hugegraph"**)
