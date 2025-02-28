@@ -43,6 +43,19 @@ class RAGRequest(BaseModel):
         prompt.gremlin_generate_prompt,
         description="Prompt for the Text2Gremlin query.",
     )
+    max_graph_items: int = Query(30, description="Maximum number of items for GQL queries in graph.")
+    topk_return_results: int = Query(20, description="Number of sorted results to return finally.")
+    vector_dis_threshold: float = Query(0.9, description="Threshold for vector similarity\
+                                         (results greater than this will be ignored).")
+    topk_per_keyword : int = Query(1, description="TopK results returned for each keyword \
+                                   extracted from the query, by default only the most similar one is returned.")
+
+    ip: str = Query('', description="hugegraph client ip.")
+    port: str = Query('', description="hugegraph client port.")
+    name: str = Query('', description="hugegraph client name.")
+    user: str = Query('', description="hugegraph client user.")
+    pwd: str = Query('', description="hugegraph client pwd.")
+    gs: str = Query('', description="hugegraph client gs.")
 
 
 # TODO: import the default value of prompt.* dynamically
@@ -58,6 +71,19 @@ class GraphRAGRequest(BaseModel):
         prompt.gremlin_generate_prompt,
         description="Prompt for the Text2Gremlin query.",
     )
+    max_graph_items: int = Query(30, description="Maximum number of items for GQL queries in graph.")
+    topk_return_results: int = Query(20, description="Number of sorted results to return finally.")
+    vector_dis_threshold: float = Query(0.9, description="Threshold for vector similarity \
+                                        (results greater than this will be ignored).")
+    topk_per_keyword : int = Query(1, description="TopK results returned for each keyword extracted\
+                                    from the query, by default only the most similar one is returned.")
+
+    ip: str = Query('', description="hugegraph client ip.")
+    port: str = Query('', description="hugegraph client port.")
+    name: str = Query('', description="hugegraph client name.")
+    user: str = Query('', description="hugegraph client user.")
+    pwd: str = Query('', description="hugegraph client pwd.")
+    gs: str = Query('', description="hugegraph client gs.")
 
 
 class GraphConfigRequest(BaseModel):

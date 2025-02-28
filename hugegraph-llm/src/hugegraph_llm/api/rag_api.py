@@ -27,6 +27,7 @@ from hugegraph_llm.api.models.rag_requests import (
     RerankerConfigRequest,
     GraphRAGRequest,
 )
+from hugegraph_llm.config import huge_settings
 from hugegraph_llm.api.models.rag_response import RAGResponse
 from hugegraph_llm.config import llm_settings, prompt
 from hugegraph_llm.utils.log import log
@@ -57,6 +58,10 @@ def rag_http_api(
             keywords_extract_prompt=req.keywords_extract_prompt or prompt.keywords_extract_prompt,
             gremlin_tmpl_num=req.gremlin_tmpl_num,
             gremlin_prompt=req.gremlin_prompt or prompt.gremlin_generate_prompt,
+            max_graph_items=req.max_graph_items,
+            topk_return_results=req.topk_return_results,
+            vector_dis_threshold=req.vector_dis_threshold,
+            topk_per_keyword=req.topk_per_keyword,
         )
         # TODO: we need more info in the response for users to understand the query logic
         return {
@@ -78,6 +83,10 @@ def rag_http_api(
                 near_neighbor_first=req.near_neighbor_first,
                 custom_related_information=req.custom_priority_info,
                 gremlin_prompt=req.gremlin_prompt or prompt.gremlin_generate_prompt,
+                max_graph_items=req.max_graph_items,
+                topk_return_results=req.topk_return_results,
+                vector_dis_threshold=req.vector_dis_threshold,
+                topk_per_keyword=req.topk_per_keyword,
             )
 
             if isinstance(result, dict):
@@ -109,6 +118,91 @@ def rag_http_api(
         # Accept status code
         res = apply_graph_conf(req.ip, req.port, req.name, req.user, req.pwd, req.gs, origin_call="http")
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
+    
+    @router.post("/rag_auth", status_code=status.HTTP_200_OK)
+    def rag_auth_answer_api(req: RAGRequest):
+        '''rag_auth_answer_api'''
+        huge_settings.graph_ip = req.ip
+        huge_settings.graph_port = req.port
+        huge_settings.graph_name = req.name
+        huge_settings.graph_user = req.user
+        huge_settings.graph_pwd = req.pwd
+        huge_settings.graph_space = req.gs
+        result = rag_answer_func(
+            text=req.query,
+            raw_answer=req.raw_answer,
+            vector_only_answer=req.vector_only,
+            graph_only_answer=req.graph_only,
+            graph_vector_answer=req.graph_vector_answer,
+            graph_ratio=req.graph_ratio,
+            rerank_method=req.rerank_method,
+            near_neighbor_first=req.near_neighbor_first,
+            custom_related_information=req.custom_priority_info,
+            answer_prompt=req.answer_prompt or prompt.answer_prompt,
+            keywords_extract_prompt=req.keywords_extract_prompt or prompt.keywords_extract_prompt,
+            gremlin_tmpl_num=req.gremlin_tmpl_num,
+            gremlin_prompt=req.gremlin_prompt or prompt.gremlin_generate_prompt,
+            max_graph_items=req.max_graph_items,
+            topk_return_results=req.topk_return_results,
+            vector_dis_threshold=req.vector_dis_threshold,
+            topk_per_keyword=req.topk_per_keyword,
+        )
+        # TODO: we need more info in the response for users to understand the query logic
+        return {
+            "query": req.query,
+            **{
+                key: value
+                for key, value in zip(["raw_answer", "vector_only", "graph_only", "graph_vector_answer"], result)
+                if getattr(req, key)
+            },
+        }
+
+    @router.post("/rag_auth/graph", status_code=status.HTTP_200_OK)
+    def graph_rag_auth_recall_api(req: GraphRAGRequest):
+        '''graph_rag_auth_recall_api'''
+        try:
+            huge_settings.graph_ip = req.ip
+            huge_settings.graph_port = req.port
+            huge_settings.graph_name = req.name
+            huge_settings.graph_user = req.user
+            huge_settings.graph_pwd = req.pwd
+            huge_settings.graph_space = req.gs
+            result = graph_rag_recall_func(
+                query=req.query,
+                gremlin_tmpl_num=req.gremlin_tmpl_num,
+                rerank_method=req.rerank_method,
+                near_neighbor_first=req.near_neighbor_first,
+                custom_related_information=req.custom_priority_info,
+                gremlin_prompt=req.gremlin_prompt or prompt.gremlin_generate_prompt,
+                max_graph_items=req.max_graph_items,
+                topk_return_results=req.topk_return_results,
+                vector_dis_threshold=req.vector_dis_threshold,
+                topk_per_keyword=req.topk_per_keyword,
+            )
+
+            if isinstance(result, dict):
+                params = [
+                    "query",
+                    "keywords",
+                    "match_vids",
+                    "graph_result_flag",
+                    "gremlin",
+                    "graph_result",
+                    "vertex_degree_list",
+                ]
+                user_result = {key: result[key] for key in params if key in result}
+                return {"graph_recall": user_result}
+            # Note: Maybe only for qianfan/wenxin
+            return {"graph_recall": json.dumps(result)}
+
+        except TypeError as e:
+            log.error("TypeError in graph_rag_recall_api: %s", e)
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+        except Exception as e:
+            log.error("Unexpected error occurred: %s", e)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred."
+            ) from e
 
     # TODO: restructure the implement of llm to three types, like "/config/chat_llm"
     @router.post("/config/llm", status_code=status.HTTP_201_CREATED)

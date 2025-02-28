@@ -174,6 +174,7 @@ class RAGPipeline:
         rerank_method: Literal["bleu", "reranker"] = "bleu",
         near_neighbor_first: bool = False,
         custom_related_information: str = "",
+        topk_return_results: int = huge_settings.topk_return_results,
     ):
         """
         Add a merge, deduplication, and rerank operator to the pipeline.
@@ -187,6 +188,7 @@ class RAGPipeline:
                 method=rerank_method,
                 near_neighbor_first=near_neighbor_first,
                 custom_related_information=custom_related_information,
+                topk_return_results=topk_return_results
             )
         )
         return self
@@ -239,7 +241,9 @@ class RAGPipeline:
         :return: Final context after all operators have been executed.
         """
         if len(self._operators) == 0:
-            self.extract_keywords().query_graphdb().synthesize_answer()
+            self.extract_keywords().query_graphdb(
+                max_graph_items=kwargs.get('max_graph_items')
+            ).synthesize_answer()
 
         context = kwargs
 
