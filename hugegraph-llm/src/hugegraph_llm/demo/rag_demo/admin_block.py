@@ -50,7 +50,7 @@ async def log_stream(log_path: str, lines: int = 125):
 def read_llm_server_log(lines=250):
     log_path = "logs/llm-server.log"
     try:
-        with open(log_path, "r", encoding='utf-8') as f:
+        with open(log_path, "r", encoding='utf-8', errors="replace") as f:
             return ''.join(deque(f, maxlen=lines))
     except FileNotFoundError:
         log.critical("Log file not found: %s", log_path)
