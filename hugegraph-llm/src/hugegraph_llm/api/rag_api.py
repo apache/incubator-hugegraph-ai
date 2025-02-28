@@ -118,16 +118,18 @@ def rag_http_api(
         # Accept status code
         res = apply_graph_conf(req.ip, req.port, req.name, req.user, req.pwd, req.gs, origin_call="http")
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
-    
+
+    # TODO: move /rag_auth/* api to rag_auth_api.py
     @router.post("/rag_auth", status_code=status.HTTP_200_OK)
     def rag_auth_answer_api(req: RAGRequest):
-        '''rag_auth_answer_api'''
+        """rag_auth_answer_api"""
         huge_settings.graph_ip = req.ip
         huge_settings.graph_port = req.port
         huge_settings.graph_name = req.name
         huge_settings.graph_user = req.user
         huge_settings.graph_pwd = req.pwd
         huge_settings.graph_space = req.gs
+
         result = rag_answer_func(
             text=req.query,
             raw_answer=req.raw_answer,
@@ -159,7 +161,7 @@ def rag_http_api(
 
     @router.post("/rag_auth/graph", status_code=status.HTTP_200_OK)
     def graph_rag_auth_recall_api(req: GraphRAGRequest):
-        '''graph_rag_auth_recall_api'''
+        """graph_rag_auth_recall_api"""
         try:
             huge_settings.graph_ip = req.ip
             huge_settings.graph_port = req.port

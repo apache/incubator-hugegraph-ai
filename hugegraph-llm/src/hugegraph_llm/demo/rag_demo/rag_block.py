@@ -94,9 +94,9 @@ def rag_answer(
         )
     # TODO: add more user-defined search strategies
     rag.merge_dedup_rerank(
-        graph_ratio,
-        rerank_method,
-        near_neighbor_first,
+        graph_ratio=graph_ratio,
+        rerank_method=rerank_method,
+        near_neighbor_first=near_neighbor_first,
         topk_return_results=topk_return_results
     )
     rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)

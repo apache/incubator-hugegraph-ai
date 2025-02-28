@@ -50,12 +50,12 @@ class RAGRequest(BaseModel):
     topk_per_keyword : int = Query(1, description="TopK results returned for each keyword \
                                    extracted from the query, by default only the most similar one is returned.")
 
-    ip: str = Query('', description="hugegraph client ip.")
-    port: str = Query('', description="hugegraph client port.")
-    name: str = Query('', description="hugegraph client name.")
-    user: str = Query('', description="hugegraph client user.")
-    pwd: str = Query('', description="hugegraph client pwd.")
-    gs: str = Query('', description="hugegraph client gs.")
+    ip: str = Query('127.0.0.1', description="graph server ip.")
+    port: str = Query('8080', description="graph server port.")
+    name: str = Query('hugegraph', description="graph name.")
+    user: str = Query('xxx', description="graph server username.")
+    pwd: str = Query('xxx', description="graph server pwd.")
+    gs: str = Query('', description="graphspace.")
 
 
 # TODO: import the default value of prompt.* dynamically
@@ -78,12 +78,12 @@ class GraphRAGRequest(BaseModel):
     topk_per_keyword : int = Query(1, description="TopK results returned for each keyword extracted\
                                     from the query, by default only the most similar one is returned.")
 
-    ip: str = Query('', description="hugegraph client ip.")
-    port: str = Query('', description="hugegraph client port.")
-    name: str = Query('', description="hugegraph client name.")
-    user: str = Query('', description="hugegraph client user.")
-    pwd: str = Query('', description="hugegraph client pwd.")
-    gs: str = Query('', description="hugegraph client gs.")
+    ip: str = Query('127.0.0.1', description="graph server ip.")
+    port: str = Query('8080', description="graph server port.")
+    name: str = Query('hugegraph', description="graph name.")
+    user: str = Query('xxx', description="graph server username.")
+    pwd: str = Query('xxx', description="graph server pwd.")
+    gs: str = Query('', description="graphspace.")
 
 
 class GraphConfigRequest(BaseModel):
