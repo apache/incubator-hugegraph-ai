@@ -91,7 +91,7 @@ class GremlinGenerateSynthesize:
         context["call_count"] = context.get("call_count", 0) + 2
 
         return context
-    
+
     def sync_generate(self, context: Dict[str, Any]):
         query = context.get("query")
         raw_example = [{'query': 'who is peter', 'gremlin': "g.V().has('name', 'peter')"}]

@@ -219,7 +219,11 @@ class AnswerSynthesize:
 
             final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
             async_generators.append(
-                self.__llm_generate_with_meta_info(task_id=auto_id, target_key="vector_only_answer", prompt=final_prompt)
+                self.__llm_generate_with_meta_info(
+                    task_id=auto_id,
+                    target_key="vector_only_answer",
+                    prompt=final_prompt
+                )
             )
             auto_id += 1
         if self._graph_only_answer:
@@ -242,7 +246,11 @@ class AnswerSynthesize:
 
             final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
             async_generators.append(
-                self.__llm_generate_with_meta_info(task_id=auto_id, target_key="graph_vector_answer", prompt=final_prompt)
+                self.__llm_generate_with_meta_info(
+                    task_id=auto_id,
+                    target_key="graph_vector_answer",
+                    prompt=final_prompt
+                )
             )
             auto_id += 1
 
@@ -261,7 +269,7 @@ class AnswerSynthesize:
 
         # ops = sum([self._raw_answer, self._vector_only_answer, self._graph_only_answer, self._graph_vector_answer])
         # context['call_count'] = context.get('call_count', 0) + ops
-        async_tasks = [asyncio.create_task(gen.__anext__()) for gen in async_generators]
+        async_tasks = [asyncio.create_task(anext(gen)) for gen in async_generators]
         while True:
             # print("# task", len(tasks))
             done, _ = await asyncio.wait(async_tasks, return_when=asyncio.FIRST_COMPLETED)
@@ -273,7 +281,7 @@ class AnswerSynthesize:
                     # print("### (task_id, result) =", task_id, result)
                     context[target_key] = context.get(target_key, "") + token
                     gen = async_generators[task_id]
-                    async_tasks[task_id] = asyncio.create_task(gen.__anext__())
+                    async_tasks[task_id] = asyncio.create_task(anext(gen))
                 except StopAsyncIteration:
                     # print("### stop task:", task)
                     stop_task_num += 1

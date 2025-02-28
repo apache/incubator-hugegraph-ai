@@ -46,7 +46,7 @@ class BaseLLM(ABC):
             on_token_callback: Optional[Callable] = None,
     ) -> Generator[str, None, None]:
         """Comment"""
-    
+
     @abstractmethod
     async def agenerate_streaming(
             self,

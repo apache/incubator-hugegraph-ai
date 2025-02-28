@@ -79,13 +79,13 @@ class QianfanClient(BaseLLM):
         if messages is None:
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
-        
+
         for msg in self.chat_comp.do(messages=messages, model=self.chat_model, stream=True):
             token = msg
             if on_token_callback:
                 on_token_callback(token)
             yield token
-    
+
     async def agenerate_streaming(
             self,
             messages: Optional[List[Dict[str, Any]]] = None,

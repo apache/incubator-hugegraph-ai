@@ -17,7 +17,7 @@
 
 
 import json
-from typing import Any, AsyncGenerator, Generator, List, Optional, Callable, Dict, AsyncIterator
+from typing import Any, AsyncGenerator, Generator, List, Optional, Callable, Dict
 
 import ollama
 from retry import retry
@@ -105,7 +105,7 @@ class OllamaClient(BaseLLM):
             if on_token_callback:
                 on_token_callback(token)
             yield token
-    
+
     async def agenerate_streaming(
         self,
         messages: Optional[List[Dict[str, Any]]] = None,
