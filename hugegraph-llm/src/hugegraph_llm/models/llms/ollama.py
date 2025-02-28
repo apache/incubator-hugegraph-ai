@@ -17,7 +17,7 @@
 
 
 import json
-from typing import Any, AsyncGenerator, Generator, List, Optional, Callable, Dict
+from typing import Any, AsyncGenerator, Generator, List, Optional, Callable, Dict, AsyncIterator
 
 import ollama
 from retry import retry
@@ -117,15 +117,21 @@ class OllamaClient(BaseLLM):
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
 
-        async for chunk in self.async_client.chat(
-            model=self.model,
-            messages=messages,
-            stream=True
-        ):
-            token = chunk["message"]["content"]
-            if on_token_callback:
-                on_token_callback(token)
-            yield token
+        try:
+            async_generator = await self.async_client.chat(
+                model=self.model,
+                messages=messages,
+                stream=True
+            )
+            async for chunk in async_generator:
+                token = chunk["message"]["content"]
+                if on_token_callback:
+                    on_token_callback(token)
+                yield token
+        except Exception as e:
+            print(f"Retrying LLM call {e}")
+            raise e
+
 
     def num_tokens_from_string(
         self,

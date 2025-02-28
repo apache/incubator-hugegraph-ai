@@ -93,7 +93,6 @@ class GremlinGenerateSynthesize:
         return context
     
     def sync_generate(self, context: Dict[str, Any]):
-        async_tasks = {}
         query = context.get("query")
         raw_example = [{'query': 'who is peter', 'gremlin': "g.V().has('name', 'peter')"}]
         raw_prompt = self.gremlin_prompt.format(
@@ -126,5 +125,7 @@ class GremlinGenerateSynthesize:
         if not query:
             raise ValueError("query is required")
 
+        # TODO: update to async_generate again
+        # The best method may be changing all `operator.run(*arg)` to be asynchronous function
         context = self.sync_generate(context)
         return context

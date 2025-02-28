@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Callable, List, Optional, Dict, Any, Generator
+from typing import Callable, List, Optional, Dict, Any, Generator, AsyncGenerator
 
 import openai
 import tiktoken
@@ -148,15 +148,13 @@ class OpenAIClient(BaseLLM):
                 stream=True,
             )
 
-            result = ""
             for chunk in completions:
                 delta = chunk.choices[0].delta
                 if delta.content:
                     token = delta.content
-                    result += token
                     if on_token_callback:
                         on_token_callback(token)
-                    yield result
+                    yield token
 
         except openai.BadRequestError as e:
             log.critical("Fatal: %s", e)
@@ -166,6 +164,45 @@ class OpenAIClient(BaseLLM):
             yield "Error: The provided API key is invalid"
         except Exception as e:
             log.error("Error in streaming: %s", e)
+            raise e
+
+    async def agenerate_streaming(
+        self,
+        messages: Optional[List[Dict[str, Any]]] = None,
+        prompt: Optional[str] = None,
+        on_token_callback: Optional[Callable] = None,
+    ) -> AsyncGenerator[str, None]:
+        """Comment"""
+        if messages is None:
+            assert prompt is not None, "Messages or prompt must be provided."
+            messages = [{"role": "user", "content": prompt}]
+
+        try:
+            completions = await self.aclient.chat.completions.create(
+                model=self.model,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                messages=messages,
+                stream=True
+            )
+            async for chunk in completions:
+                delta = chunk.choices[0].delta
+                if delta.content:
+                    token = delta.content
+                    if on_token_callback:
+                        on_token_callback(token)
+                    yield token
+            # TODO: log.info("Token usage: %s", completions.usage.model_dump_json())
+        # catch context length / do not retry
+        except openai.BadRequestError as e:
+            log.critical("Fatal: %s", e)
+            yield str(f"Error: {e}")
+        # catch authorization errors / do not retry
+        except openai.AuthenticationError:
+            log.critical("The provided OpenAI API key is invalid")
+            yield "Error: The provided OpenAI API key is invalid"
+        except Exception as e:
+            log.error("Retrying LLM call %s", e)
             raise e
 
     def num_tokens_from_string(self, string: str) -> int:

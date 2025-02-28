@@ -95,13 +95,17 @@ class QianfanClient(BaseLLM):
         if messages is None:
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
-        
-        async_generator = await self.chat_comp.ado(messages=messages, model=self.chat_model, stream=True)
-        async for msg in async_generator:
-            chunk = msg.body['result']
-            if on_token_callback:
-                on_token_callback(chunk)
-            yield chunk
+
+        try:
+            async_generator = await self.chat_comp.ado(messages=messages, model=self.chat_model, stream=True)
+            async for msg in async_generator:
+                chunk = msg.body['result']
+                if on_token_callback:
+                    on_token_callback(chunk)
+                yield chunk
+        except Exception as e:
+            print(f"Retrying LLM call {e}")
+            raise e
 
     def num_tokens_from_string(self, string: str) -> int:
         return len(string)
