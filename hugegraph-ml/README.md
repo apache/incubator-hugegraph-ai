@@ -1,14 +1,16 @@
-  # hugegraph-ml
+# hugegraph-ml
 
 ## Summary
 
-`hugegraph-ml` is a tool that integrates HugeGraph with popular graph learning libraries. 
-It implements most graph learning algorithms, enabling users to perform end-to-end graph learning workflows directly from HugeGraph using `hugegraph-ml`. 
-Graph data can be read directly from `HugeGraph` and used for tasks such as node embedding, node classification, and graph classification. 
+`hugegraph-ml` is a tool that integrates HugeGraph with popular graph learning libraries.
+It implements most graph learning algorithms, enabling users to perform end-to-end graph learning workflows directly
+from HugeGraph using `hugegraph-ml`.
+Graph data can be read directly from `HugeGraph` and used for tasks such as node embedding, node classification, and
+graph classification.
 The implemented algorithm models can be found in the [models](./src/hugegraph_ml/models) folder.
 
 | model       | paper                                              |
-| ----------- | -------------------------------------------------- |
+|-------------|----------------------------------------------------|
 | AGNN        | https://arxiv.org/abs/1803.03735                   |
 | APPNP       | https://arxiv.org/abs/1810.05997                   |
 | ARMA        | https://arxiv.org/abs/1901.01343                   |
@@ -30,13 +32,16 @@ The implemented algorithm models can be found in the [models](./src/hugegraph_ml
 
 ## Environment Requirements
 
-- python 3.9+ 
+- python 3.9+
 - hugegraph-server 1.0+
 
 ## Preparation
 
-1. Start the HugeGraph database, you can do it via Docker/[Binary packages](https://hugegraph.apache.org/docs/download/download/). 
-   Refer to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for guidance
+1. Start the HugeGraph database, you can do it via
+   Docker/[Binary packages](https://hugegraph.apache.org/docs/download/download/).
+   Refer
+   to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev)
+   for guidance
 
 2. Clone this project
 
@@ -63,7 +68,7 @@ The implemented algorithm models can be found in the [models](./src/hugegraph_ml
 
 ### Perform node embedding on the `Cora` dataset using the `DGI` model
 
-Make sure that the Cora dataset is already in your HugeGraph database. 
+Make sure that the Cora dataset is already in your HugeGraph database.
 If not, you can run the `import_graph_from_dgl` function to import the `Cora` dataset from `DGL` into
 the `HugeGraph` database.
 
@@ -74,6 +79,7 @@ import_graph_from_dgl("cora")
 ```
 
 Run [dgi_example.py](./src/hugegraph_ml/examples/dgi_example.py) to view the example.
+
 ```bash
 python ./hugegraph_ml/examples/dgi_example.py
 ```
@@ -112,8 +118,8 @@ embedded_graph = node_embed_task.train_and_embed(add_self_loop=True, n_epochs=30
 
 ```python
 model = MLPClassifier(
-   n_in_feat=embedded_graph.ndata["feat"].shape[1], 
-   n_out_feat=embedded_graph.ndata["label"].unique().shape[0]
+    n_in_feat=embedded_graph.ndata["feat"].shape[1],
+    n_out_feat=embedded_graph.ndata["label"].unique().shape[0]
 )
 node_clf_task = NodeClassify(graph=embedded_graph, model=model)
 node_clf_task.train(lr=1e-3, n_epochs=400, patience=40)
