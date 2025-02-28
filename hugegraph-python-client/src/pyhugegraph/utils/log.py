@@ -24,6 +24,37 @@ from logging.handlers import RotatingFileHandler
 
 from rich.logging import RichHandler
 
+"""
+HugeGraph Logger Util
+======================
+
+A unified logging module that provides consistent logging functionality across the HugeGraph project.
+
+Key Features:
+- Uses "Rich" library for enhanced console output with proper formatting and colors
+- Provides both console and file logging capabilities with rotation
+- Includes utility functions for controlled logging frequency
+
+Best Practices:
+- Other modules should reuse this logger instead of creating new logging configurations
+- Use the provided init_logger() function to maintain consistent log formatting
+- If additional functionality is needed, extend this module rather than creating new loggers
+
+Example Usage:
+    from pyhugegraph.utils.log import init_logger
+    
+    # Initialize logger with both console and file output
+    log = init_logger(
+        log_output="logs/myapp.log",
+        log_level=logging.INFO,
+        logger_name="myapp"
+    )
+    
+    # Use the log/logger
+    log.info("Application started")
+    log.debug("Processing data...")
+    log.error("Error occurred: %s", error_msg)
+"""
 __all__ = [
     "init_logger",
     "fetch_log_level",
@@ -38,15 +69,15 @@ DEFAULT_BUFFER_SIZE: int = 1024 * 1024  # 1MB
 
 @lru_cache()  # avoid creating multiple handlers when calling init_logger()
 def init_logger(
-        log_output=None,
-        log_level=logging.INFO,
-        rank=0,
-        *,
-        logger_name="client", # users should set logger name for modules
-        propagate_logs: bool = False,
-        stdout_logging: bool = True,
-        max_log_size=50 * 1024 * 1024,  # 50 MB
-        backup_logs=5,
+    log_output=None,
+    log_level=logging.INFO,
+    rank=0,
+    *,
+    logger_name="client",  # users should set logger name for modules
+    propagate_logs: bool = False,
+    stdout_logging: bool = True,
+    max_log_size=50 * 1024 * 1024,  # 50 MB
+    backup_logs=5,
 ):
     """
     Initialize the logger and set its verbosity level to "DEBUG".
@@ -199,5 +230,6 @@ def fetch_log_level(level_name: str):
     if not isinstance(level, int):
         raise ValueError(f"Invalid log level: {level_name}")
     return level
+
 
 log = init_logger(log_output="logs/output.log", log_level=logging.INFO)
