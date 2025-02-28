@@ -16,7 +16,7 @@
 # under the License.
 
 import json
-from typing import Optional, List, Dict, Any, Callable
+from typing import AsyncGenerator, Generator, Optional, List, Dict, Any, Callable
 
 import qianfan
 from retry import retry
@@ -74,9 +74,34 @@ class QianfanClient(BaseLLM):
             self,
             messages: Optional[List[Dict[str, Any]]] = None,
             prompt: Optional[str] = None,
-            on_token_callback: Callable = None,
-    ) -> str:
-        return self.generate(messages, prompt)
+            on_token_callback: Optional[Callable] = None,
+    ) -> Generator[str, None, None]:
+        if messages is None:
+            assert prompt is not None, "Messages or prompt must be provided."
+            messages = [{"role": "user", "content": prompt}]
+        
+        for msg in self.chat_comp.do(messages=messages, model=self.chat_model, stream=True):
+            token = msg
+            if on_token_callback:
+                on_token_callback(token)
+            yield token
+    
+    async def agenerate_streaming(
+            self,
+            messages: Optional[List[Dict[str, Any]]] = None,
+            prompt: Optional[str] = None,
+            on_token_callback: Optional[Callable] = None,
+    ) -> AsyncGenerator[str, None]:
+        if messages is None:
+            assert prompt is not None, "Messages or prompt must be provided."
+            messages = [{"role": "user", "content": prompt}]
+        
+        async_generator = await self.chat_comp.ado(messages=messages, model=self.chat_model, stream=True)
+        async for msg in async_generator:
+            chunk = msg.body['result']
+            if on_token_callback:
+                on_token_callback(chunk)
+            yield chunk
 
     def num_tokens_from_string(self, string: str) -> int:
         return len(string)

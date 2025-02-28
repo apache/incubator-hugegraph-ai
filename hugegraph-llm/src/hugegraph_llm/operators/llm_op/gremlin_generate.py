@@ -91,11 +91,40 @@ class GremlinGenerateSynthesize:
         context["call_count"] = context.get("call_count", 0) + 2
 
         return context
+    
+    def sync_generate(self, context: Dict[str, Any]):
+        async_tasks = {}
+        query = context.get("query")
+        raw_example = [{'query': 'who is peter', 'gremlin': "g.V().has('name', 'peter')"}]
+        raw_prompt = self.gremlin_prompt.format(
+            query=query,
+            schema=self.schema,
+            example=self._format_examples(examples=raw_example),
+            vertices=self._format_vertices(vertices=self.vertices)
+        )
+        raw_response = self.llm.generate(prompt=raw_prompt)
+
+        examples = context.get("match_result")
+        init_prompt = self.gremlin_prompt.format(
+            query=query,
+            schema=self.schema,
+            example=self._format_examples(examples=examples),
+            vertices=self._format_vertices(vertices=self.vertices)
+        )
+        initialized_response = self.llm.generate(prompt=init_prompt)
+
+        log.debug("Text2Gremlin with tmpl prompt:\n %s,\n LLM Response: %s", init_prompt, initialized_response)
+
+        context["result"] = self._extract_gremlin(response=initialized_response)
+        context["raw_result"] = self._extract_gremlin(response=raw_response)
+        context["call_count"] = context.get("call_count", 0) + 2
+
+        return context
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context.get("query", "")
         if not query:
             raise ValueError("query is required")
 
-        context = asyncio.run(self.async_generate(context))
+        context = self.sync_generate(context)
         return context

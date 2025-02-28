@@ -16,7 +16,7 @@
 # under the License.
 
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, Callable, Dict
+from typing import Any, AsyncGenerator, Generator, List, Optional, Callable, Dict
 
 
 class BaseLLM(ABC):
@@ -43,8 +43,17 @@ class BaseLLM(ABC):
             self,
             messages: Optional[List[Dict[str, Any]]] = None,
             prompt: Optional[str] = None,
-            on_token_callback: Callable = None,
-    ) -> List[Any]:
+            on_token_callback: Optional[Callable] = None,
+    ) -> Generator[str, None, None]:
+        """Comment"""
+    
+    @abstractmethod
+    async def agenerate_streaming(
+            self,
+            messages: Optional[List[Dict[str, Any]]] = None,
+            prompt: Optional[str] = None,
+            on_token_callback: Optional[Callable] = None,
+    ) -> AsyncGenerator[str, None]:
         """Comment"""
 
     @abstractmethod
