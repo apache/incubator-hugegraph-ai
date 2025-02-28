@@ -51,10 +51,17 @@ def read_llm_server_log(lines=250):
     log_path = "logs/llm-server.log"
     try:
         with open(log_path, "r", encoding='utf-8') as f:
-            return ''.join(deque(f, maxlen=lines))
+            data = f.read()
+            return ''.join(deque(data, maxlen=lines))
     except FileNotFoundError:
-        log.critical("Log file not found: %s", log_path)
+        print(f"Log file not found: {log_path}")
         return "LLM Server log file not found."
+    except UnicodeDecodeError as e:
+        print(f"Decoding error occurred: {e}")
+        # ignore the bad bytes and continue processing
+        with open(log_path, "r", encoding='utf-8', errors='ignore') as f:
+            data = f.read()
+            return ''.join(deque(data, maxlen=lines))
 
 
 # Functions to clear each log file

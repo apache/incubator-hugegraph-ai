@@ -19,6 +19,7 @@
 
 import os
 from typing import Tuple, Literal, Optional
+import uuid
 
 import gradio as gr
 import pandas as pd
@@ -28,7 +29,17 @@ from hugegraph_llm.config import resource_path, prompt, huge_settings, llm_setti
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.utils.log import log
 
+# A decorator to wrap functions with task id generation and logging
+def with_task_id(func):
+    def wrapper(*args, **kwargs):
+        task_id = str(uuid.uuid4())
+        log.info(f"New task created with id: {task_id}")
+        # Optionally, you could also pass the task_id to the function if needed:
+        # kwargs['task_id'] = task_id
+        return func(*args, **kwargs)
+    return wrapper
 
+@with_task_id
 def rag_answer(
     text: str,
     raw_answer: bool,
@@ -95,6 +106,7 @@ def rag_answer(
 
     try:
         context = rag.run(verbose=True, query=text, vector_search=vector_search, graph_search=graph_search)
+        
         if context.get("switch_to_bleu"):
             gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
         return (
@@ -113,67 +125,79 @@ def rag_answer(
 
 def create_rag_block():
     # pylint: disable=R0915 (too-many-statements),C0301
+    log.info("Creating RAG block...")
     gr.Markdown("""## 1. HugeGraph RAG Query""")
     with gr.Row():
         with gr.Column(scale=2):
-            inp = gr.Textbox(value=prompt.default_question, label="Question", show_copy_button=True, lines=3)
+            with gr.Blocks().queue(max_size=20, default_concurrency_limit=5):
+                log.info(f"Queue created...")
 
-            # TODO: Only support inline formula now. Should support block formula
-            gr.Markdown("Basic LLM Answer", elem_classes="output-box-label")
-            raw_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
-            gr.Markdown("Vector-only Answer", elem_classes="output-box-label")
-            vector_only_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
-            gr.Markdown("Graph-only Answer", elem_classes="output-box-label")
-            graph_only_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
-            gr.Markdown("Graph-Vector Answer", elem_classes="output-box-label")
-            graph_vector_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
+                inp = gr.Textbox(value=prompt.default_question, label="Question", show_copy_button=True, lines=3)
 
-            answer_prompt_input = gr.Textbox(
-                value=prompt.answer_prompt, label="Query Prompt", show_copy_button=True, lines=7
-            )
-            keywords_extract_prompt_input = gr.Textbox(
-                value=prompt.keywords_extract_prompt,
-                label="Keywords Extraction Prompt",
-                show_copy_button=True,
-                lines=7,
-            )
-        with gr.Column(scale=1):
-            with gr.Row():
-                raw_radio = gr.Radio(choices=[True, False], value=False, label="Basic LLM Answer")
-                vector_only_radio = gr.Radio(choices=[True, False], value=False, label="Vector-only Answer")
-            with gr.Row():
-                graph_only_radio = gr.Radio(choices=[True, False], value=True, label="Graph-only Answer")
-                graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
+                # TODO: Only support inline formula now. Should support block formula
+                gr.Markdown("Basic LLM Answer", elem_classes="output-box-label")
+                raw_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
+                gr.Markdown("Vector-only Answer", elem_classes="output-box-label")
+                vector_only_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
+                gr.Markdown("Graph-only Answer", elem_classes="output-box-label")
+                graph_only_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
+                gr.Markdown("Graph-Vector Answer", elem_classes="output-box-label")
+                graph_vector_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
 
-            def toggle_slider(enable):
-                return gr.update(interactive=enable)
-
-            with gr.Column():
+                answer_prompt_input = gr.Textbox(
+                    value=prompt.answer_prompt, label="Query Prompt", show_copy_button=True, lines=7
+                )
+                keywords_extract_prompt_input = gr.Textbox(
+                    value=prompt.keywords_extract_prompt,
+                    label="Keywords Extraction Prompt",
+                    show_copy_button=True,
+                    lines=7,
+                )
+                
+                # try:
+                #     log.debug(f"Current queue size: {queueinstance.size()}")
+                #     log.debug(f"Number of concurrent processes: {queueinstance.concurrent_count()}")
+                # except Exception as e:
+                #     log.error(f"Error: {e}")
+                
+            with gr.Column(scale=1):
                 with gr.Row():
-                    online_rerank = llm_settings.reranker_type
-                    rerank_method = gr.Dropdown(
-                        choices=["bleu", ("rerank (online)", "reranker")] if online_rerank else ["bleu"],
-                        value="reranker" if online_rerank else "bleu",
-                        label="Rerank method",
+                    raw_radio = gr.Radio(choices=[True, False], value=False, label="Basic LLM Answer")
+                    vector_only_radio = gr.Radio(choices=[True, False], value=False, label="Vector-only Answer")
+                with gr.Row():
+                    graph_only_radio = gr.Radio(choices=[True, False], value=True, label="Graph-only Answer")
+                    graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
+
+                def toggle_slider(enable):
+                    return gr.update(interactive=enable)
+
+                with gr.Column():
+                    with gr.Row():
+                        online_rerank = llm_settings.reranker_type
+                        rerank_method = gr.Dropdown(
+                            choices=["bleu", ("rerank (online)", "reranker")] if online_rerank else ["bleu"],
+                            value="reranker" if online_rerank else "bleu",
+                            label="Rerank method",
+                        )
+                        example_num = gr.Number(value=2, label="Template Num (0 to disable it) ", precision=0)
+                        graph_ratio = gr.Slider(0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False)
+
+                    graph_vector_radio.change(
+                        toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio
+                    )  # pylint: disable=no-member
+                    near_neighbor_first = gr.Checkbox(
+                        value=False,
+                        label="Near neighbor first(Optional)",
+                        info="One-depth neighbors > two-depth neighbors",
                     )
-                    example_num = gr.Number(value=2, label="Template Num (0 to disable it) ", precision=0)
-                    graph_ratio = gr.Slider(0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False)
+                    custom_related_information = gr.Text(
+                        prompt.custom_rerank_info,
+                        label="Query related information(Optional)",
+                    )
+                    btn = gr.Button("Answer Question", variant="primary")
 
-                graph_vector_radio.change(
-                    toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio
-                )  # pylint: disable=no-member
-                near_neighbor_first = gr.Checkbox(
-                    value=False,
-                    label="Near neighbor first(Optional)",
-                    info="One-depth neighbors > two-depth neighbors",
-                )
-                custom_related_information = gr.Text(
-                    prompt.custom_rerank_info,
-                    label="Query related information(Optional)",
-                )
-                btn = gr.Button("Answer Question", variant="primary")
 
-    btn.click(  # pylint: disable=no-member
+    btn.click(
         fn=rag_answer,
         inputs=[
             inp,
@@ -188,9 +212,14 @@ def create_rag_block():
             answer_prompt_input,
             keywords_extract_prompt_input,
             example_num,
+               # Grouped under this concurrency ID
         ],
         outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
+        # queue=True,                       # Enable queueing for this event
+        # concurrency_limit=5,               # Maximum of 5 concurrent executions
+        concurrency_id="rag_answer_task"
     )
+
 
     gr.Markdown(
         """## 2. (Batch) Back-testing )
