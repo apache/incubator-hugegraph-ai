@@ -33,16 +33,7 @@ class RAGRequest(BaseModel):
     rerank_method: Literal["bleu", "reranker"] = Query("bleu", description="Method to rerank the results.")
     near_neighbor_first: bool = Query(False, description="Prioritize near neighbors in the search results.")
     custom_priority_info: str = Query("", description="Custom information to prioritize certain results.")
-    answer_prompt: Optional[str] = Query(prompt.answer_prompt, description="Prompt to guide the answer generation.")
-    keywords_extract_prompt: Optional[str] = Query(
-        prompt.keywords_extract_prompt,
-        description="Prompt for extracting keywords from query.",
-    )
-    gremlin_tmpl_num: int = Query(1, description="Number of Gremlin templates to use.")
-    gremlin_prompt: Optional[str] = Query(
-        prompt.gremlin_generate_prompt,
-        description="Prompt for the Text2Gremlin query.",
-    )
+    # Graph Configs
     max_graph_items: int = Query(30, description="Maximum number of items for GQL queries in graph.")
     topk_return_results: int = Query(20, description="Number of sorted results to return finally.")
     vector_dis_threshold: float = Query(0.9, description="Threshold for vector similarity\
@@ -56,21 +47,32 @@ class RAGRequest(BaseModel):
     user: str = Query('xxx', description="graph server username.")
     pwd: str = Query('xxx', description="graph server pwd.")
     gs: str = Query('', description="graphspace.")
-
-
-# TODO: import the default value of prompt.* dynamically
-class GraphRAGRequest(BaseModel):
-    query: str = Query("", description="Query you want to ask")
-    gremlin_tmpl_num: int = Query(
-        1, description="Number of Gremlin templates to use. If num <=0 means template is not provided"
+    # Keep prompt params in the end
+    answer_prompt: Optional[str] = Query(prompt.answer_prompt, description="Prompt to guide the answer generation.")
+    keywords_extract_prompt: Optional[str] = Query(
+        prompt.keywords_extract_prompt,
+        description="Prompt for extracting keywords from query.",
     )
-    rerank_method: Literal["bleu", "reranker"] = Query("bleu", description="Method to rerank the results.")
-    near_neighbor_first: bool = Query(False, description="Prioritize near neighbors in the search results.")
-    custom_priority_info: str = Query("", description="Custom information to prioritize certain results.")
+    gremlin_tmpl_num: int = Query(1, description="Number of Gremlin templates to use.")
     gremlin_prompt: Optional[str] = Query(
         prompt.gremlin_generate_prompt,
         description="Prompt for the Text2Gremlin query.",
     )
+
+
+class GraphConfigRequest(BaseModel):
+    ip: str = "127.0.0.1"
+    port: str = "8080"
+    name: str = "hugegraph"
+    user: str = "xxx"
+    pwd: str = "xxx"
+    gs: str = None
+
+
+# TODO: import the default value of prompt.* dynamically
+class GraphRAGRequest(BaseModel):
+    query: str = Query(..., description="Query you want to ask")
+    # Graph Configs
     max_graph_items: int = Query(30, description="Maximum number of items for GQL queries in graph.")
     topk_return_results: int = Query(20, description="Number of sorted results to return finally.")
     vector_dis_threshold: float = Query(0.9, description="Threshold for vector similarity \
@@ -85,14 +87,18 @@ class GraphRAGRequest(BaseModel):
     pwd: str = Query('xxx', description="graph server pwd.")
     gs: str = Query('', description="graphspace.")
 
+    client_cfg : Optional[GraphConfigRequest] = Query(None, description="Graph client config.")
 
-class GraphConfigRequest(BaseModel):
-    ip: str = "127.0.0.1"
-    port: str = "8080"
-    name: str = "hugegraph"
-    user: str = "xxx"
-    pwd: str = "xxx"
-    gs: str = None
+    gremlin_tmpl_num: int = Query(
+        1, description="Number of Gremlin templates to use. If num <=0 means template is not provided"
+    )
+    rerank_method: Literal["bleu", "reranker"] = Query("bleu", description="Method to rerank the results.")
+    near_neighbor_first: bool = Query(False, description="Prioritize near neighbors in the search results.")
+    custom_priority_info: str = Query("", description="Custom information to prioritize certain results.")
+    gremlin_prompt: Optional[str] = Query(
+        prompt.gremlin_generate_prompt,
+        description="Prompt for the Text2Gremlin query.",
+    )
 
 
 class LLMConfigRequest(BaseModel):
