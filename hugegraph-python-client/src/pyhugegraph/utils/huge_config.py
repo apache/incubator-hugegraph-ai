@@ -16,6 +16,7 @@
 # under the License.
 
 import re
+import sys
 import traceback
 from dataclasses import dataclass, field
 from typing import List, Optional
@@ -63,8 +64,12 @@ class HGraphConfig:
                     )
 
             except Exception as e:  # pylint: disable=broad-exception-caught
-                traceback.print_exception(e)
-                self.gs_supported = False
-                log.warning(
+                try:
+                    traceback.print_exception(e)
+                    self.gs_supported = False
+                except Exception as e:
+                    exc_type, exc_value, tb = sys.exc_info()
+                    traceback.print_exception(exc_type, exc_value, tb)
+                    log.warning(
                     "Failed to retrieve API version information from the server, reverting to default v1."
                 )
