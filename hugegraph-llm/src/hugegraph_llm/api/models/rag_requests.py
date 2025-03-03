@@ -76,7 +76,7 @@ class GraphRAGRequest(BaseModel):
                                     from the query, by default only the most similar one is returned.")
 
     client_config : Optional[GraphConfigRequest] = Query(None, description="hugegraph server config.")
-    get_vid_only: bool = Query(False, description="return only keywords & vid (early stop).")
+    get_vertex_only: bool = Query(False, description="return only keywords & vertex (early stop).")
 
     gremlin_tmpl_num: int = Query(
         1, description="Number of Gremlin templates to use. If num <=0 means template is not provided"
