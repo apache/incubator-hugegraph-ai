@@ -91,12 +91,11 @@ def record_qps(func: Callable) -> Callable:
         return result
     return wrapper
 
-# A decorator to wrap functions with a task id generation and logging
-def with_task_id(func):
-    def wrapper(*args, **kwargs):
+def with_task_id(func: Callable) -> Callable:
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         import uuid
         task_id = str(uuid.uuid4())
-        log.info(f"New task created with id: {task_id}")
+        log.info("New task created with id: %s", task_id)
         # Optionally, you could also pass the task_id to the function if needed:
         # kwargs['task_id'] = task_id
         return func(*args, **kwargs)
