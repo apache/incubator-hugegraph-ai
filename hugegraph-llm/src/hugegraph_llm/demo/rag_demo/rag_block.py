@@ -23,21 +23,12 @@ from typing import Tuple, Literal, Optional
 import gradio as gr
 import pandas as pd
 from gradio.utils import NamedString
-import uuid
 
 from hugegraph_llm.config import resource_path, prompt, huge_settings, llm_settings
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
+from hugegraph_llm.utils.decorators import with_task_id
 from hugegraph_llm.utils.log import log
 
-# A decorator to wrap functions with task id generation and logging
-def with_task_id(func):
-    def wrapper(*args, **kwargs):
-        task_id = str(uuid.uuid4())
-        log.info(f"New task created with id: {task_id}")
-        # Optionally, you could also pass the task_id to the function if needed:
-        # kwargs['task_id'] = task_id
-        return func(*args, **kwargs)
-    return wrapper
 
 @with_task_id
 def rag_answer(
@@ -134,24 +125,25 @@ def rag_answer(
 
 def create_rag_block():
     # pylint: disable=R0915 (too-many-statements),C0301
-    log.info("Creating RAG block...")
     gr.Markdown("""## 1. HugeGraph RAG Query""")
     with gr.Row():
         with gr.Column(scale=2):
             with gr.Blocks().queue(max_size=20, default_concurrency_limit=5):
-                log.info(f"Queue created...")
-
                 inp = gr.Textbox(value=prompt.default_question, label="Question", show_copy_button=True, lines=3)
 
                 # TODO: Only support inline formula now. Should support block formula
                 gr.Markdown("Basic LLM Answer", elem_classes="output-box-label")
-                raw_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
+                raw_out = gr.Markdown(elem_classes="output-box", show_copy_button=True,
+                                      latex_delimiters=[{"left": "$", "right": "$", "display": False}])
                 gr.Markdown("Vector-only Answer", elem_classes="output-box-label")
-                vector_only_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
+                vector_only_out = gr.Markdown(elem_classes="output-box", show_copy_button=True,
+                                              latex_delimiters=[{"left": "$", "right": "$", "display": False}])
                 gr.Markdown("Graph-only Answer", elem_classes="output-box-label")
-                graph_only_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
+                graph_only_out = gr.Markdown(elem_classes="output-box", show_copy_button=True,
+                                             latex_delimiters=[{"left": "$", "right": "$", "display": False}])
                 gr.Markdown("Graph-Vector Answer", elem_classes="output-box-label")
-                graph_vector_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
+                graph_vector_out = gr.Markdown(elem_classes="output-box", show_copy_button=True,
+                                               latex_delimiters=[{"left": "$", "right": "$", "display": False}])
 
                 answer_prompt_input = gr.Textbox(
                     value=prompt.answer_prompt, label="Query Prompt", show_copy_button=True, lines=7
@@ -162,12 +154,6 @@ def create_rag_block():
                     show_copy_button=True,
                     lines=7,
                 )
-
-                # try:
-                #     log.debug(f"Current queue size: {queueinstance.size()}")
-                #     log.debug(f"Number of concurrent processes: {queueinstance.concurrent_count()}")
-                # except Exception as e:
-                #     log.error(f"Error: {e}")
 
             with gr.Column(scale=1):
                 with gr.Row():
@@ -205,8 +191,7 @@ def create_rag_block():
                     )
                     btn = gr.Button("Answer Question", variant="primary")
 
-
-    btn.click( # pylint: disable=no-member
+    btn.click(  # pylint: disable=no-member
         fn=rag_answer,
         inputs=[
             inp,
