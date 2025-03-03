@@ -200,6 +200,8 @@ def create_rag_block():
             example_num,
         ],
         outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
+        queue=True,
+        concurrency_limit=5,
     )
 
     gr.Markdown(
