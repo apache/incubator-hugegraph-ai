@@ -32,7 +32,7 @@ from hugegraph_llm.api.models.rag_response import RAGResponse
 from hugegraph_llm.config import llm_settings, prompt
 from hugegraph_llm.utils.log import log
 
-
+# pylint: disable=too-many-statements
 def rag_http_api(
     router: APIRouter,
     rag_answer_func,

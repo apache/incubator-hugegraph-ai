@@ -255,19 +255,15 @@ class GraphRAGQuery:
                 gs = context.get("graphspace") or None
                 self._client = PyHugeClient(ip, port, graph, user, pwd, gs)
         assert self._client is not None, "No valid graph to search."
-        
+
     def get_vertex_details(self, vertex_ids: List[str]) -> List[Dict[str, Any]]:
         if not vertex_ids:
             return []
-            
+
         formatted_ids = ", ".join(f"'{vid}'" for vid in vertex_ids)
         gremlin_query = f"g.V({formatted_ids}).limit(20)"
-        try:
-            result = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
-            return result
-        except Exception as e:
-            log.error("Failed to get vertex details: %s", e)
-            return []
+        result = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
+        return result
 
     def _format_graph_from_vertex(self, query_result: List[Any]) -> Set[str]:
         knowledge = set()
@@ -389,8 +385,8 @@ class GraphRAGQuery:
         schema = self._get_graph_schema()
         vertex_props_str, edge_props_str = schema.split("\n")[:2]
         # TODO: rename to vertex (also need update in the schema)
-        vertex_props_str = vertex_props_str[len("Vertex properties: ") :].strip("[").strip("]")
-        edge_props_str = edge_props_str[len("Edge properties: ") :].strip("[").strip("]")
+        vertex_props_str = vertex_props_str[len("Vertex properties: "):].strip("[").strip("]")
+        edge_props_str = edge_props_str[len("Edge properties: "):].strip("[").strip("]")
         vertex_labels = self._extract_label_names(vertex_props_str)
         edge_labels = self._extract_label_names(edge_props_str)
         return vertex_labels, edge_labels
