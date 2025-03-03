@@ -44,6 +44,10 @@ def rag_answer(
     keywords_extract_prompt: str,
     gremlin_tmpl_num: Optional[int] = 2,
     gremlin_prompt: Optional[str] = None,
+    max_graph_items=30,
+    topk_return_results=20,
+    vector_dis_threshold=0.9,
+    topk_per_keyword=1,
 ) -> Tuple:
     """
     Generate an answer using the RAG (Retrieval-Augmented Generation) pipeline.
@@ -80,22 +84,28 @@ def rag_answer(
     if vector_search:
         rag.query_vector_index()
     if graph_search:
-        rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid().import_schema(
+        rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid(
+            vector_dis_threshold=vector_dis_threshold,
+            topk_per_keyword=topk_per_keyword,
+        ).import_schema(
             huge_settings.graph_name
         ).query_graphdb(
             num_gremlin_generate_example=gremlin_tmpl_num,
             gremlin_prompt=gremlin_prompt,
+            max_graph_items=max_graph_items
         )
     # TODO: add more user-defined search strategies
     rag.merge_dedup_rerank(
-        graph_ratio,
-        rerank_method,
-        near_neighbor_first,
+        graph_ratio=graph_ratio,
+        rerank_method=rerank_method,
+        near_neighbor_first=near_neighbor_first,
+        topk_return_results=topk_return_results
     )
     rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
 
     try:
-        context = rag.run(verbose=True, query=text, vector_search=vector_search, graph_search=graph_search)
+        context = rag.run(verbose=True, query=text, vector_search=vector_search, graph_search=graph_search,
+                          max_graph_items=max_graph_items)
         if context.get("switch_to_bleu"):
             gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
         return (
