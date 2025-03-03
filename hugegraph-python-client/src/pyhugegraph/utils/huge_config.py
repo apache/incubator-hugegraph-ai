@@ -67,7 +67,7 @@ class HGraphConfig:
                 try:
                     traceback.print_exception(e)
                     self.gs_supported = False
-                except Exception as e:
+                except:
                     exc_type, exc_value, tb = sys.exc_info()
                     traceback.print_exception(exc_type, exc_value, tb)
                     log.warning(
