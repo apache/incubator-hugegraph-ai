@@ -188,17 +188,28 @@ def graph_rag_recall(
     near_neighbor_first: bool,
     custom_related_information: str,
     gremlin_prompt: str,
+    max_graph_items: int,
+    topk_return_results: int,
+    vector_dis_threshold: float,
+    topk_per_keyword: int,
+    get_vid_only: bool
 ) -> dict:
     store_schema(prompt.text2gql_graph_schema, query, gremlin_prompt)
     rag = RAGPipeline()
-
-    rag.extract_keywords().keywords_to_vid().import_schema(huge_settings.graph_name).query_graphdb(
-        num_gremlin_generate_example=gremlin_tmpl_num,
-        gremlin_prompt=gremlin_prompt,
-    ).merge_dedup_rerank(
-        rerank_method=rerank_method,
-        near_neighbor_first=near_neighbor_first,
-        custom_related_information=custom_related_information,
-    )
+    rag.extract_keywords().keywords_to_vid(
+            vector_dis_threshold=vector_dis_threshold,
+            topk_per_keyword=topk_per_keyword,
+        )
+    if not get_vid_only:
+        rag.import_schema(huge_settings.graph_name).query_graphdb(
+            num_gremlin_generate_example=gremlin_tmpl_num,
+            gremlin_prompt=gremlin_prompt,
+            max_graph_items=max_graph_items,
+        ).merge_dedup_rerank(
+            rerank_method=rerank_method,
+            near_neighbor_first=near_neighbor_first,
+            custom_related_information=custom_related_information,
+            topk_return_results=topk_return_results,
+        )
     context = rag.run(verbose=True, query=query, graph_search=True)
     return context

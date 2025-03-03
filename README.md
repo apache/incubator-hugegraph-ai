@@ -22,7 +22,13 @@ It is used to define graph structures and perform CRUD operations on graph data.
 
 ## Contributing
 
-- Code format: Please run [`./style/code_format_and_analysis.sh`](style/code_format_and_analysis.sh) to format your code before submitting a MR.
+- Code format: Please run [`./style/code_format_and_analysis.sh`](style/code_format_and_analysis.sh) to format your code before submitting a PR. (Use `pylint` to check code style)
+- Thank you to all the people who already contributed to HugeGraph!
+
+## License
+
+hugegraph-ai is licensed under [Apache 2.0 License](./LICENSE).
+
 
 ## Contact Us
 
