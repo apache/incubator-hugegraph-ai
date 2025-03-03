@@ -32,7 +32,7 @@ from hugegraph_llm.api.models.rag_response import RAGResponse
 from hugegraph_llm.config import llm_settings, prompt
 from hugegraph_llm.utils.log import log
 
-
+# pylint: disable=too-many-statements
 def rag_http_api(
     router: APIRouter,
     rag_answer_func,
@@ -101,8 +101,17 @@ def rag_http_api(
                 near_neighbor_first=req.near_neighbor_first,
                 custom_related_information=req.custom_priority_info,
                 gremlin_prompt=req.gremlin_prompt or prompt.gremlin_generate_prompt,
-                get_vid_only=req.get_vid_only
+                get_vertex_only=req.get_vertex_only
             )
+
+            if req.get_vertex_only:
+                from hugegraph_llm.operators.hugegraph_op.graph_rag_query import GraphRAGQuery
+                graph_rag = GraphRAGQuery()
+                graph_rag.init_client(result)
+                vertex_details = graph_rag.get_vertex_details(result["match_vids"])
+
+                if vertex_details:
+                    result["match_vids"] = vertex_details
 
             if isinstance(result, dict):
                 params = [
