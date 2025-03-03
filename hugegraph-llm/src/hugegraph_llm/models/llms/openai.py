@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Callable, List, Optional, Dict, Any
+from typing import Callable, List, Optional, Dict, Any, Generator, AsyncGenerator
 
 import openai
 import tiktoken
@@ -90,9 +90,9 @@ class OpenAIClient(BaseLLM):
         retry=retry_if_exception_type((RateLimitError, APIConnectionError, APITimeoutError)),
     )
     async def agenerate(
-            self,
-            messages: Optional[List[Dict[str, Any]]] = None,
-            prompt: Optional[str] = None,
+        self,
+        messages: Optional[List[Dict[str, Any]]] = None,
+        prompt: Optional[str] = None,
     ) -> str:
         """Generate a response to the query messages/prompt."""
         if messages is None:
@@ -119,31 +119,91 @@ class OpenAIClient(BaseLLM):
             log.error("Retrying LLM call %s", e)
             raise e
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+        retry=retry_if_exception_type((RateLimitError, APIConnectionError, APITimeoutError)),
+    )
     def generate_streaming(
         self,
         messages: Optional[List[Dict[str, Any]]] = None,
         prompt: Optional[str] = None,
-        on_token_callback: Callable = None,
-    ) -> str:
-        """Generate a response to the query messages/prompt in streaming mode."""
+        on_token_callback: Optional[Callable[[str], None]] = None,
+    ) -> Generator[str, None, None]:
+        """Generate a response to the query messages/prompt in streaming mode.
+
+        Yields:
+            Accumulated response string after each new token.
+        """
         if messages is None:
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
-        completions = self.client.chat.completions.create(
-            model=self.model,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-            messages=messages,
-            stream=True,
-        )
-        result = ""
-        for message in completions:
-            # Process the streamed messages or perform any other desired action
-            delta = message["choices"][0]["delta"]
-            if "content" in delta:
-                result += delta["content"]
-            on_token_callback(message)
-        return result
+
+        try:
+            completions = self.client.chat.completions.create(
+                model=self.model,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                messages=messages,
+                stream=True,
+            )
+
+            for chunk in completions:
+                delta = chunk.choices[0].delta
+                if delta.content:
+                    token = delta.content
+                    if on_token_callback:
+                        on_token_callback(token)
+                    yield token
+
+        except openai.BadRequestError as e:
+            log.critical("Fatal: %s", e)
+            yield str(f"Error: {e}")
+        except openai.AuthenticationError:
+            log.critical("The provided API key is invalid")
+            yield "Error: The provided API key is invalid"
+        except Exception as e:
+            log.error("Error in streaming: %s", e)
+            raise e
+
+    async def agenerate_streaming(
+        self,
+        messages: Optional[List[Dict[str, Any]]] = None,
+        prompt: Optional[str] = None,
+        on_token_callback: Optional[Callable] = None,
+    ) -> AsyncGenerator[str, None]:
+        """Comment"""
+        if messages is None:
+            assert prompt is not None, "Messages or prompt must be provided."
+            messages = [{"role": "user", "content": prompt}]
+
+        try:
+            completions = await self.aclient.chat.completions.create(
+                model=self.model,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                messages=messages,
+                stream=True
+            )
+            async for chunk in completions:
+                delta = chunk.choices[0].delta
+                if delta.content:
+                    token = delta.content
+                    if on_token_callback:
+                        on_token_callback(token)
+                    yield token
+            # TODO: log.info("Token usage: %s", completions.usage.model_dump_json())
+        # catch context length / do not retry
+        except openai.BadRequestError as e:
+            log.critical("Fatal: %s", e)
+            yield str(f"Error: {e}")
+        # catch authorization errors / do not retry
+        except openai.AuthenticationError:
+            log.critical("The provided OpenAI API key is invalid")
+            yield "Error: The provided OpenAI API key is invalid"
+        except Exception as e:
+            log.error("Retrying LLM call %s", e)
+            raise e
 
     def num_tokens_from_string(self, string: str) -> int:
         """Get token count from string."""
