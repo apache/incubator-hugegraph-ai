@@ -40,7 +40,7 @@ Answer:
 
     default_question: str = """Tell me about Sarah."""
 
-    # Data is detached from hugegraph-llm/src/hugegraph_llm/operators/llm_op/property_graph_extract.py
+    # Note: Users should modify the prompt(examples) according to the real schema and text (property_graph_extract.py)
     extract_graph_prompt: str = """## Main Task
 Given the following graph schema and a piece of text, your task is to analyze the text and extract information that fits into the schema's structure, formatting the information into vertices and edges as specified.
 
@@ -85,7 +85,7 @@ Strictly follow these rules:
 2. Ensure the extracted property set in the same type as the given schema (like 'age' should be a number, 'select' should be a boolean).
 3. If there are multiple primary keys, the strategy for generating VID is: vertexlabelID:pk1!pk2!pk3 (pk means primary key, and '!' is the separator). This id must be generated ONLY if there are multiple primary keys. If there is only one primary key, the strategy for generating VID is: int (sequencially increasing).
 4. Output in JSON format, only include vertexes and edges & remove empty properties, extracted and formatted based on the text/rules and schema.
-5. Translate the schema fields into Chinese if the given text input is Chinese, even if the given schema is in English. (Optional)
+5. Translate the schema fields into Chinese if the given text input is Chinese (Optional)
 
 Refer to the following baseline example to understand the output generation requirements:
 ## Example:
