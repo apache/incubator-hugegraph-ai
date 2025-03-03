@@ -44,13 +44,8 @@ def rag_http_api(
 ):
     @router.post("/rag", status_code=status.HTTP_200_OK)
     def rag_answer_api(req: RAGRequest):
-        if req.client_config:
-            huge_settings.graph_ip = req.client_config.ip
-            huge_settings.graph_port = req.client_config.port
-            huge_settings.graph_name = req.client_config.name
-            huge_settings.graph_user = req.client_config.user
-            huge_settings.graph_pwd = req.client_config.pwd
-            huge_settings.graph_space = req.client_config.gs
+        set_graph_config(req)
+
         result = rag_answer_func(
             text=req.query,
             raw_answer=req.raw_answer,
@@ -81,16 +76,19 @@ def rag_http_api(
             },
         }
 
+    def set_graph_config(req):
+        if req.client_config:
+            huge_settings.graph_ip = req.client_config.ip
+            huge_settings.graph_port = req.client_config.port
+            huge_settings.graph_name = req.client_config.name
+            huge_settings.graph_user = req.client_config.user
+            huge_settings.graph_pwd = req.client_config.pwd
+            huge_settings.graph_space = req.client_config.gs
+
     @router.post("/rag/graph", status_code=status.HTTP_200_OK)
     def graph_rag_recall_api(req: GraphRAGRequest):
         try:
-            if req.client_config:
-                huge_settings.graph_ip = req.client_config.ip
-                huge_settings.graph_port = req.client_config.port
-                huge_settings.graph_name = req.client_config.name
-                huge_settings.graph_user = req.client_config.user
-                huge_settings.graph_pwd = req.client_config.pwd
-                huge_settings.graph_space = req.client_config.gs
+            set_graph_config(req)
 
             result = graph_rag_recall_func(
                 query=req.query,
