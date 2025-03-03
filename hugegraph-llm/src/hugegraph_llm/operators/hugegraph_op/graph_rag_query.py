@@ -110,7 +110,7 @@ class GraphRAGQuery:
         self._gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        self._init_client(context)
+        self.init_client(context)
 
         # initial flag: -1 means no result, 0 means subgraph query, 1 means gremlin query
         context["graph_result_flag"] = -1
@@ -239,7 +239,9 @@ class GraphRAGQuery:
             )
         return context
 
-    def _init_client(self, context):
+    # TODO: move this method to a util file for reuse (remove self param)
+    def init_client(self, context):
+        """Initialize the HugeGraph client from context or default settings."""
         # pylint: disable=R0915 (too-many-statements)
         if self._client is None:
             if isinstance(context.get("graph_client"), PyHugeClient):
@@ -253,6 +255,19 @@ class GraphRAGQuery:
                 gs = context.get("graphspace") or None
                 self._client = PyHugeClient(ip, port, graph, user, pwd, gs)
         assert self._client is not None, "No valid graph to search."
+        
+    def get_vertex_details(self, vertex_ids: List[str]) -> List[Dict[str, Any]]:
+        if not vertex_ids:
+            return []
+            
+        formatted_ids = ", ".join(f"'{vid}'" for vid in vertex_ids)
+        gremlin_query = f"g.V({formatted_ids}).limit(20)"
+        try:
+            result = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
+            return result
+        except Exception as e:
+            log.error("Failed to get vertex details: %s", e)
+            return []
 
     def _format_graph_from_vertex(self, query_result: List[Any]) -> Set[str]:
         knowledge = set()
