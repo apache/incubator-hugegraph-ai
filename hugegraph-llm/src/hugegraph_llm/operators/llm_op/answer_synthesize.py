@@ -254,21 +254,9 @@ class AnswerSynthesize:
             )
             auto_id += 1
 
-        # async_tasks_mapping = {
-        #     "raw_task": "raw_answer",
-        #     "vector_only_task": "vector_only_answer",
-        #     "graph_only_task": "graph_only_answer",
-        #     "graph_vector_task": "graph_vector_answer"
-        # }
+        ops = sum([self._raw_answer, self._vector_only_answer, self._graph_only_answer, self._graph_vector_answer])
+        context['call_count'] = context.get('call_count', 0) + ops
 
-        # for task_key, context_key in async_tasks_mapping.items():
-        #     if async_tasks.get(task_key):
-        #         response = await async_tasks[task_key]
-        #         context[context_key] = response
-        #         log.debug("Query Answer: %s", response)
-
-        # ops = sum([self._raw_answer, self._vector_only_answer, self._graph_only_answer, self._graph_vector_answer])
-        # context['call_count'] = context.get('call_count', 0) + ops
         async_tasks = [asyncio.create_task(anext(gen)) for gen in async_generators]
         while True:
             # print("# task", len(tasks))

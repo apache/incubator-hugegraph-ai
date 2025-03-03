@@ -111,7 +111,7 @@ def rag_answer(
         log.critical(e)
         raise gr.Error(f"An unexpected error occurred: {str(e)}")
 
-async def rag_answer_streaming_test(
+async def rag_answer_streaming(
     text: str,
     raw_answer: bool,
     vector_only_answer: bool,
@@ -203,40 +203,6 @@ async def rag_answer_streaming_test(
         log.critical(e)
         raise gr.Error(f"An unexpected error occurred: {str(e)}")
 
-def rag_answer_streaming(text: str, answer_prompt: str, keywords_extract_prompt: str) -> Tuple:
-    """
-    Generate an answer using the RAG (Retrieval-Augmented Generation) pipeline in streaming mode.
-    1. Initialize the RAGPipeline.
-    2. Extract keywords and query the graph database.
-    3. Merge, deduplicate, and rerank the results.
-    4. Synthesize the final answer.
-    5. Run the pipeline and return the results.
-    """
-
-    rag = RAGPipeline()
-    rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid().import_schema(
-        huge_settings.graph_name
-    ).query_graphdb()
-    rag.merge_dedup_rerank(
-        graph_ratio=0.6,
-        rerank_method="bleu",
-        near_neighbor_first=False,
-    )
-
-    try:
-        context = rag.run(verbose=True, query=text, vector_search=False, graph_search=True)
-
-        from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
-
-        yield from AnswerSynthesize().run_streaming(context, answer_prompt)
-
-    except ValueError as e:
-        log.critical(e)
-        raise gr.Error(str(e))
-    except Exception as e:
-        log.critical(e)
-        raise gr.Error(f"An unexpected error occurred: {str(e)}")
-
 def create_rag_block():
     # pylint: disable=R0915 (too-many-statements),C0301
     gr.Markdown("""## 1. HugeGraph RAG Query""")
@@ -300,7 +266,7 @@ def create_rag_block():
                 btn = gr.Button("Answer Question", variant="primary")
 
     btn.click(  # pylint: disable=no-member
-        fn=rag_answer_streaming_test,
+        fn=rag_answer_streaming,
         inputs=[
             inp,
             raw_radio,
@@ -316,33 +282,6 @@ def create_rag_block():
             example_num,
         ],
         outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
-    )
-
-    gr.Markdown("## (Testing) Streaming RAG Query")
-    # use graph_only as default to test streaming RAG query
-    with gr.Row():
-        with gr.Column(scale=2):
-            inp = gr.Textbox(value=prompt.default_question, label="Question", show_copy_button=True, lines=3)
-
-            gr.Markdown("Graph-only Answer", elem_classes="output-box-label")
-            stream_graph_out = gr.Markdown(elem_classes="output-box", show_copy_button=True,
-                                           latex_delimiters=[{"left":"$", "right":"$", "display":False}])
-
-            answer_prompt_input = gr.Textbox(
-                value=prompt.answer_prompt, label="Query Prompt", show_copy_button=True, lines=7
-            )
-            keywords_extract_prompt_input = gr.Textbox(
-                value=prompt.keywords_extract_prompt,
-                label="Keywords Extraction Prompt",
-                show_copy_button=True,
-                lines=7,
-            )
-        with gr.Column(scale=1):
-            stream_btn = gr.Button("(Streaming) Answer Question", variant="primary")
-    stream_btn.click(  # pylint: disable=no-member
-        fn=rag_answer_streaming,
-        inputs=[inp, answer_prompt_input, keywords_extract_prompt_input],
-        outputs=[stream_graph_out]
     )
 
     gr.Markdown(
