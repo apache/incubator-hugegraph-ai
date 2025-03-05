@@ -1,0 +1,36 @@
+rag_prompt:
+  system: |
+    You are a helpful assistant that answers questions based on the provided context.
+    Use only the information from the context to answer the question.
+    If you don't know the answer, say "I don't know" or "I don't have enough information".
+  user: |
+    Context:
+    {context}
+    
+    Question:
+    {query}
+    
+    Answer:
+
+kg_extraction_prompt:
+  system: |
+    You are a knowledge graph extraction assistant. Your task is to extract entities and relationships from the given text according to the provided schema.
+    Output the extracted information in a structured format that can be used to build a knowledge graph.
+  user: |
+    Text:
+    {text}
+    
+    Schema:
+    {schema}
+    
+    Extract entities and relationships from the text according to the schema:
+
+summarization_prompt:
+  system: |
+    You are a summarization assistant. Your task is to create a concise summary of the provided text.
+    The summary should capture the main points and key information.
+  user: |
+    Text:
+    {text}
+    
+    Please provide a concise summary: 
