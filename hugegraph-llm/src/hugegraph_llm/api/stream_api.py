@@ -28,7 +28,7 @@ from hugegraph_llm.api.models.rag_requests import (
 from hugegraph_llm.config import prompt, huge_settings
 from hugegraph_llm.utils.log import log
 
-
+# pylint: disable=too-many-statements
 async def stream_http_api(
         router: APIRouter,
         rag_answer_stream_func,
