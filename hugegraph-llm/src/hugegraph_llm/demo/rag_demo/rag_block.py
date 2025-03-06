@@ -18,7 +18,7 @@
 # pylint: disable=E1101
 
 import os
-from typing import Tuple, Literal, Optional
+from typing import AsyncGenerator, Tuple, Literal, Optional
 
 import gradio as gr
 import pandas as pd
@@ -27,6 +27,7 @@ from gradio.utils import NamedString
 from hugegraph_llm.config import resource_path, prompt, huge_settings, llm_settings
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.utils.decorators import with_task_id
+from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.utils.log import log
 
 
@@ -58,25 +59,10 @@ def rag_answer(
     4. Synthesize the final answer.
     5. Run the pipeline and return the results.
     """
-
-    gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
-    should_update_prompt = (
-        prompt.default_question != text
-        or prompt.answer_prompt != answer_prompt
-        or prompt.keywords_extract_prompt != keywords_extract_prompt
-        or prompt.gremlin_generate_prompt != gremlin_prompt
-        or prompt.custom_rerank_info != custom_related_information
-    )
-    if should_update_prompt:
-        prompt.custom_rerank_info = custom_related_information
-        prompt.default_question = text
-        prompt.answer_prompt = answer_prompt
-        prompt.keywords_extract_prompt = keywords_extract_prompt
-        prompt.gremlin_generate_prompt = gremlin_prompt
-        prompt.update_yaml_file()
-
-    vector_search = vector_only_answer or graph_vector_answer
-    graph_search = graph_only_answer or graph_vector_answer
+    graph_search, gremlin_prompt, vector_search = update_ui_configs(answer_prompt, custom_related_information,
+                                                                    graph_only_answer, graph_vector_answer,
+                                                                    gremlin_prompt, keywords_extract_prompt, text,
+                                                                    vector_only_answer)
     if raw_answer is False and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
         return "", "", "", ""
@@ -123,6 +109,106 @@ def rag_answer(
         raise gr.Error(f"An unexpected error occurred: {str(e)}")
 
 
+def update_ui_configs(answer_prompt, custom_related_information, graph_only_answer, graph_vector_answer, gremlin_prompt,
+                      keywords_extract_prompt, text, vector_only_answer):
+    gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
+    should_update_prompt = (
+        prompt.default_question != text
+        or prompt.answer_prompt != answer_prompt
+        or prompt.keywords_extract_prompt != keywords_extract_prompt
+        or prompt.gremlin_generate_prompt != gremlin_prompt
+        or prompt.custom_rerank_info != custom_related_information
+    )
+    if should_update_prompt:
+        prompt.custom_rerank_info = custom_related_information
+        prompt.default_question = text
+        prompt.answer_prompt = answer_prompt
+        prompt.keywords_extract_prompt = keywords_extract_prompt
+        prompt.gremlin_generate_prompt = gremlin_prompt
+        prompt.update_yaml_file()
+    vector_search = vector_only_answer or graph_vector_answer
+    graph_search = graph_only_answer or graph_vector_answer
+    return graph_search, gremlin_prompt, vector_search
+
+
+async def rag_answer_streaming(
+    text: str,
+    raw_answer: bool,
+    vector_only_answer: bool,
+    graph_only_answer: bool,
+    graph_vector_answer: bool,
+    graph_ratio: float,
+    rerank_method: Literal["bleu", "reranker"],
+    near_neighbor_first: bool,
+    custom_related_information: str,
+    answer_prompt: str,
+    keywords_extract_prompt: str,
+    gremlin_tmpl_num: Optional[int] = 2,
+    gremlin_prompt: Optional[str] = None,
+) -> AsyncGenerator[Tuple[str, str, str, str], None]:
+    """
+    Generate an answer using the RAG (Retrieval-Augmented Generation) pipeline.
+    1. Initialize the RAGPipeline.
+    2. Select vector search or graph search based on parameters.
+    3. Merge, deduplicate, and rerank the results.
+    4. Synthesize the final answer.
+    5. Run the pipeline and return the results.
+    """
+
+    graph_search, gremlin_prompt, vector_search = update_ui_configs(answer_prompt, custom_related_information,
+                                                                    graph_only_answer, graph_vector_answer,
+                                                                    gremlin_prompt, keywords_extract_prompt, text,
+                                                                    vector_only_answer)
+    if raw_answer is False and not vector_search and not graph_search:
+        gr.Warning("Please select at least one generate mode.")
+        yield "", "", "", ""
+        return
+
+    rag = RAGPipeline()
+    if vector_search:
+        rag.query_vector_index()
+    if graph_search:
+        rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid().import_schema(
+            huge_settings.graph_name
+        ).query_graphdb(
+            num_gremlin_generate_example=gremlin_tmpl_num,
+            gremlin_prompt=gremlin_prompt,
+        )
+    rag.merge_dedup_rerank(
+        graph_ratio,
+        rerank_method,
+        near_neighbor_first,
+    )
+    # rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
+
+    try:
+        context = rag.run(verbose=True, query=text, vector_search=vector_search, graph_search=graph_search)
+        if context.get("switch_to_bleu"):
+            gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
+        answer_synthesize = AnswerSynthesize(
+            raw_answer=raw_answer,
+            vector_only_answer=vector_only_answer,
+            graph_only_answer=graph_only_answer,
+            graph_vector_answer=graph_vector_answer,
+            prompt_template=answer_prompt,
+        )
+        async for context in answer_synthesize.run_streaming(context):
+            if context.get("switch_to_bleu"):
+                gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
+            yield (
+                context.get("raw_answer", ""),
+                context.get("vector_only_answer", ""),
+                context.get("graph_only_answer", ""),
+                context.get("graph_vector_answer", ""),
+            )
+    except ValueError as e:
+        log.critical(e)
+        raise gr.Error(str(e))
+    except Exception as e:
+        log.critical(e)
+        raise gr.Error(f"An unexpected error occurred: {str(e)}")
+
+
 def create_rag_block():
     # pylint: disable=R0915 (too-many-statements),C0301
     gr.Markdown("""## 1. HugeGraph RAG Query""")
@@ -134,16 +220,16 @@ def create_rag_block():
             # TODO: Only support inline formula now. Should support block formula
             gr.Markdown("Basic LLM Answer", elem_classes="output-box-label")
             raw_out = gr.Markdown(elem_classes="output-box", show_copy_button=True,
-                                    latex_delimiters=[{"left": "$", "right": "$", "display": False}])
+                                  latex_delimiters=[{"left": "$", "right": "$", "display": False}])
             gr.Markdown("Vector-only Answer", elem_classes="output-box-label")
             vector_only_out = gr.Markdown(elem_classes="output-box", show_copy_button=True,
-                                            latex_delimiters=[{"left": "$", "right": "$", "display": False}])
+                                          latex_delimiters=[{"left": "$", "right": "$", "display": False}])
             gr.Markdown("Graph-only Answer", elem_classes="output-box-label")
             graph_only_out = gr.Markdown(elem_classes="output-box", show_copy_button=True,
-                                            latex_delimiters=[{"left": "$", "right": "$", "display": False}])
+                                         latex_delimiters=[{"left": "$", "right": "$", "display": False}])
             gr.Markdown("Graph-Vector Answer", elem_classes="output-box-label")
             graph_vector_out = gr.Markdown(elem_classes="output-box", show_copy_button=True,
-                                            latex_delimiters=[{"left": "$", "right": "$", "display": False}])
+                                           latex_delimiters=[{"left": "$", "right": "$", "display": False}])
 
             answer_prompt_input = gr.Textbox(
                 value=prompt.answer_prompt, label="Query Prompt", show_copy_button=True, lines=7
@@ -192,7 +278,7 @@ def create_rag_block():
                 btn = gr.Button("Answer Question", variant="primary")
 
     btn.click(  # pylint: disable=no-member
-        fn=rag_answer,
+        fn=rag_answer_streaming,
         inputs=[
             inp,
             raw_radio,
@@ -265,13 +351,13 @@ def create_rag_block():
         is_vector_only_answer: bool,
         is_graph_only_answer: bool,
         is_graph_vector_answer: bool,
-        graph_ratio: float,
-        rerank_method: Literal["bleu", "reranker"],
-        near_neighbor_first: bool,
-        custom_related_information: str,
+        graph_ratio_ui: float,
+        rerank_method_ui: Literal["bleu", "reranker"],
+        near_neighbor_first_ui: bool,
+        custom_related_information_ui: str,
         answer_prompt: str,
         keywords_extract_prompt: str,
-        answer_max_line_count: int = 1,
+        answer_max_line_count_ui: int = 1,
         progress=gr.Progress(track_tqdm=True),
     ):
         df = pd.read_excel(questions_path, dtype=str)
@@ -284,10 +370,10 @@ def create_rag_block():
                 is_vector_only_answer,
                 is_graph_only_answer,
                 is_graph_vector_answer,
-                graph_ratio,
-                rerank_method,
-                near_neighbor_first,
-                custom_related_information,
+                graph_ratio_ui,
+                rerank_method_ui,
+                near_neighbor_first_ui,
+                custom_related_information_ui,
                 answer_prompt,
                 keywords_extract_prompt,
             )
@@ -296,9 +382,9 @@ def create_rag_block():
             df.at[index, "Graph-only Answer"] = graph_only_answer
             df.at[index, "Graph-Vector Answer"] = graph_vector_answer
             progress((index + 1, total_rows))
-        answers_path = os.path.join(resource_path, "demo", "questions_answers.xlsx")
-        df.to_excel(answers_path, index=False)
-        return df.head(answer_max_line_count), answers_path
+        answers_path_ui = os.path.join(resource_path, "demo", "questions_answers.xlsx")
+        df.to_excel(answers_path_ui, index=False)
+        return df.head(answer_max_line_count_ui), answers_path_ui
 
     with gr.Row():
         with gr.Column():

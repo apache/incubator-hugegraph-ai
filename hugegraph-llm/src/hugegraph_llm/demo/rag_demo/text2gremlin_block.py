@@ -192,7 +192,7 @@ def graph_rag_recall(
     topk_return_results: int,
     vector_dis_threshold: float,
     topk_per_keyword: int,
-    get_vid_only: bool
+    get_vertex_only: bool = False,
 ) -> dict:
     store_schema(prompt.text2gql_graph_schema, query, gremlin_prompt)
     rag = RAGPipeline()
@@ -200,7 +200,8 @@ def graph_rag_recall(
             vector_dis_threshold=vector_dis_threshold,
             topk_per_keyword=topk_per_keyword,
         )
-    if not get_vid_only:
+
+    if not get_vertex_only:
         rag.import_schema(huge_settings.graph_name).query_graphdb(
             num_gremlin_generate_example=gremlin_tmpl_num,
             gremlin_prompt=gremlin_prompt,
