@@ -124,7 +124,7 @@ class OllamaClient(BaseLLM):
                 stream=True
             )
             async for chunk in async_generator:
-                token = chunk["message"]["content"]
+                token = chunk.get("message", {}).get("content", "")
                 if on_token_callback:
                     on_token_callback(token)
                 yield token

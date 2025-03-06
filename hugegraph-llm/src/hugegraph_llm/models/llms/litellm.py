@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Callable, List, Optional, Dict, Any
+from typing import Callable, List, Optional, Dict, Any, AsyncGenerator
 
 import tiktoken
 from litellm import completion, acompletion
@@ -136,6 +136,35 @@ class LiteLLMClient(BaseLLM):
         except (RateLimitError, BudgetExceededError, APIError) as e:
             log.error("Error in streaming LiteLLM call: %s", e)
             return f"Error: {str(e)}"
+
+    async def agenerate_streaming(
+        self,
+        messages: Optional[List[Dict[str, Any]]] = None,
+        prompt: Optional[str] = None,
+        on_token_callback: Optional[Callable] = None,
+    ) -> AsyncGenerator[str, None]:
+        """Generate a response to the query messages/prompt in async streaming mode."""
+        if messages is None:
+            assert prompt is not None, "Messages or prompt must be provided."
+            messages = [{"role": "user", "content": prompt}]
+        try:
+            response = await acompletion(
+                model=self.model,
+                messages=messages,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                api_key=self.api_key,
+                base_url=self.api_base,
+                stream=True,
+            )
+            async for chunk in response:
+                if chunk.choices[0].delta.content:
+                    if on_token_callback:
+                        on_token_callback(chunk)
+                    yield chunk.choices[0].delta.content
+        except (RateLimitError, BudgetExceededError, APIError) as e:
+            log.error("Error in async streaming LiteLLM call: %s", e)
+            yield f"Error: {str(e)}"
 
     def num_tokens_from_string(self, string: str) -> int:
         """Get token count from string."""

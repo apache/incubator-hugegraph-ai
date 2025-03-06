@@ -81,7 +81,7 @@ class QianfanClient(BaseLLM):
             messages = [{"role": "user", "content": prompt}]
 
         for msg in self.chat_comp.do(messages=messages, model=self.chat_model, stream=True):
-            token = msg
+            token = msg.body['result']
             if on_token_callback:
                 on_token_callback(token)
             yield token
