@@ -125,7 +125,7 @@ class GremlinGenerateSynthesize:
         if not query:
             raise ValueError("query is required")
 
-        # TODO: update to async_generate again
-        # The best method may be changing all `operator.run(*arg)` to be asynchronous function
+        # TODO: Update to async_generate again
+        #       The best method may be changing all `operator.run(*arg)` to be async function
         context = self.sync_generate(context)
         return context

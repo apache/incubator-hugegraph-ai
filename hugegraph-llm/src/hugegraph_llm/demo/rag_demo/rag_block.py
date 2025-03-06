@@ -57,25 +57,10 @@ def rag_answer(
     4. Synthesize the final answer.
     5. Run the pipeline and return the results.
     """
-
-    gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
-    should_update_prompt = (
-        prompt.default_question != text
-        or prompt.answer_prompt != answer_prompt
-        or prompt.keywords_extract_prompt != keywords_extract_prompt
-        or prompt.gremlin_generate_prompt != gremlin_prompt
-        or prompt.custom_rerank_info != custom_related_information
-    )
-    if should_update_prompt:
-        prompt.custom_rerank_info = custom_related_information
-        prompt.default_question = text
-        prompt.answer_prompt = answer_prompt
-        prompt.keywords_extract_prompt = keywords_extract_prompt
-        prompt.gremlin_generate_prompt = gremlin_prompt
-        prompt.update_yaml_file()
-
-    vector_search = vector_only_answer or graph_vector_answer
-    graph_search = graph_only_answer or graph_vector_answer
+    graph_search, gremlin_prompt, vector_search = update_ui_configs(answer_prompt, custom_related_information,
+                                                                    graph_only_answer, graph_vector_answer,
+                                                                    gremlin_prompt, keywords_extract_prompt, text,
+                                                                    vector_only_answer)
     if raw_answer is False and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
         return "", "", "", ""
@@ -122,6 +107,28 @@ def rag_answer(
         raise gr.Error(f"An unexpected error occurred: {str(e)}")
 
 
+def update_ui_configs(answer_prompt, custom_related_information, graph_only_answer, graph_vector_answer, gremlin_prompt,
+                      keywords_extract_prompt, text, vector_only_answer):
+    gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
+    should_update_prompt = (
+        prompt.default_question != text
+        or prompt.answer_prompt != answer_prompt
+        or prompt.keywords_extract_prompt != keywords_extract_prompt
+        or prompt.gremlin_generate_prompt != gremlin_prompt
+        or prompt.custom_rerank_info != custom_related_information
+    )
+    if should_update_prompt:
+        prompt.custom_rerank_info = custom_related_information
+        prompt.default_question = text
+        prompt.answer_prompt = answer_prompt
+        prompt.keywords_extract_prompt = keywords_extract_prompt
+        prompt.gremlin_generate_prompt = gremlin_prompt
+        prompt.update_yaml_file()
+    vector_search = vector_only_answer or graph_vector_answer
+    graph_search = graph_only_answer or graph_vector_answer
+    return graph_search, gremlin_prompt, vector_search
+
+
 async def rag_answer_streaming(
     text: str,
     raw_answer: bool,
@@ -146,24 +153,10 @@ async def rag_answer_streaming(
     5. Run the pipeline and return the results.
     """
 
-    gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
-    should_update_prompt = (
-        prompt.default_question != text
-        or prompt.answer_prompt != answer_prompt
-        or prompt.keywords_extract_prompt != keywords_extract_prompt
-        or prompt.gremlin_generate_prompt != gremlin_prompt
-        or prompt.custom_rerank_info != custom_related_information
-    )
-    if should_update_prompt:
-        prompt.custom_rerank_info = custom_related_information
-        prompt.default_question = text
-        prompt.answer_prompt = answer_prompt
-        prompt.keywords_extract_prompt = keywords_extract_prompt
-        prompt.gremlin_generate_prompt = gremlin_prompt
-        prompt.update_yaml_file()
-
-    vector_search = vector_only_answer or graph_vector_answer
-    graph_search = graph_only_answer or graph_vector_answer
+    graph_search, gremlin_prompt, vector_search = update_ui_configs(answer_prompt, custom_related_information,
+                                                                    graph_only_answer, graph_vector_answer,
+                                                                    gremlin_prompt, keywords_extract_prompt, text,
+                                                                    vector_only_answer)
     if raw_answer is False and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
         yield "", "", "", ""
@@ -351,13 +344,13 @@ def create_rag_block():
         is_vector_only_answer: bool,
         is_graph_only_answer: bool,
         is_graph_vector_answer: bool,
-        graph_ratio: float,
-        rerank_method: Literal["bleu", "reranker"],
-        near_neighbor_first: bool,
-        custom_related_information: str,
+        graph_ratio_ui: float,
+        rerank_method_ui: Literal["bleu", "reranker"],
+        near_neighbor_first_ui: bool,
+        custom_related_information_ui: str,
         answer_prompt: str,
         keywords_extract_prompt: str,
-        answer_max_line_count: int = 1,
+        answer_max_line_count_ui: int = 1,
         progress=gr.Progress(track_tqdm=True),
     ):
         df = pd.read_excel(questions_path, dtype=str)
@@ -370,10 +363,10 @@ def create_rag_block():
                 is_vector_only_answer,
                 is_graph_only_answer,
                 is_graph_vector_answer,
-                graph_ratio,
-                rerank_method,
-                near_neighbor_first,
-                custom_related_information,
+                graph_ratio_ui,
+                rerank_method_ui,
+                near_neighbor_first_ui,
+                custom_related_information_ui,
                 answer_prompt,
                 keywords_extract_prompt,
             )
@@ -382,9 +375,9 @@ def create_rag_block():
             df.at[index, "Graph-only Answer"] = graph_only_answer
             df.at[index, "Graph-Vector Answer"] = graph_vector_answer
             progress((index + 1, total_rows))
-        answers_path = os.path.join(resource_path, "demo", "questions_answers.xlsx")
-        df.to_excel(answers_path, index=False)
-        return df.head(answer_max_line_count), answers_path
+        answers_path_ui = os.path.join(resource_path, "demo", "questions_answers.xlsx")
+        df.to_excel(answers_path_ui, index=False)
+        return df.head(answer_max_line_count_ui), answers_path_ui
 
     with gr.Row():
         with gr.Column():
