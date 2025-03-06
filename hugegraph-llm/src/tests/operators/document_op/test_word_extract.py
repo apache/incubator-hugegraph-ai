@@ -31,22 +31,20 @@ class TestWordExtract(unittest.TestCase):
     def test_init_with_defaults(self):
         """Test initialization with default values."""
         word_extract = WordExtract()
+        # pylint: disable=protected-access
         self.assertIsNone(word_extract._llm)
         self.assertIsNone(word_extract._query)
         self.assertEqual(word_extract._language, "english")
 
     def test_init_with_parameters(self):
         """Test initialization with provided parameters."""
-        word_extract = WordExtract(
-            text=self.test_query_en,
-            llm=self.mock_llm,
-            language="chinese"
-        )
+        word_extract = WordExtract(text=self.test_query_en, llm=self.mock_llm, language="chinese")
+        # pylint: disable=protected-access
         self.assertEqual(word_extract._llm, self.mock_llm)
         self.assertEqual(word_extract._query, self.test_query_en)
         self.assertEqual(word_extract._language, "chinese")
 
-    @patch('hugegraph_llm.models.llms.init_llm.LLMs')
+    @patch("hugegraph_llm.models.llms.init_llm.LLMs")
     def test_run_with_query_in_context(self, mock_llms_class):
         """Test running with query in context."""
         # Setup mock
@@ -57,14 +55,15 @@ class TestWordExtract(unittest.TestCase):
 
         # Create context with query
         context = {"query": self.test_query_en}
-        
+
         # Create WordExtract instance without query
         word_extract = WordExtract()
-        
+
         # Run the extraction
         result = word_extract.run(context)
-        
+
         # Verify that the query was taken from context
+        # pylint: disable=protected-access
         self.assertEqual(word_extract._query, self.test_query_en)
         self.assertIn("keywords", result)
         self.assertIsInstance(result["keywords"], list)
@@ -74,13 +73,13 @@ class TestWordExtract(unittest.TestCase):
         """Test running with query provided at initialization."""
         # Create context without query
         context = {}
-        
+
         # Create WordExtract instance with query
         word_extract = WordExtract(text=self.test_query_en, llm=self.mock_llm)
-        
+
         # Run the extraction
         result = word_extract.run(context)
-        
+
         # Verify that the query was used
         self.assertEqual(result["query"], self.test_query_en)
         self.assertIn("keywords", result)
@@ -91,14 +90,15 @@ class TestWordExtract(unittest.TestCase):
         """Test running with language in context."""
         # Create context with language
         context = {"query": self.test_query_en, "language": "spanish"}
-        
+
         # Create WordExtract instance
         word_extract = WordExtract(llm=self.mock_llm)
-        
+
         # Run the extraction
         result = word_extract.run(context)
-        
+
         # Verify that the language was taken from context
+        # pylint: disable=protected-access
         self.assertEqual(word_extract._language, "spanish")
         self.assertEqual(result["language"], "spanish")
 
@@ -106,14 +106,15 @@ class TestWordExtract(unittest.TestCase):
         """Test filtering keywords with lowercase option."""
         word_extract = WordExtract(llm=self.mock_llm)
         keywords = ["Test", "EXAMPLE", "Multi-Word Phrase"]
-        
+
         # Filter with lowercase=True
+        # pylint: disable=protected-access
         result = word_extract._filter_keywords(keywords, lowercase=True)
-        
+
         # Check that words are lowercased
         self.assertIn("test", result)
         self.assertIn("example", result)
-        
+
         # Check that multi-word phrases are split
         self.assertIn("multi", result)
         self.assertIn("word", result)
@@ -123,15 +124,16 @@ class TestWordExtract(unittest.TestCase):
         """Test filtering keywords without lowercase option."""
         word_extract = WordExtract(llm=self.mock_llm)
         keywords = ["Test", "EXAMPLE", "Multi-Word Phrase"]
-        
+
         # Filter with lowercase=False
+        # pylint: disable=protected-access
         result = word_extract._filter_keywords(keywords, lowercase=False)
-        
+
         # Check that original case is preserved
         self.assertIn("Test", result)
         self.assertIn("EXAMPLE", result)
         self.assertIn("Multi-Word Phrase", result)
-        
+
         # Check that multi-word phrases are still split
         self.assertTrue(any(w in result for w in ["Multi", "Word", "Phrase"]))
 
@@ -139,21 +141,23 @@ class TestWordExtract(unittest.TestCase):
         """Test running with Chinese text."""
         # Create context
         context = {}
-        
+
         # Create WordExtract instance with Chinese text
         word_extract = WordExtract(text=self.test_query_zh, llm=self.mock_llm, language="chinese")
-        
+
         # Run the extraction
         result = word_extract.run(context)
-        
+
         # Verify that keywords were extracted
         self.assertIn("keywords", result)
         self.assertIsInstance(result["keywords"], list)
         self.assertGreater(len(result["keywords"]), 0)
         # Check for expected Chinese keywords
-        self.assertTrue(any("人工" in keyword for keyword in result["keywords"]) or 
-                       any("智能" in keyword for keyword in result["keywords"]))
+        self.assertTrue(
+            any("人工" in keyword for keyword in result["keywords"])
+            or any("智能" in keyword for keyword in result["keywords"])
+        )
 
 
 if __name__ == "__main__":
-    unittest.main() 
+    unittest.main()

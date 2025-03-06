@@ -16,39 +16,54 @@
 # under the License.
 
 import unittest
-import importlib
+
+from hugegraph_llm.document import Document, Metadata
 
 
-class TestDocumentModule(unittest.TestCase):
-    def test_import_document_module(self):
-        """Test that the document module can be imported."""
-        try:
-            import hugegraph_llm.document
-            self.assertTrue(True)
-        except ImportError:
-            self.fail("Failed to import hugegraph_llm.document module")
-            
-    def test_import_chunk_split(self):
-        """Test that the chunk_split module can be imported."""
-        try:
-            from hugegraph_llm.document import chunk_split
-            self.assertTrue(True)
-        except ImportError:
-            self.fail("Failed to import chunk_split module")
-            
-    def test_chunk_splitter_class_exists(self):
-        """Test that the ChunkSplitter class exists in the chunk_split module."""
-        try:
-            from hugegraph_llm.document.chunk_split import ChunkSplitter
-            self.assertTrue(True)
-        except ImportError:
-            self.fail("ChunkSplitter class not found in chunk_split module")
-            
-    def test_module_reload(self):
-        """Test that the document module can be reloaded."""
-        try:
-            import hugegraph_llm.document
-            importlib.reload(hugegraph_llm.document)
-            self.assertTrue(True)
-        except Exception as e:
-            self.fail(f"Failed to reload document module: {e}")
+class TestDocument(unittest.TestCase):
+    def test_document_initialization(self):
+        """Test document initialization with content and metadata."""
+        content = "This is a test document."
+        metadata = {"source": "test", "author": "tester"}
+        doc = Document(content=content, metadata=metadata)
+
+        self.assertEqual(doc.content, content)
+        self.assertEqual(doc.metadata["source"], "test")
+        self.assertEqual(doc.metadata["author"], "tester")
+
+    def test_document_default_metadata(self):
+        """Test document initialization with default empty metadata."""
+        content = "This is a test document."
+        doc = Document(content=content)
+
+        self.assertEqual(doc.content, content)
+        self.assertEqual(doc.metadata, {})
+
+    def test_metadata_class(self):
+        """Test Metadata class functionality."""
+        metadata = Metadata(source="test_source", author="test_author", page=5)
+        metadata_dict = metadata.as_dict()
+
+        self.assertEqual(metadata_dict["source"], "test_source")
+        self.assertEqual(metadata_dict["author"], "test_author")
+        self.assertEqual(metadata_dict["page"], 5)
+
+    def test_metadata_as_dict(self):
+        """Test converting Metadata to dictionary."""
+        metadata = Metadata(source="test_source", author="test_author", page=5)
+        metadata_dict = metadata.as_dict()
+
+        self.assertEqual(metadata_dict["source"], "test_source")
+        self.assertEqual(metadata_dict["author"], "test_author")
+        self.assertEqual(metadata_dict["page"], 5)
+
+    def test_document_with_metadata_object(self):
+        """Test document initialization with Metadata object."""
+        content = "This is a test document."
+        metadata = Metadata(source="test_source", author="test_author", page=5)
+        doc = Document(content=content, metadata=metadata)
+
+        self.assertEqual(doc.content, content)
+        self.assertEqual(doc.metadata["source"], "test_source")
+        self.assertEqual(doc.metadata["author"], "test_author")
+        self.assertEqual(doc.metadata["page"], 5)

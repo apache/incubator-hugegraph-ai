@@ -17,31 +17,26 @@
 
 import os
 import sys
-import pytest
+import logging
 import nltk
 
-# 获取项目根目录
+# Get project root directory
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-# 添加到 Python 路径
+# Add to Python path
 sys.path.insert(0, project_root)
-
-# 添加 src 目录到 Python 路径
+# Add src directory to Python path
 src_path = os.path.join(project_root, "src")
 sys.path.insert(0, src_path)
-
-# 下载 NLTK 资源
+# Download NLTK resources
 def download_nltk_resources():
     try:
         nltk.data.find("corpora/stopwords")
     except LookupError:
-        print("下载 NLTK stopwords 资源...")
-        nltk.download('stopwords', quiet=True)
-
-# 在测试开始前下载 NLTK 资源
+        logging.info("Downloading NLTK stopwords resource...")
+        nltk.download("stopwords", quiet=True)
+# Download NLTK resources before tests start
 download_nltk_resources()
-
-# 设置环境变量，跳过外部服务测试
-os.environ['SKIP_EXTERNAL_SERVICES'] = 'true'
-
-# 打印当前 Python 路径，用于调试
-print("Python path:", sys.path) 
+# Set environment variable to skip external service tests
+os.environ["SKIP_EXTERNAL_SERVICES"] = "true"
+# Log current Python path for debugging
+logging.debug("Python path: %s", sys.path)
