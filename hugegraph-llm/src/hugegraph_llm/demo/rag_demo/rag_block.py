@@ -121,6 +121,7 @@ def rag_answer(
         log.critical(e)
         raise gr.Error(f"An unexpected error occurred: {str(e)}")
 
+
 async def rag_answer_streaming(
     text: str,
     raw_answer: bool,
@@ -178,7 +179,6 @@ async def rag_answer_streaming(
             num_gremlin_generate_example=gremlin_tmpl_num,
             gremlin_prompt=gremlin_prompt,
         )
-    # TODO: add more user-defined search strategies
     rag.merge_dedup_rerank(
         graph_ratio,
         rerank_method,
@@ -213,6 +213,7 @@ async def rag_answer_streaming(
         log.critical(e)
         raise gr.Error(f"An unexpected error occurred: {str(e)}")
 
+
 def create_rag_block():
     # pylint: disable=R0915 (too-many-statements),C0301
     gr.Markdown("""## 1. HugeGraph RAG Query""")
@@ -222,13 +223,17 @@ def create_rag_block():
 
             # TODO: Only support inline formula now. Should support block formula
             gr.Markdown("Basic LLM Answer", elem_classes="output-box-label")
-            raw_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
+            raw_out = gr.Markdown(elem_classes="output-box", show_copy_button=True,
+                                  latex_delimiters=[{"left": "$", "right": "$", "display": False}])
             gr.Markdown("Vector-only Answer", elem_classes="output-box-label")
-            vector_only_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
+            vector_only_out = gr.Markdown(elem_classes="output-box", show_copy_button=True,
+                                          latex_delimiters=[{"left": "$", "right": "$", "display": False}])
             gr.Markdown("Graph-only Answer", elem_classes="output-box-label")
-            graph_only_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
+            graph_only_out = gr.Markdown(elem_classes="output-box", show_copy_button=True,
+                                         latex_delimiters=[{"left": "$", "right": "$", "display": False}])
             gr.Markdown("Graph-Vector Answer", elem_classes="output-box-label")
-            graph_vector_out = gr.Markdown(elem_classes="output-box", show_copy_button=True, latex_delimiters=[{"left":"$", "right":"$", "display":False}])
+            graph_vector_out = gr.Markdown(elem_classes="output-box", show_copy_button=True,
+                                           latex_delimiters=[{"left": "$", "right": "$", "display": False}])
 
             answer_prompt_input = gr.Textbox(
                 value=prompt.answer_prompt, label="Query Prompt", show_copy_button=True, lines=7
