@@ -19,6 +19,7 @@
 from hugegraph_llm.models.embeddings.openai import OpenAIEmbedding
 from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
 from hugegraph_llm.models.embeddings.qianfan import QianFanEmbedding
+from hugegraph_llm.models.embeddings.litellm import LiteLLMEmbedding
 from hugegraph_llm.config import llm_settings
 
 
@@ -44,6 +45,12 @@ class Embeddings:
                 model_name=llm_settings.qianfan_embedding_model,
                 api_key=llm_settings.qianfan_embedding_api_key,
                 secret_key=llm_settings.qianfan_embedding_secret_key
+            )
+        if self.embedding_type == "litellm":
+            return LiteLLMEmbedding(
+                model_name=llm_settings.litellm_embedding_model,
+                api_key=llm_settings.litellm_embedding_api_key,
+                api_base=llm_settings.litellm_embedding_api_base
             )
 
         raise Exception("embedding type is not supported !")
