@@ -1,11 +1,6 @@
-FROM iregistry.baidu-int.com/baidu-base/python:3.10-noble
+FROM python:3.10.16-bookworm
 
-RUN apt update && apt install -y --no-install-recommends \
-    zip net-tools less psmisc python3-pip pkg-config \
-    && apt clean \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN pip3 install --break-system-packages --no-cache-dir poetry
+RUN pip install --no-cache-dir poetry
 
 WORKDIR /home/work/
 
@@ -20,7 +15,5 @@ RUN cd /home/work/hugegraph-llm && \
 ENV PATH="/home/work/hugegraph-llm/.venv/bin:$PATH"
 
 WORKDIR /home/work/hugegraph-llm
-
-USER work
 
 CMD [ "python", "-m", "hugegraph_llm.demo.rag_demo.app", "--port", "8080" ]
