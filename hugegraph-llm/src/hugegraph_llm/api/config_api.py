@@ -27,7 +27,6 @@ from hugegraph_llm.api.models.rag_response import RAGResponse
 from hugegraph_llm.config import llm_settings
 
 
-
 async def graph_config_route(router: APIRouter, apply_graph_conf):
     @router.post("/config/graph", status_code=status.HTTP_201_CREATED)
     async def graph_config_api(req: GraphConfigRequest):
@@ -37,7 +36,7 @@ async def graph_config_route(router: APIRouter, apply_graph_conf):
     return graph_config_api
 
 async def llm_config_route(router: APIRouter, apply_llm_conf):
-    # TODO: restructure the implement of llm to three types, like "/config/chat_llm"
+    # TODO: restructure the implement of llm to three types, like "/config/chat_llm" + /config/mini_task_llm + ..
     @router.post("/config/llm", status_code=status.HTTP_201_CREATED)
     async def llm_config_api(req: LLMConfigRequest):
         llm_settings.llm_type = req.llm_type

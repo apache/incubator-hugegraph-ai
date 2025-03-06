@@ -15,8 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import unittest
 import asyncio
+import unittest
+
 from fastapi import FastAPI, APIRouter
 from fastapi.testclient import TestClient
 
@@ -60,7 +61,7 @@ class TestRagApi(unittest.TestCase):
             "vertex_degree_list": [1, 2]
         })
 
-        # Setup the API
+        # Set up the API
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             rag_http_api(

@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
 import asyncio
+import json
 
 from fastapi import status, APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
@@ -27,6 +27,7 @@ from hugegraph_llm.api.models.rag_requests import (
 )
 from hugegraph_llm.config import prompt, huge_settings
 from hugegraph_llm.utils.log import log
+
 
 # pylint: disable=too-many-statements
 async def stream_http_api(
@@ -130,7 +131,7 @@ async def stream_http_api(
                         gremlin_prompt=req.gremlin_prompt or prompt.gremlin_generate_prompt,
                         get_vertex_only=req.get_vertex_only
                 ):
-                    # Handle vertex details for get_vertex_only flag
+                    # Handle vertex details for a get_vertex_only flag
                     if req.get_vertex_only and isinstance(chunk, dict) and "match_vids" in chunk:
                         from hugegraph_llm.operators.hugegraph_op.graph_rag_query import GraphRAGQuery
                         graph_rag = GraphRAGQuery()
