@@ -1,0 +1,10 @@
+version: '3'
+services:
+  hugegraph-llm:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile.llm
+  container_name: hugegraph-llm-rag
+  restart: always
+  ports:
+    - "8080:8080"
