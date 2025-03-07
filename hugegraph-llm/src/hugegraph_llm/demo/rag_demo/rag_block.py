@@ -187,7 +187,7 @@ async def rag_answer_streaming(
         context = rag.run(verbose=True, query=text, vector_search=vector_search, graph_search=graph_search)
         if context.get("switch_to_bleu"):
             gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
-            
+
         def stream_data(stream):
             collect=""
             for chunk in stream:
@@ -216,7 +216,7 @@ async def rag_answer_streaming(
 
         for update1, update2,update3,update4 in run_streaming(u1,u2,u3,u4):
             yield gr.update(value=update1), gr.update(value=update2), gr.update(value=update3), gr.update(value=update4)
-        
+
 
 
     except ValueError as e:
