@@ -29,7 +29,6 @@ from gradio.utils import NamedString
 
 from hugegraph_llm.config import resource_path, prompt, huge_settings, llm_settings
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
-from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.utils.log import log
 
 
