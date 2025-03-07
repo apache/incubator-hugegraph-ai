@@ -60,4 +60,3 @@ watchfiles_logger = logging.getLogger("watchfiles")
 watchfiles_logger.handlers.clear()
 watchfiles_logger.handlers.extend(root_logger.handlers)
 watchfiles_logger.setLevel(logging.ERROR)
-
