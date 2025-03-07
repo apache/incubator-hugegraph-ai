@@ -18,12 +18,12 @@
 
 set -e
 
-tag="v1.5.0"
+tag="1.5.0"
 
 script_dir=$(realpath "$(dirname "$0")")
 
 cd "${script_dir}/../docker"
 
-name="hugegraph/hugegraph-llm:${tag}"
+name="hugegraph/graphrag:${tag}"
 
 docker build -f Dockerfile.llm -t ${name} ..

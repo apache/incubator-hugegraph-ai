@@ -16,4 +16,3 @@ spec:
       name: http
   selector:
     {{- include "hg-llm.selectorLabels" . | nindent 4 }}
-    
