@@ -1,0 +1,12 @@
+# TODO: we could add graph server & hubble(Graph UI) here
+# Usage: docker-compose -f docker-compose-llm.yml up -d
+version: '3'
+services:
+  hugegraph-llm:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile.llm
+  container_name: hugegraph-llm-rag
+  restart: always
+  ports:
+    - "8001:8001"
