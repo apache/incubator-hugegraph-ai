@@ -19,7 +19,7 @@
 
 import os
 from typing import Tuple, Literal, Optional
-
+import time
 import gradio as gr
 import pandas as pd
 from gradio.utils import NamedString
@@ -73,7 +73,7 @@ def rag_answer(
     graph_search = graph_only_answer or graph_vector_answer
     if raw_answer is False and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
-        return "", "", "", ""
+        yield gr.update(value=""), gr.update(value=""), gr.update(value=""), gr.update(value="")
 
     rag = RAGPipeline()
     if vector_search:
@@ -97,12 +97,36 @@ def rag_answer(
         context = rag.run(verbose=True, query=text, vector_search=vector_search, graph_search=graph_search)
         if context.get("switch_to_bleu"):
             gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
-        return (
-            context.get("raw_answer", ""),
-            context.get("vector_only_answer", ""),
-            context.get("graph_only_answer", ""),
-            context.get("graph_vector_answer", ""),
-        )
+        def stream_data(stream):
+            collect=""
+            for chunk in stream:
+                if chunk:
+                    collect+=chunk
+                    yield collect
+                time.sleep(0.001)
+        u1=[""]
+        u2=[""]
+        u3=[""]
+        u4=[""]
+        def run_streaming(u1,u2,u3,u4):
+            for update1 in stream_data(context.get("raw_answer", "")):
+                u1[0]=update1
+                yield u1[0], u2[0] ,u3[0],u4[0] # Stream output 1
+            for update2 in stream_data(context.get("vector_only_answer", "")):
+                u2[0]=update2
+                yield u1[0], u2[0] ,u3[0],u4[0]
+
+            for update3 in stream_data(context.get("graph_only_answer", "")):
+                u3[0]=update3
+                yield u1[0], u2[0] ,u3[0],u4[0]
+            for update4 in stream_data(context.get("graph_vector_answer", "")):
+                u4[0]=update4
+                yield u1[0], u2[0] ,u3[0],u4[0]
+
+        for update1, update2,update3,update4 in run_streaming(u1,u2,u3,u4):
+            yield gr.update(value=update1), gr.update(value=update2), gr.update(value=update3), gr.update(value=update4)
+        
+
     except ValueError as e:
         log.critical(e)
         raise gr.Error(str(e))
