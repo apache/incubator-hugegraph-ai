@@ -13,7 +13,8 @@
 
 Construct a knowledge graph, chunk vector, and graph vid vector from the text.
 
-![img](https://hugegraph.feishu.cn/space/api/box/stream/download/asynccode/?code=Y2RiMzQ2M2Q3YzhiNzIzNWQwZTc2YWViNWYzYTdhNTJfT0pTaGFzVTZycHZEZHRlS05ReWxQcnRvbGtVYmt0dnhfVG9rZW46VG5MaGJLNmh0bzZBNGx4bUQ2MmNmNTRYbkVsXzE3NDEyNzA4NzE6MTc0MTI3NDQ3MV9WNA)
+![image](https://github.com/user-attachments/assets/f67dc679-a02d-4da9-8a66-62a7a90444e7)
+
 
 ```mermaid
 graph TD;
@@ -75,7 +76,7 @@ This module consists of two parts:
 
 The first part handles single queries, while the second part handles multiple queries at once. Below is an explanation of the first part.
 
-![img](https://hugegraph.feishu.cn/space/api/box/stream/download/asynccode/?code=YmYxNzYxNzA5NTFmMzUwMTcwNDZmMmNmZTYxNTkxNWZfb3ZKVHlVWWt5VnhPWTZBeTNWaWxJTEdueUduN0VpTElfVG9rZW46SVhrdGJxZzZmb2R0SUZ4WWljWmNHYnUwbk9iXzE3NDEyNzEyMzQ6MTc0MTI3NDgzNF9WNA)
+![image](https://github.com/user-attachments/assets/b18b8a59-6666-46ee-a201-f9bde8d60694)
 
 ```mermaid
 graph TD;
@@ -106,7 +107,7 @@ graph TD;
 - **Graph-only Answer:** Uses only graph-based retrieval (queries graph vid vectors in the vector database and the graph database)
 - **Graph-Vector Answer:** Uses both graph-based and vector-based retrieval
 
-![img](https://hugegraph.feishu.cn/space/api/box/stream/download/asynccode/?code=NDI4NjA5YTdkMDExMWFiZTljMDViZGY4YmMxY2RiZjRfMm9MNGxnMlhCNDZlM0NmU1NlUE1lYlJqOXdLcVozdEtfVG9rZW46R2JGUmJLRzhsbzZhUkl4U205OGM4MUpIbm5GXzE3NDEyNzEzNDg6MTc0MTI3NDk0OF9WNA)
+![image](https://github.com/user-attachments/assets/26641e09-249f-4b3a-8013-16dc9383d333)
 
 ### Execution Flow:
 
@@ -114,7 +115,7 @@ graph TD;
 
 - Extract keywords from the **question** using the **Keywords Extraction Prompt**.
 
-![img](https://hugegraph.feishu.cn/space/api/box/stream/download/asynccode/?code=NmMwNDJhOGE0YjMzMzA5NTZhZTM2NTQwZmM0NDU1MjFfNGxnV2c0cXJlTE1uY3dDT2JtR0dqYVl2cmNzcTFVYmZfVG9rZW46SjRvNGJVV2I5b0NDU1V4N25CTGNzYVZnblNmXzE3NDEyNzEzNjM6MTc0MTI3NDk2M19WNA)
+![image](https://github.com/user-attachments/assets/3d4471a8-babb-40b5-b372-c69216b1e83c)
 
 - Use the extracted keywords to:
 
@@ -142,7 +143,7 @@ graph TD;
   - **Graph-only Answer**
   - **Graph-Vector Answer**
 
-![img](https://hugegraph.feishu.cn/space/api/box/stream/download/asynccode/?code=ODFhZjE0NDJkYTFiZmZiZDgyOTkyYjJjZWI3YjJhYzZfd1J6dHJ6bjZSbnpRN0RuWmZ0WjY2MDl5dzlrY1RHYjBfVG9rZW46SDg1eGJ4VjdZb0FuUUl4emhUWGM4OWZobjRkXzE3NDEyNzE0NDY6MTc0MTI3NTA0Nl9WNA)
+![image](https://github.com/user-attachments/assets/7d4496a3-d44c-4491-9463-8e93595dfa45)
 
 # 4. (Processing Flow) Text2Gremlin
 
@@ -155,7 +156,7 @@ This module consists of two parts:
 
 The first part is straightforward, so the focus is on the second part.
 
-![img](https://hugegraph.feishu.cn/space/api/box/stream/download/asynccode/?code=Yzk4NjUzODQ4ZDFkZGFjYzRjM2E3NmU3Yjg0NWFjOTNfSTNUS2RvblB0bVdWdlFjaTRraFI2RE84enZQRDNLZWRfVG9rZW46T0lNcmJ2MWFlb1RDMGF4TlBycWNob0lNbjRjXzE3NDEyNzE1MDM6MTc0MTI3NTEwM19WNA)
+![image](https://github.com/user-attachments/assets/9a1c3f85-3633-4283-94f5-c677c578b388)
 
 ```mermaid
 graph TD;
@@ -173,7 +174,7 @@ graph TD;
 
 - **Natural Language** **Query**: Input the natural language text to be converted into Gremlin.
 
-![img](https://hugegraph.feishu.cn/space/api/box/stream/download/asynccode/?code=MTRlMjMzMjMzZTZjYzEyNjY3YWYxNThiOWFmMTJkNTFfR05WNWJ3Z201VzNONEFUZ2dQSHlnWGRuRW1CTG1ZUHBfVG9rZW46WGgxdWJFSTIyb0R5a1d4WTVMWGNwckhwbkhiXzE3NDEyNzE1Nzg6MTc0MTI3NTE3OF9WNA)
+![image](https://github.com/user-attachments/assets/d2a72f45-488c-4099-968b-a11816655ba0)
 
 - **Schema:** Input the graph schema.
 
@@ -192,7 +193,7 @@ graph TD;
       - Retrieve the **graph schema**.
       - Query the vector database for example vectors, retrieving query-gremlin pairs similar to the input query (if the vector database lacks examples, it automatically initializes with examples from the **resources** folder).
 
-      ![img](https://hugegraph.feishu.cn/space/api/box/stream/download/asynccode/?code=NDcwNmEwY2ZhMGM1ZjNlMWI0MDk4YmQ1OWMyYzYyNjJfSnBjUVJJOHgxM1o5MkMyY0xCV1IxNWQ2TlZxWVhpTzFfVG9rZW46U3MxY2Jsdmlyb21lTFp4TGc0bmNVbjJ1bldmXzE3NDEyNzE1ODc6MTc0MTI3NTE4N19WNA)
+![image](https://github.com/user-attachments/assets/c6040308-d336-4dd1-b47e-f6052b0be424)
 
       - Generate the Gremlin query using the constructed prompt.
 
