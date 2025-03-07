@@ -1,3 +1,5 @@
+> Follow up [README.md](./README.md) to introduce the basic UI function & details, welcome to update and improve at any time, thanks
+
 # 1. Core Logic of the Project
 
 ## Build RAG Index Responsibilities:
