@@ -13,7 +13,8 @@
 
 Construct a knowledge graph, chunk vector, and graph vid vector from the text.
 
-![image](https://github.com/user-attachments/assets/f67dc679-a02d-4da9-8a66-62a7a90444e7)
+![image](https://github.com/user-attachments/assets/f3366d46-2e31-4638-94c4-7214951ef77a)
+
 
 
 ```mermaid
@@ -76,7 +77,8 @@ This module consists of two parts:
 
 The first part handles single queries, while the second part handles multiple queries at once. Below is an explanation of the first part.
 
-![image](https://github.com/user-attachments/assets/b18b8a59-6666-46ee-a201-f9bde8d60694)
+![image](https://github.com/user-attachments/assets/33698062-e46b-4757-8b5e-93e8f10eae65)
+
 
 ```mermaid
 graph TD;
@@ -115,7 +117,8 @@ graph TD;
 
 - Extract keywords from the **question** using the **Keywords Extraction Prompt**.
 
-![image](https://github.com/user-attachments/assets/3d4471a8-babb-40b5-b372-c69216b1e83c)
+![image](https://github.com/user-attachments/assets/b49e269f-eaec-40b1-8d8f-9e409821d75d)
+
 
 - Use the extracted keywords to:
 
@@ -156,7 +159,8 @@ This module consists of two parts:
 
 The first part is straightforward, so the focus is on the second part.
 
-![image](https://github.com/user-attachments/assets/9a1c3f85-3633-4283-94f5-c677c578b388)
+![image](https://github.com/user-attachments/assets/fc678369-261d-49ea-a289-1ca6ade5ca55)
+
 
 ```mermaid
 graph TD;
@@ -193,7 +197,8 @@ graph TD;
       - Retrieve the **graph schema**.
       - Query the vector database for example vectors, retrieving query-gremlin pairs similar to the input query (if the vector database lacks examples, it automatically initializes with examples from the **resources** folder).
 
-![image](https://github.com/user-attachments/assets/c6040308-d336-4dd1-b47e-f6052b0be424)
+![image](https://github.com/user-attachments/assets/fd150f87-27f8-48e5-8a55-319ec039b7e0)
+
 
       - Generate the Gremlin query using the constructed prompt.
 
