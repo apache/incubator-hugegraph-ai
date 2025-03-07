@@ -1,5 +1,7 @@
+# TODO: we could use 'uv' to replace the poetry + python image
 FROM python:3.10.16-bookworm
 
+LABEL maintainer="HugeGraph Docker Maintainers <dev@hugegraph.apache.org>"
 RUN pip install --no-cache-dir poetry
 
 WORKDIR /home/work/
@@ -15,5 +17,6 @@ RUN cd /home/work/hugegraph-llm && \
 ENV PATH="/home/work/hugegraph-llm/.venv/bin:$PATH"
 
 WORKDIR /home/work/hugegraph-llm
+EXPOSE 8001
 
-CMD [ "python", "-m", "hugegraph_llm.demo.rag_demo.app", "--port", "8080" ]
+CMD [ "python", "-m", "hugegraph_llm.demo.rag_demo.app", "--port", "8001" ]
