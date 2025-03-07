@@ -192,4 +192,6 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8001, help="port")
     args = parser.parse_args()
 
-    uvicorn.run("hugegraph_llm.demo.rag_demo.app:create_app", host=args.host, port=args.port, reload=True)
+
+    uvicorn.run("hugegraph_llm.demo.rag_demo.app:create_app", host=args.host, port=args.port, factory=True, reload=True)
+    

@@ -110,7 +110,7 @@ class GraphRAGQuery:
         self._gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        self._init_client(context)
+        self.init_client(context)
 
         # initial flag: -1 means no result, 0 means subgraph query, 1 means gremlin query
         context["graph_result_flag"] = -1
@@ -239,7 +239,9 @@ class GraphRAGQuery:
             )
         return context
 
-    def _init_client(self, context):
+    # TODO: move this method to a util file for reuse (remove self param)
+    def init_client(self, context):
+        """Initialize the HugeGraph client from context or default settings."""
         # pylint: disable=R0915 (too-many-statements)
         if self._client is None:
             if isinstance(context.get("graph_client"), PyHugeClient):
@@ -253,6 +255,15 @@ class GraphRAGQuery:
                 gs = context.get("graphspace") or None
                 self._client = PyHugeClient(ip, port, graph, user, pwd, gs)
         assert self._client is not None, "No valid graph to search."
+
+    def get_vertex_details(self, vertex_ids: List[str]) -> List[Dict[str, Any]]:
+        if not vertex_ids:
+            return []
+
+        formatted_ids = ", ".join(f"'{vid}'" for vid in vertex_ids)
+        gremlin_query = f"g.V({formatted_ids}).limit(20)"
+        result = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
+        return result
 
     def _format_graph_from_vertex(self, query_result: List[Any]) -> Set[str]:
         knowledge = set()
@@ -374,8 +385,8 @@ class GraphRAGQuery:
         schema = self._get_graph_schema()
         vertex_props_str, edge_props_str = schema.split("\n")[:2]
         # TODO: rename to vertex (also need update in the schema)
-        vertex_props_str = vertex_props_str[len("Vertex properties: ") :].strip("[").strip("]")
-        edge_props_str = edge_props_str[len("Edge properties: ") :].strip("[").strip("]")
+        vertex_props_str = vertex_props_str[len("Vertex properties: "):].strip("[").strip("]")
+        edge_props_str = edge_props_str[len("Edge properties: "):].strip("[").strip("]")
         vertex_labels = self._extract_label_names(vertex_props_str)
         edge_labels = self._extract_label_names(edge_props_str)
         return vertex_labels, edge_labels

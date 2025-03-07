@@ -1,4 +1,4 @@
-openai~=1.47.1
+openai~=1.61.0
 ollama~=0.2.1
 qianfan~=0.3.18
 retry~=0.9.2
@@ -16,3 +16,4 @@ pandas~=2.2.2
 openpyxl~=3.1.5
 pydantic-settings~=2.6.1
 apscheduler~=3.10.4
+litellm~=1.61.13

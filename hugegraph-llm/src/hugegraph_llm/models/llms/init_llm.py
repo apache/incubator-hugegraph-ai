@@ -19,6 +19,7 @@
 from hugegraph_llm.models.llms.ollama import OllamaClient
 from hugegraph_llm.models.llms.openai import OpenAIClient
 from hugegraph_llm.models.llms.qianfan import QianfanClient
+from hugegraph_llm.models.llms.litellm import LiteLLMClient
 from hugegraph_llm.config import llm_settings
 
 
@@ -48,6 +49,13 @@ class LLMs:
                 host=llm_settings.ollama_chat_host,
                 port=llm_settings.ollama_chat_port,
             )
+        if self.chat_llm_type == "litellm":
+            return LiteLLMClient(
+                api_key=llm_settings.litellm_chat_api_key,
+                api_base=llm_settings.litellm_chat_api_base,
+                model_name=llm_settings.litellm_chat_language_model,
+                max_tokens=llm_settings.litellm_chat_tokens,
+            )
         raise Exception("chat llm type is not supported !")
 
     def get_extract_llm(self):
@@ -70,6 +78,13 @@ class LLMs:
                 host=llm_settings.ollama_extract_host,
                 port=llm_settings.ollama_extract_port,
             )
+        if self.extract_llm_type == "litellm":
+            return LiteLLMClient(
+                api_key=llm_settings.litellm_extract_api_key,
+                api_base=llm_settings.litellm_extract_api_base,
+                model_name=llm_settings.litellm_extract_language_model,
+                max_tokens=llm_settings.litellm_extract_tokens,
+            )
         raise Exception("extract llm type is not supported !")
 
     def get_text2gql_llm(self):
@@ -91,6 +106,13 @@ class LLMs:
                 model=llm_settings.ollama_text2gql_language_model,
                 host=llm_settings.ollama_text2gql_host,
                 port=llm_settings.ollama_text2gql_port,
+            )
+        if self.text2gql_llm_type == "litellm":
+            return LiteLLMClient(
+                api_key=llm_settings.litellm_text2gql_api_key,
+                api_base=llm_settings.litellm_text2gql_api_base,
+                model_name=llm_settings.litellm_text2gql_language_model,
+                max_tokens=llm_settings.litellm_text2gql_tokens,
             )
         raise Exception("text2gql llm type is not supported !")
 

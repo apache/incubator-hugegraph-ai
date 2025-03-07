@@ -25,10 +25,10 @@ from .models import BaseConfig
 class LLMConfig(BaseConfig):
     """LLM settings"""
 
-    chat_llm_type: Literal["openai", "ollama/local", "qianfan_wenxin", "zhipu"] = "openai"
-    extract_llm_type: Literal["openai", "ollama/local", "qianfan_wenxin", "zhipu"] = "openai"
-    text2gql_llm_type: Literal["openai", "ollama/local", "qianfan_wenxin", "zhipu"] = "openai"
-    embedding_type: Optional[Literal["openai", "ollama/local", "qianfan_wenxin", "zhipu"]] = "openai"
+    chat_llm_type: Literal["openai", "litellm", "ollama/local", "qianfan_wenxin"] = "openai"
+    extract_llm_type: Literal["openai", "litellm", "ollama/local", "qianfan_wenxin"] = "openai"
+    text2gql_llm_type: Literal["openai", "litellm", "ollama/local", "qianfan_wenxin"] = "openai"
+    embedding_type: Optional[Literal["openai", "litellm", "ollama/local", "qianfan_wenxin"]] = "openai"
     reranker_type: Optional[Literal["cohere", "siliconflow"]] = None
     # 1. OpenAI settings
     openai_chat_api_base: Optional[str] = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
@@ -84,14 +84,19 @@ class LLMConfig(BaseConfig):
     qianfan_embed_url: Optional[str] = qianfan_url_prefix + "/embeddings/"
     # refer https://cloud.baidu.com/doc/WENXINWORKSHOP/s/alj562vvu to get more details
     qianfan_embedding_model: Optional[str] = "embedding-v1"
-    # TODO: To be confirmed, whether to configure
-    # 5. ZhiPu(GLM) settings
-    zhipu_chat_api_key: Optional[str] = None
-    zhipu_chat_language_model: Optional[str] = "glm-4"
-    zhipu_chat_embedding_model: Optional[str] = "embedding-2"
-    zhipu_extract_api_key: Optional[str] = None
-    zhipu_extract_language_model: Optional[str] = "glm-4"
-    zhipu_extract_embedding_model: Optional[str] = "embedding-2"
-    zhipu_text2gql_api_key: Optional[str] = None
-    zhipu_text2gql_language_model: Optional[str] = "glm-4"
-    zhipu_text2gql_embedding_model: Optional[str] = "embedding-2"
+    # 5. LiteLLM settings
+    litellm_chat_api_key: Optional[str] = None
+    litellm_chat_api_base: Optional[str] = None
+    litellm_chat_language_model: Optional[str] = "openai/gpt-4o"
+    litellm_chat_tokens: int = 8192
+    litellm_extract_api_key: Optional[str] = None
+    litellm_extract_api_base: Optional[str] = None
+    litellm_extract_language_model: Optional[str] = "openai/gpt-4o"
+    litellm_extract_tokens: int = 256
+    litellm_text2gql_api_key: Optional[str] = None
+    litellm_text2gql_api_base: Optional[str] = None
+    litellm_text2gql_language_model: Optional[str] = "openai/gpt-4o"
+    litellm_text2gql_tokens: int = 4096
+    litellm_embedding_api_key: Optional[str] = None
+    litellm_embedding_api_base: Optional[str] = None
+    litellm_embedding_model: Optional[str] = "openai/text-embedding-3-small"
