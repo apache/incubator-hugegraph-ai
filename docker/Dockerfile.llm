@@ -39,6 +39,7 @@ USER work
 ENV PATH="/home/work/hugegraph-llm/.venv/bin:$PATH"
 
 WORKDIR /home/work/hugegraph-llm
+VOLUME ["/home/work/hugegraph-llm/src/hugegraph_llm/resources"]
 EXPOSE 8001
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 CMD curl -f http://localhost:8001/ || exit 1
