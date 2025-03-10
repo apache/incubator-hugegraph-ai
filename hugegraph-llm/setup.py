@@ -18,6 +18,7 @@
 import setuptools
 from pkg_resources import parse_requirements
 
+# TODO: remove this file later (replace by poetry/uv configs)
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
