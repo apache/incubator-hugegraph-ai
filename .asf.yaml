@@ -20,6 +20,7 @@ github:
     issues: true
     wiki: true
     projects: true
+    discussions: true
   description: The integration of HugeGraph with AI/LLM & GraphRAG
   homepage: https://hugegraph.apache.org/docs/quickstart/hugegraph-ai/
   del_branch_on_merge: true
@@ -33,6 +34,9 @@ github:
     merge: false
     rebase: true
     squash: true
+    # can either be: DEFAULT | PR_TITLE | PR_TITLE_AND_COMMIT_DETAILS | PR_TITLE_AND_DESC
+    squash_commit_message: PR_TITLE_AND_DESC
+    merge_commit_message: PR_TITLE_AND_DESC
   protected_branches:
     main:
       required_status_checks:
