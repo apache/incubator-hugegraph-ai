@@ -26,10 +26,12 @@ from gradio.utils import NamedString
 
 from hugegraph_llm.config import resource_path, prompt, huge_settings, llm_settings
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
+from hugegraph_llm.utils.decorators import with_task_id
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.utils.log import log
 
 
+@with_task_id
 def rag_answer(
     text: str,
     raw_answer: bool,
@@ -212,6 +214,7 @@ def create_rag_block():
     gr.Markdown("""## 1. HugeGraph RAG Query""")
     with gr.Row():
         with gr.Column(scale=2):
+            # with gr.Blocks().queue(max_size=20, default_concurrency_limit=5):
             inp = gr.Textbox(value=prompt.default_question, label="Question", show_copy_button=True, lines=3)
 
             # TODO: Only support inline formula now. Should support block formula
@@ -237,6 +240,7 @@ def create_rag_block():
                 show_copy_button=True,
                 lines=7,
             )
+
         with gr.Column(scale=1):
             with gr.Row():
                 raw_radio = gr.Radio(choices=[True, False], value=False, label="Basic LLM Answer")
@@ -290,6 +294,9 @@ def create_rag_block():
             example_num,
         ],
         outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
+        queue=True,                       # Enable queueing for this event
+        concurrency_limit=5,               # Maximum of 5 concurrent executions
+        concurrency_id="rag_answer_task"
     )
 
     gr.Markdown(
