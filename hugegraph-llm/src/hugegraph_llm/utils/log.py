@@ -16,13 +16,16 @@
 import logging
 import os
 
+
 from pyhugegraph.utils.log import init_logger
 
 # Configure common settings
+
 LOG_DIR = "logs"
 os.makedirs(LOG_DIR, exist_ok=True)
 LOG_FILE = os.path.join(LOG_DIR, "llm-server.log")
 INFO = logging.INFO
+
 
 # Initialize the root logger first with Rich handler
 root_logger = init_logger(

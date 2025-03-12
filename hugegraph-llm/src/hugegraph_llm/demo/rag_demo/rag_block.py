@@ -18,6 +18,9 @@
 # pylint: disable=E1101
 
 import os
+
+import time
+
 from typing import AsyncGenerator, Tuple, Literal, Optional
 
 import gradio as gr
@@ -26,7 +29,6 @@ from gradio.utils import NamedString
 
 from hugegraph_llm.config import resource_path, prompt, huge_settings, llm_settings
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
-from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.utils.log import log
 
 
@@ -159,8 +161,10 @@ async def rag_answer_streaming(
                                                                     vector_only_answer)
     if raw_answer is False and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
+
         yield "", "", "", ""
         return
+
 
     rag = RAGPipeline()
     if vector_search:
@@ -177,28 +181,44 @@ async def rag_answer_streaming(
         rerank_method,
         near_neighbor_first,
     )
-    # rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
+    rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
 
     try:
         context = rag.run(verbose=True, query=text, vector_search=vector_search, graph_search=graph_search)
         if context.get("switch_to_bleu"):
             gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
-        answer_synthesize = AnswerSynthesize(
-            raw_answer=raw_answer,
-            vector_only_answer=vector_only_answer,
-            graph_only_answer=graph_only_answer,
-            graph_vector_answer=graph_vector_answer,
-            prompt_template=answer_prompt,
-        )
-        async for context in answer_synthesize.run_streaming(context):
-            if context.get("switch_to_bleu"):
-                gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
-            yield (
-                context.get("raw_answer", ""),
-                context.get("vector_only_answer", ""),
-                context.get("graph_only_answer", ""),
-                context.get("graph_vector_answer", ""),
-            )
+
+        def stream_data(stream):
+            collect=""
+            for chunk in stream:
+                if chunk:
+                    collect+=chunk
+                    yield collect
+                time.sleep(0.001)
+        u1=[""]
+        u2=[""]
+        u3=[""]
+        u4=[""]
+        def run_streaming(u1,u2,u3,u4):
+            for update1 in stream_data(context.get("raw_answer", "")):
+                u1[0]=update1
+                yield u1[0], u2[0] ,u3[0],u4[0] # Stream output 1
+            for update2 in stream_data(context.get("vector_only_answer", "")):
+                u2[0]=update2
+                yield u1[0], u2[0] ,u3[0],u4[0]
+
+            for update3 in stream_data(context.get("graph_only_answer", "")):
+                u3[0]=update3
+                yield u1[0], u2[0] ,u3[0],u4[0]
+            for update4 in stream_data(context.get("graph_vector_answer", "")):
+                u4[0]=update4
+                yield u1[0], u2[0] ,u3[0],u4[0]
+
+        for update1, update2,update3,update4 in run_streaming(u1,u2,u3,u4):
+            yield gr.update(value=update1), gr.update(value=update2), gr.update(value=update3), gr.update(value=update4)
+
+
+
     except ValueError as e:
         log.critical(e)
         raise gr.Error(str(e))
