@@ -22,7 +22,7 @@ import jieba
 import requests
 from nltk.translate.bleu_score import sentence_bleu
 
-from hugegraph_llm.config import huge_settings
+from hugegraph_llm.config import huge_settings, llm_settings
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.rerankers.init_reranker import Rerankers
 from hugegraph_llm.utils.log import log
@@ -52,6 +52,8 @@ class MergeDedupRerank:
         priority: bool = False,  # TODO: implement priority
     ):
         assert method in ["bleu", "reranker"], f"Unimplemented rerank method '{method}'."
+        if llm_settings.reranker_type is None:
+            assert method == "bleu", "Please set the online reranker first"
         self.embedding = embedding
         self.graph_ratio = graph_ratio
         self.topk_return_results = topk_return_results
