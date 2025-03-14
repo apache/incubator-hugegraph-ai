@@ -53,7 +53,7 @@ class MergeDedupRerank:
     ):
         assert method in ["bleu", "reranker"], f"Unimplemented rerank method '{method}'."
         if llm_settings.reranker_type is None:
-            assert method == "bleu", f"Please set the online reranker first"
+            assert method == "bleu", "Please set the online reranker first"
         self.embedding = embedding
         self.graph_ratio = graph_ratio
         self.topk_return_results = topk_return_results
