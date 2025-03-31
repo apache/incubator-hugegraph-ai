@@ -31,7 +31,6 @@ from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.utils.log import log
 
 
-@with_task_id
 def rag_answer(
     text: str,
     raw_answer: bool,
@@ -145,6 +144,7 @@ async def rag_answer_streaming(
     keywords_extract_prompt: str,
     gremlin_tmpl_num: Optional[int] = 2,
     gremlin_prompt: Optional[str] = None,
+    task_id: str = "unknown_task",
 ) -> AsyncGenerator[Tuple[str, str, str, str], None]:
     """
     Generate an answer using the RAG (Retrieval-Augmented Generation) pipeline.
@@ -154,6 +154,7 @@ async def rag_answer_streaming(
     4. Synthesize the final answer.
     5. Run the pipeline and return the results.
     """
+    log.info("Processing RAG request with task_id: %s", task_id)
 
     graph_search, gremlin_prompt, vector_search = update_ui_configs(answer_prompt, custom_related_information,
                                                                     graph_only_answer, graph_vector_answer,
@@ -208,7 +209,7 @@ async def rag_answer_streaming(
         log.critical(e)
         raise gr.Error(f"An unexpected error occurred: {str(e)}")
 
-
+@with_task_id
 def create_rag_block():
     # pylint: disable=R0915 (too-many-statements),C0301
     gr.Markdown("""## 1. HugeGraph RAG Query""")
@@ -276,6 +277,8 @@ def create_rag_block():
                     label="Query related information(Optional)",
                 )
                 btn = gr.Button("Answer Question", variant="primary")
+                
+    task_id = getattr(create_rag_block, "task_id", "rag_answer_task")
 
     btn.click(  # pylint: disable=no-member
         fn=rag_answer_streaming,
@@ -296,7 +299,7 @@ def create_rag_block():
         outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
         queue=True,                       # Enable queueing for this event
         concurrency_limit=5,               # Maximum of 5 concurrent executions
-        concurrency_id="rag_answer_task"
+        concurrency_id=task_id
     )
 
     gr.Markdown(
