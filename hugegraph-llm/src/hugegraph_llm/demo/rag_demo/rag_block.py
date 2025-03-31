@@ -144,7 +144,7 @@ async def rag_answer_streaming(
     keywords_extract_prompt: str,
     gremlin_tmpl_num: Optional[int] = 2,
     gremlin_prompt: Optional[str] = None,
-    task_id: str = "unknown_task",
+    task_id: str = "task",
 ) -> AsyncGenerator[Tuple[str, str, str, str], None]:
     """
     Generate an answer using the RAG (Retrieval-Augmented Generation) pipeline.
