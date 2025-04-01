@@ -95,7 +95,7 @@ def with_task_id(func: Callable) -> Callable:
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         import uuid
         task_id = f"task_{str(uuid.uuid4())[:8]}"
-        log.info("New task created with id: %s", task_id)
+        log.debug("New task created with id: %s", task_id)
 
         # Store the original return value
         result = func(*args, **kwargs)

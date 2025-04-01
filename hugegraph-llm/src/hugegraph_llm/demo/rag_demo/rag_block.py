@@ -307,7 +307,7 @@ def create_rag_block():
                     label="Query related information(Optional)",
                 )
                 btn = gr.Button("Answer Question", variant="primary")
-                
+
     btn.click(  # pylint: disable=no-member
         fn=rag_answer_streaming,
         inputs=[
