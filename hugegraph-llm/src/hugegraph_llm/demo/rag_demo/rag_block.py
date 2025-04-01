@@ -153,10 +153,17 @@ async def rag_answer_streaming(
     4. Synthesize the final answer.
     5. Run the pipeline and return the results.
     """
-    graph_search, gremlin_prompt, vector_search = update_ui_configs(answer_prompt, custom_related_information,
-                                                                    graph_only_answer, graph_vector_answer,
-                                                                    gremlin_prompt, keywords_extract_prompt, text,
-                                                                    vector_only_answer)
+    
+    graph_search, gremlin_prompt, vector_search = update_ui_configs(
+        answer_prompt,
+        custom_related_information,
+        graph_only_answer,
+        graph_vector_answer,
+        gremlin_prompt,
+        keywords_extract_prompt,
+        text,
+        vector_only_answer,
+    )
     if raw_answer is False and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
         yield "", "", "", ""
