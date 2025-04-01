@@ -13,13 +13,13 @@ building knowledge graphs. This project will offer more applications and integra
 graph systems and large language models.
 1.  Construct knowledge graph by LLM + HugeGraph
 2.  Use natural language to operate graph databases (Gremlin/Cypher)
-3.  Knowledge graph supplements answer context (GraphRAG)
+3.  Knowledge graph supplements answer context (GraphRAG -> Graph Agent)
 
 ## 2. Environment Requirements
-
-- python 3.10+ (not tested in 3.12)
-- hugegraph-server 1.3+ (better to use 1.5+)
-- poetry 2.0+
+> [!IMPORTANT]
+> - python 3.10+ (not tested in 3.12)
+> - hugegraph-server 1.3+ (better to use 1.5+)
+> - poetry 2.0+
 
 ## 3. Preparation
 
@@ -76,6 +76,8 @@ graph systems and large language models.
     ```bash
     python ./hugegraph_llm/operators/common_op/nltk_helper.py
     ```
+> [!TIP]   
+> You can also refer our [quick-start](./quick_start.md) doc to understand how to use it & the basic query logic 🚧
 
 ## 4 Examples
 
