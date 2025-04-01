@@ -30,7 +30,6 @@ from hugegraph_llm.utils.decorators import with_task_id
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.utils.log import log
 
-
 def rag_answer(
     text: str,
     raw_answer: bool,
@@ -128,7 +127,6 @@ def update_ui_configs(answer_prompt, custom_related_information, graph_only_answ
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
     return graph_search, gremlin_prompt, vector_search
-
 
 async def rag_answer_streaming(
     text: str,
@@ -281,8 +279,6 @@ def create_rag_block():
                 )
                 btn = gr.Button("Answer Question", variant="primary")
                 
-    task_id = getattr(create_rag_block, "task_id", "rag_answer_task")
-
     btn.click(  # pylint: disable=no-member
         fn=rag_answer_streaming,
         inputs=[
@@ -302,7 +298,6 @@ def create_rag_block():
         outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
         queue=True,                       # Enable queueing for this event
         concurrency_limit=5,               # Maximum of 5 concurrent executions
-        concurrency_id=task_id
     )
 
     gr.Markdown(
