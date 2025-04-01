@@ -153,7 +153,6 @@ async def rag_answer_streaming(
     4. Synthesize the final answer.
     5. Run the pipeline and return the results.
     """
-    
     graph_search, gremlin_prompt, vector_search = update_ui_configs(
         answer_prompt,
         custom_related_information,
