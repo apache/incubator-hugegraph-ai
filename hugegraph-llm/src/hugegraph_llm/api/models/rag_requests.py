@@ -50,6 +50,7 @@ class RAGRequest(BaseModel):
     topk_per_keyword : int = Query(1, description="TopK results returned for each keyword \
                                    extracted from the query, by default only the most similar one is returned.")
     client_config: Optional[GraphConfigRequest] = Query(None, description="hugegraph server config.")
+    stream: bool = Query(False, description="Whether to use streaming response")
 
     # Keep prompt params in the end
     answer_prompt: Optional[str] = Query(prompt.answer_prompt, description="Prompt to guide the answer generation.")
@@ -77,6 +78,7 @@ class GraphRAGRequest(BaseModel):
 
     client_config : Optional[GraphConfigRequest] = Query(None, description="hugegraph server config.")
     get_vertex_only: bool = Query(False, description="return only keywords & vertex (early stop).")
+    stream: bool = Query(False, description="Whether to use streaming response")
 
     gremlin_tmpl_num: int = Query(
         1, description="Number of Gremlin templates to use. If num <=0 means template is not provided"
