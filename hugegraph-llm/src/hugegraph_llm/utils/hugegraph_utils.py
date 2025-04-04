@@ -188,11 +188,11 @@ def check_graph_db_connection(
         response = requests.get(test_url, timeout=(1.0, 5.0), auth=auth)
         return response.status_code == 200
     except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
-        log.debug("GraphDB connection error: %s", str(e))
+        log.warning("GraphDB connection error: %s", str(e))
         return False
     except ConnectionError as e:
-        log.debug("network connection error: %s", str(e))
+        log.warning("network connection error: %s", str(e))
         return False
     except Exception as e:
-        log.debug("Unexpected connection error: %s", str(e))
-        return False
+        log.error("Unexpected connection error: %s", e, exc_info=True)
+        raise Exception("Failed to execute update_vid_embedding") from e
