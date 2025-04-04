@@ -166,7 +166,7 @@ async def timely_update_vid_embedding():
                 log.info("update_vid_embedding executed successfully")
             else:
                 log.warning("HugeGraph server connection failed, so skipping update_vid_embedding,"
-                " please Check graph configuration and connectivity")
+                " please check graph configuration and connectivity")
         except asyncio.CancelledError as ce:
             log.info("Periodic task has been cancelled due to: %s", ce)
             break
