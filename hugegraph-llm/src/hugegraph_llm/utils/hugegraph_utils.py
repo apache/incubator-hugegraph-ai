@@ -19,6 +19,8 @@ import json
 import os
 import shutil
 from datetime import datetime
+import requests
+from requests.auth import HTTPBasicAuth
 
 from hugegraph_llm.config import huge_settings, resource_path
 from hugegraph_llm.utils.log import log
@@ -168,3 +170,26 @@ def manage_backup_retention():
     except Exception as e:  # pylint: disable=W0718
         log.error("Failed to manage backup retention: %s", e, exc_info=True)
         raise Exception("Failed to manage backup retention") from e
+
+def check_graph_db_connection(
+    ip: str,
+    port: str,
+    name: str,
+    user: str,
+    pwd: str,
+    graph_space: str
+) -> bool:
+    try:
+        if graph_space and graph_space.strip():
+            test_url = f"http://{ip}:{port}/graphspaces/{graph_space}/graphs/{name}/schema"
+        else:
+            test_url = f"http://{ip}:{port}/graphs/{name}/schema"
+        auth = HTTPBasicAuth(user, pwd)
+        response = requests.get(test_url, timeout=(1.0, 5.0), auth=auth)
+        return response.status_code == 200
+    except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
+        log.debug(f"GraphDB connection error: {str(e)}")
+        return False
+    except Exception as e:
+        log.debug(f"Unexpected connection error: {str(e)}")
+        return False

@@ -31,6 +31,8 @@ from hugegraph_llm.utils.graph_index_utils import (
 )
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index, build_vector_index, get_vector_index_info
 from hugegraph_llm.utils.log import log
+from hugegraph_llm.config import huge_settings
+from hugegraph_llm.utils.hugegraph_utils import check_graph_db_connection
 
 def store_prompt(doc, schema, example_prompt):
     # update env variables: doc, schema and example_prompt
@@ -151,12 +153,23 @@ def create_vector_graph_block():
 async def timely_update_vid_embedding():
     while True:
         try:
-            await asyncio.to_thread(update_vid_embedding)
-            log.info("rebuild_vid_index timely executed successfully.")
+            config = {
+                "ip": huge_settings.graph_ip,
+                "port": huge_settings.graph_port,
+                "name": huge_settings.graph_name,
+                "user": huge_settings.graph_user,
+                "pwd": huge_settings.graph_pwd,
+                "graph_space": huge_settings.graph_space
+            }
+            if check_graph_db_connection(**config):
+                await asyncio.to_thread(update_vid_embedding)
+                log.info("update_vid_embedding executed successfully")
+            else:
+                log.debug("HugeGraph server connection failed, so skipping update_vid_embedding")
         except asyncio.CancelledError as ce:
             log.info("Periodic task has been cancelled due to: %s", ce)
             break
         except Exception as e:
-            log.error("Failed to execute rebuild_vid_index: %s", e, exc_info=True)
-            raise Exception("Failed to execute rebuild_vid_index") from e
+            log.error("Failed to execute update_vid_embedding: %s", e, exc_info=True)
+            raise Exception("Failed to execute update_vid_embedding") from e
         await asyncio.sleep(3600)
