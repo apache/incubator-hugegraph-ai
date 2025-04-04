@@ -188,8 +188,11 @@ def check_graph_db_connection(
         response = requests.get(test_url, timeout=(1.0, 5.0), auth=auth)
         return response.status_code == 200
     except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
-        log.debug(f"GraphDB connection error: {str(e)}")
+        log.debug("GraphDB connection error: %s", str(e))
+        return False
+    except ConnectionError as e:
+        log.debug("network connection error: %s", str(e))
         return False
     except Exception as e:
-        log.debug(f"Unexpected connection error: {str(e)}")
+        log.debug("Unexpected connection error: %s", str(e))
         return False
