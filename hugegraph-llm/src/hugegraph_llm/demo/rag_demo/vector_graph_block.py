@@ -176,12 +176,10 @@ async def timely_update_vid_embedding(interval_seconds: int = 3600):
             else:
                 log.warning("HugeGraph server connection failed, so skipping update_vid_embedding, "
                             "please check graph configuration and connectivity")
-                gr.Warning("HugeGraph server connection failed, so skipping update_vid_embedding, "
-                            "please check graph configuration and connectivity")
         except asyncio.CancelledError as ce:
             log.info("Periodic task has been cancelled due to: %s", ce)
             break
+        # TODO: Add Gradio Warning here
         except Exception as e:
             log.warning("Failed to execute update_vid_embedding: %s", e, exc_info=True)
-            gr.Warning("Failed to execute update_vid_embedding: %s", e, exc_info=True)
         await asyncio.sleep(interval_seconds)
