@@ -180,6 +180,7 @@ async def timely_update_vid_embedding(interval_seconds: int = 3600):
             log.info("Periodic task has been cancelled due to: %s", ce)
             break
         # TODO: Add Gradio Warning here
+        # pylint: disable=W0718
         except Exception as e:
             log.warning("Failed to execute update_vid_embedding: %s", e, exc_info=True)
         await asyncio.sleep(interval_seconds)
