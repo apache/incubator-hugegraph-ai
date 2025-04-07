@@ -172,6 +172,9 @@ def manage_backup_retention():
         raise Exception("Failed to manage backup retention") from e
 
 
+#TODO: In the path demo/rag_demo/configs_block.py, 
+# there is a function test_api_connection that is similar to this function, 
+# but it is not straightforward to reuse
 def check_graph_db_connection(ip: str, port: str, name: str, user: str, pwd: str, graph_space: str) -> bool:
     try:
         if graph_space and graph_space.strip():
