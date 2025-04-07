@@ -184,9 +184,6 @@ def check_graph_db_connection(ip: str, port: str, name: str, user: str, pwd: str
     except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
         log.warning("GraphDB connection error: %s", str(e))
         return False
-    except ConnectionError as e:
-        log.warning("network connection error: %s", str(e))
-        return False
     except Exception as e:
         log.error("Unexpected connection error: %s", e, exc_info=True)
         raise Exception("Failed to execute update_vid_embedding") from e
