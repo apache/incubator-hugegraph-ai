@@ -171,14 +171,8 @@ def manage_backup_retention():
         log.error("Failed to manage backup retention: %s", e, exc_info=True)
         raise Exception("Failed to manage backup retention") from e
 
-def check_graph_db_connection(
-    ip: str,
-    port: str,
-    name: str,
-    user: str,
-    pwd: str,
-    graph_space: str
-) -> bool:
+
+def check_graph_db_connection(ip: str, port: str, name: str, user: str, pwd: str, graph_space: str) -> bool:
     try:
         if graph_space and graph_space.strip():
             test_url = f"http://{ip}:{port}/graphspaces/{graph_space}/graphs/{name}/schema"

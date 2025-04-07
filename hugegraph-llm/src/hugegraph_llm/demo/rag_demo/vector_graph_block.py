@@ -18,8 +18,10 @@
 # pylint: disable=E1101
 
 import asyncio
+
 import gradio as gr
 
+from hugegraph_llm.config import huge_settings
 from hugegraph_llm.config import prompt
 from hugegraph_llm.utils.graph_index_utils import (
     get_graph_index_info,
@@ -29,10 +31,10 @@ from hugegraph_llm.utils.graph_index_utils import (
     extract_graph,
     import_graph_data,
 )
-from hugegraph_llm.utils.vector_index_utils import clean_vector_index, build_vector_index, get_vector_index_info
-from hugegraph_llm.utils.log import log
-from hugegraph_llm.config import huge_settings
 from hugegraph_llm.utils.hugegraph_utils import check_graph_db_connection
+from hugegraph_llm.utils.log import log
+from hugegraph_llm.utils.vector_index_utils import clean_vector_index, build_vector_index, get_vector_index_info
+
 
 def store_prompt(doc, schema, example_prompt):
     # update env variables: doc, schema and example_prompt
@@ -150,9 +152,16 @@ def create_vector_graph_block():
 
     return input_text, input_schema, info_extract_template
 
-async def timely_update_vid_embedding():
+async def timely_update_vid_embedding(interval_seconds: int = 3600):
+    """
+    Periodically updates vertex embeddings in the graph database.
+
+    Args:
+        :param interval_seconds: Time interval between updates in seconds (default: 3600s -> 1h)
+    """
     while True:
         try:
+            # Get the latest configuration values on each iteration
             config = {
                 "ip": huge_settings.graph_ip,
                 "port": huge_settings.graph_port,
@@ -165,12 +174,13 @@ async def timely_update_vid_embedding():
                 await asyncio.to_thread(update_vid_embedding)
                 log.info("update_vid_embedding executed successfully")
             else:
-                log.warning("HugeGraph server connection failed, so skipping update_vid_embedding,"
-                " please check graph configuration and connectivity")
+                log.warning("HugeGraph server connection failed, so skipping update_vid_embedding, "
+                            "please check graph configuration and connectivity")
         except asyncio.CancelledError as ce:
             log.info("Periodic task has been cancelled due to: %s", ce)
             break
         except Exception as e:
             log.error("Failed to execute update_vid_embedding: %s", e, exc_info=True)
+            # FIXME: resume the task after a failure
             raise Exception("Failed to execute update_vid_embedding") from e
-        await asyncio.sleep(3600)
+        await asyncio.sleep(interval_seconds)
