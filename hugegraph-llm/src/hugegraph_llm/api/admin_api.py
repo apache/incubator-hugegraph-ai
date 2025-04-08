@@ -16,21 +16,18 @@
 # under the License.
 import os
 
-from fastapi import status, APIRouter
+from fastapi import status, APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
-from hugegraph_llm.api.exceptions.rag_exceptions import generate_response
 from hugegraph_llm.api.models.rag_requests import LogStreamRequest
-from hugegraph_llm.api.models.rag_response import RAGResponse
 from hugegraph_llm.config import admin_settings
 
 
-# FIXME: line 31: E0702: Raising dict while only classes or instances are allowed (raising-bad-type)
 def admin_http_api(router: APIRouter, log_stream):
     @router.post("/logs", status_code=status.HTTP_200_OK)
     async def log_stream_api(req: LogStreamRequest):
         if admin_settings.admin_token != req.admin_token:
-            raise generate_response(RAGResponse(status_code=status.HTTP_403_FORBIDDEN, message="Invalid admin_token")) #pylint: disable=E0702
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid admin_token")
         log_path = os.path.join("logs", req.log_file)
 
         # Create a StreamingResponse that reads from the log stream generator
