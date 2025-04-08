@@ -26,9 +26,9 @@ from gradio.utils import NamedString
 
 from hugegraph_llm.config import resource_path, prompt, huge_settings, llm_settings
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
+from hugegraph_llm.utils.decorators import with_task_id
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.utils.log import log
-
 
 def rag_answer(
     text: str,
@@ -145,7 +145,6 @@ def update_ui_configs(
     graph_search = graph_only_answer or graph_vector_answer
     return graph_search, gremlin_prompt, vector_search
 
-
 async def rag_answer_streaming(
     text: str,
     raw_answer: bool,
@@ -169,7 +168,6 @@ async def rag_answer_streaming(
     4. Synthesize the final answer.
     5. Run the pipeline and return the results.
     """
-
     graph_search, gremlin_prompt, vector_search = update_ui_configs(
         answer_prompt,
         custom_related_information,
@@ -229,12 +227,13 @@ async def rag_answer_streaming(
         log.critical(e)
         raise gr.Error(f"An unexpected error occurred: {str(e)}")
 
-
+@with_task_id
 def create_rag_block():
     # pylint: disable=R0915 (too-many-statements),C0301
     gr.Markdown("""## 1. HugeGraph RAG Query""")
     with gr.Row():
         with gr.Column(scale=2):
+            # with gr.Blocks().queue(max_size=20, default_concurrency_limit=5):
             inp = gr.Textbox(value=prompt.default_question, label="Question", show_copy_button=True, lines=3)
 
             # TODO: Only support inline formula now. Should support block formula
@@ -272,6 +271,7 @@ def create_rag_block():
                 show_copy_button=True,
                 lines=7,
             )
+
         with gr.Column(scale=1):
             with gr.Row():
                 raw_radio = gr.Radio(choices=[True, False], value=False, label="Basic LLM Answer")
@@ -325,6 +325,8 @@ def create_rag_block():
             example_num,
         ],
         outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
+        queue=True,                       # Enable queueing for this event
+        concurrency_limit=5,               # Maximum of 5 concurrent executions
     )
 
     gr.Markdown(
