@@ -308,12 +308,13 @@ def create_configs_block() -> list:
                     llm_config_input = [gr.Textbox(value="", visible=False) for _ in range(4)]
                 llm_config_button = gr.Button("Apply configuration")
                 llm_config_button.click(apply_llm_config_with_chat_op, inputs=llm_config_input)
+                llm_config_button.click(apply_llm_config_with_extract_op, inputs=llm_config_input)
+                llm_config_button.click(apply_llm_config_with_text2gql_op, inputs=llm_config_input)
 
         with gr.Tab(label='mini_tasks'):
             extract_llm_dropdown = gr.Dropdown(choices=["openai", "litellm", "qianfan_wenxin", "ollama/local"],
                                                value=getattr(llm_settings, "extract_llm_type"), label="type")
             apply_llm_config_with_extract_op = partial(apply_llm_config, "extract")
-
             @gr.render(inputs=[extract_llm_dropdown])
             def extract_llm_settings(llm_type):
                 llm_settings.extract_llm_type = llm_type
