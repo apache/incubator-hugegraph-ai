@@ -67,8 +67,8 @@ def init_rag_ui() -> gr.Interface:
         """
         TODO: leave a general idea of the unresolved part
         graph_config_input = textbox_array_graph_config
-         = [settings.graph_ip, settings.graph_port, settings.graph_name, graph_user, settings.graph_pwd, settings.graph_space] 
-        
+         = [settings.graph_url, settings.graph_name, graph_user, settings.graph_pwd, settings.graph_space]
+
         llm_config_input = textbox_array_llm_config
          = if settings.llm_type == openai [settings.openai_api_key, settings.openai_api_base, settings.openai_language_model, settings.openai_max_tokens]
          = else if settings.llm_type == ollama [settings.ollama_host, settings.ollama_port, settings.ollama_language_model, ""]
@@ -111,8 +111,7 @@ def init_rag_ui() -> gr.Interface:
             huge_settings.__init__()  # pylint: disable=C2801
             prompt.ensure_yaml_file_exists()
             return (
-                huge_settings.graph_ip,
-                huge_settings.graph_port,
+                huge_settings.graph_url,
                 huge_settings.graph_name,
                 huge_settings.graph_user,
                 huge_settings.graph_pwd,
@@ -137,7 +136,6 @@ def init_rag_ui() -> gr.Interface:
                 textbox_array_graph_config[2],
                 textbox_array_graph_config[3],
                 textbox_array_graph_config[4],
-                textbox_array_graph_config[5],
                 textbox_input_text,
                 textbox_input_schema,
                 textbox_info_extract_template,

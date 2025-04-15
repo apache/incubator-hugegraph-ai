@@ -28,12 +28,11 @@ from pyhugegraph.utils.exceptions import NotFoundError, CreateError
 class Commit2Graph:
     def __init__(self):
         self.client = PyHugeClient(
-            huge_settings.graph_ip,
-            huge_settings.graph_port,
-            huge_settings.graph_name,
-            huge_settings.graph_user,
-            huge_settings.graph_pwd,
-            huge_settings.graph_space,
+            url=huge_settings.graph_url,
+            graph=huge_settings.graph_name,
+            user=huge_settings.graph_user,
+            pwd=huge_settings.graph_pwd,
+            graphspace=huge_settings.graph_space,
         )
         self.schema = self.client.schema()
 

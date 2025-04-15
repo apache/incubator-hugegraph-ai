@@ -39,12 +39,11 @@ def run_gremlin_query(query, fmt=True):
 
 def get_hg_client():
     return PyHugeClient(
-        huge_settings.graph_ip,
-        huge_settings.graph_port,
-        huge_settings.graph_name,
-        huge_settings.graph_user,
-        huge_settings.graph_pwd,
-        huge_settings.graph_space,
+        url=huge_settings.graph_url,
+        graph=huge_settings.graph_name,
+        user=huge_settings.graph_user,
+        pwd=huge_settings.graph_pwd,
+        graphspace=huge_settings.graph_space,
     )
 
 
