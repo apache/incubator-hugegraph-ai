@@ -247,13 +247,12 @@ class GraphRAGQuery:
             if isinstance(context.get("graph_client"), PyHugeClient):
                 self._client = context["graph_client"]
             else:
-                ip = context.get("ip") or "localhost"
-                port = context.get("port") or "8080"
+                url = context.get("url") or "http://localhost:8080"
                 graph = context.get("graph") or "hugegraph"
                 user = context.get("user") or "admin"
                 pwd = context.get("pwd") or "admin"
                 gs = context.get("graphspace") or None
-                self._client = PyHugeClient(ip, port, graph, user, pwd, gs)
+                self._client = PyHugeClient(url, graph, user, pwd, gs)
         assert self._client is not None, "No valid graph to search."
 
     def get_vertex_details(self, vertex_ids: List[str]) -> List[Dict[str, Any]]:

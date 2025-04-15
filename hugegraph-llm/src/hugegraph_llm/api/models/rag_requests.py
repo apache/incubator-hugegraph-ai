@@ -24,8 +24,7 @@ from hugegraph_llm.config import prompt
 
 
 class GraphConfigRequest(BaseModel):
-    ip: str = Query('127.0.0.1', description="hugegraph client ip.")
-    port: str = Query('8080', description="hugegraph client port.")
+    url: str = Query('http://127.0.0.1:8080', description="hugegraph client url.")
     name: str = Query('hugegraph', description="hugegraph client name.")
     user: str = Query('', description="hugegraph client user.")
     pwd: str = Query('', description="hugegraph client pwd.")
@@ -102,8 +101,7 @@ class LLMConfigRequest(BaseModel):
     # qianfan-wenxin-only properties
     secret_key: str = None
     # ollama-only properties
-    host: str = None
-    port: str = None
+    url: str = None
 
 
 class RerankerConfigRequest(BaseModel):

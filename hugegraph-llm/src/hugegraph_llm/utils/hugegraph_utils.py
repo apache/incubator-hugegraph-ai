@@ -175,12 +175,12 @@ def manage_backup_retention():
 #TODO: In the path demo/rag_demo/configs_block.py,
 # there is a function test_api_connection that is similar to this function,
 # but it is not straightforward to reuse
-def check_graph_db_connection(ip: str, port: str, name: str, user: str, pwd: str, graph_space: str) -> bool:
+def check_graph_db_connection(url: str, name: str, user: str, pwd: str, graph_space: str) -> bool:
     try:
         if graph_space and graph_space.strip():
-            test_url = f"http://{ip}:{port}/graphspaces/{graph_space}/graphs/{name}/schema"
+            test_url = f"{url}/graphspaces/{graph_space}/graphs/{name}/schema"
         else:
-            test_url = f"http://{ip}:{port}/graphs/{name}/schema"
+            test_url = f"{url}/graphs/{name}/schema"
         auth = HTTPBasicAuth(user, pwd)
         response = requests.get(test_url, timeout=(1.0, 5.0), auth=auth)
         return response.status_code == 200

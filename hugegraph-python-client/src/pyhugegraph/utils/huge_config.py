@@ -27,8 +27,7 @@ from pyhugegraph.utils.log import log
 
 @dataclass
 class HGraphConfig:
-    ip: str
-    port: str
+    url: str
     username: str
     password: str
     graph_name: str
@@ -45,7 +44,7 @@ class HGraphConfig:
         else:
             try:
                 response = requests.get(
-                    f"http://{self.ip}:{self.port}/versions", timeout=0.5
+                    f"{self.url}/versions", timeout=0.5
                 )
                 core = response.json()["versions"]["core"]
                 log.info(  # pylint: disable=logging-fstring-interpolation
