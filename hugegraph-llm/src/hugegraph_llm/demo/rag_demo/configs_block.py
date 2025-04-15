@@ -179,6 +179,11 @@ def apply_reranker_config(
 
 
 def apply_graph_config(url, name, user, pwd, gs, origin_call=None) -> int:
+    # Add URL prefix automatically to improve user experience
+    if url and not (url.startswith('http://') or url.startswith('https://')):
+        url = f"http://{url}"
+        log.info("Added 'http://' prefix to URL: %s", url)
+
     huge_settings.graph_url = url
     huge_settings.graph_name = name
     huge_settings.graph_user = user
@@ -248,11 +253,16 @@ def create_configs_block() -> list:
     with gr.Accordion("1. Set up the HugeGraph server.", open=False):
         with gr.Row():
             graph_config_input = [
-                gr.Textbox(value=huge_settings.graph_url, label="url"),
-                gr.Textbox(value=huge_settings.graph_name, label="graph"),
-                gr.Textbox(value=huge_settings.graph_user, label="user"),
-                gr.Textbox(value=huge_settings.graph_pwd, label="pwd", type="password"),
-                gr.Textbox(value=huge_settings.graph_space, label="graphspace(Optional)"),
+                gr.Textbox(value=huge_settings.graph_url, label="url",
+                           info="IP:PORT (e.g. 127.0.0.1:8080) or full URL (e.g. http://127.0.0.1:8080)"),
+                gr.Textbox(value=huge_settings.graph_name, label="graph",
+                           info="The graph name of HugeGraph-Server instance"),
+                gr.Textbox(value=huge_settings.graph_user, label="user",
+                           info="Username for graph server auth"),
+                gr.Textbox(value=huge_settings.graph_pwd, label="pwd", type="password",
+                           info="Password for graph server auth"),
+                gr.Textbox(value=huge_settings.graph_space, label="graphspace (Optional)",
+                           info="Namespace for multi-tenant scenarios (leave empty if not using graphspaces)"),
             ]
         graph_config_button = gr.Button("Apply Configuration")
     graph_config_button.click(apply_graph_config, inputs=graph_config_input)  # pylint: disable=no-member

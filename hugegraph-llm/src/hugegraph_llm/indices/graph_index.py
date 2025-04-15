@@ -31,7 +31,8 @@ class GraphIndex:
             graph_pwd: Optional[str] = huge_settings.graph_pwd,
             graph_space: Optional[str] = huge_settings.graph_space,
     ):
-        self.client = PyHugeClient(url=graph_url, graph=graph_name, user=graph_user, pwd=graph_pwd, graphspace=graph_space)
+        self.client = PyHugeClient(url=graph_url, graph=graph_name, user=graph_user, pwd=graph_pwd,
+                                   graphspace=graph_space)
 
     def clear_graph(self):
         self.client.gremlin().exec("g.V().drop()")
