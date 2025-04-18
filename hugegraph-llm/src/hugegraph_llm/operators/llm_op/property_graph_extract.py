@@ -26,6 +26,7 @@ from hugegraph_llm.document.chunk_split import ChunkSplitter
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
 
+
 """
 TODO: It is not clear whether there is any other dependence on the SCHEMA_EXAMPLE_PROMPT variable. 
 Because the SCHEMA_EXAMPLE_PROMPT variable will no longer change based on 
