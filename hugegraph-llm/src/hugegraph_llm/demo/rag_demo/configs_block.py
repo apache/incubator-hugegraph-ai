@@ -15,7 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 import os
-from dotenv import dotenv_values
 import json
 from functools import partial
 from typing import Optional
@@ -26,7 +25,7 @@ from hugegraph_llm.config import huge_settings, llm_settings
 from hugegraph_llm.models.embeddings.litellm import LiteLLMEmbedding
 from hugegraph_llm.models.llms.litellm import LiteLLMClient
 from hugegraph_llm.utils.log import log
-
+from dotenv import dotenv_values
 current_llm = "chat"
 
 
