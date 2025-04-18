@@ -128,7 +128,8 @@ class PropertyGraphExtract:
         # Use regex to extract JSON object with curly braces
         json_match = re.search(r'({.*})', text, re.DOTALL)
         if not json_match:
-            log.critical("Invalid property graph! No JSON object found.")
+            log.critical("Invalid property graph! No JSON object found, " +
+                         "please check the output format example in prompt.")
             return []
         json_str = json_match.group(1).strip()
 
