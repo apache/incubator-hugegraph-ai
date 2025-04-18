@@ -68,20 +68,54 @@ class BaseConfig(BaseSettings):
             log.info("Update %s: %s=%s", env_path, k, v)
             set_key(env_path, k, v if v else "", quote_mode="never")
 
+
     def check_env(self):
-        config_dict = self.model_dump()
-        config_dict = {k.upper(): v for k, v in config_dict.items()}
-        env_config = dotenv_values(f"{env_path}")
-        for k, v in config_dict.items():
-            if k in env_config:
-                continue
-            log.info("Update %s: %s=%s", env_path, k, v)
-            set_key(env_path, k, v if v else "", quote_mode="never")
+        try:
+            # 读取环境变量文件
+            env_config = dotenv_values(env_path)
+            # 获取当前对象的配置
+            config_dict = self.model_dump()
+            config_dict = {k.upper(): v for k, v in config_dict.items()}
+            # 检查环境变量文件中是否有对象中不存在的配置项
+            for k, v in env_config.items():
+                if k in config_dict:
+                    # 如果环境变量文件中的值与对象中的值不一致，更新对象中的值
+                    str_v = str(config_dict[k]) if config_dict[k] is not None else ""
+                    if v != str_v:
+                        log.info("从环境变量文件更新配置项: %s=%s (原值: %s)", k, v, str_v)
+                        # 更新对象中的值
+                        setattr(self, k.lower(), v)
+            # 检查对象中是否有环境变量文件中不存在的配置项
+            for k, v in config_dict.items():
+                if k not in env_config:
+                    # 如果对象中有环境变量文件中不存在的配置项，添加到文件中
+                    log.info("添加配置项到环境变量文件: %s=%s", k, v)
+                    str_v = str(v) if v is not None else ""
+                    set_key(env_path, k, str_v, quote_mode="never")
+            return True
+        except Exception as e:
+            # 记录错误日志
+            log.error("检查环境变量文件时发生错误: %s", str(e))
+            # 重新抛出异常，让调用者处理
+            raise
 
     def __init__(self, **data):
-        super().__init__(**data)
-        if not os.path.exists(env_path):
-            self.generate_env()
-        else:
-            self.check_env()
-        log.info("Loading %s successfully for %s!", env_path, self.__class__.__name__)
+        try:
+            if os.path.exists(env_path):
+                env_config = dotenv_values(env_path)
+                for k, v in env_config.items():
+                    os.environ[k] = v
+            super().__init__(**data)
+            if not os.path.exists(env_path):
+                log.info("环境变量文件 %s 不存在，将创建新文件", env_path)
+                self.generate_env()
+            else:
+                # 检查环境变量文件是否完整
+                self.check_env()
+            log.info("成功加载 %s 配置文件，配置类: %s", env_path, self.__class__.__name__)
+        except Exception as e:
+            log.error("初始化配置对象时发生错误: %s", str(e))
+            raise
+
+
+    
