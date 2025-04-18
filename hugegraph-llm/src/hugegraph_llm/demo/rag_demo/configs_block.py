@@ -14,21 +14,19 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
+import os
+from dotenv import dotenv_values
 import json
 from functools import partial
 from typing import Optional
-
 import gradio as gr
 import requests
 from requests.auth import HTTPBasicAuth
-
 from hugegraph_llm.config import huge_settings, llm_settings
 from hugegraph_llm.models.embeddings.litellm import LiteLLMEmbedding
 from hugegraph_llm.models.llms.litellm import LiteLLMClient
 from hugegraph_llm.utils.log import log
-import os
-from dotenv import dotenv_values, set_key
+
 current_llm = "chat"
 
 
@@ -309,7 +307,7 @@ def create_configs_block() -> list:
                     llm_config_input = [gr.Textbox(value="", visible=False) for _ in range(4)]
                 llm_config_button = gr.Button("Apply configuration")
                 llm_config_button.click(apply_llm_config_with_chat_op, inputs=llm_config_input)
-                
+                # 判断.env文件中有无设置
                 dir_name = os.path.dirname
                 package_path = dir_name(dir_name(dir_name(dir_name(dir_name(os.path.abspath(__file__))))))
                 env_path = os.path.join(package_path, ".env")

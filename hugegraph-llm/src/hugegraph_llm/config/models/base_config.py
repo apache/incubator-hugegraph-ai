@@ -116,6 +116,3 @@ class BaseConfig(BaseSettings):
         except Exception as e:
             log.error("初始化配置对象时发生错误: %s", str(e))
             raise
-
-
-    
