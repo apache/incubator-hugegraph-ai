@@ -135,36 +135,29 @@ class PropertyGraphExtract:
         try:
             property_graph = json.loads(json_str)
             # Expect property_graph to be a dict with keys "vertices" and "edges"
-            if isinstance(property_graph, dict) and "vertices" in property_graph and "edges" in property_graph:
-                # Create sets for valid vertex and edge labels based on the schema
-                vertex_label_set = {vertex["name"] for vertex in schema["vertexlabels"]}
-                edge_label_set = {edge["name"] for edge in schema["edgelabels"]}
-                # Process vertices
-                for item in property_graph["vertices"]:
-                    if not isinstance(item, dict):
-                        log.warning("Invalid property graph item type '%s'.", type(item))
-                        continue
-                    if not self.NECESSARY_ITEM_KEYS.issubset(item.keys()):
-                        log.warning("Invalid item keys '%s'.", item.keys())
-                        continue
-                    if item["label"] not in vertex_label_set:
-                        log.warning("Invalid vertex label '%s' has been ignored.", item["label"])
-                    else:
-                        items.append(item)
-                # Process edges
-                for item in property_graph["edges"]:
-                    if not isinstance(item, dict):
-                        log.warning("Invalid property graph item type '%s'.", type(item))
-                        continue
-                    if not self.NECESSARY_ITEM_KEYS.issubset(item.keys()):
-                        log.warning("Invalid item keys '%s'.", item.keys())
-                        continue
-                    if item["label"] not in edge_label_set:
-                        log.warning("Invalid edge label '%s' has been ignored.", item["label"])
-                    else:
-                        items.append(item)
-            else:
+            if not (isinstance(property_graph, dict) and "vertices" in property_graph and "edges" in property_graph):
                 log.critical("Invalid property graph format; expecting 'vertices' and 'edges'.")
+                return items
+
+            # Create sets for valid vertex and edge labels based on the schema
+            vertex_label_set = {vertex["name"] for vertex in schema["vertexlabels"]}
+            edge_label_set = {edge["name"] for edge in schema["edgelabels"]}
+
+            def process_items(item_list, valid_labels, item_type):
+                for item in item_list:
+                    if not isinstance(item, dict):
+                        log.warning("Invalid property graph item type '%s'.", type(item))
+                        continue
+                    if not self.NECESSARY_ITEM_KEYS.issubset(item.keys()):
+                        log.warning("Invalid item keys '%s'.", item.keys())
+                        continue
+                    if item["label"] not in valid_labels:
+                        log.warning("Invalid %s label '%s' has been ignored.", item_type, item["label"])
+                        continue
+                    items.append(item)
+
+            process_items(property_graph["vertices"], vertex_label_set, "vertex")
+            process_items(property_graph["edges"], edge_label_set, "edge")
         except json.JSONDecodeError:
             log.critical("Invalid property graph JSON! Please check the extracted JSON data carefully")
         return items
