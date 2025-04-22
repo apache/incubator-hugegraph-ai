@@ -78,7 +78,7 @@ class BaseConfig(BaseSettings):
                 if k in config_dict:
                     str_v = str(config_dict[k]) if config_dict[k] is not None else ""
                     if v != str_v:
-                        log.info("Update configuration items from the environment variable file: %s=%s (Original value: %s)", k, v, str_v)
+                        log.info("Update configuration from the file: %s=%s (Original value: %s)", k, v, str_v)
                         setattr(self, k.lower(), v)
             for k, v in config_dict.items():
                 if k not in env_config:
@@ -98,11 +98,11 @@ class BaseConfig(BaseSettings):
                     os.environ[k] = v
             super().__init__(**data)
             if not os.path.exists(env_path):
-                log.info("The environment variable file %s does not exist and a new file will be created", env_path)
+                log.info("The environment file %s does not exist and a new file will be created", env_path)
                 self.generate_env()
             else:
                 self.check_env()
-            log.info("The %s configuration file was successfully loaded. Configuration class: %s", env_path, self.__class__.__name__)
+            log.info("The %s file was loaded.Class: %s", env_path, self.__class__.__name__)
         except Exception as e:
             log.error("An error occurred when initializing the configuration object: %s", str(e))
             raise
