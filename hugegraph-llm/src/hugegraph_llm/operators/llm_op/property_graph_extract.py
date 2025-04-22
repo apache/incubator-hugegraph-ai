@@ -26,7 +26,6 @@ from hugegraph_llm.document.chunk_split import ChunkSplitter
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
 
-
 """
 TODO: It is not clear whether there is any other dependence on the SCHEMA_EXAMPLE_PROMPT variable. 
 Because the SCHEMA_EXAMPLE_PROMPT variable will no longer change based on 
@@ -88,9 +87,9 @@ def filter_item(schema, items) -> List[Dict[str, Any]]:
 
 class PropertyGraphExtract:
     def __init__(
-            self,
-            llm: BaseLLM,
-            example_prompt: str = prompt.extract_graph_prompt
+        self,
+        llm: BaseLLM,
+        example_prompt: str = prompt.extract_graph_prompt
     ) -> None:
         self.llm = llm
         self.example_prompt = example_prompt
@@ -125,10 +124,10 @@ class PropertyGraphExtract:
         return self.llm.generate(prompt=prompt)
 
     def _extract_and_filter_label(self, schema, text) -> List[Dict[str, Any]]:
-        # Use regex to extract JSON object with curly braces
+        # Use regex to extract a JSON object with curly braces
         json_match = re.search(r'({.*})', text, re.DOTALL)
         if not json_match:
-            log.critical("Invalid property graph! No JSON object found, " +
+            log.critical("Invalid property graph! No JSON object found, "
                          "please check the output format example in prompt.")
             return []
         json_str = json_match.group(1).strip()
