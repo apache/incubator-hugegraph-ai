@@ -306,7 +306,7 @@ def create_configs_block() -> list:
                     llm_config_input = [gr.Textbox(value="", visible=False) for _ in range(4)]
                 llm_config_button = gr.Button("Apply configuration")
                 llm_config_button.click(apply_llm_config_with_chat_op, inputs=llm_config_input)
-                # 判断.env文件中有无设置
+                # Determine whether there are Settings in the.env file
                 dir_name = os.path.dirname
                 package_path = dir_name(dir_name(dir_name(dir_name(dir_name(os.path.abspath(__file__))))))
                 env_path = os.path.join(package_path, ".env")
