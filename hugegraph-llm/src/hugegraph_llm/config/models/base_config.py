@@ -71,19 +71,24 @@ class BaseConfig(BaseSettings):
 
     def check_env(self):
         try:
+            # Read the environment variable file
             env_config = dotenv_values(env_path)
             config_dict = self.model_dump()
+            # check whether configuration in environment file don't in object
             config_dict = {k.upper(): v for k, v in config_dict.items()}
             for k, v in env_config.items():
                 if k in config_dict:
                     str_v = str(config_dict[k]) if config_dict[k] is not None else ""
                     if v != str_v:
                         log.info("Update configuration from the file: %s=%s (Original value: %s)", k, v, str_v)
+                        # Update the values in the object
                         setattr(self, k.lower(), v)
+            # Check whether configuration in object don't in environment file
             for k, v in config_dict.items():
                 if k not in env_config:
                     log.info("Add configuration items to the environment variable file: %s=%s", k, v)
                     str_v = str(v) if v is not None else ""
+                    # Add the values to the environment file
                     set_key(env_path, k, str_v, quote_mode="never")
             return True
         except Exception as e:
