@@ -8,23 +8,23 @@ This project includes runnable demos, it can also be used as a third-party libra
 As we know, graph systems can help large models address challenges like timeliness and hallucination,
 while large models can help graph systems with cost-related issues.
 
-With this project, we aim to reduce the cost of using graph systems, and decrease the complexity of 
+With this project, we aim to reduce the cost of using graph systems and decrease the complexity of 
 building knowledge graphs. This project will offer more applications and integration solutions for 
 graph systems and large language models.
 1.  Construct knowledge graph by LLM + HugeGraph
 2.  Use natural language to operate graph databases (Gremlin/Cypher)
-3.  Knowledge graph supplements answer context (GraphRAG)
+3.  Knowledge graph supplements answer context (GraphRAG → Graph Agent)
 
 ## 2. Environment Requirements
-
-- python 3.10+ (not tested in 3.12)
-- hugegraph-server 1.3+ (better to use 1.5+)
-- poetry 2.0+
+> [!IMPORTANT]
+> - python 3.10+ (not tested in 3.12)
+> - hugegraph-server 1.3+ (better to use 1.5+)
+> - poetry 2.0+
 
 ## 3. Preparation
 
 1. Start the HugeGraph database, you can run it via [Docker](https://hub.docker.com/r/hugegraph/hugegraph)/[Binary Package](https://hugegraph.apache.org/docs/download/download/).  
-    Refer to detailed [doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance
+    Refer to a detailed [doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance
 
 2. Configuring the poetry environment, Use the official installer to install Poetry, See the [poetry documentation](https://poetry.pythonlang.cn/docs/#installing-with-pipx) for other installation methods   
     ```bash
@@ -32,11 +32,11 @@ graph systems and large language models.
     curl -sSL https://install.python-poetry.org | python3 - # install the latest version like 2.0+
     ```
 
-2. Clone this project
+3. Clone this project
     ```bash
     git clone https://github.com/apache/incubator-hugegraph-ai.git
     ```
-3. Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph_llm](src/hugegraph_llm), poetry officially recommends using virtual environments
+4. Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph_llm](src/hugegraph_llm), poetry officially recommends using virtual environments
     ```bash
     cd ./incubator-hugegraph-ai/hugegraph-llm
     poetry config --list # List/check the current configuration (Optional)
@@ -48,11 +48,11 @@ graph systems and large language models.
     poetry shell # use 'exit' to leave the shell
     ```  
     If `poetry install` fails or too slow due to network issues, it is recommended to modify `tool.poetry.source` of `hugegraph-llm/pyproject.toml`
-4. Enter the project directory(`./incubator-hugegraph-ai/hugegraph-llm/src`)
+5. Enter the project directory(`./incubator-hugegraph-ai/hugegraph-llm/src`)
     ```bash
     cd ./src
     ```
-5. Start the gradio interactive demo of **Graph RAG**, you can run with the following command, and open http://127.0.0.1:8001 after starting
+6. Start the gradio interactive demo of **Graph RAG**, you can run with the following command and open http://127.0.0.1:8001 after starting
     ```bash
     python -m hugegraph_llm.demo.rag_demo.app  # same as "poetry run xxx"
     ```
@@ -61,21 +61,23 @@ graph systems and large language models.
     python -m hugegraph_llm.demo.rag_demo.app --host 127.0.0.1 --port 18001
     ```
    
-6. After running the web demo, the config file `.env` will be automatically generated at the path `hugegraph-llm/.env`.    Additionally, a prompt-related configuration file `config_prompt.yaml` will also be generated at the path `hugegraph-llm/src/hugegraph_llm/resources/demo/config_prompt.yaml`.
+7. After running the web demo, the config file `.env` will be automatically generated at the path `hugegraph-llm/.env`.    Additionally, a prompt-related configuration file `config_prompt.yaml` will also be generated at the path `hugegraph-llm/src/hugegraph_llm/resources/demo/config_prompt.yaml`.
     You can modify the content on the web page, and it will be automatically saved to the configuration file after the corresponding feature is triggered.  You can also modify the file directly without restarting the web application; refresh the page to load your latest changes.  
     (Optional)To regenerate the config file, you can use `config.generate` with `-u` or `--update`.  
     ```bash
     python -m hugegraph_llm.config.generate --update
     ```
     Note: `Litellm` support multi-LLM provider, refer [litellm.ai](https://docs.litellm.ai/docs/providers) to config it
-7. (__Optional__) You could use 
+8. (__Optional__) You could use 
     [hugegraph-hubble](https://hugegraph.apache.org/docs/quickstart/hugegraph-hubble/#21-use-docker-convenient-for-testdev) 
     to visit the graph data, could run it via [Docker/Docker-Compose](https://hub.docker.com/r/hugegraph/hubble) 
-    for guidance. (Hubble is a graph-analysis dashboard include data loading/schema management/graph traverser/display).
-8. (__Optional__) offline download NLTK stopwords  
+    for guidance. (Hubble is a graph-analysis dashboard that includes data loading/schema management/graph traverser/display).
+9. (__Optional__) offline download NLTK stopwords  
     ```bash
     python ./hugegraph_llm/operators/common_op/nltk_helper.py
     ```
+> [!TIP]   
+> You can also refer to our [quick-start](./quick_start.md) doc to understand how to use it & the basic query logic 🚧
 
 ## 4 Examples
 
@@ -122,7 +124,7 @@ This can be obtained from the `LLMs` class.
     )
     ```
     ![gradio-config](https://hugegraph.apache.org/docs/images/kg-uml.png)
-2. **Import Schema**: The `import_schema` method is used to import a schema from a source. The source can be a HugeGraph instance, a user-defined schema or an extraction result. The method `print_result` can be chained to print the result.
+2. **Import Schema**: The `import_schema` method is used to import a schema from a source. The source can be a HugeGraph instance, a user-defined schema, or an extraction result. The method `print_result` can be chained to print the result.
     ```python
     # Import schema from a HugeGraph instance
     builder.import_schema(from_hugegraph="xxx").print_result()

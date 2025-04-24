@@ -18,11 +18,13 @@
 
 from hugegraph_llm.config.models.base_prompt_config import BasePromptConfig
 
+
 # pylint: disable=C0301
 class PromptConfig(BasePromptConfig):
     # Data is detached from llm_op/answer_synthesize.py
-    answer_prompt: str = """You are an expert in knowledge graphs and natural language processing.
-Your task is to provide a precise and accurate answer based on the given context.
+    answer_prompt: str = """You are an expert in the fields of knowledge graphs and natural language processing.
+
+Please provide precise and accurate answers based on the following context information, which is sorted in order of importance from high to low, without using any fabricated knowledge.
 
 Given the context information and without using fictive knowledge, 
 answer the following query in a concise and professional manner.
@@ -246,7 +248,8 @@ and experiences.
     answer_prompt_CN: str = """你是知识图谱和自然语言处理领域的专家。
 你的任务是基于给定的上下文提供精确和准确的答案。
 
-根据提供的上下文信息，不使用虚构知识，
+请根据以下按重要性从高到低排序的上下文信息，提供基于上下文的精确、准确的答案，不使用任何虚构的知识。
+
 请以简洁专业的方式回答以下问题。
 请使用 Markdown 格式编写答案，其中行内数学公式用 `$...$` 包裹
 

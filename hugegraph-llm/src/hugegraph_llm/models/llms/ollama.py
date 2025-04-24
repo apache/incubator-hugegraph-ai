@@ -17,7 +17,7 @@
 
 
 import json
-from typing import Any, List, Optional, Callable, Dict
+from typing import Any, AsyncGenerator, Generator, List, Optional, Callable, Dict
 
 import ollama
 from retry import retry
@@ -89,22 +89,49 @@ class OllamaClient(BaseLLM):
         self,
         messages: Optional[List[Dict[str, Any]]] = None,
         prompt: Optional[str] = None,
-        on_token_callback: Callable = None,
-    ) -> List[Any]:
+        on_token_callback: Optional[Callable] = None,
+    ) -> Generator[str, None, None]:
         """Comment"""
         if messages is None:
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
-        stream = self.client.chat(
+
+        for chunk in self.client.chat(
             model=self.model,
             messages=messages,
             stream=True
-        )
-        chunks = []
-        for chunk in stream:
-            on_token_callback(chunk["message"]["content"])
-            chunks.append(chunk)
-        return chunks
+        ):
+            token = chunk["message"]["content"]
+            if on_token_callback:
+                on_token_callback(token)
+            yield token
+
+    async def agenerate_streaming(
+        self,
+        messages: Optional[List[Dict[str, Any]]] = None,
+        prompt: Optional[str] = None,
+        on_token_callback: Optional[Callable] = None,
+    ) -> AsyncGenerator[str, None]:
+        """Comment"""
+        if messages is None:
+            assert prompt is not None, "Messages or prompt must be provided."
+            messages = [{"role": "user", "content": prompt}]
+
+        try:
+            async_generator = await self.async_client.chat(
+                model=self.model,
+                messages=messages,
+                stream=True
+            )
+            async for chunk in async_generator:
+                token = chunk.get("message", {}).get("content", "")
+                if on_token_callback:
+                    on_token_callback(token)
+                yield token
+        except Exception as e:
+            print(f"Retrying LLM call {e}")
+            raise e
+
 
     def num_tokens_from_string(
         self,
