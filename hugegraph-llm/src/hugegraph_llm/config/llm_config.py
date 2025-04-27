@@ -33,13 +33,13 @@ class LLMConfig(BaseConfig):
     # 1. OpenAI settings
     openai_chat_api_base: Optional[str] = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
     openai_chat_api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
-    openai_chat_language_model: Optional[str] = "gpt-4o-mini"
+    openai_chat_language_model: Optional[str] = "gpt-4.1-mini"
     openai_extract_api_base: Optional[str] = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
     openai_extract_api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
-    openai_extract_language_model: Optional[str] = "gpt-4o-mini"
+    openai_extract_language_model: Optional[str] = "gpt-4.1-mini"
     openai_text2gql_api_base: Optional[str] = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
     openai_text2gql_api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
-    openai_text2gql_language_model: Optional[str] = "gpt-4o-mini"
+    openai_text2gql_language_model: Optional[str] = "gpt-4.1-mini"
     openai_embedding_api_base: Optional[str] = os.environ.get("OPENAI_EMBEDDING_BASE_URL", "https://api.openai.com/v1")
     openai_embedding_api_key: Optional[str] = os.environ.get("OPENAI_EMBEDDING_API_KEY")
     openai_embedding_model: Optional[str] = "text-embedding-3-small"
@@ -87,15 +87,15 @@ class LLMConfig(BaseConfig):
     # 5. LiteLLM settings
     litellm_chat_api_key: Optional[str] = None
     litellm_chat_api_base: Optional[str] = None
-    litellm_chat_language_model: Optional[str] = "openai/gpt-4o"
+    litellm_chat_language_model: Optional[str] = "openai/gpt-4.1-mini"
     litellm_chat_tokens: int = 8192
     litellm_extract_api_key: Optional[str] = None
     litellm_extract_api_base: Optional[str] = None
-    litellm_extract_language_model: Optional[str] = "openai/gpt-4o"
+    litellm_extract_language_model: Optional[str] = "openai/gpt-4.1-mini"
     litellm_extract_tokens: int = 256
     litellm_text2gql_api_key: Optional[str] = None
     litellm_text2gql_api_base: Optional[str] = None
-    litellm_text2gql_language_model: Optional[str] = "openai/gpt-4o"
+    litellm_text2gql_language_model: Optional[str] = "openai/gpt-4.1-mini"
     litellm_text2gql_tokens: int = 4096
     litellm_embedding_api_key: Optional[str] = None
     litellm_embedding_api_base: Optional[str] = None

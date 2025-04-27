@@ -38,9 +38,9 @@ class LiteLLMClient(BaseLLM):
         self,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
-        model_name: str = "openai/gpt-4o",  # Can be any model supported by LiteLLM
+        model_name: str = "openai/gpt-4.1-mini",  # Can be any model supported by LiteLLM
         max_tokens: int = 4096,
-        temperature: float = 0.0,
+        temperature: float = 0.01,
     ) -> None:
         self.api_key = api_key
         self.api_base = api_base
