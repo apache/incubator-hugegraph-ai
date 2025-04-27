@@ -40,7 +40,7 @@ class OpenAIClient(BaseLLM):
         api_base: Optional[str] = None,
         model_name: str = "gpt-4.1-mini",
         max_tokens: int = 4096,
-        temperature: float = 0.1,
+        temperature: float = 0.01,
     ) -> None:
         api_key = api_key or ''
         self.client = OpenAI(api_key=api_key, base_url=api_base)
