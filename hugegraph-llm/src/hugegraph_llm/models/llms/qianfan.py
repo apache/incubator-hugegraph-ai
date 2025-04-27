@@ -27,7 +27,7 @@ from hugegraph_llm.utils.log import log
 
 
 class QianfanClient(BaseLLM):
-    def __init__(self, model_name: Optional[str] = "ERNIE-4.0-Turbo-8K",
+    def __init__(self, model_name: Optional[str] = "ernie-4.5-8k-preview",
                  api_key: Optional[str] = None, secret_key: Optional[str] = None):
         qianfan.get_config().AK = api_key or llm_settings.qianfan_chat_api_key
         qianfan.get_config().SK = secret_key or llm_settings.qianfan_chat_secret_key
