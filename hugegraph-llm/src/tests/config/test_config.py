@@ -23,5 +23,6 @@ class TestConfig(unittest.TestCase):
     def test_config(self):
         import nltk
         from hugegraph_llm.config import resource_path
+
         nltk.data.path.append(resource_path)
         nltk.data.find("corpora/stopwords")

@@ -17,16 +17,15 @@
 
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
-import asyncio
-import time
-from fastapi import Request, Response, FastAPI
+
+from fastapi import FastAPI, Request, Response
 from hugegraph_llm.middleware.middleware import UseTimeMiddleware
 
 
 class TestUseTimeMiddlewareInit(unittest.TestCase):
     def setUp(self):
         self.mock_app = MagicMock(spec=FastAPI)
-        
+
     def test_init(self):
         # Test that the middleware initializes correctly
         middleware = UseTimeMiddleware(self.mock_app)
@@ -37,7 +36,7 @@ class TestUseTimeMiddlewareDispatch(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.mock_app = MagicMock(spec=FastAPI)
         self.middleware = UseTimeMiddleware(self.mock_app)
-        
+
         # Create a mock request with necessary attributes
         self.mock_request = MagicMock(spec=Request)
         self.mock_request.method = "GET"
@@ -45,44 +44,40 @@ class TestUseTimeMiddlewareDispatch(unittest.IsolatedAsyncioTestCase):
         self.mock_request.client = MagicMock()
         self.mock_request.client.host = "127.0.0.1"
         self.mock_request.url = "http://localhost:8000/api"
-        
+
         # Create a mock response with necessary attributes
         self.mock_response = MagicMock(spec=Response)
         self.mock_response.status_code = 200
         self.mock_response.headers = {}
-        
+
         # Create a mock call_next function
         self.mock_call_next = AsyncMock()
         self.mock_call_next.return_value = self.mock_response
 
-    @patch('time.perf_counter')
-    @patch('hugegraph_llm.middleware.middleware.log')
+    @patch("time.perf_counter")
+    @patch("hugegraph_llm.middleware.middleware.log")
     async def test_dispatch(self, mock_log, mock_time):
         # Setup mock time to return specific values on consecutive calls
         mock_time.side_effect = [100.0, 100.5]  # Start time, end time (0.5s difference)
-        
+
         # Call the dispatch method
         result = await self.middleware.dispatch(self.mock_request, self.mock_call_next)
-        
+
         # Verify call_next was called with the request
         self.mock_call_next.assert_called_once_with(self.mock_request)
-        
+
         # Verify the response headers were set correctly
         self.assertEqual(self.mock_response.headers["X-Process-Time"], "500.00 ms")
-        
+
         # Verify log.info was called with the correct arguments
         mock_log.info.assert_any_call("Request process time: %.2f ms, code=%d", 500.0, 200)
         mock_log.info.assert_any_call(
-            "%s - Args: %s, IP: %s, URL: %s",
-            "GET",
-            {},
-            "127.0.0.1",
-            "http://localhost:8000/api"
+            "%s - Args: %s, IP: %s, URL: %s", "GET", {}, "127.0.0.1", "http://localhost:8000/api"
         )
-        
+
         # Verify the result is the response
         self.assertEqual(result, self.mock_response)
 
 
 if __name__ == "__main__":
-    unittest.main() 
+    unittest.main()

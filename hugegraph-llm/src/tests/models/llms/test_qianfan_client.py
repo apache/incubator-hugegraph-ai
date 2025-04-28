@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import unittest
 import asyncio
+import unittest
 
 from hugegraph_llm.models.llms.qianfan import QianfanClient
 
@@ -27,53 +27,50 @@ class TestQianfanClient(unittest.TestCase):
         response = qianfan_client.generate(prompt="What is the capital of China?")
         self.assertIsInstance(response, str)
         self.assertGreater(len(response), 0)
-        
+
     def test_generate_with_messages(self):
         qianfan_client = QianfanClient()
-        messages = [
-            {"role": "user", "content": "What is the capital of China?"}
-        ]
+        messages = [{"role": "user", "content": "What is the capital of China?"}]
         response = qianfan_client.generate(messages=messages)
         self.assertIsInstance(response, str)
         self.assertGreater(len(response), 0)
-        
+
     def test_agenerate(self):
         qianfan_client = QianfanClient()
-        
+
         async def run_async_test():
             response = await qianfan_client.agenerate(prompt="What is the capital of China?")
             self.assertIsInstance(response, str)
             self.assertGreater(len(response), 0)
-            
+
         asyncio.run(run_async_test())
-        
+
     def test_generate_streaming(self):
         qianfan_client = QianfanClient()
-        
+
         def on_token_callback(chunk):
             # This is a no-op in Qianfan's implementation
             pass
-            
+
         response = qianfan_client.generate_streaming(
-            prompt="What is the capital of China?",
-            on_token_callback=on_token_callback
+            prompt="What is the capital of China?", on_token_callback=on_token_callback
         )
-        
+
         self.assertIsInstance(response, str)
         self.assertGreater(len(response), 0)
-        
+
     def test_num_tokens_from_string(self):
         qianfan_client = QianfanClient()
         test_string = "Hello, world!"
         token_count = qianfan_client.num_tokens_from_string(test_string)
         self.assertEqual(token_count, len(test_string))
-        
+
     def test_max_allowed_token_length(self):
         qianfan_client = QianfanClient()
         max_tokens = qianfan_client.max_allowed_token_length()
         self.assertEqual(max_tokens, 6000)
-        
+
     def test_get_llm_type(self):
         qianfan_client = QianfanClient()
         llm_type = qianfan_client.get_llm_type()
-        self.assertEqual(llm_type, "qianfan_wenxin") 
+        self.assertEqual(llm_type, "qianfan_wenxin")

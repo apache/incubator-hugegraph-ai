@@ -19,7 +19,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph import Commit2Graph
-from pyhugegraph.utils.exceptions import NotFoundError, CreateError
+from pyhugegraph.utils.exceptions import CreateError, NotFoundError
 
 
 class TestCommit2Graph(unittest.TestCase):
@@ -31,7 +31,9 @@ class TestCommit2Graph(unittest.TestCase):
         self.mock_client.schema.return_value = self.mock_schema
 
         # Create a Commit2Graph instance with the mock client
-        with patch('hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.PyHugeClient', return_value=self.mock_client):
+        with patch(
+            "hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.PyHugeClient", return_value=self.mock_client
+        ):
             self.commit2graph = Commit2Graph()
 
         # Sample schema
@@ -41,7 +43,7 @@ class TestCommit2Graph(unittest.TestCase):
                 {"name": "age", "data_type": "INT", "cardinality": "SINGLE"},
                 {"name": "title", "data_type": "TEXT", "cardinality": "SINGLE"},
                 {"name": "year", "data_type": "INT", "cardinality": "SINGLE"},
-                {"name": "role", "data_type": "TEXT", "cardinality": "SINGLE"}
+                {"name": "role", "data_type": "TEXT", "cardinality": "SINGLE"},
             ],
             "vertexlabels": [
                 {
@@ -49,65 +51,34 @@ class TestCommit2Graph(unittest.TestCase):
                     "properties": ["name", "age"],
                     "primary_keys": ["name"],
                     "nullable_keys": ["age"],
-                    "id_strategy": "PRIMARY_KEY"
+                    "id_strategy": "PRIMARY_KEY",
                 },
                 {
                     "name": "movie",
                     "properties": ["title", "year"],
                     "primary_keys": ["title"],
                     "nullable_keys": ["year"],
-                    "id_strategy": "PRIMARY_KEY"
-                }
+                    "id_strategy": "PRIMARY_KEY",
+                },
             ],
             "edgelabels": [
-                {
-                    "name": "acted_in",
-                    "properties": ["role"],
-                    "source_label": "person",
-                    "target_label": "movie"
-                }
-            ]
+                {"name": "acted_in", "properties": ["role"], "source_label": "person", "target_label": "movie"}
+            ],
         }
 
         # Sample vertices and edges
         self.vertices = [
-            {
-                "type": "vertex",
-                "label": "person",
-                "properties": {
-                    "name": "Tom Hanks",
-                    "age": "67"
-                }
-            },
-            {
-                "type": "vertex",
-                "label": "movie",
-                "properties": {
-                    "title": "Forrest Gump",
-                    "year": "1994"
-                }
-            }
+            {"type": "vertex", "label": "person", "properties": {"name": "Tom Hanks", "age": "67"}},
+            {"type": "vertex", "label": "movie", "properties": {"title": "Forrest Gump", "year": "1994"}},
         ]
 
         self.edges = [
             {
                 "type": "edge",
                 "label": "acted_in",
-                "properties": {
-                    "role": "Forrest Gump"
-                },
-                "source": {
-                    "label": "person",
-                    "properties": {
-                        "name": "Tom Hanks"
-                    }
-                },
-                "target": {
-                    "label": "movie",
-                    "properties": {
-                        "title": "Forrest Gump"
-                    }
-                }
+                "properties": {"role": "Forrest Gump"},
+                "source": {"label": "person", "properties": {"name": "Tom Hanks"}},
+                "target": {"label": "movie", "properties": {"title": "Forrest Gump"}},
             }
         ]
 
@@ -115,11 +86,9 @@ class TestCommit2Graph(unittest.TestCase):
         self.formatted_edges = [
             {
                 "label": "acted_in",
-                "properties": {
-                    "role": "Forrest Gump"
-                },
+                "properties": {"role": "Forrest Gump"},
                 "outV": "person:Tom Hanks",  # This is a simplified ID format
-                "inV": "movie:Forrest Gump"  # This is a simplified ID format
+                "inV": "movie:Forrest Gump",  # This is a simplified ID format
             }
         ]
 
@@ -138,8 +107,8 @@ class TestCommit2Graph(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.commit2graph.run({"vertices": [], "edges": []})
 
-    @patch('hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph.load_into_graph')
-    @patch('hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph.init_schema_if_need')
+    @patch("hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph.load_into_graph")
+    @patch("hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph.init_schema_if_need")
     def test_run_with_schema(self, mock_init_schema, mock_load_into_graph):
         """Test run method with schema."""
         # Setup mocks
@@ -147,11 +116,7 @@ class TestCommit2Graph(unittest.TestCase):
         mock_load_into_graph.return_value = None
 
         # Create input data
-        data = {
-            "schema": self.schema,
-            "vertices": self.vertices,
-            "edges": self.edges
-        }
+        data = {"schema": self.schema, "vertices": self.vertices, "edges": self.edges}
 
         # Run the method
         result = self.commit2graph.run(data)
@@ -165,18 +130,14 @@ class TestCommit2Graph(unittest.TestCase):
         # Verify the results
         self.assertEqual(result, data)
 
-    @patch('hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph.schema_free_mode')
+    @patch("hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph.schema_free_mode")
     def test_run_without_schema(self, mock_schema_free_mode):
         """Test run method without schema."""
         # Setup mocks
         mock_schema_free_mode.return_value = None
 
         # Create input data
-        data = {
-            "vertices": self.vertices,
-            "edges": self.edges,
-            "triples": []
-        }
+        data = {"vertices": self.vertices, "edges": self.edges, "triples": []}
 
         # Run the method
         result = self.commit2graph.run(data)
@@ -187,16 +148,16 @@ class TestCommit2Graph(unittest.TestCase):
         # Verify the results
         self.assertEqual(result, data)
 
-    @patch('hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph._check_property_data_type')
+    @patch("hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph._check_property_data_type")
     def test_set_default_property(self, mock_check_property_data_type):
         """Test _set_default_property method."""
         # Mock _check_property_data_type to return True
         mock_check_property_data_type.return_value = True
-        
+
         # Create property label map
         property_label_map = {
             "name": {"data_type": "TEXT", "cardinality": "SINGLE"},
-            "age": {"data_type": "INT", "cardinality": "SINGLE"}
+            "age": {"data_type": "INT", "cardinality": "SINGLE"},
         }
 
         # Test with missing property
@@ -208,12 +169,12 @@ class TestCommit2Graph(unittest.TestCase):
 
         # Test with existing property - should not change the value
         input_properties = {"name": "Tom Hanks", "age": 67}  # Use integer instead of string
-        
+
         # Patch the method to avoid changing the existing value
-        with patch.object(self.commit2graph, '_set_default_property', return_value=None):
+        with patch.object(self.commit2graph, "_set_default_property", return_value=None):
             # This is just a placeholder call, the actual method is patched
             self.commit2graph._set_default_property("age", input_properties, property_label_map)
-        
+
         # Verify that the existing value was not changed
         self.assertEqual(input_properties["age"], 67)
 
@@ -234,6 +195,7 @@ class TestCommit2Graph(unittest.TestCase):
 
     def test_handle_graph_creation_not_found(self):
         """Test _handle_graph_creation method with NotFoundError."""
+
         # Create a real implementation of _handle_graph_creation
         def handle_graph_creation(func, *args, **kwargs):
             try:
@@ -242,22 +204,22 @@ class TestCommit2Graph(unittest.TestCase):
                 return None
             except Exception as e:
                 raise e
-        
+
         # Temporarily replace the method with our implementation
         original_method = self.commit2graph._handle_graph_creation
         self.commit2graph._handle_graph_creation = handle_graph_creation
-        
+
         # Setup mock function that raises NotFoundError
         mock_func = MagicMock()
         mock_func.side_effect = NotFoundError("Not found")
-        
+
         try:
             # Call the method
             result = self.commit2graph._handle_graph_creation(mock_func, "arg1", "arg2")
-            
+
             # Verify that the function was called
             mock_func.assert_called_once_with("arg1", "arg2")
-            
+
             # Verify the result
             self.assertIsNone(result)
         finally:
@@ -266,6 +228,7 @@ class TestCommit2Graph(unittest.TestCase):
 
     def test_handle_graph_creation_create_error(self):
         """Test _handle_graph_creation method with CreateError."""
+
         # Create a real implementation of _handle_graph_creation
         def handle_graph_creation(func, *args, **kwargs):
             try:
@@ -274,44 +237,44 @@ class TestCommit2Graph(unittest.TestCase):
                 return None
             except Exception as e:
                 raise e
-        
+
         # Temporarily replace the method with our implementation
         original_method = self.commit2graph._handle_graph_creation
         self.commit2graph._handle_graph_creation = handle_graph_creation
-        
+
         # Setup mock function that raises CreateError
         mock_func = MagicMock()
         mock_func.side_effect = CreateError("Create error")
-        
+
         try:
             # Call the method
             result = self.commit2graph._handle_graph_creation(mock_func, "arg1", "arg2")
-            
+
             # Verify that the function was called
             mock_func.assert_called_once_with("arg1", "arg2")
-            
+
             # Verify the result
             self.assertIsNone(result)
         finally:
             # Restore the original method
             self.commit2graph._handle_graph_creation = original_method
 
-    @patch('hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph._create_property')
-    @patch('hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph._handle_graph_creation')
+    @patch("hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph._create_property")
+    @patch("hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph._handle_graph_creation")
     def test_init_schema_if_need(self, mock_handle_graph_creation, mock_create_property):
         """Test init_schema_if_need method."""
         # Setup mocks
         mock_handle_graph_creation.return_value = None
         mock_create_property.return_value = None
-        
+
         # Patch the schema methods to avoid actual calls
         self.commit2graph.schema.vertexLabel = MagicMock()
         self.commit2graph.schema.edgeLabel = MagicMock()
-        
+
         # Create mock vertex and edge label builders
         mock_vertex_builder = MagicMock()
         mock_edge_builder = MagicMock()
-        
+
         # Setup method chaining
         self.commit2graph.schema.vertexLabel.return_value = mock_vertex_builder
         mock_vertex_builder.properties.return_value = mock_vertex_builder
@@ -319,7 +282,7 @@ class TestCommit2Graph(unittest.TestCase):
         mock_vertex_builder.usePrimaryKeyId.return_value = mock_vertex_builder
         mock_vertex_builder.primaryKeys.return_value = mock_vertex_builder
         mock_vertex_builder.ifNotExist.return_value = mock_vertex_builder
-        
+
         self.commit2graph.schema.edgeLabel.return_value = mock_edge_builder
         mock_edge_builder.sourceLabel.return_value = mock_edge_builder
         mock_edge_builder.targetLabel.return_value = mock_edge_builder
@@ -332,47 +295,33 @@ class TestCommit2Graph(unittest.TestCase):
 
         # Verify that _create_property was called for each property key
         self.assertEqual(mock_create_property.call_count, 5)  # 5 property keys
-        
+
         # Verify that vertexLabel was called for each vertex label
         self.assertEqual(self.commit2graph.schema.vertexLabel.call_count, 2)  # 2 vertex labels
-        
+
         # Verify that edgeLabel was called for each edge label
         self.assertEqual(self.commit2graph.schema.edgeLabel.call_count, 1)  # 1 edge label
 
-    @patch('hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph._check_property_data_type')
-    @patch('hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph._handle_graph_creation')
+    @patch("hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph._check_property_data_type")
+    @patch("hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph._handle_graph_creation")
     def test_load_into_graph(self, mock_handle_graph_creation, mock_check_property_data_type):
         """Test load_into_graph method."""
         # Setup mocks
         mock_handle_graph_creation.return_value = MagicMock(id="vertex_id")
         mock_check_property_data_type.return_value = True
-        
+
         # Create vertices and edges with the correct format
         vertices = [
-            {
-                "label": "person",
-                "properties": {
-                    "name": "Tom Hanks",
-                    "age": 67  # Use integer instead of string
-                }
-            },
-            {
-                "label": "movie",
-                "properties": {
-                    "title": "Forrest Gump",
-                    "year": 1994  # Use integer instead of string
-                }
-            }
+            {"label": "person", "properties": {"name": "Tom Hanks", "age": 67}},  # Use integer instead of string
+            {"label": "movie", "properties": {"title": "Forrest Gump", "year": 1994}},  # Use integer instead of string
         ]
-        
+
         edges = [
             {
                 "label": "acted_in",
-                "properties": {
-                    "role": "Forrest Gump"
-                },
+                "properties": {"role": "Forrest Gump"},
                 "outV": "person:Tom Hanks",  # Use the format expected by the implementation
-                "inV": "movie:Forrest Gump"  # Use the format expected by the implementation
+                "inV": "movie:Forrest Gump",  # Use the format expected by the implementation
             }
         ]
 
@@ -389,31 +338,31 @@ class TestCommit2Graph(unittest.TestCase):
         self.commit2graph.schema.vertexLabel = MagicMock()
         self.commit2graph.schema.edgeLabel = MagicMock()
         self.commit2graph.schema.indexLabel = MagicMock()
-        
+
         # Setup method chaining
         mock_property_builder = MagicMock()
         mock_vertex_builder = MagicMock()
         mock_edge_builder = MagicMock()
         mock_index_builder = MagicMock()
-        
+
         self.commit2graph.schema.propertyKey.return_value = mock_property_builder
         mock_property_builder.asText.return_value = mock_property_builder
         mock_property_builder.ifNotExist.return_value = mock_property_builder
         mock_property_builder.create.return_value = None
-        
+
         self.commit2graph.schema.vertexLabel.return_value = mock_vertex_builder
         mock_vertex_builder.useCustomizeStringId.return_value = mock_vertex_builder
         mock_vertex_builder.properties.return_value = mock_vertex_builder
         mock_vertex_builder.ifNotExist.return_value = mock_vertex_builder
         mock_vertex_builder.create.return_value = None
-        
+
         self.commit2graph.schema.edgeLabel.return_value = mock_edge_builder
         mock_edge_builder.sourceLabel.return_value = mock_edge_builder
         mock_edge_builder.targetLabel.return_value = mock_edge_builder
         mock_edge_builder.properties.return_value = mock_edge_builder
         mock_edge_builder.ifNotExist.return_value = mock_edge_builder
         mock_edge_builder.create.return_value = None
-        
+
         self.commit2graph.schema.indexLabel.return_value = mock_index_builder
         mock_index_builder.onV.return_value = mock_index_builder
         mock_index_builder.onE.return_value = mock_index_builder
@@ -421,7 +370,7 @@ class TestCommit2Graph(unittest.TestCase):
         mock_index_builder.secondary.return_value = mock_index_builder
         mock_index_builder.ifNotExist.return_value = mock_index_builder
         mock_index_builder.create.return_value = None
-        
+
         # Mock the client.graph() methods
         mock_graph = MagicMock()
         self.mock_client.graph.return_value = mock_graph
@@ -429,10 +378,7 @@ class TestCommit2Graph(unittest.TestCase):
         mock_graph.addEdge.return_value = MagicMock()
 
         # Create sample triples data in the correct format
-        triples = [
-            ["Tom Hanks", "acted_in", "Forrest Gump"],
-            ["Forrest Gump", "released_in", "1994"]
-        ]
+        triples = [["Tom Hanks", "acted_in", "Forrest Gump"], ["Forrest Gump", "released_in", "1994"]]
 
         # Call the method
         self.commit2graph.schema_free_mode(triples)
@@ -442,11 +388,11 @@ class TestCommit2Graph(unittest.TestCase):
         self.commit2graph.schema.vertexLabel.assert_called_once_with("vertex")
         self.commit2graph.schema.edgeLabel.assert_called_once_with("edge")
         self.assertEqual(self.commit2graph.schema.indexLabel.call_count, 2)
-        
+
         # Verify that addVertex and addEdge were called for each triple
         self.assertEqual(mock_graph.addVertex.call_count, 4)  # 2 subjects + 2 objects
         self.assertEqual(mock_graph.addEdge.call_count, 2)  # 2 predicates
 
 
 if __name__ == "__main__":
-    unittest.main() 
+    unittest.main()

@@ -52,6 +52,13 @@ jobs:
         source .venv/bin/activate
         uv pip install pytest pytest-cov
         uv pip install -r ./hugegraph-llm/requirements.txt
+        
+    # Install local hugegraph-python-client first
+    - name: Install hugegraph-python-client
+      run: |
+        source .venv/bin/activate
+        pip install -e ./hugegraph-python-client/
+        pip install -e ./hugegraph-llm/
 
     - name: Run unit tests
       run: |

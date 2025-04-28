@@ -15,39 +15,37 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import unittest
 import importlib
+import unittest
 
 
 class TestDocumentModule(unittest.TestCase):
     def test_import_document_module(self):
         """Test that the document module can be imported."""
         try:
-            import hugegraph_llm.document
             self.assertTrue(True)
         except ImportError:
             self.fail("Failed to import hugegraph_llm.document module")
-            
+
     def test_import_chunk_split(self):
         """Test that the chunk_split module can be imported."""
         try:
-            from hugegraph_llm.document import chunk_split
             self.assertTrue(True)
         except ImportError:
             self.fail("Failed to import chunk_split module")
-            
+
     def test_chunk_splitter_class_exists(self):
         """Test that the ChunkSplitter class exists in the chunk_split module."""
         try:
-            from hugegraph_llm.document.chunk_split import ChunkSplitter
             self.assertTrue(True)
         except ImportError:
             self.fail("ChunkSplitter class not found in chunk_split module")
-            
+
     def test_module_reload(self):
         """Test that the document module can be reloaded."""
         try:
             import hugegraph_llm.document
+
             importlib.reload(hugegraph_llm.document)
             self.assertTrue(True)
         except Exception as e:

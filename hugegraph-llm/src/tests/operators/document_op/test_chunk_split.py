@@ -16,14 +16,15 @@
 # under the License.
 
 import unittest
-from typing import List
 
 from hugegraph_llm.operators.document_op.chunk_split import ChunkSplit
 
 
 class TestChunkSplit(unittest.TestCase):
     def setUp(self):
-        self.test_text_en = "This is a test. It has multiple sentences. And some paragraphs.\n\nThis is another paragraph."
+        self.test_text_en = (
+            "This is a test. It has multiple sentences. And some paragraphs.\n\nThis is another paragraph."
+        )
         self.test_text_zh = "这是一个测试。它有多个句子。还有一些段落。\n\n这是另一个段落。"
         self.test_texts = [self.test_text_en, self.test_text_zh]
 
@@ -130,4 +131,4 @@ class TestChunkSplit(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main() 
+    unittest.main()
