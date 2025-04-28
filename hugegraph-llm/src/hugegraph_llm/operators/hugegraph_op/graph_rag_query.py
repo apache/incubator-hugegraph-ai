@@ -84,7 +84,7 @@ class GraphRAGQuery:
         embedding: Optional[BaseEmbedding] = None,
         max_v_prop_len: Optional[int] = 2048,
         max_e_prop_len: Optional[int] = 256,
-        num_gremlin_generate_example: Optional[int] = 1,
+        num_gremlin_generate_example: Optional[int] = 0,
         gremlin_prompt: Optional[str] = None,
     ):
         self._client = PyHugeClient(
