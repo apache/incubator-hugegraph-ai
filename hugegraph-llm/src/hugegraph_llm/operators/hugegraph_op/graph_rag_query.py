@@ -115,7 +115,6 @@ class GraphRAGQuery:
         # initial flag: -1 means no result, 0 means subgraph query, 1 means gremlin query
         context["graph_result_flag"] = -1
         # 1. Try to perform a query based on the generated gremlin
-        log.debug("_num_gremlin_generate_example=%s", self._num_gremlin_generate_example)
         if self._num_gremlin_generate_example >= 0:
             context = self._gremlin_generate_query(context)
         # 2. Try to perform a query based on subgraph-search if the previous query failed
