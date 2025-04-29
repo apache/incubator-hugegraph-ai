@@ -100,7 +100,7 @@ class VectorIndex:
                 results.append(deepcopy(self.properties[i]))
                 log.debug("[✓] Add valid distance %s to results.", dist)
             else:
-                log.debug("[x] Distance %s ≥ threshold %s, ignore this result.", dist, dis_threshold)
+                log.debug("[x] Distance %s >= threshold %s, ignore this result.", dist, dis_threshold)
         return results
 
     @staticmethod

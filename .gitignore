@@ -131,6 +131,8 @@ config_prompt.yaml
 # Environments
 .env
 .venv
+.vscode
+.cursor
 env/
 venv/
 ENV/
