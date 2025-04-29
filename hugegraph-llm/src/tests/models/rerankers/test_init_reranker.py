@@ -68,6 +68,6 @@ class TestRerankers(unittest.TestCase):
 
         # Assertions
         with self.assertRaises(Exception) as context:
-            reranker = rerankers.get_reranker()
+            rerankers.get_reranker()
 
         self.assertTrue("Reranker type is not supported!" in str(context.exception))

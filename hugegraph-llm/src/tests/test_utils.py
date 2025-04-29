@@ -18,6 +18,8 @@
 import os
 from unittest.mock import MagicMock, patch
 
+from hugegraph_llm.document import Document
+
 
 # 检查是否应该跳过外部服务测试
 def should_skip_external():
@@ -105,8 +107,6 @@ def ensure_nltk_resources():
 
 # 创建测试文档的辅助函数
 def create_test_document(content="这是一个测试文档"):
-    from hugegraph_llm.document.document import Document
-
     return Document(content=content, metadata={"source": "test"})
 
 

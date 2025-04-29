@@ -67,8 +67,7 @@ class TestTextLoader(unittest.TestCase):
     def test_load_empty_file(self):
         """Test loading an empty file."""
         empty_file_path = os.path.join(self.temp_dir.name, "empty.txt")
-        with open(empty_file_path, "w", encoding="utf-8") as f:
-            pass  # Create an empty file
+        open(empty_file_path, "w", encoding="utf-8").close()  # Create an empty file
 
         loader = TextLoader(empty_file_path)
         content = loader.load()

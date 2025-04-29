@@ -60,7 +60,7 @@ class TestCohereReranker(unittest.TestCase):
 
         # Verify the API call
         mock_post.assert_called_once()
-        args, kwargs = mock_post.call_args
+        _, kwargs = mock_post.call_args
         self.assertEqual(kwargs["json"]["query"], query)
         self.assertEqual(kwargs["json"]["documents"], documents)
         self.assertEqual(kwargs["json"]["top_n"], 3)
@@ -93,7 +93,7 @@ class TestCohereReranker(unittest.TestCase):
 
         # Verify the API call
         mock_post.assert_called_once()
-        args, kwargs = mock_post.call_args
+        _, kwargs = mock_post.call_args
         self.assertEqual(kwargs["json"]["top_n"], 2)
 
     def test_get_rerank_lists_empty_documents(self):

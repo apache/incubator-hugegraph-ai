@@ -21,18 +21,15 @@ import unittest
 from unittest.mock import patch
 
 # 导入测试工具
-from src.tests.test_utils import create_test_document, should_skip_external, with_mock_openai_client
+from hugegraph_llm.document import Document
+import sys
+
+# 添加父级目录到sys.path以便导入test_utils
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+from tests.test_utils import create_test_document, should_skip_external, with_mock_openai_client
 
 
 # 创建模拟类，替代缺失的模块
-class Document:
-    """模拟的Document类"""
-
-    def __init__(self, content, metadata=None):
-        self.content = content
-        self.metadata = metadata or {}
-
-
 class OpenAILLM:
     """模拟的OpenAILLM类"""
 
