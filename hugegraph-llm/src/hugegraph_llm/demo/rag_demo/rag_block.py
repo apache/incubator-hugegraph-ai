@@ -291,7 +291,7 @@ def create_rag_block():
                         value="reranker" if online_rerank else "bleu",
                         label="Rerank method",
                     )
-                    example_num = gr.Number(value=-1, label="Template Num (0 means no example, -1 means no text2gql) ", precision=0)
+                    example_num = gr.Number(value=-1, label="Template Num (<0 means disable text2gql) ", precision=0)
                     graph_ratio = gr.Slider(0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False)
 
                 graph_vector_radio.change(
