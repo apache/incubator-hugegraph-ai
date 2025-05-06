@@ -103,6 +103,7 @@ graph TD;
 - **Question:** Input the query
 - **Query** **Prompt:** The prompt template used to ask the final question to the LLM
 - **Keywords Extraction Prompt:** The prompt template for extracting keywords from the question
+- **Template Num:** < 0 means disable text2gql
 
 ### Query Scope Selection:
 
