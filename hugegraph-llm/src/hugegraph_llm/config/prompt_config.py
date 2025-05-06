@@ -233,6 +233,9 @@ Referenced Extracted Vertex IDs Related to the Query:
 
 Generate Gremlin from the Following User Query:
 {query}
+
+**Important: Do NOT output any analysis, reasoning steps, explanations or any other text. ONLY return the Gremlin query wrapped in a code block with ```gremlin``` fences.**
+
 The generated Gremlin is:
 """
 
