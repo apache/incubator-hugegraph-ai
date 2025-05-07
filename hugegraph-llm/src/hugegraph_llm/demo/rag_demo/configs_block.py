@@ -213,7 +213,7 @@ def apply_llm_config(current_llm_config, arg1, arg2, arg3, arg4, origin_call=Non
         test_url = getattr(llm_settings, f"openai_{current_llm_config}_api_base") + "/chat/completions"
         data = {
             "model": arg3,
-            "temperature": 0.0,
+            "temperature": 0.01,
             "messages": [{"role": "user", "content": "test"}],
         }
         headers = {"Authorization": f"Bearer {arg1}"}
