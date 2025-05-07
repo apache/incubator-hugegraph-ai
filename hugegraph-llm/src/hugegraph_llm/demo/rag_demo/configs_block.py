@@ -214,7 +214,7 @@ def apply_llm_config(current_llm_config, arg1, arg2, arg3, arg4, origin_call=Non
         data = {
             "model": arg3,
             "temperature": 0.01,
-            "messages": [{"role": "user", "content": "test"}],
+            "messages": [{"role": "user", "content": "hello"}],
         }
         headers = {"Authorization": f"Bearer {arg1}"}
         status_code = test_api_connection(test_url, method="POST", headers=headers, body=data, origin_call=origin_call)
