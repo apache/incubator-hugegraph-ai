@@ -165,8 +165,7 @@ async def timely_update_vid_embedding(interval_seconds: int = 3600):
         try:
             # Get the latest configuration values on each iteration
             config = {
-                "ip": huge_settings.graph_ip,
-                "port": huge_settings.graph_port,
+                "url": huge_settings.graph_url,
                 "name": huge_settings.graph_name,
                 "user": huge_settings.graph_user,
                 "pwd": huge_settings.graph_pwd,

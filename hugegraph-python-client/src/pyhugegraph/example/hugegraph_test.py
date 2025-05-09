@@ -23,8 +23,7 @@ class HugeGraph:
         self,
         username: str = "default",
         password: str = "default",
-        address: str = "127.0.0.1",
-        port: str = "8081",
+        url: str = "http://127.0.0.1:8081",
         graph: str = "hugegraph",
     ) -> None:
         """Create a new HugeGraph wrapper instance."""
@@ -38,11 +37,10 @@ class HugeGraph:
 
         self.username = username
         self.password = password
-        self.address = address
-        self.port = port
+        self.url = url
         self.graph = graph
         self.client = PyHugeClient(
-            address, port, user=username, pwd=password, graph=graph, graphspace=None
+            url=url, user=username, pwd=password, graph=graph, graphspace=None
         )
         self.schema = ""
 
