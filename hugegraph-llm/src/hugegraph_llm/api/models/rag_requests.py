@@ -24,8 +24,7 @@ from hugegraph_llm.config import prompt
 
 
 class GraphConfigRequest(BaseModel):
-    ip: str = Query('127.0.0.1', description="hugegraph client ip.")
-    port: str = Query('8080', description="hugegraph client port.")
+    url: str = Query('127.0.0.1:8080', description="hugegraph client url.")
     name: str = Query('hugegraph', description="hugegraph client name.")
     user: str = Query('', description="hugegraph client user.")
     pwd: str = Query('', description="hugegraph client pwd.")
@@ -47,7 +46,7 @@ class RAGRequest(BaseModel):
     topk_return_results: int = Query(20, description="Number of sorted results to return finally.")
     vector_dis_threshold: float = Query(0.9, description="Threshold for vector similarity\
                                          (results greater than this will be ignored).")
-    topk_per_keyword : int = Query(1, description="TopK results returned for each keyword \
+    topk_per_keyword: int = Query(1, description="TopK results returned for each keyword \
                                    extracted from the query, by default only the most similar one is returned.")
     client_config: Optional[GraphConfigRequest] = Query(None, description="hugegraph server config.")
 
@@ -72,10 +71,10 @@ class GraphRAGRequest(BaseModel):
     topk_return_results: int = Query(20, description="Number of sorted results to return finally.")
     vector_dis_threshold: float = Query(0.9, description="Threshold for vector similarity \
                                         (results greater than this will be ignored).")
-    topk_per_keyword : int = Query(1, description="TopK results returned for each keyword extracted\
+    topk_per_keyword: int = Query(1, description="TopK results returned for each keyword extracted\
                                     from the query, by default only the most similar one is returned.")
 
-    client_config : Optional[GraphConfigRequest] = Query(None, description="hugegraph server config.")
+    client_config: Optional[GraphConfigRequest] = Query(None, description="hugegraph server config.")
     get_vertex_only: bool = Query(False, description="return only keywords & vertex (early stop).")
 
     gremlin_tmpl_num: int = Query(
@@ -102,6 +101,7 @@ class LLMConfigRequest(BaseModel):
     # qianfan-wenxin-only properties
     secret_key: str = None
     # ollama-only properties
+    # TODO: replace to url later
     host: str = None
     port: str = None
 

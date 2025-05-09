@@ -19,8 +19,7 @@ from pyhugegraph.client import PyHugeClient
 
 
 class ClientUtils:
-    IP = "127.0.0.1"
-    PORT = "8080"
+    URL = "http://127.0.0.1:8080"
     GRAPH = "hugegraph"
     USERNAME = "admin"
     PASSWORD = "admin"
@@ -29,7 +28,7 @@ class ClientUtils:
 
     def __init__(self):
         self.client = PyHugeClient(
-            self.IP, self.PORT, user=self.USERNAME, pwd=self.PASSWORD, graph=self.GRAPH, graphspace=self.GRAPHSPACE
+            url=self.URL, user=self.USERNAME, pwd=self.PASSWORD, graph=self.GRAPH, graphspace=self.GRAPHSPACE
         )
         assert self.client is not None
 
