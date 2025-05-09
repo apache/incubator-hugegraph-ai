@@ -54,13 +54,13 @@ def create_other_block():
             base = gr.Textbox(value=getattr(llm_settings, "openai_chat_api_base"),label="API Base")
     with gr.Row():
         with gr.Column():
-            with gr.Tab("file") as tab_upload_file:
+            with gr.Tab("file") as tab_upload_file: # pylint: disable=W0612
                 inp1_file = gr.File(
                     value=os.path.join(resource_path, "demo", "llm_review.yaml"),
                     label="yaml file",
                     file_count="single",
                 )
-            with gr.Tab("text") as tab_upload_text:
+            with gr.Tab("text") as tab_upload_text: # pylint: disable=W0612
                 inp1 = gr.Textbox(
                     value="openai, model_name, api_key, api_base, max_tokens\n" \
                     "qianfan_wenxin, model_name, api_key, secret_key\n" \
@@ -74,18 +74,18 @@ def create_other_block():
         inp3 = gr.Textbox(value="I am fine, thank you", label="Standard Answer", show_copy_button=True, lines=8)
     out = gr.Code(label="Output", language="json", elem_classes="code-container-show")
     btn = gr.Button("Run LLM Test")
-    btn.click(
+    btn.click( # pylint: disable=no-member
         fn=auto_test_llms,
         inputs=[inp1, inp1_file, inp2, inp3, review_model_name, review_max_tokens, key, base],
         outputs=out
-    )  # pylint: disable=no-member
+    )
     with gr.Accordion("Init HugeGraph test data (🚧)", open=False):
         with gr.Row():
             inp = []
             out = gr.Textbox(label="Init Graph Demo Result", show_copy_button=True)
         btn = gr.Button("(BETA) Init HugeGraph test data (🚧)")
         btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
-    
+
     # def on_tab_select(input_f, input_t, evt: gr.SelectData):
     #     print(f"You selected {evt.value} at {evt.index} from {evt.target}")
     #     if evt.value == "file":

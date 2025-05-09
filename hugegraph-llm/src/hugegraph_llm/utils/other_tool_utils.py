@@ -35,7 +35,7 @@ def judge(answers, standard_answer, review_model_name, review_max_tokens, key, b
             max_tokens=int(review_max_tokens)
         )
         review_prompt = PromptConfig.review_prompt.format(standard_answer=standard_answer)
-        for idx, (model_name, answer) in enumerate(answers.items(), start=1):
+        for _, (model_name, answer) in enumerate(answers.items(), start=1):
             review_prompt += f"### {model_name}:\n{answer.strip()}\n\n"
         log.debug("Review_prompt: %s", review_prompt)
         response = review_client.generate(prompt=review_prompt)
@@ -45,9 +45,10 @@ def judge(answers, standard_answer, review_model_name, review_max_tokens, key, b
             response = match.group(1).strip()
         reviews = json.loads(response)
         return reviews
-    except Exception as e:
+    except Exception as e: # pylint: disable=W0718
         log.error("Review failed: %s", str(e))
         reviews = {"error": f"Review error: {str(e)}"}
+        return reviews
 
 def parse_llm_configurations(config_text: str):
     configs = []
@@ -100,20 +101,15 @@ def parse_llm_configurations(config_text: str):
             else:
                 raise ValueError(f"Unsupported llm type '{llm_type}' in line {i}")
         except Exception as e:
-            raise ValueError(f"Error parsing line {i}: {line}\nDetails: {e}")
+            raise ValueError(f"Error parsing line {i}: {line}\nDetails: {e}") from e
     return configs
 
 def parse_llm_configurations_from_yaml(yaml_file_path: str):
     configs = []
-    try:
-        with open(yaml_file_path, "r", encoding="utf-8") as f:
-            raw_configs = yaml.safe_load(f)
-    except Exception as e:
-        raise ValueError(f"YAML 文件读取失败: {e}")
-
+    with open(yaml_file_path, "r", encoding="utf-8") as f:
+        raw_configs = yaml.safe_load(f)
     if not isinstance(raw_configs, list):
         raise ValueError("YAML 文件内容必须是一个 LLM 配置列表。")
-
     for i, config in enumerate(raw_configs, 1):
         try:
             llm_type = config.get("type")
@@ -151,7 +147,7 @@ def parse_llm_configurations_from_yaml(yaml_file_path: str):
             else:
                 raise ValueError(f"不支持的 llm type '{llm_type}'，在配置第 {i} 项")
         except Exception as e:
-            raise ValueError(f"解析配置第 {i} 项失败: {e}")
+            raise ValueError(f"解析配置第 {i} 项失败: {e}") from e
 
     return configs
 
@@ -167,6 +163,7 @@ def auto_test_llms(
         base,
         fmt=True
     ):
+    configs = None
     if llm_configs_file and llm_configs:
         raise gr.Error("Please only choose one between file and text.")
     if llm_configs:
@@ -209,4 +206,3 @@ def auto_test_llms(
     reviews = judge(answers, standard_answer, review_model_name, review_max_tokens, key, base)
     log.debug("reviews: %s", reviews)
     return json.dumps(reviews, indent=4, ensure_ascii=False) if fmt else reviews
-
