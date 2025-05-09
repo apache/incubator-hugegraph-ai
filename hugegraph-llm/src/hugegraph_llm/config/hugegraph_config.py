@@ -22,7 +22,7 @@ from .models import BaseConfig
 class HugeGraphConfig(BaseConfig):
     """HugeGraph settings"""
     # graph server config
-    graph_url: Optional[str] = "http://127.0.0.1:8080"
+    graph_url: Optional[str] = "127.0.0.1:8080"
     graph_name: Optional[str] = "hugegraph"
     graph_user: Optional[str] = "admin"
     graph_pwd: Optional[str] = "xxx"

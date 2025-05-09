@@ -184,7 +184,6 @@ def apply_graph_config(url, name, user, pwd, gs, origin_call=None) -> int:
     # Add URL prefix automatically to improve user experience
     if url and not (url.startswith('http://') or url.startswith('https://')):
         url = f"http://{url}"
-        log.info("Added 'http://' prefix to URL: %s", url)
 
     huge_settings.graph_url = url
     huge_settings.graph_name = name
