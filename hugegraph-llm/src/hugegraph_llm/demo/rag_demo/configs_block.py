@@ -16,11 +16,13 @@
 # under the License.
 
 import json
+import os
 from functools import partial
 from typing import Optional
 
 import gradio as gr
 import requests
+from dotenv import dotenv_values
 from requests.auth import HTTPBasicAuth
 
 from hugegraph_llm.config import huge_settings, llm_settings
@@ -261,7 +263,8 @@ def create_configs_block() -> list:
 
     # TODO : use OOP to refactor the following code
     with gr.Accordion("2. Set up the LLM.", open=False):
-        gr.Markdown("> Tips: the openai option also support openai style api from other providers.")
+        gr.Markdown("> Tips: The OpenAI option also support openai style api from other providers. "
+                    "**Refresh the page** to load the **latest configs** in __UI__.")
         with gr.Tab(label='chat'):
             chat_llm_dropdown = gr.Dropdown(choices=["openai", "litellm", "qianfan_wenxin", "ollama/local"],
                                             value=getattr(llm_settings, "chat_llm_type"), label="type")
@@ -308,7 +311,17 @@ def create_configs_block() -> list:
                     llm_config_input = [gr.Textbox(value="", visible=False) for _ in range(4)]
                 llm_config_button = gr.Button("Apply configuration")
                 llm_config_button.click(apply_llm_config_with_chat_op, inputs=llm_config_input)
-
+                # Determine whether there are Settings in the.env file
+                dir_name = os.path.dirname
+                package_path = dir_name(dir_name(dir_name(dir_name(dir_name(os.path.abspath(__file__))))))
+                env_path = os.path.join(package_path, ".env")
+                env_vars = dotenv_values(env_path)
+                api_extract_key = env_vars.get("OPENAI_EXTRACT_API_KEY")
+                api_text2sql_key = env_vars.get("OPENAI_TEXT2GQL_API_KEY")
+                if not api_extract_key:
+                    llm_config_button.click(apply_llm_config_with_text2gql_op, inputs=llm_config_input)
+                if not api_text2sql_key:
+                    llm_config_button.click(apply_llm_config_with_extract_op, inputs=llm_config_input)
         with gr.Tab(label='mini_tasks'):
             extract_llm_dropdown = gr.Dropdown(choices=["openai", "litellm", "qianfan_wenxin", "ollama/local"],
                                                value=getattr(llm_settings, "extract_llm_type"), label="type")
