@@ -45,12 +45,11 @@ class SemanticIdQuery:
         self.topk_per_keyword = topk_per_keyword
         self.vector_dis_threshold = vector_dis_threshold
         self._client = PyHugeClient(
-            huge_settings.graph_ip,
-            huge_settings.graph_port,
-            huge_settings.graph_name,
-            huge_settings.graph_user,
-            huge_settings.graph_pwd,
-            huge_settings.graph_space,
+            url=huge_settings.graph_url,
+            graph=huge_settings.graph_name,
+            user=huge_settings.graph_user,
+            pwd=huge_settings.graph_pwd,
+            graphspace=huge_settings.graph_space,
         )
 
     def _exact_match_vids(self, keywords: List[str]) -> Tuple[List[str], List[str]]:
