@@ -109,7 +109,7 @@ class HGraphSession:
         - The result will be "http://127.0.0.1:8000/graphspaces/default/graphs/test_graph/some/things"
         """
 
-        url = f"http://{self._cfg.ip}:{self._cfg.port}/"
+        url = f"{self._cfg.url}/"
         if self._cfg.gs_supported:
             url = urljoin(
                 url,

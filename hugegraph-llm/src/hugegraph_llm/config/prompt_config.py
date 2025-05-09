@@ -40,7 +40,7 @@ Answer:
 
     custom_rerank_info: str = """"""
 
-    default_question: str = """Tell me about Sarah."""
+    default_question: str = """Who is Sarah ?"""
 
     # Note: Users should modify the prompt(examples) according to the real schema and text (property_graph_extract.py)
     extract_graph_prompt: str = """## Main Task

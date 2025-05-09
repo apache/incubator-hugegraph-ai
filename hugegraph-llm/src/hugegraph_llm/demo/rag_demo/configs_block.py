@@ -180,18 +180,21 @@ def apply_reranker_config(
     return status_code
 
 
-def apply_graph_config(ip, port, name, user, pwd, gs, origin_call=None) -> int:
-    huge_settings.graph_ip = ip
-    huge_settings.graph_port = port
+def apply_graph_config(url, name, user, pwd, gs, origin_call=None) -> int:
+    # Add URL prefix automatically to improve user experience
+    if url and not (url.startswith('http://') or url.startswith('https://')):
+        url = f"http://{url}"
+
+    huge_settings.graph_url = url
     huge_settings.graph_name = name
     huge_settings.graph_user = user
     huge_settings.graph_pwd = pwd
     huge_settings.graph_space = gs
     # Test graph connection (Auth)
     if gs and gs.strip():
-        test_url = f"http://{ip}:{port}/graphspaces/{gs}/graphs/{name}/schema"
+        test_url = f"{url}/graphspaces/{gs}/graphs/{name}/schema"
     else:
-        test_url = f"http://{ip}:{port}/graphs/{name}/schema"
+        test_url = f"{url}/graphs/{name}/schema"
     auth = HTTPBasicAuth(user, pwd)
     # for http api return status
     response = test_api_connection(test_url, auth=auth, origin_call=origin_call)
@@ -251,12 +254,16 @@ def create_configs_block() -> list:
     with gr.Accordion("1. Set up the HugeGraph server.", open=False):
         with gr.Row():
             graph_config_input = [
-                gr.Textbox(value=huge_settings.graph_ip, label="ip"),
-                gr.Textbox(value=huge_settings.graph_port, label="port"),
-                gr.Textbox(value=huge_settings.graph_name, label="graph"),
-                gr.Textbox(value=huge_settings.graph_user, label="user"),
-                gr.Textbox(value=huge_settings.graph_pwd, label="pwd", type="password"),
-                gr.Textbox(value=huge_settings.graph_space, label="graphspace(Optional)"),
+                gr.Textbox(value=huge_settings.graph_url, label="url",
+                           info="IP:PORT (e.g. 127.0.0.1:8080) or full URL (e.g. http://127.0.0.1:8080)"),
+                gr.Textbox(value=huge_settings.graph_name, label="graph",
+                           info="The graph name of HugeGraph-Server instance"),
+                gr.Textbox(value=huge_settings.graph_user, label="user",
+                           info="Username for graph server auth"),
+                gr.Textbox(value=huge_settings.graph_pwd, label="pwd", type="password",
+                           info="Password for graph server auth"),
+                gr.Textbox(value=huge_settings.graph_space, label="graphspace (Optional)",
+                           info="Namespace for multi-tenant scenarios (leave empty if not using graphspaces)"),
             ]
         graph_config_button = gr.Button("Apply Configuration")
     graph_config_button.click(apply_graph_config, inputs=graph_config_input)  # pylint: disable=no-member
