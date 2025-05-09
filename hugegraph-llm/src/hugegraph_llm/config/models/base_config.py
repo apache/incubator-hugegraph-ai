@@ -31,7 +31,7 @@ class BaseConfig(BaseSettings):
     class Config:
         env_file = env_path
         case_sensitive = False
-        extra = 'ignore' # ignore extra fields to avoid ValidationError
+        extra = 'ignore'  # ignore extra fields to avoid ValidationError
         env_ignore_empty = True
 
     def generate_env(self):
@@ -68,32 +68,48 @@ class BaseConfig(BaseSettings):
             log.info("Update %s: %s=%s", env_path, k, v)
             set_key(env_path, k, v if v else "", quote_mode="never")
 
-
     def check_env(self):
+        """Synchronize configs between .env file and object.
+
+        This method performs two steps:
+        1. Updates object attributes from .env file values when they differ
+        2. Adds missing configuration items to the .env file
+        """
         try:
-            # Read the environment variable file
+            # Read the.env file and prepare object config
             env_config = dotenv_values(env_path)
-            config_dict = self.model_dump()
-            # check whether configuration in environment file don't in object
-            config_dict = {k.upper(): v for k, v in config_dict.items()}
-            for k, v in env_config.items():
-                if k in config_dict:
-                    str_v = str(config_dict[k]) if config_dict[k] is not None else ""
-                    if v != str_v:
-                        log.info("Update configuration from the file: %s=%s (Original value: %s)", k, v, str_v)
-                        # Update the values in the object
-                        setattr(self, k.lower(), v)
-            # Check whether configuration in object don't in environment file
-            for k, v in config_dict.items():
-                if k not in env_config:
-                    log.info("Add configuration items to the environment variable file: %s=%s", k, v)
-                    str_v = str(v) if v is not None else ""
-                    # Add the values to the environment file
-                    set_key(env_path, k, str_v, quote_mode="never")
-            return True
+            config_dict = {k.upper(): v for k, v in self.model_dump().items()}
+
+            # Step 1: Update the object from .env when values differ
+            self._sync_env_to_object(env_config, config_dict)
+            # Step 2: Add missing config items to .env
+            self._sync_object_to_env(env_config, config_dict)
         except Exception as e:
-            log.error("An error occurred when checking the environment variable file: %s", str(e))
+            log.error("An error occurred when checking the .env variable file: %s", str(e))
             raise
+
+    def _sync_env_to_object(self, env_config, config_dict):
+        """Update object attributes from .env file values when they differ."""
+        for env_key, env_value in env_config.items():
+            if env_key in config_dict:
+                obj_value = config_dict[env_key]
+                obj_value_str = str(obj_value) if obj_value is not None else ""
+
+                if env_value != obj_value_str:
+                    log.info("Update configuration from the file: %s=%s (Original value: %s)",
+                             env_key, env_value, obj_value_str)
+                    # Update the object attribute (using lowercase key)
+                    setattr(self, env_key.lower(), env_value)
+
+    def _sync_object_to_env(self, env_config, config_dict):
+        """Add missing configuration items to the .env file."""
+        for obj_key, obj_value in config_dict.items():
+            if obj_key not in env_config:
+                obj_value_str = str(obj_value) if obj_value is not None else ""
+                log.info("Add configuration items to the environment variable file: %s=%s",
+                         obj_key, obj_value)
+                # Add to .env
+                set_key(env_path, obj_key, obj_value_str, quote_mode="never")
 
     def __init__(self, **data):
         try:
