@@ -130,6 +130,7 @@ config_prompt.yaml
 
 # Environments
 .env
+.env.bak
 .venv
 .vscode
 .cursor
