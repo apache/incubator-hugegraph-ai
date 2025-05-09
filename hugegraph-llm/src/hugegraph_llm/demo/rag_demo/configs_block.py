@@ -14,18 +14,22 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-import os
+
 import json
+import os
 from functools import partial
 from typing import Optional
+
 import gradio as gr
 import requests
+from dotenv import dotenv_values
 from requests.auth import HTTPBasicAuth
+
 from hugegraph_llm.config import huge_settings, llm_settings
 from hugegraph_llm.models.embeddings.litellm import LiteLLMEmbedding
 from hugegraph_llm.models.llms.litellm import LiteLLMClient
 from hugegraph_llm.utils.log import log
-from dotenv import dotenv_values
+
 current_llm = "chat"
 
 
