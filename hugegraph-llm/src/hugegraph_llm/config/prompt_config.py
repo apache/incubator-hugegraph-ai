@@ -26,7 +26,7 @@ class PromptConfig(BasePromptConfig):
 
 Please provide precise and accurate answers based on the following context information, which is sorted in order of importance from high to low, without using any fabricated knowledge.
 
-Given the context information and without using fictive knowledge, 
+Given the context information and without using fictive knowledge,
 answer the following query in a concise and professional manner.
 Please write your answer using Markdown with MathJax syntax, where inline math is wrapped with `$...$`
 
@@ -53,7 +53,7 @@ Graph Schema:
 - "edges": [List of edge labels, their source and target vertex labels, and properties]
 
 ### Content Rule:
-Please read the provided text carefully and identify any information that corresponds to the vertices and edges defined in the schema. 
+Please read the provided text carefully and identify any information that corresponds to the vertices and edges defined in the schema.
 You are not allowed to modify the schema contraints. Your task is to format the provided information into the required schema, without missing any keyword.
 For each piece of information that matches a vertex or edge, format it strictly according to the following JSON structures:
 
@@ -82,7 +82,7 @@ where:
     - "sourceVertexId": "vertexLabelID:entityName"
     - "targetVertexId": "vertexLabelID:entityName"
 
-Strictly follow these rules: 
+Strictly follow these rules:
 1. Don't extract property fields or labels that doesn't exist in the given schema. Do not generate new information.
 2. Ensure the extracted property set in the same type as the given schema (like 'age' should be a number, 'select' should be a boolean).
 3. If there are multiple primary keys, the strategy for generating VID is: vertexlabelID:pk1!pk2!pk3 (pk means primary key, and '!' is the separator). This id must be generated ONLY if there are multiple primary keys. If there is only one primary key, the strategy for generating VID is: int (sequencially increasing).
@@ -93,7 +93,7 @@ Refer to the following baseline example to understand the output generation requ
 ## Example:
 ### Input example:
 #### text:
-Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with since 2010. James, in his professional life, works as a journalist.  
+Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with since 2010. James, in his professional life, works as a journalist.
 
 #### graph schema example:
 {"vertices":[{"vertex_label":"person","properties":["name","age","occupation"]}], "edges":[{"edge_label":"roommate", "source_vertex_label":"person","target_vertex_label":"person","properties":["date"]]}
@@ -165,22 +165,22 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
        - For these keywords that need rewriting, generate synonyms or similar terms in the given context.
        - Replace the corresponding keywords in the original text with generated synonyms.
        - If no suitable synonym exists for a keyword, keep the original keyword unchanged.
-    
+
     Requirements:
     - Keywords should be meaningful and specific entities; avoid meaningless or overly broad terms, or single-character words (e.g., "items", "actions", "effects", "functions", "the", "he").
     - Prioritize extracting subjects, verbs, and objects; avoid function words or auxiliary words.
     - Maintain semantic integrity: Extracted keywords should preserve their semantic and informational completeness in the original context (e.g., "Apple computer" should be extracted as a whole, not split into "Apple" and "computer").
     - Avoid generalization: Do not expand into unrelated generalized categories.
-    
+
     Notes:
     - Only consider context-relevant synonyms: Only consider semantic synonyms and words with similar meanings in the given context.
     - Adjust keyword length: If keywords are relatively broad, you can appropriately increase individual keyword length based on context (e.g., "illegal behavior" can be extracted as a single keyword, or as "illegal", but should not be split into "illegal" and "behavior").
-    
+
     Output Format:
     - Output only one line, prefixed with KEYWORDS:, followed by all keywords or corresponding synonyms, separated by commas. No spaces or empty characters are allowed in the extracted keywords.
     - Format example:
     KEYWORDS:keyword1,keyword2,...,keywordN
-    
+
     MAX_KEYWORDS: {max_keywords}
     Text:
     {question}
@@ -233,6 +233,9 @@ Referenced Extracted Vertex IDs Related to the Query:
 
 Generate Gremlin from the Following User Query:
 {query}
+
+**Important: Do NOT output any analysis, reasoning steps, explanations or any other text. ONLY return the Gremlin query wrapped in a code block with ```gremlin``` fences.**
+
 The generated Gremlin is:
 """
 
@@ -345,6 +348,9 @@ g.V().limit(10)
 
 从以下用户查询生成Gremlin：
 {query}
+
+**重要提示：请勿输出任何分析、推理步骤、解释或其他文本。仅返回用 ```gremlin``` 标记包装的 Gremlin 查询。**
+
 生成的Gremlin是：
 """
 

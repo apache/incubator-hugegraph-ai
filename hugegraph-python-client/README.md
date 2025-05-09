@@ -6,6 +6,8 @@ It is used to define graph structures, perform CRUD operations on graph data, ma
 
 ## Installation
 
+### Install released package(Stable)
+
 To install the `hugegraph-python-client`, you can use pip/poetry/source building:
 
 ```bash
@@ -18,7 +20,7 @@ To install from the source, clone the repository and install the required depend
 
 ```bash
 git clone https://github.com/apache/incubator-hugegraph-ai.git
-cd path/to/hugegraph-python-client
+cd incubator-hugegraph-ai/hugegraph-python-client
 
 # Normal install 
 pip install .
@@ -60,18 +62,18 @@ print(schema.getRelations())
 
 # Init Graph
 g = client.graph()
-g.addVertex("Person", {"name": "Al Pacino", "birthDate": "1940-04-25"})
-g.addVertex("Person", {"name": "Robert De Niro", "birthDate": "1943-08-17"})
-g.addVertex("Movie", {"name": "The Godfather"})
-g.addVertex("Movie", {"name": "The Godfather Part II"})
-g.addVertex("Movie", {"name": "The Godfather Coda The Death of Michael Corleone"})
+v_al_pacino = g.addVertex("Person", {"name": "Al Pacino", "birthDate": "1940-04-25"})
+v_robert = g.addVertex("Person", {"name": "Robert De Niro", "birthDate": "1943-08-17"})
+v_godfather = g.addVertex("Movie", {"name": "The Godfather"})
+v_godfather2 = g.addVertex("Movie", {"name": "The Godfather Part II"})
+v_godfather3 = g.addVertex("Movie", {"name": "The Godfather Coda The Death of Michael Corleone"})
 
-g.addEdge("ActedIn", "12:Al Pacino", "13:The Godfather", {})
-g.addEdge("ActedIn", "12:Al Pacino", "13:The Godfather Part II", {})
-g.addEdge("ActedIn", "12:Al Pacino", "13:The Godfather Coda The Death of Michael Corleone", {})
-g.addEdge("ActedIn", "12:Robert De Niro", "13:The Godfather Part II", {})
+g.addEdge("ActedIn", v_al_pacino.id, v_godfather.id, {})
+g.addEdge("ActedIn", v_al_pacino.id, v_godfather2.id, {})
+g.addEdge("ActedIn", v_al_pacino.id, v_godfather3.id, {})
+g.addEdge("ActedIn", v_robert.id, v_godfather2.id, {})
 
-res = g.getVertexById("12:Al Pacino").label
+res = g.getVertexById(v_al_pacino.id).label
 print(res)
 g.close()
 ```

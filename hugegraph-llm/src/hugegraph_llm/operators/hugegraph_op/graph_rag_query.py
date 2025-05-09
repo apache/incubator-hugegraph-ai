@@ -84,7 +84,7 @@ class GraphRAGQuery:
         embedding: Optional[BaseEmbedding] = None,
         max_v_prop_len: Optional[int] = 2048,
         max_e_prop_len: Optional[int] = 256,
-        num_gremlin_generate_example: Optional[int] = 1,
+        num_gremlin_generate_example: Optional[int] = -1,
         gremlin_prompt: Optional[str] = None,
     ):
         self._client = PyHugeClient(
@@ -114,7 +114,8 @@ class GraphRAGQuery:
         # initial flag: -1 means no result, 0 means subgraph query, 1 means gremlin query
         context["graph_result_flag"] = -1
         # 1. Try to perform a query based on the generated gremlin
-        context = self._gremlin_generate_query(context)
+        if self._num_gremlin_generate_example >= 0:
+            context = self._gremlin_generate_query(context)
         # 2. Try to perform a query based on subgraph-search if the previous query failed
         if not context.get("graph_result"):
             context = self._subgraph_query(context)
