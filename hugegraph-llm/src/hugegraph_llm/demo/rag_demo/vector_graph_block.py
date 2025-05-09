@@ -78,9 +78,10 @@ def create_vector_graph_block():
                     label="Docs (multi-files can be selected together)",
                     file_count="multiple",
                 )
-        input_schema = gr.Code(value=prompt.graph_schema, label="Graph Schema",language="json", lines=15,max_lines=29)
+        input_schema = gr.Code(value=prompt.graph_schema, label="Graph Schema", language="json", lines=15, max_lines=29)
         info_extract_template = gr.Code(
-            value=prompt.extract_graph_prompt, label="Graph Extract Prompt Header",language="markdown",lines=15,max_lines=29
+            value=prompt.extract_graph_prompt, label="Graph Extract Prompt Header", language="markdown", lines=15,
+            max_lines=29
         )
         out = gr.Code(label="Output Info", language="json", elem_classes="code-container-edit")
 
