@@ -113,17 +113,23 @@ class BaseConfig(BaseSettings):
 
     def __init__(self, **data):
         try:
-            if os.path.exists(env_path):
+            file_exists = os.path.exists(env_path)
+            # Step 1: Load environment variables if file exists
+            if file_exists:
                 env_config = dotenv_values(env_path)
                 for k, v in env_config.items():
                     os.environ[k] = v
+
+            # Step 2: Init the parent class with loaded environment variables
             super().__init__(**data)
-            if not os.path.exists(env_path):
-                log.info("The environment file %s does not exist and a new file will be created", env_path)
+            # Step 3: Handle environment file operations after initialization
+            if not file_exists:
                 self.generate_env()
             else:
+                # Synchronize configurations between the object and .env file
                 self.check_env()
-            log.info("The %s file was loaded.Class: %s", env_path, self.__class__.__name__)
+
+            log.info("The %s file was loaded. Class: %s", env_path, self.__class__.__name__)
         except Exception as e:
             log.error("An error occurred when initializing the configuration object: %s", str(e))
             raise

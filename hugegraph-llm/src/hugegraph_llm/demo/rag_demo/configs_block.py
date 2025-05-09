@@ -263,7 +263,8 @@ def create_configs_block() -> list:
 
     # TODO : use OOP to refactor the following code
     with gr.Accordion("2. Set up the LLM.", open=False):
-        gr.Markdown("> Tips: The openai option also support openai style api from other providers. You can load the latest llm configuration by refreshing.")
+        gr.Markdown("> Tips: The OpenAI option also support openai style api from other providers. "
+                    "**Refresh the page** to load the **latest configs** in __UI__.")
         with gr.Tab(label='chat'):
             chat_llm_dropdown = gr.Dropdown(choices=["openai", "litellm", "qianfan_wenxin", "ollama/local"],
                                             value=getattr(llm_settings, "chat_llm_type"), label="type")
