@@ -24,12 +24,11 @@ class SchemaManager:
     def __init__(self, graph_name: str):
         self.graph_name = graph_name
         self.client = PyHugeClient(
-            huge_settings.graph_ip,
-            huge_settings.graph_port,
-            self.graph_name,
-            huge_settings.graph_user,
-            huge_settings.graph_pwd,
-            huge_settings.graph_space,
+            url=huge_settings.graph_url,
+            graph=self.graph_name,
+            user=huge_settings.graph_user,
+            pwd=huge_settings.graph_pwd,
+            graphspace=huge_settings.graph_space,
         )
         self.schema = self.client.schema()
 

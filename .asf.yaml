@@ -54,10 +54,10 @@ github:
   collaborators:
     - ChenZiHong-Gavin
     - MrJs133
-    - vichayturen
     - HJ-Young
     - afterimagex
     - returnToInnocence
+    - Thespica
 
 # refer https://cwiki.apache.org/confluence/display/INFRA/Git+-+.asf.yaml+features#Git.asf.yamlfeatures-Notificationsettingsforrepositories
 notifications:

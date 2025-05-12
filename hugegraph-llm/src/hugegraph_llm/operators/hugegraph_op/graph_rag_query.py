@@ -84,16 +84,15 @@ class GraphRAGQuery:
         embedding: Optional[BaseEmbedding] = None,
         max_v_prop_len: Optional[int] = 2048,
         max_e_prop_len: Optional[int] = 256,
-        num_gremlin_generate_example: Optional[int] = 1,
+        num_gremlin_generate_example: Optional[int] = -1,
         gremlin_prompt: Optional[str] = None,
     ):
         self._client = PyHugeClient(
-            huge_settings.graph_ip,
-            huge_settings.graph_port,
-            huge_settings.graph_name,
-            huge_settings.graph_user,
-            huge_settings.graph_pwd,
-            huge_settings.graph_space,
+            url=huge_settings.graph_url,
+            graph=huge_settings.graph_name,
+            user=huge_settings.graph_user,
+            pwd=huge_settings.graph_pwd,
+            graphspace=huge_settings.graph_space,
         )
         self._max_deep = max_deep
         self._max_items = max_graph_items
@@ -115,7 +114,8 @@ class GraphRAGQuery:
         # initial flag: -1 means no result, 0 means subgraph query, 1 means gremlin query
         context["graph_result_flag"] = -1
         # 1. Try to perform a query based on the generated gremlin
-        context = self._gremlin_generate_query(context)
+        if self._num_gremlin_generate_example >= 0:
+            context = self._gremlin_generate_query(context)
         # 2. Try to perform a query based on subgraph-search if the previous query failed
         if not context.get("graph_result"):
             context = self._subgraph_query(context)
@@ -247,13 +247,12 @@ class GraphRAGQuery:
             if isinstance(context.get("graph_client"), PyHugeClient):
                 self._client = context["graph_client"]
             else:
-                ip = context.get("ip") or "localhost"
-                port = context.get("port") or "8080"
+                url = context.get("url") or "http://localhost:8080"
                 graph = context.get("graph") or "hugegraph"
                 user = context.get("user") or "admin"
                 pwd = context.get("pwd") or "admin"
                 gs = context.get("graphspace") or None
-                self._client = PyHugeClient(ip, port, graph, user, pwd, gs)
+                self._client = PyHugeClient(url, graph, user, pwd, gs)
         assert self._client is not None, "No valid graph to search."
 
     def get_vertex_details(self, vertex_ids: List[str]) -> List[Dict[str, Any]]:
