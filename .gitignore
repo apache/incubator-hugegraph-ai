@@ -174,4 +174,3 @@ cython_debug/
 *.out
 *.zip
 *.tar.gz
-hugegraph-llm/pyproject.toml

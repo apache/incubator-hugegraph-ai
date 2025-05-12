@@ -62,18 +62,9 @@ dependencies = [
     "litellm~=1.61.13",
     "hugegraph-python"
 ]
-
-[project.urls]
-Homepage = "https://hugegraph.apache.org/"
-Repository = "https://github.com/apache/incubator-hugegraph-ai"
-Documentation = "https://hugegraph.apache.org/docs/quickstart/hugegraph-ai/"
-"Bug Tracker" = "https://github.com/apache/incubator-hugegraph-ai/issues"
-
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
 
 [tool.uv]
 index-url = "https://pypi.org/simple/"
@@ -82,7 +73,6 @@ extra-index-url = [
     "https://mirrors.cloud.tencent.com/pypi/simple/",
     "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/"
 ]
-
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hugegraph_llm"]
