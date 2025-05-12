@@ -39,7 +39,7 @@ class OpenAIClient(BaseLLM):
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
         model_name: str = "gpt-4.1-mini",
-        max_tokens: int = 4096,
+        max_tokens: int = 8092,
         temperature: float = 0.01,
     ) -> None:
         api_key = api_key or ''

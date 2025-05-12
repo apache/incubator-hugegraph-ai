@@ -39,7 +39,7 @@ class LiteLLMClient(BaseLLM):
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
         model_name: str = "openai/gpt-4.1-mini",  # Can be any model supported by LiteLLM
-        max_tokens: int = 4096,
+        max_tokens: int = 8192,
         temperature: float = 0.01,
     ) -> None:
         self.api_key = api_key
@@ -49,8 +49,8 @@ class LiteLLMClient(BaseLLM):
         self.temperature = temperature
 
     @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=4, max=10),
+        stop=stop_after_attempt(2),
+        wait=wait_exponential(multiplier=1, min=2, max=5),
         retry=retry_if_exception_type((RateLimitError, BudgetExceededError, APIError))
     )
     def generate(
@@ -78,8 +78,8 @@ class LiteLLMClient(BaseLLM):
             return f"Error: {str(e)}"
 
     @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=4, max=10),
+        stop=stop_after_attempt(2),
+        wait=wait_exponential(multiplier=1, min=2, max=5),
         retry=retry_if_exception_type((RateLimitError, BudgetExceededError, APIError))
     )
     async def agenerate(

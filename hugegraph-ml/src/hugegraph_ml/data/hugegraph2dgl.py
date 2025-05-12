@@ -32,15 +32,14 @@ import networkx as nx
 class HugeGraph2DGL:
     def __init__(
         self,
-        ip: str = "127.0.0.1",
-        port: str = "8080",
+        url: str = "http://127.0.0.1:8080",
         graph: str = "hugegraph",
         user: str = "",
         pwd: str = "",
         graphspace: Optional[str] = None,
     ):
         self._client: PyHugeClient = PyHugeClient(
-            ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace
+            url=url, graph=graph, user=user, pwd=pwd, graphspace=graphspace
         )
         self._graph_germlin: GremlinManager = self._client.gremlin()
 

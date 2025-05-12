@@ -22,13 +22,13 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 import requests
+
 from pyhugegraph.utils.log import log
 
 
 @dataclass
 class HGraphConfig:
-    ip: str
-    port: str
+    url: str
     username: str
     password: str
     graph_name: str
@@ -38,6 +38,9 @@ class HGraphConfig:
     version: List[int] = field(default_factory=list)
 
     def __post_init__(self):
+        # Add URL prefix compatibility check
+        if self.url and not self.url.startswith('http'):
+            self.url = f"http://{self.url}"
 
         if self.graphspace and self.graphspace.strip():
             self.gs_supported = True
@@ -45,7 +48,7 @@ class HGraphConfig:
         else:
             try:
                 response = requests.get(
-                    f"http://{self.ip}:{self.port}/versions", timeout=0.5
+                    f"{self.url}/versions", timeout=0.5
                 )
                 core = response.json()["versions"]["core"]
                 log.info(  # pylint: disable=logging-fstring-interpolation
@@ -59,15 +62,13 @@ class HGraphConfig:
                 if major >= 3:
                     self.graphspace = "DEFAULT"
                     self.gs_supported = True
-                    log.warning(
-                        "graph space is not set, default value 'DEFAULT' will be used."
-                    )
+                    log.warning("graph space is not set, default value 'DEFAULT' will be used.")
 
             except Exception as e:  # pylint: disable=broad-exception-caught
                 try:
                     traceback.print_exception(e)
                     self.gs_supported = False
-                except Exception:   # pylint: disable=broad-exception-caught
+                except Exception:  # pylint: disable=broad-exception-caught
                     exc_type, exc_value, tb = sys.exc_info()
                     traceback.print_exception(exc_type, exc_value, tb)
                     log.warning("Failed to retrieve API version information from the server, reverting to default v1.")

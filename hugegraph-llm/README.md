@@ -19,12 +19,12 @@ graph systems and large language models.
 > [!IMPORTANT]
 > - python 3.10+ (not tested in 3.12)
 > - hugegraph-server 1.3+ (better to use 1.5+)
-> - poetry 2.0+
+> - poetry 2.0+ (`uv` is on the way)
 
 ## 3. Preparation
 
 1. Start the HugeGraph database, you can run it via [Docker](https://hub.docker.com/r/hugegraph/hugegraph)/[Binary Package](https://hugegraph.apache.org/docs/download/download/).  
-    Refer to a detailed [doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance
+    Refer to the detailed [doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance
 
 2. Configuring the poetry environment, Use the official installer to install Poetry, See the [poetry documentation](https://poetry.pythonlang.cn/docs/#installing-with-pipx) for other installation methods   
     ```bash

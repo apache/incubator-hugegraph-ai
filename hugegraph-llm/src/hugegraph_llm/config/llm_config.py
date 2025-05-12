@@ -64,6 +64,7 @@ class LLMConfig(BaseConfig):
     ollama_embedding_port: Optional[int] = 11434
     ollama_embedding_model: Optional[str] = None
     # 4. QianFan/WenXin settings
+    # TODO: update to one token key mode
     qianfan_chat_api_key: Optional[str] = None
     qianfan_chat_secret_key: Optional[str] = None
     qianfan_chat_access_token: Optional[str] = None
