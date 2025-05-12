@@ -19,15 +19,22 @@
 name = "hugegraph-llm"
 version = "1.5.0"
 description = "A tool for the implementation and research related to large language models."
-readme = "README.md"
-license = {text = "Apache-2.0"}
-requires-python = ">=3.10,<3.12"
 authors = [
-    {name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org"}
+    { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
 ]
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10,<3.12"
 maintainers = [
-    {name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org"}
+    { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
 ]
+
+[project.urls]
+homepage = "https://hugegraph.apache.org/"
+repository = "https://github.com/apache/incubator-hugegraph-ai"
+documentation = "https://hugegraph.apache.org/docs/quickstart/hugegraph-ai/"
+"Bug Tracker" = "https://github.com/apache/incubator-hugegraph-ai/issues"
+
 dependencies = [
     "openai~=1.61.0",
     "ollama~=0.2.1",
