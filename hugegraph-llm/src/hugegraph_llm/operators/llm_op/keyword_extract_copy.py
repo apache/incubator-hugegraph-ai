@@ -19,8 +19,11 @@
 import re
 import time
 from typing import Set, Dict, Any, Optional
-from gensim.summarization import keywords as textrank_keywords
-import jieba
+
+from textrank4zh import TextRank4Keyword
+import spacy
+import pytextrank
+# from transformers import BertForMaskedLM, BertTokenizer
 
 import sys
 sys.path.append('/mnt/WD4T/workspace/hs/incubator-hugegraph-ai/hugegraph-llm/src')
@@ -42,7 +45,6 @@ class KeywordExtract:
             extract_template: Optional[str] = None,
             language: str = "english",
             use_textrank: bool = False,  # 新增TextRank开关
-            textrank_kwargs: Optional[Dict] = None,  # TextRank参数
     ):
         self._llm = llm
         self._query = text
@@ -50,11 +52,7 @@ class KeywordExtract:
         self._max_keywords = max_keywords
         self._extract_template = extract_template or KEYWORDS_EXTRACT_TPL
         self._use_textrank = use_textrank  # 新增TextRank开关
-        self._textrank_config = {
-            "ratio": 0.2,  # 提取前20%的关键词
-            "scores": False,  # 不返回关键词的分数
-            **(textrank_kwargs or {})
-        }  # TextRank参数
+
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._query is None:
@@ -99,26 +97,66 @@ class KeywordExtract:
         """ TextRank提取模式 """
         start_time = time.perf_counter()
         # 多语言预处理
-        if self._language.startswith("zh"):
-            words = jieba.lcut(self._query)  # 中文分词
-            processed_text = " ".join(words)
-        else:
-            processed_text = self._query  # 英文保持原始文本
-
-        try:
-            # 使用Gensim的TextRank实现
-            keywords = textrank_keywords(
-                processed_text, 
-                words=self._max_keywords,
-                **self._textrank_config
-            ).split("\n")
-        except Exception as e:
-            log.error(f"TextRank提取失败: {str(e)}")
-            keywords = []
+        if self._language == "chinese":
+            # 中文使用textrank4zh
+            # allow_speech_tags = ['an', 'i', 'j', 'l', 'n', 'nr', 'nrfg', 'ns', 'nt', 'nz', 't', 'v', 'vd', 'vn', 'eng']
+            allow_speech_tags = ['an', 'i', 'j', 'l', 'n', 'nr', 'nrfg', 'ns', 'nt', 'nz', 't', 'v', 'vd', 'vn', 'eng']
+            tr4w = TextRank4Keyword(allow_speech_tags=allow_speech_tags)
+            try:
+                tr4w.analyze(text=self._query, lower=True, window=2, vertex_source='all_filters', edge_source='no_stop_words', pagerank_config={'alpha': 0.85,})
+                keywords = [keyword.word for keyword in tr4w.get_keywords(self._max_keywords, word_min_len=2)]
+            except Exception as e:
+                log.error(f"TextRank提取失败: {str(e)}")
+                keywords = []
+        if self._language == "english":
+            # 英文使用pytextrank
+            try:
+                nlp = spacy.load("en_core_web_sm")
+                nlp.add_pipe("textrank")
+                doc = nlp(self._query)
+                keywords = [token.text for token in doc if not token.is_stop and token.is_alpha and len(token.text) > 1]
+                keywords = list(set(keywords))[:self._max_keywords]
+            except Exception as e:
+                log.error(f"TextRank提取失败: {str(e)}")
+                keywords = []
+        
         log.debug(f"TextRank提取耗时: {time.perf_counter()-start_time:.2f}s")
     
         return set(filter(None, keywords))
 
+    #ToDO: 同义词替换
+    # def _expand_keywords_with_synonyms(self, keywords: Set[str]) -> Set[str]:
+    #     """ 使用BERT进行关键词同义词替换 """
+    #     if not keywords:
+    #         return set()
+    #     # 加载预训练的BERT模型和分词器
+    #     model_name = "bert-base-uncased"
+    #     tokenizer = BertTokenizer.from_pretrained(model_name)
+    #     model = BertForMaskedLM.from_pretrained(model_name)
+    #     model.eval()
+    #     expanded_keywords = set()
+    #     for keyword in keywords:
+    #         # 分词并标记
+    #         tokens = tokenizer.tokenize(keyword)
+    #         if len(tokens) < 2:
+    #             expanded_keywords.add(keyword)
+    #             continue
+    #         # 替换每个词
+    #         for i in range(len(tokens)):
+    #             masked_tokens = tokens.copy()
+    #             masked_tokens[i] = "[MASK]"
+    #             masked_text = tokenizer.convert_tokens_to_string(masked_tokens)
+    #             input_ids = tokenizer.encode(masked_text, return_tensors="pt")
+    #             with torch.no_grad():
+    #                 outputs = model(input_ids)  # 模型输出
+    #             predictions = outputs.logits[0, i]  # 预测概率
+    #             predicted_token_id = torch.argmax(predictions).item()
+    #             predicted_token = tokenizer.convert_ids_to_tokens([predicted_token_id])[0]
+    #             # 替换并还原
+    #             expanded_keywords.add(tokenizer.convert_tokens_to_string(
+    #                 [token if token != "[MASK]" else predicted_token for token in masked_tokens]
+    #             ))
+    #     return expanded_keywords
     def _extract_keywords_from_response(
             self,
             response: str,
@@ -148,7 +186,10 @@ class KeywordExtract:
 def test_textrank_english():
     """测试英文TextRank提取"""
     extractor = KeywordExtract(
-        text="Natural language processing (NLP) is a subfield of AI focused on computer-human interaction. It enables machines to understand human language.",
+        text="No one’s born being good at all things. You become good at things through hard work. You’re not a varsity athlete " \
+        "the first time you play a new sport. You don’t hit every note the first time you sing a song.You’ve got to practice. The "\
+        "same principle applies to your schoolwork. You might have to do a math problem a few times before you get it right. You "\
+        "might have to read something a few times before you understand it.You definitely have to do a few drafts of a paper before it’s good enough to hand in.",
         use_textrank=True,
         max_keywords=3,
         language="english"
@@ -156,20 +197,26 @@ def test_textrank_english():
     result = extractor.run({})
     
     # 验证基础提取能力
-    print( any(k in ["processing", "language", "human"] for k in result["keywords"]))
+    print( any(k in ["hard work", "practice", "schoolwork", "repetition", "perseverance"] for k in result["keywords"]))
 
 def test_textrank_chinese():
     """测试中文TextRank提取及分词"""
     extractor = KeywordExtract(
-        text="自然语言处理是人工智能的重要分支，专注于人机交互技术。",
+        text="来源：中国科学报本报讯（记者肖洁）又有一位中国科学家喜获小行星命名殊荣！4月19日下午，中国科学院国家天文台在京举行“周又元星”颁授仪式，" \
+           "我国天文学家、中国科学院院士周又元的弟子与后辈在欢声笑语中济济一堂。国家天文台党委书记、" \
+           "副台长赵刚在致辞一开始更是送上白居易的诗句：“令公桃李满天下，何须堂前更种花。”" \
+           "据介绍，这颗小行星由国家天文台施密特CCD小行星项目组于1997年9月26日发现于兴隆观测站，" \
+           "获得国际永久编号第120730号。2018年9月25日，经国家天文台申报，" \
+           "国际天文学联合会小天体联合会小天体命名委员会批准，国际天文学联合会《小行星通报》通知国际社会，" \
+           "正式将该小行星命名为“周又元星”。",
         use_textrank=True,
-        max_keywords=2,
+        max_keywords=5,
         language="chinese"
     )
     result = extractor.run({})
     
     # 验证中文分词效果
-    expected_keywords = ["自然语言处理", "人工智能", "人机交互"]
+    expected_keywords = ["小行星", "命名", "国家", "周又元", "天文台"]
     print( any(k in expected_keywords for k in result["keywords"]))
 
 test_textrank_chinese()
