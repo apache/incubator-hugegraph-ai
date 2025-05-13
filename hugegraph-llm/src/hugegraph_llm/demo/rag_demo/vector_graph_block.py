@@ -48,15 +48,16 @@ def store_prompt(doc, schema, example_prompt):
 def create_vector_graph_block():
     # pylint: disable=no-member
     # pylint: disable=C0301
+    # pylint: disable=unexpected-keyword-arg
     gr.Markdown(
         """## Build Vector/Graph Index & Extract Knowledge Graph
 - Docs:
   - text: Build rag index from plain text
   - file: Upload file(s) which should be <u>TXT</u> or <u>.docx</u> (Multiple files can be selected together)
 - [Schema](https://hugegraph.apache.org/docs/clients/restful-api/schema/): (Accept **2 types**)
-  - User-defined Schema (JSON format, follow the [template](https://github.com/apache/incubator-hugegraph-ai/blob/aff3bbe25fa91c3414947a196131be812c20ef11/hugegraph-llm/src/hugegraph_llm/config/config_data.py#L125) 
+  - User-defined Schema (JSON format, follow the [template](https://github.com/apache/incubator-hugegraph-ai/blob/aff3bbe25fa91c3414947a196131be812c20ef11/hugegraph-llm/src/hugegraph_llm/config/config_data.py#L125)
   to modify it)
-  - Specify the name of the HugeGraph graph instance, it will automatically get the schema from it (like 
+  - Specify the name of the HugeGraph graph instance, it will automatically get the schema from it (like
   **"hugegraph"**)
 - Graph Extract Prompt Header: The user-defined prompt of graph extracting
 - If already exist the graph data, you should click "**Rebuild vid Index**" to update the index
@@ -78,9 +79,10 @@ def create_vector_graph_block():
                     label="Docs (multi-files can be selected together)",
                     file_count="multiple",
                 )
-        input_schema = gr.Textbox(value=prompt.graph_schema, label="Graph Schema", lines=15, show_copy_button=True)
-        info_extract_template = gr.Textbox(
-            value=prompt.extract_graph_prompt, label="Graph Extract Prompt Header", lines=15, show_copy_button=True
+        input_schema = gr.Code(value=prompt.graph_schema, label="Graph Schema", language="json", lines=15, max_lines=29)
+        info_extract_template = gr.Code(
+            value=prompt.extract_graph_prompt, label="Graph Extract Prompt Header", language="markdown", lines=15,
+            max_lines=29
         )
         out = gr.Code(label="Output Info", language="json", elem_classes="code-container-edit")
 
@@ -163,8 +165,7 @@ async def timely_update_vid_embedding(interval_seconds: int = 3600):
         try:
             # Get the latest configuration values on each iteration
             config = {
-                "ip": huge_settings.graph_ip,
-                "port": huge_settings.graph_port,
+                "url": huge_settings.graph_url,
                 "name": huge_settings.graph_name,
                 "user": huge_settings.graph_user,
                 "pwd": huge_settings.graph_pwd,
