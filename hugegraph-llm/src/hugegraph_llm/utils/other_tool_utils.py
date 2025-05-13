@@ -15,11 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import time
 import json
 import re
 import gradio as gr
 import yaml
-import time
 
 from hugegraph_llm.config import PromptConfig
 from hugegraph_llm.utils.log import log
@@ -174,6 +174,7 @@ def auto_test_llms(
     log.debug("LLM_configs: %s", configs)
     answers = {}
     for config in configs:
+        output = None
         time_start = time.perf_counter()
         if config["type"] == "openai":
             client = OpenAIClient(
@@ -222,10 +223,10 @@ def auto_test_llms(
     log.debug("reviews: %s", reviews)
     result = {}
     reviews_dict = {item["model"]: item for item in reviews} if isinstance(reviews, list) else reviews
-    for model_name in answers:
+    for model_name, infos in answers.items():
         result[model_name] = {
-            "answer": answers[model_name]["answer"],
-            "latency": answers[model_name]["latency"],
+            "answer": infos["answer"],
+            "latency": infos["latency"],
             "review": reviews_dict.get(model_name, {})
         }
     return json.dumps(result, indent=4, ensure_ascii=False) if fmt else reviews
