@@ -19,6 +19,7 @@ import json
 import re
 import gradio as gr
 import yaml
+import time
 
 from hugegraph_llm.config import PromptConfig
 from hugegraph_llm.utils.log import log
@@ -173,6 +174,7 @@ def auto_test_llms(
     log.debug("LLM_configs: %s", configs)
     answers = {}
     for config in configs:
+        time_start = time.perf_counter()
         if config["type"] == "openai":
             client = OpenAIClient(
                 api_key=config["api_key"],
@@ -180,21 +182,21 @@ def auto_test_llms(
                 model_name=config["model_name"],
                 max_tokens=config["max_tokens"],
             )
-            answers[config["model_name"]] = client.generate(prompt=prompt)
+            output = client.generate(prompt=prompt)
         elif config["type"] == "qianfan_wenxin":
             client = QianfanClient(
                 model_name=config["model_name"],
                 api_key=config["api_key"],
                 secret_key=config["secret_key"]
             )
-            answers[config["model_name"]] = client.generate(prompt=prompt)
+            output = client.generate(prompt=prompt)
         elif config["type"] == "ollama/local":
             client = OllamaClient(
                 model_name=config["model_name"],
                 host=config["host"],
                 port=config["port"],
             )
-            answers[config["model_name"]] = client.generate(prompt=prompt)
+            output = client.generate(prompt=prompt)
         elif config["type"] == "litellm":
             client = LiteLLMClient(
                 api_key=config["api_key"],
@@ -202,7 +204,28 @@ def auto_test_llms(
                 model_name=config["model_name"],
                 max_tokens=config["max_tokens"],
             )
-            answers[config["model_name"]] = client.generate(prompt=prompt)
-    reviews = judge(answers, standard_answer, review_model_name, review_max_tokens, key, base)
+            output = client.generate(prompt=prompt)
+        time_end = time.perf_counter()
+        latency = time_end - time_start
+        answers[config["model_name"]] = {
+            "answer": output,
+            "latency": f"{round(latency, 2)}s"
+        }
+    reviews = judge(
+        {k: v["answer"] for k, v in answers.items()},
+        standard_answer,
+        review_model_name,
+        review_max_tokens,
+        key,
+        base
+    )
     log.debug("reviews: %s", reviews)
-    return json.dumps(reviews, indent=4, ensure_ascii=False) if fmt else reviews
+    result = {}
+    reviews_dict = {item["model"]: item for item in reviews} if isinstance(reviews, list) else reviews
+    for model_name in answers:
+        result[model_name] = {
+            "answer": answers[model_name]["answer"],
+            "latency": answers[model_name]["latency"],
+            "review": reviews_dict.get(model_name, {})
+        }
+    return json.dumps(result, indent=4, ensure_ascii=False) if fmt else reviews
