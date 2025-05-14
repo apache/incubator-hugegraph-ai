@@ -156,6 +156,8 @@ class GraphRAGQuery:
             log.error(e)
             context["graph_result"] = ""
         return context
+        self._init_client(context)
+
 
     def _subgraph_query(self, context: Dict[str, Any]) -> Dict[str, Any]:
         # 1. Extract params from context
@@ -188,6 +190,11 @@ class GraphRAGQuery:
             for matched_vid in matched_vids:
                 gremlin_query = VID_QUERY_NEIGHBOR_TPL.format(
                     keywords=f"'{matched_vid}'",
+
+            # TODO: 这里后续改为使用生成器 or 异步 asycnio 处理以提高性能
+            for matched_vid in matched_vids:
+                gremlin_query = VID_QUERY_NEIGHBOR_TPL.format(
+                    keywords="'{}'".format(matched_vid),
                     max_deep=self._max_deep,
                     edge_labels=edge_labels_str,
                     edge_limit=edge_limit_amount,
@@ -239,19 +246,29 @@ class GraphRAGQuery:
             )
         return context
 
+
     # TODO: move this method to a util file for reuse (remove self param)
     def init_client(self, context):
         """Initialize the HugeGraph client from context or default settings."""
+
+    def _init_client(self, context):
+
         # pylint: disable=R0915 (too-many-statements)
         if self._client is None:
             if isinstance(context.get("graph_client"), PyHugeClient):
                 self._client = context["graph_client"]
             else:
+
                 url = context.get("url") or "http://localhost:8080"
+
+                ip = context.get("ip") or "localhost"
+                port = context.get("port") or "8080"
+
                 graph = context.get("graph") or "hugegraph"
                 user = context.get("user") or "admin"
                 pwd = context.get("pwd") or "admin"
                 gs = context.get("graphspace") or None
+
                 self._client = PyHugeClient(url, graph, user, pwd, gs)
         assert self._client is not None, "No valid graph to search."
 
@@ -263,6 +280,10 @@ class GraphRAGQuery:
         gremlin_query = f"g.V({formatted_ids}).limit(20)"
         result = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
         return result
+
+
+                self._client = PyHugeClient(ip, port, graph, user, pwd, gs)
+        assert self._client is not None, "No valid graph to search."
 
     def _format_graph_from_vertex(self, query_result: List[Any]) -> Set[str]:
         knowledge = set()
