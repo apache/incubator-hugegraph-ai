@@ -88,12 +88,11 @@ class GraphRAGQuery:
         gremlin_prompt: Optional[str] = None,
     ):
         self._client = PyHugeClient(
-            huge_settings.graph_ip,
-            huge_settings.graph_port,
-            huge_settings.graph_name,
-            huge_settings.graph_user,
-            huge_settings.graph_pwd,
-            huge_settings.graph_space,
+            url=huge_settings.graph_url,
+            graph=huge_settings.graph_name,
+            user=huge_settings.graph_user,
+            pwd=huge_settings.graph_pwd,
+            graphspace=huge_settings.graph_space,
         )
         self._max_deep = max_deep
         self._max_items = max_graph_items
@@ -248,13 +247,12 @@ class GraphRAGQuery:
             if isinstance(context.get("graph_client"), PyHugeClient):
                 self._client = context["graph_client"]
             else:
-                ip = context.get("ip") or "localhost"
-                port = context.get("port") or "8080"
+                url = context.get("url") or "http://localhost:8080"
                 graph = context.get("graph") or "hugegraph"
                 user = context.get("user") or "admin"
                 pwd = context.get("pwd") or "admin"
                 gs = context.get("graphspace") or None
-                self._client = PyHugeClient(ip, port, graph, user, pwd, gs)
+                self._client = PyHugeClient(url, graph, user, pwd, gs)
         assert self._client is not None, "No valid graph to search."
 
     def get_vertex_details(self, vertex_ids: List[str]) -> List[Dict[str, Any]]:

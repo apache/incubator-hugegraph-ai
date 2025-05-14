@@ -39,21 +39,19 @@ from pyhugegraph.client import PyHugeClient
 MAX_BATCH_NUM = 500
 
 def clear_all_data(
-    ip: str = "127.0.0.1",
-    port: str = "8080",
+    url: str = "http://127.0.0.1:8080",
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
     graphspace: Optional[str] = None,
 ):
-    client: PyHugeClient = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
+    client: PyHugeClient = PyHugeClient(url=url, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
     client.graphs().clear_graph_all_data()
 
 
 def import_graph_from_dgl(
     dataset_name,
-    ip: str = "127.0.0.1",
-    port: str = "8080",
+    url: str = "http://127.0.0.1:8080",
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
@@ -70,7 +68,7 @@ def import_graph_from_dgl(
         raise ValueError("dataset not supported")
     graph_dgl = dataset_dgl[0]
 
-    client: PyHugeClient = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
+    client: PyHugeClient = PyHugeClient(url=url, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
     client_schema: SchemaManager = client.schema()
     client_graph: GraphManager = client.graph()
     # create property schema
@@ -123,8 +121,7 @@ def import_graph_from_dgl(
 
 def import_graphs_from_dgl(
     dataset_name,
-    ip: str = "127.0.0.1",
-    port: str = "8080",
+    url: str = "http://127.0.0.1:8080",
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
@@ -139,7 +136,7 @@ def import_graphs_from_dgl(
     else:
         raise ValueError("dataset not supported")
     # hugegraph client
-    client: PyHugeClient = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
+    client: PyHugeClient = PyHugeClient(url=url, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
     client_schema: SchemaManager = client.schema()
     client_graph: GraphManager = client.graph()
     # define vertexLabel/edgeLabel
@@ -204,8 +201,7 @@ def import_graphs_from_dgl(
 
 def import_hetero_graph_from_dgl(
     dataset_name,
-    ip: str = "127.0.0.1",
-    port: str = "8080",
+    url: str = "http://127.0.0.1:8080",
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
@@ -216,7 +212,7 @@ def import_hetero_graph_from_dgl(
         hetero_graph = load_acm_raw()
     else:
         raise ValueError("dataset not supported")
-    client: PyHugeClient = PyHugeClient(ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
+    client: PyHugeClient = PyHugeClient(url=url, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
     client_schema: SchemaManager = client.schema()
     client_graph: GraphManager = client.graph()
 
@@ -286,8 +282,7 @@ def import_hetero_graph_from_dgl(
 
 def import_hetero_graph_from_dgl_no_feat(
     dataset_name,
-    ip: str = "127.0.0.1",
-    port: str = "8080",
+    url: str = "http://127.0.0.1:8080",
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
@@ -301,7 +296,7 @@ def import_hetero_graph_from_dgl_no_feat(
     else:
         raise ValueError("dataset not supported")
     client: PyHugeClient = PyHugeClient(
-        ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace
+        url=url, graph=graph, user=user, pwd=pwd, graphspace=graphspace
     )
     client_schema: SchemaManager = client.schema()
     client_graph: GraphManager = client.graph()
@@ -360,8 +355,7 @@ def import_hetero_graph_from_dgl_no_feat(
 
 def import_graph_from_nx(
     dataset_name,
-    ip: str = "127.0.0.1",
-    port: str = "8080",
+    url: str = "http://127.0.0.1:8080",
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
@@ -374,7 +368,7 @@ def import_graph_from_nx(
         raise ValueError("dataset not supported")
 
     client: PyHugeClient = PyHugeClient(
-        ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace
+        url=url, graph=graph, user=user, pwd=pwd, graphspace=graphspace
     )
     client_schema: SchemaManager = client.schema()
     client_graph: GraphManager = client.graph()
@@ -423,8 +417,7 @@ def import_graph_from_nx(
 
 def import_graph_from_dgl_with_edge_feat(
     dataset_name,
-    ip: str = "127.0.0.1",
-    port: str = "8080",
+    url: str = "http://127.0.0.1:8080",
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
@@ -442,7 +435,7 @@ def import_graph_from_dgl_with_edge_feat(
     graph_dgl = dataset_dgl[0]
 
     client: PyHugeClient = PyHugeClient(
-        ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace
+        url=url, graph=graph, user=user, pwd=pwd, graphspace=graphspace
     )
     client_schema: SchemaManager = client.schema()
     client_graph: GraphManager = client.graph()
@@ -519,8 +512,7 @@ def import_graph_from_dgl_with_edge_feat(
 
 def import_graph_from_ogb(
     dataset_name,
-    ip: str = "127.0.0.1",
-    port: str = "8080",
+    url: str = "http://127.0.0.1:8080",
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
@@ -533,7 +525,7 @@ def import_graph_from_ogb(
     graph_dgl = dataset_dgl[0]
 
     client: PyHugeClient = PyHugeClient(
-        ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace
+        url=url, graph=graph, user=user, pwd=pwd, graphspace=graphspace
     )
     client_schema: SchemaManager = client.schema()
     client_graph: GraphManager = client.graph()
@@ -631,8 +623,7 @@ def import_split_edge_from_ogb(
     dataset_name,
     idx_to_vertex_id,
     max_nodes: int,
-    ip: str = "127.0.0.1",
-    port: str = "8080",
+    url: str = "http://127.0.0.1:8080",
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
@@ -645,7 +636,7 @@ def import_split_edge_from_ogb(
     split_edges = dataset_dgl.get_edge_split()
 
     client: PyHugeClient = PyHugeClient(
-        ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace
+        url=url, graph=graph, user=user, pwd=pwd, graphspace=graphspace
     )
     client_schema: SchemaManager = client.schema()
     client_graph: GraphManager = client.graph()
@@ -768,8 +759,7 @@ def import_split_edge_from_ogb(
 
 def import_hetero_graph_from_dgl_bgnn(
     dataset_name,
-    ip: str = "127.0.0.1",
-    port: str = "8080",
+    url: str = "http://127.0.0.1:8080",
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
@@ -783,7 +773,7 @@ def import_hetero_graph_from_dgl_bgnn(
     else:
         raise ValueError("dataset not supported")
     client: PyHugeClient = PyHugeClient(
-        ip=ip, port=port, graph=graph, user=user, pwd=pwd, graphspace=graphspace
+        url=url, graph=graph, user=user, pwd=pwd, graphspace=graphspace
     )
     client_schema: SchemaManager = client.schema()
     client_graph: GraphManager = client.graph()

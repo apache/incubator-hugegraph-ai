@@ -126,7 +126,7 @@ celerybeat.pid
 *.sage.py
 
 # prompt config
-config_prompt.yaml
+config_prompt.yaml*
 
 # Environments
 .env
