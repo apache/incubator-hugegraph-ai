@@ -29,11 +29,6 @@ maintainers = [
     { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
 ]
 
-[project.urls]
-homepage = "https://hugegraph.apache.org/"
-repository = "https://github.com/apache/incubator-hugegraph-ai"
-documentation = "https://hugegraph.apache.org/docs/quickstart/hugegraph-ai/"
-"Bug Tracker" = "https://github.com/apache/incubator-hugegraph-ai/issues"
 
 dependencies = [
     "openai~=1.61.0",
@@ -62,6 +57,12 @@ dependencies = [
     "litellm~=1.61.13",
     "hugegraph-python"
 ]
+[project.urls]
+homepage = "https://hugegraph.apache.org/"
+repository = "https://github.com/apache/incubator-hugegraph-ai"
+documentation = "https://hugegraph.apache.org/docs/quickstart/hugegraph-ai/"
+"Bug Tracker" = "https://github.com/apache/incubator-hugegraph-ai/issues"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
