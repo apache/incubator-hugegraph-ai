@@ -38,6 +38,30 @@ class OpenAIEmbedding:
         response = self.client.embeddings.create(input=text, model=self.embedding_model_name)
         return response.data[0].embedding
 
+    def get_texts_embeddings(
+            self,
+            texts: List[str]
+    ) -> List[List[float]]:
+        """Get embeddings for multiple texts in a single batch.
+        
+        This method efficiently processes multiple texts at once by leveraging
+        OpenAI's batching capabilities, which is more efficient than processing
+        texts individually.
+        
+        Parameters
+        ----------
+        texts : List[str]
+            A list of text strings to be embedded.
+            
+        Returns
+        -------
+        List[List[float]]
+            A list of embedding vectors, where each vector is a list of floats.
+            The order of embeddings matches the order of input texts.
+        """
+        response = self.client.embeddings.create(input=texts, model=self.embedding_model_name)
+        return [data.embedding for data in response.data]
+
     async def async_get_text_embedding(self, text: str) -> List[float]:
         """Comment"""
         response = await self.aclient.embeddings.create(input=text, model=self.embedding_model_name)
