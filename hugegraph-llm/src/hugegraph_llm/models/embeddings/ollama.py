@@ -41,12 +41,28 @@ class OllamaEmbedding(BaseEmbedding):
     ) -> List[float]:
         """Comment"""
         return list(self.client.embed(model=self.model, input=text)["embeddings"][0])
-    
+
     def get_texts_embeddings(
             self,
             texts: List[str]
     ) -> List[List[float]]:
-        """Comment"""
+        """Get embeddings for multiple texts in a single batch.
+        
+        This method efficiently processes multiple texts at once by leveraging
+        Ollama's batching capabilities, which is more efficient than processing
+        texts individually.
+        
+        Parameters
+        ----------
+        texts : List[str]
+            A list of text strings to be embedded.
+            
+        Returns
+        -------
+        List[List[float]]
+            A list of embedding vectors, where each vector is a list of floats.
+            The order of embeddings matches the order of input texts.
+        """
         response = self.client.embed(model=self.model, input=texts)["embeddings"]
         return [list(inner_sequence) for inner_sequence in response]
 
