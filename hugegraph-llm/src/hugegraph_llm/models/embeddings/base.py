@@ -85,6 +85,7 @@ class BaseEmbedding(ABC):
             A list of embedding vectors, where each vector is a list of floats.
             The order of embeddings should match the order of input texts.
         """
+
     @abstractmethod
     async def async_get_text_embedding(
             self,

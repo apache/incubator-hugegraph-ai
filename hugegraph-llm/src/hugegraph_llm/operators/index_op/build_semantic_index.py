@@ -20,14 +20,12 @@ import asyncio
 import os
 from typing import Any, Dict
 
-from tqdm import tqdm
-
 from hugegraph_llm.config import resource_path, huge_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.utils.log import log
-
+from tqdm import tqdm
 
 class BuildSemanticIndex:
     def __init__(self, embedding: BaseEmbedding):
