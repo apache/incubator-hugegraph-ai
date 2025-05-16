@@ -61,6 +61,13 @@ class BaseEmbedding(ABC):
         """Comment"""
 
     @abstractmethod
+    def get_texts_embeddings(
+            self,
+            texts: List[str]
+    ) -> List[List[float]]:
+        """Comment"""
+
+    @abstractmethod
     async def async_get_text_embedding(
             self,
             text: str

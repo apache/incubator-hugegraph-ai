@@ -40,7 +40,15 @@ class OllamaEmbedding(BaseEmbedding):
             text: str
     ) -> List[float]:
         """Comment"""
-        return list(self.client.embeddings(model=self.model, prompt=text)["embedding"])
+        return list(self.client.embed(model=self.model, input=text)["embeddings"][0])
+    
+    def get_texts_embeddings(
+            self,
+            texts: List[str]
+    ) -> List[List[float]]:
+        """Comment"""
+        response = self.client.embed(model=self.model, input=texts)["embeddings"]
+        return [list(inner_sequence) for inner_sequence in response]
 
     async def async_get_text_embedding(
             self,

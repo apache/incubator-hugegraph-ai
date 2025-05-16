@@ -39,9 +39,7 @@ class BuildSemanticIndex:
 
     # TODO: use asyncio for IO tasks
     def _get_embeddings_parallel(self, vids: list[str]) -> list[Any]:
-        from concurrent.futures import ThreadPoolExecutor
-        with ThreadPoolExecutor() as executor:
-            embeddings = list(tqdm(executor.map(self.embedding.get_text_embedding, vids), total=len(vids)))
+        embeddings = self.embedding.get_texts_embeddings(vids)
         return embeddings
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
