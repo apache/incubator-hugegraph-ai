@@ -31,7 +31,7 @@ from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
-from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_qps
+from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_rpm
 from hugegraph_llm.config import prompt, huge_settings
 
 
@@ -235,7 +235,7 @@ class RAGPipeline:
         return self
 
     @log_time("total time")
-    @record_qps
+    @record_rpm
     def run(self, **kwargs) -> Dict[str, Any]:
         """
         Execute all operators in the pipeline in sequence.

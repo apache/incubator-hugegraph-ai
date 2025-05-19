@@ -76,18 +76,18 @@ def log_operator_time(func: Callable) -> Callable:
         return result
     return wrapper
 
-
-def record_qps(func: Callable) -> Callable:
+def record_rpm(func: Callable) -> Callable:
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         start = time.perf_counter()
         result = func(*args, **kwargs)
         call_count = result.get("call_count", 0)
-        qps = call_count / (time.perf_counter() - start)
-        if qps >= 0.10:
-            log.debug("%s QPS: %.2f/s", args[0].__class__.__name__, qps)
+        elapsed_time = time.perf_counter() - start
+        rpm = (call_count / elapsed_time * 60) if elapsed_time > 0 else 0
+        if rpm >= 6.0:
+            log.debug("%s RPM: %.2f/min", args[0].__class__.__name__, rpm)
         else:
-            log.debug("%s QPS: %f/s", args[0].__class__.__name__, qps)
+            log.debug("%s RPM: %f/min", args[0].__class__.__name__, rpm)
         return result
     return wrapper
 
