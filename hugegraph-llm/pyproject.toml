@@ -67,13 +67,10 @@ documentation = "https://hugegraph.apache.org/docs/quickstart/hugegraph-ai/"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.uv]
-index-url = "https://pypi.org/simple/"
-extra-index-url = [
-    "https://mirrors.aliyun.com/pypi/simple/",
-    "https://mirrors.cloud.tencent.com/pypi/simple/",
-    "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/"
-]
+#If you want to modify the network configuration file of the project, then you can modify this part
+[[tool.uv.index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hugegraph_llm"]
