@@ -26,13 +26,31 @@ from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
+from pyhugegraph.client import PyHugeClient
+
+INDEX_PROPERTY_GREMLIN = """
+g.V().hasLabel('{label}')
+ .project('vid', 'properties')
+ .by(id())
+ .by(valueMap({fields}))
+ .toList()
+"""
 
 class BuildSemanticIndex:
     def __init__(self, embedding: BaseEmbedding):
         self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids"))
+        self.index_dir_prop = str(os.path.join(resource_path, huge_settings.graph_name, "graph_props"))
         self.vid_index = VectorIndex.from_index_file(self.index_dir)
+        self.prop_index = VectorIndex.from_index_file(self.index_dir_prop)
         self.embedding = embedding
         self.sm = SchemaManager(huge_settings.graph_name)
+        self.client = PyHugeClient(
+            url=huge_settings.graph_url,
+            graph=huge_settings.graph_name,
+            user=huge_settings.graph_user,
+            pwd=huge_settings.graph_pwd,
+            graphspace=huge_settings.graph_space,
+        )
 
     def _extract_names(self, vertices: list[str]) -> list[str]:
         return [v.split(":")[1] for v in vertices]
@@ -67,4 +85,47 @@ class BuildSemanticIndex:
             "removed_vid_vector_num": removed_num,
             "added_vid_vector_num": len(added_vids)
         })
+        
+        if context["index_labels"]:
+            results = []
+            for item in context["index_labels"]:
+                label = item["base_value"]
+                fields = item["fields"]
+                fields_str_list = [f"'{field}'" for field in fields]
+                fields_for_query = ", ".join(fields_str_list)
+                gremlin_query = INDEX_PROPERTY_GREMLIN.format(
+                    label=label,
+                    fields=fields_for_query
+                )
+                log.debug("gremlin_query: %s", gremlin_query)
+                result = self.client.gremlin().exec(gremlin=gremlin_query)["data"]
+                results.extend(result)
+            log.debug("results: %s", results)
+            present_props = []
+            seen = set()
+            for item in results:
+                vid = item["vid"]
+                for key, value in item["properties"].items():
+                    prop = f"{key}: {value}"
+                    if prop not in seen:
+                        seen.add(prop)
+                        present_props.append((vid, prop))
+            log.debug("present_props: %s", present_props)
+            past_props = self.prop_index.properties
+            removed_props = set(past_props) - set(present_props)
+            removed_props_num = self.prop_index.remove(removed_props)
+            added_props = list(set(present_props) - set(past_props))
+            if added_props:
+                added_props_key = [item[1] for item in added_props]
+                added_props_embeddings = self._get_embeddings_parallel(added_props_key)
+                log.info("Building vector index for %s props...", len(added_props_key))
+                self.prop_index.add(added_props_embeddings, added_props)
+                self.prop_index.to_index_file(self.index_dir_prop)
+            else:
+                log.debug("No update props to build vector index.")
+            context.update({
+                "removed_props_num": removed_props_num,
+                "added_props_vector_num": len(added_props)
+            })
+
         return context
