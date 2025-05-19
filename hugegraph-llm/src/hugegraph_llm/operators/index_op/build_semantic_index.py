@@ -30,6 +30,7 @@ from pyhugegraph.client import PyHugeClient
 
 INDEX_PROPERTY_GREMLIN = """
 g.V().hasLabel('{label}')
+ .limit(100000)
  .project('vid', 'properties')
  .by(id())
  .by(valueMap({fields}))
@@ -85,7 +86,8 @@ class BuildSemanticIndex:
             "removed_vid_vector_num": removed_num,
             "added_vid_vector_num": len(added_vids)
         })
-        
+
+        context["update_props_flag"] = False
         if context["index_labels"]:
             results = []
             for item in context["index_labels"]:
@@ -115,7 +117,11 @@ class BuildSemanticIndex:
             removed_props = set(past_props) - set(present_props)
             removed_props_num = self.prop_index.remove(removed_props)
             added_props = list(set(present_props) - set(past_props))
+            if len(added_props) > 100000:
+                log.warning("The number of props > 100000, please select which properties to vectorize.")
+                return context
             if added_props:
+                context["update_props_flag"] = True
                 added_props_key = [item[1] for item in added_props]
                 added_props_embeddings = self._get_embeddings_parallel(added_props_key)
                 log.info("Building vector index for %s props...", len(added_props_key))
