@@ -150,7 +150,7 @@ class OpenAIClient(BaseLLM):
 
             for chunk in completions:
                 if not chunk.choices:
-                    log.debug(f"Received empty choices in streaming chunk: {chunk}")
+                    log.debug("Received empty choices in streaming chunk: %s", chunk)
                     continue
                 delta = chunk.choices[0].delta
                 if delta.content:
@@ -190,7 +190,7 @@ class OpenAIClient(BaseLLM):
             )
             async for chunk in completions:
                 if not chunk.choices:
-                    log.debug(f"Received empty choices in streaming chunk: {chunk}")
+                    log.debug("Received empty choices in streaming chunk: %s", chunk)
                     continue
                 delta = chunk.choices[0].delta
                 if delta.content:
