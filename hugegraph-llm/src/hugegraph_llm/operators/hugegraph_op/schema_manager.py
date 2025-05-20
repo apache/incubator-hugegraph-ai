@@ -33,7 +33,7 @@ class SchemaManager:
         self.schema = self.client.schema()
 
     def simple_schema(self, schema: Dict[str, Any]) -> Dict[str, Any]:
-        mini_schema = {}
+        mini_schema = {}  # type: ignore
 
         # Add necessary vertexlabels items (3)
         if "vertexlabels" in schema:
@@ -46,8 +46,9 @@ class SchemaManager:
         if "edgelabels" in schema:
             mini_schema["edgelabels"] = []
             for edge in schema["edgelabels"]:
-                new_edge = {key: edge[key] for key in
-                            ["name", "source_label", "target_label", "properties"] if key in edge}
+                new_edge = {
+                    key: edge[key] for key in ["name", "source_label", "target_label", "properties"] if key in edge
+                }
                 mini_schema["edgelabels"].append(new_edge)
 
         return mini_schema

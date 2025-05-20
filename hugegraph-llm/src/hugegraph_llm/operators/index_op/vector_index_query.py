@@ -20,7 +20,7 @@ import os
 from typing import Dict, Any
 
 from hugegraph_llm.config import resource_path, huge_settings
-from hugegraph_llm.indices.vector_index import VectorIndex
+from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.utils.log import log
 
@@ -30,10 +30,11 @@ class VectorIndexQuery:
         self.embedding = embedding
         self.topk = topk
         self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "chunks"))
-        self.vector_index = VectorIndex.from_index_file(self.index_dir)
+        self.vector_index = FaissVectorIndex.from_name(self.index_dir)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context.get("query")
+        assert query, "query is None"
         query_embedding = self.embedding.get_text_embedding(query)
         # TODO: why set dis_threshold=2?
         results = self.vector_index.search(query_embedding, self.topk, dis_threshold=2)

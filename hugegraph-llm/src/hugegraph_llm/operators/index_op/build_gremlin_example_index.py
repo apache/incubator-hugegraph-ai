@@ -19,9 +19,9 @@
 import os
 from typing import Dict, Any, List
 
+from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.config import resource_path
-from hugegraph_llm.indices.vector_index import VectorIndex
 
 
 class BuildGremlinExampleIndex:
@@ -36,7 +36,7 @@ class BuildGremlinExampleIndex:
             examples_embedding.append(self.embedding.get_text_embedding(example["query"]))
         embed_dim = len(examples_embedding[0])
         if len(self.examples) > 0:
-            vector_index = VectorIndex(embed_dim)
+            vector_index = FaissVectorIndex(embed_dim)
             vector_index.add(examples_embedding, self.examples)
             vector_index.to_index_file(self.index_dir)
         context["embed_dim"] = embed_dim

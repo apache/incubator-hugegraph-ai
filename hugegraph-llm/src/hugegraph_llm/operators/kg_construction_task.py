@@ -37,7 +37,7 @@ from pyhugegraph.client import PyHugeClient
 
 class KgBuilder:
     def __init__(self, llm: BaseLLM, embedding: Optional[BaseEmbedding] = None, graph: Optional[PyHugeClient] = None):
-        self.operators = []
+        self.operators: List[Any] = []
         self.llm = llm
         self.embedding = embedding
         self.graph = graph

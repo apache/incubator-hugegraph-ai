@@ -21,7 +21,7 @@ from typing import Dict, Any
 
 from tqdm import tqdm
 from hugegraph_llm.config import huge_settings, resource_path
-from hugegraph_llm.indices.vector_index import VectorIndex
+from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.utils.log import log
 
@@ -30,7 +30,7 @@ class BuildVectorIndex:
     def __init__(self, embedding: BaseEmbedding):
         self.embedding = embedding
         self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "chunks"))
-        self.vector_index = VectorIndex.from_index_file(self.index_dir)
+        self.vector_index = FaissVectorIndex.from_name(self.index_dir)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if "chunks" not in context:

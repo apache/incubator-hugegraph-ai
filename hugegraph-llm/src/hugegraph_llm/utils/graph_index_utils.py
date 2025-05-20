@@ -27,7 +27,7 @@ from .hugegraph_utils import get_hg_client, clean_hg_data
 from .log import log
 from .vector_index_utils import read_documents
 from ..config import resource_path, huge_settings
-from ..indices.vector_index import VectorIndex
+from ..indices.vector_index.faiss_vector_store import FaissVectorIndex
 from ..models.embeddings.init_embedding import Embeddings
 from ..models.llms.init_llm import LLMs
 from ..operators.kg_construction_task import KgBuilder
@@ -36,7 +36,7 @@ from ..operators.kg_construction_task import KgBuilder
 def get_graph_index_info():
     builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     graph_summary_info = builder.fetch_graph_data().run()
-    vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
+    vector_index = FaissVectorIndex.from_name(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
     graph_summary_info["vid_index"] = {
         "embed_dim": vector_index.index.d,
         "num_vectors": vector_index.index.ntotal,
@@ -46,8 +46,8 @@ def get_graph_index_info():
 
 
 def clean_all_graph_index():
-    VectorIndex.clean(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
-    VectorIndex.clean(str(os.path.join(resource_path, "gremlin_examples")))
+    FaissVectorIndex.clean(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
+    FaissVectorIndex.clean(str(os.path.join(resource_path, "gremlin_examples")))
     log.warning("Clear graph index and text2gql index successfully!")
     gr.Info("Clear graph index and text2gql index successfully!")
 
@@ -92,10 +92,10 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
                 {
                     "vertices": context["vertices"],
                     "edges": context["edges"],
-                    "warning": "The schema may not match the Doc"
+                    "warning": "The schema may not match the Doc",
                 },
                 ensure_ascii=False,
-                indent=2
+                indent=2,
             )
         return json.dumps({"vertices": context["vertices"], "edges": context["edges"]}, ensure_ascii=False, indent=2)
     except Exception as e:  # pylint: disable=broad-exception-caught

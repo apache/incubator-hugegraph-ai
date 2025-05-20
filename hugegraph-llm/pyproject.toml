@@ -91,6 +91,7 @@ priority = "supplemental"
 [tool.mypy]
 disable_error_code = ["import-untyped"]
 check_untyped_defs = true
+disallow_untyped_defs = false
 
 
 [tool.ruff]
