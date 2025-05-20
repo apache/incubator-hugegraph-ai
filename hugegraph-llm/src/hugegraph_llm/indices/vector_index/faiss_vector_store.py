@@ -23,35 +23,17 @@ from typing import List, Any, Set, Union
 import faiss
 import numpy as np
 
+from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.utils.log import log
 
 INDEX_FILE_NAME = "index.faiss"
 PROPERTIES_FILE_NAME = "properties.pkl"
 
 
-class VectorIndex:
-    """Comment"""
-
+class FaissVectorIndex(VectorStoreBase):
     def __init__(self, embed_dim: int = 1024):
         self.index = faiss.IndexFlatL2(embed_dim)
-        self.properties = []
-
-    @staticmethod
-    def from_index_file(dir_path: str) -> "VectorIndex":
-        index_file = os.path.join(dir_path, INDEX_FILE_NAME)
-        properties_file = os.path.join(dir_path, PROPERTIES_FILE_NAME)
-        if not os.path.exists(index_file) or not os.path.exists(properties_file):
-            log.warning("No index file found, create a new one.")
-            return VectorIndex()
-
-        faiss_index = faiss.read_index(index_file)
-        embed_dim = faiss_index.d
-        with open(properties_file, "rb") as f:
-            properties = pkl.load(f)
-        vector_index = VectorIndex(embed_dim)
-        vector_index.index = faiss_index
-        vector_index.properties = properties
-        return vector_index
+        self.properties: list[Any] = []
 
     def to_index_file(self, dir_path: str):
         if not os.path.exists(dir_path):
@@ -96,11 +78,15 @@ class VectorIndex:
         distances, indices = self.index.search(np.array([query_vector]), top_k)
         results = []
         for dist, i in zip(distances[0], indices[0]):
-            if dist < dis_threshold:  # Smaller distances indicate higher similarity
+            if dist < dis_threshold:
                 results.append(deepcopy(self.properties[i]))
                 log.debug("[✓] Add valid distance %s to results.", dist)
             else:
-                log.debug("[x] Distance %s >= threshold %s, ignore this result.", dist, dis_threshold)
+                log.debug(
+                    "[x] Distance %s >= threshold %s, ignore this result.",
+                    dist,
+                    dis_threshold,
+                )
         return results
 
     @staticmethod
@@ -111,3 +97,20 @@ class VectorIndex:
             os.remove(index_file)
         if os.path.exists(properties_file):
             os.remove(properties_file)
+
+    @staticmethod
+    def from_name(name: str) -> "FaissVectorIndex":
+        index_file = os.path.join(name, INDEX_FILE_NAME)
+        properties_file = os.path.join(name, PROPERTIES_FILE_NAME)
+        if not os.path.exists(index_file) or not os.path.exists(properties_file):
+            log.warning("No index file found, create a new one.")
+            return FaissVectorIndex()
+
+        faiss_index = faiss.read_index(index_file)
+        embed_dim = faiss_index.d
+        with open(properties_file, "rb") as f:
+            properties = pkl.load(f)
+        vector_index = FaissVectorIndex(embed_dim)
+        vector_index.index = faiss_index
+        vector_index.properties = properties
+        return vector_index

@@ -16,24 +16,19 @@
 # under the License.
 
 
-__all__ = ["huge_settings", "admin_settings", "llm_settings", "resource_path"]
-
+from typing import Optional
+from .models import BaseConfig
 import os
 
-from hugegraph_llm.config.index_config import IndexConfig
 
-from .prompt_config import PromptConfig
-from .hugegraph_config import HugeGraphConfig
-from .admin_config import AdminConfig
-from .llm_config import LLMConfig
+class IndexConfig(BaseConfig):
+    """LLM settings"""
 
-prompt = PromptConfig()
-prompt.ensure_yaml_file_exists()
+    qdrant_host: Optional[str] = os.environ.get("QDRANT_HOST", None)
+    qdrant_port: int = int(os.environ.get("QDRANT_PORT", "6333"))
+    qdrant_api_key: Optional[str] = os.environ.get("QDRANT_API_KEY") if os.environ.get("QDRANT_API_KEY") else None
 
-huge_settings = HugeGraphConfig()
-admin_settings = AdminConfig()
-llm_settings = LLMConfig()
-index_settings = IndexConfig()
-
-package_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-resource_path = os.path.join(package_path, "resources")
+    milvus_host: Optional[str] = os.environ.get("MILVUS_HOST", None)
+    milvus_port: int = int(os.environ.get("MILVUS_PORT", "19530"))
+    milvus_user: str = os.environ.get("MILVUS_USER", "")
+    milvus_password: str = os.environ.get("MILVUS_PASSWORD", "")

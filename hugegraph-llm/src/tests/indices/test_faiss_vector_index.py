@@ -19,15 +19,19 @@
 import unittest
 from pprint import pprint
 from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
-from hugegraph_llm.indices.vector_index import VectorIndex
+from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
 
 
 class TestVectorIndex(unittest.TestCase):
     def test_vector_index(self):
         embedder = OllamaEmbedding("quentinz/bge-large-zh-v1.5")
-        data = ["腾讯的合伙人有字节跳动", "谷歌和微软是竞争关系", "美团的合伙人有字节跳动"]
+        data = [
+            "腾讯的合伙人有字节跳动",
+            "谷歌和微软是竞争关系",
+            "美团的合伙人有字节跳动",
+        ]
         data_embedding = [embedder.get_text_embedding(d) for d in data]
-        index = VectorIndex(1024)
+        index = FaissVectorIndex(1024)
         index.add(data_embedding, data)
         query = "腾讯的合伙人有哪些？"
         query_vector = embedder.get_text_embedding(query)
