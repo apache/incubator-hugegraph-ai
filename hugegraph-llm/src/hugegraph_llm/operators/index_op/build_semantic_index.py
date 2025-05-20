@@ -71,14 +71,23 @@ class BuildSemanticIndex:
 
         past_vids = self.vid_index.properties
         # TODO: We should build vid vector index separately, especially when the vertices may be very large
+<<<<<<< HEAD
         present_vids = context["vertices"]  # Warning: data truncated by fetch_graph_data.py
+=======
+        # TODO: Implement batching/pagination if List[str] grows too large; consider extracting this logic into a separate method.
+        present_vids = context["vertices"] # Warning: data truncated by fetch_graph_data.py
+>>>>>>> f6e3381 (Update build_semantic_index.py;)
         removed_vids = set(past_vids) - set(present_vids)
         removed_num = self.vid_index.remove(removed_vids)
         added_vids = list(set(present_vids) - set(past_vids))
 
         if added_vids:
             vids_to_process = self._extract_names(added_vids) if all_pk_flag else added_vids
+<<<<<<< HEAD
             added_embeddings = asyncio.run(self._get_embeddings_parallel(vids_to_process))
+=======
+            added_embeddings = self.embedding.get_texts_embeddings(vids_to_process)
+>>>>>>> f6e3381 (Update build_semantic_index.py;)
             log.info("Building vector index for %s vertices...", len(added_vids))
             self.vid_index.add(added_embeddings, added_vids)
             self.vid_index.to_index_file(self.index_dir)
