@@ -20,8 +20,14 @@ import asyncio
 import os
 from typing import Dict, Any
 
+<<<<<<< HEAD
 from hugegraph_llm.config import huge_settings, resource_path, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
+=======
+from tqdm import tqdm
+from hugegraph_llm.config import huge_settings, resource_path
+from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
+>>>>>>> 902fee5 (feat(llm): some type bug && revert to FaissVectorIndex)
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.utils.embedding_utils import (
     get_embeddings_parallel,
@@ -34,6 +40,7 @@ from hugegraph_llm.utils.log import log
 class BuildVectorIndex:
     def __init__(self, embedding: BaseEmbedding):
         self.embedding = embedding
+<<<<<<< HEAD
         self.folder_name = get_index_folder_name(
             huge_settings.graph_name, huge_settings.graph_space
         )
@@ -42,6 +49,10 @@ class BuildVectorIndex:
             llm_settings.embedding_type, getattr(self.embedding, "model_name", None)
         )
         self.vector_index = VectorIndex.from_index_file(self.index_dir, self.filename_prefix)
+=======
+        self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "chunks"))
+        self.vector_index = FaissVectorIndex.from_name(self.index_dir)
+>>>>>>> 902fee5 (feat(llm): some type bug && revert to FaissVectorIndex)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if "chunks" not in context:

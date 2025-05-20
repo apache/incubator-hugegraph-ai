@@ -21,7 +21,7 @@ import os
 from typing import Any, Dict
 
 from hugegraph_llm.config import resource_path, huge_settings, llm_settings
-from hugegraph_llm.indices.vector_index import VectorIndex
+from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.utils.embedding_utils import (
@@ -41,7 +41,7 @@ class BuildSemanticIndex:
         self.filename_prefix = get_filename_prefix(
             llm_settings.embedding_type, getattr(embedding, "model_name", None)
         )
-        self.vid_index = VectorIndex.from_index_file(self.index_dir, self.filename_prefix)
+        self.vid_index = FaissVectorIndex.from_index_file(self.index_dir, self.filename_prefix)
         self.embedding = embedding
         self.sm = SchemaManager(huge_settings.graph_name)
 

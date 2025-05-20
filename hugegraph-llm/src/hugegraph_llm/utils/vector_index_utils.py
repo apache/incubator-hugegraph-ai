@@ -22,13 +22,16 @@ import docx
 import gradio as gr
 
 from hugegraph_llm.config import resource_path, huge_settings, llm_settings
-from hugegraph_llm.indices.vector_index import VectorIndex
-from hugegraph_llm.models.embeddings.init_embedding import model_map
+from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
+from hugegraph_llm.models.embeddings.init_embedding import Embeddings, model_map
 from hugegraph_llm.flows.scheduler import SchedulerSingleton
 from hugegraph_llm.utils.embedding_utils import (
     get_filename_prefix,
     get_index_folder_name,
 )
+from hugegraph_llm.models.llms.init_llm import LLMs
+from hugegraph_llm.operators.kg_construction_task import KgBuilder
+from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 
 
 def read_documents(input_file, input_text):
@@ -64,12 +67,12 @@ def get_vector_index_info():
     filename_prefix = get_filename_prefix(
         llm_settings.embedding_type, model_map.get(llm_settings.embedding_type)
     )
-    chunk_vector_index = VectorIndex.from_index_file(
+    chunk_vector_index = FaissVectorIndex.from_index_file(
         str(os.path.join(resource_path, folder_name, "chunks")),
         filename_prefix,
         record_miss=False,
     )
-    graph_vid_vector_index = VectorIndex.from_index_file(
+    graph_vid_vector_index = FaissVectorIndex.from_index_file(
         str(os.path.join(resource_path, folder_name, "graph_vids")), filename_prefix
     )
     return json.dumps(
@@ -91,7 +94,7 @@ def clean_vector_index():
     filename_prefix = get_filename_prefix(
         llm_settings.embedding_type, model_map.get(llm_settings.embedding_type)
     )
-    VectorIndex.clean(str(os.path.join(resource_path, folder_name, "chunks")), filename_prefix)
+    FaissVectorIndex.clean(str(os.path.join(resource_path, folder_name, "chunks")), filename_prefix)
     gr.Info("Clean vector index successfully!")
 
 

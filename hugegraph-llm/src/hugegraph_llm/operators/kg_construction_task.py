@@ -37,6 +37,7 @@ from pyhugegraph.client import PyHugeClient
 
 
 class KgBuilder:
+<<<<<<< HEAD
     def __init__(
         self,
         llm: BaseLLM,
@@ -44,6 +45,10 @@ class KgBuilder:
         graph: Optional[PyHugeClient] = None,
     ):
         self.operators = []
+=======
+    def __init__(self, llm: BaseLLM, embedding: Optional[BaseEmbedding] = None, graph: Optional[PyHugeClient] = None):
+        self.operators: List[Any] = []
+>>>>>>> 902fee5 (feat(llm): some type bug && revert to FaissVectorIndex)
         self.llm = llm
         self.embedding = embedding
         self.graph = graph

@@ -28,37 +28,43 @@ from .embedding_utils import get_filename_prefix, get_index_folder_name
 from .hugegraph_utils import get_hg_client, clean_hg_data
 from .log import log
 from .vector_index_utils import read_documents
+<<<<<<< HEAD
 from ..config import resource_path, huge_settings, llm_settings
-from ..indices.vector_index import VectorIndex
+from ..indices.vector_index.faiss_vector_store import FaissVectorIndex
+=======
+from ..config import resource_path, huge_settings
+from ..indices.vector_index.faiss_vector_store import FaissVectorIndex
+>>>>>>> 902fee5 (feat(llm): some type bug && revert to FaissVectorIndex)
 from ..models.embeddings.init_embedding import Embeddings
 from ..models.llms.init_llm import LLMs
 from ..operators.kg_construction_task import KgBuilder
 
 
 def get_graph_index_info():
-    try:
-        scheduler = SchedulerSingleton.get_instance()
-        return scheduler.schedule_flow("get_graph_index_info")
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        log.error(e)
-        raise gr.Error(str(e))
+    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
+    graph_summary_info = builder.fetch_graph_data().run()
+    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
+    filename_prefix = get_filename_prefix(
+        llm_settings.embedding_type, getattr(Embeddings().get_embedding(), "model_name", None)
+    )
+    vector_index = FaissVectorIndex.from_index_file(
+        str(os.path.join(resource_path, folder_name, "graph_vids")), filename_prefix, record_miss=False
+    )
+    graph_summary_info["vid_index"] = {
+        "embed_dim": vector_index.index.d,
+        "num_vectors": vector_index.index.ntotal,
+        "num_vids": len(vector_index.properties),
+    }
+    return json.dumps(graph_summary_info, ensure_ascii=False, indent=2)
 
 
 def clean_all_graph_index():
-    folder_name = get_index_folder_name(
-        huge_settings.graph_name, huge_settings.graph_space
-    )
+    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
     filename_prefix = get_filename_prefix(
-        llm_settings.embedding_type,
-        getattr(Embeddings().get_embedding(), "model_name", None),
+        llm_settings.embedding_type, getattr(Embeddings().get_embedding(), "model_name", None)
     )
-    VectorIndex.clean(
-        str(os.path.join(resource_path, folder_name, "graph_vids")), filename_prefix
-    )
-    VectorIndex.clean(
-        str(os.path.join(resource_path, folder_name, "gremlin_examples")),
-        filename_prefix,
-    )
+    FaissVectorIndex.clean(str(os.path.join(resource_path, folder_name, "graph_vids")), filename_prefix)
+    FaissVectorIndex.clean(str(os.path.join(resource_path, folder_name, "gremlin_examples")), filename_prefix)
     log.warning("Clear graph index and text2gql index successfully!")
     gr.Info("Clear graph index and text2gql index successfully!")
 

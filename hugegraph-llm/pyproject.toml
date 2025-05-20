@@ -92,6 +92,7 @@ pycgraph = { git = "https://github.com/ChunelFeng/CGraph.git", subdirectory = "p
 [tool.mypy]
 disable_error_code = ["import-untyped"]
 check_untyped_defs = true
+disallow_untyped_defs = false
 
 [tool.ruff]
 line-length = 120
