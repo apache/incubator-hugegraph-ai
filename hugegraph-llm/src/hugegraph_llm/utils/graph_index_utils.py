@@ -112,7 +112,7 @@ def update_vid_embedding():
         context = builder.run()
         removed_num = context["removed_vid_vector_num"]
         added_num = context["added_vid_vector_num"]
-        if context["update_props_flag"]:
+        if context["index_labels"]:
             removed_prop_num = context["removed_props_num"]
             added_prop_num = context["added_props_vector_num"]
             return (f"Removed {removed_num} vid vectors, added {added_num} vid vectors.\n"
