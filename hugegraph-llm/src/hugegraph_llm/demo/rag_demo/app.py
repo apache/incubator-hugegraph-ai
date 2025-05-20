@@ -108,7 +108,7 @@ def init_rag_ui() -> gr.Interface:
         def refresh_ui_config_prompt() -> tuple:
             # we can use its __init__() for in-place reload
             # settings.from_env()
-            huge_settings.__init__()  # pylint: disable=C2801
+            huge_settings.__init__()  # type: ignore[misc] # pylint: disable=C2801
             prompt.ensure_yaml_file_exists()
             return (
                 huge_settings.graph_url,
@@ -125,7 +125,7 @@ def init_rag_ui() -> gr.Interface:
                 prompt.custom_rerank_info,
                 prompt.default_question,
                 huge_settings.graph_name,
-                prompt.gremlin_generate_prompt
+                prompt.gremlin_generate_prompt,
             )
 
         hugegraph_llm_ui.load(  # pylint: disable=E1101
@@ -157,6 +157,7 @@ def create_app():
     # we don't need to manually check the env now
     # settings.check_env()
     prompt.update_yaml_file()
+    assert admin_settings.enable_login
     auth_enabled = admin_settings.enable_login.lower() == "true"
     log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
     api_auth = APIRouter(dependencies=[Depends(authenticate)] if auth_enabled else [])
