@@ -16,8 +16,8 @@
 # under the License.
 
 
-import os
 import asyncio
+import os
 from typing import Any, Dict
 
 from tqdm import tqdm
@@ -25,8 +25,8 @@ from tqdm import tqdm
 from hugegraph_llm.config import resource_path, huge_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.utils.log import log
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
+from hugegraph_llm.utils.log import log
 
 
 class BuildSemanticIndex:
@@ -43,6 +43,9 @@ class BuildSemanticIndex:
         sem = asyncio.Semaphore(10)
 
         async def get_embedding_with_semaphore(vid: str) -> Any:
+            # Executes sync embedding method in a thread pool via loop.run_in_executor, combining async programming
+            # with multi-threading capabilities.
+            # This pattern avoids blocking the event loop and prepares for a future fully async pipeline.
             async with sem:
                 loop = asyncio.get_running_loop()
                 return await loop.run_in_executor(None, self.embedding.get_text_embedding, vid)
