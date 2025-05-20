@@ -86,6 +86,7 @@ class KgBuilder:
         if extract_type == "triples":
             self.operators.append(InfoExtract(self.llm, example_prompt))
         elif extract_type == "property_graph":
+            assert example_prompt
             self.operators.append(PropertyGraphExtract(self.llm, example_prompt))
         return self
 
@@ -98,10 +99,12 @@ class KgBuilder:
         return self
 
     def build_vertex_id_semantic_index(self):
+        assert self.embedding
         self.operators.append(BuildSemanticIndex(self.embedding))
         return self
 
     def build_vector_index(self):
+        assert self.embedding
         self.operators.append(BuildVectorIndex(self.embedding))
         return self
 
@@ -118,6 +121,7 @@ class KgBuilder:
     def run(self, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         for operator in self.operators:
             context = self._run_operator(operator, context)
+        assert context is not None
         return context
 
     @log_operator_time
