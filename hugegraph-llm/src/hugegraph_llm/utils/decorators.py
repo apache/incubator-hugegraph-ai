@@ -80,7 +80,18 @@ def log_operator_time(func: Callable) -> Callable:
 
 def record_rpm(func: Callable) -> Callable:
     @wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
+    async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+        start = time.perf_counter()
+        result = await func(*args, **kwargs)
+        call_count = result.get("call_count", 0)
+        elapsed_time = time.perf_counter() - start
+        rpm = (call_count / elapsed_time * 60) if elapsed_time > 0 else 0
+        if rpm >= 1:
+            log.debug("%s RPM: %.1f/min", args[0].__class__.__name__, rpm)
+        return result
+
+    @wraps(func)
+    def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
         start = time.perf_counter()
         result = func(*args, **kwargs)
         call_count = result.get("call_count", 0)
@@ -90,7 +101,9 @@ def record_rpm(func: Callable) -> Callable:
             log.debug("%s RPM: %.1f/min", args[0].__class__.__name__, rpm)
         return result
 
-    return wrapper
+    if asyncio.iscoroutinefunction(func):
+        return async_wrapper
+    return sync_wrapper
 
 
 def with_task_id(func: Callable) -> Callable:
