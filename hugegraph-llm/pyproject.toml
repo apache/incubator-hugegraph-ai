@@ -22,11 +22,12 @@ description = "A tool for the implementation and research related to large langu
 authors = [
     { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
 ]
+maintainers = [
+    { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
+]
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10,<3.12"
-
-
 dependencies = [
     # Common dependencies
     "decorator",
@@ -87,3 +88,17 @@ allow-direct-references = true
 [tool.uv.sources]
 hugegraph-python-client = { workspace = true }
 pycgraph = { git = "https://github.com/ChunelFeng/CGraph.git", subdirectory = "python", rev = "main", marker = "sys_platform == 'linux'"  }
+
+[tool.mypy]
+disable_error_code = ["import-untyped"]
+check_untyped_defs = true
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+extend-exclude = []
+
+[tool.ruff.format]
+quote-style = "preserve"
+indent-style = "space"
+line-ending = "auto"
