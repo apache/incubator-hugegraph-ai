@@ -16,14 +16,16 @@
 # under the License.
 
 
+import asyncio
 import os
 from typing import Any, Dict
 
 from hugegraph_llm.config import resource_path, huge_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.utils.log import log
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
+from hugegraph_llm.utils.log import log
+
 
 class BuildSemanticIndex:
     def __init__(self, embedding: BaseEmbedding):
@@ -37,7 +39,7 @@ class BuildSemanticIndex:
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         vertexlabels = self.sm.schema.getSchema()["vertexlabels"]
-        all_pk_flag = all(data.get('id_strategy') == 'PRIMARY_KEY' for data in vertexlabels)
+        all_pk_flag = all(data.get("id_strategy") == "PRIMARY_KEY" for data in vertexlabels)
 
         past_vids = self.vid_index.properties
         # TODO: We should build vid vector index separately, especially when the vertices may be very large
@@ -45,6 +47,8 @@ class BuildSemanticIndex:
         present_vids = context["vertices"] # Warning: data truncated by fetch_graph_data.py
         removed_vids = set(past_vids) - set(present_vids)
         removed_num = self.vid_index.remove(removed_vids)
+        if removed_vids:
+            self.vid_index.to_index_file(self.index_dir)
         added_vids = list(set(present_vids) - set(past_vids))
 
         if added_vids:
@@ -55,8 +59,5 @@ class BuildSemanticIndex:
             self.vid_index.to_index_file(self.index_dir)
         else:
             log.debug("No update vertices to build vector index.")
-        context.update({
-            "removed_vid_vector_num": removed_num,
-            "added_vid_vector_num": len(added_vids)
-        })
+        context.update({"removed_vid_vector_num": removed_num, "added_vid_vector_num": len(added_vids)})
         return context
