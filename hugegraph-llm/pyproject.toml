@@ -98,7 +98,7 @@ disallow_untyped_defs = false
 line-length = 120
 indent-width = 4
 extend-exclude = []
-
+extend-select = ["I"]
 
 [tool.ruff.format]
 quote-style = "preserve"

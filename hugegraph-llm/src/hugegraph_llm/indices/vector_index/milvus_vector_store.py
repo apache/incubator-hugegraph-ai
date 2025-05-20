@@ -16,20 +16,20 @@
 # under the License.
 
 import json
-from typing import List, Any, Set, Union
+from typing import Any, List, Set, Union
 
 from pymilvus import (
-    connections,
-    utility,
     Collection,
-    FieldSchema,
     CollectionSchema,
     DataType,
+    FieldSchema,
+    connections,
+    utility,
 )
 
+from hugegraph_llm.config import index_settings
 from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.config import index_settings
 
 COLLECTION_NAME_PREFIX = "hugegraph_llm_"
 

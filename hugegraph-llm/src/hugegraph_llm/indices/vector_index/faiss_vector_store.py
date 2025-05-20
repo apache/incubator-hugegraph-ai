@@ -18,7 +18,7 @@
 import os
 import pickle as pkl
 from copy import deepcopy
-from typing import List, Any, Set, Union
+from typing import Any, List, Set, Union
 
 import faiss
 import numpy as np
@@ -35,12 +35,12 @@ class FaissVectorIndex(VectorStoreBase):
         self.index = faiss.IndexFlatL2(embed_dim)
         self.properties: list[Any] = []
 
-    def to_index_file(self, dir_path: str):
-        if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
+    def to_index_file(self, name: str):
+        if not os.path.exists(name):
+            os.makedirs(name)
 
-        index_file = os.path.join(dir_path, INDEX_FILE_NAME)
-        properties_file = os.path.join(dir_path, PROPERTIES_FILE_NAME)
+        index_file = os.path.join(name, INDEX_FILE_NAME)
+        properties_file = os.path.join(name, PROPERTIES_FILE_NAME)
         faiss.write_index(self.index, index_file)
         with open(properties_file, "wb") as f:
             pkl.dump(self.properties, f)
@@ -90,9 +90,9 @@ class FaissVectorIndex(VectorStoreBase):
         return results
 
     @staticmethod
-    def clean(dir_path: str):
-        index_file = os.path.join(dir_path, INDEX_FILE_NAME)
-        properties_file = os.path.join(dir_path, PROPERTIES_FILE_NAME)
+    def clean(name: str):
+        index_file = os.path.join(name, INDEX_FILE_NAME)
+        properties_file = os.path.join(name, PROPERTIES_FILE_NAME)
         if os.path.exists(index_file):
             os.remove(index_file)
         if os.path.exists(properties_file):

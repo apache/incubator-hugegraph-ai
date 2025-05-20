@@ -17,7 +17,7 @@
 
 
 from abc import ABC, abstractmethod
-from typing import List, Any, Union, Set
+from typing import Any, List, Set, Union
 
 
 class VectorStoreBase(ABC):
@@ -64,22 +64,22 @@ class VectorStoreBase(ABC):
         """
 
     @abstractmethod
-    def to_index_file(self, dir_path: str):
+    def to_index_file(self, name: str):
         """
         Persist the vector store (index and metadata) to the specified directory.
 
         Args:
-            dir_path (str): Path to the directory where the index and properties will be saved.
+            name (str): Path to the directory where the index and properties will be saved.
         """
 
     @staticmethod
     @abstractmethod
-    def from_name(dir_path: str) -> "VectorStoreBase":
+    def from_name(name: str) -> "VectorStoreBase":
         """
         Load a vector store from the specified directory.
 
         Args:
-            dir_path (str): Path to the directory containing the index and properties.
+            name (str): Path to the directory containing the index and properties.
 
         Returns:
             VectorStore: An instance of the vector store.
@@ -87,10 +87,10 @@ class VectorStoreBase(ABC):
 
     @staticmethod
     @abstractmethod
-    def clean(dir_path: str):
+    def clean(name: str):
         """
         Delete the persisted index and properties from the specified directory.
 
         Args:
-            dir_path (str): Path to the directory to clean.
+            name (str): Path to the directory to clean.
         """

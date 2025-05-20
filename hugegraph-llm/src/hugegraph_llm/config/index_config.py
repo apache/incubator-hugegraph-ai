@@ -15,10 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
-from typing import Optional
-from .models import BaseConfig
 import os
+from typing import Optional
+
+from .models import BaseConfig
 
 
 class IndexConfig(BaseConfig):

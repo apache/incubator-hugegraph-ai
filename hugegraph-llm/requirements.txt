@@ -17,3 +17,5 @@ openpyxl~=3.1.5
 pydantic-settings~=2.6.1
 apscheduler~=3.10.4
 litellm~=1.61.13
+pymilvus ~=2.5.9
+qdrant-client ~=1.14.2
