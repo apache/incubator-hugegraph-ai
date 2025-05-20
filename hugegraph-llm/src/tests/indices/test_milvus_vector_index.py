@@ -19,8 +19,8 @@
 import unittest
 from pprint import pprint
 
-from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
 from hugegraph_llm.indices.vector_index.milvus_vector_store import MilvusVectorIndex
+from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
 
 test_name = "test"
 

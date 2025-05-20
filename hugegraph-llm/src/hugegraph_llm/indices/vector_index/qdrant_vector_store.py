@@ -15,14 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import List, Any, Set, Union
+from typing import Any, List, Set, Union
 
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 
+from hugegraph_llm.config import index_settings
 from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.config import index_settings
 
 COLLECTION_NAME_PREFIX = "hugegraph_llm_"
 

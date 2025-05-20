@@ -18,8 +18,9 @@
 
 import unittest
 from pprint import pprint
-from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
+
 from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
+from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
 
 
 class TestVectorIndex(unittest.TestCase):
