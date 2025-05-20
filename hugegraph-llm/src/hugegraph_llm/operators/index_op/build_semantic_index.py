@@ -53,7 +53,8 @@ class BuildSemanticIndex:
         present_vids = context["vertices"] # Warning: data truncated by fetch_graph_data.py
         removed_vids = set(past_vids) - set(present_vids)
         removed_num = self.vid_index.remove(removed_vids)
-        self.vid_index.to_index_file(self.index_dir)
+        if removed_vids:
+            self.vid_index.to_index_file(self.index_dir)
         added_vids = list(set(present_vids) - set(past_vids))
 
         if added_vids:
