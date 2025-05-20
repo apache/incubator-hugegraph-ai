@@ -43,18 +43,17 @@ graph systems and large language models.
 4. Configuration dependency environment
     ```bash
     cd incubator-hugegraph-ai/hugegraph-llm
-    uv venv llm1
-    source llm1/bin/activate
+    uv venv && source .venv/bin/activate
     uv pip install -e .
     ```  
-    If dependency download fails or too slow due to network issues, it is recommended to modify `hugegraph-llm/pyproject.toml` or `uv.toml`. 
+    If dependency download fails or too slow due to network issues, it is recommended to modify `hugegraph-llm/pyproject.toml`.
 6. Start the gradio interactive demo of **Graph RAG**, you can run with the following command and open http://127.0.0.1:8001 after starting
     ```bash
-    python3 src/hugegraph_llm/demo/rag_demo/app.py  # same as "poetry run xxx"
+    python -m hugegraph_llm.demo.rag_demo.app  # same as "uv run xxx"
     ```
     The default host is `0.0.0.0` and the port is `8001`. You can change them by passing command line arguments`--host` and `--port`.  
     ```bash
-    python3 src/hugegraph_llm/demo/rag_demo/app.py --host 127.0.0.1 --port 18001
+    python -m hugegraph_llm.demo.rag_demo.app --host 127.0.0.1 --port 18001
     ```
    
 7. After running the web demo, the config file `.env` will be automatically generated at the path `hugegraph-llm/.env`.    Additionally, a prompt-related configuration file `config_prompt.yaml` will also be generated at the path `hugegraph-llm/src/hugegraph_llm/resources/demo/config_prompt.yaml`.
@@ -73,7 +72,7 @@ graph systems and large language models.
     python ./hugegraph_llm/operators/common_op/nltk_helper.py
     ```
 > [!TIP]   
-> You can also refer to our [quick-start](./quick_start.md) doc to understand how to use it & the basic query logic 🚧
+> You can also refer to our [quick-start](https://github.com/apache/incubator-hugegraph-ai/blob/main/hugegraph-llm/quick_start.md) doc to understand how to use it & the basic query logic 🚧
 
 ## 4 Examples
 
