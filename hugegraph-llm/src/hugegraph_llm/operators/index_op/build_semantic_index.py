@@ -98,17 +98,19 @@ class BuildSemanticIndex:
                     label=label,
                     fields=fields_for_query
                 )
+                log.debug("gremlin_query: %s", gremlin_query)
                 result = self.client.gremlin().exec(gremlin=gremlin_query)["data"]
                 results.extend(result)
             present_props = []
             seen = set()
             for item in results:
                 vid = item["vid"]
-                for key, value in item["properties"].items():
-                    prop = f"{key}: {value}"
+                for _, value in item["properties"].items():
+                    prop = f"{value[0]}"
                     if prop not in seen:
                         seen.add(prop)
                         present_props.append((vid, prop))
+            log.debug("present_props: %s", present_props)
             past_props = self.prop_index.properties
             removed_props = set(past_props) - set(present_props)
             removed_props_num = self.prop_index.remove(removed_props)
