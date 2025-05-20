@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import time
 import asyncio
+import time
 from functools import wraps
 from typing import Optional, Any, Callable
 
@@ -74,7 +74,9 @@ def log_operator_time(func: Callable) -> Callable:
             log.debug("Operator %s finished in %.2f seconds", operator.__class__.__name__, op_time)
             # log.debug("Current context:\n%s", result)
         return result
+
     return wrapper
+
 
 def record_rpm(func: Callable) -> Callable:
     @wraps(func)
@@ -84,12 +86,12 @@ def record_rpm(func: Callable) -> Callable:
         call_count = result.get("call_count", 0)
         elapsed_time = time.perf_counter() - start
         rpm = (call_count / elapsed_time * 60) if elapsed_time > 0 else 0
-        if rpm >= 6.0:
-            log.debug("%s RPM: %.2f/min", args[0].__class__.__name__, rpm)
-        else:
-            log.debug("%s RPM: %f/min", args[0].__class__.__name__, rpm)
+        if rpm >= 1:
+            log.debug("%s RPM: %.1f/min", args[0].__class__.__name__, rpm)
         return result
+
     return wrapper
+
 
 def with_task_id(func: Callable) -> Callable:
     def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -99,11 +101,10 @@ def with_task_id(func: Callable) -> Callable:
 
         # Store the original return value
         result = func(*args, **kwargs)
-
         # Add the task_id to the function's context
         if hasattr(result, "__closure__") and result.__closure__:
             # If it's a closure, we can add the task_id to its context
             setattr(result, "task_id", task_id)
-
         return result
+
     return wrapper
