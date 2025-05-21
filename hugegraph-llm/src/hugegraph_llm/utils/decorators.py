@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import time
 import asyncio
+import time
 from functools import wraps
 from typing import Optional, Any, Callable
 
@@ -74,22 +74,37 @@ def log_operator_time(func: Callable) -> Callable:
             log.debug("Operator %s finished in %.2f seconds", operator.__class__.__name__, op_time)
             # log.debug("Current context:\n%s", result)
         return result
+
     return wrapper
 
 
-def record_qps(func: Callable) -> Callable:
+def record_rpm(func: Callable) -> Callable:
     @wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
+    async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+        start = time.perf_counter()
+        result = await func(*args, **kwargs)
+        call_count = result.get("call_count", 0)
+        elapsed_time = time.perf_counter() - start
+        rpm = (call_count / elapsed_time * 60) if elapsed_time > 0 else 0
+        if rpm >= 1:
+            log.debug("%s RPM: %.1f/min", args[0].__class__.__name__, rpm)
+        return result
+
+    @wraps(func)
+    def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
         start = time.perf_counter()
         result = func(*args, **kwargs)
         call_count = result.get("call_count", 0)
-        qps = call_count / (time.perf_counter() - start)
-        if qps >= 0.10:
-            log.debug("%s QPS: %.2f/s", args[0].__class__.__name__, qps)
-        else:
-            log.debug("%s QPS: %f/s", args[0].__class__.__name__, qps)
+        elapsed_time = time.perf_counter() - start
+        rpm = (call_count / elapsed_time * 60) if elapsed_time > 0 else 0
+        if rpm >= 1:
+            log.debug("%s RPM: %.1f/min", args[0].__class__.__name__, rpm)
         return result
-    return wrapper
+
+    if asyncio.iscoroutinefunction(func):
+        return async_wrapper
+    return sync_wrapper
+
 
 def with_task_id(func: Callable) -> Callable:
     def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -99,11 +114,10 @@ def with_task_id(func: Callable) -> Callable:
 
         # Store the original return value
         result = func(*args, **kwargs)
-
         # Add the task_id to the function's context
         if hasattr(result, "__closure__") and result.__closure__:
             # If it's a closure, we can add the task_id to its context
             setattr(result, "task_id", task_id)
-
         return result
+
     return wrapper
