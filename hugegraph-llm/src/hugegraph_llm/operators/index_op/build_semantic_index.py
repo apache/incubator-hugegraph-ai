@@ -59,7 +59,7 @@ class BuildSemanticIndex:
         with tqdm(total=len(tasks)) as pbar:
             for future in asyncio.as_completed(tasks):
                 batch_embeddings = await future
-                embeddings.append(batch_embeddings) # Extend the list with batch results
+                embeddings.extend(batch_embeddings) # Extend the list with batch results
                 pbar.update(1)
         return embeddings
 
