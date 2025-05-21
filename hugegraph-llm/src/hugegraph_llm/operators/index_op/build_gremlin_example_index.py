@@ -24,6 +24,7 @@ from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.config import resource_path
 
 
+# FIXME: we need keep the logic same with build_semantic_index.py
 class BuildGremlinExampleIndex:
     def __init__(self, embedding: BaseEmbedding, examples: List[Dict[str, str]]):
         self.index_dir = os.path.join(resource_path, "gremlin_examples")
