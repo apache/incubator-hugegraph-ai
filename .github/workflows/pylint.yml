@@ -9,54 +9,75 @@ on:
   pull_request:
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11"]
+        python-version: ["3.10", "3.11"] # Using 3.11 as per black.yml, 3.10 for compatibility
+        project:
+          - name: "hugegraph-llm"
+            path: "hugegraph-llm"
+          - name: "hugegraph-ml"
+            path: "hugegraph-ml"
+          - name: "hugegraph-python-client"
+            path: "hugegraph-python-client"
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Setup Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install uv
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v1
+        with:
+          uv-version: latest # Or a specific version
 
-      - name: Cache dependencies
-        id: cache-deps
+      - name: Cache uv dependencies for ${{ matrix.project.name }}
+        id: cache-uv-deps
         uses: actions/cache@v4
         with:
           path: |
-            .venv
+            ${{ matrix.project.path }}/.venv
             ~/.cache/uv
-            ~/.cache/pip
-          key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt', '**/pyproject.toml') }}
+          key: ${{ runner.os }}-uv-${{ matrix.python-version }}-${{ matrix.project.name }}-${{ hashFiles(format('{0}/uv.lock', matrix.project.path)) }}
           restore-keys: |
-            ${{ runner.os }}-venv-${{ matrix.python-version }}-
-            ${{ runner.os }}-venv-
+            ${{ runner.os }}-uv-${{ matrix.python-version }}-${{ matrix.project.name }}-
 
-      - name: Install dependencies
-        if: steps.cache-deps.outputs.cache-hit != 'true'
+      - name: Install dependencies for ${{ matrix.project.name }}
+        working-directory: ${{ matrix.project.path }}
         run: |
-          uv venv && source .venv/bin/activate
-          uv pip install pylint pytest
-          # TODO: use pyproject.toml later (unify all modules)
-          uv pip install -r ./hugegraph-python-client/requirements.txt
-          uv pip install ./hugegraph-llm
-          uv pip install -r ./hugegraph-ml/requirements.txt
+          uv sync --all-extras # This installs main + optional (dev) dependencies like pylint
 
-      - name: Check DGL version
+      - name: Run Pylint on ${{ matrix.project.name }}
+        working-directory: ${{ matrix.project.path }}
         run: |
           source .venv/bin/activate
-          python -c "import dgl; print(dgl.__version__)"
+          PYLINT_TARGET="." # Default to linting the whole project directory
+          if [ -d "src" ]; then
+            echo "Found 'src' directory, setting PYTHONPATH and PYLINT_TARGET to 'src'."
+            # Ensure PYTHONPATH includes the project's src directory if pylint is run on src,
+            # or if modules within src import each other.
+            # For pylint, it needs to find the modules.
+            export PYTHONPATH=$(pwd)/src:$PYTHONPATH 
+            PYLINT_TARGET="src"
+          else
+            echo "No 'src' directory found, PYLINT_TARGET will be '.' (current directory)."
+            # If linting '.', ensure Python can find modules in the current dir for pylint.
+            export PYTHONPATH=$(pwd):$PYTHONPATH 
+          fi
+          echo "Running pylint on PYLINT_TARGET: $PYLINT_TARGET in $(pwd)"
+          # Assuming style/pylint.conf is at the root of the repository
+          pylint --rcfile=../style/pylint.conf $PYLINT_TARGET
 
-      - name: Analysing the code with pylint
+      - name: Check DGL version for hugegraph-ml
+        if: matrix.project.name == 'hugegraph-ml'
+        working-directory: ${{ matrix.project.path }}
         run: |
           source .venv/bin/activate
-          bash ./style/code_format_and_analysis.sh -p
+          echo "Checking DGL version for hugegraph-ml..."
+          python -c "import dgl; print('DGL version:', dgl.__version__)"

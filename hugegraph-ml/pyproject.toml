@@ -15,7 +15,19 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
 [build-system]
 requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "hugegraph-ml"
+version = "0.0.1" 
+description = "Placeholder description for hugegraph-ml. Will be filled by build backend."
+requires-python = ">=3.9" 
+dynamic = ["readme", "authors", "classifiers", "dependencies"]
+
+[project.optional-dependencies]
+dev = [
+  "pylint",
+  # Add other dev dependencies here if needed in the future
+]

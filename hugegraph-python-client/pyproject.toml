@@ -1,0 +1,19 @@
+[project]
+name = "hugegraph-python-client"
+version = "0.1.0"
+description = "Python client for Apache HugeGraph."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "decorator~=5.1.1",
+  "requests~=2.32.0",
+  "setuptools~=70.0.0",
+  "urllib3~=2.2.2",
+  "rich~=13.9.4",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pylint", # Added pylint here
+]

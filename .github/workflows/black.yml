@@ -10,8 +10,24 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: psf/black@3702ba224ecffbcec30af640c149f231d90aebdb
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          options: "--check --diff --line-length 100"
-          src: "hugegraph-llm/src hugegraph-python-client/src"
+          python-version: '3.11'
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Add uv to PATH
+        # The uv install script (install.sh) typically installs to $HOME/.local/bin
+        # and attempts to add this to the PATH. Explicitly adding it here ensures it.
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Run black using uv
+        # Explicitly using ~/.local/bin/uv to avoid PATH issues if the GITHUB_PATH modification
+        # doesn't take effect immediately for this step.
+        # 'uv tool run black' will install black into a virtual environment managed by uv.
+        run: ~/.local/bin/uv tool run black --check --diff --line-length 100 hugegraph-llm/src hugegraph-python-client/src

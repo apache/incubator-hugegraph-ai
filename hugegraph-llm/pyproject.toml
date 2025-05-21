@@ -63,6 +63,12 @@ repository = "https://github.com/apache/incubator-hugegraph-ai"
 documentation = "https://hugegraph.apache.org/docs/quickstart/hugegraph-ai/"
 "Bug Tracker" = "https://github.com/apache/incubator-hugegraph-ai/issues"
 
+[project.optional-dependencies]
+dev = [
+  "pylint",
+  # Add other dev dependencies here if needed in the future, e.g., "pytest"
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
