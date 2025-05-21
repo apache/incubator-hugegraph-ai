@@ -17,7 +17,7 @@
 
 
 from abc import ABC, abstractmethod
-from typing import Any, List, Set, Union
+from typing import Any, Dict, List, Set, Union
 
 
 class VectorStoreBase(ABC):
@@ -35,6 +35,12 @@ class VectorStoreBase(ABC):
         Args:
             vectors (List[List[float]]): List of embedding vectors.
             props (List[Any]): List of associated metadata or properties for each vector.
+        """
+
+    @abstractmethod
+    def get_all_properties(self) -> list[str]:
+        """
+        #TODO: finish comment
         """
 
     @abstractmethod
@@ -64,33 +70,36 @@ class VectorStoreBase(ABC):
         """
 
     @abstractmethod
-    def to_index_file(self, name: str):
+    def save_index_by_name(self, *name: str):
         """
-        Persist the vector store (index and metadata) to the specified directory.
+        #TODO: finish comment
+        """
 
-        Args:
-            name (str): Path to the directory where the index and properties will be saved.
+    @abstractmethod
+    def get_vector_index_info(
+        self,
+    ) -> Dict:
+        """
+        #TODO: finish comment
         """
 
     @staticmethod
     @abstractmethod
-    def from_name(name: str) -> "VectorStoreBase":
+    def from_name(embed_dim: int, *name: str) -> "VectorStoreBase":
         """
-        Load a vector store from the specified directory.
-
-        Args:
-            name (str): Path to the directory containing the index and properties.
-
-        Returns:
-            VectorStore: An instance of the vector store.
+        #TODO: finish comment
         """
 
     @staticmethod
     @abstractmethod
-    def clean(name: str):
+    def exist(*name: str) -> bool:
         """
-        Delete the persisted index and properties from the specified directory.
+        #TODO: finish comment
+        """
 
-        Args:
-            name (str): Path to the directory to clean.
+    @staticmethod
+    @abstractmethod
+    def clean(*name: str) -> bool:
+        """
+        #TODO: finish comment
         """

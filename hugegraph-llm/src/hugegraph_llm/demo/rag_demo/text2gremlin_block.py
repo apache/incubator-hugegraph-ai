@@ -17,12 +17,12 @@
 
 import json
 import os
-from typing import Any, Tuple, Dict, Union, Literal
+from typing import Any, Dict, Literal, Tuple, Union
 
 import gradio as gr
 import pandas as pd
 
-from hugegraph_llm.config import prompt, resource_path, huge_settings
+from hugegraph_llm.config import huge_settings, index_settings, prompt, resource_path
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
@@ -30,6 +30,7 @@ from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.utils.hugegraph_utils import run_gremlin_query
 from hugegraph_llm.utils.log import log
+from hugegraph_llm.utils.vector_index_utils import get_vector_index_class
 
 
 def store_schema(schema, question, gremlin_prompt):
@@ -45,6 +46,8 @@ def store_schema(schema, question, gremlin_prompt):
 
 
 def build_example_vector_index(temp_file) -> dict:
+    vector_index = get_vector_index_class(index_settings.now_vector_index)
+    assert vector_index, 'vector db name is error'
     if temp_file is None:
         full_path = os.path.join(resource_path, "demo", "text2gremlin.csv")
     else:
@@ -61,12 +64,13 @@ def build_example_vector_index(temp_file) -> dict:
         llm=LLMs().get_text2gql_llm(),
         embedding=Embeddings().get_embedding(),
     )
-    return builder.example_index_build(examples).run()
+    return builder.example_index_build(examples, vector_index=vector_index).run()
 
 
 def gremlin_generate(
     inp, example_num, schema, gremlin_prompt
 ) -> Union[tuple[str, str], tuple[str, Any, Any, Any, Any]]:
+    vector_index = get_vector_index_class(index_settings.now_vector_index)
     generator = GremlinGenerator(llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding())
     sm = SchemaManager(graph_name=schema)
     short_schema = False
@@ -90,7 +94,7 @@ def gremlin_generate(
     updated_schema = sm.simple_schema(schema) if short_schema else schema
     store_schema(str(updated_schema), inp, gremlin_prompt)
     context = (
-        generator.example_index_query(example_num)
+        generator.example_index_query(example_num, vector_index)
         .gremlin_generate_synthesize(updated_schema, gremlin_prompt)
         .run(query=inp)
     )
@@ -114,7 +118,7 @@ def gremlin_generate(
 
 
 def simple_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
-    mini_schema = {}
+    mini_schema = {}  # type: ignore
 
     # Add necessary vertexlabels items (3)
     if "vertexlabels" in schema:
@@ -149,6 +153,7 @@ def create_text2gremlin_block() -> Tuple:
         out = gr.Textbox(label="Result Message")
     with gr.Row():
         btn = gr.Button("Build Example Vector Index", variant="primary")
+
     btn.click(build_example_vector_index, inputs=[file], outputs=[out])  # pylint: disable=no-member
     gr.Markdown("## Nature Language To Gremlin")
 
@@ -197,9 +202,10 @@ def graph_rag_recall(
     store_schema(prompt.text2gql_graph_schema, query, gremlin_prompt)
     rag = RAGPipeline()
     rag.extract_keywords().keywords_to_vid(
-            vector_dis_threshold=vector_dis_threshold,
-            topk_per_keyword=topk_per_keyword,
-        )
+        vector_index=index_settings.now_vector_index,
+        vector_dis_threshold=vector_dis_threshold,
+        topk_per_keyword=topk_per_keyword,
+    )
 
     if not get_vertex_only:
         rag.import_schema(huge_settings.graph_name).query_graphdb(

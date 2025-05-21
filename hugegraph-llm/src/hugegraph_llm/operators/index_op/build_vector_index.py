@@ -16,21 +16,24 @@
 # under the License.
 
 
-import os
-from typing import Dict, Any
+from typing import Any, Dict
 
 from tqdm import tqdm
-from hugegraph_llm.config import huge_settings, resource_path
-from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
+
+from hugegraph_llm.config import huge_settings
+from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.utils.log import log
 
 
 class BuildVectorIndex:
-    def __init__(self, embedding: BaseEmbedding):
+    def __init__(self, embedding: BaseEmbedding, vector_index: type[VectorStoreBase]):
         self.embedding = embedding
-        self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "chunks"))
-        self.vector_index = FaissVectorIndex.from_name(self.index_dir)
+        self.vector_index = vector_index.from_name(
+            embedding.get_embedding_dim(),
+            huge_settings.graph_name,
+            "chunks",
+        )
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if "chunks" not in context:
@@ -42,5 +45,5 @@ class BuildVectorIndex:
             chunks_embedding.append(self.embedding.get_text_embedding(chunk))
         if len(chunks_embedding) > 0:
             self.vector_index.add(chunks_embedding, chunks)
-            self.vector_index.to_index_file(self.index_dir)
+            self.vector_index.save_index_by_name(huge_settings.graph_name, "chunks")
         return context

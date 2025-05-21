@@ -17,12 +17,12 @@
 
 from typing import List, Optional
 
-from litellm import embedding, RateLimitError, APIError, APIConnectionError, aembedding
+from litellm import APIConnectionError, APIError, RateLimitError, aembedding, embedding
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
@@ -34,6 +34,7 @@ class LiteLLMEmbedding(BaseEmbedding):
 
     def __init__(
         self,
+        embedding_dimension,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
         model_name: str = "openai/text-embedding-3-small",  # Can be any embedding model supported by LiteLLM
@@ -41,6 +42,12 @@ class LiteLLMEmbedding(BaseEmbedding):
         self.api_key = api_key
         self.api_base = api_base
         self.model = model_name
+        self.embedding_dimension = embedding_dimension
+
+    def get_embedding_dim(
+        self,
+    ) -> int:
+        return self.embedding_dimension
 
     @retry(
         stop=stop_after_attempt(3),

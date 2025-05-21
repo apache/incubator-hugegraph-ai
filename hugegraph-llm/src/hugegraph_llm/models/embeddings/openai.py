@@ -23,36 +23,40 @@ from openai import OpenAI, AsyncOpenAI
 
 class OpenAIEmbedding:
     def __init__(
-            self,
-            model_name: str = "text-embedding-3-small",
-            api_key: Optional[str] = None,
-            api_base: Optional[str] = None
+        self,
+        embedding_dimension: int = 1536,
+        model_name: str = "text-embedding-3-small",
+        api_key: Optional[str] = None,
+        api_base: Optional[str] = None,
     ):
         api_key = api_key or ''
         self.client = OpenAI(api_key=api_key, base_url=api_base)
         self.aclient = AsyncOpenAI(api_key=api_key, base_url=api_base)
         self.embedding_model_name = model_name
+        self.embedding_dimension = embedding_dimension
+
+    def get_embedding_dim(
+        self,
+    ) -> int:
+        return self.embedding_dimension
 
     def get_text_embedding(self, text: str) -> List[float]:
         """Comment"""
         response = self.client.embeddings.create(input=text, model=self.embedding_model_name)
         return response.data[0].embedding
 
-    def get_texts_embeddings(
-            self,
-            texts: List[str]
-    ) -> List[List[float]]:
+    def get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Get embeddings for multiple texts in a single batch.
-        
+
         This method efficiently processes multiple texts at once by leveraging
         OpenAI's batching capabilities, which is more efficient than processing
         texts individually.
-        
+
         Parameters
         ----------
         texts : List[str]
             A list of text strings to be embedded.
-            
+
         Returns
         -------
         List[List[float]]

@@ -16,8 +16,10 @@
 # under the License.
 
 
-from typing import Dict, Any, Optional, List, Literal
+from typing import Any, Dict, List, Literal, Optional
 
+from hugegraph_llm.config import huge_settings, index_settings, prompt
+from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.base import BaseLLM
@@ -31,8 +33,8 @@ from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
-from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_rpm
-from hugegraph_llm.config import prompt, huge_settings
+from hugegraph_llm.utils.decorators import log_operator_time, log_time, record_rpm
+from hugegraph_llm.utils.vector_index_utils import get_vector_index_class
 
 
 class RAGPipeline:
@@ -97,6 +99,7 @@ class RAGPipeline:
 
     def keywords_to_vid(
         self,
+        vector_index_str,
         by: Literal["query", "keywords"] = "keywords",
         topk_per_keyword: int = huge_settings.topk_per_keyword,
         topk_per_query: int = 10,
@@ -110,8 +113,10 @@ class RAGPipeline:
         :param vector_dis_threshold: Vector distance threshold.
         :return: Self-instance for chaining.
         """
+        vector_index = get_vector_index_class(vector_index_str=vector_index_str)
         self._operators.append(
             SemanticIdQuery(
+                vector_index=vector_index,
                 embedding=self._embedding,
                 by=by,
                 topk_per_keyword=topk_per_keyword,
@@ -156,15 +161,17 @@ class RAGPipeline:
         )
         return self
 
-    def query_vector_index(self, max_items: int = 3):
+    def query_vector_index(self, vector_index_str: str, max_items: int = 3):
         """
         Add a vector index query operator to the pipeline.
 
         :param max_items: Maximum number of items to retrieve.
         :return: Self-instance for chaining.
         """
+        vector_index = get_vector_index_class(vector_index_str)
         self._operators.append(
             VectorIndexQuery(
+                vector_index=vector_index,
                 embedding=self._embedding,
                 topk=max_items,
             )
@@ -191,7 +198,7 @@ class RAGPipeline:
                 method=rerank_method,
                 near_neighbor_first=near_neighbor_first,
                 custom_related_information=custom_related_information,
-                topk_return_results=topk_return_results
+                topk_return_results=topk_return_results,
             )
         )
         return self
@@ -244,9 +251,7 @@ class RAGPipeline:
         :return: Final context after all operators have been executed.
         """
         if len(self._operators) == 0:
-            self.extract_keywords().query_graphdb(
-                max_graph_items=kwargs.get('max_graph_items')
-            ).synthesize_answer()
+            self.extract_keywords().query_graphdb(max_graph_items=kwargs.get('max_graph_items')).synthesize_answer()
 
         context = kwargs
 

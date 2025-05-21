@@ -45,7 +45,7 @@ class UseTimeMiddleware(BaseHTTPMiddleware):
             "%s - Args: %s, IP: %s, URL: %s",
             request.method,
             request.query_params,
-            request.client.host,
+            request.client.host, # type: ignore
             request.url
         )
         return response

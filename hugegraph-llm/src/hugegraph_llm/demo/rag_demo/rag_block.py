@@ -18,17 +18,18 @@
 # pylint: disable=E1101
 
 import os
-from typing import AsyncGenerator, Tuple, Literal, Optional
+from typing import AsyncGenerator, Literal, Optional, Tuple
 
 import gradio as gr
 import pandas as pd
 from gradio.utils import NamedString
 
-from hugegraph_llm.config import resource_path, prompt, huge_settings, llm_settings
+from hugegraph_llm.config import huge_settings, index_settings, llm_settings, prompt, resource_path
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
-from hugegraph_llm.utils.decorators import with_task_id
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
+from hugegraph_llm.utils.decorators import with_task_id
 from hugegraph_llm.utils.log import log
+
 
 def rag_answer(
     text: str,
@@ -73,9 +74,10 @@ def rag_answer(
 
     rag = RAGPipeline()
     if vector_search:
-        rag.query_vector_index()
+        rag.query_vector_index(vector_index_str=index_settings.now_vector_index)
     if graph_search:
         rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid(
+            vector_index_str=index_settings.now_vector_index,
             vector_dis_threshold=vector_dis_threshold,
             topk_per_keyword=topk_per_keyword,
         ).import_schema(huge_settings.graph_name).query_graphdb(
@@ -145,6 +147,7 @@ def update_ui_configs(
     graph_search = graph_only_answer or graph_vector_answer
     return graph_search, gremlin_prompt, vector_search
 
+
 async def rag_answer_streaming(
     text: str,
     raw_answer: bool,
@@ -185,11 +188,11 @@ async def rag_answer_streaming(
 
     rag = RAGPipeline()
     if vector_search:
-        rag.query_vector_index()
+        rag.query_vector_index(vector_index_str=index_settings.now_vector_index)
     if graph_search:
-        rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid().import_schema(
-            huge_settings.graph_name
-        ).query_graphdb(
+        rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid(
+            vector_index_str=index_settings.now_vector_index
+        ).import_schema(huge_settings.graph_name).query_graphdb(
             num_gremlin_generate_example=gremlin_tmpl_num,
             gremlin_prompt=gremlin_prompt,
         )
@@ -226,6 +229,7 @@ async def rag_answer_streaming(
     except Exception as e:
         log.critical(e)
         raise gr.Error(f"An unexpected error occurred: {str(e)}")
+
 
 @with_task_id
 def create_rag_block():
@@ -294,9 +298,7 @@ def create_rag_block():
                     example_num = gr.Number(value=-1, label="Template Num (<0 means disable text2gql) ", precision=0)
                     graph_ratio = gr.Slider(0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False)
 
-                graph_vector_radio.change(
-                    toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio
-                )  # pylint: disable=no-member
+                graph_vector_radio.change(toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio)  # pylint: disable=no-member
                 near_neighbor_first = gr.Checkbox(
                     value=False,
                     label="Near neighbor first(Optional)",
@@ -325,8 +327,8 @@ def create_rag_block():
             example_num,
         ],
         outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
-        queue=True,                       # Enable queueing for this event
-        concurrency_limit=5,               # Maximum of 5 concurrent executions
+        queue=True,  # Enable queueing for this event
+        concurrency_limit=5,  # Maximum of 5 concurrent executions
     )
 
     gr.Markdown(
@@ -357,15 +359,15 @@ def create_rag_block():
             df = pd.read_excel(file.name, nrows=line_count) if file else pd.DataFrame()
         elif file.name.endswith(".csv"):
             df = pd.read_csv(file.name, nrows=line_count) if file else pd.DataFrame()
-        df.to_excel(questions_path, index=False)
-        if df.empty:
+        df.to_excel(questions_path, index=False)  # type:ignore
+        if df.empty:  # type:ignore
             df = pd.DataFrame([[""] * len(tests_df_headers)], columns=tests_df_headers)
         else:
-            df.columns = tests_df_headers
+            df.columns = tests_df_headers  # type:ignore
         # truncate the dataframe if it's too long
-        if len(df) > 40:
-            return df.head(40), 40
-        return df, len(df)
+        if len(df) > 40:  # type:ignore
+            return df.head(40), 40  # type:ignore
+        return df, len(df)  # type:ignore
 
     def change_showing_excel(line_count):
         if os.path.exists(answers_path):

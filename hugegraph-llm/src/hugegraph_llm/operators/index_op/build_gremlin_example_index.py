@@ -16,20 +16,19 @@
 # under the License.
 
 
-import os
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
-from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
+from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.config import resource_path
 
 
 # FIXME: we need keep the logic same with build_semantic_index.py
 class BuildGremlinExampleIndex:
-    def __init__(self, embedding: BaseEmbedding, examples: List[Dict[str, str]]):
-        self.index_dir = os.path.join(resource_path, "gremlin_examples")
+    def __init__(self, embedding: BaseEmbedding, examples: List[Dict[str, str]], vector_index: type[VectorStoreBase]):
+        self.vector_index_name = "gremlin_examples"
         self.examples = examples
         self.embedding = embedding
+        self.vector_index = vector_index
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         examples_embedding = []
@@ -37,8 +36,8 @@ class BuildGremlinExampleIndex:
             examples_embedding.append(self.embedding.get_text_embedding(example["query"]))
         embed_dim = len(examples_embedding[0])
         if len(self.examples) > 0:
-            vector_index = FaissVectorIndex(embed_dim)
+            vector_index = self.vector_index.from_name(embed_dim, self.vector_index_name)
             vector_index.add(examples_embedding, self.examples)
-            vector_index.to_index_file(self.index_dir)
+            vector_index.save_index_by_name(self.vector_index_name)
         context["embed_dim"] = embed_dim
         return context

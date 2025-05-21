@@ -33,36 +33,34 @@ It enables the invocation and switching between WenXin and these open-source mod
 
 class QianFanEmbedding:
     def __init__(
-            self,
-            model_name: str = "embedding-v1",
-            api_key: Optional[str] = None,
-            secret_key: Optional[str] = None
+        self,
+        embedding_dimension: int,
+        model_name: str = "embedding-v1",
+        api_key: Optional[str] = None,
+        secret_key: Optional[str] = None,
     ):
         qianfan.get_config().AK = api_key or llm_settings.qianfan_embedding_api_key
         qianfan.get_config().SK = secret_key or llm_settings.qianfan_embedding_secret_key
         self.embedding_model_name = model_name
         self.client = qianfan.Embedding()
+        self.embedding_dimension = embedding_dimension
+
+    def get_embedding_dim(
+        self,
+    ) -> int:
+        return self.embedding_dimension
 
     def get_text_embedding(self, text: str) -> List[float]:
-        """ Usage refer: https://cloud.baidu.com/doc/WENXINWORKSHOP/s/hlmokk9qn"""
-        response = self.client.do(
-            model=self.embedding_model_name,
-            texts=[text]
-        )
+        """Usage refer: https://cloud.baidu.com/doc/WENXINWORKSHOP/s/hlmokk9qn"""
+        response = self.client.do(model=self.embedding_model_name, texts=[text])
         return response["body"]["data"][0]["embedding"]
 
     def get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """ Usage refer: https://cloud.baidu.com/doc/WENXINWORKSHOP/s/hlmokk9qn"""
-        response = self.client.do(
-            model=self.embedding_model_name,
-            texts=texts
-        )
+        """Usage refer: https://cloud.baidu.com/doc/WENXINWORKSHOP/s/hlmokk9qn"""
+        response = self.client.do(model=self.embedding_model_name, texts=texts)
         return [data["embedding"] for data in response["body"]["data"]]
 
     async def async_get_text_embedding(self, text: str) -> List[float]:
-        """ Usage refer: https://cloud.baidu.com/doc/WENXINWORKSHOP/s/hlmokk9qn"""
-        response = await self.client.ado(
-            model=self.embedding_model_name,
-            texts=[text]
-        )
+        """Usage refer: https://cloud.baidu.com/doc/WENXINWORKSHOP/s/hlmokk9qn"""
+        response = await self.client.ado(model=self.embedding_model_name, texts=[text])
         return response["body"]["data"][0]["embedding"]

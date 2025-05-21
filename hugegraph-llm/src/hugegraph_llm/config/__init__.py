@@ -16,7 +16,7 @@
 # under the License.
 
 
-__all__ = ["huge_settings", "admin_settings", "llm_settings", "resource_path"]
+__all__ = ["huge_settings", "admin_settings", "llm_settings", "resource_path", "index_settings"]
 
 import os
 

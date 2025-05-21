@@ -19,28 +19,32 @@
 import json
 import os
 import traceback
-from typing import Dict, Any, Union, Optional
+from typing import Any, Dict, Optional, Union
 
 import gradio as gr
 
-from .hugegraph_utils import get_hg_client, clean_hg_data
-from .log import log
-from .vector_index_utils import read_documents
-from ..config import resource_path, huge_settings
+from ..config import huge_settings, index_settings, resource_path
 from ..indices.vector_index.faiss_vector_store import FaissVectorIndex
 from ..models.embeddings.init_embedding import Embeddings
 from ..models.llms.init_llm import LLMs
 from ..operators.kg_construction_task import KgBuilder
+from .hugegraph_utils import clean_hg_data, get_hg_client
+from .log import log
+from .vector_index_utils import get_vector_index_class, read_documents
 
 
 def get_graph_index_info():
     builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     graph_summary_info = builder.fetch_graph_data().run()
-    vector_index = FaissVectorIndex.from_name(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
+    vector_index = get_vector_index_class(index_settings.now_vector_index)
+    vector_index_entity = vector_index.from_name(
+        Embeddings().get_embedding().get_embedding_dim(), huge_settings.graph_name, "chunks"
+    )
+    vector_index_info = vector_index_entity.get_vector_index_info()
     graph_summary_info["vid_index"] = {
-        "embed_dim": vector_index.index.d,
-        "num_vectors": vector_index.index.ntotal,
-        "num_vids": len(vector_index.properties),
+        "embed_dim": vector_index_info['embed_dim'],
+        "num_vectors": vector_index_info['vector_info']['chunk_vector_num'],
+        "num_vids": vector_index_info['vector_info']['graph_properties_vector_num'],
     }
     return json.dumps(graph_summary_info, ensure_ascii=False, indent=2)
 
@@ -104,8 +108,9 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
 
 
 def update_vid_embedding():
+    vector_index = get_vector_index_class(index_settings.now_vector_index)
     builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
-    builder.fetch_graph_data().build_vertex_id_semantic_index()
+    builder.fetch_graph_data().build_vertex_id_semantic_index(vector_index)
     log.debug("Operators: %s", builder.operators)
     try:
         context = builder.run()

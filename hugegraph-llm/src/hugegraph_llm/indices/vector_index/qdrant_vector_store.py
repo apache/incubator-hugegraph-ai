@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Any, List, Set, Union
+from typing import Any, Dict, List, Set, Union
 
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
@@ -38,6 +38,18 @@ class QdrantVectorIndex(VectorStoreBase):
         collection_names = [collection.name for collection in collections]
         if self.name not in collection_names:
             self._create_collection()
+        else:
+            collection_info = self.client.get_collection(self.name)
+            existing_dim = collection_info.config.params.vectors.size  # type: ignore
+            if existing_dim != self.embed_dim:
+                log.debug(
+                    "Qdrant collection '%s' dimension mismatch: %d != %d. Recreating.",
+                    self.name,
+                    existing_dim,
+                    self.embed_dim,
+                )
+                self.client.delete_collection(self.name)
+                self._create_collection()
 
     def _create_collection(self):
         """Create a new collection in Qdrant."""
@@ -47,7 +59,7 @@ class QdrantVectorIndex(VectorStoreBase):
         )
         log.info("Created Qdrant collection '%s'", self.name)
 
-    def to_index_file(self, name: str):
+    def save_index_by_name(self, *name: str):
         # nothing to do when qdrant
         pass
 
@@ -123,23 +135,79 @@ class QdrantVectorIndex(VectorStoreBase):
 
         return result_properties
 
+    def get_all_properties(self) -> list[str]:
+        all_properties = []
+        offset = None
+        page_size = 100
+        while True:
+            scroll_result = self.client.scroll(
+                collection_name=self.name,
+                offset=offset,
+                limit=page_size,
+                with_payload=True,
+                with_vectors=False,
+            )
+
+            points, next_offset = scroll_result
+
+            for point in points:
+                payload = point.payload
+                if payload and "property" in payload:
+                    all_properties.append(payload["property"])
+
+            if next_offset is None or not points:
+                break
+
+            offset = next_offset
+
+        return all_properties
+
+    def get_vector_index_info(self) -> Dict:
+        collection_info = self.client.get_collection(self.name)
+        points_count = collection_info.points_count
+        embed_dim = collection_info.config.params.vectors.size  # type: ignore
+
+        all_properties = self.get_all_properties()
+        return {
+            "embed_dim": embed_dim,
+            "vector_info": {
+                "chunk_vector_num": points_count,
+                "graph_vid_vector_num": points_count,
+                "graph_properties_vector_num": len(all_properties),
+            },
+        }
+
     @staticmethod
-    def clean(name: str):
+    def clean(*name: str):
+        name_str = '_'.join(name)
         client = QdrantClient(
             host=index_settings.qdrant_host, port=index_settings.qdrant_port, api_key=index_settings.qdrant_api_key
         )
         collections = client.get_collections().collections
         collection_names = [collection.name for collection in collections]
-        name = COLLECTION_NAME_PREFIX + name
-        if name in collection_names:
-            client.delete_collection(collection_name=name)
+        name_str = COLLECTION_NAME_PREFIX + name_str
+        if name_str in collection_names:
+            client.delete_collection(collection_name=name_str)
 
     @staticmethod
-    def from_name(name: str) -> "QdrantVectorIndex":
+    def from_name(embed_dim: int, *name: str) -> "QdrantVectorIndex":
         assert index_settings.qdrant_host, "Qdrant host is not configured"
+        name_str = '_'.join(name)
         return QdrantVectorIndex(
-            name=COLLECTION_NAME_PREFIX + name,
+            name=name_str,
             host=index_settings.qdrant_host,
             port=index_settings.qdrant_port,
+            embed_dim=embed_dim,
             api_key=index_settings.qdrant_api_key,
         )
+
+    @staticmethod
+    def exist(*name: str) -> bool:
+        name_str = '_'.join(name)
+        client = QdrantClient(
+            host=index_settings.qdrant_host, port=index_settings.qdrant_port, api_key=index_settings.qdrant_api_key
+        )
+        collections = client.get_collections().collections
+        collection_names = [collection.name for collection in collections]
+        name_str = COLLECTION_NAME_PREFIX + name_str
+        return name_str in collection_names

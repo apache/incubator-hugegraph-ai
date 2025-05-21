@@ -52,6 +52,22 @@ class MilvusVectorIndex(VectorStoreBase):
 
         if not utility.has_collection(self.name):
             self._create_collection()
+        else:
+            # dim is different, recreate
+            existing_collection = Collection(self.name)
+            existing_schema = existing_collection.schema
+            for field in existing_schema.fields:
+                if field.name == "embedding" and field.params.get("dim"):
+                    existing_dim = int(field.params["dim"])
+                    if existing_dim != self.embed_dim:
+                        log.debug(
+                            "Milvus collection '%s' dimension mismatch: %d != %d. Recreating.",
+                            self.name,
+                            existing_dim,
+                            self.embed_dim,
+                        )
+                        utility.drop_collection(self.name)
+                        break
 
         self.collection = Collection(self.name)
 
@@ -76,15 +92,22 @@ class MilvusVectorIndex(VectorStoreBase):
         }
         collection.create_index(field_name="embedding", index_params=index_params)
 
-    def to_index_file(self, name: str):
+    def save_index_by_name(self, *name: str):
         self.collection.flush()
 
-    def _deserialize_property(self, prop_str):
-        """Deserialize property from JSON string."""
+    def _deserialize_property(self, prop) -> str:
+        """If input is a string, return as-is. If dict or list, convert to JSON string."""
+        if isinstance(prop, str):
+            return prop
+        return json.dumps(prop)
+
+    def _serialize_property(self, prop: str):
+        """If input is a JSON string, parse it. Otherwise, return as-is."""
         try:
-            return json.loads(prop_str)
+            return json.loads(prop)
         except (json.JSONDecodeError, TypeError):
-            return prop_str
+            # a simple string
+            return prop
 
     def add(self, vectors: List[List[float]], props: List[Any]):
         if len(vectors) == 0:
@@ -99,7 +122,7 @@ class MilvusVectorIndex(VectorStoreBase):
             entities.append(
                 {
                     "embedding": vector,
-                    "property": prop,
+                    "property": self._deserialize_property(prop),
                     "original_id": idx,
                 }
             )
@@ -114,7 +137,7 @@ class MilvusVectorIndex(VectorStoreBase):
             self.collection.load()
             remove_num = 0
             for prop in props:
-                expr = f'property == "{prop}"'
+                expr = f'property == "{self._deserialize_property(prop)}"'
                 res = self.collection.delete(expr)
                 if hasattr(res, "delete_count"):
                     remove_num += res.delete_count
@@ -144,7 +167,7 @@ class MilvusVectorIndex(VectorStoreBase):
                 for hit in hits:
                     if hit.distance < dis_threshold:
                         prop_str = hit.entity.get("property")
-                        prop = self._deserialize_property(prop_str)
+                        prop = self._serialize_property(prop_str)
                         ret.append(prop)
                         log.debug("[✓] Add valid distance %s to results.", hit.distance)
                     else:
@@ -159,24 +182,78 @@ class MilvusVectorIndex(VectorStoreBase):
         finally:
             self.collection.release()
 
+    def get_all_properties(self) -> list[str]:
+        if self.collection.num_entities == 0:
+            return []
+
+        self.collection.load()
+        try:
+            results = self.collection.query(
+                expr='property != ""',
+                output_fields=["property"],
+            )
+
+            return [self._deserialize_property(item["property"]) for item in results]
+
+        finally:
+            self.collection.release()
+
+    def get_vector_index_info(self) -> dict:
+        self.collection.load()
+        try:
+            embed_dim = None
+            for field in self.collection.schema.fields:
+                if field.name == "embedding" and field.dtype == DataType.FLOAT_VECTOR:
+                    embed_dim = int(field.params["dim"])
+                    break
+
+            if embed_dim is None:
+                raise ValueError("Could not determine embedding dimension from schema.")
+
+            properties = self.get_all_properties()
+            return {
+                "embed_dim": embed_dim,
+                "vector_info": {
+                    "chunk_vector_num": self.collection.num_entities,
+                    "graph_vid_vector_num": self.collection.num_entities,
+                    "graph_properties_vector_num": len(properties),
+                },
+            }
+        finally:
+            self.collection.release()
+
     @staticmethod
-    def clean(name: str):
+    def clean(*name: str):
+        name_str = '_'.join(name)
         connections.connect(
             host=index_settings.milvus_host,
             port=index_settings.milvus_port,
             user=index_settings.milvus_user,
             password=index_settings.milvus_password,
         )
-        if utility.has_collection(COLLECTION_NAME_PREFIX + name):
-            utility.drop_collection(COLLECTION_NAME_PREFIX + name)
+        if utility.has_collection(COLLECTION_NAME_PREFIX + name_str):
+            utility.drop_collection(COLLECTION_NAME_PREFIX + name_str)
 
     @staticmethod
-    def from_name(name: str) -> "MilvusVectorIndex":
+    def from_name(embed_dim: int, *name: str) -> "MilvusVectorIndex":
+        name_str = '_'.join(name)
         assert index_settings.milvus_host, "Qdrant host is not configured"
         return MilvusVectorIndex(
-            name,
+            name_str,
+            host=index_settings.milvus_host,
+            port=index_settings.milvus_port,
+            user=index_settings.milvus_user,
+            password=index_settings.milvus_password,
+            embed_dim=embed_dim,
+        )
+
+    @staticmethod
+    def exist(*name: str) -> bool:
+        name_str = '_'.join(name)
+        connections.connect(
             host=index_settings.milvus_host,
             port=index_settings.milvus_port,
             user=index_settings.milvus_user,
             password=index_settings.milvus_password,
         )
+        return utility.has_collection(COLLECTION_NAME_PREFIX + name_str)

@@ -21,19 +21,18 @@ import asyncio
 
 import gradio as gr
 
-from hugegraph_llm.config import huge_settings
-from hugegraph_llm.config import prompt
+from hugegraph_llm.config import huge_settings, prompt
 from hugegraph_llm.utils.graph_index_utils import (
-    get_graph_index_info,
-    clean_all_graph_index,
     clean_all_graph_data,
-    update_vid_embedding,
+    clean_all_graph_index,
     extract_graph,
+    get_graph_index_info,
     import_graph_data,
+    update_vid_embedding,
 )
 from hugegraph_llm.utils.hugegraph_utils import check_graph_db_connection
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.utils.vector_index_utils import clean_vector_index, build_vector_index, get_vector_index_info
+from hugegraph_llm.utils.vector_index_utils import build_vector_index, clean_vector_index, get_vector_index_info
 
 
 def store_prompt(doc, schema, example_prompt):
@@ -68,10 +67,7 @@ def create_vector_graph_block():
         with gr.Column():
             with gr.Tab("text") as tab_upload_text:
                 input_text = gr.Textbox(
-                    value=prompt.doc_input_text,
-                    label="Input Doc(s)",
-                    lines=20,
-                    show_copy_button=True
+                    value=prompt.doc_input_text, label="Input Doc(s)", lines=20, show_copy_button=True
                 )
             with gr.Tab("file") as tab_upload_file:
                 input_file = gr.File(
@@ -81,8 +77,11 @@ def create_vector_graph_block():
                 )
         input_schema = gr.Code(value=prompt.graph_schema, label="Graph Schema", language="json", lines=15, max_lines=29)
         info_extract_template = gr.Code(
-            value=prompt.extract_graph_prompt, label="Graph Extract Prompt Header", language="markdown", lines=15,
-            max_lines=29
+            value=prompt.extract_graph_prompt,
+            label="Graph Extract Prompt Header",
+            language="markdown",
+            lines=15,
+            max_lines=29,
         )
         out = gr.Code(label="Output Info", language="json", elem_classes="code-container-edit")
 
@@ -96,7 +95,6 @@ def create_vector_graph_block():
                 vector_index_btn1 = gr.Button("Clear Chunks Vector Index", size="sm")
                 graph_index_btn1 = gr.Button("Clear Graph Vid Vector Index", size="sm")
                 graph_data_btn0 = gr.Button("Clear Graph Data", size="sm")
-
         vector_import_bt = gr.Button("Import into Vector", variant="primary")
         graph_extract_bt = gr.Button("Extract Graph Data (1)", variant="primary")
         graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=True)
@@ -134,9 +132,14 @@ def create_vector_graph_block():
     # origin_out = gr.Textbox(visible=False)
     graph_extract_bt.click(
         extract_graph, inputs=[input_file, input_text, input_schema, info_extract_template], outputs=[out]
-    ).then(store_prompt, inputs=[input_text, input_schema, info_extract_template], )
+    ).then(
+        store_prompt,
+        inputs=[input_text, input_schema, info_extract_template],
+    )
 
-    graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(update_vid_embedding).then(
+    graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(
+        update_vid_embedding
+    ).then(
         store_prompt,
         inputs=[input_text, input_schema, info_extract_template],
     )
@@ -154,6 +157,7 @@ def create_vector_graph_block():
 
     return input_text, input_schema, info_extract_template
 
+
 async def timely_update_vid_embedding(interval_seconds: int = 3600):
     """
     Periodically updates vertex embeddings in the graph database.
@@ -169,14 +173,16 @@ async def timely_update_vid_embedding(interval_seconds: int = 3600):
                 "name": huge_settings.graph_name,
                 "user": huge_settings.graph_user,
                 "pwd": huge_settings.graph_pwd,
-                "graph_space": huge_settings.graph_space
+                "graph_space": huge_settings.graph_space,
             }
-            if check_graph_db_connection(**config):
+            if check_graph_db_connection(**config):  # type:ignore
                 await asyncio.to_thread(update_vid_embedding)
                 log.info("update_vid_embedding executed successfully")
             else:
-                log.warning("HugeGraph server connection failed, so skipping update_vid_embedding, "
-                            "please check graph configuration and connectivity")
+                log.warning(
+                    "HugeGraph server connection failed, so skipping update_vid_embedding, "
+                    "please check graph configuration and connectivity"
+                )
         except asyncio.CancelledError as ce:
             log.info("Periodic task has been cancelled due to: %s", ce)
             break
