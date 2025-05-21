@@ -20,6 +20,8 @@ import asyncio
 import os
 from typing import Any, Dict
 
+from tqdm import tqdm
+
 from hugegraph_llm.config import resource_path, huge_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
