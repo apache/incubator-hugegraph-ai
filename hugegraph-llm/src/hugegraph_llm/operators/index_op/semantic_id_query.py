@@ -17,8 +17,9 @@
 
 
 import os
-from typing import Dict, Any, Literal, List, Tuple
+from typing import Any, Dict, List, Literal, Tuple
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 from hugegraph_llm.config import resource_path, huge_settings, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
@@ -26,10 +27,15 @@ from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.config import resource_path, huge_settings, llm_settings
 from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
 >>>>>>> 902fee5 (feat(llm): some type bug && revert to FaissVectorIndex)
+=======
+from pyhugegraph.client import PyHugeClient
+
+from hugegraph_llm.config import huge_settings, resource_path
+from hugegraph_llm.indices.vector_index.base import VectorStoreBase
+>>>>>>> 38dce0b (feat(llm): vector db finished)
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.utils.embedding_utils import get_filename_prefix, get_index_folder_name
 from hugegraph_llm.utils.log import log
-from pyhugegraph.client import PyHugeClient
 
 
 class SemanticIdQuery:
@@ -38,11 +44,13 @@ class SemanticIdQuery:
     def __init__(
         self,
         embedding: BaseEmbedding,
+        vector_index: type[VectorStoreBase],
         by: Literal["query", "keywords"] = "keywords",
         topk_per_query: int = 10,
         topk_per_keyword: int = huge_settings.topk_per_keyword,
         vector_dis_threshold: float = huge_settings.vector_dis_threshold,
     ):
+<<<<<<< HEAD
 <<<<<<< HEAD
         self.folder_name = get_index_folder_name(
             huge_settings.graph_name, huge_settings.graph_space
@@ -62,6 +70,12 @@ class SemanticIdQuery:
         )
         self.vector_index = FaissVectorIndex.from_index_file(self.index_dir, self.filename_prefix)
 >>>>>>> 902fee5 (feat(llm): some type bug && revert to FaissVectorIndex)
+=======
+        self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids"))
+        self.vector_index = vector_index.from_name(
+            embedding.get_embedding_dim(), huge_settings.graph_name, "graph_vids"
+        )
+>>>>>>> 38dce0b (feat(llm): vector db finished)
         self.embedding = embedding
         self.by = by
         self.topk_per_query = topk_per_query

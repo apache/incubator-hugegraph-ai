@@ -64,7 +64,7 @@ class TestQdrantVectorIndex(unittest.TestCase):
         index = QdrantVectorIndex.from_name(self.name)
         index.add(data_embedding, data)
 
-        index.to_index_file(self.name)
+        index.save_index_by_name(self.name)
 
         loaded_index = QdrantVectorIndex.from_name(self.name)
 

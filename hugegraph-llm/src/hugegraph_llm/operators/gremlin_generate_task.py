@@ -14,8 +14,9 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from typing import Optional, List
+from typing import List, Optional
 
+from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.common_op.check_schema import CheckSchema
@@ -24,23 +25,22 @@ from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.operators.index_op.build_gremlin_example_index import BuildGremlinExampleIndex
 from hugegraph_llm.operators.index_op.gremlin_example_index_query import GremlinExampleIndexQuery
 from hugegraph_llm.operators.llm_op.gremlin_generate import GremlinGenerateSynthesize
-from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_rpm
+from hugegraph_llm.utils.decorators import log_operator_time, log_time, record_rpm
 
 
 class GremlinGenerator:
     def __init__(self, llm: BaseLLM, embedding: BaseEmbedding):
-        self.embedding = []
         self.llm = llm
         self.embedding = embedding
         self.result = None
-        self.operators = []
+        self.operators = []  # type: ignore
 
     def clear(self):
         self.operators = []
         return self
 
-    def example_index_build(self, examples):
-        self.operators.append(BuildGremlinExampleIndex(self.embedding, examples))
+    def example_index_build(self, examples, vector_index: type[VectorStoreBase]):
+        self.operators.append(BuildGremlinExampleIndex(self.embedding, examples, vector_index=vector_index))
         return self
 
     def import_schema(self, from_hugegraph=None, from_extraction=None, from_user_defined=None):
@@ -54,8 +54,8 @@ class GremlinGenerator:
             raise ValueError("No input data / invalid schema type")
         return self
 
-    def example_index_query(self, num_examples):
-        self.operators.append(GremlinExampleIndexQuery(self.embedding, num_examples))
+    def example_index_query(self, num_examples, vector_index: type[VectorStoreBase]):
+        self.operators.append(GremlinExampleIndexQuery(vector_index, self.embedding, num_examples))
         return self
 
     def gremlin_generate_synthesize(

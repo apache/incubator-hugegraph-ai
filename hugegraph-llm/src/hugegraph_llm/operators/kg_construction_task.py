@@ -16,8 +16,11 @@
 # under the License.
 
 
-from typing import Dict, Any, Optional, Literal, Union, List
+from typing import Any, Dict, List, Literal, Optional, Union
 
+from pyhugegraph.client import PyHugeClient
+
+from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.common_op.check_schema import CheckSchema
@@ -31,9 +34,13 @@ from hugegraph_llm.operators.index_op.build_vector_index import BuildVectorIndex
 from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
 from hugegraph_llm.operators.llm_op.info_extract import InfoExtract
 from hugegraph_llm.operators.llm_op.property_graph_extract import PropertyGraphExtract
+<<<<<<< HEAD
 from hugegraph_llm.operators.llm_op.schema_build import SchemaBuilder
 from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_rpm
 from pyhugegraph.client import PyHugeClient
+=======
+from hugegraph_llm.utils.decorators import log_operator_time, log_time, record_rpm
+>>>>>>> 38dce0b (feat(llm): vector db finished)
 
 
 class KgBuilder:
@@ -98,14 +105,14 @@ class KgBuilder:
         self.operators.append(Commit2Graph())
         return self
 
-    def build_vertex_id_semantic_index(self):
+    def build_vertex_id_semantic_index(self, vector_index: type[VectorStoreBase]):
         assert self.embedding
-        self.operators.append(BuildSemanticIndex(self.embedding))
+        self.operators.append(BuildSemanticIndex(self.embedding, vector_index))
         return self
 
-    def build_vector_index(self):
+    def build_vector_index(self, vector_index: type[VectorStoreBase]):
         assert self.embedding
-        self.operators.append(BuildVectorIndex(self.embedding))
+        self.operators.append(BuildVectorIndex(self.embedding, vector_index))
         return self
 
     def print_result(self):

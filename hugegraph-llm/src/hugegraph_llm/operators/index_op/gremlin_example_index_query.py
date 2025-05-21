@@ -18,15 +18,20 @@
 
 import asyncio
 import os
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 from hugegraph_llm.config import resource_path, llm_settings, huge_settings
 from hugegraph_llm.indices.vector_index import VectorIndex, INDEX_FILE_NAME, PROPERTIES_FILE_NAME
 =======
 from hugegraph_llm.config import resource_path, huge_settings, llm_settings
+=======
+from hugegraph_llm.config import resource_path
+from hugegraph_llm.indices.vector_index.base import VectorStoreBase
+>>>>>>> 38dce0b (feat(llm): vector db finished)
 from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
 >>>>>>> 902fee5 (feat(llm): some type bug && revert to FaissVectorIndex)
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
@@ -40,9 +45,12 @@ from hugegraph_llm.utils.log import log
 
 
 class GremlinExampleIndexQuery:
-    def __init__(self, embedding: Optional[BaseEmbedding] = None, num_examples: int = 1):
+    def __init__(
+        self, vector_index: type[VectorStoreBase], embedding: Optional[BaseEmbedding] = None, num_examples: int = 1
+    ):
         self.embedding = embedding or Embeddings().get_embedding()
         self.num_examples = num_examples
+<<<<<<< HEAD
         self.folder_name = get_index_folder_name(
             huge_settings.graph_name, huge_settings.graph_space
         )
@@ -66,8 +74,15 @@ class GremlinExampleIndexQuery:
             os.path.exists(os.path.join(self.index_dir, index_name))
             and os.path.exists(os.path.join(self.index_dir, props_name))
         ):
+=======
+        if not vector_index.exist("gremlin_examples"):
+>>>>>>> 38dce0b (feat(llm): vector db finished)
             log.warning("No gremlin example index found, will generate one.")
+            self.vector_index = vector_index.from_name(self.embedding.get_embedding_dim(), "gremlin_examples")
+
             self._build_default_example_index()
+        else:
+            self.vector_index = vector_index.from_name(self.embedding.get_embedding_dim(), "gremlin_examples")
 
     def _get_match_result(self, context: Dict[str, Any], query: str) -> List[Dict[str, Any]]:
         if self.num_examples <= 0:
@@ -91,7 +106,11 @@ class GremlinExampleIndexQuery:
         properties = pd.read_csv(os.path.join(resource_path, "demo", "text2gremlin.csv")).to_dict(orient="records")
         from concurrent.futures import ThreadPoolExecutor
 
+<<<<<<< HEAD
         # TODO: use asyncio for IO tasks
+=======
+        # TODO: reuse the logic in build_semantic_index.py (consider extract the batch-embedding method)
+>>>>>>> 38dce0b (feat(llm): vector db finished)
         with ThreadPoolExecutor() as executor:
             embeddings = list(
                 tqdm(
@@ -99,10 +118,15 @@ class GremlinExampleIndexQuery:
                     total=len(properties),
                 )
             )
+<<<<<<< HEAD
         vector_index = FaissVectorIndex(len(embeddings[0]))
 >>>>>>> 902fee5 (feat(llm): some type bug && revert to FaissVectorIndex)
         vector_index.add(embeddings, properties)
         vector_index.to_index_file(self.index_dir, self.filename_prefix)
+=======
+        self.vector_index.add(embeddings, properties)
+        self.vector_index.save_index_by_name("gremlin_examples")
+>>>>>>> 38dce0b (feat(llm): vector db finished)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context.get("query")

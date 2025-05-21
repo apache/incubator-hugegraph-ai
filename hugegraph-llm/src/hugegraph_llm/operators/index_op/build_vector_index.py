@@ -16,18 +16,28 @@
 # under the License.
 
 
+<<<<<<< HEAD
 import asyncio
 import os
 from typing import Dict, Any
+=======
+from typing import Any, Dict
+>>>>>>> 38dce0b (feat(llm): vector db finished)
 
 <<<<<<< HEAD
 from hugegraph_llm.config import huge_settings, resource_path, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 =======
 from tqdm import tqdm
+<<<<<<< HEAD
 from hugegraph_llm.config import huge_settings, resource_path
 from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
 >>>>>>> 902fee5 (feat(llm): some type bug && revert to FaissVectorIndex)
+=======
+
+from hugegraph_llm.config import huge_settings
+from hugegraph_llm.indices.vector_index.base import VectorStoreBase
+>>>>>>> 38dce0b (feat(llm): vector db finished)
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.utils.embedding_utils import (
     get_embeddings_parallel,
@@ -38,8 +48,9 @@ from hugegraph_llm.utils.log import log
 
 
 class BuildVectorIndex:
-    def __init__(self, embedding: BaseEmbedding):
+    def __init__(self, embedding: BaseEmbedding, vector_index: type[VectorStoreBase]):
         self.embedding = embedding
+<<<<<<< HEAD
 <<<<<<< HEAD
         self.folder_name = get_index_folder_name(
             huge_settings.graph_name, huge_settings.graph_space
@@ -53,6 +64,13 @@ class BuildVectorIndex:
         self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "chunks"))
         self.vector_index = FaissVectorIndex.from_name(self.index_dir)
 >>>>>>> 902fee5 (feat(llm): some type bug && revert to FaissVectorIndex)
+=======
+        self.vector_index = vector_index.from_name(
+            embedding.get_embedding_dim(),
+            huge_settings.graph_name,
+            "chunks",
+        )
+>>>>>>> 38dce0b (feat(llm): vector db finished)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if "chunks" not in context:
@@ -64,5 +82,9 @@ class BuildVectorIndex:
         chunks_embedding = asyncio.run(get_embeddings_parallel(self.embedding, chunks))
         if len(chunks_embedding) > 0:
             self.vector_index.add(chunks_embedding, chunks)
+<<<<<<< HEAD
             self.vector_index.to_index_file(self.index_dir, self.filename_prefix)
+=======
+            self.vector_index.save_index_by_name(huge_settings.graph_name, "chunks")
+>>>>>>> 38dce0b (feat(llm): vector db finished)
         return context

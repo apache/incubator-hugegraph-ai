@@ -63,7 +63,7 @@ class TestMilvusVectorIndex(unittest.TestCase):
         index = MilvusVectorIndex.from_name(test_name)
         index.add(data_embedding, data)
 
-        index.to_index_file(test_name)
+        index.save_index_by_name(test_name)
 
         loaded_index = MilvusVectorIndex.from_name(test_name)
 

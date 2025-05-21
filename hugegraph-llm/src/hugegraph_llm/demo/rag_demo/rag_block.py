@@ -18,14 +18,20 @@
 # pylint: disable=E1101
 
 import os
-from typing import AsyncGenerator, Tuple, Literal, Optional
+from typing import AsyncGenerator, Literal, Optional, Tuple
 
 import gradio as gr
 from hugegraph_llm.flows.scheduler import SchedulerSingleton
 import pandas as pd
 from gradio.utils import NamedString
 
+<<<<<<< HEAD
 from hugegraph_llm.config import resource_path, prompt, llm_settings
+=======
+from hugegraph_llm.config import huge_settings, index_settings, llm_settings, prompt, resource_path
+from hugegraph_llm.operators.graph_rag_task import RAGPipeline
+from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
+>>>>>>> 38dce0b (feat(llm): vector db finished)
 from hugegraph_llm.utils.decorators import with_task_id
 from hugegraph_llm.utils.log import log
 
@@ -71,7 +77,32 @@ def rag_answer(
         gr.Warning("Please select at least one generate mode.")
         return "", "", "", ""
 
+<<<<<<< HEAD
     scheduler = SchedulerSingleton.get_instance()
+=======
+    rag = RAGPipeline()
+    if vector_search:
+        rag.query_vector_index(vector_index_str=index_settings.now_vector_index)
+    if graph_search:
+        rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid(
+            vector_index_str=index_settings.now_vector_index,
+            vector_dis_threshold=vector_dis_threshold,
+            topk_per_keyword=topk_per_keyword,
+        ).import_schema(huge_settings.graph_name).query_graphdb(
+            num_gremlin_generate_example=gremlin_tmpl_num,
+            gremlin_prompt=gremlin_prompt,
+            max_graph_items=max_graph_items,
+        )
+    # TODO: add more user-defined search strategies
+    rag.merge_dedup_rerank(
+        graph_ratio=graph_ratio,
+        rerank_method=rerank_method,
+        near_neighbor_first=near_neighbor_first,
+        topk_return_results=topk_return_results,
+    )
+    rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
+
+>>>>>>> 38dce0b (feat(llm): vector db finished)
     try:
         # Select workflow by mode to avoid fetching the wrong pipeline from the pool
         if graph_vector_answer or (graph_only_answer and vector_only_answer):
@@ -193,6 +224,26 @@ async def rag_answer_streaming(
         yield "", "", "", ""
         return
 
+<<<<<<< HEAD
+=======
+    rag = RAGPipeline()
+    if vector_search:
+        rag.query_vector_index(vector_index_str=index_settings.now_vector_index)
+    if graph_search:
+        rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid(
+            vector_index_str=index_settings.now_vector_index
+        ).import_schema(huge_settings.graph_name).query_graphdb(
+            num_gremlin_generate_example=gremlin_tmpl_num,
+            gremlin_prompt=gremlin_prompt,
+        )
+    rag.merge_dedup_rerank(
+        graph_ratio,
+        rerank_method,
+        near_neighbor_first,
+    )
+    # rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
+
+>>>>>>> 38dce0b (feat(llm): vector db finished)
     try:
         # Select the specific streaming workflow
         scheduler = SchedulerSingleton.get_instance()
@@ -332,9 +383,7 @@ def create_rag_block():
                         0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False
                     )
 
-                graph_vector_radio.change(
-                    toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio
-                )  # pylint: disable=no-member
+                graph_vector_radio.change(toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio)  # pylint: disable=no-member
                 near_neighbor_first = gr.Checkbox(
                     value=False,
                     label="Near neighbor first(Optional)",
@@ -397,15 +446,15 @@ def create_rag_block():
             df = pd.read_excel(file.name, nrows=line_count) if file else pd.DataFrame()
         elif file.name.endswith(".csv"):
             df = pd.read_csv(file.name, nrows=line_count) if file else pd.DataFrame()
-        df.to_excel(questions_path, index=False)
-        if df.empty:
+        df.to_excel(questions_path, index=False)  # type:ignore
+        if df.empty:  # type:ignore
             df = pd.DataFrame([[""] * len(tests_df_headers)], columns=tests_df_headers)
         else:
-            df.columns = tests_df_headers
+            df.columns = tests_df_headers  # type:ignore
         # truncate the dataframe if it's too long
-        if len(df) > 40:
-            return df.head(40), 40
-        return df, len(df)
+        if len(df) > 40:  # type:ignore
+            return df.head(40), 40  # type:ignore
+        return df, len(df)  # type:ignore
 
     def change_showing_excel(line_count):
         if os.path.exists(answers_path):

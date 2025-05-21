@@ -17,6 +17,7 @@
 
 
 from hugegraph_llm.config import llm_settings
+<<<<<<< HEAD
 from hugegraph_llm.config import LLMConfig
 from hugegraph_llm.models.embeddings.litellm import LiteLLMEmbedding
 from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
@@ -50,6 +51,12 @@ def get_embedding(llm_settings: LLMConfig):
         )
 
     raise Exception("embedding type is not supported !")
+=======
+from hugegraph_llm.models.embeddings.litellm import LiteLLMEmbedding
+from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
+from hugegraph_llm.models.embeddings.openai import OpenAIEmbedding
+from hugegraph_llm.models.embeddings.qianfan import QianFanEmbedding
+>>>>>>> 38dce0b (feat(llm): vector db finished)
 
 
 class Embeddings:
@@ -58,22 +65,45 @@ class Embeddings:
 
     def get_embedding(self):
         if self.embedding_type == "openai":
+            assert llm_settings.openai_embedding_model_dim, 'openai_embedding_model_dim is need'
             return OpenAIEmbedding(
+                embedding_dimension=llm_settings.openai_embedding_model_dim,
                 model_name=llm_settings.openai_embedding_model,
                 api_key=llm_settings.openai_embedding_api_key,
                 api_base=llm_settings.openai_embedding_api_base,
             )
         if self.embedding_type == "ollama/local":
+            assert llm_settings.ollama_embedding_model_dim, 'ollama_embedding_model_dim is need'
             return OllamaEmbedding(
+<<<<<<< HEAD
                 model_name=llm_settings.ollama_embedding_model,
                 host=llm_settings.ollama_embedding_host,
                 port=llm_settings.ollama_embedding_port,
             )
+=======
+                embedding_dimension=llm_settings.ollama_embedding_model_dim,
+                model=llm_settings.ollama_embedding_model,
+                host=llm_settings.ollama_embedding_host,
+                port=llm_settings.ollama_embedding_port,
+            )
+        if self.embedding_type == "qianfan_wenxin":
+            return QianFanEmbedding(
+                embedding_dimension=llm_settings.litellm_embedding_model_dim,
+                model_name=llm_settings.qianfan_embedding_model,
+                api_key=llm_settings.qianfan_embedding_api_key,
+                secret_key=llm_settings.qianfan_embedding_secret_key,
+            )  # type: ignore
+>>>>>>> 38dce0b (feat(llm): vector db finished)
         if self.embedding_type == "litellm":
             return LiteLLMEmbedding(
+                embedding_dimension=llm_settings.litellm_embedding_model_dim,
                 model_name=llm_settings.litellm_embedding_model,
                 api_key=llm_settings.litellm_embedding_api_key,
                 api_base=llm_settings.litellm_embedding_api_base,
+<<<<<<< HEAD
             )
+=======
+            )  # type: ignore
+>>>>>>> 38dce0b (feat(llm): vector db finished)
 
         raise Exception("embedding type is not supported !")

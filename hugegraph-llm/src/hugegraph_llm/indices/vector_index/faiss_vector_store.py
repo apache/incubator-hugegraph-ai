@@ -18,11 +18,12 @@
 import os
 import pickle as pkl
 from copy import deepcopy
-from typing import Any, List, Set, Union
+from typing import Any, Dict, List, Set, Union
 
 import faiss
 import numpy as np
 
+from hugegraph_llm.config import resource_path
 from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.utils.log import log
 
@@ -35,6 +36,7 @@ class FaissVectorIndex(VectorStoreBase):
         self.index = faiss.IndexFlatL2(embed_dim)
         self.properties: list[Any] = []
 
+<<<<<<< HEAD
         
 
     def to_index_file(self, dir_path: str, filename_prefix: str = None):
@@ -48,6 +50,12 @@ class FaissVectorIndex(VectorStoreBase):
         )
         index_file = os.path.join(dir_path, index_name)
         properties_file = os.path.join(dir_path, property_name)
+=======
+    def save_index_by_name(self, *name: str):
+        os.makedirs(os.path.join(resource_path, *name), exist_ok=True)
+        index_file = os.path.join(resource_path, *name, INDEX_FILE_NAME)
+        properties_file = os.path.join(resource_path, *name, PROPERTIES_FILE_NAME)
+>>>>>>> 38dce0b (feat(llm): vector db finished)
         faiss.write_index(self.index, index_file)
         with open(properties_file, "wb") as f:
             pkl.dump(self.properties, f)
@@ -55,7 +63,6 @@ class FaissVectorIndex(VectorStoreBase):
     def add(self, vectors: List[List[float]], props: List[Any]):
         if len(vectors) == 0:
             return
-
         if self.index.ntotal == 0 and len(vectors[0]) != self.index.d:
             self.index = faiss.IndexFlatL2(len(vectors[0]))
         self.index.add(np.array(vectors))
@@ -98,7 +105,23 @@ class FaissVectorIndex(VectorStoreBase):
                 )
         return results
 
+    def get_all_properties(self) -> list[Any]:
+        return self.properties
+
+    def get_vector_index_info(
+        self,
+    ) -> Dict:
+        return {
+            "embed_dim": self.index.d,
+            "vector_info": {
+                "chunk_vector_num": self.index.ntotal,
+                "graph_vid_vector_num": self.index.ntotal,
+                "graph_properties_vector_num": len(self.properties),
+            },
+        }
+
     @staticmethod
+<<<<<<< HEAD
     def from_index_file(
         dir_path: str, filename_prefix: str | None = None, record_miss: bool = True
     ) -> "FaissVectorIndex":
@@ -170,20 +193,38 @@ class FaissVectorIndex(VectorStoreBase):
                 except OSError as e:
                     log.error("Error removing file %s: %s", file, e)
         
+=======
+    def clean(*name: str):
+        index_file = os.path.join(resource_path, *name, INDEX_FILE_NAME)
+        properties_file = os.path.join(resource_path, *name, PROPERTIES_FILE_NAME)
+        if os.path.exists(index_file):
+            os.remove(index_file)
+        if os.path.exists(properties_file):
+            os.remove(properties_file)
+>>>>>>> 38dce0b (feat(llm): vector db finished)
 
     @staticmethod
-    def from_name(name: str) -> "FaissVectorIndex":
-        index_file = os.path.join(name, INDEX_FILE_NAME)
-        properties_file = os.path.join(name, PROPERTIES_FILE_NAME)
+    def from_name(embed_dim: int, *name: str) -> "FaissVectorIndex":
+        index_file = os.path.join(resource_path, *name, INDEX_FILE_NAME)
+        properties_file = os.path.join(resource_path, *name, PROPERTIES_FILE_NAME)
         if not os.path.exists(index_file) or not os.path.exists(properties_file):
             log.warning("No index file found, create a new one.")
-            return FaissVectorIndex()
+            return FaissVectorIndex(embed_dim)
 
         faiss_index = faiss.read_index(index_file)
-        embed_dim = faiss_index.d
         with open(properties_file, "rb") as f:
             properties = pkl.load(f)
         vector_index = FaissVectorIndex(embed_dim)
-        vector_index.index = faiss_index
-        vector_index.properties = properties
+        if faiss_index.d == vector_index.index.d:
+            # when dim same, use old
+            vector_index.index = faiss_index
+            vector_index.properties = properties
+        else:
+            log.warning("dim is different, create a new one.")
         return vector_index
+
+    @staticmethod
+    def exist(*name: str) -> bool:
+        index_file = os.path.join(resource_path, *name, INDEX_FILE_NAME)
+        properties_file = os.path.join(resource_path, *name, PROPERTIES_FILE_NAME)
+        return os.path.exists(index_file) and os.path.exists(properties_file)

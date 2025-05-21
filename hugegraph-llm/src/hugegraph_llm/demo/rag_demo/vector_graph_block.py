@@ -23,17 +23,21 @@ import os
 
 import gradio as gr
 
+<<<<<<< HEAD
 from hugegraph_llm.config import huge_settings
 from hugegraph_llm.config import prompt
 from hugegraph_llm.config import resource_path
 from hugegraph_llm.flows.scheduler import SchedulerSingleton
+=======
+from hugegraph_llm.config import huge_settings, prompt
+>>>>>>> 38dce0b (feat(llm): vector db finished)
 from hugegraph_llm.utils.graph_index_utils import (
-    get_graph_index_info,
-    clean_all_graph_index,
     clean_all_graph_data,
-    update_vid_embedding,
+    clean_all_graph_index,
     extract_graph,
+    get_graph_index_info,
     import_graph_data,
+<<<<<<< HEAD
     build_schema,
 )
 from hugegraph_llm.utils.hugegraph_utils import check_graph_db_connection
@@ -43,6 +47,13 @@ from hugegraph_llm.utils.vector_index_utils import (
     build_vector_index,
     get_vector_index_info,
 )
+=======
+    update_vid_embedding,
+)
+from hugegraph_llm.utils.hugegraph_utils import check_graph_db_connection
+from hugegraph_llm.utils.log import log
+from hugegraph_llm.utils.vector_index_utils import build_vector_index, clean_vector_index, get_vector_index_info
+>>>>>>> 38dce0b (feat(llm): vector db finished)
 
 
 def store_prompt(doc, schema, example_prompt):
@@ -226,6 +237,7 @@ def create_vector_graph_block():
     # pylint: disable=no-member
     # pylint: disable=C0301
     # pylint: disable=unexpected-keyword-arg
+<<<<<<< HEAD
     with gr.Blocks() as demo:
         gr.Markdown(
             """## Build Vector/Graph Index & Extract Knowledge Graph
@@ -240,10 +252,47 @@ def create_vector_graph_block():
     - Graph Extract Prompt Header: The user-defined prompt of graph extracting
     - If already exist the graph data, you should click "**Rebuild vid Index**" to update the index
     """
+=======
+    gr.Markdown(
+        """## Build Vector/Graph Index & Extract Knowledge Graph
+- Docs:
+  - text: Build rag index from plain text
+  - file: Upload file(s) which should be <u>TXT</u> or <u>.docx</u> (Multiple files can be selected together)
+- [Schema](https://hugegraph.apache.org/docs/clients/restful-api/schema/): (Accept **2 types**)
+  - User-defined Schema (JSON format, follow the [template](https://github.com/apache/incubator-hugegraph-ai/blob/aff3bbe25fa91c3414947a196131be812c20ef11/hugegraph-llm/src/hugegraph_llm/config/config_data.py#L125)
+  to modify it)
+  - Specify the name of the HugeGraph graph instance, it will automatically get the schema from it (like
+  **"hugegraph"**)
+- Graph Extract Prompt Header: The user-defined prompt of graph extracting
+- If already exist the graph data, you should click "**Rebuild vid Index**" to update the index
+"""
+    )
+
+    with gr.Row():
+        with gr.Column():
+            with gr.Tab("text") as tab_upload_text:
+                input_text = gr.Textbox(
+                    value=prompt.doc_input_text, label="Input Doc(s)", lines=20, show_copy_button=True
+                )
+            with gr.Tab("file") as tab_upload_file:
+                input_file = gr.File(
+                    value=None,
+                    label="Docs (multi-files can be selected together)",
+                    file_count="multiple",
+                )
+        input_schema = gr.Code(value=prompt.graph_schema, label="Graph Schema", language="json", lines=15, max_lines=29)
+        info_extract_template = gr.Code(
+            value=prompt.extract_graph_prompt,
+            label="Graph Extract Prompt Header",
+            language="markdown",
+            lines=15,
+            max_lines=29,
+>>>>>>> 38dce0b (feat(llm): vector db finished)
         )
 
         with gr.Row():
             with gr.Column():
+<<<<<<< HEAD
                 with gr.Tab("text") as tab_upload_text:
                     input_text = gr.Textbox(
                         value=prompt.doc_input_text,
@@ -283,12 +332,26 @@ def create_vector_graph_block():
                     vector_index_btn1 = gr.Button("Clear Chunks Vector Index", size="sm")
                     graph_index_btn1 = gr.Button("Clear Graph Vid Vector Index", size="sm")
                     graph_data_btn0 = gr.Button("Clear Graph Data", size="sm")
+=======
+                vector_index_btn0 = gr.Button("Get Vector Index Info", size="sm")
+                graph_index_btn0 = gr.Button("Get Graph Index Info", size="sm")
+        with gr.Accordion("Clear RAG Data", open=False):
+            with gr.Column():
+                vector_index_btn1 = gr.Button("Clear Chunks Vector Index", size="sm")
+                graph_index_btn1 = gr.Button("Clear Graph Vid Vector Index", size="sm")
+                graph_data_btn0 = gr.Button("Clear Graph Data", size="sm")
+        vector_import_bt = gr.Button("Import into Vector", variant="primary")
+        graph_extract_bt = gr.Button("Extract Graph Data (1)", variant="primary")
+        graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=True)
+        graph_index_rebuild_bt = gr.Button("Update Vid Embedding")
+>>>>>>> 38dce0b (feat(llm): vector db finished)
 
             vector_import_bt = gr.Button("Import into Vector", variant="primary")
             graph_extract_bt = gr.Button("Extract Graph Data (1)", variant="primary")
             graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=True)
             graph_index_rebuild_bt = gr.Button("Update Vid Embedding")
 
+<<<<<<< HEAD
         gr.Markdown("---")
         with gr.Accordion("Graph Schema Generator", open=False):
             gr.Markdown(
@@ -343,6 +406,22 @@ def create_vector_graph_block():
             store_prompt,
             inputs=[input_text, input_schema, info_extract_template],
         )
+=======
+    # origin_out = gr.Textbox(visible=False)
+    graph_extract_bt.click(
+        extract_graph, inputs=[input_file, input_text, input_schema, info_extract_template], outputs=[out]
+    ).then(
+        store_prompt,
+        inputs=[input_text, input_schema, info_extract_template],
+    )
+
+    graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(
+        update_vid_embedding
+    ).then(
+        store_prompt,
+        inputs=[input_text, input_schema, info_extract_template],
+    )
+>>>>>>> 38dce0b (feat(llm): vector db finished)
 
         # origin_out = gr.Textbox(visible=False)
         graph_extract_bt.click(
@@ -414,7 +493,7 @@ async def timely_update_vid_embedding(interval_seconds: int = 3600):
                 "pwd": huge_settings.graph_pwd,
                 "graph_space": huge_settings.graph_space,
             }
-            if check_graph_db_connection(**config):
+            if check_graph_db_connection(**config):  # type:ignore
                 await asyncio.to_thread(update_vid_embedding)
                 log.info("update_vid_embedding executed successfully")
             else:
