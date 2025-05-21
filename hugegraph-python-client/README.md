@@ -8,25 +8,32 @@ It is used to define graph structures, perform CRUD operations on graph data, ma
 
 ### Install released package(Stable)
 
-To install the `hugegraph-python-client`, you can use pip/poetry/source building:
+To install the `hugegraph-python-client`, you can use `pip` or `uv`:
 
 ```bash
-pip install hugegraph-python # Note: may not the latest version, recommend to install from source
+pip install hugegraph-python
+# or with uv
+uv pip install hugegraph-python
+# Note: may not be the latest version, recommend to install from source for the latest features.
 ```
 
 ### Install from Source (Latest Code)
 
-To install from the source, clone the repository and install the required dependencies:
+To install from the source, clone the repository and use `uv` to install:
 
 ```bash
 git clone https://github.com/apache/incubator-hugegraph-ai.git
 cd incubator-hugegraph-ai/hugegraph-python-client
 
-# Normal install 
-pip install .
+# Install uv (if not already installed, e.g., curl -LsSf https://astral.sh/uv/install.sh | sh)
+uv venv # Create a virtual environment
+source .venv/bin/activate # Activate the environment
 
-# (Optional) install the devel version
-pip install -e .
+# Normal install
+uv pip install .
+
+# (Optional) install the development version (editable) with test dependencies
+uv pip install -e .[test]
 ```
 
 ## Usage

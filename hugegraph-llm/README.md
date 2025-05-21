@@ -19,42 +19,42 @@ graph systems and large language models.
 > [!IMPORTANT]
 > - python 3.10+ (not tested in 3.12)
 > - hugegraph-server 1.3+ (better to use 1.5+)
-> - poetry 2.0+ (`uv` is on the way)
+> - uv (Unified Python package installer and resolver, see https://github.com/astral-sh/uv)
 
 ## 3. Preparation
 
 1. Start the HugeGraph database, you can run it via [Docker](https://hub.docker.com/r/hugegraph/hugegraph)/[Binary Package](https://hugegraph.apache.org/docs/download/download/).  
     Refer to the detailed [doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance
 
-2. Configuring the poetry environment, Use the official installer to install Poetry, See the [poetry documentation](https://poetry.pythonlang.cn/docs/#installing-with-pipx) for other installation methods   
+2. Install `uv` (if not already installed). `uv` is a fast Python package installer and resolver.
     ```bash
-    # You could try pipx or pip to install poetry when meet network issues, refer the poetry doc for more details
-    curl -sSL https://install.python-poetry.org | python3 - # install the latest version like 2.0+
+    # Follow instructions at https://github.com/astral-sh/uv to install uv.
+    # For example, on macOS and Linux:
+    curl -LsSf https://astral.sh/uv/install.sh | sh
     ```
 
 3. Clone this project
     ```bash
     git clone https://github.com/apache/incubator-hugegraph-ai.git
     ```
-4. Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph_llm](src/hugegraph_llm), poetry officially recommends using virtual environments
+4. Install `hugegraph-llm` and its dependencies using `uv`. This project uses a virtual environment managed by `uv`.
     ```bash
     cd ./incubator-hugegraph-ai/hugegraph-llm
-    poetry config --list # List/check the current configuration (Optional)
-    # e.g: poetry config virtualenvs.in-project true
-    # You could update the poetry configs if need 
-    poetry install
-    # (Recommended) If you want to use the shell of the venv, you can run the following command
-    poetry self add poetry-plugin-shell # from poetry 2.0+
-    poetry shell # use 'exit' to leave the shell
-    ```  
-    If `poetry install` fails or too slow due to network issues, it is recommended to modify `tool.poetry.source` of `hugegraph-llm/pyproject.toml`
+    # Create a virtual environment
+    uv venv
+    # Activate the environment (the command might vary depending on your shell)
+    source .venv/bin/activate 
+    # Install hugegraph-llm in editable mode with development dependencies
+    # This will also install the local hugegraph-python-client dependency.
+    uv pip install -e .[dev]
+    ```
 5. Enter the project directory(`./incubator-hugegraph-ai/hugegraph-llm/src`)
     ```bash
     cd ./src
     ```
-6. Start the gradio interactive demo of **Graph RAG**, you can run with the following command and open http://127.0.0.1:8001 after starting
+6. Start the gradio interactive demo of **Graph RAG**, you can run with the following command (ensure your virtual environment is active) and open http://127.0.0.1:8001 after starting
     ```bash
-    python -m hugegraph_llm.demo.rag_demo.app  # same as "poetry run xxx"
+    python -m hugegraph_llm.demo.rag_demo.app  # Run from the activated virtual environment
     ```
     The default host is `0.0.0.0` and the port is `8001`. You can change them by passing command line arguments`--host` and `--port`.  
     ```bash

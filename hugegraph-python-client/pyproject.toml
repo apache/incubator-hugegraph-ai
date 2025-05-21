@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+backend-path = ["."]
+
+[project]
+name = "hugegraph-python"
+version = "1.5.0"
+description = "A Python SDK for Apache HugeGraph"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "Apache-2.0"}
+authors = [
+    { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" }
+]
+maintainers = [
+    { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "decorator~=5.1.1",
+    "requests~=2.32.0",
+    "setuptools~=70.0.0",
+    "urllib3~=2.2.2",
+    "rich~=13.9.4",
+]
+
+[project.urls]
+homepage = "https://hugegraph.apache.org/"
+repository = "https://github.com/apache/incubator-hugegraph-ai"
+documentation = "https://hugegraph.apache.org/docs/"
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["tests*"]
+namespaces = false

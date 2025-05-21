@@ -49,13 +49,18 @@ The implemented algorithm models can be found in the [models](./src/hugegraph_ml
    git clone https://github.com/apache/incubator-hugegraph-ai.git
    ```
 
-3. Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph-ml](../hugegraph-ml)
+3. Install `hugegraph-ml` and its dependencies using `uv`. This project uses a virtual environment managed by `uv`.
 
    ```bash
-   cd ./incubator-hugegraph-ai # better to use virtualenv (source venv/bin/activate) 
-   pip install ./hugegraph-python-client
-   cd ./hugegraph-ml/
-   pip install -e .
+   # Ensure you are in the root of the cloned repository: ./incubator-hugegraph-ai
+   # Install uv (if not already installed, e.g., curl -LsSf https://astral.sh/uv/install.sh | sh)
+   # Create a virtual environment in the root directory
+   uv venv 
+   # Activate the environment (the command might vary depending on your shell)
+   source .venv/bin/activate 
+   # Install hugegraph-ml in editable mode with its test dependencies.
+   # This will also install hugegraph-python-client as it's a path dependency.
+   uv pip install -e ./hugegraph-ml[test]
    ```
 
 4. Enter the project directory

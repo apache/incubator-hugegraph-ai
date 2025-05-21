@@ -42,7 +42,7 @@ jobs:
           .venv
           ~/.cache/uv
           ~/.cache/pip
-        key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('hugegraph-python-client/requirements.txt') }}
+        key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('hugegraph-python-client/pyproject.toml') }}
         restore-keys: |
           ${{ runner.os }}-venv-${{ matrix.python-version }}-
           ${{ runner.os }}-venv-
@@ -53,8 +53,8 @@ jobs:
       run: |
         uv venv
         source .venv/bin/activate
-        uv pip install pytest
-        uv pip install -r ./hugegraph-python-client/requirements.txt
+        # pytest is now included via [test] extra in pyproject.toml
+        uv pip install ./hugegraph-python-client[test]
 
     - name: Test example
       run: |
