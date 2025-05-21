@@ -31,7 +31,9 @@ RUN useradd -m -s /bin/bash work && \
 
 WORKDIR /home/work/
 
-COPY --from=builder --chown=work:work /build/hugegraph-llm /home/work/hugegraph-llm
+COPY --from=builder --chown=work:work /build/hugegraph-llm/src /home/work/hugegraph-llm/src
+COPY --from=builder --chown=work:work /build/hugegraph-llm/app.dist /home/work/hugegraph-llm/app.dist
+COPY --from=builder --chown=work:work /build/hugegraph-llm/app.build /home/work/hugegraph-llm/app.build
 
 USER work
 
