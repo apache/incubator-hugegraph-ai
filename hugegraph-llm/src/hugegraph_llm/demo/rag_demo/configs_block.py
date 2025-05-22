@@ -16,11 +16,13 @@
 # under the License.
 
 import json
+import os
 from functools import partial
 from typing import Optional
 
 import gradio as gr
 import requests
+from dotenv import dotenv_values
 from requests.auth import HTTPBasicAuth
 
 from hugegraph_llm.config import huge_settings, llm_settings
@@ -33,10 +35,10 @@ current_llm = "chat"
 
 def test_litellm_embedding(api_key, api_base, model_name) -> int:
     llm_client = LiteLLMEmbedding(
-            api_key = api_key,
-            api_base = api_base,
-            model_name = model_name,
-        )
+        api_key=api_key,
+        api_base=api_base,
+        model_name=model_name,
+    )
     try:
         response = llm_client.get_text_embedding("test")
         assert len(response) > 0
@@ -141,10 +143,10 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
 
 
 def apply_reranker_config(
-        reranker_api_key: Optional[str] = None,
-        reranker_model: Optional[str] = None,
-        cohere_base_url: Optional[str] = None,
-        origin_call=None,
+    reranker_api_key: Optional[str] = None,
+    reranker_model: Optional[str] = None,
+    cohere_base_url: Optional[str] = None,
+    origin_call=None,
 ) -> int:
     status_code = -1
     reranker_option = llm_settings.reranker_type
@@ -178,18 +180,21 @@ def apply_reranker_config(
     return status_code
 
 
-def apply_graph_config(ip, port, name, user, pwd, gs, origin_call=None) -> int:
-    huge_settings.graph_ip = ip
-    huge_settings.graph_port = port
+def apply_graph_config(url, name, user, pwd, gs, origin_call=None) -> int:
+    # Add URL prefix automatically to improve user experience
+    if url and not (url.startswith('http://') or url.startswith('https://')):
+        url = f"http://{url}"
+
+    huge_settings.graph_url = url
     huge_settings.graph_name = name
     huge_settings.graph_user = user
     huge_settings.graph_pwd = pwd
     huge_settings.graph_space = gs
     # Test graph connection (Auth)
     if gs and gs.strip():
-        test_url = f"http://{ip}:{port}/graphspaces/{gs}/graphs/{name}/schema"
+        test_url = f"{url}/graphspaces/{gs}/graphs/{name}/schema"
     else:
-        test_url = f"http://{ip}:{port}/graphs/{name}/schema"
+        test_url = f"{url}/graphs/{name}/schema"
     auth = HTTPBasicAuth(user, pwd)
     # for http api return status
     response = test_api_connection(test_url, auth=auth, origin_call=origin_call)
@@ -213,7 +218,7 @@ def apply_llm_config(current_llm_config, arg1, arg2, arg3, arg4, origin_call=Non
         test_url = getattr(llm_settings, f"openai_{current_llm_config}_api_base") + "/chat/completions"
         data = {
             "model": arg3,
-            "temperature": 0.0,
+            "temperature": 0.01,
             "messages": [{"role": "user", "content": "test"}],
         }
         headers = {"Authorization": f"Bearer {arg1}"}
@@ -249,19 +254,24 @@ def create_configs_block() -> list:
     with gr.Accordion("1. Set up the HugeGraph server.", open=False):
         with gr.Row():
             graph_config_input = [
-                gr.Textbox(value=huge_settings.graph_ip, label="ip"),
-                gr.Textbox(value=huge_settings.graph_port, label="port"),
-                gr.Textbox(value=huge_settings.graph_name, label="graph"),
-                gr.Textbox(value=huge_settings.graph_user, label="user"),
-                gr.Textbox(value=huge_settings.graph_pwd, label="pwd", type="password"),
-                gr.Textbox(value=huge_settings.graph_space, label="graphspace(Optional)"),
+                gr.Textbox(value=huge_settings.graph_url, label="url",
+                           info="IP:PORT (e.g. 127.0.0.1:8080) or full URL (e.g. http://127.0.0.1:8080)"),
+                gr.Textbox(value=huge_settings.graph_name, label="graph",
+                           info="The graph name of HugeGraph-Server instance"),
+                gr.Textbox(value=huge_settings.graph_user, label="user",
+                           info="Username for graph server auth"),
+                gr.Textbox(value=huge_settings.graph_pwd, label="pwd", type="password",
+                           info="Password for graph server auth"),
+                gr.Textbox(value=huge_settings.graph_space, label="graphspace (Optional)",
+                           info="Namespace for multi-tenant scenarios (leave empty if not using graphspaces)"),
             ]
         graph_config_button = gr.Button("Apply Configuration")
     graph_config_button.click(apply_graph_config, inputs=graph_config_input)  # pylint: disable=no-member
 
     # TODO : use OOP to refactor the following code
     with gr.Accordion("2. Set up the LLM.", open=False):
-        gr.Markdown("> Tips: the openai option also support openai style api from other providers.")
+        gr.Markdown("> Tips: The OpenAI option also support openai style api from other providers. "
+                    "**Refresh the page** to load the **latest configs** in __UI__.")
         with gr.Tab(label='chat'):
             chat_llm_dropdown = gr.Dropdown(choices=["openai", "litellm", "qianfan_wenxin", "ollama/local"],
                                             value=getattr(llm_settings, "chat_llm_type"), label="type")
@@ -308,7 +318,15 @@ def create_configs_block() -> list:
                     llm_config_input = [gr.Textbox(value="", visible=False) for _ in range(4)]
                 llm_config_button = gr.Button("Apply configuration")
                 llm_config_button.click(apply_llm_config_with_chat_op, inputs=llm_config_input)
-
+                # Determine whether there are Settings in the.env file
+                env_path = os.path.join(os.getcwd(), ".env")  # Load .env from the current working directory
+                env_vars = dotenv_values(env_path)
+                api_extract_key = env_vars.get("OPENAI_EXTRACT_API_KEY")
+                api_text2sql_key = env_vars.get("OPENAI_TEXT2GQL_API_KEY")
+                if not api_extract_key:
+                    llm_config_button.click(apply_llm_config_with_text2gql_op, inputs=llm_config_input)
+                if not api_text2sql_key:
+                    llm_config_button.click(apply_llm_config_with_extract_op, inputs=llm_config_input)
         with gr.Tab(label='mini_tasks'):
             extract_llm_dropdown = gr.Dropdown(choices=["openai", "litellm", "qianfan_wenxin", "ollama/local"],
                                                value=getattr(llm_settings, "extract_llm_type"), label="type")

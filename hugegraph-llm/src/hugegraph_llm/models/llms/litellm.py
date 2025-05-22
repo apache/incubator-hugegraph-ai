@@ -38,9 +38,9 @@ class LiteLLMClient(BaseLLM):
         self,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
-        model_name: str = "openai/gpt-4o",  # Can be any model supported by LiteLLM
-        max_tokens: int = 4096,
-        temperature: float = 0.0,
+        model_name: str = "openai/gpt-4.1-mini",  # Can be any model supported by LiteLLM
+        max_tokens: int = 8192,
+        temperature: float = 0.01,
     ) -> None:
         self.api_key = api_key
         self.api_base = api_base
@@ -49,8 +49,8 @@ class LiteLLMClient(BaseLLM):
         self.temperature = temperature
 
     @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=4, max=10),
+        stop=stop_after_attempt(2),
+        wait=wait_exponential(multiplier=1, min=2, max=5),
         retry=retry_if_exception_type((RateLimitError, BudgetExceededError, APIError))
     )
     def generate(
@@ -78,8 +78,8 @@ class LiteLLMClient(BaseLLM):
             return f"Error: {str(e)}"
 
     @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=4, max=10),
+        stop=stop_after_attempt(2),
+        wait=wait_exponential(multiplier=1, min=2, max=5),
         retry=retry_if_exception_type((RateLimitError, BudgetExceededError, APIError))
     )
     async def agenerate(
@@ -128,6 +128,9 @@ class LiteLLMClient(BaseLLM):
             )
             result = ""
             for chunk in response:
+                if not chunk.choices:
+                    log.debug("Received empty choices in streaming chunk: %s", chunk)
+                    continue
                 if chunk.choices[0].delta.content:
                     result += chunk.choices[0].delta.content
                 if on_token_callback:
@@ -158,6 +161,9 @@ class LiteLLMClient(BaseLLM):
                 stream=True,
             )
             async for chunk in response:
+                if not chunk.choices:
+                    log.debug("Received empty choices in streaming chunk: %s", chunk)
+                    continue
                 if chunk.choices[0].delta.content:
                     if on_token_callback:
                         on_token_callback(chunk)

@@ -48,15 +48,14 @@ def manager_builder(fn: Callable[[Any, "HGraphSession"], T]) -> Callable[[Any], 
 class PyHugeClient:
     def __init__(
         self,
-        ip: str,
-        port: str, # TODO: port should be int?
+        url: str,
         graph: str,
         user: str,
         pwd: str,
         graphspace: Optional[str] = None,
         timeout: Optional[tuple[float, float]] = None
     ):
-        self.cfg = HGraphConfig(ip, port, user, pwd, graph, graphspace, timeout or (0.5, 15.0))
+        self.cfg = HGraphConfig(url, user, pwd, graph, graphspace, timeout or (0.5, 15.0))
 
     @manager_builder
     def schema(self) -> "SchemaManager":

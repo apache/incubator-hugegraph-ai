@@ -38,9 +38,9 @@ class OpenAIClient(BaseLLM):
         self,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
-        model_name: str = "gpt-4o-mini",
-        max_tokens: int = 4096,
-        temperature: float = 0.0,
+        model_name: str = "gpt-4.1-mini",
+        max_tokens: int = 8092,
+        temperature: float = 0.01,
     ) -> None:
         api_key = api_key or ''
         self.client = OpenAI(api_key=api_key, base_url=api_base)
@@ -149,6 +149,9 @@ class OpenAIClient(BaseLLM):
             )
 
             for chunk in completions:
+                if not chunk.choices:
+                    log.debug("Received empty choices in streaming chunk: %s", chunk)
+                    continue
                 delta = chunk.choices[0].delta
                 if delta.content:
                     token = delta.content
@@ -186,6 +189,9 @@ class OpenAIClient(BaseLLM):
                 stream=True
             )
             async for chunk in completions:
+                if not chunk.choices:
+                    log.debug("Received empty choices in streaming chunk: %s", chunk)
+                    continue
                 delta = chunk.choices[0].delta
                 if delta.content:
                     token = delta.content
@@ -206,7 +212,7 @@ class OpenAIClient(BaseLLM):
             raise e
 
     def num_tokens_from_string(self, string: str) -> int:
-        """Get token count from string."""
+        """Get token count from a string."""
         encoding = tiktoken.encoding_for_model(self.model)
         num_tokens = len(encoding.encode(string))
         return num_tokens

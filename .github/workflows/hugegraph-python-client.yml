@@ -13,58 +13,58 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12"]
 
     steps:
-    # TODO: upgrade to HugeGraph 1.5.0 (need to update the test cases)
-    - name: Prepare HugeGraph Server Environment
-      run: |
-        docker run -d --name=graph -p 8080:8080 -e PASSWORD=admin hugegraph/hugegraph:1.3.0
-        sleep 10
+      # TODO: upgrade to HugeGraph 1.5.0 (need to update the test cases)
+      - name: Prepare HugeGraph Server Environment
+        run: |
+          docker run -d --name=graph -p 8080:8080 -e PASSWORD=admin hugegraph/hugegraph:1.3.0
+          sleep 10
 
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Install uv
-      run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-    - name: Cache dependencies
-      id: cache-deps
-      uses: actions/cache@v4
-      with:
-        path: |
-          .venv
-          ~/.cache/uv
-          ~/.cache/pip
-        key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('hugegraph-python-client/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-venv-${{ matrix.python-version }}-
-          ${{ runner.os }}-venv-
+      - name: Cache dependencies
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            .venv
+            ~/.cache/uv
+            ~/.cache/pip
+          # TODO: switch to pyproject.toml after uv adoption
+          key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('hugegraph-python-client/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-venv-${{ matrix.python-version }}-
+            ${{ runner.os }}-venv-
 
-    # TODO: use pyproject.toml later
-    - name: Install dependencies
-      if: steps.cache-deps.outputs.cache-hit != 'true'
-      run: |
-        uv venv
-        source .venv/bin/activate
-        uv pip install pytest
-        uv pip install -r ./hugegraph-python-client/requirements.txt
+      # TODO: use pyproject.toml later
+      - name: Install dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: |
+          uv venv && source .venv/bin/activate
+          uv pip install pytest
+          uv pip install -r ./hugegraph-python-client/requirements.txt  # TODO: use uv pip install ./hugegraph-python-client later
 
-    - name: Test example
-      run: |
-        ls -al && source .venv/bin/activate
-        export PYTHONPATH=$(pwd)/hugegraph-python-client/src
-        echo ${PYTHONPATH}
-        python hugegraph-python-client/src/pyhugegraph/example/hugegraph_example.py
+      - name: Test example
+        run: |
+          ls -al && source .venv/bin/activate
+          export PYTHONPATH=$(pwd)/hugegraph-python-client/src
+          echo ${PYTHONPATH}
+          python hugegraph-python-client/src/pyhugegraph/example/hugegraph_example.py
 
-    - name: Test with pytest
-      run: |
-        ls -al ../ && source ../.venv/bin/activate
-        pytest
-      working-directory: hugegraph-python-client
+      - name: Test with pytest
+        run: |
+          ls -al ../ && source ../.venv/bin/activate
+          pytest
+        working-directory: hugegraph-python-client
