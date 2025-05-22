@@ -87,13 +87,14 @@ class SemanticIdQuery:
 
     def _exact_match_properties(self, keywords: List[str]) -> Tuple[List[str], List[str]]:
         property_keys = self._client.schema().getPropertyKeys()
-        log.debug("Property keys: %s", property_keys)
+        log.debug("property_keys: %s", property_keys)
         matched_properties = set()
         unmatched_keywords = set(keywords)
 
         for key in property_keys:
             for keyword in list(unmatched_keywords):
-                gremlin_query = f"g.V().has('{key}', '{keyword}').limit(1)"  # 一旦命中就够
+                gremlin_query = f"g.V().has('{key.name}', '{keyword}').limit(1)"
+                log.debug("prop Gremlin query: %s", gremlin_query)
                 resp = self._client.gremlin().exec(gremlin_query)
                 if resp.get("data"):
                     matched_properties.add((key, keyword))
@@ -130,14 +131,14 @@ class SemanticIdQuery:
             fuzzy_match_vids = self._fuzzy_match_vids(unmatched_vids)
             log.debug("Fuzzy match vids: %s", fuzzy_match_vids)
             graph_query_list.update(fuzzy_match_vids)
-            # index_labels = self.schema.getIndexLabels()
-            # if index_labels:
-            #     props_list = set()
-            #     exact_match_props, unmatched_props = self._exact_match_properties(keywords)
-            #     props_list.update(exact_match_props)
-            #     fuzzy_match_props = self._fuzzy_match_props(unmatched_props)
-            #     log.debug("Fuzzy match props: %s", fuzzy_match_props)
-            #     props_list.update(fuzzy_match_props)
-            #     context["match_props"] = list(props_list)
+            index_labels = self.schema.getIndexLabels()
+            if index_labels:
+                props_list = set()
+                exact_match_props, unmatched_props = self._exact_match_properties(keywords)
+                props_list.update(exact_match_props)
+                fuzzy_match_props = self._fuzzy_match_props(unmatched_props)
+                log.debug("Fuzzy match props: %s", fuzzy_match_props)
+                props_list.update(fuzzy_match_props)
+                context["match_props"] = list(props_list)
         context["match_vids"] = list(graph_query_list)
         return context
