@@ -365,9 +365,7 @@ def create_configs_block() -> list:
                 llm_config_button = gr.Button("Apply configuration")
                 llm_config_button.click(apply_llm_config_with_chat_op, inputs=llm_config_input)
                 # Determine whether there are Settings in the.env file
-                dir_name = os.path.dirname
-                package_path = dir_name(dir_name(dir_name(dir_name(dir_name(os.path.abspath(__file__))))))
-                env_path = os.path.join(package_path, ".env")
+                env_path = os.path.join(os.getcwd(), ".env")  # Load .env from the current working directory
                 env_vars = dotenv_values(env_path)
                 api_extract_key = env_vars.get("OPENAI_EXTRACT_API_KEY")
                 api_text2sql_key = env_vars.get("OPENAI_TEXT2GQL_API_KEY")

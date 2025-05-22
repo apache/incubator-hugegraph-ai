@@ -15,4 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# Note:
+# This MANIFEST.in file ensures that all necessary non-code resource files are included when building the
+# hugegraph-llm Python package distribution. It recursively includes all files under src/hugegraph_llm/resources.
+# Maintenance: When adding or removing resource files, update this file to keep the package contents accurate.
+
 recursive-include src/hugegraph_llm/resources *
