@@ -207,7 +207,7 @@ class BuildSemanticIndex:
                     removed_num = self.prop_index.remove(update_remove_prop_values)
                     self.prop_index.to_index_file(self.index_dir_prop)
                     log.info("In to_update: Removed %s outdated property set", removed_num)
-                added_props_embeddings = self._get_embeddings_parallel(add_prop_values)
+                added_props_embeddings = asyncio.run(self._get_embeddings_parallel(add_prop_values))
                 self.prop_index.add(added_props_embeddings, add_propsets)
                 log.info("Added %s new or updated property embeddings", len(added_props_embeddings))
                 self.prop_index.to_index_file(self.index_dir_prop)
