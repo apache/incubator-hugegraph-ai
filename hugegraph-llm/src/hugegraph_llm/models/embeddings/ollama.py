@@ -63,8 +63,20 @@ class OllamaEmbedding(BaseEmbedding):
             A list of embedding vectors, where each vector is a list of floats.
             The order of embeddings matches the order of input texts.
         """
-        response = self.client.embed(model=self.model, input=texts)["embeddings"]
-        return [list(inner_sequence) for inner_sequence in response]
+        if hasattr(self.client, "embed"):
+            response = self.client.embed(model=self.model, input=texts)["embeddings"]
+            return [list(inner_sequence) for inner_sequence in response]
+        elif hasattr(self.client, "embeddings"):
+            embeddings_list = []
+            for text_item in texts:
+                response_item = self.client.embeddings(model=self.model, prompt=text_item)
+                embeddings_list.append(list(response_item["embedding"]))
+            return embeddings_list
+        else:
+            raise AttributeError(
+                "Ollama client object has neither 'embed' nor 'embeddings' method. "
+                "Please check your ollama library version."
+            )
 
     async def async_get_text_embedding(
             self,
