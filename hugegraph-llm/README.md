@@ -1,4 +1,4 @@
-# hugegraph-llm
+# hugegraph-llm [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/apache/incubator-hugegraph-ai)
 
 ## 1. Summary
 
@@ -24,7 +24,7 @@ graph systems and large language models.
 ## 3. Preparation
 
 1. Start the HugeGraph database, you can run it via [Docker](https://hub.docker.com/r/hugegraph/hugegraph)/[Binary Package](https://hugegraph.apache.org/docs/download/download/).
-    There is a simple method by docker：  
+    There is a simple method by docker:  
     ```bash
    docker run -itd --name=server -p 8080:8080 hugegraph/hugegraph
     ```  

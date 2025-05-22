@@ -101,6 +101,9 @@ class OllamaClient(BaseLLM):
             messages=messages,
             stream=True
         ):
+            if not chunk["message"]:
+                log.debug("Received empty chunk['message'] in streaming chunk: %s", chunk)
+                continue
             token = chunk["message"]["content"]
             if on_token_callback:
                 on_token_callback(token)
