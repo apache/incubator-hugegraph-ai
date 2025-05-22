@@ -40,7 +40,7 @@ class TestQdrantVectorIndex(unittest.TestCase):
         ]
         data_embedding = [embedder.get_text_embedding(d) for d in data]
 
-        index = QdrantVectorIndex.from_name(self.name)
+        index = QdrantVectorIndex.from_name(1024, self.name)
         index.add(data_embedding, data)
 
         query = "腾讯的合伙人有哪些？"
@@ -61,12 +61,12 @@ class TestQdrantVectorIndex(unittest.TestCase):
         ]
         data_embedding = [embedder.get_text_embedding(d) for d in data]
 
-        index = QdrantVectorIndex.from_name(self.name)
+        index = QdrantVectorIndex.from_name(1024, self.name)
         index.add(data_embedding, data)
 
         index.save_index_by_name(self.name)
 
-        loaded_index = QdrantVectorIndex.from_name(self.name)
+        loaded_index = QdrantVectorIndex.from_name(1024, self.name)
 
         query = "腾讯的合伙人有哪些？"
         query_vector = embedder.get_text_embedding(query)
@@ -85,7 +85,7 @@ class TestQdrantVectorIndex(unittest.TestCase):
         ]
         data_embedding = [embedder.get_text_embedding(d) for d in data]
 
-        index = QdrantVectorIndex.from_name(self.name)
+        index = QdrantVectorIndex.from_name(1024, self.name)
         index.add(data_embedding, data)
 
         query = "合伙人"

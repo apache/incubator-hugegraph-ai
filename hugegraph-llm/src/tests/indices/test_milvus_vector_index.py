@@ -39,7 +39,7 @@ class TestMilvusVectorIndex(unittest.TestCase):
         ]
         data_embedding = [embedder.get_text_embedding(d) for d in data]
 
-        index = MilvusVectorIndex.from_name(test_name)
+        index = MilvusVectorIndex.from_name(1024, test_name)
         index.add(data_embedding, data)
 
         query = "腾讯的合伙人有哪些？"
@@ -60,12 +60,12 @@ class TestMilvusVectorIndex(unittest.TestCase):
         ]
         data_embedding = [embedder.get_text_embedding(d) for d in data]
 
-        index = MilvusVectorIndex.from_name(test_name)
+        index = MilvusVectorIndex.from_name(1024, test_name)
         index.add(data_embedding, data)
 
         index.save_index_by_name(test_name)
 
-        loaded_index = MilvusVectorIndex.from_name(test_name)
+        loaded_index = MilvusVectorIndex.from_name(1024, test_name)
 
         query = "腾讯的合伙人有哪些？"
         query_vector = embedder.get_text_embedding(query)
@@ -83,7 +83,7 @@ class TestMilvusVectorIndex(unittest.TestCase):
         ]
         data_embedding = [embedder.get_text_embedding(d) for d in data]
 
-        index = MilvusVectorIndex.from_name(test_name)
+        index = MilvusVectorIndex.from_name(1024, test_name)
         index.add(data_embedding, data)
 
         query = "合伙人"
