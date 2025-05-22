@@ -38,7 +38,9 @@ class SemanticIdQuery:
             vector_dis_threshold: float = huge_settings.vector_dis_threshold,
     ):
         self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids"))
+        self.index_dir_prop = str(os.path.join(resource_path, huge_settings.graph_name, "graph_props"))
         self.vector_index = VectorIndex.from_index_file(self.index_dir)
+        self.prop_index = VectorIndex.from_index_file(self.index_dir_prop)
         self.embedding = embedding
         self.by = by
         self.topk_per_query = topk_per_query
@@ -82,6 +84,32 @@ class SemanticIdQuery:
                 fuzzy_match_result.extend(results[:self.topk_per_keyword])
         return fuzzy_match_result
 
+    def _exact_match_properties(self, keywords: List[str]) -> Tuple[List[str], List[str]]:
+        property_keys = self._client.schema().getPropertyKeys()
+        log.debug("Property keys: %s", property_keys)
+        matched_properties = set()
+        unmatched_keywords = set(keywords)
+
+        for key in property_keys:
+            for keyword in list(unmatched_keywords):
+                gremlin_query = f"g.V().has('{key}', '{keyword}').limit(1)"  # 一旦命中就够
+                resp = self._client.gremlin().exec(gremlin_query)
+                if resp.get("data"):
+                    matched_properties.add((key, keyword))
+                    unmatched_keywords.remove(keyword)
+
+        return list(matched_properties), list(unmatched_keywords)
+
+    def _fuzzy_match_props(self, keywords: List[str]) -> List[str]:
+        fuzzy_match_result = []
+        for keyword in keywords:
+            keyword_vector = self.embedding.get_text_embedding(keyword)
+            results = self.prop_index.search(keyword_vector, top_k=self.topk_per_keyword,
+                                               dis_threshold=float(self.vector_dis_threshold))
+            if results:
+                fuzzy_match_result.extend(results[:self.topk_per_keyword])
+        return fuzzy_match_result
+
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         graph_query_list = set()
         if self.by == "query":
@@ -101,5 +129,14 @@ class SemanticIdQuery:
             fuzzy_match_vids = self._fuzzy_match_vids(unmatched_vids)
             log.debug("Fuzzy match vids: %s", fuzzy_match_vids)
             graph_query_list.update(fuzzy_match_vids)
+
+            if context["index_labels"]:
+                props_list = set()
+                exact_match_props, unmatched_props = self._exact_match_properties(keywords)
+                props_list.update(exact_match_props)
+                fuzzy_match_props = self._fuzzy_match_props(unmatched_props)
+                log.debug("Fuzzy match props: %s", fuzzy_match_props)
+                props_list.update(fuzzy_match_props)
+                context["match_props"] = list(props_list)
         context["match_vids"] = list(graph_query_list)
         return context

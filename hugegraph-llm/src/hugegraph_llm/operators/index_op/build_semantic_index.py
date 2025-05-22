@@ -17,8 +17,8 @@
 
 
 import os
-from typing import Any, Dict
-
+from typing import Any, Dict, List, Tuple, Set
+from collections import defaultdict
 from tqdm import tqdm
 
 from hugegraph_llm.config import resource_path, huge_settings
@@ -63,6 +63,34 @@ class BuildSemanticIndex:
             embeddings = list(tqdm(executor.map(self.embedding.get_text_embedding, vids), total=len(vids)))
         return embeddings
 
+    def diff_property_sets(
+        self,
+        present_prop_value_to_propset: dict,
+        past_prop_value_to_propset: dict
+    ):
+        """
+        比较新旧属性值映射，得到新增、更新和删除的属性值及其对应的属性集合。
+
+        返回：
+            to_add: List[Tuple[prop_value, Set[(prop_key, prop_value)]]]     # 新增属性值（之前不存在）
+            to_update: List[Tuple[prop_value, Set[(prop_key, prop_value)]]]  # 属性值仍存在，但对应属性集合变化
+            to_remove: Set[prop_value]                                       # 旧索引中存在，但当前已删除的属性值
+        """
+        to_add = []
+        to_update = []
+        to_update_remove = []
+        to_remove_keys = set(past_prop_value_to_propset) - set(present_prop_value_to_propset)
+        to_remove = [past_prop_value_to_propset[k] for k in to_remove_keys]
+        for prop_value, present_propset in present_prop_value_to_propset.items():
+            past_propset = past_prop_value_to_propset.get(prop_value)
+            if past_propset is None:
+                to_add.append((prop_value, present_propset))
+            elif present_propset != past_propset:
+                to_update.append((prop_value, present_propset))
+                to_update_remove.append((prop_value, past_propset))
+                log.debug("Update prop_value: %s, present_propset: %s, past_propset: %s, to_update_remove: %s", prop_value, present_propset, past_propset, to_update_remove)
+        return to_add, to_update, to_remove, to_update_remove
+
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]: # pylint: disable=too-many-statements
         vertexlabels = self.sm.schema.getSchema()["vertexlabels"]
         all_pk_flag = all(data.get('id_strategy') == 'PRIMARY_KEY' for data in vertexlabels)
@@ -72,6 +100,8 @@ class BuildSemanticIndex:
         present_vids = context["vertices"] # Warning: data truncated by fetch_graph_data.py
         removed_vids = set(past_vids) - set(present_vids)
         removed_num = self.vid_index.remove(removed_vids)
+        if removed_num:
+            self.vid_index.to_index_file(self.index_dir)
         added_vids = list(set(present_vids) - set(past_vids))
 
         if added_vids:
@@ -88,6 +118,7 @@ class BuildSemanticIndex:
         })
 
         if context["index_labels"]:
+            # 1. get present prop_value_to_propset
             results = []
             for item in context["index_labels"]:
                 label = item["base_value"]
@@ -101,40 +132,72 @@ class BuildSemanticIndex:
                 log.debug("gremlin_query: %s", gremlin_query)
                 result = self.client.gremlin().exec(gremlin=gremlin_query)["data"]
                 results.extend(result)
-            present_props = []
-            seen = set()
+            orig_present_prop_value_to_propset = defaultdict(set)
             for item in results:
-                vid = item["vid"]
-                for _, value in item["properties"].items():
-                    prop = f"{value[0]}"
-                    if prop not in seen:
-                        seen.add(prop)
-                        present_props.append((vid, prop))
-            log.debug("present_props: %s", present_props)
-            past_props = self.prop_index.properties
-            removed_props = set(past_props) - set(present_props)
-            removed_props_num = self.prop_index.remove(removed_props)
-            if removed_props:
+                properties = item["properties"]
+                for prop_key, values in properties.items():
+                    if not values:
+                        continue
+                    prop_value = str(values[0])
+                    orig_present_prop_value_to_propset[prop_value].add((prop_key, prop_value))
+            present_prop_value_to_propset = {
+                k: frozenset(v)
+                for k, v in orig_present_prop_value_to_propset.items()
+            }
+            log.debug("present_prop_value_to_propset: %s", present_prop_value_to_propset)
+            # 2. get past prop_value_to_propset
+            orig_past_prop_value_to_propset = defaultdict(set)
+            for propset in self.prop_index.properties:
+                for prop_key, prop_value in propset:
+                    orig_past_prop_value_to_propset[prop_value].update(propset)
+            past_prop_value_to_propset = {
+                k: frozenset(v)
+                for k, v in orig_past_prop_value_to_propset.items()
+            }
+            # 3. to add(add pk), to update(change pv), to_remove(delete pk), to_update_remove(change pv)
+            to_add, to_update, to_remove, to_update_remove = self.diff_property_sets(
+                present_prop_value_to_propset,
+                past_prop_value_to_propset
+            )
+            log.debug("to_add: %s", to_add)
+            log.debug("to_update: %s", to_update)
+            log.debug("to_remove: %s", to_remove)
+            log.debug("to_update_remove: %s", to_update_remove)
+            log.debug("prop properties.pkl: %s", self.prop_index.properties)
+            # 4. remove
+            log.info(f"Removing {len(to_remove)} outdated property value")
+            removed_props_num = self.prop_index.remove(to_remove)
+            if removed_props_num:
                 self.prop_index.to_index_file(self.index_dir_prop)
-            added_props = list(set(present_props) - set(past_props))
-            if len(added_props) > 100000:
-                log.warning("The number of props > 100000, please select which properties to vectorize.")
-                context.update({
-                    "removed_props_num": removed_props_num,
-                    "added_props_vector_num": "0 (because of exceeding limit)"
-                })
-                return context
-            if added_props:
-                added_props_key = [item[1] for item in added_props]
-                added_props_embeddings = self._get_embeddings_parallel(added_props_key)
-                log.info("Building vector index for %s props...", len(added_props_key))
-                self.prop_index.add(added_props_embeddings, added_props)
+            # 5. embedding
+            all_to_add = to_add + to_update
+            add_propsets = []
+            add_prop_values = []
+            for prop_value, propset in all_to_add:
+                add_propsets.append(propset)
+                add_prop_values.append(prop_value)
+            if add_prop_values:
+                if len(add_prop_values) > 100000:
+                    log.warning("The number of props > 100000, please select which properties to vectorize.")
+                    context.update({
+                        "removed_props_num": removed_props_num,
+                        "added_props_vector_num": "0 (because of exceeding limit)"
+                    })
+                    return context
+                if to_update_remove:
+                    update_remove_prop_values = [prop_set for _, prop_set in to_update_remove]
+                    removed_num = self.prop_index.remove(update_remove_prop_values)
+                    self.prop_index.to_index_file(self.index_dir_prop)
+                    log.info(f"In to_update: Removed {removed_num} outdated property set")
+                added_props_embeddings = self._get_embeddings_parallel(add_prop_values)
+                self.prop_index.add(added_props_embeddings, add_propsets)
+                log.info(f"Added {len(added_props_embeddings)} new or updated property embeddings")
                 self.prop_index.to_index_file(self.index_dir_prop)
             else:
                 log.debug("No update props to build vector index.")
             context.update({
                 "removed_props_num": removed_props_num,
-                "added_props_vector_num": len(added_props)
+                "added_props_vector_num": len(to_add)
             })
 
         return context
