@@ -32,7 +32,7 @@ maintainers = [
 
 dependencies = [
     "openai~=1.61.0",
-    "ollama~=0.2.1",
+    "ollama~=0.4.8",
     "qianfan~=0.3.18",
     "retry~=0.9.2",
     "tiktoken>=0.7.0",
