@@ -12,6 +12,7 @@ RUN apt update && \
     apt install -y --no-install-recommends build-essential patchelf && \
     python -m pip install --upgrade pip && \
     python -m pip install wheel setuptools==65.0.0 && \
+    python setup.py bdist_wheel && \
     python -m pip install nuitka && \
     pip install --use-pep517 --no-build-isolation ./hugegraph-python-client && \
     pip install -r ./hugegraph-llm/requirements.txt && \
