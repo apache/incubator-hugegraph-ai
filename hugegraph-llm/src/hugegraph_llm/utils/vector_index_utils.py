@@ -72,43 +72,21 @@ def read_documents(input_file, input_text):
 
 # pylint: disable=C0301
 def get_vector_index_info():
-<<<<<<< HEAD
-    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
-    filename_prefix = get_filename_prefix(
-        llm_settings.embedding_type, model_map.get(llm_settings.embedding_type)
-    )
-    chunk_vector_index = FaissVectorIndex.from_index_file(
-        str(os.path.join(resource_path, folder_name, "chunks")),
-        filename_prefix,
-        record_miss=False,
-    )
-    graph_vid_vector_index = FaissVectorIndex.from_index_file(
-        str(os.path.join(resource_path, folder_name, "graph_vids")), filename_prefix
-=======
     vector_index = get_vector_index_class(index_settings.now_vector_index)
     vector_index_entity = vector_index.from_name(
         Embeddings().get_embedding().get_embedding_dim(), huge_settings.graph_name, "chunks"
->>>>>>> 38dce0b (feat(llm): vector db finished)
     )
 
     return json.dumps(
-        vector_index_entity.get_vector_index_info(),
+        {**vector_index_entity.get_vector_index_info(), 'now_vector_index': index_settings.now_vector_index},
         ensure_ascii=False,
         indent=2,
     )
 
 
 def clean_vector_index():
-<<<<<<< HEAD
-    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
-    filename_prefix = get_filename_prefix(
-        llm_settings.embedding_type, model_map.get(llm_settings.embedding_type)
-    )
-    FaissVectorIndex.clean(str(os.path.join(resource_path, folder_name, "chunks")), filename_prefix)
-=======
     vector_index = get_vector_index_class(index_settings.now_vector_index)
     vector_index.clean(huge_settings.graph_name, "chunks")
->>>>>>> 38dce0b (feat(llm): vector db finished)
     gr.Info("Clean vector index successfully!")
 
 
@@ -117,10 +95,6 @@ def build_vector_index(input_file, input_text):
     if input_file and input_text:
         raise gr.Error("Please only choose one between file and text.")
     texts = read_documents(input_file, input_text)
-<<<<<<< HEAD
-    scheduler = SchedulerSingleton.get_instance()
-    return scheduler.schedule_flow("build_vector_index", texts)
-=======
     builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     context = builder.chunk_split(texts, "paragraph", "zh").build_vector_index(vector_index).run()
     return json.dumps(context, ensure_ascii=False, indent=2)
@@ -135,4 +109,3 @@ def get_vector_index_class(vector_index_str: str) -> Type[VectorStoreBase]:
     ret = mapping.get(vector_index_str)
     assert ret
     return ret  # type: ignore
->>>>>>> 38dce0b (feat(llm): vector db finished)

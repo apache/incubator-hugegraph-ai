@@ -388,9 +388,13 @@ def graph_rag_recall(
     rag = RAGPipeline()
     rag.extract_keywords().keywords_to_vid(
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
         vector_index=index_settings.now_vector_index,
 >>>>>>> 38dce0b (feat(llm): vector db finished)
+=======
+        vector_index_str=index_settings.now_vector_index,
+>>>>>>> dd3b085 (feat(llm):  nexpected-keyword-arg,unused-import)
         vector_dis_threshold=vector_dis_threshold,
         topk_per_keyword=topk_per_keyword,
     )
