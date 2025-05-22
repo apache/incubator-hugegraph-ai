@@ -1,3 +1,4 @@
+# TODO: remove this file after uv run stable, don't update it
 openai~=1.61.0
 ollama~=0.4.8
 qianfan~=0.3.18

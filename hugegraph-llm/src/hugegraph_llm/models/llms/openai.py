@@ -212,7 +212,7 @@ class OpenAIClient(BaseLLM):
             raise e
 
     def num_tokens_from_string(self, string: str) -> int:
-        """Get token count from string."""
+        """Get token count from a string."""
         encoding = tiktoken.encoding_for_model(self.model)
         num_tokens = len(encoding.encode(string))
         return num_tokens
