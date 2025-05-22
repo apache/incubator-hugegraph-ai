@@ -63,10 +63,10 @@ class OllamaEmbedding(BaseEmbedding):
             A list of embedding vectors, where each vector is a list of floats.
             The order of embeddings matches the order of input texts.
         """
-        if hasattr(self.client, "embed"):
+        if hasattr(self.client, "embed"): # pylint: disable=no-else-return
             response = self.client.embed(model=self.model, input=texts)["embeddings"]
             return [list(inner_sequence) for inner_sequence in response]
-        elif hasattr(self.client, "embeddings"): # pylint: disable=no-else-return
+        elif hasattr(self.client, "embeddings"):
             embeddings_list = []
             for text_item in texts:
                 response_item = self.client.embeddings(model=self.model, prompt=text_item)
