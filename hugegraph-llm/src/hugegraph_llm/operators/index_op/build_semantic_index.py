@@ -17,7 +17,7 @@
 
 
 import os
-from typing import Any, Dict, List, Tuple, Set
+from typing import Any, Dict
 from collections import defaultdict
 from tqdm import tqdm
 
@@ -88,10 +88,9 @@ class BuildSemanticIndex:
             elif present_propset != past_propset:
                 to_update.append((prop_value, present_propset))
                 to_update_remove.append((prop_value, past_propset))
-                log.debug("Update prop_value: %s, present_propset: %s, past_propset: %s, to_update_remove: %s", prop_value, present_propset, past_propset, to_update_remove)
         return to_add, to_update, to_remove, to_update_remove
 
-    def run(self, context: Dict[str, Any]) -> Dict[str, Any]: # pylint: disable=too-many-statements
+    def run(self, context: Dict[str, Any]) -> Dict[str, Any]: # pylint: disable=too-many-statements, too-many-branches
         vertexlabels = self.sm.schema.getSchema()["vertexlabels"]
         all_pk_flag = all(data.get('id_strategy') == 'PRIMARY_KEY' for data in vertexlabels)
 
@@ -165,7 +164,7 @@ class BuildSemanticIndex:
             log.debug("to_update_remove: %s", to_update_remove)
             log.debug("prop properties.pkl: %s", self.prop_index.properties)
             # 4. remove
-            log.info(f"Removing {len(to_remove)} outdated property value")
+            log.info("Removing %s outdated property value", len(to_remove))
             removed_props_num = self.prop_index.remove(to_remove)
             if removed_props_num:
                 self.prop_index.to_index_file(self.index_dir_prop)
@@ -188,10 +187,10 @@ class BuildSemanticIndex:
                     update_remove_prop_values = [prop_set for _, prop_set in to_update_remove]
                     removed_num = self.prop_index.remove(update_remove_prop_values)
                     self.prop_index.to_index_file(self.index_dir_prop)
-                    log.info(f"In to_update: Removed {removed_num} outdated property set")
+                    log.info("In to_update: Removed %s outdated property set", removed_num)
                 added_props_embeddings = self._get_embeddings_parallel(add_prop_values)
                 self.prop_index.add(added_props_embeddings, add_propsets)
-                log.info(f"Added {len(added_props_embeddings)} new or updated property embeddings")
+                log.info("Added %s new or updated property embeddings", len(added_props_embeddings))
                 self.prop_index.to_index_file(self.index_dir_prop)
             else:
                 log.debug("No update props to build vector index.")

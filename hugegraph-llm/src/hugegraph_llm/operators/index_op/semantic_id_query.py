@@ -53,6 +53,7 @@ class SemanticIdQuery:
             pwd=huge_settings.graph_pwd,
             graphspace=huge_settings.graph_space,
         )
+        self.schema = self._client.schema()
 
     def _exact_match_vids(self, keywords: List[str]) -> Tuple[List[str], List[str]]:
         assert keywords, "keywords can't be empty, please check the logic"
@@ -129,14 +130,14 @@ class SemanticIdQuery:
             fuzzy_match_vids = self._fuzzy_match_vids(unmatched_vids)
             log.debug("Fuzzy match vids: %s", fuzzy_match_vids)
             graph_query_list.update(fuzzy_match_vids)
-
-            if context["index_labels"]:
-                props_list = set()
-                exact_match_props, unmatched_props = self._exact_match_properties(keywords)
-                props_list.update(exact_match_props)
-                fuzzy_match_props = self._fuzzy_match_props(unmatched_props)
-                log.debug("Fuzzy match props: %s", fuzzy_match_props)
-                props_list.update(fuzzy_match_props)
-                context["match_props"] = list(props_list)
+            # index_labels = self.schema.getIndexLabels()
+            # if index_labels:
+            #     props_list = set()
+            #     exact_match_props, unmatched_props = self._exact_match_properties(keywords)
+            #     props_list.update(exact_match_props)
+            #     fuzzy_match_props = self._fuzzy_match_props(unmatched_props)
+            #     log.debug("Fuzzy match props: %s", fuzzy_match_props)
+            #     props_list.update(fuzzy_match_props)
+            #     context["match_props"] = list(props_list)
         context["match_vids"] = list(graph_query_list)
         return context
