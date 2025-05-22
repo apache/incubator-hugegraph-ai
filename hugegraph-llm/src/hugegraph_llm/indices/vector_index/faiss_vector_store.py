@@ -36,26 +36,10 @@ class FaissVectorIndex(VectorStoreBase):
         self.index = faiss.IndexFlatL2(embed_dim)
         self.properties: list[Any] = []
 
-<<<<<<< HEAD
-        
-
-    def to_index_file(self, dir_path: str, filename_prefix: str = None):
-        """Save index to files, supporting model-specific filenames."""
-        if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
-
-        index_name = f"{filename_prefix}_{INDEX_FILE_NAME}" if filename_prefix else INDEX_FILE_NAME
-        property_name = (
-            f"{filename_prefix}_{PROPERTIES_FILE_NAME}" if filename_prefix else PROPERTIES_FILE_NAME
-        )
-        index_file = os.path.join(dir_path, index_name)
-        properties_file = os.path.join(dir_path, property_name)
-=======
     def save_index_by_name(self, *name: str):
         os.makedirs(os.path.join(resource_path, *name), exist_ok=True)
         index_file = os.path.join(resource_path, *name, INDEX_FILE_NAME)
         properties_file = os.path.join(resource_path, *name, PROPERTIES_FILE_NAME)
->>>>>>> 38dce0b (feat(llm): vector db finished)
         faiss.write_index(self.index, index_file)
         with open(properties_file, "wb") as f:
             pkl.dump(self.properties, f)
@@ -121,79 +105,6 @@ class FaissVectorIndex(VectorStoreBase):
         }
 
     @staticmethod
-<<<<<<< HEAD
-    def from_index_file(
-        dir_path: str, filename_prefix: str | None = None, record_miss: bool = True
-    ) -> "FaissVectorIndex":
-        """Load index from files, supporting model-specific filenames.
-
-        If prefixed files are missing, optionally warn and return an empty index.
-        Also validates vector/property count consistency.
-        """
-        index_name = f"{filename_prefix}_{INDEX_FILE_NAME}" if filename_prefix else INDEX_FILE_NAME
-        property_name = (
-            f"{filename_prefix}_{PROPERTIES_FILE_NAME}" if filename_prefix else PROPERTIES_FILE_NAME
-        )
-        index_file = os.path.join(dir_path, index_name)
-        properties_file = os.path.join(dir_path, property_name)
-        missing = [p for p in [index_file, properties_file] if not os.path.exists(p)]
-        if missing:
-            if record_miss:
-                log.warning(
-                    "Missing vector files: %s. Need create a new one for it.", ", ".join(missing)
-                )
-            return FaissVectorIndex()
-
-        try:
-            faiss_index = faiss.read_index(index_file)
-            with open(properties_file, "rb") as f:
-                properties = pkl.load(f)
-        except (RuntimeError, pkl.UnpicklingError, OSError) as e:  # pragma: no cover
-            log.error(
-                "Failed to load index files for model '%s': %s",
-                filename_prefix or "default",
-                e,
-            )
-            raise RuntimeError(
-                f"Could not load index files for model '{filename_prefix or 'default'}'. "
-                f"Original error ({type(e).__name__}): {e}"
-            ) from e
-
-        if faiss_index.ntotal != len(properties):
-            raise RuntimeError(
-                f"Data inconsistency: index for model '{filename_prefix or 'default'}' has "
-                f"{faiss_index.ntotal} vectors, but {len(properties)} properties."
-            )
-
-        embed_dim = faiss_index.d
-        vector_index = FaissVectorIndex(embed_dim)
-        vector_index.index = faiss_index
-        vector_index.properties = properties
-        return vector_index
-
-    @staticmethod
-    def clean(dir_path: str, filename_prefix: str = None):
-        """Clean index files, supporting model-specific filenames.
-
-        This method deletes the index and properties files associated with a specific model.
-        If model_name is None, it targets the default files.
-        """
-        index_name = f"{filename_prefix}_{INDEX_FILE_NAME}" if filename_prefix else INDEX_FILE_NAME
-        property_name = (
-            f"{filename_prefix}_{PROPERTIES_FILE_NAME}" if filename_prefix else PROPERTIES_FILE_NAME
-        )
-        index_file = os.path.join(dir_path, index_name)
-        properties_file = os.path.join(dir_path, property_name)
-
-        for file in [index_file, properties_file]:
-            if os.path.exists(file):
-                try:
-                    os.remove(file)
-                    log.info("Removed index file: %s", file)
-                except OSError as e:
-                    log.error("Error removing file %s: %s", file, e)
-        
-=======
     def clean(*name: str):
         index_file = os.path.join(resource_path, *name, INDEX_FILE_NAME)
         properties_file = os.path.join(resource_path, *name, PROPERTIES_FILE_NAME)
@@ -201,7 +112,6 @@ class FaissVectorIndex(VectorStoreBase):
             os.remove(index_file)
         if os.path.exists(properties_file):
             os.remove(properties_file)
->>>>>>> 38dce0b (feat(llm): vector db finished)
 
     @staticmethod
     def from_name(embed_dim: int, *name: str) -> "FaissVectorIndex":
