@@ -80,6 +80,7 @@ include = [
     "src/hugegraph_llm",
     "README.md",
     "LICENSE",
+    "NOTICE",
     "MANIFEST.in"
 ]
 

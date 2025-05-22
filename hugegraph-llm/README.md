@@ -23,12 +23,12 @@ graph systems and large language models.
 
 ## 3. Preparation
 
-1. Start the HugeGraph database, you can run it via [Docker](https://hub.docker.com/r/hugegraph/hugegraph)/[Binary Package](https://hugegraph.apache.org/docs/download/download/).  
-    Refer to the detailed [doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance  
+1. Start the HugeGraph database, you can run it via [Docker](https://hub.docker.com/r/hugegraph/hugegraph)/[Binary Package](https://hugegraph.apache.org/docs/download/download/).
     There is a simple method by docker：  
     ```bash
    docker run -itd --name=server -p 8080:8080 hugegraph/hugegraph
-    ```
+    ```  
+   You can refer to the detailed documents [doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance.
 
 2. Configuring the uv environment, Use the official installer to install uv, See the [uv documentation](https://docs.astral.sh/uv/configuration/installer/) for other installation methods   
     ```bash
