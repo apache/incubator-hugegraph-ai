@@ -61,9 +61,9 @@ class LLMConfig(BaseConfig):
     ollama_text2gql_host: str = "127.0.0.1"
     ollama_text2gql_port: int = 11434
     ollama_text2gql_language_model: str | None = None
-    ollama_embedding_host: str = os.getenv("OLLAMA_EMBEDDING_HOST", "127.0.0.1")
-    ollama_embedding_port: int = int(os.getenv("OLLAMA_EMBEDDING_PORT", 11434))
-    ollama_embedding_model: str = os.getenv("OLLAMA_EMBEDDING_MODEL", 'quentinz/bge-large-zh-v1.5')
+    ollama_embedding_host: str = "127.0.0.1"
+    ollama_embedding_port: int = int(11434)
+    ollama_embedding_model: str = 'quentinz/bge-large-zh-v1.5'
     ollama_embedding_model_dim: Optional[int] = (
         int(os.getenv("OLLAMA_EMBEDDING_MODEL_DIM")) if os.getenv("OLLAMA_EMBEDDING_MODEL_DIM") else None  # type:ignore
     )
