@@ -1,4 +1,4 @@
-# hugegraph-llm
+# hugegraph-llm [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/apache/incubator-hugegraph-ai)
 
 ## 1. Summary
 
@@ -19,42 +19,37 @@ graph systems and large language models.
 > [!IMPORTANT]
 > - python 3.10+ (not tested in 3.12)
 > - hugegraph-server 1.3+ (better to use 1.5+)
-> - poetry 2.0+ (`uv` is on the way)
+> - uv 0.7+
 
 ## 3. Preparation
 
-1. Start the HugeGraph database, you can run it via [Docker](https://hub.docker.com/r/hugegraph/hugegraph)/[Binary Package](https://hugegraph.apache.org/docs/download/download/).  
-    Refer to the detailed [doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance
-
-2. Configuring the poetry environment, Use the official installer to install Poetry, See the [poetry documentation](https://poetry.pythonlang.cn/docs/#installing-with-pipx) for other installation methods   
+1. Start the HugeGraph database, you can run it via [Docker](https://hub.docker.com/r/hugegraph/hugegraph)/[Binary Package](https://hugegraph.apache.org/docs/download/download/).
+    There is a simple method by docker:  
     ```bash
-    # You could try pipx or pip to install poetry when meet network issues, refer the poetry doc for more details
-    curl -sSL https://install.python-poetry.org | python3 - # install the latest version like 2.0+
+   docker run -itd --name=server -p 8080:8080 hugegraph/hugegraph
+    ```  
+   You can refer to the detailed documents [doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance.
+
+2. Configuring the uv environment, Use the official installer to install uv, See the [uv documentation](https://docs.astral.sh/uv/configuration/installer/) for other installation methods   
+    ```bash
+    # You could try pipx or pip to install uv when meet network issues, refer the uv doc for more details
+    curl -LsSf https://astral.sh/uv/install.sh | sh  - # install the latest version like 0.7.3+
     ```
 
 3. Clone this project
     ```bash
     git clone https://github.com/apache/incubator-hugegraph-ai.git
     ```
-4. Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph_llm](src/hugegraph_llm), poetry officially recommends using virtual environments
+4. Configuration dependency environment
     ```bash
-    cd ./incubator-hugegraph-ai/hugegraph-llm
-    poetry config --list # List/check the current configuration (Optional)
-    # e.g: poetry config virtualenvs.in-project true
-    # You could update the poetry configs if need 
-    poetry install
-    # (Recommended) If you want to use the shell of the venv, you can run the following command
-    poetry self add poetry-plugin-shell # from poetry 2.0+
-    poetry shell # use 'exit' to leave the shell
+    cd incubator-hugegraph-ai/hugegraph-llm
+    uv venv && source .venv/bin/activate
+    uv pip install -e .
     ```  
-    If `poetry install` fails or too slow due to network issues, it is recommended to modify `tool.poetry.source` of `hugegraph-llm/pyproject.toml`
-5. Enter the project directory(`./incubator-hugegraph-ai/hugegraph-llm/src`)
-    ```bash
-    cd ./src
-    ```
+    If dependency download fails or too slow due to network issues, it is recommended to modify `hugegraph-llm/pyproject.toml`.
 6. Start the gradio interactive demo of **Graph RAG**, you can run with the following command and open http://127.0.0.1:8001 after starting
     ```bash
-    python -m hugegraph_llm.demo.rag_demo.app  # same as "poetry run xxx"
+    python -m hugegraph_llm.demo.rag_demo.app  # same as "uv run xxx"
     ```
     The default host is `0.0.0.0` and the port is `8001`. You can change them by passing command line arguments`--host` and `--port`.  
     ```bash
@@ -77,7 +72,7 @@ graph systems and large language models.
     python ./hugegraph_llm/operators/common_op/nltk_helper.py
     ```
 > [!TIP]   
-> You can also refer to our [quick-start](./quick_start.md) doc to understand how to use it & the basic query logic 🚧
+> You can also refer to our [quick-start](https://github.com/apache/incubator-hugegraph-ai/blob/main/hugegraph-llm/quick_start.md) doc to understand how to use it & the basic query logic 🚧
 
 ## 4 Examples
 

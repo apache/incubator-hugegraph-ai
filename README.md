@@ -1,6 +1,7 @@
 # hugegraph-ai
 
 [![License](https://img.shields.io/badge/license-Apache%202-0E78BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/apache/incubator-hugegraph-ai)
 
 `hugegraph-ai` aims to explore the integration of [HugeGraph](https://github.com/apache/hugegraph) with artificial 
 intelligence (AI) and provide comprehensive support for developers to leverage HugeGraph's AI capabilities 

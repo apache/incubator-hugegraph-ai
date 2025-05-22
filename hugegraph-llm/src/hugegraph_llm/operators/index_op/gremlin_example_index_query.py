@@ -57,7 +57,7 @@ class GremlinExampleIndexQuery:
     def _build_default_example_index(self):
         properties = pd.read_csv(os.path.join(resource_path, "demo", "text2gremlin.csv")).to_dict(orient="records")
         from concurrent.futures import ThreadPoolExecutor
-        # TODO: use asyncio for IO tasks
+        # TODO: reuse the logic in build_semantic_index.py (consider extract the batch-embedding method)
         with ThreadPoolExecutor() as executor:
             embeddings = list(
                 tqdm(executor.map(self.embedding.get_text_embedding, [row["query"] for row in properties]),
