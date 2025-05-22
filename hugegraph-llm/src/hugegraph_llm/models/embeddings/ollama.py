@@ -66,7 +66,7 @@ class OllamaEmbedding(BaseEmbedding):
         if hasattr(self.client, "embed"):
             response = self.client.embed(model=self.model, input=texts)["embeddings"]
             return [list(inner_sequence) for inner_sequence in response]
-        elif hasattr(self.client, "embeddings"):
+        elif hasattr(self.client, "embeddings"): # pylint: disable=no-else-return
             embeddings_list = []
             for text_item in texts:
                 response_item = self.client.embeddings(model=self.model, prompt=text_item)
