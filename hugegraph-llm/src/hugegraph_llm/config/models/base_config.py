@@ -20,11 +20,11 @@ import os
 
 from dotenv import dotenv_values, set_key
 from pydantic_settings import BaseSettings
+
 from hugegraph_llm.utils.log import log
 
 dir_name = os.path.dirname
-package_path = dir_name(dir_name(dir_name(dir_name(dir_name(os.path.abspath(__file__))))))
-env_path = os.path.join(package_path, ".env")
+env_path = os.path.join(os.getcwd(), ".env")  # Load .env from the current working directory
 
 
 class BaseConfig(BaseSettings):
