@@ -22,10 +22,10 @@ import os
 
 from hugegraph_llm.config.index_config import IndexConfig
 
-from .prompt_config import PromptConfig
-from .hugegraph_config import HugeGraphConfig
 from .admin_config import AdminConfig
+from .hugegraph_config import HugeGraphConfig
 from .llm_config import LLMConfig
+from .prompt_config import PromptConfig
 
 llm_settings = LLMConfig()
 prompt = PromptConfig(llm_settings)
