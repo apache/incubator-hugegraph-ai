@@ -18,8 +18,7 @@
 
 from typing import Any, Dict, List, Literal, Optional
 
-from hugegraph_llm.config import huge_settings, index_settings, prompt
-from hugegraph_llm.indices.vector_index.base import VectorStoreBase
+from hugegraph_llm.config import huge_settings, prompt
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.base import BaseLLM

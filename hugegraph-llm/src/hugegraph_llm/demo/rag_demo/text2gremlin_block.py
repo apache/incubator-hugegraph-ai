@@ -202,7 +202,7 @@ def graph_rag_recall(
     store_schema(prompt.text2gql_graph_schema, query, gremlin_prompt)
     rag = RAGPipeline()
     rag.extract_keywords().keywords_to_vid(
-        vector_index=index_settings.now_vector_index,
+        vector_index_str=index_settings.now_vector_index,
         vector_dis_threshold=vector_dis_threshold,
         topk_per_keyword=topk_per_keyword,
     )

@@ -16,6 +16,7 @@
 # under the License.
 
 import os
+
 import yaml
 
 from hugegraph_llm.utils.log import log
@@ -55,12 +56,12 @@ class BasePromptConfig:
         indented_gremlin_prompt = "\n".join([f"  {line}" for line in self.gremlin_generate_prompt.splitlines()])
         indented_example_prompt = "\n".join([f"    {line}" for line in self.extract_graph_prompt.splitlines()])
         indented_question = "\n".join([f"    {line}" for line in self.default_question.splitlines()])
-        indented_custom_related_information = (
-            "\n".join([f"    {line}" for line in self.custom_rerank_info.splitlines()])
+        indented_custom_related_information = "\n".join(
+            [f"    {line}" for line in self.custom_rerank_info.splitlines()]
         )
         indented_default_answer_template = "\n".join([f"    {line}" for line in self.answer_prompt.splitlines()])
-        indented_keywords_extract_template = (
-            "\n".join([f"    {line}" for line in self.keywords_extract_prompt.splitlines()])
+        indented_keywords_extract_template = "\n".join(
+            [f"    {line}" for line in self.keywords_extract_prompt.splitlines()]
         )
         indented_doc_input_text = "\n".join([f"  {line}" for line in self.doc_input_text.splitlines()])
 
