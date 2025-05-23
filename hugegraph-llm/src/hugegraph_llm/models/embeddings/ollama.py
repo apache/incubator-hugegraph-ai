@@ -19,17 +19,12 @@
 from typing import List
 
 import ollama
+
 from .base import BaseEmbedding
 
 
 class OllamaEmbedding(BaseEmbedding):
-    def __init__(
-            self,
-            model: str,
-            host: str = "127.0.0.1",
-            port: int = 11434,
-            **kwargs
-    ):
+    def __init__(self, model: str, host: str = "127.0.0.1", port: int = 11434, **kwargs):
         self.model = model
         self.client = ollama.Client(host=f"http://{host}:{port}", **kwargs)
         self.async_client = ollama.AsyncClient(host=f"http://{host}:{port}", **kwargs)
@@ -75,21 +70,9 @@ class OllamaEmbedding(BaseEmbedding):
                 "Please check your ollama library version."
             )
 
-    def get_texts_embeddings(
-            self,
-            texts: List[str]
-    ) -> List[List[float]]:
+    def get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Get embeddings for multiple texts in a single batch.
-        
-        This method efficiently processes multiple texts at once by leveraging
-        Ollama's batching capabilities, which is more efficient than processing
-        texts individually.
-        
-        Parameters
-        ----------
-        texts : List[str]
-            A list of text strings to be embedded.
-            
+
         Returns
         -------
         List[List[float]]
@@ -111,10 +94,7 @@ class OllamaEmbedding(BaseEmbedding):
                 "Please check your ollama library version."
             )
 
-    async def async_get_text_embedding(
-            self,
-            text: str
-    ) -> List[float]:
-        """Comment"""
+    # TODO: Add & implement batch processing for async_get_texts_embeddings (refactor here)
+    async def async_get_text_embedding(self, text: str) -> List[float]:
         response = await self.async_client.embeddings(model=self.model, prompt=text)
         return list(response["embedding"])
