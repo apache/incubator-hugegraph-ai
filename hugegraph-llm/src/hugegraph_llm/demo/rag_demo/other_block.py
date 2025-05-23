@@ -86,17 +86,6 @@ def create_other_block():
         btn = gr.Button("(BETA) Init HugeGraph test data (🚧)")
         btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
 
-    # def on_tab_select(input_f, input_t, evt: gr.SelectData):
-    #     print(f"You selected {evt.value} at {evt.index} from {evt.target}")
-    #     if evt.value == "file":
-    #         return input_f, ""
-    #     if evt.value == "text":
-    #         return None, input_t
-    #     return None, ""
-
-    # tab_upload_file.select(fn=on_tab_select, inputs=[inp1_file, inp1], outputs=[inp1_file, inp1])
-    # tab_upload_text.select(fn=on_tab_select, inputs=[inp1_file, inp1], outputs=[inp1_file, inp1])
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # pylint: disable=W0621
     log.info("Starting background scheduler...")

@@ -176,36 +176,40 @@ def auto_test_llms(
     for config in configs:
         output = None
         time_start = time.perf_counter()
-        if config["type"] == "openai":
-            client = OpenAIClient(
-                api_key=config["api_key"],
-                api_base=config["api_base"],
-                model_name=config["model_name"],
-                max_tokens=config["max_tokens"],
-            )
-            output = client.generate(prompt=prompt)
-        elif config["type"] == "qianfan_wenxin":
-            client = QianfanClient(
-                model_name=config["model_name"],
-                api_key=config["api_key"],
-                secret_key=config["secret_key"]
-            )
-            output = client.generate(prompt=prompt)
-        elif config["type"] == "ollama/local":
-            client = OllamaClient(
-                model_name=config["model_name"],
-                host=config["host"],
-                port=config["port"],
-            )
-            output = client.generate(prompt=prompt)
-        elif config["type"] == "litellm":
-            client = LiteLLMClient(
-                api_key=config["api_key"],
-                api_base=config["api_base"],
-                model_name=config["model_name"],
-                max_tokens=config["max_tokens"],
-            )
-            output = client.generate(prompt=prompt)
+        try:
+            if config["type"] == "openai":
+                    client = OpenAIClient(
+                        api_key=config["api_key"],
+                        api_base=config["api_base"],
+                        model_name=config["model_name"],
+                        max_tokens=config["max_tokens"],
+                    )
+                    output = client.generate(prompt=prompt)
+            elif config["type"] == "qianfan_wenxin":
+                    client = QianfanClient(
+                        model_name=config["model_name"],
+                        api_key=config["api_key"],
+                        secret_key=config["secret_key"]
+                    )
+                    output = client.generate(prompt=prompt)
+            elif config["type"] == "ollama/local":
+                    client = OllamaClient(
+                        model_name=config["model_name"],
+                        host=config["host"],
+                        port=config["port"],
+                    )
+                    output = client.generate(prompt=prompt)
+            elif config["type"] == "litellm":
+                    client = LiteLLMClient(
+                        api_key=config["api_key"],
+                        api_base=config["api_base"],
+                        model_name=config["model_name"],
+                        max_tokens=config["max_tokens"],
+                    )
+                    output = client.generate(prompt=prompt)
+        except Exception as e:  # pylint: disable=broad-except
+            log.error("Generate failed for %s: %s", config["model_name"], e)
+            output = f"[ERROR] {e}"
         time_end = time.perf_counter()
         latency = time_end - time_start
         answers[config["model_name"]] = {
