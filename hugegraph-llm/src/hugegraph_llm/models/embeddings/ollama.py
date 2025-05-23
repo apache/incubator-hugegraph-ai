@@ -43,15 +43,15 @@ class OllamaEmbedding(BaseEmbedding):
             A list of embedding vectors, where each vector is a list of floats.
             The order of embeddings matches the order of input texts.
         """
-        if hasattr(self.client, "embed"):
-            response = self.client.embed(model=self.model, input=texts)["embeddings"]
-            return [list(inner_sequence) for inner_sequence in response]
-        else:
+        if not hasattr(self.client, "embed"):
             error_message = (
                 "The required 'embed' method was not found on the Ollama client. "
                 "Please ensure your ollama library is up-to-date and supports batch embedding. "
             )
             raise AttributeError(error_message)
+
+        response = self.client.embed(model=self.model, input=texts)["embeddings"]
+        return [list(inner_sequence) for inner_sequence in response]
 
     # TODO: Add & implement batch processing for async_get_texts_embeddings (refactor here)
     async def async_get_text_embedding(self, text: str) -> List[float]:

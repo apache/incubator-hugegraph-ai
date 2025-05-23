@@ -18,9 +18,9 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import List, Union
-from warnings import deprecated
 
 import numpy as np
+from typing_extensions import deprecated
 
 
 class SimilarityMode(str, Enum):
