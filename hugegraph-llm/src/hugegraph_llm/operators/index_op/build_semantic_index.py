@@ -171,9 +171,9 @@ class BuildSemanticIndex:
 
         if context["index_labels"]:
             present_prop_value_to_propset = self.get_present_props(context)
-            log.debug("present_prop_value_to_propset: %s", present_prop_value_to_propset)
+            # log.debug("present_prop_value_to_propset: %s", present_prop_value_to_propset)
             past_prop_value_to_propset = self.get_past_props()
-            log.debug("past_prop_value_to_propset: %s", past_prop_value_to_propset)
+            # log.debug("past_prop_value_to_propset: %s", past_prop_value_to_propset)
             to_add, to_update, to_remove, to_update_remove = self.diff_property_sets(
                 present_prop_value_to_propset,
                 past_prop_value_to_propset

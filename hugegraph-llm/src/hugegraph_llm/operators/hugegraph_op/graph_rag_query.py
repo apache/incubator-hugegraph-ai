@@ -129,12 +129,13 @@ class GraphRAGQuery:
     def _gremlin_generate_query(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context["query"]
         vertices = context.get("match_vids")
+        properties = context.get("match_props")
         query_embedding = context.get("query_embedding")
 
         self._gremlin_generator.clear()
         self._gremlin_generator.example_index_query(num_examples=self._num_gremlin_generate_example)
         gremlin_response = self._gremlin_generator.gremlin_generate_synthesize(
-            context["simple_schema"], vertices=vertices, gremlin_prompt=self._gremlin_prompt
+            context["simple_schema"], vertices=vertices, gremlin_prompt=self._gremlin_prompt, properties=properties
         ).run(query=query, query_embedding=query_embedding)
         if self._num_gremlin_generate_example > 0:
             gremlin = gremlin_response["result"]

@@ -33,6 +33,7 @@ class GremlinGenerateSynthesize:
         schema: Optional[Union[dict, str]] = None,
         vertices: Optional[List[str]] = None,
         gremlin_prompt: Optional[str] = None,
+        properties: Optional[List[tuple]] = None
     ) -> None:
         self.llm = llm or LLMs().get_text2gql_llm()
         if isinstance(schema, dict):
@@ -40,6 +41,7 @@ class GremlinGenerateSynthesize:
         self.schema = schema
         self.vertices = vertices
         self.gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
+        self.properties = properties
 
     def _extract_response(self, response: str, label: str = "gremlin") -> str:
         match = re.search(f"```{label}(.*?)```", response, re.DOTALL)
@@ -70,6 +72,7 @@ class GremlinGenerateSynthesize:
             schema=self.schema,
             example=self._format_examples(examples=raw_example),
             vertices=self._format_vertices(vertices=self.vertices),
+            properties=self.properties
         )
         async_tasks["raw_answer"] = asyncio.create_task(self.llm.agenerate(prompt=raw_prompt))
 
@@ -79,6 +82,7 @@ class GremlinGenerateSynthesize:
             schema=self.schema,
             example=self._format_examples(examples=examples),
             vertices=self._format_vertices(vertices=self.vertices),
+            properties=self.properties
         )
         async_tasks["initialized_answer"] = asyncio.create_task(self.llm.agenerate(prompt=init_prompt))
 
@@ -100,6 +104,7 @@ class GremlinGenerateSynthesize:
             schema=self.schema,
             example=self._format_examples(examples=raw_example),
             vertices=self._format_vertices(vertices=self.vertices),
+            properties=self.properties
         )
         raw_response = self.llm.generate(prompt=raw_prompt)
 
@@ -109,6 +114,7 @@ class GremlinGenerateSynthesize:
             schema=self.schema,
             example=self._format_examples(examples=examples),
             vertices=self._format_vertices(vertices=self.vertices),
+            properties=self.properties
         )
         initialized_response = self.llm.generate(prompt=init_prompt)
 

@@ -17,7 +17,7 @@
 
 
 import os
-from typing import Dict, Any, Literal, List, Tuple
+from typing import Dict, Any, Literal, List, Tuple, Union, FrozenSet
 
 from hugegraph_llm.config import resource_path, huge_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
@@ -90,33 +90,45 @@ class SemanticIdQuery:
         log.debug("property_keys: %s", property_keys)
         matched_properties = set()
         unmatched_keywords = set(keywords)
-
         for key in property_keys:
             for keyword in list(unmatched_keywords):
                 gremlin_query = f"g.V().has('{key.name}', '{keyword}').limit(1)"
                 log.debug("prop Gremlin query: %s", gremlin_query)
                 resp = self._client.gremlin().exec(gremlin_query)
                 if resp.get("data"):
-                    matched_properties.add((key, keyword))
+                    matched_properties.add((key.name, keyword))
                     unmatched_keywords.remove(keyword)
-
         return list(matched_properties), list(unmatched_keywords)
 
     def _fuzzy_match_props(self, keywords: List[str]) -> List[str]:
         fuzzy_match_result = []
         for keyword in keywords:
-            keyword_vector = self.embedding.get_text_embedding(keyword)
-            results = self.prop_index.search(keyword_vector, top_k=self.topk_per_keyword,
+            keyword_vector = self.embedding.get_texts_embeddings([keyword])
+            results = self.prop_index.search(keyword_vector[0], top_k=self.topk_per_keyword,
                                                dis_threshold=float(self.vector_dis_threshold))
             if results:
                 fuzzy_match_result.extend(results[:self.topk_per_keyword])
         return fuzzy_match_result
 
+    def reformat_mixed_list_to_unique_tuples(
+        self, mixed_data_list: List[Union[FrozenSet[Tuple[str, str]], Tuple[str, str]]]
+    ) -> List[Tuple[str, str]]:
+        unique_tuples = set()
+        for item in mixed_data_list:
+            if isinstance(item, (frozenset, set)):
+                for prop_tuple in item:
+                    if isinstance(prop_tuple, tuple) and len(prop_tuple) == 2:
+                        unique_tuples.add(prop_tuple)
+            elif isinstance(item, tuple):
+                if len(item) == 2:
+                    unique_tuples.add(item)
+        return list(unique_tuples)
+
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         graph_query_list = set()
         if self.by == "query":
             query = context["query"]
-            query_vector = self.embedding.get_text_embedding(query)
+            query_vector = self.embedding.get_texts_embeddings([query])
             results = self.vector_index.search(query_vector, top_k=self.topk_per_query)
             if results:
                 graph_query_list.update(results[:self.topk_per_query])
@@ -125,7 +137,6 @@ class SemanticIdQuery:
             if not keywords:
                 context["match_vids"] = []
                 return context
-
             exact_match_vids, unmatched_vids = self._exact_match_vids(keywords)
             graph_query_list.update(exact_match_vids)
             fuzzy_match_vids = self._fuzzy_match_vids(unmatched_vids)
@@ -140,6 +151,7 @@ class SemanticIdQuery:
                 fuzzy_match_props = self._fuzzy_match_props(unmatched_props)
                 log.debug("Fuzzy match props: %s", fuzzy_match_props)
                 props_list.update(fuzzy_match_props)
+                props_list = self.reformat_mixed_list_to_unique_tuples(props_list)
                 context["match_props"] = list(props_list)
                 log.debug("Match props: %s", context["match_props"])
         context["match_vids"] = list(graph_query_list)
