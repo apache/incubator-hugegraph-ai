@@ -19,66 +19,35 @@
 from typing import List
 
 import ollama
+
 from .base import BaseEmbedding
 
 
 class OllamaEmbedding(BaseEmbedding):
-    def __init__(
-            self,
-            model: str,
-            host: str = "127.0.0.1",
-            port: int = 11434,
-            **kwargs
-    ):
+    def __init__(self, model: str, host: str = "127.0.0.1", port: int = 11434, **kwargs):
         self.model = model
         self.client = ollama.Client(host=f"http://{host}:{port}", **kwargs)
         self.async_client = ollama.AsyncClient(host=f"http://{host}:{port}", **kwargs)
         self.embedding_dimension = None
 
-    def get_text_embedding(
-            self,
-            text: str
-    ) -> List[float]:
+    def get_text_embedding(self, text: str) -> List[float]:
         """Get embedding for a single text.
 
-        This method handles different Ollama client API versions by checking for
-        the presence of 'embed' or 'embeddings' methods.
+        This method delegates to get_texts_embeddings to handle different Ollama API versions and response parsing.
         """
-        if hasattr(self.client, "embed"):
-            response = self.client.embed(model=self.model, input=text)
-            try:
-                # First, try the structure typically seen for single embeddings
-                # or newer batch responses that might return a single "embedding" key.
-                return list(response["embedding"])
-            except KeyError:
-                # Fallback for older batch-like response for single item,
-                # or if "embeddings" is a list with one item.
-                try:
-                    return list(response["embeddings"][0])
-                except (KeyError, IndexError) as e:
-                    raise RuntimeError(
-                        "Failed to extract embedding from Ollama client 'embed' response. "
-                        f"Response: {response}. Error: {e}"
-                    ) from e
-        elif hasattr(self.client, "embeddings"):
-            response = self.client.embeddings(model=self.model, prompt=text)
-            try:
-                return list(response["embedding"])
-            except KeyError as e:
-                raise RuntimeError(
-                    "Failed to extract embedding from Ollama client 'embeddings' response. "
-                    f"Response: {response}. Error: {e}"
-                ) from e
+        # For a single input text, it should return a list containing one embedding.
+        list_of_embeddings = self.get_texts_embeddings([text])
+
+        # Ensure that we received exactly one embedding for the single input text
+        if list_of_embeddings and len(list_of_embeddings) == 1:
+            return list_of_embeddings[0]
         else:
-            raise AttributeError(
-                "Ollama client object has neither 'embed' nor 'embeddings' method. "
-                "Please check your ollama library version."
+            raise RuntimeError(
+                f"Failed to retrieve a unique embedding for the text. "
+                f"Received from get_texts_embeddings: {list_of_embeddings}"
             )
 
-    def get_texts_embeddings(
-            self,
-            texts: List[str]
-    ) -> List[List[float]]:
+    def get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Get embeddings for multiple texts in a single batch.
         
         This method efficiently processes multiple texts at once by leveraging
@@ -96,7 +65,7 @@ class OllamaEmbedding(BaseEmbedding):
             A list of embedding vectors, where each vector is a list of floats.
             The order of embeddings matches the order of input texts.
         """
-        if hasattr(self.client, "embed"): # pylint: disable=no-else-return
+        if hasattr(self.client, "embed"):  # pylint: disable=no-else-return
             response = self.client.embed(model=self.model, input=texts)["embeddings"]
             return [list(inner_sequence) for inner_sequence in response]
         elif hasattr(self.client, "embeddings"):
@@ -111,10 +80,7 @@ class OllamaEmbedding(BaseEmbedding):
                 "Please check your ollama library version."
             )
 
-    async def async_get_text_embedding(
-            self,
-            text: str
-    ) -> List[float]:
-        """Comment"""
+    # TODO: Add & implement batch processing for async_get_texts_embeddings (refactor here)
+    async def async_get_text_embedding(self, text: str) -> List[float]:
         response = await self.async_client.embeddings(model=self.model, prompt=text)
         return list(response["embedding"])

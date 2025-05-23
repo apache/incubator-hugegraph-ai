@@ -83,6 +83,7 @@ class BaseEmbedding(ABC):
             The order of embeddings should match the order of input texts.
         """
 
+    # TODO: Add & implement batch processing for async_get_texts_embeddings (refactor here)
     @abstractmethod
     async def async_get_text_embedding(
             self,
