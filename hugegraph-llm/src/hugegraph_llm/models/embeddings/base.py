@@ -53,6 +53,7 @@ def similarity(
 class BaseEmbedding(ABC):
     """Embedding wrapper should take in a text and return a vector."""
 
+    # TODO: replace it by get_texts_embeddings() in the future, mark it as deprecated
     @abstractmethod
     def get_text_embedding(
             self,
