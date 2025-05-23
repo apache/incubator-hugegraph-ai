@@ -59,7 +59,7 @@ class OllamaEmbedding(BaseEmbedding):
                     raise RuntimeError(
                         "Failed to extract embedding from Ollama client 'embed' response. "
                         f"Response: {response}. Error: {e}"
-                    )
+                    ) from e
         elif hasattr(self.client, "embeddings"):
             response = self.client.embeddings(model=self.model, prompt=text)
             try:
@@ -68,7 +68,7 @@ class OllamaEmbedding(BaseEmbedding):
                 raise RuntimeError(
                     "Failed to extract embedding from Ollama client 'embeddings' response. "
                     f"Response: {response}. Error: {e}"
-                )
+                ) from e
         else:
             raise AttributeError(
                 "Ollama client object has neither 'embed' nor 'embeddings' method. "

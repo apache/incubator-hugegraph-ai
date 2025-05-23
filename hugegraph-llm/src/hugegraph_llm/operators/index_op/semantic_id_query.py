@@ -86,7 +86,7 @@ class SemanticIdQuery:
         return fuzzy_match_result
 
     def _exact_match_properties(self, keywords: List[str]) -> Tuple[List[str], List[str]]:
-        property_keys = self._client.schema().getPropertyKeys()
+        property_keys = self.schema.getPropertyKeys()
         log.debug("property_keys: %s", property_keys)
         matched_properties = set()
         unmatched_keywords = set(keywords)
@@ -141,5 +141,6 @@ class SemanticIdQuery:
                 log.debug("Fuzzy match props: %s", fuzzy_match_props)
                 props_list.update(fuzzy_match_props)
                 context["match_props"] = list(props_list)
+                log.debug("Match props: %s", context["match_props"])
         context["match_vids"] = list(graph_query_list)
         return context
