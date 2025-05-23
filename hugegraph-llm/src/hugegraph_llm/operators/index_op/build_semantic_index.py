@@ -18,7 +18,7 @@
 
 import asyncio
 import os
-from typing import Any, Dict
+from typing import Any, Dict, List
 from collections import defaultdict
 from tqdm import tqdm
 
@@ -104,6 +104,45 @@ class BuildSemanticIndex:
                 to_update_remove.append((prop_value, past_propset))
         return to_add, to_update, to_remove, to_update_remove
 
+    def get_present_props(self, context: Dict[str, Any]) -> Dict[str, set]:
+        results = []
+        for item in context["index_labels"]:
+            label = item["base_value"]
+            fields = item["fields"]
+            fields_str_list = [f"'{field}'" for field in fields]
+            fields_for_query = ", ".join(fields_str_list)
+            gremlin_query = INDEX_PROPERTY_GREMLIN.format(
+                label=label,
+                fields=fields_for_query
+            )
+            log.debug("gremlin_query: %s", gremlin_query)
+            result = self.client.gremlin().exec(gremlin=gremlin_query)["data"]
+            results.extend(result)
+        orig_present_prop_value_to_propset = defaultdict(set)
+        for item in results:
+            properties = item["properties"]
+            for prop_key, values in properties.items():
+                if not values:
+                    continue
+                prop_value = str(values[0])
+                orig_present_prop_value_to_propset[prop_value].add((prop_key, prop_value))
+        present_prop_value_to_propset = {
+            k: frozenset(v)
+            for k, v in orig_present_prop_value_to_propset.items()
+        }
+        return present_prop_value_to_propset
+
+    def get_past_props(self) -> Dict[str, set]:
+        orig_past_prop_value_to_propset = defaultdict(set)
+        for propset in self.prop_index.properties:
+            for _, prop_value in propset:
+                orig_past_prop_value_to_propset[prop_value].update(propset)
+        past_prop_value_to_propset = {
+            k: frozenset(v)
+            for k, v in orig_past_prop_value_to_propset.items()
+        }
+        return past_prop_value_to_propset
+
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]: # pylint: disable=too-many-statements, too-many-branches
         vertexlabels = self.sm.schema.getSchema()["vertexlabels"]
         all_pk_flag = all(data.get('id_strategy') == 'PRIMARY_KEY' for data in vertexlabels)
@@ -131,43 +170,10 @@ class BuildSemanticIndex:
         })
 
         if context["index_labels"]:
-            # 1. get present prop_value_to_propset
-            results = []
-            for item in context["index_labels"]:
-                label = item["base_value"]
-                fields = item["fields"]
-                fields_str_list = [f"'{field}'" for field in fields]
-                fields_for_query = ", ".join(fields_str_list)
-                gremlin_query = INDEX_PROPERTY_GREMLIN.format(
-                    label=label,
-                    fields=fields_for_query
-                )
-                log.debug("gremlin_query: %s", gremlin_query)
-                result = self.client.gremlin().exec(gremlin=gremlin_query)["data"]
-                results.extend(result)
-            orig_present_prop_value_to_propset = defaultdict(set)
-            for item in results:
-                properties = item["properties"]
-                for prop_key, values in properties.items():
-                    if not values:
-                        continue
-                    prop_value = str(values[0])
-                    orig_present_prop_value_to_propset[prop_value].add((prop_key, prop_value))
-            present_prop_value_to_propset = {
-                k: frozenset(v)
-                for k, v in orig_present_prop_value_to_propset.items()
-            }
+            present_prop_value_to_propset = self.get_present_props(context)
             log.debug("present_prop_value_to_propset: %s", present_prop_value_to_propset)
-            # 2. get past prop_value_to_propset
-            orig_past_prop_value_to_propset = defaultdict(set)
-            for propset in self.prop_index.properties:
-                for prop_key, prop_value in propset:
-                    orig_past_prop_value_to_propset[prop_value].update(propset)
-            past_prop_value_to_propset = {
-                k: frozenset(v)
-                for k, v in orig_past_prop_value_to_propset.items()
-            }
-            # 3. to add(add pk), to update(change pv), to_remove(delete pk), to_update_remove(change pv)
+            past_prop_value_to_propset = self.get_past_props()
+            log.debug("past_prop_value_to_propset: %s", past_prop_value_to_propset)
             to_add, to_update, to_remove, to_update_remove = self.diff_property_sets(
                 present_prop_value_to_propset,
                 past_prop_value_to_propset
@@ -176,13 +182,10 @@ class BuildSemanticIndex:
             log.debug("to_update: %s", to_update)
             log.debug("to_remove: %s", to_remove)
             log.debug("to_update_remove: %s", to_update_remove)
-            log.debug("prop properties.pkl: %s", self.prop_index.properties)
-            # 4. remove
             log.info("Removing %s outdated property value", len(to_remove))
             removed_props_num = self.prop_index.remove(to_remove)
             if removed_props_num:
                 self.prop_index.to_index_file(self.index_dir_prop)
-            # 5. embedding
             all_to_add = to_add + to_update
             add_propsets = []
             add_prop_values = []
