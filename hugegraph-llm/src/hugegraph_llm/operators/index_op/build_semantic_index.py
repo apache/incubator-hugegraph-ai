@@ -26,6 +26,7 @@ from hugegraph_llm.config import resource_path, huge_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
+from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
 
 INDEX_PROPERTY_GREMLIN = """
