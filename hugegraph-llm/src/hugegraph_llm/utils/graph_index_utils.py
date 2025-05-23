@@ -47,9 +47,10 @@ def get_graph_index_info():
 
 def clean_all_graph_index():
     VectorIndex.clean(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
+    VectorIndex.clean(str(os.path.join(resource_path, huge_settings.graph_name, "graph_props")))
     VectorIndex.clean(str(os.path.join(resource_path, "gremlin_examples")))
-    log.warning("Clear graph index and text2gql index successfully!")
-    gr.Info("Clear graph index and text2gql index successfully!")
+    log.warning("Clear graph index, property index and text2gql index successfully!")
+    gr.Info("Clear graph index, property index and text2gql index successfully!")
 
 
 def clean_all_graph_data():
@@ -111,7 +112,12 @@ def update_vid_embedding():
         context = builder.run()
         removed_num = context["removed_vid_vector_num"]
         added_num = context["added_vid_vector_num"]
-        return f"Removed {removed_num} vectors, added {added_num} vectors."
+        if context["index_labels"]:
+            removed_prop_num = context["removed_props_num"]
+            added_prop_num = context["added_props_vector_num"]
+            return (f"Removed {removed_num} vid vectors, added {added_num} vid vectors.\n"
+                    f"Removed {removed_prop_num} prop vectors, added {added_prop_num} prop vectors.")
+        return f"Removed {removed_num} vid vectors, added {added_num} vid vectors."
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
         raise gr.Error(str(e))

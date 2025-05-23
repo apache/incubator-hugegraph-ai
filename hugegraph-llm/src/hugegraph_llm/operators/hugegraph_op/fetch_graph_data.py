@@ -25,6 +25,7 @@ class FetchGraphData:
 
     def __init__(self, graph: PyHugeClient):
         self.graph = graph
+        self.schema = self.graph.schema()
 
     def run(self, graph_summary: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         if graph_summary is None:
@@ -49,4 +50,19 @@ class FetchGraphData:
 
         if isinstance(result, list) and len(result) > 0:
             graph_summary.update({key: result[i].get(key) for i, key in enumerate(keys)})
+
+        index_labels = self.schema.getIndexLabels()
+        if index_labels:
+            graph_summary["index_labels"] = [
+                {
+                    "id": label.id,
+                    "base_type": label.baseType,
+                    "base_value": label.baseValue,
+                    "name": label.name,
+                    "fields": label.fields,
+                    "index_type": label.indexType
+                } for label in index_labels
+            ]
+        else:
+            graph_summary["index_labels"] = []
         return graph_summary
