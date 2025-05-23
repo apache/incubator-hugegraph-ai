@@ -135,6 +135,7 @@ class SemanticIdQuery:
             if index_labels:
                 props_list = set()
                 exact_match_props, unmatched_props = self._exact_match_properties(keywords)
+                log.debug("Exact match props: %s", exact_match_props)
                 props_list.update(exact_match_props)
                 fuzzy_match_props = self._fuzzy_match_props(unmatched_props)
                 log.debug("Fuzzy match props: %s", fuzzy_match_props)

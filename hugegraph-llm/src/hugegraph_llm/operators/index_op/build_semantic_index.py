@@ -87,14 +87,6 @@ class BuildSemanticIndex:
         present_prop_value_to_propset: dict,
         past_prop_value_to_propset: dict
     ):
-        """
-        比较新旧属性值映射，得到新增、更新和删除的属性值及其对应的属性集合。
-
-        返回：
-            to_add: List[Tuple[prop_value, Set[(prop_key, prop_value)]]]     # 新增属性值（之前不存在）
-            to_update: List[Tuple[prop_value, Set[(prop_key, prop_value)]]]  # 属性值仍存在，但对应属性集合变化
-            to_remove: Set[prop_value]                                       # 旧索引中存在，但当前已删除的属性值
-        """
         to_add = []
         to_update = []
         to_update_remove = []

@@ -39,8 +39,41 @@ class OllamaEmbedding(BaseEmbedding):
             self,
             text: str
     ) -> List[float]:
-        """Comment"""
-        return list(self.client.embed(model=self.model, input=text)["embeddings"][0])
+        """Get embedding for a single text.
+
+        This method handles different Ollama client API versions by checking for
+        the presence of 'embed' or 'embeddings' methods.
+        """
+        if hasattr(self.client, "embed"):
+            response = self.client.embed(model=self.model, input=text)
+            try:
+                # First, try the structure typically seen for single embeddings
+                # or newer batch responses that might return a single "embedding" key.
+                return list(response["embedding"])
+            except KeyError:
+                # Fallback for older batch-like response for single item,
+                # or if "embeddings" is a list with one item.
+                try:
+                    return list(response["embeddings"][0])
+                except (KeyError, IndexError) as e:
+                    raise RuntimeError(
+                        "Failed to extract embedding from Ollama client 'embed' response. "
+                        f"Response: {response}. Error: {e}"
+                    )
+        elif hasattr(self.client, "embeddings"):
+            response = self.client.embeddings(model=self.model, prompt=text)
+            try:
+                return list(response["embedding"])
+            except KeyError as e:
+                raise RuntimeError(
+                    "Failed to extract embedding from Ollama client 'embeddings' response. "
+                    f"Response: {response}. Error: {e}"
+                )
+        else:
+            raise AttributeError(
+                "Ollama client object has neither 'embed' nor 'embeddings' method. "
+                "Please check your ollama library version."
+            )
 
     def get_texts_embeddings(
             self,
@@ -63,7 +96,7 @@ class OllamaEmbedding(BaseEmbedding):
             A list of embedding vectors, where each vector is a list of floats.
             The order of embeddings matches the order of input texts.
         """
-        if hasattr(self.client, "embed"):
+        if hasattr(self.client, "embed"): # pylint: disable=no-else-return
             response = self.client.embed(model=self.model, input=texts)["embeddings"]
             return [list(inner_sequence) for inner_sequence in response]
         elif hasattr(self.client, "embeddings"):
