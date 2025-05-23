@@ -78,8 +78,8 @@ class SemanticIdQuery:
     def _fuzzy_match_vids(self, keywords: List[str]) -> List[str]:
         fuzzy_match_result = []
         for keyword in keywords:
-            keyword_vector = self.embedding.get_text_embedding(keyword)
-            results = self.vector_index.search(keyword_vector, top_k=self.topk_per_keyword,
+            keyword_vector = self.embedding.get_texts_embeddings([keyword])
+            results = self.vector_index.search(keyword_vector[0], top_k=self.topk_per_keyword,
                                                dis_threshold=float(self.vector_dis_threshold))
             if results:
                 fuzzy_match_result.extend(results[:self.topk_per_keyword])
