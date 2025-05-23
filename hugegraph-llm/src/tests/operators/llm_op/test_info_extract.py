@@ -19,8 +19,8 @@ import unittest
 
 from hugegraph_llm.operators.llm_op.info_extract import (
     InfoExtract,
-    extract_triples_by_regex_with_schema,
     extract_triples_by_regex,
+    extract_triples_by_regex_with_schema,
 )
 
 
@@ -46,7 +46,7 @@ class TestInfoExtract(unittest.TestCase):
 
         self.llm_output = """
         {"id": "as-rymwkgbvqf", "object": "chat.completion", "created": 1706599975,
-                  "result": "Based on the given graph schema and the extracted text, we can extract 
+                  "result": "Based on the given graph schema and the extracted text, we can extract
                   the following triples:\n\n
                   1. (Alice, name, Alice) - person\n
                   2. (Alice, age, 25) - person\n
@@ -58,15 +58,15 @@ class TestInfoExtract(unittest.TestCase):
                   8. (www.alice.com, url, www.alice.com) - webpage\n
                   9. (www.bob.com, name, www.bob.com) - webpage\n
                   10. (www.bob.com, url, www.bob.com) - webpage\n\n
-                  However, the schema does not provide a direct relationship between people and 
-                  webpages they own. To establish such a relationship, we might need to introduce 
-                  a new edge label like \"owns\" or modify the schema accordingly. Assuming we 
-                  introduce a new edge label \"owns\", we can extract the following additional 
+                  However, the schema does not provide a direct relationship between people and
+                  webpages they own. To establish such a relationship, we might need to introduce
+                  a new edge label like \"owns\" or modify the schema accordingly. Assuming we
+                  introduce a new edge label \"owns\", we can extract the following additional
                   triples:\n\n
                   1. (Alice, owns, www.alice.com) - owns\n2. (Bob, owns, www.bob.com) - owns\n\n
-                  Please note that the extraction of some triples, like the webpage name and URL, 
-                  might seem redundant since they are the same. However, 
-                  I included them to strictly follow the given format. In a real-world scenario, 
+                  Please note that the extraction of some triples, like the webpage name and URL,
+                  might seem redundant since they are the same. However,
+                  I included them to strictly follow the given format. In a real-world scenario,
                   such redundancy might be avoided or handled differently.",
                   "is_truncated": false, "need_clear_history": false, "finish_reason": "normal",
                   "usage": {"prompt_tokens": 221, "completion_tokens": 325, "total_tokens": 546}}
