@@ -25,8 +25,9 @@ from tqdm import tqdm
 from hugegraph_llm.config import resource_path, huge_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.utils.log import log
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
+from hugegraph_llm.utils.log import log
+
 
 class BuildSemanticIndex:
     def __init__(self, embedding: BaseEmbedding):
@@ -41,12 +42,15 @@ class BuildSemanticIndex:
     async def _get_embeddings_parallel(self, vids: list[str]) -> list[Any]:
         sem = asyncio.Semaphore(10)
         batch_size = 1000
+
+        # TODO: refactor the logic here (call async method)
         async def get_embeddings_with_semaphore(vid_list: list[str]) -> Any:
             # Executes sync embedding method in a thread pool via loop.run_in_executor, combining async programming
             # with multi-threading capabilities.
             # This pattern avoids blocking the event loop and prepares for a future fully async pipeline.
             async with sem:
                 loop = asyncio.get_running_loop()
+                # FIXME: [PR-238] add & use async_get_texts_embedding instead of sync method
                 return await loop.run_in_executor(None, self.embedding.get_texts_embeddings, vid_list)
 
         # Split vids into batches of size batch_size
@@ -59,7 +63,7 @@ class BuildSemanticIndex:
         with tqdm(total=len(tasks)) as pbar:
             for future in asyncio.as_completed(tasks):
                 batch_embeddings = await future
-                embeddings.extend(batch_embeddings) # Extend the list with batch results
+                embeddings.extend(batch_embeddings)  # Extend the list with batch results
                 pbar.update(1)
         return embeddings
 
@@ -69,7 +73,7 @@ class BuildSemanticIndex:
 
         past_vids = self.vid_index.properties
         # TODO: We should build vid vector index separately, especially when the vertices may be very large
-        present_vids = context["vertices"] # Warning: data truncated by fetch_graph_data.py
+        present_vids = context["vertices"]  # Warning: data truncated by fetch_graph_data.py
         removed_vids = set(past_vids) - set(present_vids)
         removed_num = self.vid_index.remove(removed_vids)
         added_vids = list(set(present_vids) - set(past_vids))
