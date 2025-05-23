@@ -110,7 +110,7 @@ class SemanticIdQuery:
                 fuzzy_match_result.extend(results[:self.topk_per_keyword])
         return fuzzy_match_result
 
-    def reformat_mixed_list_to_unique_tuples(
+    def _reformat_mixed_list_to_unique_tuples(
         self, mixed_data_list: List[Union[FrozenSet[Tuple[str, str]], Tuple[str, str]]]
     ) -> List[Tuple[str, str]]:
         unique_tuples = set()
@@ -151,7 +151,7 @@ class SemanticIdQuery:
                 fuzzy_match_props = self._fuzzy_match_props(unmatched_props)
                 log.debug("Fuzzy match props: %s", fuzzy_match_props)
                 props_list.update(fuzzy_match_props)
-                props_list = self.reformat_mixed_list_to_unique_tuples(props_list)
+                props_list = self._reformat_mixed_list_to_unique_tuples(props_list)
                 context["match_props"] = list(props_list)
                 log.debug("Match props: %s", context["match_props"])
         context["match_vids"] = list(graph_query_list)
