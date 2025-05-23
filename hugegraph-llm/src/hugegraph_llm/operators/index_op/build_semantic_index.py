@@ -43,13 +43,14 @@ class BuildSemanticIndex:
         sem = asyncio.Semaphore(10)
         batch_size = 1000
 
+        # TODO: refactor the logic here (call async method)
         async def get_embeddings_with_semaphore(vid_list: list[str]) -> Any:
             # Executes sync embedding method in a thread pool via loop.run_in_executor, combining async programming
             # with multi-threading capabilities.
             # This pattern avoids blocking the event loop and prepares for a future fully async pipeline.
             async with sem:
                 loop = asyncio.get_running_loop()
-                # FIXME: add & use async_get_texts_embedding instead of sync method
+                # FIXME: [PR-238] add & use async_get_texts_embedding instead of sync method
                 return await loop.run_in_executor(None, self.embedding.get_texts_embeddings, vid_list)
 
         # Split vids into batches of size batch_size

@@ -18,6 +18,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import List, Union
+from warnings import deprecated
 
 import numpy as np
 
@@ -53,7 +54,8 @@ def similarity(
 class BaseEmbedding(ABC):
     """Embedding wrapper should take in a text and return a vector."""
 
-    # TODO: replace it by get_texts_embeddings() in the future, mark it as deprecated
+    # TODO: replace all the usage by get_texts_embeddings() & remove it in the future
+    @deprecated("Use get_texts_embeddings() instead in the future.")
     @abstractmethod
     def get_text_embedding(
             self,
@@ -84,7 +86,7 @@ class BaseEmbedding(ABC):
             The order of embeddings should match the order of input texts.
         """
 
-    # TODO: Add & implement batch processing for async_get_texts_embeddings (refactor here)
+    # TODO: [PR-238] Add & implement batch processing for async_get_texts_embeddings (refactor here)
     @abstractmethod
     async def async_get_text_embedding(
             self,
