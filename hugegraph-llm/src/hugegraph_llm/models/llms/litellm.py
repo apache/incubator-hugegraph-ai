@@ -128,6 +128,9 @@ class LiteLLMClient(BaseLLM):
             )
             result = ""
             for chunk in response:
+                if not chunk.choices:
+                    log.debug("Received empty choices in streaming chunk: %s", chunk)
+                    continue
                 if chunk.choices[0].delta.content:
                     result += chunk.choices[0].delta.content
                 if on_token_callback:
@@ -158,6 +161,9 @@ class LiteLLMClient(BaseLLM):
                 stream=True,
             )
             async for chunk in response:
+                if not chunk.choices:
+                    log.debug("Received empty choices in streaming chunk: %s", chunk)
+                    continue
                 if chunk.choices[0].delta.content:
                     if on_token_callback:
                         on_token_callback(chunk)
