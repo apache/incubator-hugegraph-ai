@@ -20,7 +20,6 @@ import os
 from typing import Dict, Any
 
 from tqdm import tqdm
-
 from hugegraph_llm.config import huge_settings, resource_path
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
@@ -39,7 +38,6 @@ class BuildVectorIndex:
         chunks = context["chunks"]
         chunks_embedding = []
         log.debug("Building vector index for %s chunks...", len(context["chunks"]))
-        # TODO: use async_get_texts_embedding instead of single sync method
         for chunk in tqdm(chunks):
             chunks_embedding.append(self.embedding.get_text_embedding(chunk))
         if len(chunks_embedding) > 0:

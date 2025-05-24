@@ -18,9 +18,8 @@
 
 import unittest
 from pprint import pprint
-
-from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
+from hugegraph_llm.indices.vector_index import VectorIndex
 
 
 class TestVectorIndex(unittest.TestCase):
