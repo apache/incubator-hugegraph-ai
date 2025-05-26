@@ -237,7 +237,7 @@ class GraphRAGQuery:
         if context["graph_result"]:
             context["graph_result_flag"] = 0
             context["vertex_degree_list"] = [list(vertex_degree) for vertex_degree in vertex_degree_list]
-            context["knowledge_with_degree"] = knowledge_with_degree
+            context["knowledge_with_degree"] = knowledge_with_degree # pylint: disable=possibly-used-before-assignment
             context["graph_context_head"] = (
                 f"The following are graph knowledge in {self._max_deep} depth, e.g:\n"
                 "`vertexA--[links]-->vertexB<--[links]--vertexC ...`"
