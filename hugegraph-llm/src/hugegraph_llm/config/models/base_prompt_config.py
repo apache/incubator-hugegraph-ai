@@ -43,7 +43,8 @@ class BasePromptConfig:
             log.info("Current working directory is the project root, proceeding to run the app.")
         else:
             log.error(
-                "Current working directory is not the project root. Please run this script from the project root directory: %s",
+                "Current working directory is not the project root. "
+                "Please run this script from the project root directory: %s",
                 get_project_root(),
             )
             import sys
