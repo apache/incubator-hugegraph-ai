@@ -16,8 +16,11 @@
 # under the License.
 
 
-from fastapi import status, APIRouter
+from fastapi import status, APIRouter, HTTPException
+from datetime import datetime, date
+from hugegraph_llm.utils.log import log
 
+API_CALL_TRACKER = {}
 
 # pylint: disable=too-many-statements
 def vector_http_api(
@@ -25,6 +28,18 @@ def vector_http_api(
     update_embedding_func,
 ):
     @router.post("/vector/embedding", status_code=status.HTTP_200_OK)
-    def update_embedding_api():
+    def update_embedding_api(daily_limit: int = 2):
+        today = date.today()
+        for call_date in list(API_CALL_TRACKER.keys()):
+            if call_date != today:
+                del API_CALL_TRACKER[call_date]
+        call_count = API_CALL_TRACKER.get(today, 0)
+        if call_count >= daily_limit:
+            log.error("Rate limit exceeded for update_vid_embedding. Maximum %d calls per day.", daily_limit)
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"API call limit of {daily_limit} per day exceeded. Please try again tomorrow."
+            )
+        API_CALL_TRACKER[today] = call_count + 1
         result = update_embedding_func()
         return result
