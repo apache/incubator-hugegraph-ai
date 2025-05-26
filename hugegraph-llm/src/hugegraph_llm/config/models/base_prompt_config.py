@@ -22,9 +22,9 @@ import yaml
 from hugegraph_llm.utils.log import log
 
 dir_name = os.path.dirname
+package_path = dir_name(dir_name(dir_name(dir_name(dir_name(os.path.abspath(__file__))))))
 F_NAME = "config_prompt.yaml"
-yaml_file_path = os.path.join(os.getcwd(), "src/hugegraph_llm/resources/demo", F_NAME)
-
+yaml_file_path = os.path.join(package_path, f"src/hugegraph_llm/resources/demo/{F_NAME}")
 
 class BasePromptConfig:
     graph_schema: str = ''
