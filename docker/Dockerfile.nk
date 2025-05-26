@@ -9,11 +9,9 @@ COPY hugegraph-llm/ ./hugegraph-llm/
 
 # 1.2 Install dependency
 RUN apt update && \
-    apt install -y --no-install-recommends build-essential patchelf libpq-dev && \
-    python -m pip install --upgrade pip && \
-    python -m pip install wheel setuptools==65.0.0 && \
+    apt install -y --no-install-recommends build-essential patchelf && \
     python -m pip install nuitka && \
-    pip install --use-pep517 --no-build-isolation ./hugegraph-python-client && \
+    pip install ./hugegraph-python-client && \
     pip install -r ./hugegraph-llm/requirements.txt && \
     cd hugegraph-llm/src && \
     export PYTHONPATH=/build/hugegraph-llm/src && \
