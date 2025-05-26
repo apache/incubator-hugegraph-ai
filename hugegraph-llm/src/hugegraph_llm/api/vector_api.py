@@ -16,8 +16,8 @@
 # under the License.
 
 
+from datetime import date
 from fastapi import status, APIRouter, HTTPException
-from datetime import datetime, date
 from hugegraph_llm.utils.log import log
 
 API_CALL_TRACKER = {}
