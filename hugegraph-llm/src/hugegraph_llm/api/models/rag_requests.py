@@ -116,3 +116,12 @@ class RerankerConfigRequest(BaseModel):
 class LogStreamRequest(BaseModel):
     admin_token: Optional[str] = None
     log_file: Optional[str] = "llm-server.log"
+
+class GremlinGenerateRequest(BaseModel):
+    query: str
+    example_num: int
+    schema_str: str
+    gremlin_prompt: Optional[str] = Query(
+        prompt.gremlin_generate_prompt,
+        description="Prompt for the Text2Gremlin query.",
+    )
