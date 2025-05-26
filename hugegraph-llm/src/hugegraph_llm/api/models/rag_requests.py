@@ -18,7 +18,7 @@
 from typing import Optional, Literal, List
 from enum import Enum
 from fastapi import Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from hugegraph_llm.config import prompt
 from hugegraph_llm.config import huge_settings
@@ -139,11 +139,11 @@ class GremlinGenerateRequest(BaseModel):
         description="Prompt for the Text2Gremlin query.",
     )
     output_types: Optional[List[GremlinOutputType]] = Query(
-        Field(default=None),
+        default=None,
         description="""
         a list can contain "match_result","template_gremlin",
         "raw_gremlin","template_execution_result","raw_execution_result"
-        You can specify which type of result do you need
+        You can specify which type of result do you need. Empty means all types.
         """
     )
 
