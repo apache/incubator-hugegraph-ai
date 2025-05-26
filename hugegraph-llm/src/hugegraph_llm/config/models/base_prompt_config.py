@@ -26,7 +26,7 @@ from hugegraph_llm.utils.log import log
 
 dir_name = os.path.dirname
 F_NAME = "config_prompt.yaml"
-yaml_file_path = os.path.join(os.getcwd(), "src/hugegraph_llm/resources/demo", F_NAME)
+yaml_file_path = os.path.join(os.getcwd(), "hugegraph_llm/resources/demo", F_NAME)
 
 
 class BasePromptConfig:
