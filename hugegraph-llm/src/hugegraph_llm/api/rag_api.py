@@ -42,7 +42,7 @@ def rag_http_api(
     apply_llm_conf,
     apply_embedding_conf,
     apply_reranker_conf,
-    gremlin_generate_func,
+    gremlin_generate_selective_func,
 ):
     @router.post("/rag", status_code=status.HTTP_200_OK)
     def rag_answer_api(req: RAGRequest):
@@ -184,21 +184,18 @@ def rag_http_api(
     @router.post("/text2gremlin", status_code=status.HTTP_200_OK)
     def text2gremlin_api(req: GremlinGenerateRequest):
         try:
-            match_result, template_gremlin, raw_gremlin, template_execution_result, raw_execution_result = (
-                gremlin_generate_func(
-                    inp=req.query,
-                    example_num=req.example_num,
-                    schema=req.schema_str,
-                    gremlin_prompt=req.gremlin_prompt or prompt.gremlin_generate_prompt,
-                )
+            output_types_str_list = None
+            if req.output_types:
+                output_types_str_list = [ot.value for ot in req.output_types]
+
+            response_dict = gremlin_generate_selective_func(
+                inp=req.query,
+                example_num=req.example_num,
+                schema_input=req.schema_str,
+                gremlin_prompt_input=req.gremlin_prompt,
+                requested_outputs=output_types_str_list,
             )
-            return {
-                "match_result": match_result,
-                "template_gremlin": template_gremlin,
-                "raw_gremlin": raw_gremlin,
-                "template_execution_result": template_execution_result,
-                "raw_execution_result": raw_execution_result,
-            }
+            return response_dict
         except HTTPException as e:
             raise e
         except Exception as e:

@@ -17,7 +17,7 @@
 
 import json
 import os
-from typing import Any, Tuple, Dict, Union, Literal
+from typing import Any, Tuple, Dict, Union, Literal, Optional, List, Set
 
 import gradio as gr
 import pandas as pd
@@ -214,3 +214,63 @@ def graph_rag_recall(
         )
     context = rag.run(verbose=True, query=query, graph_search=True)
     return context
+
+def gremlin_generate_selective(
+    inp: str,
+    example_num: int,
+    schema_input: str,
+    gremlin_prompt_input: str,
+    requested_outputs: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """
+    Wraps the original gremlin_generate function and filters its output
+    based on the requested_outputs list of strings.
+    """
+
+    output_keys = [
+        "match_result",
+        "template_gremlin",
+        "raw_gremlin",
+        "template_execution_result",
+        "raw_execution_result",
+    ]
+    log.debug("................ %s", schema_input)
+    original_results = gremlin_generate(inp, example_num, schema_input, gremlin_prompt_input)
+
+    outputs_dict: Dict[str, Any] = {}
+    requested_outputs_set: Set[str]
+
+    if not requested_outputs:  # None or empty list
+        requested_outputs_set = set(output_keys)
+    else:
+        requested_outputs_set = set(requested_outputs)
+
+    # Handle the case where gremlin_generate might return a 2-tuple error message
+    if isinstance(original_results, tuple) and len(original_results) == 2 and isinstance(original_results[0], str):
+        # This indicates an error from gremlin_generate (e.g., "Invalid JSON schema...")
+        # In this case, we can return the error message for relevant fields or a general error
+        if "match_result" in requested_outputs_set: # Or any other default error field
+             outputs_dict["match_result"] = original_results[0]
+             outputs_dict["error_detail"] = original_results[1] # usually empty string from original
+        # Or, more simply, return a dictionary indicating the error.
+        # For simplicity, if an error tuple is returned, and match_result is requested, we populate it.
+        # This part might need refinement based on how errors should be structured in the selective output.
+        # For now, if an error tuple is returned, and "match_result" is requested, it gets the error message.
+        # Other requested fields will be absent.
+        return outputs_dict # Early exit if gremlin_generate returned an error tuple
+
+
+    match_res_orig, template_gremlin_orig, raw_gremlin_orig, template_exec_res_orig, raw_exec_res_orig = original_results
+
+    if "match_result" in requested_outputs_set:
+        outputs_dict["match_result"] = match_res_orig
+    if "template_gremlin" in requested_outputs_set:
+        outputs_dict["template_gremlin"] = template_gremlin_orig
+    if "raw_gremlin" in requested_outputs_set:
+        outputs_dict["raw_gremlin"] = raw_gremlin_orig
+    if "template_execution_result" in requested_outputs_set:
+        outputs_dict["template_execution_result"] = template_exec_res_orig
+    if "raw_execution_result" in requested_outputs_set:
+        outputs_dict["raw_execution_result"] = raw_exec_res_orig
+
+    return outputs_dict
