@@ -17,18 +17,23 @@
 
 
 from datetime import date
+
 from fastapi import status, APIRouter, HTTPException
+
 from hugegraph_llm.utils.log import log
 
 API_CALL_TRACKER = {}
 
+
 # pylint: disable=too-many-statements
-def vector_http_api(
-    router: APIRouter,
-    update_embedding_func,
-):
+def vector_http_api(router: APIRouter, update_embedding_func):
     @router.post("/vector/embedding", status_code=status.HTTP_200_OK)
     def update_embedding_api(daily_limit: int = 2):
+        """
+        Updates the vector embedding.
+        This endpoint is rate-limited. By default, it allows 2 calls per day. (Note: Not Thread-Safe!)
+        The rate limit is tracked per day and resets at midnight.
+        """
         today = date.today()
         for call_date in list(API_CALL_TRACKER.keys()):
             if call_date != today:
