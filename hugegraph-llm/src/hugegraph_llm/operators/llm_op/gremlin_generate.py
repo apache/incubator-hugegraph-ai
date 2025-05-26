@@ -45,8 +45,10 @@ class GremlinGenerateSynthesize:
 
     def _extract_response(self, response: str, label: str = "gremlin") -> str:
         match = re.search(f"```{label}(.*?)```", response, re.DOTALL)
-        assert match is not None, f"No {label} found in response: {response}"
-        return match.group(1).strip()
+        if match:
+            return match.group(1).strip()
+        else:
+            return response.strip()
 
     def _format_examples(self, examples: Optional[List[Dict[str, str]]]) -> Optional[str]:
         if not examples:
