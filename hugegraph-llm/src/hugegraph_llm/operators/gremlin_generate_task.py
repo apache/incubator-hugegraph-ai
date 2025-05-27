@@ -59,9 +59,13 @@ class GremlinGenerator:
         return self
 
     def gremlin_generate_synthesize(
-        self, schema, gremlin_prompt: Optional[str] = None, vertices: Optional[List[str]] = None
+        self,
+        schema,
+        gremlin_prompt: Optional[str] = None,
+        vertices: Optional[List[str]] = None,
+        properties: Optional[List[tuple]] = None
     ):
-        self.operators.append(GremlinGenerateSynthesize(self.llm, schema, vertices, gremlin_prompt))
+        self.operators.append(GremlinGenerateSynthesize(self.llm, schema, vertices, gremlin_prompt, properties))
         return self
 
     def print_result(self):

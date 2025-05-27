@@ -23,6 +23,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from hugegraph_llm.api.admin_api import admin_http_api
 from hugegraph_llm.api.rag_api import rag_http_api
+from hugegraph_llm.api.vector_api import vector_http_api
 from hugegraph_llm.config import admin_settings, huge_settings, prompt
 from hugegraph_llm.demo.rag_demo.admin_block import create_admin_block, log_stream
 from hugegraph_llm.demo.rag_demo.configs_block import (
@@ -32,6 +33,7 @@ from hugegraph_llm.demo.rag_demo.configs_block import (
     apply_reranker_config,
     apply_graph_config,
 )
+from hugegraph_llm.utils.graph_index_utils import update_vid_embedding
 from hugegraph_llm.demo.rag_demo.other_block import create_other_block
 from hugegraph_llm.demo.rag_demo.other_block import lifespan
 from hugegraph_llm.demo.rag_demo.rag_block import create_rag_block, rag_answer
@@ -173,7 +175,7 @@ def create_app():
         apply_reranker_config,
     )
     admin_http_api(api_auth, log_stream)
-
+    vector_http_api(api_auth, update_vid_embedding)
     app.include_router(api_auth)
     # Mount Gradio inside FastAPI
     # TODO: support multi-user login when need

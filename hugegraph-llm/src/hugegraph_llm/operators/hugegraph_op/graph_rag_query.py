@@ -53,7 +53,7 @@ g.V({keywords})
 """
 
 PROPERTY_QUERY_NEIGHBOR_TPL = """\
-g.V().has('{prop}', within({keywords}))
+g.V().has('{current_prop_name}', '{current_prop_value}')
 .repeat(
    bothE({edge_labels}).limit({edge_limit}).otherV().dedup()
 ).times({max_deep}).emit()
@@ -65,8 +65,8 @@ g.V().has('{prop}', within({keywords}))
 )
 .by(project('label', 'inV', 'outV', 'props')
    .by(label())
-   .by(inV().values('{prop}'))
-   .by(outV().values('{prop}'))
+   .by(inV().values('{current_prop_name}'))
+   .by(outV().values('{current_prop_name}'))
    .by(valueMap().by(unfold()))
 )
 .limit({max_items})
@@ -129,12 +129,13 @@ class GraphRAGQuery:
     def _gremlin_generate_query(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context["query"]
         vertices = context.get("match_vids")
+        properties = context.get("match_props")
         query_embedding = context.get("query_embedding")
 
         self._gremlin_generator.clear()
         self._gremlin_generator.example_index_query(num_examples=self._num_gremlin_generate_example)
         gremlin_response = self._gremlin_generator.gremlin_generate_synthesize(
-            context["simple_schema"], vertices=vertices, gremlin_prompt=self._gremlin_prompt
+            context["simple_schema"], vertices=vertices, gremlin_prompt=self._gremlin_prompt, properties=properties
         ).run(query=query, query_embedding=query_embedding)
         if self._num_gremlin_generate_example > 0:
             gremlin = gremlin_response["result"]
@@ -160,12 +161,14 @@ class GraphRAGQuery:
     def _subgraph_query(self, context: Dict[str, Any]) -> Dict[str, Any]:
         # 1. Extract params from context
         matched_vids = context.get("match_vids")
+        matched_props = context.get("match_props")
         if isinstance(context.get("max_deep"), int):
             self._max_deep = context["max_deep"]
         if isinstance(context.get("max_items"), int):
             self._max_items = context["max_items"]
-        if isinstance(context.get("prop_to_match"), str):
-            self._prop_to_match = context["prop_to_match"]
+        if isinstance(context.get("match_props"), list):
+            self._prop_to_match = matched_props[0][0] if matched_props else None
+            log.debug("Prop to match: %s", self._prop_to_match)
 
         # 2. Extract edge_labels from graph schema
         _, edge_labels = self._extract_labels_from_schema()
@@ -207,31 +210,34 @@ class GraphRAGQuery:
                 vertex_degree_list[0].update(vertex_knowledge)
             else:
                 vertex_degree_list.append(vertex_knowledge)
-        else:
+        elif matched_props:
             # WARN: When will the query enter here?
-            keywords = context.get("keywords")
-            assert keywords, "No related property(keywords) for graph query."
-            keywords_str = ",".join("'" + kw + "'" for kw in keywords)
-            gremlin_query = PROPERTY_QUERY_NEIGHBOR_TPL.format(
-                prop=self._prop_to_match,
-                keywords=keywords_str,
-                edge_labels=edge_labels_str,
-                edge_limit=edge_limit_amount,
-                max_deep=self._max_deep,
-                max_items=self._max_items,
-            )
-            log.warning("Unable to find vid, downgraded to property query, please confirm if it meets expectation.")
+            graph_chain_knowledge = set()
+            for prop_name, prop_value in matched_props:
+                self._prop_to_match = prop_name
+                gremlin_query = PROPERTY_QUERY_NEIGHBOR_TPL.format(
+                    current_prop_name=prop_name,
+                    current_prop_value=prop_value,
+                    edge_labels=edge_labels_str,
+                    edge_limit=edge_limit_amount,
+                    max_deep=self._max_deep,
+                    max_items=self._max_items
+                )
+                log.warning("Unable to find vid, downgraded to property query, please confirm if it meets expectation.")
+                log.debug("property gremlin: %s", gremlin_query)
 
-            paths: List[Any] = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
-            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_graph_query_result(
-                query_paths=paths
-            )
+                paths: List[Any] = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
+                log.debug("paths: %s", paths)
+                temp_graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_graph_query_result(
+                    query_paths=paths
+                )
+                graph_chain_knowledge.update(temp_graph_chain_knowledge)
 
         context["graph_result"] = list(graph_chain_knowledge)
         if context["graph_result"]:
             context["graph_result_flag"] = 0
             context["vertex_degree_list"] = [list(vertex_degree) for vertex_degree in vertex_degree_list]
-            context["knowledge_with_degree"] = knowledge_with_degree
+            context["knowledge_with_degree"] = knowledge_with_degree # pylint: disable=possibly-used-before-assignment
             context["graph_context_head"] = (
                 f"The following are graph knowledge in {self._max_deep} depth, e.g:\n"
                 "`vertexA--[links]-->vertexB<--[links]--vertexC ...`"
@@ -340,7 +346,7 @@ class GraphRAGQuery:
             node_str = matched_str
         else:
             v_cache.add(matched_str)
-            node_str = f"{item['id']}{{{props_str}}}"
+            node_str = f"{item['id']}{{{props_str}}}" if use_id_to_match else f"{item['props']}{{{props_str}}}"
 
         flat_rel += node_str
         nodes_with_degree.append(node_str)
