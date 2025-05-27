@@ -387,3 +387,24 @@ MAX_KEYWORDS: {max_keywords}
 职业道路也很出色。另外，Sarah拥有一个个人网站www.sarahsplace.com，而James也经营着自己的网页，不过这里没有提到具体的网址。这两个人，
 Sarah和James，不仅建立起了深厚的室友情谊，还各自在网络上开辟了自己的一片天地，展示着他们各自丰富多彩的兴趣和经历。
 """
+
+    review_prompt: str = """
+## 评审任务
+请根据以下标准答案对模型的回答进行专业评估：
+
+## 评估要求
+1. 从准确性（与标准答案一致性）、相关性（与问题相关度）、完整性（信息完整度）三个维度进行1-5分评分
+2. 计算综合评分（三个维度平均分，保留1位小数）
+3. 提供简明扼要的改进建议
+4. 使用JSON格式返回以下字段(返回内容一定要被```json ```所包围)：
+   - accuracy_score (int)
+   - relevance_score (int)
+   - completeness_score (int)
+   - overall_score (float)
+   - comment (str)
+
+## 标准答案
+{standard_answer}
+
+## 待评审回答
+"""
