@@ -41,7 +41,7 @@ class GremlinGenerateSynthesize:
         self.vertices = vertices
         self.gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
 
-    # TODO: Maybe we can remove the label in the future
+    # TODO: The label is used to mark the start and end of Gremlin. In the future, we can consider removing it
     def _extract_response(self, response: str, label: str = "gremlin") -> str:
         match = re.search(f"```{label}(.*?)```", response, re.DOTALL)
         if match:
