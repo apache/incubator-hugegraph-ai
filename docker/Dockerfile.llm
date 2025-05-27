@@ -38,6 +38,7 @@ COPY --from=builder --chown=work:work /build/hugegraph-llm/src /home/work/hugegr
 
 USER work
 ENV PATH="/home/work/hugegraph-llm/.venv/bin:$PATH"
+ENV PYTHONPATH="/home/work/hugegraph-llm/src"
 
 WORKDIR /home/work/hugegraph-llm/src
 VOLUME ["/home/work/hugegraph-llm/src/hugegraph_llm/resources"]
