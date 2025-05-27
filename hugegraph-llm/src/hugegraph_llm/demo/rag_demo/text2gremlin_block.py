@@ -234,7 +234,6 @@ def gremlin_generate_selective(
         "template_execution_result",
         "raw_execution_result",
     ]
-    log.debug("................ %s", schema_input)
     original_results = gremlin_generate(inp, example_num, schema_input, gremlin_prompt_input)
 
     outputs_dict: Dict[str, Any] = {}
