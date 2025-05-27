@@ -42,4 +42,5 @@ def vector_http_api(
             )
         API_CALL_TRACKER[today] = call_count + 1
         result = update_embedding_func()
+        result = {"message": result}
         return result
