@@ -1,24 +1,23 @@
-# TODO: we could use 'uv' to replace the poetry + python image (Also use the slime image)
 # Stage 1: Build stage (Isolating the build env)
 FROM python:3.10.16-bookworm AS builder
 
 WORKDIR /build/
 
-# 1.1 Install poetry
-RUN pip install --no-cache-dir poetry
-
-# 1.2 Copy source code
+# 1.1 Copy source code
 COPY hugegraph-python-client/ ./hugegraph-python-client/
 COPY hugegraph-llm/ ./hugegraph-llm/
 
-# 1.3 Install dependencies
-RUN cd /build/hugegraph-llm && \
-    poetry config virtualenvs.in-project true && \
-    poetry lock && \
-    poetry install --no-interaction --no-ansi --verbose && \
-    .venv/bin/pip install ../hugegraph-python-client && \
-    poetry build
-
+# Install dependency
+RUN apt update && \
+    apt install -y --no-install-recommends build-essential patchelf && \
+    python -m pip install nuitka && \
+    pip install ./hugegraph-python-client && \
+    pip install -r ./hugegraph-llm/requirements.txt && \
+    cd hugegraph-llm/src && \
+    export PYTHONPATH=/build/hugegraph-llm/src && \
+    python -m nuitka --follow-imports --standalone --include-package-data=safehttpx,groovy,gradio --include-module=hugegraph_llm.demo.rag_demo.app --include-data-dir=./hugegraph_llm/resources=hugegraph_llm/resources ./hugegraph_llm/demo/rag_demo/app.py && \
+    mv app.* ..
+    
 # Stage 2: Runtime stage
 FROM python:3.10.16-slim-bookworm
 LABEL maintainer="HugeGraph Docker Maintainers <dev@hugegraph.apache.org>"
@@ -32,18 +31,14 @@ RUN useradd -m -s /bin/bash work && \
 
 WORKDIR /home/work/
 
-# Copy only the built packages and virtual environment from the builder stage
-COPY --from=builder --chown=work:work /build/hugegraph-llm/.venv /home/work/hugegraph-llm/.venv
-COPY --from=builder --chown=work:work /build/hugegraph-llm/src /home/work/hugegraph-llm/src
+COPY --from=builder --chown=work:work /build/hugegraph-llm /home/work/hugegraph-llm
 
 USER work
-ENV PATH="/home/work/hugegraph-llm/.venv/bin:$PATH"
-ENV PYTHONPATH="/home/work/hugegraph-llm/src"
 
-WORKDIR /home/work/hugegraph-llm/src
+WORKDIR /home/work/hugegraph-llm
 VOLUME ["/home/work/hugegraph-llm/src/hugegraph_llm/resources"]
 EXPOSE 8001
 
 HEALTHCHECK --interval=60s --timeout=10s --start-period=5s --retries=3 CMD curl -f http://localhost:8001/ || exit 1
 
-CMD ["python", "-m", "hugegraph_llm.demo.rag_demo.app", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["./app.dist/app.bin", "--host", "0.0.0.0", "--port", "8001"]
