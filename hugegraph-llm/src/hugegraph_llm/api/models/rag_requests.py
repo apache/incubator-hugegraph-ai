@@ -130,6 +130,10 @@ class GremlinGenerateRequest(BaseModel):
         0,
         description="Number of Gremlin templates to use.(0 means no templates)"
     )
+    graphspae: Optional[str] = Query(
+        huge_settings.graph_space,
+        description="graph space."
+    )
     schema_str: Optional[str] = Query(
         huge_settings.graph_name,
         description="graph name."
