@@ -143,7 +143,7 @@ class GremlinGenerateRequest(BaseModel):
         description="Prompt for the Text2Gremlin query.",
     )
     output_types: Optional[List[GremlinOutputType]] = Query(
-        default=None,
+        default=["template_gremlin"],
         description="""
         a list can contain "match_result","template_gremlin",
         "raw_gremlin","template_execution_result","raw_execution_result"
