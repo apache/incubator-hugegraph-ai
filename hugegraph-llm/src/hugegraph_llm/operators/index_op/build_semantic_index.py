@@ -18,8 +18,9 @@
 
 import asyncio
 import os
-from typing import Any, Dict
 from collections import defaultdict
+from typing import Any
+
 from tqdm import tqdm
 
 from hugegraph_llm.config import resource_path, huge_settings
@@ -104,7 +105,7 @@ class BuildSemanticIndex:
                 to_update_remove.append((prop_value, past_propset))
         return to_add, to_update, to_remove, to_update_remove
 
-    def get_present_props(self, context: Dict[str, Any]) -> Dict[str, set]:
+    def get_present_props(self, context: dict[str, Any]) -> dict[str, frozenset[tuple[str, str]]]:
         results = []
         for item in context["index_labels"]:
             label = item["base_value"]
@@ -132,7 +133,7 @@ class BuildSemanticIndex:
         }
         return present_prop_value_to_propset
 
-    def get_past_props(self) -> Dict[str, set]:
+    def get_past_props(self) -> dict[str, frozenset[tuple[str, str]]]:
         orig_past_prop_value_to_propset = defaultdict(set)
         for propset in self.prop_index.properties:
             for _, prop_value in propset:
@@ -209,7 +210,7 @@ class BuildSemanticIndex:
 
         return removed_props_num, added_props_vector_num
 
-    def run(self, context: Dict[str, Any]) -> Dict[str, Any]: # pylint: disable=too-many-statements, too-many-branches
+    def run(self, context: dict[str, Any]) -> dict[str, Any]: # pylint: disable=too-many-statements, too-many-branches
         vertexlabels = self.sm.schema.getSchema()["vertexlabels"]
         all_pk_flag = all(data.get('id_strategy') == 'PRIMARY_KEY' for data in vertexlabels)
 
