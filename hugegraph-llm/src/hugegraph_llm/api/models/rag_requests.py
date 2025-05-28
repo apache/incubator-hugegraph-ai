@@ -15,13 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Optional, Literal
-
+from typing import Optional, Literal, List
+from enum import Enum
 from fastapi import Query
 from pydantic import BaseModel
 
 from hugegraph_llm.config import prompt
-
+from hugegraph_llm.config import huge_settings
 
 class GraphConfigRequest(BaseModel):
     url: str = Query('127.0.0.1:8080', description="hugegraph client url.")
@@ -116,3 +116,38 @@ class RerankerConfigRequest(BaseModel):
 class LogStreamRequest(BaseModel):
     admin_token: Optional[str] = None
     log_file: Optional[str] = "llm-server.log"
+
+class GremlinOutputType(str, Enum):
+    MATCH_RESULT = "match_result"
+    TEMPLATE_GREMLIN = "template_gremlin"
+    RAW_GREMLIN = "raw_gremlin"
+    TEMPLATE_EXECUTION_RESULT = "template_execution_result"
+    RAW_EXECUTION_RESULT = "raw_execution_result"
+
+class GremlinGenerateRequest(BaseModel):
+    query: str
+    example_num: Optional[int] = Query(
+        0,
+        description="Number of Gremlin templates to use.(0 means no templates)"
+    )
+    graphspae: Optional[str] = Query(
+        huge_settings.graph_space,
+        description="graph space."
+    )
+    schema_str: Optional[str] = Query(
+        huge_settings.graph_name,
+        description="graph name."
+    )
+    gremlin_prompt: Optional[str] = Query(
+        prompt.gremlin_generate_prompt,
+        description="Prompt for the Text2Gremlin query.",
+    )
+    output_types: Optional[List[GremlinOutputType]] = Query(
+        default=[GremlinOutputType.TEMPLATE_GREMLIN],
+        description="""
+        a list can contain "match_result","template_gremlin",
+        "raw_gremlin","template_execution_result","raw_execution_result"
+        You can specify which type of result do you need. Empty means all types.
+        """
+    )
+

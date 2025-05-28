@@ -37,7 +37,11 @@ from hugegraph_llm.utils.graph_index_utils import update_vid_embedding
 from hugegraph_llm.demo.rag_demo.other_block import create_other_block
 from hugegraph_llm.demo.rag_demo.other_block import lifespan
 from hugegraph_llm.demo.rag_demo.rag_block import create_rag_block, rag_answer
-from hugegraph_llm.demo.rag_demo.text2gremlin_block import create_text2gremlin_block, graph_rag_recall
+from hugegraph_llm.demo.rag_demo.text2gremlin_block import (
+    create_text2gremlin_block,
+    graph_rag_recall,
+    gremlin_generate_selective,
+)
 from hugegraph_llm.demo.rag_demo.vector_graph_block import create_vector_graph_block
 from hugegraph_llm.resources.demo.css import CSS
 from hugegraph_llm.utils.log import log
@@ -173,6 +177,7 @@ def create_app():
         apply_llm_config,
         apply_embedding_config,
         apply_reranker_config,
+        gremlin_generate_selective,
     )
     admin_http_api(api_auth, log_stream)
     vector_http_api(api_auth, update_vid_embedding)

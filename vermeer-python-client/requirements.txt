@@ -1,0 +1,6 @@
+decorator~=5.1.1
+requests~=2.32.0
+setuptools~=70.0.0
+urllib3~=2.2.2
+rich~=13.9.4
+python-dateutil~=2.9.0
