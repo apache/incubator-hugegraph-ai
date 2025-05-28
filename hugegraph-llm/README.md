@@ -47,6 +47,34 @@ graph systems and large language models.
     uv pip install -e .
     ```  
     If dependency download fails or too slow due to network issues, it is recommended to modify `hugegraph-llm/pyproject.toml`.
+
+5. **Docker Deployment**  
+   Alternatively, you can deploy HugeGraph-AI using Docker:
+   - Ensure you have Docker installed
+   - We provide two container images:
+     - **Image 1**: [hugegraph/rag](https://hub.docker.com/r/hugegraph/rag/tags)  
+       For building and running the RAG functionality, suitable for quick deployment
+     - **Image 2**: [hugegraph/rag-bin](https://hub.docker.com/r/hugegraph/rag-bin/tags)  
+       Binary version for more stable and efficient performance
+   - Pull the Docker images:
+     ```bash
+     docker pull hugegraph/rag:latest # Pull Image 1
+     docker pull hugegraph/rag-bin:latest # Pull Image 2
+     ```
+   - Start the Docker container:
+     ```bash
+     docker run -it --name rag -p 8001:8001 hugegraph/rag bash
+     docker run -it --name rag-bin -p 8001:8001 hugegraph/rag-bin bash
+     ```
+   - Start the Graph RAG demo:
+     ```bash
+     # For Image 1
+     python ./src/hugegraph_llm/demo/rag_demo/app.py
+     # For Image 2
+     ./app.dist/app.bin
+     ```
+   - Access the interface at http://localhost:8001
+
 6. Start the gradio interactive demo of **Graph RAG**, you can run with the following command and open http://127.0.0.1:8001 after starting
     ```bash
     python -m hugegraph_llm.demo.rag_demo.app  # same as "uv run xxx"
