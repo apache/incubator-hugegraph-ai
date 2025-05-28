@@ -18,8 +18,9 @@
 
 import asyncio
 import os
-from typing import Any, Dict
 from collections import defaultdict
+from typing import Any
+
 from tqdm import tqdm
 
 from hugegraph_llm.config import resource_path, huge_settings
@@ -104,7 +105,7 @@ class BuildSemanticIndex:
                 to_update_remove.append((prop_value, past_propset))
         return to_add, to_update, to_remove, to_update_remove
 
-    def get_present_props(self, context: Dict[str, Any]) -> Dict[str, set]:
+    def get_present_props(self, context: dict[str, Any]) -> dict[str, frozenset[tuple[str, str]]]:
         results = []
         for item in context["index_labels"]:
             label = item["base_value"]
@@ -132,7 +133,7 @@ class BuildSemanticIndex:
         }
         return present_prop_value_to_propset
 
-    def get_past_props(self) -> Dict[str, set]:
+    def get_past_props(self) -> dict[str, frozenset[tuple[str, str]]]:
         orig_past_prop_value_to_propset = defaultdict(set)
         for propset in self.prop_index.properties:
             for _, prop_value in propset:
@@ -143,7 +144,7 @@ class BuildSemanticIndex:
         }
         return past_prop_value_to_propset
 
-    def _update_vid_index(self, context: dict[str, Any], all_pk_flag: bool) -> tuple[int, int]:
+    def _update_vertex_index(self, context: dict[str, Any], all_pk_flag: bool) -> tuple[int, int]:
         past_vids = self.vid_index.properties
         # TODO: We should build vid vector index separately, especially when the vertices may be very large
         present_vids = context["vertices"]  # Warning: data truncated by fetch_graph_data.py
@@ -192,9 +193,14 @@ class BuildSemanticIndex:
         if add_prop_values:
             if len(add_prop_values) > 100000:
                 log.warning("The number of props > 100000, please select which properties to vectorize.")
+                # context.update({
+                #     "removed_props_num": removed_props_num,
+                #     "added_props_vector_num": "0 (because of exceeding limit)"
+                # })
                 return removed_props_num, "0 (because of exceeding limit)"
             if to_update_remove:
                 update_remove_prop_values = [prop_set for _, prop_set in to_update_remove]
+                # removed_num variable was conflicting, renamed to inner_removed_num
                 inner_removed_num = self.prop_index.remove(update_remove_prop_values)
                 self.prop_index.to_index_file(self.index_dir_prop)
                 log.info("In to_update: Removed %s outdated property set", inner_removed_num)
@@ -202,18 +208,18 @@ class BuildSemanticIndex:
             self.prop_index.add(added_props_embeddings, add_propsets)
             log.info("Added %s new or updated property embeddings", len(added_props_embeddings))
             self.prop_index.to_index_file(self.index_dir_prop)
-            added_props_vector_num = len(to_add)
+            added_props_vector_num = len(to_add)  # As per original logic
         else:
             log.debug("No update props to build vector index.")
-            added_props_vector_num = 0
+            added_props_vector_num = 0 # no items added
 
         return removed_props_num, added_props_vector_num
 
-    def run(self, context: Dict[str, Any]) -> Dict[str, Any]: # pylint: disable=too-many-statements, too-many-branches
+    def run(self, context: dict[str, Any]) -> dict[str, Any]:
         vertexlabels = self.sm.schema.getSchema()["vertexlabels"]
         all_pk_flag = all(data.get('id_strategy') == 'PRIMARY_KEY' for data in vertexlabels)
 
-        removed_vid_num, added_vid_num = self._update_vid_index(context, all_pk_flag)
+        removed_vid_num, added_vid_num = self._update_vertex_index(context, all_pk_flag)
         context.update({
             "removed_vid_vector_num": removed_vid_num,
             "added_vid_vector_num": added_vid_num,
@@ -225,5 +231,11 @@ class BuildSemanticIndex:
                 "removed_props_num": removed_prop_num,
                 "added_props_vector_num": added_prop_num,
             })
+        # else: # This else block is not in the original code, so commenting out
+            # context.update({
+            #     "removed_props_num": 0,
+            #     "added_props_vector_num": 0,
+            # })
+
 
         return context
