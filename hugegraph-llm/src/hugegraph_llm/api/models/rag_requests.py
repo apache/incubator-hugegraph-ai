@@ -26,9 +26,10 @@ from hugegraph_llm.config import huge_settings
 class GraphConfigRequest(BaseModel):
     url: str = Query('127.0.0.1:8080', description="hugegraph client url.")
     name: str = Query('hugegraph', description="hugegraph client name.")
-    user: str = Query('', description="hugegraph client user.")
-    pwd: str = Query('', description="hugegraph client pwd.")
+    user: Optional[str] = Query('', description="hugegraph client user.")
+    pwd: Optional[str] = Query('', description="hugegraph client pwd.")
     gs: str = None
+    token: Optional[str] = Query('', description="hugegraph client token.")
 
 
 class RAGRequest(BaseModel):
@@ -130,18 +131,11 @@ class GremlinGenerateRequest(BaseModel):
         0,
         description="Number of Gremlin templates to use.(0 means no templates)"
     )
-    graphspae: Optional[str] = Query(
-        huge_settings.graph_space,
-        description="graph space."
-    )
-    schema_str: Optional[str] = Query(
-        huge_settings.graph_name,
-        description="graph name."
-    )
     gremlin_prompt: Optional[str] = Query(
         prompt.gremlin_generate_prompt,
         description="Prompt for the Text2Gremlin query.",
     )
+    client_config: Optional[GraphConfigRequest] = Query(None, description="hugegraph server config.")
     output_types: Optional[List[GremlinOutputType]] = Query(
         default=[GremlinOutputType.TEMPLATE_GREMLIN],
         description="""

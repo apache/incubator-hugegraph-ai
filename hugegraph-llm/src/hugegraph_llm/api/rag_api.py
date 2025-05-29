@@ -85,6 +85,7 @@ def rag_http_api(
             huge_settings.graph_user = req.client_config.user
             huge_settings.graph_pwd = req.client_config.pwd
             huge_settings.graph_space = req.client_config.gs
+            huge_settings.graph_token = req.client_config.token
 
     @router.post("/rag/graph", status_code=status.HTTP_200_OK)
     def graph_rag_recall_api(req: GraphRAGRequest):
@@ -184,6 +185,8 @@ def rag_http_api(
     @router.post("/text2gremlin", status_code=status.HTTP_200_OK)
     def text2gremlin_api(req: GremlinGenerateRequest):
         try:
+            set_graph_config(req)
+
             output_types_str_list = None
             if req.output_types:
                 output_types_str_list = [ot.value for ot in req.output_types]
@@ -191,7 +194,7 @@ def rag_http_api(
             response_dict = gremlin_generate_selective_func(
                 inp=req.query,
                 example_num=req.example_num,
-                schema_input=req.schema_str,
+                schema_input=huge_settings.graph_name,
                 gremlin_prompt_input=req.gremlin_prompt,
                 requested_outputs=output_types_str_list,
             )

@@ -43,6 +43,7 @@ def get_hg_client():
         graph=huge_settings.graph_name,
         user=huge_settings.graph_user,
         pwd=huge_settings.graph_pwd,
+        token=huge_settings.graph_token,
         graphspace=huge_settings.graph_space,
     )
 

@@ -27,6 +27,7 @@ class HugeGraphConfig(BaseConfig):
     graph_user: Optional[str] = "admin"
     graph_pwd: Optional[str] = "xxx"
     graph_space: Optional[str] = None
+    graph_token: Optional[str] = None
 
     # graph query config
     limit_property: Optional[str] = "False"
