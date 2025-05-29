@@ -50,6 +50,10 @@ class HGraphSession:
         self._backoff_factor = backoff_factor
         self._status_forcelist = status_forcelist
         self._auth = (cfg.username, cfg.password)
+        if cfg.token:
+            self._token = cfg.token
+        else:
+            self._token = None
         self._headers = {"Content-Type": Constants.HEADER_CONTENT_TYPE}
         self._timeout = cfg.timeout
         self._session = session if session else requests.Session()
@@ -140,10 +144,15 @@ class HGraphSession:
         **kwargs: Any,
     ) -> dict:
         url = self.resolve(path)
+        request_headers = self._headers.copy()
+        auth = self._auth
+        if self._token:
+            request_headers['Authorization'] = f"Bearer {self._token}"
+            auth = None
         response: requests.Response = getattr(self._session, method.lower())(
             url,
-            auth=self._auth,
-            headers=self._headers,
+            auth=auth,
+            headers=request_headers,
             timeout=self._timeout,
             **kwargs,
         )

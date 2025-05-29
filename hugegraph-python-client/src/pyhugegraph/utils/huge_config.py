@@ -29,9 +29,10 @@ from pyhugegraph.utils.log import log
 @dataclass
 class HGraphConfig:
     url: str
-    username: str
-    password: str
     graph_name: str
+    token: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
     graphspace: Optional[str] = None
     timeout: tuple[float, float] = (0.5, 15.0)
     gs_supported: bool = field(default=False, init=False)

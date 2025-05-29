@@ -29,6 +29,7 @@ from pyhugegraph.api.variable import VariableManager
 from pyhugegraph.api.version import VersionManager
 from pyhugegraph.utils.huge_config import HGraphConfig
 from pyhugegraph.utils.huge_requests import HGraphSession
+from pyhugegraph.utils.log import log
 
 T = TypeVar("T")
 
@@ -50,12 +51,30 @@ class PyHugeClient:
         self,
         url: str,
         graph: str,
-        user: str,
-        pwd: str,
+        user: Optional[str] = None,
+        pwd: Optional[str] = None,
+        token: Optional[str] = None,
         graphspace: Optional[str] = None,
         timeout: Optional[tuple[float, float]] = None
     ):
-        self.cfg = HGraphConfig(url, user, pwd, graph, graphspace, timeout or (0.5, 15.0))
+        if token is None and (user is None or pwd is None):
+            raise ValueError("Either a token or both username and password must be provided.")
+
+        if token is not None and (user is not None or pwd is not None):
+            log.warning(
+                "Both token and username/password are provided. "
+                "Token will be used for authentication."
+            )
+
+        self.cfg = HGraphConfig(
+            url=url,
+            graph_name=graph,
+            token=token,
+            username=user,
+            password=pwd,
+            graphspace=graphspace,
+            timeout=timeout or (0.5, 15.0)
+        )
 
     @manager_builder
     def schema(self) -> "SchemaManager":
