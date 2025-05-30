@@ -54,23 +54,11 @@ def vector_http_api(router: APIRouter, update_embedding_func):
         API_CALL_TRACKER[today] = call_count + 1
         if graph_config:
             huge_settings.graph_url = graph_config.url
-            huge_settings.graph_name = graph_config.name
+            huge_settings.graph_name = graph_config.graph
             huge_settings.graph_user = graph_config.user
             huge_settings.graph_pwd = graph_config.pwd
             huge_settings.graph_space = graph_config.gs
             huge_settings.graph_token = graph_config.token
-        
-        from pyhugegraph.client import PyHugeClient
-        client = PyHugeClient(
-            url=huge_settings.graph_url,
-            graph=huge_settings.graph_name,
-            user=huge_settings.graph_user,
-            pwd=huge_settings.graph_pwd,
-            token=huge_settings.graph_token,
-            graphspace=huge_settings.graph_space,
-        )
-        schema = client.schema()
-        log.debug("..............%s", schema.getVertexLabels())
 
         result = update_embedding_func()
         result = {"detail": result}

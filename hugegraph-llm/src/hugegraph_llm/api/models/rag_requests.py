@@ -25,7 +25,7 @@ from hugegraph_llm.config import huge_settings
 
 class GraphConfigRequest(BaseModel):
     url: str = Query('127.0.0.1:8080', description="hugegraph client url.")
-    name: str = Query('hugegraph', description="hugegraph client name.")
+    graph: str = Query('hugegraph', description="hugegraph client name.")
     user: Optional[str] = Query('', description="hugegraph client user.")
     pwd: Optional[str] = Query('', description="hugegraph client pwd.")
     gs: str = None

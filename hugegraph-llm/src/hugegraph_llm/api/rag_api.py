@@ -81,7 +81,7 @@ def rag_http_api(
     def set_graph_config(req):
         if req.client_config:
             huge_settings.graph_url = req.client_config.url
-            huge_settings.graph_name = req.client_config.name
+            huge_settings.graph_name = req.client_config.graph
             huge_settings.graph_user = req.client_config.user
             huge_settings.graph_pwd = req.client_config.pwd
             huge_settings.graph_space = req.client_config.gs
@@ -142,7 +142,7 @@ def rag_http_api(
     @router.post("/config/graph", status_code=status.HTTP_201_CREATED)
     def graph_config_api(req: GraphConfigRequest):
         # Accept status code
-        res = apply_graph_conf(req.url, req.name, req.user, req.pwd, req.gs, origin_call="http")
+        res = apply_graph_conf(req.url, req.graph, req.user, req.pwd, req.gs, origin_call="http")
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
 
     # TODO: restructure the implement of llm to three types, like "/config/chat_llm"
