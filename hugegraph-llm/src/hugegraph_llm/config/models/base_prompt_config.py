@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import sys
 import os
 
 import yaml
@@ -42,12 +43,12 @@ class BasePromptConfig:
         if os.getcwd() == str(get_project_root()):
             log.info("Current working directory is the project root, proceeding to run the app.")
         else:
-            log.error(
-                "Current working directory is not the project root. "
-                "Please run this script from the project root directory: %s",
-                get_project_root(),
+            error_msg = (
+                f"Current working directory is not the project root. "
+                f"Please run this script from the project root directory: {get_project_root()}\n"
+                f"Current directory: {os.getcwd()}"
             )
-            import sys
+            log.error(error_msg)
             sys.exit(1)
         if os.path.exists(yaml_file_path):
             log.info("Loading prompt file '%s' successfully.", F_NAME)
