@@ -17,4 +17,9 @@ from pathlib import Path
 
 def get_project_root() -> Path:
     """Returns the Path object of the project root directory"""
+    current_path = Path(__file__).resolve()
+    for parent in current_path.parents:
+        if (parent / "pyproject.toml").exists() or (parent / ".git").exists():
+            return parent
+    # Fallback to current hardcoded approach
     return Path(__file__).resolve().parent.parent.parent.parent

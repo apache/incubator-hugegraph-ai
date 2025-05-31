@@ -53,9 +53,9 @@ graph systems and large language models.
    - Ensure you have Docker installed
    - We provide two container images:
      - **Image 1**: [hugegraph/rag](https://hub.docker.com/r/hugegraph/rag/tags)  
-       For building and running the RAG functionality, suitable for quick deployment
+       For building and running the RAG functionality, suitable for quick deployment and development
      - **Image 2**: [hugegraph/rag-bin](https://hub.docker.com/r/hugegraph/rag-bin/tags)  
-       Binary version for more stable and efficient performance
+       Binary version compiled with Nuitka for more stable and efficient performance in production
    - Pull the Docker images:
      ```bash
      docker pull hugegraph/rag:latest # Pull Image 1

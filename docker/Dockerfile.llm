@@ -1,7 +1,7 @@
 # Stage 1: Build stage (Isolating the build env)
 FROM python:3.10.16-bookworm AS builder
 
-WORKDIR /build/
+WORKDIR /home/work/
 
 RUN pip install --no-cache-dir uv
 
@@ -10,7 +10,7 @@ COPY hugegraph-python-client/ ./hugegraph-python-client/
 COPY hugegraph-llm/ ./hugegraph-llm/
 
 # 1.2 Install dependency
-RUN cd /build/hugegraph-llm && \
+RUN cd /home/work/hugegraph-llm && \
     uv venv && \
     uv pip install -e . && \
     uv pip install ../hugegraph-python-client
@@ -29,8 +29,8 @@ RUN useradd -m -s /bin/bash work && \
 WORKDIR /home/work/
 
 # Copy virtual environment and source code
-COPY --from=builder --chown=work:work /build/hugegraph-llm/.venv /home/work/hugegraph-llm/.venv
-COPY --from=builder --chown=work:work /build/hugegraph-llm/src /home/work/hugegraph-llm/src
+COPY --from=builder --chown=work:work /home/work/hugegraph-llm/.venv /home/work/hugegraph-llm/.venv
+COPY --from=builder --chown=work:work /home/work/hugegraph-llm/src /home/work/hugegraph-llm/src
 
 USER work
 ENV PATH="/home/work/hugegraph-llm/.venv/bin:$PATH"
