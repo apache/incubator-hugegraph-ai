@@ -25,6 +25,24 @@ from hugegraph_llm.models.embeddings.base import BaseEmbedding
 
 
 async def get_embeddings_parallel(embedding: BaseEmbedding, vids: list[str]) -> list[Any]:
+    """Get embeddings for texts in parallel.
+
+    This function processes text embeddings asynchronously in parallel, using batching and semaphore
+    to control concurrency, improving processing efficiency while preventing resource overuse.
+
+    Args:
+        embedding (BaseEmbedding): The embedding model instance used to compute text embeddings.
+        vids (list[str]): List of texts to compute embeddings for.
+
+    Returns:
+        list[Any]: List of embedding vectors corresponding to the input texts, maintaining the same
+                  order as the input vids list.
+
+    Note:
+        - Uses a semaphore to limit maximum concurrency to 10
+        - Processes texts in batches of 1000
+        - Displays progress using a progress bar
+    """
     sem = asyncio.Semaphore(10)
     batch_size = 1000
 

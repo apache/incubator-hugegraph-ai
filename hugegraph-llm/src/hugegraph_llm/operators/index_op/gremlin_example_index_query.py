@@ -34,7 +34,7 @@ class GremlinExampleIndexQuery:
     def __init__(self, embedding: BaseEmbedding = None, num_examples: int = 1):
         self.embedding = embedding or Embeddings().get_embedding()
         self.num_examples = num_examples
-        self.index_dir = os.path.join(resource_path, "gremlin_examples_aaa")
+        self.index_dir = os.path.join(resource_path, "gremlin_examples")
         self._ensure_index_exists()
         self.vector_index = VectorIndex.from_index_file(self.index_dir)
 
