@@ -10,7 +10,11 @@ RUN pip install --no-cache-dir uv
 COPY . .
 
 # 1.2 Install dependency
+<<<<<<< HEAD
 RUN cd /home/work/ && \
+=======
+RUN cd /home/work/hugegraph-llm && \
+>>>>>>> 467b2d0 (minor fix of dockerfile & get_project_path)
     uv venv && \
     . .venv/bin/activate && \
     uv sync --extra llm
