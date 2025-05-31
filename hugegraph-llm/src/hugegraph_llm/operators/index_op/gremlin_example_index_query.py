@@ -16,24 +16,25 @@
 # under the License.
 
 
+import asyncio
 import os
 from typing import Dict, Any, List
 
 import pandas as pd
-from tqdm import tqdm
 
 from hugegraph_llm.config import resource_path
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.utils.log import log
+from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel
 
 
 class GremlinExampleIndexQuery:
     def __init__(self, embedding: BaseEmbedding = None, num_examples: int = 1):
         self.embedding = embedding or Embeddings().get_embedding()
         self.num_examples = num_examples
-        self.index_dir = os.path.join(resource_path, "gremlin_examples")
+        self.index_dir = os.path.join(resource_path, "gremlin_examples_aaa")
         self._ensure_index_exists()
         self.vector_index = VectorIndex.from_index_file(self.index_dir)
 
@@ -51,17 +52,14 @@ class GremlinExampleIndexQuery:
 
         query_embedding = context.get("query_embedding")
         if not isinstance(query_embedding, list):
-            query_embedding = self.embedding.get_text_embedding(query)
+            query_embedding = self.embedding.get_texts_embeddings([query])[0]
         return self.vector_index.search(query_embedding, self.num_examples, dis_threshold=1.8)
 
     def _build_default_example_index(self):
         properties = pd.read_csv(os.path.join(resource_path, "demo", "text2gremlin.csv")).to_dict(orient="records")
-        from concurrent.futures import ThreadPoolExecutor
         # TODO: reuse the logic in build_semantic_index.py (consider extract the batch-embedding method)
-        with ThreadPoolExecutor() as executor:
-            embeddings = list(
-                tqdm(executor.map(self.embedding.get_text_embedding, [row["query"] for row in properties]),
-                     total=len(properties)))
+        queries = [row["query"] for row in properties]
+        embeddings = asyncio.run(get_embeddings_parallel(self.embedding, queries))
         vector_index = VectorIndex(len(embeddings[0]))
         vector_index.add(embeddings, properties)
         vector_index.to_index_file(self.index_dir)
