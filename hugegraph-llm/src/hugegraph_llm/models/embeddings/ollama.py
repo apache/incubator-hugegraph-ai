@@ -25,7 +25,7 @@ from .base import BaseEmbedding
 
 class OllamaEmbedding(BaseEmbedding):
     def __init__(self, model: str, host: str = "127.0.0.1", port: int = 11434, **kwargs):
-        self.model = model
+        self.model_name = model
         self.client = ollama.Client(host=f"http://{host}:{port}", **kwargs)
         self.async_client = ollama.AsyncClient(host=f"http://{host}:{port}", **kwargs)
         self.embedding_dimension = None
@@ -50,10 +50,10 @@ class OllamaEmbedding(BaseEmbedding):
             )
             raise AttributeError(error_message)
 
-        response = self.client.embed(model=self.model, input=texts)["embeddings"]
+        response = self.client.embed(model=self.model_name, input=texts)["embeddings"]
         return [list(inner_sequence) for inner_sequence in response]
 
     # TODO: Add & implement batch processing for async_get_texts_embeddings (refactor here)
     async def async_get_text_embedding(self, text: str) -> List[float]:
-        response = await self.async_client.embeddings(model=self.model, prompt=text)
+        response = await self.async_client.embeddings(model=self.model_name, prompt=text)
         return list(response["embedding"])

@@ -19,7 +19,7 @@
 import os
 from typing import Dict, Any, Literal, List, Tuple
 
-from hugegraph_llm.config import resource_path, huge_settings
+from hugegraph_llm.config import resource_path, huge_settings, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.utils.log import log
@@ -37,8 +37,9 @@ class SemanticIdQuery:
             topk_per_keyword: int = huge_settings.topk_per_keyword,
             vector_dis_threshold: float = huge_settings.vector_dis_threshold,
     ):
-        self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids"))
-        self.vector_index = VectorIndex.from_index_file(self.index_dir)
+        self.base_dir = str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids"))
+        self.index_dir = os.path.join(self.base_dir, llm_settings.embedding_type)
+        self.vector_index = VectorIndex.from_index_file(self.index_dir, getattr(embedding, "model_name", None))
         self.embedding = embedding
         self.by = by
         self.topk_per_query = topk_per_query

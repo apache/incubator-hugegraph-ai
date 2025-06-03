@@ -26,7 +26,7 @@ import gradio as gr
 from .hugegraph_utils import get_hg_client, clean_hg_data
 from .log import log
 from .vector_index_utils import read_documents
-from ..config import resource_path, huge_settings
+from ..config import resource_path, huge_settings, llm_settings
 from ..indices.vector_index import VectorIndex
 from ..models.embeddings.init_embedding import Embeddings
 from ..models.llms.init_llm import LLMs
@@ -36,7 +36,9 @@ from ..operators.kg_construction_task import KgBuilder
 def get_graph_index_info():
     builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     graph_summary_info = builder.fetch_graph_data().run()
-    vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
+    base_dir = str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids"))
+    index_dir = os.path.join(base_dir, llm_settings.embedding_type)
+    vector_index = VectorIndex.from_index_file(index_dir, getattr(builder.embedding, "model_name", None))
     graph_summary_info["vid_index"] = {
         "embed_dim": vector_index.index.d,
         "num_vectors": vector_index.index.ntotal,
@@ -46,7 +48,7 @@ def get_graph_index_info():
 
 
 def clean_all_graph_index():
-    VectorIndex.clean(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
+    VectorIndex.clean(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids", llm_settings.embedding_type)),Embeddings().get_embedding())
     VectorIndex.clean(str(os.path.join(resource_path, "gremlin_examples")))
     log.warning("Clear graph index and text2gql index successfully!")
     gr.Info("Clear graph index and text2gql index successfully!")

@@ -23,6 +23,7 @@ from typing import List, Any, Set, Union
 import faiss
 import numpy as np
 
+from hugegraph_llm.utils.file_utils import get_model_filename
 from hugegraph_llm.utils.log import log
 
 INDEX_FILE_NAME = "index.faiss"
@@ -37,12 +38,20 @@ class VectorIndex:
         self.properties = []
 
     @staticmethod
-    def from_index_file(dir_path: str) -> "VectorIndex":
-        index_file = os.path.join(dir_path, INDEX_FILE_NAME)
-        properties_file = os.path.join(dir_path, PROPERTIES_FILE_NAME)
+    def from_index_file(dir_path: str, model_name: str = None) -> "VectorIndex":
+        """Load index from file,Supporting model-specific filenames"""
+        index_file = os.path.join(dir_path, get_model_filename(INDEX_FILE_NAME, model_name))
+        properties_file = os.path.join(dir_path, get_model_filename(PROPERTIES_FILE_NAME, model_name))
+
+        # Fallback to default filenames if model-specific files don't exist
         if not os.path.exists(index_file) or not os.path.exists(properties_file):
-            log.warning("No index file found, create a new one.")
-            return VectorIndex()
+            if model_name:  # Try default filenames as fallback
+                index_file = os.path.join(dir_path, INDEX_FILE_NAME)
+                properties_file = os.path.join(dir_path, PROPERTIES_FILE_NAME)
+
+            if not os.path.exists(index_file) or not os.path.exists(properties_file):
+                log.warning("No index file found, create a new one.")
+                return VectorIndex()
 
         faiss_index = faiss.read_index(index_file)
         embed_dim = faiss_index.d
@@ -53,12 +62,13 @@ class VectorIndex:
         vector_index.properties = properties
         return vector_index
 
-    def to_index_file(self, dir_path: str):
+    def to_index_file(self, dir_path: str, model_name: str = None):
+        """Save index to file, supporting model-specific filenames."""
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
 
-        index_file = os.path.join(dir_path, INDEX_FILE_NAME)
-        properties_file = os.path.join(dir_path, PROPERTIES_FILE_NAME)
+        index_file = os.path.join(dir_path, get_model_filename(INDEX_FILE_NAME, model_name))
+        properties_file = os.path.join(dir_path, get_model_filename(PROPERTIES_FILE_NAME, model_name))
         faiss.write_index(self.index, index_file)
         with open(properties_file, "wb") as f:
             pkl.dump(self.properties, f)
@@ -104,10 +114,15 @@ class VectorIndex:
         return results
 
     @staticmethod
-    def clean(dir_path: str):
-        index_file = os.path.join(dir_path, INDEX_FILE_NAME)
-        properties_file = os.path.join(dir_path, PROPERTIES_FILE_NAME)
-        if os.path.exists(index_file):
-            os.remove(index_file)
-        if os.path.exists(properties_file):
-            os.remove(properties_file)
+    def clean(dir_path: str, model_name: str = None):
+        """Clean index files, supporting model-specific filenames."""
+        index_file = os.path.join(dir_path, get_model_filename(INDEX_FILE_NAME, model_name))
+        properties_file = os.path.join(dir_path, get_model_filename(PROPERTIES_FILE_NAME, model_name))
+
+        # Also clean default filenames for backward compatibility
+        default_index_file = os.path.join(dir_path, INDEX_FILE_NAME)
+        default_properties_file = os.path.join(dir_path, PROPERTIES_FILE_NAME)
+
+        for file in [index_file, properties_file, default_index_file, default_properties_file]:
+            if os.path.exists(file):
+                os.remove(file)

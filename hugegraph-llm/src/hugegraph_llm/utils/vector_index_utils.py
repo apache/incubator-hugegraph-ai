@@ -57,8 +57,12 @@ def read_documents(input_file, input_text):
 
 #pylint: disable=C0301
 def get_vector_index_info():
-    chunk_vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "chunks")))
-    graph_vid_vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
+    chunk_vector_index = VectorIndex.from_index_file(
+        str(os.path.join(resource_path, huge_settings.graph_name, "chunks")), )
+    graph_vid_vector_index = VectorIndex.from_index_file(
+        str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")),
+        model_name=Embeddings().get_embedding()
+    )
     return json.dumps({
         "embed_dim": chunk_vector_index.index.d,
         "vector_info": {
