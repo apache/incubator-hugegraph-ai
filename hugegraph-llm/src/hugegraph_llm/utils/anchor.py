@@ -16,7 +16,18 @@
 from pathlib import Path
 
 def get_project_root() -> Path:
-    """Returns the Path object of the project root directory"""
+    """
+    Returns the Path object of the project root directory.
+    
+    The function searches for common project root indicators like pyproject.toml 
+    or .git directory by traversing up the directory tree from the current file location.
+    
+    Returns:
+        Path: The absolute path to the project root directory
+        
+    Raises:
+        RuntimeError: If no project root indicators could be found
+    """
     current_path = Path(__file__).resolve()
     for parent in current_path.parents:
         if (parent / "pyproject.toml").exists() or (parent / ".git").exists():
