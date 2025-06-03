@@ -41,8 +41,8 @@ class BasePromptConfig:
     doc_input_text: str = ''
 
     def ensure_yaml_file_exists(self):
-        current_dir = Path(os.getcwd()).resolve()
-        project_root = get_project_root().resolve()
+        current_dir = Path.cwd().resolve()
+        project_root = get_project_root()
         if current_dir == project_root:
             log.info("Current working directory is the project root, proceeding to run the app.")
         else:
