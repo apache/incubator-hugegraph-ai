@@ -17,6 +17,7 @@
 
 import sys
 import os
+from pathlib import Path
 
 import yaml
 
@@ -40,13 +41,13 @@ class BasePromptConfig:
     doc_input_text: str = ''
 
     def ensure_yaml_file_exists(self):
-        if os.getcwd() == str(get_project_root()):
+        if Path.cwd().resolve() == get_project_root():
             log.info("Current working directory is the project root, proceeding to run the app.")
         else:
             error_msg = (
                 f"Current working directory is not the project root. "
-                f"Please run this script from the project root directory: {get_project_root()}\n"
-                f"Current directory: {os.getcwd()}"
+                f"Please run this script from the project root directory: {get_project_root().resolve()}\n"
+                f"Current directory: {Path.cwd().resolve()}"
             )
             log.error(error_msg)
             sys.exit(1)
