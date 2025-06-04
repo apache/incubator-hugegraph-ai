@@ -1,23 +1,20 @@
-# TODO: we could use 'uv' to replace the poetry + python image (Also use the slime image)
 # Stage 1: Build stage (Isolating the build env)
 FROM python:3.10.16-bookworm AS builder
 
-WORKDIR /build/
+WORKDIR /home/work/
 
-# 1.1 Install poetry
-RUN pip install --no-cache-dir poetry
+# Use uv instead of poetry for a more efficient, elegant, and unified py env management```
+RUN pip install --no-cache-dir uv
 
-# 1.2 Copy source code
+# 1.1 Copy source code
 COPY hugegraph-python-client/ ./hugegraph-python-client/
 COPY hugegraph-llm/ ./hugegraph-llm/
 
-# 1.3 Install dependencies
-RUN cd /build/hugegraph-llm && \
-    poetry config virtualenvs.in-project true && \
-    poetry lock && \
-    poetry install --no-interaction --no-ansi --verbose && \
-    .venv/bin/pip install ../hugegraph-python-client && \
-    poetry build
+# 1.2 Install dependency
+RUN cd /home/work/hugegraph-llm && \
+    uv venv && \
+    uv pip install -e . && \
+    uv pip install ../hugegraph-python-client
 
 # Stage 2: Runtime stage
 FROM python:3.10.16-slim-bookworm
@@ -32,14 +29,15 @@ RUN useradd -m -s /bin/bash work && \
 
 WORKDIR /home/work/
 
-# Copy only the built packages and virtual environment from the builder stage
-COPY --from=builder --chown=work:work /build/hugegraph-llm/.venv /home/work/hugegraph-llm/.venv
-COPY --from=builder --chown=work:work /build/hugegraph-llm/src /home/work/hugegraph-llm/src
+# Copy virtual environment and source code
+COPY --from=builder --chown=work:work /home/work/hugegraph-llm/.venv /home/work/hugegraph-llm/.venv
+COPY --from=builder --chown=work:work /home/work/hugegraph-llm/src /home/work/hugegraph-llm/src
 
 USER work
 ENV PATH="/home/work/hugegraph-llm/.venv/bin:$PATH"
+ENV PYTHONPATH="/home/work/hugegraph-llm/src"
 
-WORKDIR /home/work/hugegraph-llm/src
+WORKDIR /home/work/hugegraph-llm
 VOLUME ["/home/work/hugegraph-llm/src/hugegraph_llm/resources"]
 EXPOSE 8001
 
