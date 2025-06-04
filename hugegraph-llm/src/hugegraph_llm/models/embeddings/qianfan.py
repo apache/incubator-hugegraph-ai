@@ -66,4 +66,3 @@ class QianFanEmbedding:
             texts=texts
         )
         return [data["embedding"] for data in response["body"]["data"]]
-

@@ -43,7 +43,6 @@ async def get_embeddings_parallel(embedding: BaseEmbedding, vids: list[str]) -> 
         - Processes texts in batches of 1000
         - Displays progress using a progress bar
     """
-    sem = asyncio.Semaphore(10)
     batch_size = 1000
 
     async def get_embeddings_async(vid_list: list[str]) -> Any:
