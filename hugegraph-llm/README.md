@@ -47,6 +47,7 @@ graph systems and large language models.
      ```bash
      # For Image 1
      python ./src/hugegraph_llm/demo/rag_demo/app.py # or run python -m hugegraph_llm.demo.rag_demo.app
+
      # For Image 2
      ./app.dist/app.bin
      ```
