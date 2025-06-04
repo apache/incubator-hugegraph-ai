@@ -48,7 +48,9 @@ def get_graph_index_info():
 
 
 def clean_all_graph_index():
-    VectorIndex.clean(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids", llm_settings.embedding_type)),Embeddings().get_embedding())
+    VectorIndex.clean(
+        str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids", llm_settings.embedding_type)),
+        getattr(Embeddings().get_embedding(), "model_name", None))
     VectorIndex.clean(str(os.path.join(resource_path, "gremlin_examples")))
     log.warning("Clear graph index and text2gql index successfully!")
     gr.Info("Clear graph index and text2gql index successfully!")
