@@ -50,7 +50,7 @@ class OllamaEmbedding(BaseEmbedding):
             )
             raise AttributeError(error_message)
 
-        response = self.client.embed(model=self.model, input=texts).embeddings
+        response = self.client.embed(model=self.model, input=texts)["embeddings"]
         return [list(inner_sequence) for inner_sequence in response]
 
     async def async_get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
@@ -68,5 +68,5 @@ class OllamaEmbedding(BaseEmbedding):
                 "Please ensure your ollama library is up-to-date and supports batch embedding. "
             )
             raise AttributeError(error_message)
-        response = await self.async_client.embed(model=self.model, input=texts)
-        return [list(inner_sequence) for inner_sequence in response.embeddings]
+        response = await self.async_client.embed(model=self.model, input=texts)["embeddings"]
+        return [list(inner_sequence) for inner_sequence in response]
