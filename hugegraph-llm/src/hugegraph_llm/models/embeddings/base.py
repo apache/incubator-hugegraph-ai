@@ -87,11 +87,27 @@ class BaseEmbedding(ABC):
         """
 
     @abstractmethod
-    async def async_get_text_embedding(
+    async def async_get_texts_embeddings(
             self,
-            text: str
-    ) -> List[float]:
-        """Comment"""
+            texts: List[str]
+    ) -> List[List[float]]:
+        """Get embeddings for multiple texts in a single batch asynchronously.
+        
+        This method should efficiently process multiple texts at once by leveraging
+        the embedding model's batching capabilities, which is typically more efficient
+        than processing texts individually.
+
+        Parameters
+        ----------
+        texts : List[str]
+            A list of text strings to be embedded.
+            
+        Returns
+        -------
+        List[List[float]]
+            A list of embedding vectors, where each vector is a list of floats.
+            The order of embeddings should match the order of input texts.
+        """
 
     @staticmethod
     def similarity(
