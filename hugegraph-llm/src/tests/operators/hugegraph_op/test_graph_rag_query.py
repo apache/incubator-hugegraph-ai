@@ -183,11 +183,10 @@ class TestGraphRAGQuery(unittest.TestCase):
         self.assertTrue("graph_result" in result)
 
     def test_init_client(self):
-        """Test _init_client method."""
-        # Create context with client parameters
+        """Test init_client method."""
+        # Create context with client parameters - 使用 url 而不是分别的 ip 和 port
         context = {
-            "ip": "127.0.0.1",
-            "port": "8080",
+            "url": "http://127.0.0.1:8080",
             "graph": "hugegraph",
             "user": "admin",
             "pwd": "xxx",
@@ -218,7 +217,8 @@ class TestGraphRAGQuery(unittest.TestCase):
             test_instance.init_client(context)
 
             # Verify that PyHugeClient was created with correct parameters
-            mock_client_class.assert_called_once_with("127.0.0.1", "8080", "hugegraph", "admin", "xxx", None)
+            # 修改期望的调用参数格式
+            mock_client_class.assert_called_once_with("http://127.0.0.1:8080", "hugegraph", "admin", "xxx", None)
 
             # Verify that the client was set
             self.assertEqual(test_instance._client, mock_client)
