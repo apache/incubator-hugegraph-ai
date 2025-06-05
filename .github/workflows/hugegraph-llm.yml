@@ -57,10 +57,14 @@ jobs:
     - name: Install hugegraph-python-client
       run: |
         source .venv/bin/activate
-        cd ./hugegraph-python-client/
-        pip install -e .
-        cd ..
-        pip install -e ./hugegraph-llm/
+        # 使用uv安装本地包
+        uv pip install -e ./hugegraph-python-client/
+        uv pip install -e ./hugegraph-llm/
+        # 验证安装
+        echo "=== 已安装的包 ==="
+        uv pip list | grep hugegraph
+        echo "=== Python路径 ==="
+        python -c "import sys; [print(p) for p in sys.path]"
 
     - name: Run unit tests
       run: |
