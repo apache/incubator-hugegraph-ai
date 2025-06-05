@@ -34,6 +34,7 @@ WORKDIR /home/work/
 COPY --from=builder --chown=work:work /build/hugegraph-llm/src /home/work/hugegraph-llm/src
 COPY --from=builder --chown=work:work /build/hugegraph-llm/app.dist /home/work/hugegraph-llm/app.dist
 COPY --from=builder --chown=work:work /build/hugegraph-llm/app.build /home/work/hugegraph-llm/app.build
+COPY --from=builder --chown=work:work /build/hugegraph-llm/pyproject.toml /home/work/hugegraph-llm/pyproject.toml
 
 USER work
 
