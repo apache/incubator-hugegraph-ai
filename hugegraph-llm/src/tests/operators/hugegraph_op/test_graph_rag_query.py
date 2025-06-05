@@ -215,7 +215,7 @@ class TestGraphRAGQuery(unittest.TestCase):
             test_instance._client = None
 
             # Run the method
-            test_instance._init_client(context)
+            test_instance.init_client(context)
 
             # Verify that PyHugeClient was created with correct parameters
             mock_client_class.assert_called_once_with("127.0.0.1", "8080", "hugegraph", "admin", "xxx", None)
