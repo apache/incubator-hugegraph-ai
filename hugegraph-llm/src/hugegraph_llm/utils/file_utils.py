@@ -17,6 +17,8 @@
 
 def get_model_filename(base_name: str, model_name: str = None) -> str:
     """Generate filename based on model name."""
-    if model_name:
-        return f"{model_name}_{base_name}"
-    return base_name
+    if not model_name or model_name.strip() == "":
+        return base_name
+    # Sanitize model_name to prevent path traversal or invalid filename chars
+    safe_model_name = model_name.replace("/", "_").replace("\\", "_").strip()
+    return f"{safe_model_name}_{base_name}"
