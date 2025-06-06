@@ -48,7 +48,7 @@ class VectorIndex:
             if model_name:  # Try default filenames as fallback
                 index_file = os.path.join(dir_path, INDEX_FILE_NAME)
                 properties_file = os.path.join(dir_path, PROPERTIES_FILE_NAME)
-                log.warning(f"Try default filenames for model: {model_name}.")
+                log.warning("Try default filenames for model: %s.", model_name)
 
             if not os.path.exists(index_file) or not os.path.exists(properties_file):
                 log.warning("No index file found, create a new one.")
