@@ -62,7 +62,22 @@ def init_rag_ui() -> gr.Interface:
         title="HugeGraph RAG Platform",
         css=CSS,
     ) as hugegraph_llm_ui:
-        gr.Markdown("# HugeGraph RAG Platform 🚀")
+        with gr.Row(equal_height=True):
+            with gr.Column(scale=11):
+                gr.Markdown("# HugeGraph RAG Platform 🚀")
+            with gr.Column(scale=1, min_width=120):
+                language_state = gr.State("EN")
+                lang_button = gr.Button("prompt: EN", elem_classes="tool", min_width=120)
+
+                def switch_language(lang):
+                    new_lang = prompt.switch_language()
+                    return new_lang, f"prompt: {new_lang}"
+
+                lang_button.click(
+                    fn=switch_language,
+                    inputs=[language_state],
+                    outputs=[language_state, lang_button]
+                )
 
         """
         TODO: leave a general idea of the unresolved part
@@ -123,8 +138,40 @@ def init_rag_ui() -> gr.Interface:
                 prompt.custom_rerank_info,
                 prompt.default_question,
                 huge_settings.graph_name,
-                prompt.gremlin_generate_prompt
+                prompt.gremlin_generate_prompt,
+                prompt.current_language,
+                f"prompt: {prompt.current_language}"
             )
+
+        # Callback function after language switch
+        def on_language_change(lang):
+            # Trigger UI refresh
+            return refresh_ui_config_prompt()
+
+        # Monitor language state changes
+        language_state.change(
+            fn=on_language_change,
+            inputs=[language_state],
+            outputs=[
+                textbox_array_graph_config[0],
+                textbox_array_graph_config[1],
+                textbox_array_graph_config[2],
+                textbox_array_graph_config[3],
+                textbox_array_graph_config[4],
+                textbox_input_text,
+                textbox_input_schema,
+                textbox_info_extract_template,
+                textbox_inp,
+                textbox_answer_prompt_input,
+                textbox_keywords_extract_prompt_input,
+                textbox_custom_related_information,
+                textbox_gremlin_inp,
+                textbox_gremlin_schema,
+                textbox_gremlin_prompt,
+                language_state,
+                lang_button,
+            ],
+        )
 
         hugegraph_llm_ui.load(  # pylint: disable=E1101
             fn=refresh_ui_config_prompt,
@@ -144,6 +191,8 @@ def init_rag_ui() -> gr.Interface:
                 textbox_gremlin_inp,
                 textbox_gremlin_schema,
                 textbox_gremlin_prompt,
+                language_state,
+                lang_button,
             ],
         )
 
