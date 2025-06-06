@@ -16,6 +16,8 @@
 # under the License.
 
 
+from typing import Literal, Callable
+
 from hugegraph_llm.config.models.base_prompt_config import BasePromptConfig
 
 
@@ -387,3 +389,52 @@ MAX_KEYWORDS: {max_keywords}
 职业道路也很出色。另外，Sarah拥有一个个人网站www.sarahsplace.com，而James也经营着自己的网页，不过这里没有提到具体的网址。这两个人，
 Sarah和James，不仅建立起了深厚的室友情谊，还各自在网络上开辟了自己的一片天地，展示着他们各自丰富多彩的兴趣和经历。
 """
+
+    current_language: Literal["EN", "CN"] = "EN"
+    _language_callbacks: list[Callable[[str], None]] = []
+
+    def __init__(self):
+        super().__init__()
+        self._answer_prompt_EN = self.answer_prompt
+        self._extract_graph_prompt_EN = self.extract_graph_prompt
+        self._keywords_extract_prompt_EN = self.keywords_extract_prompt
+        self._gremlin_generate_prompt_EN = self.gremlin_generate_prompt
+        self._doc_input_text_EN = self.doc_input_text
+
+    @property
+    def is_chinese(self) -> bool:
+        return self.current_language == "CN"
+
+    def add_language_callback(self, callback: Callable[[str], None]) -> None:
+        self._language_callbacks.append(callback)
+
+    def remove_language_callback(self, callback: Callable[[str], None]) -> None:
+        if callback in self._language_callbacks:
+            self._language_callbacks.remove(callback)
+
+    def switch_language(self) -> str:
+        if self.current_language not in ["EN", "CN"]:
+            raise ValueError("Unsupported language")
+
+        if self.current_language == "EN":
+            self.current_language = "CN"
+            self.answer_prompt = self.answer_prompt_CN
+            self.extract_graph_prompt = self.extract_graph_prompt_CN
+            self.keywords_extract_prompt = self.keywords_extract_prompt_CN
+            self.gremlin_generate_prompt = self.gremlin_generate_prompt_CN
+            self.doc_input_text = self.doc_input_text_CN
+        else:
+            self.current_language = "EN"
+            self.answer_prompt = self._answer_prompt_EN
+            self.extract_graph_prompt = self._extract_graph_prompt_EN
+            self.keywords_extract_prompt = self._keywords_extract_prompt_EN
+            self.gremlin_generate_prompt = self._gremlin_generate_prompt_EN
+            self.doc_input_text = self._doc_input_text_EN
+
+        self.update_yaml_file()
+
+        # callback
+        for callback in self._language_callbacks:
+            callback(self.current_language)
+
+        return self.current_language
