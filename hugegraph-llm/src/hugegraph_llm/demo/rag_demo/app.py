@@ -62,7 +62,12 @@ def init_rag_ui() -> gr.Interface:
         title="HugeGraph RAG Platform",
         css=CSS,
     ) as hugegraph_llm_ui:
-        gr.Markdown("# HugeGraph RAG Platform 🚀")
+        with gr.Row(equal_height=True):
+            with gr.Column(scale=11):
+                gr.Markdown("# HugeGraph RAG Platform 🚀")
+            with gr.Column(scale=1, min_width=120):
+                language_state = gr.State("EN")
+                lang_button = gr.Button("prompt: EN", elem_classes="tool", min_width=120)
 
         """
         TODO: leave a general idea of the unresolved part
@@ -104,6 +109,41 @@ def init_rag_ui() -> gr.Interface:
             create_other_block()
         with gr.Tab(label="5. Admin Tools 🛠"):
             create_admin_block()
+
+            def switch_language(current_lang):
+                new_lang = "CN" if current_lang == "EN" else "EN"
+                if new_lang == "CN":
+                    updates = (
+                        gr.update(value=f"prompt: {new_lang}"),
+                        gr.update(value=prompt.doc_input_text_CN),
+                        gr.update(value=prompt.extract_graph_prompt_CN),
+                        gr.update(value=prompt.answer_prompt_CN),
+                        gr.update(value=prompt.keywords_extract_prompt_CN),
+                        gr.update(value=prompt.gremlin_generate_prompt_CN),
+                    )
+                else:
+                    updates = (
+                        gr.update(value=f"prompt: {new_lang}"),
+                        gr.update(value=prompt.doc_input_text),
+                        gr.update(value=prompt.extract_graph_prompt),
+                        gr.update(value=prompt.answer_prompt),
+                        gr.update(value=prompt.keywords_extract_prompt),
+                        gr.update(value=prompt.gremlin_generate_prompt),
+                    )
+                return new_lang, *updates
+            lang_button.click(
+                fn=switch_language,
+                inputs=[language_state],
+                outputs=[
+                    language_state,
+                    lang_button,
+                    textbox_input_text,
+                    textbox_info_extract_template,
+                    textbox_answer_prompt_input,
+                    textbox_keywords_extract_prompt_input,
+                    textbox_gremlin_prompt,
+                ]
+            )
 
         def refresh_ui_config_prompt() -> tuple:
             # we can use its __init__() for in-place reload
