@@ -39,7 +39,7 @@ class VectorIndex:
 
     @staticmethod
     def from_index_file(dir_path: str, model_name: str = None) -> "VectorIndex":
-        """Load index from files,Supporting model-specific filenames"""
+        """Load index from files, Supporting model-specific filenames"""
         index_file = os.path.join(dir_path, get_model_filename(INDEX_FILE_NAME, model_name))
         properties_file = os.path.join(dir_path, get_model_filename(PROPERTIES_FILE_NAME, model_name))
 
