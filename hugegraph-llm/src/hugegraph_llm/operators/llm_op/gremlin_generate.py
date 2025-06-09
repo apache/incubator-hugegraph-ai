@@ -41,10 +41,12 @@ class GremlinGenerateSynthesize:
         self.vertices = vertices
         self.gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
 
+    # TODO: Tag is used to standardize gql output, maybe remove it in future
     def _extract_response(self, response: str, label: str = "gremlin") -> str:
         match = re.search(f"```{label}(.*?)```", response, re.DOTALL)
-        assert match is not None, f"No {label} found in response: {response}"
-        return match.group(1).strip()
+        if match:
+            return match.group(1).strip()
+        return response.strip()
 
     def _format_examples(self, examples: Optional[List[Dict[str, str]]]) -> Optional[str]:
         if not examples:
