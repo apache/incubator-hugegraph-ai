@@ -6,12 +6,14 @@ It is used to define graph structures, perform CRUD operations on graph data, ma
 
 ## Installation
 
-### Install released package (Stable)
+### Install the released package (Stable)
 
-To install the `hugegraph-python-client`, you can use pip/poetry/source building:
+To install the `hugegraph-python-client`, you can use uv/pip or source code building:
 
 ```bash
+# uv is optional, you can use pip directly
 uv pip install hugegraph-python # Note: may not the latest version, recommend to install from source
+# WIP: we will use 'hugegraph-python-client' as the package name soon
 ```
 
 ### Install from Source (Latest Code)
