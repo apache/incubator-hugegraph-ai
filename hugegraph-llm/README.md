@@ -23,6 +23,38 @@ graph systems and large language models.
 
 ## 3. Preparation
 
+### 3.1 Docker
+
+**Docker Deployment**  
+   Alternatively, you can deploy HugeGraph-AI using Docker:
+   - Ensure you have Docker installed
+   - We provide two container images:
+     - **Image 1**: [hugegraph/rag](https://hub.docker.com/r/hugegraph/rag/tags)  
+       For building and running the RAG functionality, suitable for quick deployment and development
+     - **Image 2**: [hugegraph/rag-bin](https://hub.docker.com/r/hugegraph/rag-bin/tags)  
+       Binary version compiled with Nuitka for more stable and efficient performance in production
+   - Pull the Docker images:
+     ```bash
+     docker pull hugegraph/rag:latest # Pull Image 1
+     docker pull hugegraph/rag-bin:latest # Pull Image 2
+     ```
+   - Start the Docker container:
+     ```bash
+     docker run -it --name rag -p 8001:8001 hugegraph/rag bash
+     docker run -it --name rag-bin -p 8001:8001 hugegraph/rag-bin bash
+     ```
+   - Start the Graph RAG demo:
+     ```bash
+     # For Image 1
+     python ./src/hugegraph_llm/demo/rag_demo/app.py # or run python -m hugegraph_llm.demo.rag_demo.app
+
+     # For Image 2
+     ./app.dist/app.bin
+     ```
+   - Access the interface at http://localhost:8001
+
+### 3.2 Build from Source
+
 1. Start the HugeGraph database, you can run it via [Docker](https://hub.docker.com/r/hugegraph/hugegraph)/[Binary Package](https://hugegraph.apache.org/docs/download/download/).
     There is a simple method by docker:  
     ```bash
@@ -47,7 +79,8 @@ graph systems and large language models.
     uv pip install -e .
     ```  
     If dependency download fails or too slow due to network issues, it is recommended to modify `hugegraph-llm/pyproject.toml`.
-6. Start the gradio interactive demo of **Graph RAG**, you can run with the following command and open http://127.0.0.1:8001 after starting
+
+5. Start the gradio interactive demo of **Graph RAG**, you can run with the following command and open http://127.0.0.1:8001 after starting
     ```bash
     python -m hugegraph_llm.demo.rag_demo.app  # same as "uv run xxx"
     ```
@@ -56,18 +89,18 @@ graph systems and large language models.
     python -m hugegraph_llm.demo.rag_demo.app --host 127.0.0.1 --port 18001
     ```
    
-7. After running the web demo, the config file `.env` will be automatically generated at the path `hugegraph-llm/.env`.    Additionally, a prompt-related configuration file `config_prompt.yaml` will also be generated at the path `hugegraph-llm/src/hugegraph_llm/resources/demo/config_prompt.yaml`.
+6. After running the web demo, the config file `.env` will be automatically generated at the path `hugegraph-llm/.env`.    Additionally, a prompt-related configuration file `config_prompt.yaml` will also be generated at the path `hugegraph-llm/src/hugegraph_llm/resources/demo/config_prompt.yaml`.
     You can modify the content on the web page, and it will be automatically saved to the configuration file after the corresponding feature is triggered.  You can also modify the file directly without restarting the web application; refresh the page to load your latest changes.  
     (Optional)To regenerate the config file, you can use `config.generate` with `-u` or `--update`.  
     ```bash
     python -m hugegraph_llm.config.generate --update
     ```
     Note: `Litellm` support multi-LLM provider, refer [litellm.ai](https://docs.litellm.ai/docs/providers) to config it
-8. (__Optional__) You could use 
+7. (__Optional__) You could use 
     [hugegraph-hubble](https://hugegraph.apache.org/docs/quickstart/hugegraph-hubble/#21-use-docker-convenient-for-testdev) 
     to visit the graph data, could run it via [Docker/Docker-Compose](https://hub.docker.com/r/hugegraph/hubble) 
     for guidance. (Hubble is a graph-analysis dashboard that includes data loading/schema management/graph traverser/display).
-9. (__Optional__) offline download NLTK stopwords  
+8. (__Optional__) offline download NLTK stopwords  
     ```bash
     python ./hugegraph_llm/operators/common_op/nltk_helper.py
     ```
