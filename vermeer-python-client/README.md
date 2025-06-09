@@ -5,7 +5,7 @@ The `vermeer-python-client` is a Python client(SDK) for [Vermeer](https://github
 
 ## Installation
 
-To install the `vermeer-python-client`, you can use pip/poetry/source building:
+To install the `vermeer-python-client`, you can use `pip/uv`  or **source code building**:
 
 ```bash
 #todo
