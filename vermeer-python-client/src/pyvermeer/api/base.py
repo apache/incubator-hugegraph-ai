@@ -19,7 +19,7 @@ from pyvermeer.utils.log import log
 
 
 class BaseModule:
-    """基类"""
+    """Base class"""
 
     def __init__(self, client):
         self._client = client
@@ -27,11 +27,11 @@ class BaseModule:
 
     @property
     def session(self):
-        """返回客户端的session对象"""
+        """Return the client's session object"""
         return self._client.session
 
     def _send_request(self, method: str, endpoint: str, params: dict = None):
-        """统一请求入口"""
+        """Unified request entry point"""
         self.log.debug(f"Sending {method} to {endpoint}")
         return self._client.send_request(
             method=method,

@@ -22,10 +22,10 @@ from pyvermeer.utils.vermeer_datetime import parse_vermeer_time
 
 
 class MasterInfo:
-    """Master 信息"""
+    """Master information"""
 
     def __init__(self, dic: dict):
-        """初始化函数"""
+        """Initialization function"""
         self.__grpc_peer = dic.get('grpc_peer', '')
         self.__ip_addr = dic.get('ip_addr', '')
         self.__debug_mod = dic.get('debug_mod', False)
@@ -34,31 +34,31 @@ class MasterInfo:
 
     @property
     def grpc_peer(self) -> str:
-        """gRPC地址"""
+        """gRPC address"""
         return self.__grpc_peer
 
     @property
     def ip_addr(self) -> str:
-        """IP地址"""
+        """IP address"""
         return self.__ip_addr
 
     @property
     def debug_mod(self) -> bool:
-        """是否为调试模式"""
+        """Whether it is debug mode"""
         return self.__debug_mod
 
     @property
     def version(self) -> str:
-        """Master 版本号"""
+        """Master version number"""
         return self.__version
 
     @property
     def launch_time(self) -> datetime:
-        """Master 启动时间"""
+        """Master startup time"""
         return self.__launch_time
 
     def to_dict(self):
-        """返回字典格式数据"""
+        """Return data in dictionary format"""
         return {
             "grpc_peer": self.__grpc_peer,
             "ip_addr": self.__ip_addr,
@@ -69,14 +69,14 @@ class MasterInfo:
 
 
 class MasterResponse(BaseResponse):
-    """Master 响应"""
+    """Master response"""
 
     def __init__(self, dic: dict):
-        """初始化函数"""
+        """Initialization function"""
         super().__init__(dic)
         self.__master_info = MasterInfo(dic['master_info'])
 
     @property
     def master_info(self) -> MasterInfo:
-        """获取主节点信息"""
+        """Get master node information"""
         return self.__master_info

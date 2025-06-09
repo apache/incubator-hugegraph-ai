@@ -24,7 +24,7 @@ class TaskModule(BaseModule):
     """Task"""
 
     def get_tasks(self) -> TasksResponse:
-        """获取任务列表"""
+        """Get task list"""
         response = self._send_request(
             "GET",
             "/tasks"
@@ -32,7 +32,7 @@ class TaskModule(BaseModule):
         return TasksResponse(response)
 
     def get_task(self, task_id: int) -> TaskResponse:
-        """获取单个任务信息"""
+        """Get single task information"""
         response = self._send_request(
             "GET",
             f"/task/{task_id}"
@@ -40,7 +40,7 @@ class TaskModule(BaseModule):
         return TaskResponse(response)
 
     def create_task(self, create_task: TaskCreateRequest) -> TaskCreateResponse:
-        """创建新任务"""
+        """Create new task"""
         response = self._send_request(
             method="POST",
             endpoint="/tasks/create",

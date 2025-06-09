@@ -23,7 +23,7 @@ class GraphModule(BaseModule):
     """Graph"""
 
     def get_graph(self, graph_name: str) -> GraphResponse:
-        """获取任务列表"""
+        """Get task list"""
         response = self._send_request(
             "GET",
             f"/graphs/{graph_name}"
@@ -31,7 +31,7 @@ class GraphModule(BaseModule):
         return GraphResponse(response)
 
     def get_graphs(self) -> GraphsResponse:
-        """获取任务列表"""
+        """Get task list"""
         response = self._send_request(
             "GET",
             "/graphs",

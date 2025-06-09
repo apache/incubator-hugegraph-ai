@@ -37,7 +37,7 @@ class PyVermeerClient:
             timeout: Optional[tuple[float, float]] = None,
             log_level: str = "INFO",
     ):
-        """初始化客户端，包括配置和会话管理
+        """Initialize the client, including configuration and session management
         :param ip:
         :param port:
         :param token:
@@ -53,11 +53,11 @@ class PyVermeerClient:
         log.setLevel(log_level)
 
     def __getattr__(self, name):
-        """通过属性访问模块"""
+        """Access modules through attributes"""
         if name in self._modules:
             return self._modules[name]
         raise AttributeError(f"Module {name} not found")
 
     def send_request(self, method: str, endpoint: str, params: dict = None):
-        """统一请求方法"""
+        """Unified request method"""
         return self.session.request(method, endpoint, params)

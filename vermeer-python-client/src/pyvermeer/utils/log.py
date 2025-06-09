@@ -31,20 +31,20 @@ class VermeerLogger:
         return cls._instance
 
     def _initialize(self, name: str):
-        """初始化日志配置"""
+        """Initialize log configuration"""
         self.logger = logging.getLogger(name)
-        self.logger.setLevel(logging.INFO)  # 默认级别
+        self.logger.setLevel(logging.INFO)  # Default level
 
         if not self.logger.handlers:
-            # 控制台输出格式
+            # Console output format
             console_format = logging.Formatter(
                 '[%(asctime)s] [%(levelname)s] %(name)s - %(message)s',
                 datefmt='%Y-%m-%d %H:%M:%S'
             )
 
-            # 控制台处理器
+            # Console handler
             console_handler = logging.StreamHandler(sys.stdout)
-            console_handler.setLevel(logging.INFO)  # 控制台默认级别
+            console_handler.setLevel(logging.INFO)  # Console default level
             console_handler.setFormatter(console_format)
 
             # file_handler = logging.FileHandler('api_client.log')
@@ -62,9 +62,9 @@ class VermeerLogger:
 
     @classmethod
     def get_logger(cls) -> logging.Logger:
-        """获取配置好的日志记录器"""
+        """Get configured logger"""
         return cls().logger
 
 
-# 全局日志实例
+# Global log instance
 log = VermeerLogger.get_logger()
