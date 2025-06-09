@@ -1,6 +1,6 @@
 # vermeer-python-client
 
-The `vermeer-python-client` is a Python client(SDK) for Vermeer. 
+The `vermeer-python-client` is a Python client(SDK) for [Vermeer](https://github.com/apache/incubator-hugegraph-computer/tree/master/vermeer#readme) (A high-performance distributed graph computing platform based on memory, supporting more than 15 graph algorithms, custom algorithm extensions, and custom data source access & easy to deploy and use)
 
 
 ## Installation
