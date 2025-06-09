@@ -42,8 +42,7 @@ jobs:
             .venv
             ~/.cache/uv
             ~/.cache/pip
-          # TODO: switch to pyproject.toml after uv adoption
-          key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('hugegraph-python-client/requirements.txt') }}
+          key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-venv-${{ matrix.python-version }}-
             ${{ runner.os }}-venv-
@@ -54,7 +53,7 @@ jobs:
         run: |
           uv venv && source .venv/bin/activate
           uv pip install pytest
-          uv pip install -r ./hugegraph-python-client/requirements.txt  # TODO: use uv pip install ./hugegraph-python-client later
+          uv pip install ./hugegraph-python-client
 
       - name: Test example
         run: |

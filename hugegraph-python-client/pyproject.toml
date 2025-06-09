@@ -18,16 +18,14 @@
 [project]
 name = "hugegraph-python"
 version = "1.5.0"
-description = "A Python SDK for Apache HugeGraph"
+description = "A Python SDK for Apache HugeGraph Database."
 authors = [
     { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
 ]
 readme = "README.md"
-license = "Apache-2.0" # Assuming Apache-2.0 based on the setup.py
-requires-python = ">=3.9" # From setup.py
-maintainers = [
-    { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
-]
+license = "Apache-2.0"
+requires-python = ">=3.9"
+
 dependencies = [
     "decorator~=5.1.1",
     "requests~=2.32.0",

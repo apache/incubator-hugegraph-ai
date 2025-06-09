@@ -1,17 +1,17 @@
 # hugegraph-python-client
 
-The `hugegraph-python-client` is a Python client(SDK( for HugeGraph. 
+The `hugegraph-python-client` is a Python client/SDK for HugeGraph Database. 
 
 It is used to define graph structures, perform CRUD operations on graph data, manage schemas, and execute Gremlin queries. Both the `hugegraph-llm` and `hugegraph-ml` modules depend on this foundational library.
 
 ## Installation
 
-### Install released package(Stable)
+### Install released package (Stable)
 
 To install the `hugegraph-python-client`, you can use pip/poetry/source building:
 
 ```bash
-pip install hugegraph-python # Note: may not the latest version, recommend to install from source
+uv pip install hugegraph-python # Note: may not the latest version, recommend to install from source
 ```
 
 ### Install from Source (Latest Code)
@@ -23,10 +23,10 @@ git clone https://github.com/apache/incubator-hugegraph-ai.git
 cd incubator-hugegraph-ai/hugegraph-python-client
 
 # Normal install 
-pip install .
+uv pip install .
 
 # (Optional) install the devel version
-pip install -e .
+uv pip install -e .
 ```
 
 ## Usage
@@ -168,7 +168,7 @@ res = g.exec("g.V().limit(5)")
 print(res)
 ```
 
-Other info are under 🚧 (Welcome to add more docs for it, users could refer [java-client-doc]([url](https://hugegraph.apache.org/docs/clients/hugegraph-client/)) for similar usage)
+Other info is under 🚧 (Welcome to add more docs for it, users could refer [java-client-doc]([url](https://hugegraph.apache.org/docs/clients/hugegraph-client/)) for similar usage)
 
 ## Contributing
 
