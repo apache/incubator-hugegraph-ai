@@ -22,9 +22,9 @@ from pyvermeer.structure.task_data import TaskCreateRequest
 def main():
     """main"""
     client = PyVermeerClient(
-        ip="10.41.57.139",
+        ip="127.0.0.1",
         port=8688,
-        token="Q7svB13nYvREB4bDCj7kQnwJEMvLgrgfDimu4h1Fp7CUzQLk758ya1EYwycn1kjbgskiHiKzDni9jEkJcssgTy7rZJdt4gYEkfvjeowZGzSebgiSEU86dgFPXzUUtwrA81vWKm1xfioBcS9GmXjGQoM6C",
+        token="",
         log_level="DEBUG",
     )
     task = client.tasks.get_tasks()
@@ -36,7 +36,7 @@ def main():
             task_type='load',
             graph_name='DEFAULT-example',
             params={
-                "load.hg_pd_peers": "[\"10.41.57.87:8686\"]",
+                "load.hg_pd_peers": "[\"127.0.0.1:8686\"]",
                 "load.hugegraph_name": "DEFAULT/example/g",
                 "load.hugegraph_password": "xxx",
                 "load.hugegraph_username": "xxx",
