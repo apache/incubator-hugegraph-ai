@@ -17,7 +17,7 @@
 
 [project]
 name = "vermeer-python-client"
-version = "0.1.0"
+version = "1.5.0"
 description = "A Python SDK for Apache Vermeer."
 authors = [
     { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
@@ -30,8 +30,13 @@ dependencies = [
     "decorator~=5.1.1",
     "requests~=2.32.0",
     "urllib3~=2.2.2",
-    "rich~=13.9.4",
-    "python-dateutil~=2.9.0", # Added from requirements.txt
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "isort>=5.0.0",
+    "flake8>=6.0.0"
+]
 ]
 
 [project.urls]

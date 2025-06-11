@@ -39,10 +39,12 @@ This section provides examples of how to use the `vermeer-python-client`.
 ### Initialize the Client
 
 ```python
-# Placeholder for client initialization example
-# from pyvermeer.client import VermeerClient
-# client = VermeerClient(host="127.0.0.1", port="8080")
-# print("Client initialized successfully.")
+```python
+from pyvermeer.client import VermeerClient
+
+# Initialize the client
+client = VermeerClient(host="127.0.0.1", port="8080")
+print("Client initialized successfully.")
 ```
 
 ### Example: Running a Graph Algorithm
