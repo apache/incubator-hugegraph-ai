@@ -52,10 +52,9 @@ The implemented algorithm models can be found in the [models](./src/hugegraph_ml
 3. Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph-ml](../hugegraph-ml)
 
    ```bash
-   cd ./incubator-hugegraph-ai # better to use virtualenv (source venv/bin/activate)
    uv venv && source .venv/bin/activate # create and activate virtual environment
    cd ./hugegraph-ml/ # navigate to the hugegraph-ml directory
-   uv pip install # install dependencies using uv
+   uv pip install . # install dependencies using uv
    ```
 
 4. Enter the project directory

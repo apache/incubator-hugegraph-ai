@@ -39,17 +39,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            .venv
             ~/.cache/uv
-            ~/.cache/pip
-          key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
+          key: ${{ runner.os }}-uv-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
           restore-keys: |
-            ${{ runner.os }}-venv-${{ matrix.python-version }}-
-            ${{ runner.os }}-venv-
+            ${{ runner.os }}-uv-${{ matrix.python-version }}-
 
       # TODO: use pyproject.toml later
       - name: Install dependencies
-        if: steps.cache-deps.outputs.cache-hit != 'true'
         run: |
           uv venv && source .venv/bin/activate
           uv pip install pytest
