@@ -32,6 +32,7 @@ WORKDIR /home/work/
 # Copy virtual environment and source code
 COPY --from=builder --chown=work:work /home/work/hugegraph-llm/.venv /home/work/hugegraph-llm/.venv
 COPY --from=builder --chown=work:work /home/work/hugegraph-llm/src /home/work/hugegraph-llm/src
+COPY --from=builder --chown=work:work /home/work/hugegraph-llm/pyproject.toml /home/work/hugegraph-llm/pyproject.toml
 
 USER work
 ENV PATH="/home/work/hugegraph-llm/.venv/bin:$PATH"
