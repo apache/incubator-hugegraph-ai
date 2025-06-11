@@ -26,6 +26,7 @@ from hugegraph_llm.api.models.rag_requests import (
     LLMConfigRequest,
     RerankerConfigRequest,
     GraphRAGRequest,
+    GremlinGenerateRequest,
 )
 from hugegraph_llm.config import huge_settings
 from hugegraph_llm.api.models.rag_response import RAGResponse
@@ -41,6 +42,7 @@ def rag_http_api(
     apply_llm_conf,
     apply_embedding_conf,
     apply_reranker_conf,
+    gremlin_generate_func,
 ):
     @router.post("/rag", status_code=status.HTTP_200_OK)
     def rag_answer_api(req: RAGRequest):
@@ -178,3 +180,30 @@ def rag_http_api(
         else:
             res = status.HTTP_501_NOT_IMPLEMENTED
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
+
+    @router.post("/text2gremlin", status_code=status.HTTP_200_OK)
+    def text2gremlin_api(req: GremlinGenerateRequest):
+        try:
+            match_result, template_gremlin, raw_gremlin, template_execution_result, raw_execution_result = (
+                gremlin_generate_func(
+                    inp=req.query,
+                    example_num=req.example_num,
+                    schema=req.schema_str,
+                    gremlin_prompt=req.gremlin_prompt or prompt.gremlin_generate_prompt,
+                )
+            )
+            return {
+                "match_result": match_result,
+                "template_gremlin": template_gremlin,
+                "raw_gremlin": raw_gremlin,
+                "template_execution_result": template_execution_result,
+                "raw_execution_result": raw_execution_result,
+            }
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            log.error(f"Error in text2gremlin_api: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected error occurred during Gremlin generation.",
+            ) from e
