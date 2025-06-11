@@ -29,7 +29,6 @@ requires-python = ">=3.9"
 dependencies = [
     "decorator~=5.1.1",
     "requests~=2.32.0",
-    "setuptools~=70.0.0", # Loosen the version constraint from ~78.1.1 to ~70.0.0 to match hugegraph-python-client
     "urllib3~=2.2.2",
     "rich~=13.9.4",
     "python-dateutil~=2.9.0", # Added from requirements.txt
