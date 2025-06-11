@@ -51,11 +51,6 @@ dependencies = [
 homepage = "https://hugegraph.apache.org/"
 repository = "https://github.com/apache/incubator-hugegraph-ai"
 
-# If you want to modify the network configuration file of the project, then you can modify this part
-[[tool.uv.index]]
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
-default = true
-
 [tool.hatch.build.targets.wheel]
 packages = ["src/hugegraph_ml"]
 

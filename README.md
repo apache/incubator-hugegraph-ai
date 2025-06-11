@@ -21,6 +21,66 @@ to seamlessly connect with third-party graph-related ML frameworks.
 - [hugegraph-python-client](./hugegraph-python-client): The `hugegraph-python-client` is a Python client for HugeGraph. 
 It is used to define graph structures and perform CRUD operations on graph data. Both the `hugegraph-llm` and 
   `hugegraph-ml` modules will depend on this foundational library. 
+- [vermeer-python-client](./vermeer-python-client): The `vermeer-python-client` is a Python client for Vermeer, a graph data analysis platform. (Note: This module was previously named `vermeer` and its setup has been integrated into the main project).
+
+## Development Setup
+
+This project uses [uv](https://github.com/astral-sh/uv) for package management and as a workspace manager. All dependencies for the submodules are defined in the root `pyproject.toml`.
+
+### Prerequisites
+
+1.  **Install uv:**
+    Follow the official instructions to install `uv` on your system. For example:
+    ```bash
+    # On macOS and Linux
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    # On Windows
+    powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+    # Or, if you have pipx or pip globally:
+    # pipx install uv
+    # pip install uv
+    ```
+
+2.  **Create and Activate a Virtual Environment:**
+    It's highly recommended to work within a virtual environment.
+    ```bash
+    # Create a virtual environment in .venv directory
+    uv venv
+    # Activate the environment
+    # On macOS and Linux
+    source .venv/bin/activate
+    # On Windows (PowerShell)
+    .venv\Scripts\Activate.ps1
+    ```
+
+### Installing Dependencies
+
+You can install dependencies for all submodules or for specific submodules as needed. The `-e` flag ensures an editable installation, linking directly to your local submodule code.
+
+*   **To install all dependencies (including all submodules):**
+    ```bash
+    uv pip install -e .[all]
+    ```
+
+*   **To install dependencies for a specific submodule:**
+    *   For `hugegraph-llm`:
+        ```bash
+        uv pip install -e .[llm]
+        ```
+    *   For `hugegraph-ml`:
+        ```bash
+        uv pip install -e .[ml]
+        ```
+    *   For `hugegraph-python-client` (core client library):
+        ```bash
+        uv pip install -e .[python-client]
+        ```
+    *   For `vermeer-python-client`:
+        ```bash
+        uv pip install -e .[vermeer]
+        ```
+
+Once the dependencies are installed, you can proceed with development across the workspace.
 
 ## Learn More
 
