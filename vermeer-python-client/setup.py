@@ -18,8 +18,7 @@
 import setuptools
 from pkg_resources import parse_requirements
 
-# TODO: replace it by poetry/uv configs (e.g. pyproject.toml)
-
+# TODO: replace/delete current file by uv
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
@@ -27,15 +26,11 @@ with open("requirements.txt", encoding="utf-8") as fp:
     install_requires = [str(requirement) for requirement in parse_requirements(fp)]
 
 setuptools.setup(
-    name="hugegraph-python",
-    version="1.5.0",
-    author="Apache HugeGraph Contributors",
-    author_email="dev@hugegraph.apache.org",
+    name="vermeer-python",
+    version="0.1.0",
     install_requires=install_requires,
-    description="A Python SDK for Apache HugeGraph",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/apache/incubator-hugegraph-ai",
     packages=setuptools.find_packages(where="src", exclude=["tests"]),
     package_dir={"": "src"},
     classifiers=[
