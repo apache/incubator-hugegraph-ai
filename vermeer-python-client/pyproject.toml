@@ -51,9 +51,3 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 exclude = ["tests"]
-
-[tool.setuptools]
-package-dir = {"" = "src"}
-
-[tool.setuptools]
-package-dir = {"" = "src"}
