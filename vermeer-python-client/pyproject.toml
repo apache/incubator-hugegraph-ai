@@ -25,24 +25,24 @@ authors = [
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.9"
-
 dependencies = [
     "decorator~=5.1.1",
     "requests~=2.32.0",
     "urllib3~=2.2.2",
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0",
-    "black>=23.0.0",
-    "isort>=5.0.0",
-    "flake8>=6.0.0"
-]
 ]
 
 [project.urls]
 "Homepage" = "https://github.com/apache/incubator-hugegraph-ai"
 "Repository" = "https://github.com/apache/incubator-hugegraph-ai"
 "Bug Tracker" = "https://github.com/apache/incubator-hugegraph-ai/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "isort>=5.0.0",
+    "flake8>=6.0.0",
+]
 
 [build-system]
 requires = ["setuptools>=61.0"]
@@ -51,6 +51,9 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 exclude = ["tests"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
 
 [tool.setuptools]
 package-dir = {"" = "src"}
