@@ -4,15 +4,14 @@ The `vermeer-python-client` is a Python client(SDK) for [Vermeer](https://github
 
 ## Installation
 
-### Install the released package (Stable)
+### Install the released package (🚧 ing)
 
 To install the `vermeer-python-client`, you can use uv/pip:
 
 ```bash
 # uv is optional, you can use pip directly
-uv pip install vermeer-python-client
-# Note: This will install the latest released version.
-# For the newest code, please install from source.
+# uv pip install vermeer-python-client (Not published yet 🚧ing)
+# Note: This will install the latest released version. For the newest code, please install from source.
 ```
 
 ### Install from Source (Latest Code)
@@ -39,7 +38,6 @@ This section provides examples of how to use the `vermeer-python-client`.
 ### Initialize the Client
 
 ```python
-```python
 from pyvermeer.client import VermeerClient
 
 # Initialize the client
@@ -51,22 +49,22 @@ print("Client initialized successfully.")
 
 ```python
 # Placeholder for running a graph algorithm example
-# try:
-#     result = client.run_algorithm(name="pagerank", params={"alpha": 0.85, "max_iter": 10})
-#     print(f"PageRank results: {result}")
-# except Exception as e:
-#     print(f"Error running algorithm: {e}")
+try:
+  result = client.run_algorithm(name="pagerank", params={"alpha": 0.85, "max_iter": 10})
+  print(f"PageRank results: {result}")
+except Exception as e:
+  print(f"Error running algorithm: {e}")
 ```
 
 ### Example: Managing Jobs
 
 ```python
 # Placeholder for managing jobs example
-# try:
-#    job_status = client.get_job_status(job_id="some_job_id")
-#    print(f"Job status: {job_status}")
-# except Exception as e:
-#    print(f"Error getting job status: {e}")
+try:
+  job_status = client.get_job_status(job_id="some_job_id")
+  print(f"Job status: {job_status}")
+except Exception as e:
+  print(f"Error getting job status: {e}")
 ```
 
 Other info is under 🚧 (Welcome to add more docs for it)
