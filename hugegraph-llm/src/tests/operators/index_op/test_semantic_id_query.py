@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=unused-argument
 
 import shutil
 import tempfile
@@ -40,6 +41,10 @@ class MockEmbedding(BaseEmbedding):
         if text == "keyword2":
             return [0.0, 0.0, 1.0, 0.0]
         return [0.5, 0.5, 0.0, 0.0]
+
+    def get_texts_embeddings(self, texts):
+        # Return embeddings for multiple texts
+        return [self.get_text_embedding(text) for text in texts]
 
     async def async_get_text_embedding(self, text):
         # Async version returns the same as the sync version
@@ -80,7 +85,12 @@ class TestSemanticIdQuery(unittest.TestCase):
 
         # Create sample vectors and properties for the index
         self.embed_dim = 4
-        self.vectors = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
+        self.vectors = [
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]
         self.properties = ["1:vid1", "2:vid2", "3:vid3", "4:vid4"]
 
         # Create a mock vector index
@@ -186,7 +196,9 @@ class TestSemanticIdQuery(unittest.TestCase):
     @patch("hugegraph_llm.operators.index_op.semantic_id_query.resource_path")
     @patch("hugegraph_llm.operators.index_op.semantic_id_query.huge_settings")
     @patch("hugegraph_llm.operators.index_op.semantic_id_query.PyHugeClient", new=MockPyHugeClient)
-    def test_run_with_empty_keywords(self, mock_settings, mock_resource_path, mock_vector_index_class):
+    def test_run_with_empty_keywords(
+        self, mock_settings, mock_resource_path, mock_vector_index_class
+    ):
         # Configure mocks
         mock_settings.graph_name = "test_graph"
         mock_settings.topk_per_keyword = 5
