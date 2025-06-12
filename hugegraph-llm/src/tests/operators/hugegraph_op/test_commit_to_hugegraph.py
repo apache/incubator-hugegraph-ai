@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=protected-access,no-member
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -267,23 +268,30 @@ class TestCommit2Graph(unittest.TestCase):
         mock_handle_graph_creation.return_value = None
         mock_create_property.return_value = None
 
-        # Patch the schema methods to avoid actual calls
-        self.commit2graph.schema.vertexLabel = MagicMock()
-        self.commit2graph.schema.edgeLabel = MagicMock()
+        # Create properly mocked schema methods
+        mock_property_key = MagicMock()
+        mock_vertex_label = MagicMock()
+        mock_edge_label = MagicMock()
+        mock_index_label = MagicMock()
+
+        self.commit2graph.schema.propertyKey = mock_property_key
+        self.commit2graph.schema.vertexLabel = mock_vertex_label
+        self.commit2graph.schema.edgeLabel = mock_edge_label
+        self.commit2graph.schema.indexLabel = mock_index_label
 
         # Create mock vertex and edge label builders
         mock_vertex_builder = MagicMock()
         mock_edge_builder = MagicMock()
 
         # Setup method chaining
-        self.commit2graph.schema.vertexLabel.return_value = mock_vertex_builder
+        mock_vertex_label.return_value = mock_vertex_builder
         mock_vertex_builder.properties.return_value = mock_vertex_builder
         mock_vertex_builder.nullableKeys.return_value = mock_vertex_builder
         mock_vertex_builder.usePrimaryKeyId.return_value = mock_vertex_builder
         mock_vertex_builder.primaryKeys.return_value = mock_vertex_builder
         mock_vertex_builder.ifNotExist.return_value = mock_vertex_builder
 
-        self.commit2graph.schema.edgeLabel.return_value = mock_edge_builder
+        mock_edge_label.return_value = mock_edge_builder
         mock_edge_builder.sourceLabel.return_value = mock_edge_builder
         mock_edge_builder.targetLabel.return_value = mock_edge_builder
         mock_edge_builder.properties.return_value = mock_edge_builder
@@ -297,10 +305,10 @@ class TestCommit2Graph(unittest.TestCase):
         self.assertEqual(mock_create_property.call_count, 5)  # 5 property keys
 
         # Verify that vertexLabel was called for each vertex label
-        self.assertEqual(self.commit2graph.schema.vertexLabel.call_count, 2)  # 2 vertex labels
+        self.assertEqual(mock_vertex_label.call_count, 2)  # 2 vertex labels
 
         # Verify that edgeLabel was called for each edge label
-        self.assertEqual(self.commit2graph.schema.edgeLabel.call_count, 1)  # 1 edge label
+        self.assertEqual(mock_edge_label.call_count, 1)  # 1 edge label
 
     @patch("hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph._check_property_data_type")
     @patch("hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph._handle_graph_creation")
@@ -333,11 +341,16 @@ class TestCommit2Graph(unittest.TestCase):
 
     def test_schema_free_mode(self):
         """Test schema_free_mode method."""
-        # Patch the schema methods to avoid actual calls
-        self.commit2graph.schema.propertyKey = MagicMock()
-        self.commit2graph.schema.vertexLabel = MagicMock()
-        self.commit2graph.schema.edgeLabel = MagicMock()
-        self.commit2graph.schema.indexLabel = MagicMock()
+        # Create properly mocked schema methods
+        mock_property_key = MagicMock()
+        mock_vertex_label = MagicMock()
+        mock_edge_label = MagicMock()
+        mock_index_label = MagicMock()
+
+        self.commit2graph.schema.propertyKey = mock_property_key
+        self.commit2graph.schema.vertexLabel = mock_vertex_label
+        self.commit2graph.schema.edgeLabel = mock_edge_label
+        self.commit2graph.schema.indexLabel = mock_index_label
 
         # Setup method chaining
         mock_property_builder = MagicMock()
@@ -345,25 +358,25 @@ class TestCommit2Graph(unittest.TestCase):
         mock_edge_builder = MagicMock()
         mock_index_builder = MagicMock()
 
-        self.commit2graph.schema.propertyKey.return_value = mock_property_builder
+        mock_property_key.return_value = mock_property_builder
         mock_property_builder.asText.return_value = mock_property_builder
         mock_property_builder.ifNotExist.return_value = mock_property_builder
         mock_property_builder.create.return_value = None
 
-        self.commit2graph.schema.vertexLabel.return_value = mock_vertex_builder
+        mock_vertex_label.return_value = mock_vertex_builder
         mock_vertex_builder.useCustomizeStringId.return_value = mock_vertex_builder
         mock_vertex_builder.properties.return_value = mock_vertex_builder
         mock_vertex_builder.ifNotExist.return_value = mock_vertex_builder
         mock_vertex_builder.create.return_value = None
 
-        self.commit2graph.schema.edgeLabel.return_value = mock_edge_builder
+        mock_edge_label.return_value = mock_edge_builder
         mock_edge_builder.sourceLabel.return_value = mock_edge_builder
         mock_edge_builder.targetLabel.return_value = mock_edge_builder
         mock_edge_builder.properties.return_value = mock_edge_builder
         mock_edge_builder.ifNotExist.return_value = mock_edge_builder
         mock_edge_builder.create.return_value = None
 
-        self.commit2graph.schema.indexLabel.return_value = mock_index_builder
+        mock_index_label.return_value = mock_index_builder
         mock_index_builder.onV.return_value = mock_index_builder
         mock_index_builder.onE.return_value = mock_index_builder
         mock_index_builder.by.return_value = mock_index_builder
@@ -384,10 +397,10 @@ class TestCommit2Graph(unittest.TestCase):
         self.commit2graph.schema_free_mode(triples)
 
         # Verify that schema methods were called
-        self.commit2graph.schema.propertyKey.assert_called_once_with("name")
-        self.commit2graph.schema.vertexLabel.assert_called_once_with("vertex")
-        self.commit2graph.schema.edgeLabel.assert_called_once_with("edge")
-        self.assertEqual(self.commit2graph.schema.indexLabel.call_count, 2)
+        mock_property_key.assert_called_once_with("name")
+        mock_vertex_label.assert_called_once_with("vertex")
+        mock_edge_label.assert_called_once_with("edge")
+        self.assertEqual(mock_index_label.call_count, 2)
 
         # Verify that addVertex and addEdge were called for each triple
         self.assertEqual(mock_graph.addVertex.call_count, 4)  # 2 subjects + 2 objects

@@ -29,16 +29,16 @@ class MockEmbedding(BaseEmbedding):
     """Mock embedding class for testing"""
 
     def __init__(self):
+        super().__init__()  # Call parent class constructor
         self.model = "mock_model"
 
     def get_text_embedding(self, text):
         # Return a simple mock embedding based on the text
         if text == "query1":
             return [1.0, 0.0, 0.0, 0.0]
-        elif text == "query2":
+        if text == "query2":
             return [0.0, 1.0, 0.0, 0.0]
-        else:
-            return [0.5, 0.5, 0.0, 0.0]
+        return [0.5, 0.5, 0.0, 0.0]
 
     async def async_get_text_embedding(self, text):
         # Async version returns the same as the sync version

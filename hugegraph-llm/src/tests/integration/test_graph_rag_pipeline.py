@@ -149,10 +149,9 @@ class MockEmbedding(BaseEmbedding):
         # Return a simple mock embedding based on the text
         if "person" in text.lower():
             return [1.0, 0.0, 0.0, 0.0]
-        elif "movie" in text.lower():
+        if "movie" in text.lower():
             return [0.0, 1.0, 0.0, 0.0]
-        else:
-            return [0.5, 0.5, 0.0, 0.0]
+        return [0.5, 0.5, 0.0, 0.0]
 
     async def async_get_text_embedding(self, text):
         # Async version returns the same as the sync version
@@ -172,10 +171,9 @@ class MockLLM(BaseLLM):
         # Return a simple mock response based on the prompt
         if "person" in prompt.lower():
             return "This is information about a person."
-        elif "movie" in prompt.lower():
+        if "movie" in prompt.lower():
             return "This is information about a movie."
-        else:
-            return "I don't have specific information about that."
+        return "I don't have specific information about that."
 
     async def async_generate(self, prompt, **kwargs):
         # Async version returns the same as the sync version
@@ -226,7 +224,10 @@ class TestGraphRAGPipeline(unittest.TestCase):
 
         self.mock_answer_synthesize = MagicMock()
         self.mock_answer_synthesize.return_value = {
-            "answer": "John Doe is a 30-year-old software engineer. The Matrix is a science fiction movie released in 1999."
+            "answer": (
+                "John Doe is a 30-year-old software engineer. "
+                "The Matrix is a science fiction movie released in 1999."
+            )
         }
 
         # 创建RAGPipeline实例

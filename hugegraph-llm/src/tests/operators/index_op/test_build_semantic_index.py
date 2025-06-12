@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=protected-access
+
 import os
 import shutil
 import tempfile
@@ -36,7 +38,9 @@ class TestBuildSemanticIndex(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
 
         # Patch the resource_path and huge_settings
-        self.patcher1 = patch("hugegraph_llm.operators.index_op.build_semantic_index.resource_path", self.temp_dir)
+        self.patcher1 = patch(
+            "hugegraph_llm.operators.index_op.build_semantic_index.resource_path", self.temp_dir
+        )
         self.patcher2 = patch("hugegraph_llm.operators.index_op.build_semantic_index.huge_settings")
 
         self.mock_resource_path = self.patcher1.start()
@@ -140,7 +144,7 @@ class TestBuildSemanticIndex(unittest.TestCase):
         # Run the builder
         result = builder.run(context)
 
-        # We can't directly assert what was passed to remove since it's a set and order is not guaranteed
+        # We can't directly assert what was passed to remove since it's a set and order
         # Instead, we'll check that remove was called once and then verify the result context
         self.mock_vector_index.remove.assert_called_once()
         removed_set = self.mock_vector_index.remove.call_args[0][0]
@@ -171,7 +175,9 @@ class TestBuildSemanticIndex(unittest.TestCase):
 
         # Check if the context is updated correctly
         self.assertEqual(result["vertices"], ["label1:name1", "label2:name2", "label3:name3"])
-        self.assertEqual(result["removed_vid_vector_num"], self.mock_vector_index.remove.return_value)
+        self.assertEqual(
+            result["removed_vid_vector_num"], self.mock_vector_index.remove.return_value
+        )
         self.assertEqual(result["added_vid_vector_num"], 3)
 
     def test_run_without_primary_key_strategy(self):
@@ -185,7 +191,11 @@ class TestBuildSemanticIndex(unittest.TestCase):
 
         # Mock _get_embeddings_parallel
         builder._get_embeddings_parallel = MagicMock()
-        builder._get_embeddings_parallel.return_value = [[0.1, 0.2, 0.3], [0.1, 0.2, 0.3], [0.1, 0.2, 0.3]]
+        builder._get_embeddings_parallel.return_value = [
+            [0.1, 0.2, 0.3],
+            [0.1, 0.2, 0.3],
+            [0.1, 0.2, 0.3],
+        ]
 
         # Create a context with vertices
         context = {"vertices": ["label1:name1", "label2:name2", "label3:name3"]}
@@ -203,7 +213,9 @@ class TestBuildSemanticIndex(unittest.TestCase):
 
         # Check if the context is updated correctly
         self.assertEqual(result["vertices"], ["label1:name1", "label2:name2", "label3:name3"])
-        self.assertEqual(result["removed_vid_vector_num"], self.mock_vector_index.remove.return_value)
+        self.assertEqual(
+            result["removed_vid_vector_num"], self.mock_vector_index.remove.return_value
+        )
         self.assertEqual(result["added_vid_vector_num"], 3)
 
     def test_run_with_no_new_vertices(self):

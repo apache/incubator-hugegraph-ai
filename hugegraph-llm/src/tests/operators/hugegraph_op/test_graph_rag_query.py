@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=protected-access,unused-variable
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -403,7 +404,7 @@ class TestGraphRAGQuery(unittest.TestCase):
         def extract_label_names(schema_text, section_name):
             if section_name == "vertexlabels":
                 return ["person", "movie"]
-            elif section_name == "edgelabels":
+            if section_name == "edgelabels":
                 return ["acted_in"]
             return []
 
@@ -435,9 +436,6 @@ class TestGraphRAGQuery(unittest.TestCase):
         with patch("hugegraph_llm.operators.hugegraph_op.graph_rag_query.PyHugeClient") as mock_client_class:
             # Setup mocks
             mock_client = MagicMock()
-            mock_vertex_labels = MagicMock()
-            mock_edge_labels = MagicMock()
-            mock_relations = MagicMock()
 
             # Setup schema methods
             mock_schema = MagicMock()

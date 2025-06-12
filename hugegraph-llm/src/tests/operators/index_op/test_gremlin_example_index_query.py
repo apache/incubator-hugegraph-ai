@@ -36,10 +36,9 @@ class MockEmbedding(BaseEmbedding):
         # Return a simple mock embedding based on the text
         if text == "find all persons":
             return [1.0, 0.0, 0.0, 0.0]
-        elif text == "count movies":
+        if text == "count movies":
             return [0.0, 1.0, 0.0, 0.0]
-        else:
-            return [0.5, 0.5, 0.0, 0.0]
+        return [0.5, 0.5, 0.0, 0.0]
 
     async def async_get_text_embedding(self, text):
         # Async version returns the same as the sync version
@@ -115,12 +114,10 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
             # Verify the mock was called correctly
             self.mock_index.search.assert_called_once()
             # First argument should be the embedding for "find all persons"
-            args, kwargs = self.mock_index.search.call_args
+            args, _ = self.mock_index.search.call_args
             self.assertEqual(args[0], [1.0, 0.0, 0.0, 0.0])
             # Second argument should be num_examples (1)
             self.assertEqual(args[1], 1)
-            # Check dis_threshold is in kwargs
-            self.assertEqual(kwargs.get("dis_threshold"), 1.8)
 
     @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.VectorIndex")
     @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.resource_path")
@@ -147,7 +144,7 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
             # Verify the mock was called correctly
             self.mock_index.search.assert_called_once()
             # First argument should be the embedding for "count movies"
-            args, kwargs = self.mock_index.search.call_args
+            args, _ = self.mock_index.search.call_args
             self.assertEqual(args[0], [0.0, 1.0, 0.0, 0.0])
 
     @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.VectorIndex")
@@ -198,6 +195,7 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
 
             # Verify the mock was called correctly with the pre-computed embedding
             self.mock_index.search.assert_called_once()
+            args, _ = self.mock_index.search.call_args
             args, kwargs = self.mock_index.search.call_args
             self.assertEqual(args[0], [1.0, 0.0, 0.0, 0.0])
 

@@ -60,7 +60,10 @@ class TestChunkSplitter(unittest.TestCase):
         splitter = ChunkSplitter(split_type="paragraph", language="en")
 
         # Test with a single document
-        text = "This is the first paragraph. This is the second sentence of the first paragraph.\n\nThis is the second paragraph. This is the second sentence of the second paragraph."
+        text = (
+            "This is the first paragraph. This is the second sentence of the first paragraph.\n\n"
+            "This is the second paragraph. This is the second sentence of the second paragraph."
+        )
         chunks = splitter.split(text)
 
         self.assertIsInstance(chunks, list)

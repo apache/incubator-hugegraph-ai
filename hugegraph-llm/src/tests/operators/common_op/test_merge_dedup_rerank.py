@@ -15,11 +15,17 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=protected-access,no-member
+
 import unittest
 from unittest.mock import MagicMock, patch
 
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.operators.common_op.merge_dedup_rerank import MergeDedupRerank, _bleu_rerank, get_bleu_score
+from hugegraph_llm.operators.common_op.merge_dedup_rerank import (
+    MergeDedupRerank,
+    _bleu_rerank,
+    get_bleu_score,
+)
 
 
 class TestMergeDedupRerank(unittest.TestCase):
@@ -29,10 +35,12 @@ class TestMergeDedupRerank(unittest.TestCase):
         self.vector_results = [
             "Artificial intelligence is a branch of computer science.",
             "AI is the simulation of human intelligence by machines.",
-            "Artificial intelligence involves creating systems that can perform tasks requiring human intelligence.",
+            "Artificial intelligence involves creating systems that can "
+            "perform tasks requiring human intelligence.",
         ]
         self.graph_results = [
-            "AI research includes reasoning, knowledge representation, planning, learning, natural language processing.",
+            "AI research includes reasoning, knowledge representation, "
+            "planning, learning, natural language processing.",
             "Machine learning is a subset of artificial intelligence.",
             "Deep learning is a type of machine learning based on artificial neural networks.",
         ]
@@ -50,14 +58,14 @@ class TestMergeDedupRerank(unittest.TestCase):
         """Test initialization with provided parameters."""
         merger = MergeDedupRerank(
             self.mock_embedding,
-            topk=5,
+            topk_return_results=5,
             graph_ratio=0.7,
             method="reranker",
             near_neighbor_first=True,
             custom_related_information="Additional context",
         )
         self.assertEqual(merger.embedding, self.mock_embedding)
-        self.assertEqual(merger.topk, 5)
+        self.assertEqual(merger.topk_return_results, 5)
         self.assertEqual(merger.graph_ratio, 0.7)
         self.assertEqual(merger.method, "reranker")
         self.assertTrue(merger.near_neighbor_first)
@@ -136,7 +144,7 @@ class TestMergeDedupRerank(unittest.TestCase):
     def test_run_with_vector_and_graph_search(self):
         """Test the run method with both vector and graph search."""
         # Create merger
-        merger = MergeDedupRerank(self.mock_embedding, topk=4, graph_ratio=0.5)
+        merger = MergeDedupRerank(self.mock_embedding, topk_return_results=4, graph_ratio=0.5)
 
         # Create context
         context = {
@@ -172,7 +180,7 @@ class TestMergeDedupRerank(unittest.TestCase):
     def test_run_with_only_vector_search(self):
         """Test the run method with only vector search."""
         # Create merger
-        merger = MergeDedupRerank(self.mock_embedding, topk=3)
+        merger = MergeDedupRerank(self.mock_embedding, topk_return_results=3)
 
         # Create context
         context = {
@@ -185,11 +193,10 @@ class TestMergeDedupRerank(unittest.TestCase):
         # Mock the _dedup_and_rerank method to return different values for different calls
         original_dedup_and_rerank = merger._dedup_and_rerank
 
-        def mock_dedup_and_rerank(query, results, topn):
+        def mock_dedup_and_rerank(query, results, topn):  # pylint: disable=unused-argument
             if results == self.vector_results:
                 return ["vector1", "vector2", "vector3"]
-            else:
-                return []  # For empty graph results
+            return []  # For empty graph results
 
         merger._dedup_and_rerank = mock_dedup_and_rerank
 
@@ -206,7 +213,7 @@ class TestMergeDedupRerank(unittest.TestCase):
     def test_run_with_only_graph_search(self):
         """Test the run method with only graph search."""
         # Create merger
-        merger = MergeDedupRerank(self.mock_embedding, topk=3)
+        merger = MergeDedupRerank(self.mock_embedding, topk_return_results=3)
 
         # Create context
         context = {
@@ -219,11 +226,10 @@ class TestMergeDedupRerank(unittest.TestCase):
         # Mock the _dedup_and_rerank method to return different values for different calls
         original_dedup_and_rerank = merger._dedup_and_rerank
 
-        def mock_dedup_and_rerank(query, results, topn):
+        def mock_dedup_and_rerank(query, results, topn):  # pylint: disable=unused-argument
             if results == self.graph_results:
                 return ["graph1", "graph2", "graph3"]
-            else:
-                return []  # For empty vector results
+            return []  # For empty vector results
 
         merger._dedup_and_rerank = mock_dedup_and_rerank
 
@@ -242,7 +248,10 @@ class TestMergeDedupRerank(unittest.TestCase):
         """Test the _rerank_with_vertex_degree method."""
         # Setup mock for reranker
         mock_reranker = MagicMock()
-        mock_reranker.get_rerank_lists.side_effect = [["vertex1_1", "vertex1_2"], ["vertex2_1", "vertex2_2"]]
+        mock_reranker.get_rerank_lists.side_effect = [
+            ["vertex1_1", "vertex1_2"],
+            ["vertex2_1", "vertex2_2"],
+        ]
         mock_rerankers_instance = MagicMock()
         mock_rerankers_instance.get_reranker.return_value = mock_reranker
         mock_rerankers_class.return_value = mock_rerankers_instance
@@ -253,10 +262,15 @@ class TestMergeDedupRerank(unittest.TestCase):
         # Create test data
         results = ["result1", "result2"]
         vertex_degree_list = [["vertex1_1", "vertex1_2"], ["vertex2_1", "vertex2_2"]]
-        knowledge_with_degree = {"result1": ["vertex1_1", "vertex2_1"], "result2": ["vertex1_2", "vertex2_2"]}
+        knowledge_with_degree = {
+            "result1": ["vertex1_1", "vertex2_1"],
+            "result2": ["vertex1_2", "vertex2_2"],
+        }
 
         # Call the method
-        reranked = merger._rerank_with_vertex_degree(self.query, results, 2, vertex_degree_list, knowledge_with_degree)
+        reranked = merger._rerank_with_vertex_degree(
+            self.query, results, 2, vertex_degree_list, knowledge_with_degree
+        )
 
         # Verify that reranker was called for each vertex degree list
         self.assertEqual(mock_reranker.get_rerank_lists.call_count, 2)
@@ -274,7 +288,9 @@ class TestMergeDedupRerank(unittest.TestCase):
         merger._dedup_and_rerank.return_value = ["result1", "result2"]
 
         # Call the method with empty vertex_degree_list
-        reranked = merger._rerank_with_vertex_degree(self.query, ["result1", "result2"], 2, [], {})
+        reranked = merger._rerank_with_vertex_degree(
+            self.query, ["result1", "result2"], 2, [], {}
+        )
 
         # Verify that _dedup_and_rerank was called
         merger._dedup_and_rerank.assert_called_once()

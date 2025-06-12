@@ -114,7 +114,7 @@ class TestBuildGremlinExampleIndex(unittest.TestCase):
 
         # Run the builder
         with self.assertRaises(IndexError):
-            result = builder.run(context)
+            builder.run(context)
 
         # Check if VectorIndex was not initialized
         self.mock_vector_index_class.assert_not_called()

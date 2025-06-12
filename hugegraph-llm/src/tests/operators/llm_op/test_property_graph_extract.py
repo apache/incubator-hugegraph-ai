@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=protected-access
+
 import json
 import unittest
 from unittest.mock import MagicMock, patch
@@ -36,7 +38,12 @@ class TestPropertyGraphExtract(unittest.TestCase):
         # Sample schema
         self.schema = {
             "vertexlabels": [
-                {"name": "person", "primary_keys": ["name"], "nullable_keys": ["age"], "properties": ["name", "age"]},
+                {
+                    "name": "person",
+                    "primary_keys": ["name"],
+                    "nullable_keys": ["age"],
+                    "properties": ["name", "age"],
+                },
                 {
                     "name": "movie",
                     "primary_keys": ["title"],
@@ -117,7 +124,9 @@ class TestPropertyGraphExtract(unittest.TestCase):
 
     def test_split_text(self):
         """Test the split_text function."""
-        with patch("hugegraph_llm.operators.llm_op.property_graph_extract.ChunkSplitter") as mock_splitter_class:
+        with patch(
+            "hugegraph_llm.operators.llm_op.property_graph_extract.ChunkSplitter"
+        ) as mock_splitter_class:
             mock_splitter = MagicMock()
             mock_splitter.split.return_value = ["chunk1", "chunk2"]
             mock_splitter_class.return_value = mock_splitter
@@ -292,7 +301,11 @@ class TestPropertyGraphExtract(unittest.TestCase):
             "schema": self.schema,
             "chunks": self.chunks,
             "vertices": [
-                {"type": "vertex", "label": "person", "properties": {"name": "Leonardo DiCaprio", "age": "1974"}}
+                {
+                    "type": "vertex",
+                    "label": "person",
+                    "properties": {"name": "Leonardo DiCaprio", "age": "1974"},
+                }
             ],
             "edges": [
                 {

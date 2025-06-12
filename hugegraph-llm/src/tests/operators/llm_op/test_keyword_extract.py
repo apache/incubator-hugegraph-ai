@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=protected-access,unused-variable
+
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -26,13 +28,19 @@ class TestKeywordExtract(unittest.TestCase):
     def setUp(self):
         # Create mock LLM
         self.mock_llm = MagicMock(spec=BaseLLM)
-        self.mock_llm.generate.return_value = "KEYWORDS: artificial intelligence, machine learning, neural networks"
+        self.mock_llm.generate.return_value = (
+            "KEYWORDS: artificial intelligence, machine learning, neural networks"
+        )
 
         # Sample query
-        self.query = "What are the latest advancements in artificial intelligence and machine learning?"
+        self.query = (
+            "What are the latest advancements in artificial intelligence and machine learning?"
+        )
 
         # Create KeywordExtract instance
-        self.extractor = KeywordExtract(text=self.query, llm=self.mock_llm, max_keywords=5, language="english")
+        self.extractor = KeywordExtract(
+            text=self.query, llm=self.mock_llm, max_keywords=5, language="english"
+        )
 
     def test_init_with_parameters(self):
         """Test initialization with provided parameters."""
@@ -85,7 +93,9 @@ class TestKeywordExtract(unittest.TestCase):
         """Test run method with no LLM provided."""
         # Setup mock
         mock_llm = MagicMock(spec=BaseLLM)
-        mock_llm.generate.return_value = "KEYWORDS: artificial intelligence, machine learning, neural networks"
+        mock_llm.generate.return_value = (
+            "KEYWORDS: artificial intelligence, machine learning, neural networks"
+        )
         mock_llms_instance = MagicMock()
         mock_llms_instance.get_extract_llm.return_value = mock_llm
         mock_llms_class.return_value = mock_llms_instance
@@ -189,8 +199,13 @@ class TestKeywordExtract(unittest.TestCase):
 
     def test_extract_keywords_from_response_with_start_token(self):
         """Test _extract_keywords_from_response method with start token."""
-        response = "Some text\nKEYWORDS: artificial intelligence, machine learning, neural networks\nMore text"
-        keywords = self.extractor._extract_keywords_from_response(response, lowercase=False, start_token="KEYWORDS:")
+        response = (
+            "Some text\nKEYWORDS: artificial intelligence, machine learning, "
+            "neural networks\nMore text"
+        )
+        keywords = self.extractor._extract_keywords_from_response(
+            response, lowercase=False, start_token="KEYWORDS:"
+        )
 
         # Check for keywords with or without leading space
         self.assertTrue(any(kw.strip() == "artificial intelligence" for kw in keywords))
@@ -210,7 +225,9 @@ class TestKeywordExtract(unittest.TestCase):
     def test_extract_keywords_from_response_with_lowercase(self):
         """Test _extract_keywords_from_response method with lowercase=True."""
         response = "KEYWORDS: Artificial Intelligence, Machine Learning, Neural Networks"
-        keywords = self.extractor._extract_keywords_from_response(response, lowercase=True, start_token="KEYWORDS:")
+        keywords = self.extractor._extract_keywords_from_response(
+            response, lowercase=True, start_token="KEYWORDS:"
+        )
 
         # Check for keywords with or without leading space
         self.assertTrue(any(kw.strip() == "artificial intelligence" for kw in keywords))
@@ -220,13 +237,17 @@ class TestKeywordExtract(unittest.TestCase):
     def test_extract_keywords_from_response_with_multi_word_tokens(self):
         """Test _extract_keywords_from_response method with multi-word tokens."""
         # Patch NLTKHelper to return a fixed set of stopwords
-        with patch("hugegraph_llm.operators.llm_op.keyword_extract.NLTKHelper") as mock_nltk_helper_class:
+        with patch(
+            "hugegraph_llm.operators.llm_op.keyword_extract.NLTKHelper"
+        ) as mock_nltk_helper_class:
             mock_nltk_helper = MagicMock()
             mock_nltk_helper.stopwords.return_value = {"the", "and", "of", "in"}
             mock_nltk_helper_class.return_value = mock_nltk_helper
 
             response = "KEYWORDS: artificial intelligence, machine learning"
-            keywords = self.extractor._extract_keywords_from_response(response, start_token="KEYWORDS:")
+            keywords = self.extractor._extract_keywords_from_response(
+                response, start_token="KEYWORDS:"
+            )
 
             # Should include both the full phrases and individual non-stopwords
             self.assertTrue(any(kw.strip() == "artificial intelligence" for kw in keywords))

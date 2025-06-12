@@ -17,12 +17,9 @@
 
 import json
 import os
+import sys
 import unittest
 from unittest.mock import patch
-
-# 导入测试工具
-from hugegraph_llm.document import Document
-import sys
 
 # 添加父级目录到sys.path以便导入test_utils
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
@@ -56,12 +53,12 @@ class KGConstructor:
                 {"type": "Person", "name": "张三", "properties": {"occupation": "软件工程师"}},
                 {"type": "Company", "name": "ABC公司", "properties": {"industry": "科技", "location": "北京"}},
             ]
-        elif "李四" in document.content:
+        if "李四" in document.content:
             return [
                 {"type": "Person", "name": "李四", "properties": {"occupation": "数据科学家"}},
                 {"type": "Person", "name": "张三", "properties": {"occupation": "软件工程师"}},
             ]
-        elif "ABC公司" in document.content:
+        if "ABC公司" in document.content:
             return [{"type": "Company", "name": "ABC公司", "properties": {"industry": "科技", "location": "北京"}}]
         return []
 
@@ -75,7 +72,7 @@ class KGConstructor:
                     "target": {"type": "Company", "name": "ABC公司"},
                 }
             ]
-        elif "李四" in document.content and "张三" in document.content:
+        if "李四" in document.content and "张三" in document.content:
             return [
                 {
                     "source": {"type": "Person", "name": "李四"},
