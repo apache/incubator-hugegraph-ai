@@ -122,9 +122,13 @@ documentation = "https://hugegraph.apache.org/docs/quickstart/hugegraph-ai/" # G
 requires = ["uv >= 0.1.17"] # Specify uv as the build system requirement
 build-backend = "uv_core.build" # Using uv's own build backend
 
-# If you want to modify the network configuration file of the project, then you can modify this part
-[[tool.uv.index]]
-url = "https://pypi.tuna.tsinghua.edu.cn/simple" # Centralized index
+# Comment explaining that this is an example and can be overridden
+# [[tool.uv.index]]
+# url = "https://pypi.tuna.tsinghua.edu.cn/simple" # Example mirror for users in China
+# default = true
+#
+# Users can override this in their personal configuration with:
+# uv config --global index.url https://pypi.org/simple
 default = true
 
 [tool.hatch.metadata] # Keep this if hatch is still used by submodules, otherwise remove
