@@ -55,7 +55,7 @@ dependencies = [
     "rich~=13.9.4",
     "apscheduler~=3.10.4",
     "litellm~=1.61.13",
-    "hugegraph-python"
+    "hugegraph-python-client"
 ]
 [project.urls]
 homepage = "https://hugegraph.apache.org/"
@@ -88,4 +88,4 @@ include = [
 allow-direct-references = true
 
 [tool.uv.sources]
-hugegraph-python = { path = "../hugegraph-python-client/", editable = true }
+hugegraph-python-client = { path = "../hugegraph-python-client/", editable = true }

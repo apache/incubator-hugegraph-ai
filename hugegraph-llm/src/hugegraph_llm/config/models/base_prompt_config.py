@@ -15,11 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import sys
 import os
+from pathlib import Path
 
 import yaml
 
 from hugegraph_llm.utils.log import log
+from hugegraph_llm.utils.anchor import get_project_root
 
 dir_name = os.path.dirname
 F_NAME = "config_prompt.yaml"
@@ -38,6 +41,18 @@ class BasePromptConfig:
     doc_input_text: str = ''
 
     def ensure_yaml_file_exists(self):
+        current_dir = Path.cwd().resolve()
+        project_root = get_project_root()
+        if current_dir == project_root:
+            log.info("Current working directory is the project root, proceeding to run the app.")
+        else:
+            error_msg = (
+                f"Current working directory is not the project root. "
+                f"Please run this script from the project root directory: {project_root}\n"
+                f"Current directory: {current_dir}"
+            )
+            log.error(error_msg)
+            sys.exit(1)
         if os.path.exists(yaml_file_path):
             log.info("Loading prompt file '%s' successfully.", F_NAME)
             with open(yaml_file_path, "r", encoding="utf-8") as file:
