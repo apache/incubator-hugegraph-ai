@@ -29,7 +29,6 @@ class MockEmbedding(BaseEmbedding):
     """Mock embedding class for testing"""
 
     def __init__(self):
-        super().__init__()  # Call parent class constructor
         self.model = "mock_model"
 
     def get_text_embedding(self, text):

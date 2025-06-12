@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=unused-argument,unused-variable
 
 import shutil
 import tempfile
@@ -39,6 +40,10 @@ class MockEmbedding(BaseEmbedding):
         if text == "count movies":
             return [0.0, 1.0, 0.0, 0.0]
         return [0.5, 0.5, 0.0, 0.0]
+
+    def get_texts_embeddings(self, texts):
+        # Return embeddings for multiple texts
+        return [self.get_text_embedding(text) for text in texts]
 
     async def async_get_text_embedding(self, text):
         # Async version returns the same as the sync version
@@ -196,7 +201,6 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
             # Verify the mock was called correctly with the pre-computed embedding
             self.mock_index.search.assert_called_once()
             args, _ = self.mock_index.search.call_args
-            args, kwargs = self.mock_index.search.call_args
             self.assertEqual(args[0], [1.0, 0.0, 0.0, 0.0])
 
     @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.VectorIndex")
@@ -221,7 +225,9 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
     @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.resource_path")
     @patch("os.path.exists")
     @patch("pandas.read_csv")
-    def test_build_default_example_index(self, mock_read_csv, mock_exists, mock_resource_path, mock_vector_index_class):
+    def test_build_default_example_index(
+        self, mock_read_csv, mock_exists, mock_resource_path, mock_vector_index_class
+    ):
         # Configure mocks
         mock_resource_path = "/mock/path"
         mock_vector_index_class.return_value = self.mock_index
@@ -234,7 +240,7 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
         # Create a GremlinExampleIndexQuery instance
         with patch("os.path.join", return_value=self.test_dir):
             # This should trigger _build_default_example_index
-            query = GremlinExampleIndexQuery(self.embedding, num_examples=1)
+            GremlinExampleIndexQuery(self.embedding, num_examples=1)
 
             # Verify that the index was built
             mock_vector_index_class.assert_called_once()

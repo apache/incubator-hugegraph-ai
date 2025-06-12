@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=import-error,wrong-import-position,unused-argument
+
 import json
 import os
 import sys
@@ -22,8 +24,8 @@ import unittest
 from unittest.mock import patch
 
 # 添加父级目录到sys.path以便导入test_utils
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
-from tests.test_utils import create_test_document, should_skip_external, with_mock_openai_client
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from test_utils import create_test_document, should_skip_external, with_mock_openai_client
 
 
 # 创建模拟类，替代缺失的模块
@@ -51,7 +53,11 @@ class KGConstructor:
         if "张三" in document.content:
             return [
                 {"type": "Person", "name": "张三", "properties": {"occupation": "软件工程师"}},
-                {"type": "Company", "name": "ABC公司", "properties": {"industry": "科技", "location": "北京"}},
+                {
+                    "type": "Company",
+                    "name": "ABC公司",
+                    "properties": {"industry": "科技", "location": "北京"},
+                },
             ]
         if "李四" in document.content:
             return [
@@ -59,7 +65,13 @@ class KGConstructor:
                 {"type": "Person", "name": "张三", "properties": {"occupation": "软件工程师"}},
             ]
         if "ABC公司" in document.content:
-            return [{"type": "Company", "name": "ABC公司", "properties": {"industry": "科技", "location": "北京"}}]
+            return [
+                {
+                    "type": "Company",
+                    "name": "ABC公司",
+                    "properties": {"industry": "科技", "location": "北京"},
+                }
+            ]
         return []
 
     def extract_relations(self, document):
@@ -136,7 +148,11 @@ class TestKGConstruction(unittest.TestCase):
         # 模拟LLM返回的实体提取结果
         mock_entities = [
             {"type": "Person", "name": "张三", "properties": {"occupation": "软件工程师"}},
-            {"type": "Company", "name": "ABC公司", "properties": {"industry": "科技", "location": "北京"}},
+            {
+                "type": "Company",
+                "name": "ABC公司",
+                "properties": {"industry": "科技", "location": "北京"},
+            },
         ]
 
         # 模拟LLM的generate方法
@@ -192,9 +208,9 @@ class TestKGConstruction(unittest.TestCase):
         ]
 
         # 模拟KG构建器的方法
-        with patch.object(self.kg_constructor, "extract_entities", return_value=mock_entities), patch.object(
-            self.kg_constructor, "extract_relations", return_value=mock_relations
-        ):
+        with patch.object(
+            self.kg_constructor, "extract_entities", return_value=mock_entities
+        ), patch.object(self.kg_constructor, "extract_relations", return_value=mock_relations):
 
             # 构建知识图谱
             kg = self.kg_constructor.construct_from_documents(self.test_docs)

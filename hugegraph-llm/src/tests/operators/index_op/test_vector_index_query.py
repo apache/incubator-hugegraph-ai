@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=unused-argument
 
 import shutil
 import tempfile
@@ -40,6 +41,10 @@ class MockEmbedding(BaseEmbedding):
             return [0.0, 1.0, 0.0, 0.0]
         return [0.5, 0.5, 0.0, 0.0]
 
+    def get_texts_embeddings(self, texts):
+        # Return embeddings for multiple texts
+        return [self.get_text_embedding(text) for text in texts]
+
     async def async_get_text_embedding(self, text):
         # Async version returns the same as the sync version
         return self.get_text_embedding(text)
@@ -58,7 +63,12 @@ class TestVectorIndexQuery(unittest.TestCase):
 
         # Create sample vectors and properties for the index
         self.embed_dim = 4
-        self.vectors = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
+        self.vectors = [
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]
         self.properties = ["doc1", "doc2", "doc3", "doc4"]
 
         # Create a mock vector index
@@ -121,7 +131,9 @@ class TestVectorIndexQuery(unittest.TestCase):
     @patch("hugegraph_llm.operators.index_op.vector_index_query.VectorIndex")
     @patch("hugegraph_llm.operators.index_op.vector_index_query.resource_path")
     @patch("hugegraph_llm.operators.index_op.vector_index_query.huge_settings")
-    def test_run_with_different_query(self, mock_settings, mock_resource_path, mock_vector_index_class):
+    def test_run_with_different_query(
+        self, mock_settings, mock_resource_path, mock_vector_index_class
+    ):
         # Configure mocks
         mock_settings.graph_name = "test_graph"
         mock_resource_path = "/mock/path"
@@ -151,7 +163,9 @@ class TestVectorIndexQuery(unittest.TestCase):
     @patch("hugegraph_llm.operators.index_op.vector_index_query.VectorIndex")
     @patch("hugegraph_llm.operators.index_op.vector_index_query.resource_path")
     @patch("hugegraph_llm.operators.index_op.vector_index_query.huge_settings")
-    def test_run_with_empty_context(self, mock_settings, mock_resource_path, mock_vector_index_class):
+    def test_run_with_empty_context(
+        self, mock_settings, mock_resource_path, mock_vector_index_class
+    ):
         # Configure mocks
         mock_settings.graph_name = "test_graph"
         mock_resource_path = "/mock/path"

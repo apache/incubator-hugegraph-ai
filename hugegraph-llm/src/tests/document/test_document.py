@@ -42,10 +42,11 @@ class TestDocument(unittest.TestCase):
     def test_metadata_class(self):
         """Test Metadata class functionality."""
         metadata = Metadata(source="test_source", author="test_author", page=5)
+        metadata_dict = metadata.as_dict()
 
-        self.assertEqual(metadata.source, "test_source")
-        self.assertEqual(metadata.author, "test_author")
-        self.assertEqual(metadata.page, 5)
+        self.assertEqual(metadata_dict["source"], "test_source")
+        self.assertEqual(metadata_dict["author"], "test_author")
+        self.assertEqual(metadata_dict["page"], 5)
 
     def test_metadata_as_dict(self):
         """Test converting Metadata to dictionary."""

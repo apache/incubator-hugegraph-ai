@@ -31,6 +31,7 @@ class TestWordExtract(unittest.TestCase):
     def test_init_with_defaults(self):
         """Test initialization with default values."""
         word_extract = WordExtract()
+        # pylint: disable=protected-access
         self.assertIsNone(word_extract._llm)
         self.assertIsNone(word_extract._query)
         self.assertEqual(word_extract._language, "english")
@@ -38,6 +39,7 @@ class TestWordExtract(unittest.TestCase):
     def test_init_with_parameters(self):
         """Test initialization with provided parameters."""
         word_extract = WordExtract(text=self.test_query_en, llm=self.mock_llm, language="chinese")
+        # pylint: disable=protected-access
         self.assertEqual(word_extract._llm, self.mock_llm)
         self.assertEqual(word_extract._query, self.test_query_en)
         self.assertEqual(word_extract._language, "chinese")
@@ -61,6 +63,7 @@ class TestWordExtract(unittest.TestCase):
         result = word_extract.run(context)
 
         # Verify that the query was taken from context
+        # pylint: disable=protected-access
         self.assertEqual(word_extract._query, self.test_query_en)
         self.assertIn("keywords", result)
         self.assertIsInstance(result["keywords"], list)
@@ -95,6 +98,7 @@ class TestWordExtract(unittest.TestCase):
         result = word_extract.run(context)
 
         # Verify that the language was taken from context
+        # pylint: disable=protected-access
         self.assertEqual(word_extract._language, "spanish")
         self.assertEqual(result["language"], "spanish")
 
@@ -104,6 +108,7 @@ class TestWordExtract(unittest.TestCase):
         keywords = ["Test", "EXAMPLE", "Multi-Word Phrase"]
 
         # Filter with lowercase=True
+        # pylint: disable=protected-access
         result = word_extract._filter_keywords(keywords, lowercase=True)
 
         # Check that words are lowercased
@@ -121,6 +126,7 @@ class TestWordExtract(unittest.TestCase):
         keywords = ["Test", "EXAMPLE", "Multi-Word Phrase"]
 
         # Filter with lowercase=False
+        # pylint: disable=protected-access
         result = word_extract._filter_keywords(keywords, lowercase=False)
 
         # Check that original case is preserved

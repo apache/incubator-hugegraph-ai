@@ -22,17 +22,18 @@ from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 
 
 class TestSchemaManager(unittest.TestCase):
-    @patch("hugegraph_llm.operators.hugegraph_op.schema_manager.PyHugeClient")
-    def setUp(self, mock_client_class):
+    def setUp(self):
+        """Set up test fixtures before each test method."""
         # Setup mock client
         self.mock_client = MagicMock()
         self.mock_schema = MagicMock()
         self.mock_client.schema.return_value = self.mock_schema
-        mock_client_class.return_value = self.mock_client
 
         # Create SchemaManager instance
         self.graph_name = "test_graph"
-        self.schema_manager = SchemaManager(self.graph_name)
+        with patch("hugegraph_llm.operators.hugegraph_op.schema_manager.PyHugeClient") as mock_client_class:
+            mock_client_class.return_value = self.mock_client
+            self.schema_manager = SchemaManager(self.graph_name)
 
         # Sample schema data for testing
         self.sample_schema = {
@@ -132,64 +133,46 @@ class TestSchemaManager(unittest.TestCase):
         self.assertNotIn("edgelabels", simple_schema)
         self.assertEqual(len(simple_schema["vertexlabels"]), 1)
 
-    @patch("hugegraph_llm.operators.hugegraph_op.schema_manager.PyHugeClient")
-    def test_run_with_valid_schema(self, mock_client_class):
+    def test_run_with_valid_schema(self):
         """Test run method with a valid schema."""
         # Setup mock
-        mock_client = MagicMock()
         mock_schema = MagicMock()
         mock_schema.getSchema.return_value = self.sample_schema
-        mock_client.schema.return_value = mock_schema
-        mock_client_class.return_value = mock_client
-
-        # Create SchemaManager instance
-        schema_manager = SchemaManager(self.graph_name)
+        self.mock_client.schema.return_value = mock_schema
 
         # Call the run method
         context = {}
-        result = schema_manager.run(context)
+        result = self.schema_manager.run(context)
 
         # Verify the result
         self.assertIn("schema", result)
         self.assertIn("simple_schema", result)
         self.assertEqual(result["schema"], self.sample_schema)
 
-    @patch("hugegraph_llm.operators.hugegraph_op.schema_manager.PyHugeClient")
-    def test_run_with_empty_schema(self, mock_client_class):
+    def test_run_with_empty_schema(self):
         """Test run method with an empty schema."""
         # Setup mock
-        mock_client = MagicMock()
         mock_schema = MagicMock()
         mock_schema.getSchema.return_value = {"vertexlabels": [], "edgelabels": []}
-        mock_client.schema.return_value = mock_schema
-        mock_client_class.return_value = mock_client
-
-        # Create SchemaManager instance
-        schema_manager = SchemaManager(self.graph_name)
+        self.mock_client.schema.return_value = mock_schema
 
         # Call the run method and expect an exception
         with self.assertRaises(Exception) as context:
-            schema_manager.run({})
+            self.schema_manager.run({})
 
         # Verify the exception message
         self.assertIn(f"Can not get {self.graph_name}'s schema from HugeGraph!", str(context.exception))
 
-    @patch("hugegraph_llm.operators.hugegraph_op.schema_manager.PyHugeClient")
-    def test_run_with_existing_context(self, mock_client_class):
+    def test_run_with_existing_context(self):
         """Test run method with an existing context."""
         # Setup mock
-        mock_client = MagicMock()
         mock_schema = MagicMock()
         mock_schema.getSchema.return_value = self.sample_schema
-        mock_client.schema.return_value = mock_schema
-        mock_client_class.return_value = mock_client
-
-        # Create SchemaManager instance
-        schema_manager = SchemaManager(self.graph_name)
+        self.mock_client.schema.return_value = mock_schema
 
         # Call the run method with an existing context
         existing_context = {"existing_key": "existing_value"}
-        result = schema_manager.run(existing_context)
+        result = self.schema_manager.run(existing_context)
 
         # Verify the result
         self.assertIn("existing_key", result)
@@ -197,21 +180,15 @@ class TestSchemaManager(unittest.TestCase):
         self.assertIn("schema", result)
         self.assertIn("simple_schema", result)
 
-    @patch("hugegraph_llm.operators.hugegraph_op.schema_manager.PyHugeClient")
-    def test_run_with_none_context(self, mock_client_class):
+    def test_run_with_none_context(self):
         """Test run method with None context."""
         # Setup mock
-        mock_client = MagicMock()
         mock_schema = MagicMock()
         mock_schema.getSchema.return_value = self.sample_schema
-        mock_client.schema.return_value = mock_schema
-        mock_client_class.return_value = mock_client
-
-        # Create SchemaManager instance
-        schema_manager = SchemaManager(self.graph_name)
+        self.mock_client.schema.return_value = mock_schema
 
         # Call the run method with None context
-        result = schema_manager.run(None)
+        result = self.schema_manager.run(None)
 
         # Verify the result
         self.assertIn("schema", result)

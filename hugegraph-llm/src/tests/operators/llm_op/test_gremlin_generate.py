@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=protected-access,no-member
+
 import json
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -63,7 +65,10 @@ class TestGremlinGenerateSynthesize(unittest.TestCase):
         custom_prompt = "Custom prompt template: {query}, {schema}, {example}, {vertices}"
 
         generator = GremlinGenerateSynthesize(
-            llm=self.mock_llm, schema=self.schema, vertices=self.vertices, gremlin_prompt=custom_prompt
+            llm=self.mock_llm,
+            schema=self.schema,
+            vertices=self.vertices,
+            gremlin_prompt=custom_prompt,
         )
 
         self.assertEqual(generator.llm, self.mock_llm)
@@ -85,7 +90,8 @@ class TestGremlinGenerateSynthesize(unittest.TestCase):
 
         # Test with valid gremlin code block
         response = (
-            "Here is the Gremlin query:\n```gremlin\ng.V().has('person', 'name', 'Tom Hanks').out('acted_in')\n```"
+            "Here is the Gremlin query:\n```gremlin\n"
+            "g.V().has('person', 'name', 'Tom Hanks').out('acted_in')\n```"
         )
         gremlin = generator._extract_gremlin(response)
         self.assertEqual(gremlin, "g.V().has('person', 'name', 'Tom Hanks').out('acted_in')")
@@ -150,8 +156,12 @@ class TestGremlinGenerateSynthesize(unittest.TestCase):
         # Verify results
         mock_asyncio_run.assert_called_once()
         self.assertEqual(result["query"], self.query)
-        self.assertEqual(result["result"], "g.V().has('person', 'name', 'Tom Hanks').out('acted_in')")
-        self.assertEqual(result["raw_result"], "g.V().has('person', 'name', 'Tom Hanks').out('acted_in')")
+        self.assertEqual(
+            result["result"], "g.V().has('person', 'name', 'Tom Hanks').out('acted_in')"
+        )
+        self.assertEqual(
+            result["raw_result"], "g.V().has('person', 'name', 'Tom Hanks').out('acted_in')"
+        )
         self.assertEqual(result["call_count"], 2)
 
     def test_run_with_empty_query(self):
@@ -175,12 +185,16 @@ class TestGremlinGenerateSynthesize(unittest.TestCase):
 
         mock_init_task = MagicMock()
         mock_init_task.__await__ = lambda _: iter([None])
-        mock_init_task.return_value = "```gremlin\ng.V().has('person', 'name', 'Tom Hanks').out('acted_in')\n```"
+        mock_init_task.return_value = (
+            "```gremlin\ng.V().has('person', 'name', 'Tom Hanks').out('acted_in')\n```"
+        )
 
         mock_create_task.side_effect = [mock_raw_task, mock_init_task]
 
         # Create generator and context
-        generator = GremlinGenerateSynthesize(llm=self.mock_llm, schema=self.schema, vertices=self.vertices)
+        generator = GremlinGenerateSynthesize(
+            llm=self.mock_llm, schema=self.schema, vertices=self.vertices
+        )
 
         # Mock asyncio.run to simulate running the coroutine
         mock_context = {
@@ -196,7 +210,9 @@ class TestGremlinGenerateSynthesize(unittest.TestCase):
 
         # Verify results
         self.assertEqual(result["query"], self.query)
-        self.assertEqual(result["result"], "g.V().has('person', 'name', 'Tom Hanks').out('acted_in')")
+        self.assertEqual(
+            result["result"], "g.V().has('person', 'name', 'Tom Hanks').out('acted_in')"
+        )
         self.assertEqual(result["raw_result"], "g.V().has('person', 'name', 'Tom Hanks')")
         self.assertEqual(result["call_count"], 2)
 
