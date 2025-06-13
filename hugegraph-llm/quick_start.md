@@ -17,8 +17,6 @@ Construct a knowledge graph, chunk vector, and graph vid vector from the text.
 
 ![image](https://github.com/user-attachments/assets/f3366d46-2e31-4638-94c4-7214951ef77a)
 
-
-
 ```mermaid
 graph TD;
     A[Raw Text] --> B[Text Segmentation]
@@ -32,8 +30,6 @@ graph TD;
     I[Retrieve vertices from Graph Database] --> J[Vectorize vertices and store in Vector Database \nNote: Incremental update]
 
 ```
-
-
 
 ### Four Input Fields:
 
@@ -172,10 +168,7 @@ graph TD;
     
     F[Natural Language Query] --> G[Search for the most similar query \nin the Vector Database \n&#40If no Gremlin pairs exist in the Vector Database, \ndefault files will be automatically vectorized&#41 \nand retrieve the corresponding Gremlin]
     G --> H[Add the matched pair to the prompt \nand use LLM to generate the Gremlin \ncorresponding to the Natural Language Query]
-
 ```
-
-
 
 ### Input Fields for the Second Part:
 
