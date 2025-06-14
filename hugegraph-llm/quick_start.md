@@ -28,7 +28,6 @@ graph TD;
     G --> H[Store graph in Graph Database, \nautomatically vectorize vertices \nand store in Vector Database]
     
     I[Retrieve vertices from Graph Database] --> J[Vectorize vertices and store in Vector Database \nNote: Incremental update]
-
 ```
 
 ### Four Input Fields:
@@ -91,8 +90,6 @@ graph TD;
     I --> J
     J --> K[Generate answer]
 ```
-
-
 
 ### Input Fields:
 
