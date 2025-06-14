@@ -29,19 +29,24 @@ from hugegraph_llm.utils.graph_index_utils import (
     clean_all_graph_data,
     update_vid_embedding,
     extract_graph,
-    import_graph_data,
+    import_graph_data, build_schema,
 )
 from hugegraph_llm.utils.hugegraph_utils import check_graph_db_connection
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index, build_vector_index, get_vector_index_info
 
 
-def store_prompt(doc, schema, example_prompt):
+def store_prompt(doc, schema, example_prompt, query_example=None, few_shot=None):
     # update env variables: doc, schema and example_prompt
-    if prompt.doc_input_text != doc or prompt.graph_schema != schema or prompt.extract_graph_prompt != example_prompt:
+    if (prompt.doc_input_text != doc or prompt.graph_schema != schema
+        or prompt.extract_graph_prompt != example_prompt
+        or prompt.query_example != query_example
+        or prompt.few_shot != few_shot):
         prompt.doc_input_text = doc
         prompt.graph_schema = schema
         prompt.extract_graph_prompt = example_prompt
+        prompt.query_example = query_example
+        prompt.few_shot = few_shot
         prompt.update_yaml_file()
 
 
@@ -86,6 +91,24 @@ def create_vector_graph_block():
         )
         out = gr.Code(label="Output Info", language="json", elem_classes="code-container-edit")
 
+    with gr.Accordion("Advanced Schema Options", open=False):
+        with gr.Row():
+            query_example = gr.Code(
+                value=prompt.query_examples,
+                label="Query Example",
+                language = "json",
+                lines=10,
+                max_lines=15
+            )
+            few_shot = gr.Code(
+                value=prompt.build_schema_few_shot,
+                label="Few Shot Example",
+                language = "json",
+                lines=10,
+                max_lines=15
+            )
+            build_schema_bt = gr.Button("Build Schema", variant="primary")
+
     with gr.Row():
         with gr.Accordion("Get RAG Info", open=False):
             with gr.Column():
@@ -104,41 +127,50 @@ def create_vector_graph_block():
 
     vector_index_btn0.click(get_vector_index_info, outputs=out).then(
         store_prompt,
-        inputs=[input_text, input_schema, info_extract_template],
+        inputs=[input_text, input_schema, info_extract_template, query_example, few_shot],
     )
     vector_index_btn1.click(clean_vector_index).then(
         store_prompt,
-        inputs=[input_text, input_schema, info_extract_template],
+        inputs=[input_text, input_schema, info_extract_template, query_example, few_shot],
     )
     vector_import_bt.click(build_vector_index, inputs=[input_file, input_text], outputs=out).then(
         store_prompt,
-        inputs=[input_text, input_schema, info_extract_template],
+        inputs=[input_text, input_schema, info_extract_template, query_example, few_shot],
     )
     graph_index_btn0.click(get_graph_index_info, outputs=out).then(
         store_prompt,
-        inputs=[input_text, input_schema, info_extract_template],
+        inputs=[input_text, input_schema, info_extract_template, query_example, few_shot],
     )
     graph_index_btn1.click(clean_all_graph_index).then(
         store_prompt,
-        inputs=[input_text, input_schema, info_extract_template],
+        inputs=[input_text, input_schema, info_extract_template, query_example, few_shot],
     )
     graph_data_btn0.click(clean_all_graph_data).then(
         store_prompt,
-        inputs=[input_text, input_schema, info_extract_template],
+        inputs=[input_text, input_schema, info_extract_template, query_example, few_shot],
     )
     graph_index_rebuild_bt.click(update_vid_embedding, outputs=out).then(
         store_prompt,
-        inputs=[input_text, input_schema, info_extract_template],
+        inputs=[input_text, input_schema, info_extract_template, query_example, few_shot],
     )
 
     # origin_out = gr.Textbox(visible=False)
     graph_extract_bt.click(
         extract_graph, inputs=[input_file, input_text, input_schema, info_extract_template], outputs=[out]
-    ).then(store_prompt, inputs=[input_text, input_schema, info_extract_template], )
+    ).then(store_prompt, inputs=[input_text, input_schema, info_extract_template, query_example, few_shot], )
 
     graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(update_vid_embedding).then(
         store_prompt,
-        inputs=[input_text, input_schema, info_extract_template],
+        inputs=[input_text, input_schema, info_extract_template, query_example, few_shot],
+    )
+
+    build_schema_bt.click(
+        build_schema,
+        inputs=[input_text, query_example, few_shot],
+        outputs=[input_schema]
+    ).then(
+        store_prompt,
+        inputs=[input_text, input_schema, info_extract_template, query_example, few_shot],
     )
 
     def on_tab_select(input_f, input_t, evt: gr.SelectData):
@@ -152,7 +184,7 @@ def create_vector_graph_block():
     tab_upload_file.select(fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text])
     tab_upload_text.select(fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text])
 
-    return input_text, input_schema, info_extract_template
+    return input_text, input_schema, info_extract_template, query_example, few_shot
 
 async def timely_update_vid_embedding(interval_seconds: int = 3600):
     """
