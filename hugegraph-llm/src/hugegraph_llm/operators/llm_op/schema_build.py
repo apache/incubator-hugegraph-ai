@@ -25,7 +25,7 @@ from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.utils.log import log
 
 
-class BuildSchema:
+class SchemaBuilder:
     """Automated Schema Generator"""
 
     def __init__(
@@ -64,7 +64,7 @@ class BuildSchema:
 
     def _extract_schema(self, response: str) -> Dict[str, Any]:
         # Try to extract JSON from Markdown code block
-        match = re.search(r"```json(.*?)```", response, re.DOTALL)
+        match = re.search(r"```(?:json)?\s*(.*?)```", response, re.DOTALL)
         if match:
             response = match.group(1).strip()
 
