@@ -40,13 +40,13 @@ def store_prompt(doc, schema, example_prompt, query_example=None, few_shot=None)
     # update env variables: doc, schema and example_prompt
     if (prompt.doc_input_text != doc or prompt.graph_schema != schema
         or prompt.extract_graph_prompt != example_prompt
-        or prompt.query_example != query_example
-        or prompt.few_shot != few_shot):
+        or prompt.query_examples != query_example
+        or prompt.build_schema_few_shot != few_shot):
         prompt.doc_input_text = doc
         prompt.graph_schema = schema
         prompt.extract_graph_prompt = example_prompt
-        prompt.query_example = query_example
-        prompt.few_shot = few_shot
+        prompt.query_examples = query_example
+        prompt.build_schema_few_shot = few_shot
         prompt.update_yaml_file()
 
 

@@ -98,7 +98,7 @@ class KgBuilder:
         return self
 
     def build_schema(self):
-        self.operators.append(SchemaBuilder())
+        self.operators.append(SchemaBuilder(self.llm))
         return self
 
     @log_time("total time")
