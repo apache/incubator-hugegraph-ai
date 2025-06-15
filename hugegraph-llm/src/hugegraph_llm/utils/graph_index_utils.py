@@ -172,6 +172,6 @@ def build_schema(input_text, query_example, few_shot) :
     try:
         formatted_schema = json.dumps(schema, ensure_ascii=False, indent=2)
         return formatted_schema
-    except Exception as e:
-        log.error(f"Failed to format schema: {e}")
+    except (TypeError, ValueError) as e:
+        log.error("Failed to format schema: %s", e)
         return str(schema)

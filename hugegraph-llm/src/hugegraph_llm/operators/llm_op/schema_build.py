@@ -127,4 +127,3 @@ class SchemaBuilder:
         schema = self._extract_schema(response)
         log.info("Generated schema: %s", json.dumps(schema, indent=2))
         return schema
-
