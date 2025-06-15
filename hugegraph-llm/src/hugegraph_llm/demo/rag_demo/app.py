@@ -73,7 +73,7 @@ def init_rag_ui() -> gr.Interface:
                     new_lang = prompt.switch_language()
                     return new_lang, f"prompt: {new_lang}"
 
-                lang_button.click(
+                lang_button.click(  # pylint: disable=E1101
                     fn=switch_language,
                     inputs=[language_state],
                     outputs=[language_state, lang_button]
@@ -149,7 +149,7 @@ def init_rag_ui() -> gr.Interface:
             return refresh_ui_config_prompt()
 
         # Monitor language state changes
-        language_state.change(
+        language_state.change(  # pylint: disable=E1101
             fn=on_language_change,
             inputs=[language_state],
             outputs=[
