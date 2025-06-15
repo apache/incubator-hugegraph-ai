@@ -17,8 +17,7 @@
 
 import json
 import re
-import asyncio
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Any, Optional
 
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
@@ -33,7 +32,7 @@ class SchemaBuilder:
         llm: Optional[BaseLLM] = None,
         schema_prompt: Optional[str] = None,
     ):
-        self.llm = llm or LLMs().get_chat_llm() #使用 chat 还是其他的如 extract？
+        self.llm = llm or LLMs().get_chat_llm()
         self.schema_prompt = schema_prompt or (
             "You are a Graph Schema generator. Based on the following three parts of content, "
             "output a Schema JSON that complies with HugeGraph specifications:\n\n"
@@ -72,7 +71,7 @@ class SchemaBuilder:
             return json.loads(response)
         except json.JSONDecodeError as e:
             log.error("Failed to parse LLM response as JSON: %s", response)
-            raise RuntimeError(f"Invalid JSON response from LLM: {str(e)}")
+            raise RuntimeError("Invalid JSON response from LLM") from e
 
     def build_prompt(
         self,
@@ -101,15 +100,29 @@ class SchemaBuilder:
         Returns:
             Generated schema as dictionary
         """
-        raw_texts = context.get("raw_texts", [])
-        query_examples = context.get("query_examples", [])
-        few_shot_schema = context.get("few_shot_schema", {})
+        if not isinstance(context, dict):
+            raise ValueError("Context must be a dictionary")
+
+        required_fields = ["raw_texts", "query_examples", "few_shot_schema"]
+        for field in required_fields:
+            if field not in context:
+                raise ValueError(f"Context must contain '{field}' field")
+            if not isinstance(context[field], (list, dict)):
+                raise ValueError(f"Context field '{field}' must be a list or dict")
+
+        raw_texts = context["raw_texts"]
+        query_examples = context["query_examples"]
+        few_shot_schema = context["few_shot_schema"]
 
         prompt = self.build_prompt(raw_texts, query_examples, few_shot_schema)
-        log.debug("Schema generation prompt:\n%s", prompt)
 
-        response = self.llm.generate(prompt=prompt)
-        log.debug("LLM response:\n%s", response)
+        try:
+            response = self.llm.generate(prompt=prompt)
+            if not response or not response.strip():
+                raise RuntimeError("LLM returned empty response")
+        except Exception as e:
+            log.error("LLM generation failed: %s", str(e))
+            raise RuntimeError(f"Failed to generate schema: {str(e)}") from e
 
         schema = self._extract_schema(response)
         log.info("Generated schema: %s", json.dumps(schema, indent=2))
