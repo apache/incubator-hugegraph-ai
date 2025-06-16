@@ -30,9 +30,9 @@ graph systems and large language models.
    - Ensure you have Docker installed
    - We provide two container images:
      - **Image 1**: [hugegraph/rag](https://hub.docker.com/r/hugegraph/rag/tags)  
-       For building and running the RAG functionality, suitable for quick deployment and development
+       For building and running RAG functionality for rapid deployment and direct source code modification
      - **Image 2**: [hugegraph/rag-bin](https://hub.docker.com/r/hugegraph/rag-bin/tags)  
-       Binary version compiled with Nuitka for more stable and efficient performance in production
+       A binary translation of C compiled with Nuitka, for better performance and efficiency.
    - Pull the Docker images:
      ```bash
      docker pull hugegraph/rag:latest # Pull Image 1
@@ -40,8 +40,8 @@ graph systems and large language models.
      ```
    - Start the Docker container:
      ```bash
-     docker run -it --name rag -p 8001:8001 hugegraph/rag bash
-     docker run -it --name rag-bin -p 8001:8001 hugegraph/rag-bin bash
+     docker run -it --name rag -v /path/to/.env:/home/work/hugegraph-llm/.env -p 8001:8001 hugegraph/rag bash
+     docker run -it --name rag-bin -v /path/to/.env:/home/work/hugegraph-llm/.env -p 8001:8001 hugegraph/rag-bin bash
      ```
    - Start the Graph RAG demo:
      ```bash
@@ -60,7 +60,7 @@ graph systems and large language models.
     ```bash
    docker run -itd --name=server -p 8080:8080 hugegraph/hugegraph
     ```  
-   You can refer to the detailed documents [doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance.
+   You can refer to the detailed documents [doc](/docs/quickstart/hugegraph/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance.
 
 2. Configure the uv environment by using the official installer to install uv. See the [uv documentation](https://docs.astral.sh/uv/configuration/installer/) for other installation methods
     ```bash
@@ -80,7 +80,7 @@ graph systems and large language models.
     ```  
     If dependency download fails or too slow due to network issues, it is recommended to modify `hugegraph-llm/pyproject.toml`.
 
-5. Start the gradio interactive demo of **Graph RAG**, you can run with the following command and open http://127.0.0.1:8001 after starting
+5. To start the Gradio interactive demo for **Graph RAG**, run the following command, then open http://127.0.0.1:8001 in your browser.
     ```bash
     python -m hugegraph_llm.demo.rag_demo.app  # same as "uv run xxx"
     ```
@@ -97,7 +97,7 @@ graph systems and large language models.
     ```
     Note: `Litellm` support multi-LLM provider, refer [litellm.ai](https://docs.litellm.ai/docs/providers) to config it
 7. (__Optional__) You could use 
-    [hugegraph-hubble](https://hugegraph.apache.org/docs/quickstart/hugegraph-hubble/#21-use-docker-convenient-for-testdev) 
+    [hugegraph-hubble](/docs/quickstart/toolchain/hugegraph-hubble/#21-use-docker-convenient-for-testdev) 
     to visit the graph data, could run it via [Docker/Docker-Compose](https://hub.docker.com/r/hugegraph/hubble) 
     for guidance. (Hubble is a graph-analysis dashboard that includes data loading/schema management/graph traverser/display).
 8. (__Optional__) offline download NLTK stopwords  
@@ -107,7 +107,7 @@ graph systems and large language models.
 > [!TIP]   
 > You can also refer to our [quick-start](https://github.com/apache/incubator-hugegraph-ai/blob/main/hugegraph-llm/quick_start.md) doc to understand how to use it & the basic query logic 🚧
 
-## 4 Examples
+## 4. Examples
 
 ### 4.1 Build a knowledge graph in HugeGraph through LLM
 
