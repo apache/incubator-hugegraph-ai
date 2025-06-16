@@ -55,14 +55,14 @@ graph systems and large language models.
 
 ### 3.2 Build from Source
 
-1. Start the HugeGraph database, you can run it via [Docker](https://hub.docker.com/r/hugegraph/hugegraph)/[Binary Package](https://hugegraph.apache.org/docs/download/download/).
+1. Start the HugeGraph database, you can run it via [Docker](https://hub.docker.com/r/hugegraph/hugegraph)/[Binary Package](https://hugegraph.apache.org/docs/download/download/)
     There is a simple method by docker:  
     ```bash
    docker run -itd --name=server -p 8080:8080 hugegraph/hugegraph
     ```  
    You can refer to the detailed documents [doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance.
 
-2. Configuring the uv environment, Use the official installer to install uv, See the [uv documentation](https://docs.astral.sh/uv/configuration/installer/) for other installation methods   
+2. Configure the uv environment by using the official installer to install uv. See the [uv documentation](https://docs.astral.sh/uv/configuration/installer/) for other installation methods
     ```bash
     # You could try pipx or pip to install uv when meet network issues, refer the uv doc for more details
     curl -LsSf https://astral.sh/uv/install.sh | sh  - # install the latest version like 0.7.3+
@@ -72,7 +72,7 @@ graph systems and large language models.
     ```bash
     git clone https://github.com/apache/incubator-hugegraph-ai.git
     ```
-4. Configuration dependency environment
+4. Configure dependency environment
     ```bash
     cd incubator-hugegraph-ai/hugegraph-llm
     uv venv && source .venv/bin/activate
@@ -89,7 +89,7 @@ graph systems and large language models.
     python -m hugegraph_llm.demo.rag_demo.app --host 127.0.0.1 --port 18001
     ```
    
-6. After running the web demo, the config file `.env` will be automatically generated at the path `hugegraph-llm/.env`.    Additionally, a prompt-related configuration file `config_prompt.yaml` will also be generated at the path `hugegraph-llm/src/hugegraph_llm/resources/demo/config_prompt.yaml`.
+6. After running the web demo, the config file `.env` will be automatically generated at the path `hugegraph-llm/.env`. Additionally, a prompt-related configuration file `config_prompt.yaml` will also be generated at the path `hugegraph-llm/src/hugegraph_llm/resources/demo/config_prompt.yaml`.
     You can modify the content on the web page, and it will be automatically saved to the configuration file after the corresponding feature is triggered.  You can also modify the file directly without restarting the web application; refresh the page to load your latest changes.  
     (Optional)To regenerate the config file, you can use `config.generate` with `-u` or `--update`.  
     ```bash
