@@ -137,7 +137,7 @@ def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
         llm_settings.litellm_embedding_api_base = arg2
         llm_settings.litellm_embedding_model = arg3
         status_code = test_litellm_embedding(arg1, arg2, arg3)
-    llm_settings.update_env()
+    llm_settings.update_configs()
     gr.Info("Configured!")
     return status_code
 
@@ -175,7 +175,7 @@ def apply_reranker_config(
             headers=headers,
             origin_call=origin_call,
         )
-    llm_settings.update_env()
+    llm_settings.update_configs()
     gr.Info("Configured!")
     return status_code
 
@@ -198,7 +198,7 @@ def apply_graph_config(url, name, user, pwd, gs, origin_call=None) -> int:
     auth = HTTPBasicAuth(user, pwd)
     # for http api return status
     response = test_api_connection(test_url, auth=auth, origin_call=origin_call)
-    huge_settings.update_env()
+    huge_settings.update_configs()
     return response
 
 
@@ -243,7 +243,7 @@ def apply_llm_config(current_llm_config, arg1, arg2, arg3, arg4, origin_call=Non
         status_code = test_litellm_chat(arg1, arg2, arg3, int(arg4))
 
     gr.Info("Configured!")
-    llm_settings.update_env()
+    llm_settings.update_configs()
     return status_code
 
 

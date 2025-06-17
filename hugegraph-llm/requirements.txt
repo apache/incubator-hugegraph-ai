@@ -18,3 +18,4 @@ openpyxl~=3.1.5
 pydantic-settings~=2.6.1
 apscheduler~=3.10.4
 litellm~=1.61.13
+OmegaConf~=2.3
