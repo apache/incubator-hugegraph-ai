@@ -45,6 +45,7 @@ You can choose one of the following two deployment methods:
      ```
    - Start one of the Docker containers:
      ```bash
+     # Replace '/path/to/.env' with your actual .env file path
      docker run -itd --name rag -v /path/to/.env:/home/work/hugegraph-llm/.env -p 8001:8001 hugegraph/rag
      # or
      docker run -itd --name rag-bin -v /path/to/.env:/home/work/hugegraph-llm/.env -p 8001:8001 hugegraph/rag-bin
