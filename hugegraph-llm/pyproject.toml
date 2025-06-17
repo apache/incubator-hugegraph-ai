@@ -83,4 +83,4 @@ include = [
 allow-direct-references = true
 
 [tool.uv.sources]
-hugegraph-python-client = { path = "../hugegraph-python-client/", editable = true }
+hugegraph-python-client = { workspace = true }
