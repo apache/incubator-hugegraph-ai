@@ -101,9 +101,8 @@ You can choose one of the following two deployment methods:
 8. (__Optional__) offline download NLTK stopwords  
     ```bash
     python ./hugegraph_llm/operators/common_op/nltk_helper.py
-    ```
-> [!TIP]   
-> You can also refer to our [quick-start](https://github.com/apache/incubator-hugegraph-ai/blob/main/hugegraph-llm/quick_start.md) doc to understand how to use it & the basic query logic 🚧
+    ```   
+> **TIP:** You can also refer to our [quick-start](https://github.com/apache/incubator-hugegraph-ai/blob/main/hugegraph-llm/quick_start.md) doc to understand how to use it & the basic query logic 🚧
 
 ## 4. Examples
 
