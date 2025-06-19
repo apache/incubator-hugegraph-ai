@@ -93,7 +93,7 @@ python-client = [
     # if both llm and python-client are installed.
     # "decorator~=5.1.1",
     # "requests~=2.32.0",
-    # "setuptools~=70.0.0",
+    # "setuptools~=70.0.0", To handle version conflicts, change to "setuptools~=78.1.1",
     # "urllib3~=2.2.2",
     # "rich~=13.9.4",
 ]
