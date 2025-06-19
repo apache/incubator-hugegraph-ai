@@ -77,6 +77,7 @@ graph systems and large language models.
     cd incubator-hugegraph-ai/hugegraph-llm
     uv venv && source .venv/bin/activate
     uv pip install -e .
+    cd src/
     ```  
     If dependency download fails or too slow due to network issues, it is recommended to modify `hugegraph-llm/pyproject.toml`.
 
