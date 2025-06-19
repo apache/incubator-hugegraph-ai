@@ -35,18 +35,19 @@ dependencies = [
     "ollama~=0.4.8",
     "qianfan~=0.3.18",
     "retry~=0.9.2",
-    "tiktoken>=0.7.0",
+    "tiktoken~=0.7.0",
     "nltk~=3.9.1",
-    "gradio>5.0.0",
+    "gradio~=5.20.0",
     "jieba>=0.42.1",
     "numpy~=1.24.4",
     "python-docx~=1.1.2",
     "langchain-text-splitters~=0.2.2",
     "faiss-cpu~=1.8.0",
-    "python-dotenv>=1.0.1",
+    "python-dotenv~=1.0.1",
     "pyarrow~=17.0.0",
     "pandas<2.2.2",
     "openpyxl~=3.1.5",
+    "pydantic~=2.10.6",
     "pydantic-settings~=2.6.1",
     "decorator~=5.1.1",
     "requests~=2.32.0",
@@ -55,7 +56,7 @@ dependencies = [
     "rich~=13.9.4",
     "apscheduler~=3.10.4",
     "litellm~=1.61.13",
-    "hugegraph-python-client"
+    "hugegraph-python-client",
 ]
 [project.urls]
 homepage = "https://hugegraph.apache.org/"
