@@ -72,11 +72,12 @@ graph systems and large language models.
     ```bash
     git clone https://github.com/apache/incubator-hugegraph-ai.git
     ```
-4. Configure dependency environment
+4. Configure dependency environment.(For workspace projects, all uv commands should be run in the project root directory.)
     ```bash
-    cd incubator-hugegraph-ai/hugegraph-llm
+    cd incubator-hugegraph-ai/
     uv venv && source .venv/bin/activate
-    uv pip install -e .
+    uv sync --extra all # You can also choose to install only specific dependencies here
+    cd hugegraph-llm/
     ```  
     If dependency download fails or too slow due to network issues, it is recommended to modify `hugegraph-llm/pyproject.toml`.
 

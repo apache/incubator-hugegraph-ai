@@ -43,7 +43,7 @@ dependencies = [
     "packaging~=24.1",
     "torchdata~=0.7.0",
     "PyYAML~=6.0.2",
-    "pydantic~=2.9.2",
+    "pydantic~=2.10.6",
     "hugegraph-python-client"
 ]
 

@@ -3,8 +3,15 @@ name: HugeGraph-LLM CI
 on:
   push:
     branches:
+      - 'main'
+      - 'feat/centralize-uv-management'
       - 'release-*'
   pull_request:
+    branches:
+      - 'feat/centralize-uv-management'
+
+permissions:
+  contents: read
 
 jobs:
   build:
