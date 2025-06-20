@@ -26,12 +26,7 @@ class TestCheckSchema(unittest.TestCase):
 
     def test_schema_check_with_valid_input(self):
         data = {
-            "vertexlabels": [
-                {
-                    "name": "person",
-                    "properties": ["name", "age", "occupation"]
-                }
-            ],
+            "vertexlabels": [{"name": "person", "properties": ["name", "age", "occupation"]}],
             "edgelabels": [
                 {
                     "name": "knows",
@@ -41,7 +36,7 @@ class TestCheckSchema(unittest.TestCase):
             ],
         }
         check_schema = CheckSchema(data)
-        self.assertEqual(check_schema.run(), {'schema': data})
+        self.assertEqual(check_schema.run(), {"schema": data})
 
     def test_schema_check_with_invalid_input(self):
         data = "invalid input"
