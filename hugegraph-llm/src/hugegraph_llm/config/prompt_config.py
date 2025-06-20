@@ -387,3 +387,85 @@ MAX_KEYWORDS: {max_keywords}
 职业道路也很出色。另外，Sarah拥有一个个人网站www.sarahsplace.com，而James也经营着自己的网页，不过这里没有提到具体的网址。这两个人，
 Sarah和James，不仅建立起了深厚的室友情谊，还各自在网络上开辟了自己的一片天地，展示着他们各自丰富多彩的兴趣和经历。
 """
+
+
+    build_schema_few_shot: str = """{
+"vertexlabels": [
+    {
+    "id": 1,
+    "name": "person",
+    "id_strategy": "PRIMARY_KEY",
+    "primary_keys": [
+        "name"
+    ],
+    "properties": [
+        "name",
+        "age",
+        "occupation"
+    ]
+    },
+    {
+    "id": 2,
+    "name": "webpage",
+    "id_strategy": "PRIMARY_KEY",
+    "primary_keys": [
+        "name"
+    ],
+    "properties": [
+        "name",
+        "url"
+    ]
+    }
+],
+"edgelabels": [
+    {
+    "id": 1,
+    "name": "roommate",
+    "source_label": "person",
+    "target_label": "person",
+    "properties": [
+        "date"
+    ]
+    },
+    {
+    "id": 2,
+    "name": "link",
+    "source_label": "webpage",
+    "target_label": "person",
+    "properties": []
+    }
+]
+}
+"""
+
+    query_examples: str = """[
+  {
+    "description": "Property filter: Find all 'person' nodes with age > 30 and return their name and occupation",
+    "gremlin": "g.V().hasLabel('person').has('age', gt(30)).valueMap('name','occupation')"
+  },
+  {
+    "description": "Relationship traversal: Find all roommates of the person named Alice, and return their name and age",
+    "gremlin": "g.V().has('person','name','Alice').out('roommate').valueMap('name','age')"
+  },
+  {
+    "description": "Shortest path: Find the shortest path between Bob and Charlie and show the edge labels along the way",
+    "gremlin": "g.V('Bob').repeat(bothE().otherV()).until(has('name','Charlie')).path().by(label).limit(1)"
+  },
+  {
+    "description": "Subgraph match: Find all friend pairs who both follow the same webpage, and return the names and URL",
+    "gremlin": "g.V().hasLabel('webpage').as('w').in('link').as('p1').in('link').as('p2').where('p1', neq('p2')).select('p1','p2','w').by('name').by('name').by('url')"
+  },
+  {
+    "description": "Aggregation: Count the number of people for each occupation and compute their average age",
+    "gremlin": "g.V().hasLabel('person').group().by('occupation').by(__.values('age').fold()).unfold().project('occupation','count','avgAge').by(select(keys)).by(select(values).count(local)).by(select(values).mean(local))"
+  },
+  {
+    "description": "Time-based filter: Find all nodes created after 2025-01-01 and return their name and created_at",
+    "gremlin": "g.V().has('created_at', gt('2025-01-01T00:00:00')).valueMap('name','created_at')"
+  },
+  {
+    "description": "Top-N query: List top 10 most visited webpages with their URL and visit_count",
+    "gremlin": "g.V().hasLabel('webpage').order().by('visit_count', decr).limit(10).valueMap('url','visit_count')"
+  }
+]
+"""
