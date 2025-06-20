@@ -20,7 +20,7 @@ import os
 import docx
 import gradio as gr
 
-from hugegraph_llm.config import resource_path, huge_settings
+from hugegraph_llm.config import resource_path, huge_settings, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.init_llm import LLMs
@@ -55,10 +55,14 @@ def read_documents(input_file, input_text):
     return texts
 
 
-#pylint: disable=C0301
+# pylint: disable=C0301
 def get_vector_index_info():
-    chunk_vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "chunks")))
-    graph_vid_vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
+    chunk_vector_index = VectorIndex.from_index_file(
+        str(os.path.join(resource_path, huge_settings.graph_name, "chunks")))
+    graph_vid_vector_index = VectorIndex.from_index_file(
+        str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids", llm_settings.embedding_type)),
+        model_name=getattr(Embeddings().get_embedding(), "model_name", None)
+    )
     return json.dumps({
         "embed_dim": chunk_vector_index.index.d,
         "vector_info": {
