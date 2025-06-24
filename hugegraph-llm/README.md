@@ -30,27 +30,66 @@ You can choose one of the following two deployment methods:
 
 ### 3.1 Docker Deployment
 
-**Docker Deployment**  
-   Deploy HugeGraph-AI using Docker for quick setup:
-   - Ensure Docker is installed
-   - We provide two container images to choose from:
+**Option 1: Network-based Deployment (Recommended)**
+
+For production environments, we recommend using Docker Compose to deploy both HugeGraph Server and HugeGraph LLM RAG Service in the same network:
+
+1. **Set up environment variables:**
+   ```bash
+   # Copy the template and modify the project path
+   cp docker/env.template docker/.env
+   # Edit docker/.env and set PROJECT_PATH to your actual project path
+   ```
+
+2. **Start the containers:**
+   ```bash
+   cd docker
+   docker-compose -f docker-compose-network.yml up -d
+   ```
+
+3. **Check container status:**
+   ```bash
+   docker-compose -f docker-compose-network.yml ps
+   ```
+
+4. **Access the services:**
+   - HugeGraph Server: http://localhost:8080
+   - RAG Service: http://localhost:8001
+
+**Option 2: Individual Container Deployment**
+
+Alternatively, you can deploy HugeGraph-AI using individual Docker containers:
+   - Ensure you have Docker installed
+   - We provide two container images:
      - **Image 1**: [hugegraph/rag](https://hub.docker.com/r/hugegraph/rag/tags)  
        For building and running RAG functionality for rapid deployment and direct source code modification
      - **Image 2**: [hugegraph/rag-bin](https://hub.docker.com/r/hugegraph/rag-bin/tags)  
-       A binary translation of C compiled with Nuitka, for better performance and efficiency.
-   - Pull one of the Docker images:
-     ```bash
-     docker pull hugegraph/rag:latest     # Pull Image 1
-     docker pull hugegraph/rag-bin:latest # Pull Image 2
-     ```
-   - Start one of the Docker containers:
-     ```bash
-     # Replace '/path/to/.env' with your actual .env file path
-     docker run -itd --name rag -v /path/to/.env:/home/work/hugegraph-llm/.env -p 8001:8001 hugegraph/rag
-     # or
-     docker run -itd --name rag-bin -v /path/to/.env:/home/work/hugegraph-llm/.env -p 8001:8001 hugegraph/rag-bin
-     ```
-   - Access the interface at http://localhost:8001
+       Binary version compiled with Nuitka for more stable and efficient performance in production
+
+1. **Create Hugegraph Network:**
+   ```bash
+   docker network create -d bridge hugegraph-net
+   ```
+
+2. **Start HugeGraph Server:**
+   ```bash
+   docker run -itd --name=server -p 8080:8080 --network hugegraph-net hugegraph/hugegraph
+   ```
+
+3. **Start RAG Service:**
+   ```bash
+   # Pull the Docker image
+   docker pull hugegraph/rag:latest
+   # or
+   docker pull hugegraph/rag-bin:latest
+   
+   # Start the RAG container
+   docker run -it --name rag -v path2project/hugegraph-llm/.env:/home/work/hugegraph-llm/.env -p 8001:8001 --network hugegraph-net hugegraph/rag
+   # or
+   docker run -it --name rag-bin -v path2project/hugegraph-llm/.env:/home/work/hugegraph-llm/.env -p 8001:8001 --network hugegraph-net hugegraph/rag-bin
+   ```
+
+4. **Access the interface at http://localhost:8001**
 
 ### 3.2 Build from Source
 
