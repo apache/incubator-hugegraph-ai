@@ -30,7 +30,7 @@ You can choose one of the following two deployment methods:
 
 ### 3.1 Docker Deployment
 
-**Option 1: Network-based Deployment (Recommended)**
+**Option 1: Network-composed Deployment (Recommended)**
 
 For production environments, we recommend using Docker Compose to deploy both HugeGraph Server and HugeGraph LLM RAG Service in the same network:
 
