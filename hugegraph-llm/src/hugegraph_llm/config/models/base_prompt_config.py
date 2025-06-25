@@ -78,6 +78,8 @@ class BasePromptConfig:
             "\n".join([f"    {line}" for line in self.keywords_extract_prompt.splitlines()])
         )
         indented_doc_input_text = "\n".join([f"  {line}" for line in self.doc_input_text.splitlines()])
+        indented_generate_extract_prompt = "\n".join([f"  {line}" for line in self.generate_extract_prompt_template.splitlines()])
+        
 
         # This can be extended to add storage fields according to the data needs to be stored
         yaml_content = f"""graph_schema: |
@@ -107,6 +109,8 @@ gremlin_generate_prompt: |
 doc_input_text: |
 {indented_doc_input_text}
 
+generate_extract_prompt_template: |
+{indented_generate_extract_prompt}
 """
         with open(yaml_file_path, "w", encoding="utf-8") as file:
             file.write(yaml_content)

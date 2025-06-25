@@ -387,3 +387,41 @@ MAX_KEYWORDS: {max_keywords}
 职业道路也很出色。另外，Sarah拥有一个个人网站www.sarahsplace.com，而James也经营着自己的网页，不过这里没有提到具体的网址。这两个人，
 Sarah和James，不仅建立起了深厚的室友情谊，还各自在网络上开辟了自己的一片天地，展示着他们各自丰富多彩的兴趣和经历。
 """
+
+    generate_extract_prompt_template: str = """## Your Role
+You are an expert in crafting high-quality prompts for Large Language Models (LLMs), specializing in extracting graph structures from text.
+
+## Core Task
+Your goal is to generate a new, tailored "Graph Extract Prompt Header" based on user requirements and a provided example. This new prompt will be used to guide another LLM.
+
+## Input Information
+1.  **User's Source Text**: A sample of the text for extraction.
+2.  **User's Desired Scenario/Direction**: A description of the user's goal.
+3.  **A High-Quality Few-shot Example**: A complete, working example including a sample text and the corresponding full "Graph Extract Prompt".
+
+## Generation Rules
+1.  **Analyze**: Carefully analyze the user's source text and desired scenario.
+2.  **Adapt**: From the provided Few-shot Example's "Graph Extract Prompt", you must learn its structure, rules, and especially the format of the `graph schema example` and `Output example` sections.
+3.  **Create New Content**:
+    - **Infer a New Schema**: Based on the user's scenario and text, create a new `graph schema example` block.
+    - **Synthesize a New Output**: Based on the user's text and your new schema, create a new `Output example` block.
+4.  **Construct the Final Prompt**: Combine the general instructions from the Few-shot Example with your newly created `graph schema example` and `Output example` to form a complete, new "Graph Extract Prompt Header".
+
+---
+## Provided Few-shot Example (For Your Reference)
+### Example Text:
+{few_shot_text}
+
+### Corresponding "Graph Extract Prompt":
+{few_shot_prompt}
+---
+
+## User's Request (Generate a new prompt based on this)
+### User's Source Text:
+{user_text}
+
+### User's Desired Scenario/Direction:
+{user_scenario}
+
+## Your Generated "Graph Extract Prompt Header":
+"""
