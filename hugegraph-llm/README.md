@@ -88,7 +88,7 @@ Alternatively, you can deploy HugeGraph-AI using individual Docker containers:
    # same as the "rag-bin" image...
    ```
 
-4. **Access the interface at http://localhost:8001**
+4. **Access the UI at http://localhost:8001**
 
 ### 3.2 Build from Source
 
