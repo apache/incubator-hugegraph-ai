@@ -39,6 +39,7 @@ class BasePromptConfig:
     text2gql_graph_schema: str = ''
     gremlin_generate_prompt: str = ''
     doc_input_text: str = ''
+    _language_generated: str = ''
 
     def ensure_yaml_file_exists(self):
         current_dir = Path.cwd().resolve()
@@ -60,6 +61,29 @@ class BasePromptConfig:
                 # Load existing values from the YAML file into the class attributes
                 for key, value in data.items():
                     setattr(self, key, value)
+
+            # Check if the language in the .env file matches the language in the YAML file        
+            env_lang = self.llm_settings.language.lower() if hasattr(self, 'llm_settings') and self.llm_settings.language else 'en'
+            yaml_lang = data.get('_language_generated', 'en').lower()
+            
+            if env_lang.strip() != yaml_lang.strip():
+                log.warning(
+                    f"Prompt was changed '.env' language is '{env_lang}', "
+                    f"but '{F_NAME}' was generated for '{yaml_lang}'. "
+                    f"Regenerating the prompt file..."
+                )
+                if self.llm_settings.language.lower() == "cn":
+                    self.answer_prompt = self.answer_prompt_CN
+                    self.extract_graph_prompt = self.extract_graph_prompt_CN
+                    self.gremlin_generate_prompt = self.gremlin_generate_prompt_CN
+                    self.keywords_extract_prompt = self.keywords_extract_prompt_CN
+                    self.doc_input_text = self.doc_input_text_CN
+                else:
+                    self.answer_prompt = self.answer_prompt_EN 
+                    self.extract_graph_prompt = self.extract_graph_prompt_EN
+                    self.gremlin_generate_prompt = self.gremlin_generate_prompt_EN
+                    self.keywords_extract_prompt = self.keywords_extract_prompt_EN
+                    self.doc_input_text = self.doc_input_text_EN
         else:
             self.generate_yaml_file()
             log.info("Prompt file '%s' doesn't exist, create it.", yaml_file_path)
@@ -67,17 +91,20 @@ class BasePromptConfig:
     def save_to_yaml(self):
         indented_schema = "\n".join([f"  {line}" for line in self.graph_schema.splitlines()])
         indented_text2gql_schema = "\n".join([f"  {line}" for line in self.text2gql_graph_schema.splitlines()])
-        indented_gremlin_prompt = "\n".join([f"  {line}" for line in self.gremlin_generate_prompt.splitlines()])
-        indented_example_prompt = "\n".join([f"    {line}" for line in self.extract_graph_prompt.splitlines()])
         indented_question = "\n".join([f"    {line}" for line in self.default_question.splitlines()])
         indented_custom_related_information = (
             "\n".join([f"    {line}" for line in self.custom_rerank_info.splitlines()])
         )
+        
+        indented_gremlin_prompt = "\n".join([f"  {line}" for line in self.gremlin_generate_prompt.splitlines()])
+        indented_example_prompt = "\n".join([f"    {line}" for line in self.extract_graph_prompt.splitlines()])
         indented_default_answer_template = "\n".join([f"    {line}" for line in self.answer_prompt.splitlines()])
         indented_keywords_extract_template = (
             "\n".join([f"    {line}" for line in self.keywords_extract_prompt.splitlines()])
         )
         indented_doc_input_text = "\n".join([f"  {line}" for line in self.doc_input_text.splitlines()])
+
+        indented_language_generated = "\n".join([f"  {line}" for line in self.llm_settings.language.splitlines()])
 
         # This can be extended to add storage fields according to the data needs to be stored
         yaml_content = f"""graph_schema: |
@@ -107,6 +134,8 @@ gremlin_generate_prompt: |
 doc_input_text: |
 {indented_doc_input_text}
 
+_language_generated: |
+{indented_language_generated}
 """
         with open(yaml_file_path, "w", encoding="utf-8") as file:
             file.write(yaml_content)
@@ -117,10 +146,21 @@ doc_input_text: |
             update = input()
             if update.lower() != "y":
                 return
-            self.save_to_yaml()
+
+        if self.llm_settings.language.lower() == "cn":
+            self.answer_prompt = self.answer_prompt_CN
+            self.extract_graph_prompt = self.extract_graph_prompt_CN
+            self.gremlin_generate_prompt = self.gremlin_generate_prompt_CN
+            self.keywords_extract_prompt = self.keywords_extract_prompt_CN
+            self.doc_input_text = self.doc_input_text_CN
         else:
-            self.save_to_yaml()
-            log.info("Prompt file '%s' doesn't exist, create it.", yaml_file_path)
+            self.answer_prompt = self.answer_prompt_EN 
+            self.extract_graph_prompt = self.extract_graph_prompt_EN
+            self.gremlin_generate_prompt = self.gremlin_generate_prompt_EN
+            self.keywords_extract_prompt = self.keywords_extract_prompt_EN
+            self.doc_input_text = self.doc_input_text_EN
+        self.save_to_yaml()
+        log.info("Prompt file '%s' has been generated with default values.", yaml_file_path)
 
     def update_yaml_file(self):
         self.save_to_yaml()
