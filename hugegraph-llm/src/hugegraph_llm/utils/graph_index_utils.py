@@ -139,7 +139,6 @@ def import_graph_data(data: str, schema: str) -> Union[str, Dict[str, Any]]:
         return data
 
 def build_schema(input_text, query_example, few_shot) :
-
     context = {
         "raw_texts": [input_text] if input_text else [],
         "query_examples": [] ,

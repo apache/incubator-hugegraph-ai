@@ -33,14 +33,26 @@ class SchemaBuilder:
         schema_prompt: Optional[str] = None,
     ):
         self.llm = llm or LLMs().get_chat_llm()
-        self.schema_prompt = schema_prompt or (
-            "You are a Graph Schema generator. Based on the following three parts of content, "
-            "output a Schema JSON that complies with HugeGraph specifications:\n\n"
-            "1. Raw data samples:\n{raw_texts}\n\n"
-            "2. Query examples (description + Gremlin):\n{query_examples}\n\n"
-            "3. Few-Shot Schema examples:\n{few_shot_schema}\n\n"
-            "Please return only the JSON object, without any additional explanations."
-        )
+        # TODO: use a basic format for it
+        self.schema_prompt = schema_prompt or """      
+            You are a Graph Schema Generator for Apache HugeGraph.  
+            Based on the following three parts of content, output a Schema JSON that complies with HugeGraph specifications:
+
+            Inputs:
+            1. Few‐Shot Schema Examples (already formatted as valid HugeGraph schema JSON):  
+            {few_shot_schema}
+
+            2. Query Examples (each with a "description" and a Gremlin traversal):  
+            {query_examples}
+
+            3. Raw Data Samples (plain text records to model as vertices/edges):  
+            {raw_texts}
+
+            Constraints:
+            - Return only the JSON object
+            - Ensure the schema follows HugeGraph specifications
+            - Do not include comments or extra fields.      
+        """
 
     def _format_raw_texts(self, raw_texts: List[str]) -> str:
         return "\n".join([f"- {text}" for text in raw_texts])
@@ -124,5 +136,5 @@ class SchemaBuilder:
             raise RuntimeError(f"Failed to generate schema: {str(e)}") from e
 
         schema = self._extract_schema(response)
-        log.info("Generated schema: %s", json.dumps(schema, indent=2))
+        log.debug("Generated schema: %s", json.dumps(schema, indent=2))
         return schema
