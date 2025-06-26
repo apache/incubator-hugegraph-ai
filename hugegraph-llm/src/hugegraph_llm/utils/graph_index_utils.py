@@ -138,10 +138,10 @@ def import_graph_data(data: str, schema: str) -> Union[str, Dict[str, Any]]:
         gr.Warning(str(e) + " Please check the graph data format/type carefully.")
         return data
 
-def build_schema(input_text, query_example, few_shot) :
+def build_schema(input_text, query_example, few_shot):
     context = {
         "raw_texts": [input_text] if input_text else [],
-        "query_examples": [] ,
+        "query_examples": [],
         "few_shot_schema": {}
     }
 
@@ -167,7 +167,11 @@ def build_schema(input_text, query_example, few_shot) :
             raise gr.Error(f"Query Examples is not in a valid JSON format: {e}") from e
 
     builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
-    schema = builder.build_schema().run(context)
+    try:
+        schema = builder.build_schema().run(context)
+    except Exception as e:
+        log.error(f"Failed to generate schema: {e}")
+        raise gr.Error(f"Schema generation failed: {e}") from e
     try:
         formatted_schema = json.dumps(schema, ensure_ascii=False, indent=2)
         return formatted_schema

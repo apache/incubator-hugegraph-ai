@@ -35,23 +35,23 @@ class SchemaBuilder:
         self.llm = llm or LLMs().get_chat_llm()
         # TODO: use a basic format for it
         self.schema_prompt = schema_prompt or """      
-            You are a Graph Schema Generator for Apache HugeGraph.  
+            You are a Graph Schema Generator for Apache HugeGraph.
             Based on the following three parts of content, output a Schema JSON that complies with HugeGraph specifications:
 
             Inputs:
-            1. Few‐Shot Schema Examples (already formatted as valid HugeGraph schema JSON):  
+            1. Few‐Shot Schema Examples (already formatted as valid HugeGraph schema JSON):
             {few_shot_schema}
 
-            2. Query Examples (each with a "description" and a Gremlin traversal):  
+            2. Query Examples (each with a "description" and a Gremlin traversal):
             {query_examples}
 
-            3. Raw Data Samples (plain text records to model as vertices/edges):  
+            3. Raw Data Samples (plain text records to model as vertices/edges):
             {raw_texts}
 
             Constraints:
             - Return only the JSON object
             - Ensure the schema follows HugeGraph specifications
-            - Do not include comments or extra fields.      
+            - Do not include comments or extra fields.
         """
 
     def _format_raw_texts(self, raw_texts: List[str]) -> str:

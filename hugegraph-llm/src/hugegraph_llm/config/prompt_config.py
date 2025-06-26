@@ -388,7 +388,6 @@ MAX_KEYWORDS: {max_keywords}
 Sarah和James，不仅建立起了深厚的室友情谊，还各自在网络上开辟了自己的一片天地，展示着他们各自丰富多彩的兴趣和经历。
 """
 
-
     build_schema_few_shot: str = """{
 "vertexlabels": [
     {
@@ -438,6 +437,7 @@ Sarah和James，不仅建立起了深厚的室友情谊，还各自在网络上�
 }
 """
 
+    # TODO: switch to more universal examples, or pre-configure multiple sets of examples based on domain.
     query_examples: str = """[
   {
     "description": "Property filter: Find all 'person' nodes with age > 30 and return their name and occupation",
