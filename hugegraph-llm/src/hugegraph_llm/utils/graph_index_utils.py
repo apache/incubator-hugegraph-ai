@@ -170,7 +170,7 @@ def build_schema(input_text, query_example, few_shot):
     try:
         schema = builder.build_schema().run(context)
     except Exception as e:
-        log.error(f"Failed to generate schema: %s", e)
+        log.error("Failed to generate schema: %s", e)
         raise gr.Error(f"Schema generation failed: {e}") from e
     try:
         formatted_schema = json.dumps(schema, ensure_ascii=False, indent=2)
