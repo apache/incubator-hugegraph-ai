@@ -34,7 +34,7 @@ class SchemaBuilder:
     ):
         self.llm = llm or LLMs().get_chat_llm()
         # TODO: use a basic format for it
-        self.schema_prompt = schema_prompt or """      
+        self.schema_prompt = schema_prompt or """
             You are a Graph Schema Generator for Apache HugeGraph.
             Based on the following three parts of content, output a Schema JSON that complies with HugeGraph specifications:
 
