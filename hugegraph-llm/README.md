@@ -84,8 +84,10 @@ Alternatively, you can deploy HugeGraph-AI using individual Docker containers:
    docker pull hugegraph/rag-bin:latest
    
    # Run it (replace /path2project with actual path) & modify .env file for your needs
-   docker run -it --name rag -v /path2project/hugegraph-llm/.env:/home/work/hugegraph-llm/.env -p 8001:8001 --network hugegraph-net hugegraph/rag
+   docker run -itd --name rag -v /path2project/hugegraph-llm/.env:/home/work/hugegraph-llm/.env -p 8001:8001 --network hugegraph-net hugegraph/rag
    # same as the "rag-bin" image...
+   # How to get logs of container
+   docker logs -f rag
    ```
 
 4. **Access the UI at http://localhost:8001**
