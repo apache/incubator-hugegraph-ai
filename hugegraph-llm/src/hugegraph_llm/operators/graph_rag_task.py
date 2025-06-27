@@ -69,7 +69,10 @@ class RAGPipeline:
         self,
         text: Optional[str] = None,
         max_keywords: int = 5,
-        language: str = "english",
+        language: str = "en",
+        extract_method: str = "TextRank",
+        window_size: int = 5,
+        mask_words: str = "",
         extract_template: Optional[str] = None,
     ):
         """
@@ -79,6 +82,9 @@ class RAGPipeline:
         :param max_keywords: Maximum number of keywords to extract.
         :param language: Language of the text.
         :param extract_template: Template for keyword extraction.
+        :param extract_method: Method for Keyword extraction
+        :param window_size: Sliding window size of TextRank.
+        :param mask_words: Filter words for TextRank in Chinese word segmentation
         :return: Self-instance for chaining.
         """
         self._operators.append(
@@ -87,6 +93,8 @@ class RAGPipeline:
                 max_keywords=max_keywords,
                 language=language,
                 extract_template=extract_template,
+                extract_method=extract_method,
+                textrank_kwargs={"keyword_num": max_keywords, "window_size": window_size, "mask_words": mask_words},
             )
         )
         return self
