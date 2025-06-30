@@ -19,7 +19,6 @@
 
 import asyncio
 import os
-import yaml
 import gradio as gr
 import json
 from hugegraph_llm.config import huge_settings
@@ -38,7 +37,6 @@ from hugegraph_llm.utils.vector_index_utils import clean_vector_index, build_vec
 from hugegraph_llm.config import resource_path
 from hugegraph_llm.operators.llm_op.prompt_generate import PromptGenerate
 from hugegraph_llm.models.llms.init_llm import LLMs
-
 
 def store_prompt(doc, schema, example_prompt):
     # update env variables: doc, schema and example_prompt
@@ -72,9 +70,7 @@ def generate_prompt_for_ui(source_text, scenario, example_name):
         return generated_prompt
     except Exception as e:
         log.error("Error generating Prompt: %s", e, exc_info=True)
-        raise gr.Error(f"Error generating Prompt: {e}")
-
-
+        raise gr.Error(f"Error generating Prompt: {e}") from e
 
 def load_example_names():
     """Load all candidate examples"""
@@ -192,34 +188,28 @@ def create_vector_graph_block():
                 example_prompt_preview = gr.Code(label="Example Graph Extract Prompt", language="markdown", interactive=False)
 
             generate_prompt_btn = gr.Button("🚀 Auto-generate Graph Extract Prompt", variant="primary")
-    
-        
         # Bind the change event of the dropdown menu
         few_shot_dropdown.change(
             fn=update_example_preview,
             inputs=[few_shot_dropdown],
             outputs=[example_desc_preview, example_text_preview, example_prompt_preview]
         )
-
         # Bind the click event of the generate button.
         generate_prompt_btn.click(
             fn=generate_prompt_for_ui,
             inputs=[input_text, user_scenario_text, few_shot_dropdown],
             outputs=[info_extract_template]
         )
-
         # Preload the page on the first load.
         def warm_up_preview(example_name):
             if not example_name:
                 return "", "", ""
             return update_example_preview(example_name)
-
         demo.load(
             fn=warm_up_preview,
             inputs=[few_shot_dropdown],
             outputs=[example_desc_preview, example_text_preview, example_prompt_preview]
         )
-    
         vector_index_btn0.click(get_vector_index_info, outputs=out).then(
             store_prompt,
             inputs=[input_text, input_schema, info_extract_template],
@@ -303,3 +293,4 @@ async def timely_update_vid_embedding(interval_seconds: int = 3600):
         except Exception as e:
             log.warning("Failed to execute update_vid_embedding: %s", e, exc_info=True)
         await asyncio.sleep(interval_seconds)
+        

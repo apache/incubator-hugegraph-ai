@@ -23,6 +23,7 @@ from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.config import resource_path, prompt as prompt_tpl
 from hugegraph_llm.utils.log import log
 
+
 class PromptGenerate:
     def __init__(self, llm: BaseLLM):
         self.llm = llm
@@ -50,7 +51,6 @@ class PromptGenerate:
 
         if not all([source_text, scenario, example_name]):
             raise ValueError("Missing required context: source_text, scenario, or example_name.")
-        # print("[DEBUG] Template content:", prompt_tpl.generate_extract_prompt_template)  # 出现过重载的错误，会一直加载旧版本的模板
         few_shot_example = self._load_few_shot_example(example_name)
 
         meta_prompt = prompt_tpl.generate_extract_prompt_template.format(
@@ -60,9 +60,9 @@ class PromptGenerate:
             user_scenario=scenario
         )
         
-        log.debug(f"Meta-prompt sent to LLM: {meta_prompt}")
+        log.debug("Meta-prompt sent to LLM: %s", meta_prompt)
         generated_prompt = self.llm.generate(prompt=meta_prompt)
-        log.debug(f"Generated prompt from LLM: {generated_prompt}")
+        log.debug("Generated prompt from LLM: %s", generated_prompt)
 
         context["generated_extract_prompt"] = generated_prompt
         return context
