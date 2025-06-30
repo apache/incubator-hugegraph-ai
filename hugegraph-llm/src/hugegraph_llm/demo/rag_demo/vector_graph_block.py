@@ -45,7 +45,6 @@ def store_prompt(doc, schema, example_prompt):
         prompt.graph_schema = schema
         prompt.extract_graph_prompt = example_prompt
         prompt.update_yaml_file()
-        
 def generate_prompt_for_ui(source_text, scenario, example_name): 
     """
     Handles the UI logic for generating a new prompt. It calls the PromptGenerate operator.
@@ -61,9 +60,7 @@ def generate_prompt_for_ui(source_text, scenario, example_name):
             "scenario": scenario,
             "example_name": example_name 
         }
-       
         result_context = prompt_generator.run(context)
-        
         # Presents the  result of  generating  prompt
         generated_prompt = result_context.get("generated_extract_prompt", "Generation failed. Please check the logs.")
         gr.Info("Prompt generated successfully!")
@@ -88,7 +85,6 @@ def update_example_preview(example_name):
         examples_path = os.path.join(resource_path, "prompt_examples", "prompt_examples.json")
         with open(examples_path, 'r', encoding='utf-8') as f:
             all_examples = json.load(f)
-        
         selected_example = next((ex for ex in all_examples if ex.get("name") == example_name), None)
 
         if selected_example:
@@ -100,7 +96,6 @@ def update_example_preview(example_name):
             )
     except Exception:
         pass
-    
     return "", "", ""
 
 
@@ -108,7 +103,6 @@ def create_vector_graph_block():
     # pylint: disable=no-member
     # pylint: disable=C0301
     # pylint: disable=unexpected-keyword-arg
-    
     with gr.Blocks() as demo:
 
         gr.Markdown(
@@ -163,25 +157,20 @@ def create_vector_graph_block():
             graph_extract_bt = gr.Button("Extract Graph Data (1)", variant="primary")
             graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=True)
             graph_index_rebuild_bt = gr.Button("Update Vid Embedding")
-        
         gr.Markdown("---")
-        
         with gr.Accordion("Assist in generating graph extraction prompts", open=True):
             gr.Markdown("Provide your **original text** and **expected scenario**, then select a reference example to generate a high-quality graph extraction prompt.")
-            
             user_scenario_text = gr.Textbox(
                 label="Expected scenario/direction", 
                 info="For example: social relationships, financial knowledge graphs, etc.",
                 lines=2
             )
-            
             example_names = load_example_names()
             few_shot_dropdown = gr.Dropdown(
                 choices=example_names, 
                 label="Select a Few-shot example as a reference",
                 value=example_names[0] if example_names and example_names[0] != "No available examples" else None
             )
-            
             with gr.Accordion("View example details", open=False):
                 example_desc_preview = gr.Markdown(label="Example description")
                 example_text_preview = gr.Textbox(label="Example input text", lines=5, interactive=False)

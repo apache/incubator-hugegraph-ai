@@ -33,14 +33,11 @@ class PromptGenerate:
         examples_path = os.path.join(resource_path, "prompt_examples", "prompt_examples.json")
         if not os.path.exists(examples_path):
             raise FileNotFoundError(f"Examples file not found: {examples_path}")
-        
         with open(examples_path, "r", encoding="utf-8") as f:
             all_examples = json.load(f)
-        
         for example in all_examples:
             if example.get("name") == example_name:
                 return example
-        
         raise ValueError(f"Example with name '{example_name}' not found in prompt_examples.json")
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -59,7 +56,6 @@ class PromptGenerate:
             user_text=source_text,
             user_scenario=scenario
         )
-        
         log.debug("Meta-prompt sent to LLM: %s", meta_prompt)
         generated_prompt = self.llm.generate(prompt=meta_prompt)
         log.debug("Generated prompt from LLM: %s", generated_prompt)
