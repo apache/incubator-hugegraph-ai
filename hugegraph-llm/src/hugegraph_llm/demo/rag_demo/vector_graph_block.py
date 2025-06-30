@@ -19,8 +19,8 @@
 
 import asyncio
 import os
-import gradio as gr
 import json
+import gradio as gr
 from hugegraph_llm.config import huge_settings
 from hugegraph_llm.config import prompt
 from hugegraph_llm.utils.graph_index_utils import (
@@ -88,17 +88,60 @@ def update_example_preview(example_name):
         selected_example = next((ex for ex in all_examples if ex.get("name") == example_name), None)
 
         if selected_example:
-            # prompt_str = json.dumps(selected_example.get('prompt', {}), indent=2, ensure_ascii=False)
             return (
                 selected_example.get('description', ''),
                 selected_example.get('text', ''),
                 selected_example.get('prompt', ''),
             )
-    except Exception:
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        log.warning("Could not update example preview: %s", e)
         pass
     return "", "", ""
+def _create_prompt_helper_block(demo, input_text, info_extract_template):
+    with gr.Accordion("Assist in generating graph extraction prompts", open=True):
+        gr.Markdown(
+            "Provide your **original text** and **expected scenario**, then select a reference example to generate a high-quality graph extraction prompt.")
+        user_scenario_text = gr.Textbox(
+            label="Expected scenario/direction",
+            info="For example: social relationships, financial knowledge graphs, etc.",
+            lines=2
+        )
+        example_names = load_example_names()
+        few_shot_dropdown = gr.Dropdown(
+            choices=example_names,
+            label="Select a Few-shot example as a reference",
+            value=example_names[0] if example_names and example_names[0] != "No available examples" else None
+        )
+        with gr.Accordion("View example details", open=False):
+            example_desc_preview = gr.Markdown(label="Example description")
+            example_text_preview = gr.Textbox(label="Example input text", lines=5, interactive=False)
+            example_prompt_preview = gr.Code(label="Example Graph Extract Prompt", language="markdown",
+                                             interactive=False)
 
+        generate_prompt_btn = gr.Button("🚀 Auto-generate Graph Extract Prompt", variant="primary")
+        # Bind the change event of the dropdown menu
+        few_shot_dropdown.change(
+            fn=update_example_preview,
+            inputs=[few_shot_dropdown],
+            outputs=[example_desc_preview, example_text_preview, example_prompt_preview]
+        )
+        # Bind the click event of the generate button.
+        generate_prompt_btn.click(
+            fn=generate_prompt_for_ui,
+            inputs=[input_text, user_scenario_text, few_shot_dropdown],
+            outputs=[info_extract_template]
+        )
+        # Preload the page on the first load.
+        def warm_up_preview(example_name):
+            if not example_name:
+                return "", "", ""
+            return update_example_preview(example_name)
 
+        demo.load(
+            fn=warm_up_preview,
+            inputs=[few_shot_dropdown],
+            outputs=[example_desc_preview, example_text_preview, example_prompt_preview]
+        )
 def create_vector_graph_block():
     # pylint: disable=no-member
     # pylint: disable=C0301
@@ -158,47 +201,7 @@ def create_vector_graph_block():
             graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=True)
             graph_index_rebuild_bt = gr.Button("Update Vid Embedding")
         gr.Markdown("---")
-        with gr.Accordion("Assist in generating graph extraction prompts", open=True):
-            gr.Markdown("Provide your **original text** and **expected scenario**, then select a reference example to generate a high-quality graph extraction prompt.")
-            user_scenario_text = gr.Textbox(
-                label="Expected scenario/direction", 
-                info="For example: social relationships, financial knowledge graphs, etc.",
-                lines=2
-            )
-            example_names = load_example_names()
-            few_shot_dropdown = gr.Dropdown(
-                choices=example_names, 
-                label="Select a Few-shot example as a reference",
-                value=example_names[0] if example_names and example_names[0] != "No available examples" else None
-            )
-            with gr.Accordion("View example details", open=False):
-                example_desc_preview = gr.Markdown(label="Example description")
-                example_text_preview = gr.Textbox(label="Example input text", lines=5, interactive=False)
-                example_prompt_preview = gr.Code(label="Example Graph Extract Prompt", language="markdown", interactive=False)
-
-            generate_prompt_btn = gr.Button("🚀 Auto-generate Graph Extract Prompt", variant="primary")
-        # Bind the change event of the dropdown menu
-        few_shot_dropdown.change(
-            fn=update_example_preview,
-            inputs=[few_shot_dropdown],
-            outputs=[example_desc_preview, example_text_preview, example_prompt_preview]
-        )
-        # Bind the click event of the generate button.
-        generate_prompt_btn.click(
-            fn=generate_prompt_for_ui,
-            inputs=[input_text, user_scenario_text, few_shot_dropdown],
-            outputs=[info_extract_template]
-        )
-        # Preload the page on the first load.
-        def warm_up_preview(example_name):
-            if not example_name:
-                return "", "", ""
-            return update_example_preview(example_name)
-        demo.load(
-            fn=warm_up_preview,
-            inputs=[few_shot_dropdown],
-            outputs=[example_desc_preview, example_text_preview, example_prompt_preview]
-        )
+        _create_prompt_helper_block(demo, input_text, info_extract_template)
         vector_index_btn0.click(get_vector_index_info, outputs=out).then(
             store_prompt,
             inputs=[input_text, input_schema, info_extract_template],

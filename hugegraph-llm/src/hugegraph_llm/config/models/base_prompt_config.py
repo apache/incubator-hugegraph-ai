@@ -81,7 +81,6 @@ class BasePromptConfig:
         indented_generate_extract_prompt = "\n".join(
             [f"  {line}" for line in self.generate_extract_prompt_template.splitlines()]
         ) + "\n"
-        
         # This can be extended to add storage fields according to the data needs to be stored
         yaml_content = f"""graph_schema: |
 {indented_schema}
