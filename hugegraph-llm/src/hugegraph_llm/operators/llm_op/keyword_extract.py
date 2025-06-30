@@ -100,10 +100,10 @@ class KeywordExtract:
         start_time = time.perf_counter()
         try:
             keywords = self._textrank_model.extract_keywords(self._query, self._language)
-        except {TypeError, FileNotFoundError, MemoryError, ValueError} as e:
-            log.error("TextRank Keyword extraction error: {}", e)
+        except (TypeError, FileNotFoundError, MemoryError, ValueError) as e:
+            log.error("TextRank Keyword extraction error: %s", e)
             keywords = []
-        log.debug("TextRank Keyword extraction time: {.2f}s",
+        log.debug("TextRank Keyword extraction time: %.2fs",
                   time.perf_counter() - start_time)
         return set(filter(None, keywords))
 
@@ -257,10 +257,10 @@ class MultiLingualTextRank:
             return
 
         edge_weights = defaultdict(int)
-        for i, word in enumerate(words):
+        for i, word1 in enumerate(words):
             for j in range(i + 1, i + self.window):
                 if j < len(words):
-                    word1, word2 = words[i], words[j]
+                    word2 = words[j]
                     # 确保两个词不相同，避免自环
                     if word1 != word2:
                         edge_weights[(word1, word2)] += 1
