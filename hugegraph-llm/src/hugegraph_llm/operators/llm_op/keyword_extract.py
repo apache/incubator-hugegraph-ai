@@ -149,10 +149,11 @@ class MultiLingualTextRank:
 
         # 定义停用词库，从文件加载
         self.stopwords = {'zh': {}, 'en': {}}
-        with importlib.resources.open_text(EXTRACT_STOPWORDS, 'chinese', encoding='utf-8') as f:
+        resource_path = importlib.resources.files(EXTRACT_STOPWORDS)
+        with resource_path.joinpath('chinese').open(encoding='utf-8') as f:
             # 读取文件所有行到一个列表中
             self.stopwords['zh'] = {line.strip() for line in f}
-        with importlib.resources.open_text(EXTRACT_STOPWORDS, 'english', encoding='utf-8') as f:
+        with resource_path.joinpath('english').open(encoding='utf-8') as f:
             # 读取文件所有行到一个列表中
             self.stopwords['en'] = {line.strip() for line in f}
 
