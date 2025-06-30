@@ -15,23 +15,22 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
+import importlib.resources
 import re
 import time
-from typing import Set, Dict, Any, Optional
+from collections import defaultdict
+from typing import Any, Dict, Optional, Set
 
-from hugegraph_llm.models.llms.base import BaseLLM
-from hugegraph_llm.models.llms.init_llm import LLMs
-from hugegraph_llm.config import prompt
-from hugegraph_llm.operators.common_op.nltk_helper import NLTKHelper
-from hugegraph_llm.utils.log import log
-
-import importlib.resources
 import jieba
 import jieba.posseg as pseg
 import networkx as nx
 import nltk
-from collections import defaultdict
+
+from hugegraph_llm.config import prompt
+from hugegraph_llm.models.llms.base import BaseLLM
+from hugegraph_llm.models.llms.init_llm import LLMs
+from hugegraph_llm.operators.common_op.nltk_helper import NLTKHelper
+from hugegraph_llm.utils.log import log
 
 KEYWORDS_EXTRACT_TPL = prompt.keywords_extract_prompt
 
@@ -40,14 +39,14 @@ EXTRACT_STOPWORDS = 'hugegraph_llm.resources.nltk_data.corpora.stopwords'
 
 class KeywordExtract:
     def __init__(
-            self,
-            text: Optional[str] = None,
-            llm: Optional[BaseLLM] = None,
-            max_keywords: int = 5,
-            extract_template: Optional[str] = None,
-            language: str = "en",
-            extract_method: str = "TextRank",  # 新增关键词提取方法设置
-            textrank_kwargs: Optional[Dict] = None,  # TextRank参数
+        self,
+        text: Optional[str] = None,
+        llm: Optional[BaseLLM] = None,
+        max_keywords: int = 5,
+        extract_template: Optional[str] = None,
+        language: str = "en",
+        extract_method: str = "TextRank",  # 新增关键词提取方法设置
+        textrank_kwargs: Optional[Dict] = None,  # TextRank 参数
     ):
         self._llm = llm
         self._query = text
@@ -55,7 +54,7 @@ class KeywordExtract:
         self._max_keywords = max_keywords
         self._extract_template = extract_template or KEYWORDS_EXTRACT_TPL
         self._extract_method = extract_method  # 新增关键词提取方法设置
-        self._textrank_model = MultiLingualTextRank(**textrank_kwargs)# TextRank参数
+        self._textrank_model = MultiLingualTextRank(**textrank_kwargs)  # TextRank 参数
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._query is None:
@@ -72,10 +71,10 @@ class KeywordExtract:
         self._max_keywords = context.get("max_keywords", self._max_keywords)
 
         if self._extract_method == "TextRank":
-            # 使用TextRank提取关键词
+            # 使用 TextRank 提取关键词
             keywords = self._extract_with_textrank()
         else:
-            # 使用LLM提取关键词
+            # 使用 LLM 提取关键词
             keywords = self._extract_with_llm()
         keywords = {k.replace("'", "") for k in keywords}
         context["keywords"] = list(keywords)[:self._max_keywords]
@@ -97,21 +96,22 @@ class KeywordExtract:
         return keywords
 
     def _extract_with_textrank(self) -> Set[str]:
-        """ TextRank提取模式 """
+        """ TextRank 提取模式 """
         start_time = time.perf_counter()
         try:
             keywords = self._textrank_model.extract_keywords(self._query, self._language)
-        except Exception as e:
-            log.error(f"TextRank Keyword extraction error: {str(e)}")
+        except {TypeError, FileNotFoundError, MemoryError, ValueError} as e:
+            log.error("TextRank Keyword extraction error: {}", e)
             keywords = []
-        log.debug(f"TextRank Keyword extraction time: {time.perf_counter()-start_time:.2f}s")
+        log.debug("TextRank Keyword extraction time: {.2f}s",
+                  time.perf_counter() - start_time)
         return set(filter(None, keywords))
 
     def _extract_keywords_from_response(
-            self,
-            response: str,
-            lowercase: bool = True,
-            start_token: str = "",
+        self,
+        response: str,
+        lowercase: bool = True,
+        start_token: str = "",
     ) -> Set[str]:
         keywords = []
         # use re.escape(start_token) if start_token contains special chars like */&/^ etc.
@@ -130,7 +130,8 @@ class KeywordExtract:
         for token in keywords:
             sub_tokens = re.findall(r"\w+", token)
             if len(sub_tokens) > 1:
-                results.update(w for w in sub_tokens if w not in NLTKHelper().stopwords(lang=self._language))
+                results.update(
+                    w for w in sub_tokens if w not in NLTKHelper().stopwords(lang=self._language))
         return results
 
 
@@ -146,7 +147,7 @@ class MultiLingualTextRank:
             'en': ('NN', 'NNS', 'NNP', 'NNPS', 'VB', 'VBG', 'VBN', 'VBZ')
         }
 
-        # 定义停用词库,从文件加载
+        # 定义停用词库，从文件加载
         self.stopwords = {'zh': {}, 'en': {}}
         with importlib.resources.open_text(EXTRACT_STOPWORDS, 'chinese', encoding='utf-8') as f:
             # 读取文件所有行到一个列表中
@@ -155,16 +156,16 @@ class MultiLingualTextRank:
             # 读取文件所有行到一个列表中
             self.stopwords['en'] = {line.strip() for line in f}
 
-        # 定义特殊词列表,支持用户传入自定义特殊词，防止中文分词时切分特殊单词
+        # 定义特殊词列表，支持用户传入自定义特殊词，防止中文分词时切分特殊单词
 
         self.mask_words = list(filter(None, mask_words.split(',')))
-
 
     def _preprocess(self, text, lang):
         """
         - 'en': 清理、分词、标注、过滤。
         - 'zh': 遮蔽特殊词 -> 占位符与过滤词输入 -> 清理 -> 中文分词 -> 恢复特殊词 -> 过滤。
         """
+        words = []
         if lang.startswith('zh'):
 
             # 1. 遮蔽 (Masking)
@@ -188,7 +189,8 @@ class MultiLingualTextRank:
             ]
             if self.mask_words:
                 escaped_words = [re.escape(word) for word in self.mask_words]
-                mask_words_pattern = r'(?<![a-zA-Z0-9])(' + '|'.join(escaped_words) + r')(?<![a-zA-Z0-9])'
+                mask_words_pattern = r'(?<![a-zA-Z0-9])(' + '|'.join(
+                    escaped_words) + r')(?<![a-zA-Z0-9])'
                 all_patterns = [mask_words_pattern] + all_patterns
 
             special_regex = re.compile('|'.join(all_patterns))
@@ -204,12 +206,11 @@ class MultiLingualTextRank:
             clean_tokens = final_token_regex.findall(masked_text)
             text_for_jieba = ' '.join(clean_tokens)
 
-            # 3. 在分词前，将所有占位符作为一个完整的词添加到jieba词典中
-            for placeholder in placeholder_map.keys():
+            # 3. 在分词前，将所有占位符作为一个完整的词添加到 jieba 词典中
+            for placeholder in placeholder_map:
                 jieba.add_word(placeholder, tag='SPTK')
 
             # 4. 分词与恢复
-            words = []
             stop_words = self.stopwords.get('zh', set())
             jieba_tokens = pseg.cut(text_for_jieba)
 
@@ -220,7 +221,6 @@ class MultiLingualTextRank:
                 else:
                     if len(word) > 1 and flag in self.pos_filter['zh'] and word not in stop_words:
                         words.append(word)
-            return words
 
         elif lang.startswith('en'):
 
@@ -235,7 +235,6 @@ class MultiLingualTextRank:
             tokens = combined_pattern.findall(text)
             text_for_nltk = ' '.join(tokens)
 
-            words = []
             stop_words = self.stopwords.get('en', set())
             text_for_nltk = text_for_nltk.lower()
             nltk_tokens = nltk.word_tokenize(text_for_nltk)
@@ -244,7 +243,7 @@ class MultiLingualTextRank:
             for word, flag in pos_tags:
                 if len(word) > 1 and flag in self.pos_filter['en'] and word not in stop_words:
                     words.append(word)
-            return words
+        return words
 
     def _build_graph(self, words):
         """
@@ -258,7 +257,7 @@ class MultiLingualTextRank:
             return
 
         edge_weights = defaultdict(int)
-        for i in range(len(words)):
+        for i, word in enumerate(words):
             for j in range(i + 1, i + self.window):
                 if j < len(words):
                     word1, word2 = words[i], words[j]
@@ -271,7 +270,7 @@ class MultiLingualTextRank:
 
     def _rank_nodes(self):
         """
-        运行PageRank算法
+        运行 PageRank 算法
         """
         # 如果图中没有节点，直接返回空字典
         if not self.graph or not self.graph.nodes():
@@ -290,12 +289,12 @@ class MultiLingualTextRank:
         # 2. 构建图
         self._build_graph(words)
 
-        # 3. 运行TextRank
+        # 3. 运行 TextRank
         if not self.graph or self.graph.number_of_nodes() == 0:
             return []
         ranks = self._rank_nodes()
 
-        # 4. 提取Top-K关键词
+        # 4. 提取 Top-K 关键词
         top_keywords = sorted(ranks, key=ranks.get, reverse=True)[:self.top_k]
 
         return top_keywords

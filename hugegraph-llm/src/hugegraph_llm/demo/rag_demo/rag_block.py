@@ -18,17 +18,17 @@
 # pylint: disable=E1101
 
 import os
-from typing import AsyncGenerator, Tuple, Literal, Optional
+from typing import AsyncGenerator, Literal, Optional, Tuple
 
 import gradio as gr
 import pandas as pd
 from gradio.utils import NamedString
-
-from hugegraph_llm.config import resource_path, prompt, huge_settings, llm_settings
+from hugegraph_llm.config import huge_settings, llm_settings, prompt, resource_path
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
-from hugegraph_llm.utils.decorators import with_task_id
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
+from hugegraph_llm.utils.decorators import with_task_id
 from hugegraph_llm.utils.log import log
+
 
 def rag_answer(
     text: str,

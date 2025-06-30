@@ -16,8 +16,9 @@
 # under the License.
 
 
-from typing import Dict, Any, Optional, List, Literal
+from typing import Any, Dict, List, Literal, Optional
 
+from hugegraph_llm.config import huge_settings, prompt
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.base import BaseLLM
@@ -31,8 +32,7 @@ from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
-from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_rpm
-from hugegraph_llm.config import prompt, huge_settings
+from hugegraph_llm.utils.decorators import log_operator_time, log_time, record_rpm
 
 
 class RAGPipeline:
