@@ -135,7 +135,7 @@ def _create_prompt_helper_block(demo, input_text, info_extract_template):
             inputs=[input_text, user_scenario_text, few_shot_dropdown],
             outputs=[info_extract_template]
         )
-        
+
         # Preload the page on the first load.
         def warm_up_preview(example_name):
             if not example_name:
