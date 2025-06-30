@@ -45,14 +45,13 @@ def store_prompt(doc, schema, example_prompt):
         prompt.graph_schema = schema
         prompt.extract_graph_prompt = example_prompt
         prompt.update_yaml_file()
-def generate_prompt_for_ui(source_text, scenario, example_name): 
+def generate_prompt_for_ui(source_text, scenario, example_name):
     """
     Handles the UI logic for generating a new prompt. It calls the PromptGenerate operator.
     """
     if not all([source_text, scenario, example_name]):
         gr.Warning("Please provide original text, expected scenario, and select an example!")
         return gr.update()
-
     try:
         prompt_generator = PromptGenerate(llm=LLMs().get_chat_llm())
         context = {
@@ -95,12 +94,13 @@ def update_example_preview(example_name):
             )
     except (FileNotFoundError, json.JSONDecodeError) as e:
         log.warning("Could not update example preview: %s", e)
-        pass
     return "", "", ""
 def _create_prompt_helper_block(demo, input_text, info_extract_template):
     with gr.Accordion("Assist in generating graph extraction prompts", open=True):
         gr.Markdown(
-            "Provide your **original text** and **expected scenario**, then select a reference example to generate a high-quality graph extraction prompt.")
+            "Provide your **original text** and **expected scenario**, "
+            "then select a reference example to generate a high-quality graph extraction prompt."
+        )
         user_scenario_text = gr.Textbox(
             label="Expected scenario/direction",
             info="For example: social relationships, financial knowledge graphs, etc.",
