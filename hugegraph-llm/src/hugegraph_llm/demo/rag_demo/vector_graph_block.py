@@ -45,6 +45,8 @@ def store_prompt(doc, schema, example_prompt):
         prompt.graph_schema = schema
         prompt.extract_graph_prompt = example_prompt
         prompt.update_yaml_file()
+
+
 def generate_prompt_for_ui(source_text, scenario, example_name):
     """
     Handles the UI logic for generating a new prompt. It calls the PromptGenerate operator.
@@ -95,6 +97,8 @@ def update_example_preview(example_name):
     except (FileNotFoundError, json.JSONDecodeError) as e:
         log.warning("Could not update example preview: %s", e)
     return "", "", ""
+
+
 def _create_prompt_helper_block(demo, input_text, info_extract_template):
     with gr.Accordion("Assist in generating graph extraction prompts", open=True):
         gr.Markdown(
@@ -131,6 +135,7 @@ def _create_prompt_helper_block(demo, input_text, info_extract_template):
             inputs=[input_text, user_scenario_text, few_shot_dropdown],
             outputs=[info_extract_template]
         )
+        
         # Preload the page on the first load.
         def warm_up_preview(example_name):
             if not example_name:
@@ -142,6 +147,8 @@ def _create_prompt_helper_block(demo, input_text, info_extract_template):
             inputs=[few_shot_dropdown],
             outputs=[example_desc_preview, example_text_preview, example_prompt_preview]
         )
+
+
 def create_vector_graph_block():
     # pylint: disable=no-member
     # pylint: disable=C0301
@@ -253,6 +260,7 @@ def create_vector_graph_block():
         tab_upload_text.select(fn=on_tab_select, inputs=[input_file, input_text], outputs=[input_file, input_text])
 
     return input_text, input_schema, info_extract_template
+
 
 async def timely_update_vid_embedding(interval_seconds: int = 3600):
     """
