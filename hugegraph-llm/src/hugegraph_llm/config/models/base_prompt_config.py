@@ -15,14 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 import yaml
 
-from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.anchor import get_project_root
+from hugegraph_llm.utils.log import log
 
 dir_name = os.path.dirname
 F_NAME = "config_prompt.yaml"
@@ -40,6 +40,7 @@ class BasePromptConfig:
     gremlin_generate_prompt: str = ''
     doc_input_text: str = ''
     generate_extract_prompt_template: str = ''
+
     def ensure_yaml_file_exists(self):
         current_dir = Path.cwd().resolve()
         project_root = get_project_root()

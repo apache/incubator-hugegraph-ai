@@ -18,11 +18,16 @@
 # pylint: disable=E1101
 
 import asyncio
-import os
 import json
+import os
+
 import gradio as gr
+
 from hugegraph_llm.config import huge_settings
 from hugegraph_llm.config import prompt
+from hugegraph_llm.config import resource_path
+from hugegraph_llm.models.llms.init_llm import LLMs
+from hugegraph_llm.operators.llm_op.prompt_generate import PromptGenerate
 from hugegraph_llm.utils.graph_index_utils import (
     get_graph_index_info,
     clean_all_graph_index,
@@ -34,9 +39,7 @@ from hugegraph_llm.utils.graph_index_utils import (
 from hugegraph_llm.utils.hugegraph_utils import check_graph_db_connection
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.vector_index_utils import clean_vector_index, build_vector_index, get_vector_index_info
-from hugegraph_llm.config import resource_path
-from hugegraph_llm.operators.llm_op.prompt_generate import PromptGenerate
-from hugegraph_llm.models.llms.init_llm import LLMs
+
 
 def store_prompt(doc, schema, example_prompt):
     # update env variables: doc, schema and example_prompt
@@ -59,16 +62,17 @@ def generate_prompt_for_ui(source_text, scenario, example_name):
         context = {
             "source_text": source_text,
             "scenario": scenario,
-            "example_name": example_name 
+            "example_name": example_name
         }
         result_context = prompt_generator.run(context)
-        # Presents the  result of  generating  prompt
+        # Presents the result of generating prompt
         generated_prompt = result_context.get("generated_extract_prompt", "Generation failed. Please check the logs.")
         gr.Info("Prompt generated successfully!")
         return generated_prompt
     except Exception as e:
         log.error("Error generating Prompt: %s", e, exc_info=True)
         raise gr.Error(f"Error generating Prompt: {e}") from e
+
 
 def load_example_names():
     """Load all candidate examples"""
@@ -79,6 +83,7 @@ def load_example_names():
         return [example.get("name", "Unnamed example") for example in examples]
     except (FileNotFoundError, json.JSONDecodeError):
         return ["No available examples"]
+
 
 def update_example_preview(example_name):
     """Update the display content based on the selected example name."""
@@ -129,7 +134,7 @@ def _create_prompt_helper_block(demo, input_text, info_extract_template):
             inputs=[few_shot_dropdown],
             outputs=[example_desc_preview, example_text_preview, example_prompt_preview]
         )
-        # Bind the click event of the generate button.
+        # Bind the click event of the generated button.
         generate_prompt_btn.click(
             fn=generate_prompt_for_ui,
             inputs=[input_text, user_scenario_text, few_shot_dropdown],
@@ -185,7 +190,8 @@ def create_vector_graph_block():
                         label="Docs (multi-files can be selected together)",
                         file_count="multiple",
                     )
-            input_schema = gr.Code(value=prompt.graph_schema, label="Graph Schema", language="json", lines=15, max_lines=29)
+            input_schema = gr.Code(value=prompt.graph_schema, label="Graph Schema", language="json", lines=15,
+                                   max_lines=29)
             info_extract_template = gr.Code(
                 value=prompt.extract_graph_prompt, label="Graph Extract Prompt Header", language="markdown", lines=15,
                 max_lines=29
@@ -243,7 +249,8 @@ def create_vector_graph_block():
             extract_graph, inputs=[input_file, input_text, input_schema, info_extract_template], outputs=[out]
         ).then(store_prompt, inputs=[input_text, input_schema, info_extract_template], )
 
-        graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(update_vid_embedding).then(
+        graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(
+            update_vid_embedding).then(
             store_prompt,
             inputs=[input_text, input_schema, info_extract_template],
         )
@@ -293,4 +300,3 @@ async def timely_update_vid_embedding(interval_seconds: int = 3600):
         except Exception as e:
             log.warning("Failed to execute update_vid_embedding: %s", e, exc_info=True)
         await asyncio.sleep(interval_seconds)
-        
