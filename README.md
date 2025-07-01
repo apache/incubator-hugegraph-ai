@@ -16,7 +16,7 @@
 ## 🚀 Quick Start
 
 > [!NOTE]
-> For complete deployment guide and detailed examples, please refer to [hugegraph-llm/README.md](./hugegraph-llm/README.md)
+> For a complete deployment guide and detailed examples, please refer to [hugegraph-llm/README.md](./hugegraph-llm/README.md)
 
 ### Prerequisites
 - Python 3.9+ (3.10+ recommended for hugegraph-llm)
@@ -130,7 +130,6 @@ Python client for HugeGraph operations:
 
 - [Project Homepage](https://hugegraph.apache.org/docs/quickstart/hugegraph-ai/)
 - [LLM Quick Start Guide](./hugegraph-llm/quick_start.md)
-- [API Documentation](https://hugegraph.apache.org/docs/)
 - [DeepWiki AI Documentation](https://deepwiki.com/apache/incubator-hugegraph-ai)
 
 ## 🔗 Related Projects
