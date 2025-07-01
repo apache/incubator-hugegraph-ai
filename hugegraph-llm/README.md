@@ -9,31 +9,9 @@ HugeGraph-LLM is a comprehensive toolkit that combines the power of graph databa
 ### Key Features
 - 🏗️ **Knowledge Graph Construction** - Build KGs automatically using LLMs + HugeGraph  
 - 🗣️ **Natural Language Querying** - Operate graph databases using natural language (Gremlin/Cypher)
-- 🔍 **Graph-Enhanced RAG** - Leverage knowledge graphs to improve answer accuracy (GraphRAG �� Graph Agent)
+- 🔍 **Graph-Enhanced RAG** - Leverage knowledge graphs to improve answer accuracy (GraphRAG & Graph Agent)
 
-### Architecture Overview
-
-```mermaid
-graph TB
-    A[Text/Documents] --> B[LLM Processing]
-    B --> C[Knowledge Extraction]
-    C --> D[HugeGraph Database]
-    D --> E[Graph RAG Pipeline]
-    E --> F[Enhanced Answers]
-    
-    G[User Query] --> H[Keyword Extraction]
-    H --> I[Graph Retrieval]
-    I --> J[Context Ranking]
-    J --> K[Answer Generation]
-    K --> F
-    
-    style D fill:#e1f5fe
-    style E fill:#f3e5f5
-    style F fill:#e8f5e8
-```
-
-> [!NOTE]
-> For detailed AI-generated documentation, visit our [DeepWiki](https://deepwiki.com/apache/incubator-hugegraph-ai) page.
+For detailed source code doc, visit our [DeepWiki](https://deepwiki.com/apache/incubator-hugegraph-ai) page. (Recommended)
 
 ## 📋 Prerequisites
 
