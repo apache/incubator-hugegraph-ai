@@ -95,7 +95,7 @@ def load_query_examples():
         return "[]"
 
 def load_schema_fewshot_examples():
-    """Load few-shot examples from JSON file"""
+    """Load few-shot examples from a JSON file"""
     try:
         examples_path = os.path.join(resource_path, "prompt_examples", "schema_examples.json")
         with open(examples_path, 'r', encoding='utf-8') as f:
@@ -123,7 +123,7 @@ def update_example_preview(example_name):
     return "", "", ""
 
 def _create_prompt_helper_block(demo, input_text, info_extract_template):
-    with gr.Accordion("Assist in generating graph extraction prompts", open=True):
+    with gr.Accordion("Graph Extraction Prompt Generator", open=False):
         gr.Markdown(
             "Provide your **original text** and **expected scenario**, "
             "then select a reference example to generate a high-quality graph extraction prompt."
@@ -232,10 +232,11 @@ def create_vector_graph_block():
             graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=True)
             graph_index_rebuild_bt = gr.Button("Update Vid Embedding")
 
-        with gr.Accordion("Assist in generating graph schema", open=True):
+        gr.Markdown("---")
+        with gr.Accordion("Graph Schema Generator", open=False):
             gr.Markdown(
-                "Provide **query examples** and **few-shot example**, "
-                "then click **Build Schema** to automatically generate graph schema."
+                "Provide **query examples** and **few-shot examples**, "
+                "then click **Generate Schema** to automatically create graph schema."
             )
             with gr.Row():
                 query_example = gr.Code(
@@ -252,8 +253,7 @@ def create_vector_graph_block():
                     lines=10,
                     max_lines=15
                 )
-                build_schema_bt = gr.Button("Build Schema", variant="primary")
-        gr.Markdown("---")
+                build_schema_bt = gr.Button("Generate Schema", variant="primary")
         _create_prompt_helper_block(demo, input_text, info_extract_template)
 
         vector_index_btn0.click(get_vector_index_info, outputs=out).then(
