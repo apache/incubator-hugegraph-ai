@@ -31,6 +31,7 @@ from hugegraph_llm.operators.index_op.build_vector_index import BuildVectorIndex
 from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
 from hugegraph_llm.operators.llm_op.info_extract import InfoExtract
 from hugegraph_llm.operators.llm_op.property_graph_extract import PropertyGraphExtract
+from hugegraph_llm.operators.llm_op.schema_build import SchemaBuilder
 from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_rpm
 from pyhugegraph.client import PyHugeClient
 
@@ -94,6 +95,10 @@ class KgBuilder:
 
     def print_result(self):
         self.operators.append(PrintResult())
+        return self
+
+    def build_schema(self):
+        self.operators.append(SchemaBuilder(self.llm))
         return self
 
     @log_time("total time")
