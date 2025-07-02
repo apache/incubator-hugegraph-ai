@@ -90,7 +90,7 @@ def init_rag_ui() -> gr.Interface:
         textbox_array_graph_config = create_configs_block()
 
         with gr.Tab(label="1. Build RAG Index 💡"):
-            textbox_input_text, textbox_input_schema, textbox_info_extract_template, textbox_query_example, textbox_few_shot = create_vector_graph_block()
+            textbox_input_text, textbox_input_schema, textbox_info_extract_template = create_vector_graph_block()
         with gr.Tab(label="2. (Graph)RAG & User Functions 📖"):
             (
                 textbox_inp,
@@ -119,8 +119,6 @@ def init_rag_ui() -> gr.Interface:
                 prompt.doc_input_text,
                 prompt.graph_schema,
                 prompt.extract_graph_prompt,
-                prompt.query_examples,
-                prompt.build_schema_few_shot,
                 prompt.default_question,
                 prompt.answer_prompt,
                 prompt.keywords_extract_prompt,
@@ -141,8 +139,6 @@ def init_rag_ui() -> gr.Interface:
                 textbox_input_text,
                 textbox_input_schema,
                 textbox_info_extract_template,
-                textbox_query_example,
-                textbox_few_shot,
                 textbox_inp,
                 textbox_answer_prompt_input,
                 textbox_keywords_extract_prompt_input,
