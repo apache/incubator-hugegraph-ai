@@ -1,0 +1,83 @@
+name: HugeGraph-LLM CI
+
+on:
+  push:
+    branches:
+      - 'release-*'
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+
+    steps:
+    - name: Prepare HugeGraph Server Environment
+      run: |
+        docker run -d --name=graph -p 8080:8080 -e PASSWORD=admin hugegraph/hugegraph:1.3.0
+        sleep 10
+
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Cache dependencies
+      id: cache-deps
+      uses: actions/cache@v4
+      with:
+        path: |
+          .venv
+          ~/.cache/uv
+          ~/.cache/pip
+        key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('hugegraph-llm/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-venv-${{ matrix.python-version }}-
+          ${{ runner.os }}-venv-
+
+    - name: Install dependencies
+      if: steps.cache-deps.outputs.cache-hit != 'true'
+      run: |
+        uv venv
+        source .venv/bin/activate
+        uv pip install pytest pytest-cov
+        uv pip install -r ./hugegraph-llm/requirements.txt
+        
+    # Install local hugegraph-python-client first
+    - name: Install hugegraph-python-client
+      run: |
+        source .venv/bin/activate
+        # 使用uv安装本地包
+        uv pip install -e ./hugegraph-python-client/
+        uv pip install -e ./hugegraph-llm/
+        # 验证安装
+        echo "=== 已安装的包 ==="
+        uv pip list | grep hugegraph
+        echo "=== Python路径 ==="
+        python -c "import sys; [print(p) for p in sys.path]"
+
+    - name: Run unit tests
+      run: |
+        source .venv/bin/activate
+        export PYTHONPATH=$(pwd)/hugegraph-llm/src
+        export SKIP_EXTERNAL_SERVICES=true
+        cd hugegraph-llm
+        python -m pytest src/tests/operators/hugegraph_op/ src/tests/config/ src/tests/document/ src/tests/middleware/ -v
+
+    - name: Run integration tests
+      run: |
+        source .venv/bin/activate
+        export PYTHONPATH=$(pwd)/hugegraph-llm/src
+        export SKIP_EXTERNAL_SERVICES=true
+        cd hugegraph-llm
+        python -m pytest src/tests/integration/test_graph_rag_pipeline.py -v
