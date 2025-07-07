@@ -42,7 +42,7 @@ class SchemaBuilder:
             1. Few‐Shot Schema Examples (already formatted as valid HugeGraph schema JSON):
             {few_shot_schema}
 
-            2. Query Examples (each with a "description" and a Gremlin traversal):
+            2. Query Examples (each with a question description):
             {query_examples}
 
             3. Raw Data Samples (plain text records to model as vertices/edges):
@@ -57,15 +57,12 @@ class SchemaBuilder:
     def _format_raw_texts(self, raw_texts: List[str]) -> str:
         return "\n".join([f"- {text}" for text in raw_texts])
 
-    def _format_query_examples(self, query_examples: List[Dict[str, str]]) -> str:
+    def _format_query_examples(self, query_examples: List[str]) -> str:
         if not query_examples:
             return "None"
         examples = []
         for example in query_examples:
-            examples.append(
-                f"- description: {example.get('description', '')}\n"
-                f"  gremlin: {example.get('gremlin', '')}"
-            )
+            examples.append(f"- {example}")
         return "\n".join(examples)
 
     def _format_few_shot_schema(self, few_shot_schema: Dict[str, Any]) -> str:
@@ -117,7 +114,7 @@ class SchemaBuilder:
         if "raw_texts" not in context or not isinstance(context["raw_texts"], list):
             raise ValueError("'raw_texts' must be a list[str]")
         if "query_examples" not in context or not isinstance(context["query_examples"], list):
-            raise ValueError("'query_examples' must be a list[dict]")
+            raise ValueError("'query_examples' must be a list[str]")
         if "few_shot_schema" not in context or not isinstance(context["few_shot_schema"], dict):
             raise ValueError("'few_shot_schema' must be a dict")
 
