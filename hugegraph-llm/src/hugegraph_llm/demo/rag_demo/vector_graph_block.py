@@ -303,13 +303,14 @@ def create_vector_graph_block():
             inputs=[input_text, input_schema, info_extract_template],
         )
 
+        # TODO: we should store the examples after the user changed them.
         build_schema_bt.click(
             _build_schema_and_provide_feedback,
             inputs=[input_text, query_example, few_shot],
             outputs=[input_schema]
         ).then(
             store_prompt,
-            inputs=[input_text, input_schema, info_extract_template],
+            inputs=[input_text, input_schema, info_extract_template],  # TODO: Store the updated examples
         )
 
         def on_tab_select(input_f, input_t, evt: gr.SelectData):
