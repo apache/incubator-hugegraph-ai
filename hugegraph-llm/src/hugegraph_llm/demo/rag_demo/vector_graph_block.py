@@ -172,6 +172,13 @@ def _create_prompt_helper_block(demo, input_text, info_extract_template):
         )
 
 
+def _build_schema_and_provide_feedback(input_text, query_example, few_shot):
+    gr.Info("Generating schema, please wait...")
+    # Call the original build_schema function
+    generated_schema = build_schema(input_text, query_example, few_shot)
+    gr.Info("Schema generated successfully!")
+    return generated_schema
+
 def create_vector_graph_block():
     # pylint: disable=no-member
     # pylint: disable=C0301
@@ -297,7 +304,7 @@ def create_vector_graph_block():
         )
 
         build_schema_bt.click(
-            build_schema,
+            _build_schema_and_provide_feedback,
             inputs=[input_text, query_example, few_shot],
             outputs=[input_schema]
         ).then(
