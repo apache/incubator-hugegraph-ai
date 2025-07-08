@@ -57,13 +57,17 @@ jobs:
     - name: Install hugegraph-python-client
       run: |
         source .venv/bin/activate
-        # 使用uv安装本地包
+    # Install local hugegraph-python-client first
+    - name: Install hugegraph-python-client
+      run: |
+        source .venv/bin/activate
+        # Use uv to install local package
         uv pip install -e ./hugegraph-python-client/
         uv pip install -e ./hugegraph-llm/
-        # 验证安装
-        echo "=== 已安装的包 ==="
+        # Verify installation
+        echo "=== Installed packages ==="
         uv pip list | grep hugegraph
-        echo "=== Python路径 ==="
+        echo "=== Python path ==="
         python -c "import sys; [print(p) for p in sys.path]"
 
     - name: Run unit tests
