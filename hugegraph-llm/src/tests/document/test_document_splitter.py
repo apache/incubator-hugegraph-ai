@@ -112,14 +112,14 @@ class TestChunkSplitter(unittest.TestCase):
 
     def test_invalid_split_type(self):
         # Test with invalid split type
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(ValueError) as cm:
             ChunkSplitter(split_type="invalid", language="en")
 
-        self.assertTrue("Arg `type` must be paragraph, sentence!" in str(context.exception))
+        self.assertTrue("Arg `type` must be paragraph, sentence!" in str(cm.exception))
 
     def test_invalid_language(self):
         # Test with invalid language
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(ValueError) as cm:
             ChunkSplitter(split_type="paragraph", language="fr")
 
-        self.assertTrue("Argument `language` must be zh or en!" in str(context.exception))
+        self.assertTrue("Argument `language` must be zh or en!" in str(cm.exception))

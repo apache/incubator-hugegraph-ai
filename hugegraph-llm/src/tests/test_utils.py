@@ -21,17 +21,17 @@ from unittest.mock import MagicMock, patch
 from hugegraph_llm.document import Document
 
 
-# 检查是否应该跳过外部服务测试
+# Check if external service tests should be skipped
 def should_skip_external():
     return os.environ.get("SKIP_EXTERNAL_SERVICES") == "true"
 
 
-# 创建模拟的 Ollama 嵌入响应
+# Create mock Ollama embedding response
 def mock_ollama_embedding(dimension=1024):
     return {"embedding": [0.1] * dimension}
 
 
-# 创建模拟的 OpenAI 嵌入响应
+# Create mock OpenAI embedding response
 def mock_openai_embedding(dimension=1536):
     class MockResponse:
         def __init__(self, data):
@@ -40,8 +40,8 @@ def mock_openai_embedding(dimension=1536):
     return MockResponse([{"embedding": [0.1] * dimension, "index": 0}])
 
 
-# 创建模拟的 OpenAI 聊天响应
-def mock_openai_chat_response(text="模拟的 OpenAI 响应"):
+# Create mock OpenAI chat response
+def mock_openai_chat_response(text="Mock OpenAI response"):
     class MockResponse:
         def __init__(self, content):
             self.choices = [MagicMock()]
@@ -50,12 +50,12 @@ def mock_openai_chat_response(text="模拟的 OpenAI 响应"):
     return MockResponse(text)
 
 
-# 创建模拟的 Ollama 聊天响应
-def mock_ollama_chat_response(text="模拟的 Ollama 响应"):
+# Create mock Ollama chat response
+def mock_ollama_chat_response(text="Mock Ollama response"):
     return {"message": {"content": text}}
 
 
-# 装饰器，用于模拟 Ollama 嵌入
+# Decorator for mocking Ollama embedding
 def with_mock_ollama_embedding(func):
     @patch("ollama._client.Client._request_raw")
     def wrapper(self, mock_request, *args, **kwargs):
@@ -65,7 +65,7 @@ def with_mock_ollama_embedding(func):
     return wrapper
 
 
-# 装饰器，用于模拟 OpenAI 嵌入
+# Decorator for mocking OpenAI embedding
 def with_mock_openai_embedding(func):
     @patch("openai.resources.embeddings.Embeddings.create")
     def wrapper(self, mock_create, *args, **kwargs):
@@ -75,7 +75,7 @@ def with_mock_openai_embedding(func):
     return wrapper
 
 
-# 装饰器，用于模拟 Ollama LLM 客户端
+# Decorator for mocking Ollama LLM client
 def with_mock_ollama_client(func):
     @patch("ollama._client.Client._request_raw")
     def wrapper(self, mock_request, *args, **kwargs):
@@ -85,7 +85,7 @@ def with_mock_ollama_client(func):
     return wrapper
 
 
-# 装饰器，用于模拟 OpenAI LLM 客户端
+# Decorator for mocking OpenAI LLM client
 def with_mock_openai_client(func):
     @patch("openai.resources.chat.completions.Completions.create")
     def wrapper(self, mock_create, *args, **kwargs):
@@ -95,7 +95,7 @@ def with_mock_openai_client(func):
     return wrapper
 
 
-# 下载 NLTK 资源的辅助函数
+# Helper function to download NLTK resources
 def ensure_nltk_resources():
     import nltk
 
@@ -105,12 +105,12 @@ def ensure_nltk_resources():
         nltk.download("stopwords", quiet=True)
 
 
-# 创建测试文档的辅助函数
-def create_test_document(content="这是一个测试文档"):
+# Helper function to create test document
+def create_test_document(content="This is a test document"):
     return Document(content=content, metadata={"source": "test"})
 
 
-# 创建测试向量索引的辅助函数
+# Helper function to create test vector index
 def create_test_vector_index(dimension=1536):
     from hugegraph_llm.indices.vector_index import VectorIndex
 

@@ -38,15 +38,17 @@ class TestUseTimeMiddlewareDispatch(unittest.IsolatedAsyncioTestCase):
         self.middleware = UseTimeMiddleware(self.mock_app)
 
         # Create a mock request with necessary attributes
-        self.mock_request = MagicMock(spec=Request)
+        # Use plain MagicMock to avoid AttributeError with FastAPI's read-only properties
+        self.mock_request = MagicMock()
         self.mock_request.method = "GET"
         self.mock_request.query_params = {}
-        self.mock_request.client = MagicMock()
-        self.mock_request.client.host = "127.0.0.1"
+        # Create a simple client object to avoid read-only property issues
+        self.mock_request.client = type("Client", (), {"host": "127.0.0.1"})()
         self.mock_request.url = "http://localhost:8000/api"
 
         # Create a mock response with necessary attributes
-        self.mock_response = MagicMock(spec=Response)
+        # Use plain MagicMock to avoid AttributeError with FastAPI's read-only properties
+        self.mock_response = MagicMock()
         self.mock_response.status_code = 200
         self.mock_response.headers = {}
 

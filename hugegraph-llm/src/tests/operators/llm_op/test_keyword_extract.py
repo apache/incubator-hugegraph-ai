@@ -146,11 +146,11 @@ class TestKeywordExtract(unittest.TestCase):
         context = {}
 
         # Call the method and expect an assertion error
-        with self.assertRaises(AssertionError) as context:
+        with self.assertRaises(AssertionError) as cm:
             extractor.run({})
 
         # Verify the assertion message
-        self.assertIn("No query for keywords extraction", str(context.exception))
+        self.assertIn("No query for keywords extraction", str(cm.exception))
 
     @patch("hugegraph_llm.operators.llm_op.keyword_extract.LLMs")
     def test_run_with_invalid_llm_raises_assertion_error(self, mock_llms_class):
@@ -164,11 +164,11 @@ class TestKeywordExtract(unittest.TestCase):
         extractor = KeywordExtract(text=self.query)
 
         # Call the method and expect an assertion error
-        with self.assertRaises(AssertionError) as context:
+        with self.assertRaises(AssertionError) as cm:
             extractor.run({})
 
         # Verify the assertion message
-        self.assertIn("Invalid LLM Object", str(context.exception))
+        self.assertIn("Invalid LLM Object", str(cm.exception))
 
     @patch("hugegraph_llm.operators.common_op.nltk_helper.NLTKHelper.stopwords")
     def test_run_with_context_parameters(self, mock_stopwords):

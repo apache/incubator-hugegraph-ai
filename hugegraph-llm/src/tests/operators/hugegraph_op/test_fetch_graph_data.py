@@ -119,23 +119,34 @@ class TestFetchGraphData(unittest.TestCase):
         # Verify the result
         self.assertEqual(result, {})
 
-    @patch("hugegraph_llm.operators.hugegraph_op.fetch_graph_data.FetchGraphData.run")
-    def test_run_with_partial_result(self, mock_run):
+    def test_run_with_partial_result(self):
         """Test run method with partial result from gremlin."""
-        # Setup mock to return a predefined result
-        mock_run.return_value = {"vertex_num": 100, "edge_num": 200}
+        # Setup mock to return partial result (missing some keys)
+        partial_result = {
+            "data": [
+                {"vertex_num": 100},
+                {"edge_num": 200},
+                {},  # Missing vertices
+                {},  # Missing edges
+                {"note": "Only ≤10000 VIDs and ≤ 200 EIDs for brief overview ."}
+            ]
+        }
+        self.mock_gremlin.exec.return_value = partial_result
 
-        # Call the method directly through the mock
-        result = mock_run({})
+        # Call the method
+        result = self.fetcher.run({})
 
-        # Verify the result
+        # Verify the result - should handle missing keys gracefully
         self.assertIn("vertex_num", result)
         self.assertEqual(result["vertex_num"], 100)
         self.assertIn("edge_num", result)
         self.assertEqual(result["edge_num"], 200)
-        self.assertNotIn("vertices", result)
-        self.assertNotIn("edges", result)
-        self.assertNotIn("note", result)
+        self.assertIn("vertices", result)
+        self.assertIsNone(result["vertices"])  # Should be None for missing key
+        self.assertIn("edges", result)
+        self.assertIsNone(result["edges"])  # Should be None for missing key
+        self.assertIn("note", result)
+        self.assertEqual(result["note"], "Only ≤10000 VIDs and ≤ 200 EIDs for brief overview .")
 
 
 if __name__ == "__main__":

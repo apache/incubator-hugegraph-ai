@@ -23,65 +23,65 @@ import sys
 import unittest
 from unittest.mock import patch
 
-# 添加父级目录到sys.path以便导入test_utils
+# Add parent directory to sys.path to import test_utils
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from test_utils import create_test_document, should_skip_external, with_mock_openai_client
 
 
-# 创建模拟类，替代缺失的模块
+# Create mock classes to replace missing modules
 class OpenAILLM:
-    """模拟的OpenAILLM类"""
+    """Mock OpenAILLM class"""
 
     def __init__(self, api_key=None, model=None):
         self.api_key = api_key
         self.model = model or "gpt-3.5-turbo"
 
     def generate(self, prompt):
-        # 返回一个模拟的回答
-        return f"这是对'{prompt}'的模拟回答"
+        # Return a mock response
+        return f"This is a mock response to '{prompt}'"
 
 
 class KGConstructor:
-    """模拟的KGConstructor类"""
+    """Mock KGConstructor class"""
 
     def __init__(self, llm, schema):
         self.llm = llm
         self.schema = schema
 
     def extract_entities(self, document):
-        # 模拟实体提取
+        # Mock entity extraction
         if "张三" in document.content:
             return [
-                {"type": "Person", "name": "张三", "properties": {"occupation": "软件工程师"}},
+                {"type": "Person", "name": "张三", "properties": {"occupation": "Software Engineer"}},
                 {
                     "type": "Company",
-                    "name": "ABC公司",
-                    "properties": {"industry": "科技", "location": "北京"},
+                    "name": "ABC Company",
+                    "properties": {"industry": "Technology", "location": "Beijing"},
                 },
             ]
         if "李四" in document.content:
             return [
-                {"type": "Person", "name": "李四", "properties": {"occupation": "数据科学家"}},
-                {"type": "Person", "name": "张三", "properties": {"occupation": "软件工程师"}},
+                {"type": "Person", "name": "李四", "properties": {"occupation": "Data Scientist"}},
+                {"type": "Person", "name": "张三", "properties": {"occupation": "Software Engineer"}},
             ]
         if "ABC公司" in document.content:
             return [
                 {
                     "type": "Company",
-                    "name": "ABC公司",
-                    "properties": {"industry": "科技", "location": "北京"},
+                    "name": "ABC Company",
+                    "properties": {"industry": "Technology", "location": "Beijing"},
                 }
             ]
         return []
 
     def extract_relations(self, document):
-        # 模拟关系提取
+        # Mock relation extraction
         if "张三" in document.content and "ABC公司" in document.content:
             return [
                 {
                     "source": {"type": "Person", "name": "张三"},
                     "relation": "works_for",
-                    "target": {"type": "Company", "name": "ABC公司"},
+                    "target": {"type": "Company", "name": "ABC Company"},
                 }
             ]
         if "李四" in document.content and "张三" in document.content:
@@ -95,16 +95,16 @@ class KGConstructor:
         return []
 
     def construct_from_documents(self, documents):
-        # 模拟知识图谱构建
+        # Mock knowledge graph construction
         entities = []
         relations = []
 
-        # 收集所有实体和关系
+        # Collect all entities and relations
         for doc in documents:
             entities.extend(self.extract_entities(doc))
             relations.extend(self.extract_relations(doc))
 
-        # 去重
+        # Deduplicate
         unique_entities = []
         entity_names = set()
         for entity in entities:
@@ -116,132 +116,109 @@ class KGConstructor:
 
 
 class TestKGConstruction(unittest.TestCase):
-    """测试知识图谱构建的集成测试"""
+    """Integration tests for knowledge graph construction"""
 
     def setUp(self):
-        """测试前的准备工作"""
-        # 如果需要跳过外部服务测试，则跳过
+        """Setup work before testing"""
+        # Skip if external service tests should be skipped
         if should_skip_external():
-            self.skipTest("跳过需要外部服务的测试")
+            self.skipTest("Skipping tests that require external services")
 
-        # 加载测试模式
+        # Load test schema
         schema_path = os.path.join(os.path.dirname(__file__), "../data/kg/schema.json")
         with open(schema_path, "r", encoding="utf-8") as f:
             self.schema = json.load(f)
 
-        # 创建测试文档
+        # Create test documents
         self.test_docs = [
-            create_test_document("张三是一名软件工程师，他在ABC公司工作。"),
-            create_test_document("李四是张三的同事，他是一名数据科学家。"),
-            create_test_document("ABC公司是一家科技公司，总部位于北京。"),
+            create_test_document("张三 is a software engineer working at ABC Company."),
+            create_test_document("李四 is 张三's colleague and works as a data scientist."),
+            create_test_document("ABC Company is a tech company headquartered in Beijing."),
         ]
 
-        # 创建LLM模型
+        # Create LLM model
         self.llm = OpenAILLM()
 
-        # 创建知识图谱构建器
+        # Create knowledge graph constructor
         self.kg_constructor = KGConstructor(llm=self.llm, schema=self.schema)
 
     @with_mock_openai_client
     def test_entity_extraction(self, *args):
-        """测试实体提取"""
-        # 模拟LLM返回的实体提取结果
-        mock_entities = [
-            {"type": "Person", "name": "张三", "properties": {"occupation": "软件工程师"}},
-            {
-                "type": "Company",
-                "name": "ABC公司",
-                "properties": {"industry": "科技", "location": "北京"},
-            },
-        ]
+        """Test entity extraction"""
+        # Extract entities from document
+        doc = self.test_docs[0]
+        entities = self.kg_constructor.extract_entities(doc)
 
-        # 模拟LLM的generate方法
-        with patch.object(self.llm, "generate", return_value=json.dumps(mock_entities)):
-            # 从文档中提取实体
-            doc = self.test_docs[0]
-            entities = self.kg_constructor.extract_entities(doc)
-
-            # 验证提取的实体
-            self.assertEqual(len(entities), 2)
-            self.assertEqual(entities[0]["name"], "张三")
-            self.assertEqual(entities[1]["name"], "ABC公司")
+        # Verify extracted entities
+        self.assertEqual(len(entities), 2)
+        self.assertEqual(entities[0]["name"], "张三")
+        self.assertEqual(entities[1]["name"], "ABC Company")
 
     @with_mock_openai_client
     def test_relation_extraction(self, *args):
-        """测试关系提取"""
-        # 模拟LLM返回的关系提取结果
-        mock_relations = [
-            {
-                "source": {"type": "Person", "name": "张三"},
-                "relation": "works_for",
-                "target": {"type": "Company", "name": "ABC公司"},
-            }
-        ]
+        """Test relation extraction"""
+        # Extract relations from document
+        doc = self.test_docs[0]
+        relations = self.kg_constructor.extract_relations(doc)
 
-        # 模拟LLM的generate方法
-        with patch.object(self.llm, "generate", return_value=json.dumps(mock_relations)):
-            # 从文档中提取关系
-            doc = self.test_docs[0]
-            relations = self.kg_constructor.extract_relations(doc)
-
-            # 验证提取的关系
-            self.assertEqual(len(relations), 1)
-            self.assertEqual(relations[0]["source"]["name"], "张三")
-            self.assertEqual(relations[0]["relation"], "works_for")
-            self.assertEqual(relations[0]["target"]["name"], "ABC公司")
+        # Verify extracted relations
+        self.assertEqual(len(relations), 1)
+        self.assertEqual(relations[0]["source"]["name"], "张三")
+        self.assertEqual(relations[0]["relation"], "works_for")
+        self.assertEqual(relations[0]["target"]["name"], "ABC Company")
 
     @with_mock_openai_client
     def test_kg_construction_end_to_end(self, *args):
-        """测试知识图谱构建的端到端流程"""
-        # 模拟实体和关系提取
+        """Test end-to-end knowledge graph construction process"""
+        # Mock entity and relation extraction
         mock_entities = [
-            {"type": "Person", "name": "张三", "properties": {"occupation": "软件工程师"}},
-            {"type": "Company", "name": "ABC公司", "properties": {"industry": "科技"}},
+            {"type": "Person", "name": "张三", "properties": {"occupation": "Software Engineer"}},
+            {"type": "Company", "name": "ABC Company", "properties": {"industry": "Technology"}},
         ]
 
         mock_relations = [
             {
                 "source": {"type": "Person", "name": "张三"},
                 "relation": "works_for",
-                "target": {"type": "Company", "name": "ABC公司"},
+                "target": {"type": "Company", "name": "ABC Company"},
             }
         ]
 
-        # 模拟KG构建器的方法
+        # Mock KG constructor methods
         with patch.object(
             self.kg_constructor, "extract_entities", return_value=mock_entities
         ), patch.object(self.kg_constructor, "extract_relations", return_value=mock_relations):
 
-            # 构建知识图谱
+            # Construct knowledge graph
             kg = self.kg_constructor.construct_from_documents(self.test_docs)
 
-            # 验证知识图谱
+            # Verify knowledge graph
             self.assertIsNotNone(kg)
             self.assertEqual(len(kg["entities"]), 2)
             self.assertEqual(len(kg["relations"]), 1)
 
-            # 验证实体
+            # Verify entities
             entity_names = [e["name"] for e in kg["entities"]]
             self.assertIn("张三", entity_names)
-            self.assertIn("ABC公司", entity_names)
+            self.assertIn("ABC Company", entity_names)
 
-            # 验证关系
+            # Verify relations
             relation = kg["relations"][0]
             self.assertEqual(relation["source"]["name"], "张三")
             self.assertEqual(relation["relation"], "works_for")
-            self.assertEqual(relation["target"]["name"], "ABC公司")
+            self.assertEqual(relation["target"]["name"], "ABC Company")
 
     def test_schema_validation(self):
-        """测试模式验证"""
-        # 验证模式结构
+        """Test schema validation"""
+        # Verify schema structure
         self.assertIn("vertices", self.schema)
         self.assertIn("edges", self.schema)
 
-        # 验证实体类型
+        # Verify entity types
         vertex_labels = [v["vertex_label"] for v in self.schema["vertices"]]
         self.assertIn("person", vertex_labels)
 
-        # 验证关系类型
+        # Verify relation types
         edge_labels = [e["edge_label"] for e in self.schema["edges"]]
         self.assertIn("works_at", edge_labels)
 

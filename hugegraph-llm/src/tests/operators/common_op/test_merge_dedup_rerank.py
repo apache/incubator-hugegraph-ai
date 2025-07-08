@@ -28,8 +28,11 @@ from hugegraph_llm.operators.common_op.merge_dedup_rerank import (
 )
 
 
-class TestMergeDedupRerank(unittest.TestCase):
+class BaseMergeDedupRerankTest(unittest.TestCase):
+    """Base test class with common setup and test data."""
+
     def setUp(self):
+        """Set up common test fixtures."""
         self.mock_embedding = MagicMock(spec=BaseEmbedding)
         self.query = "What is artificial intelligence?"
         self.vector_results = [
@@ -45,6 +48,10 @@ class TestMergeDedupRerank(unittest.TestCase):
             "Deep learning is a type of machine learning based on artificial neural networks.",
         ]
 
+
+class TestMergeDedupRerankInit(BaseMergeDedupRerankTest):
+    """Test initialization and basic functionality."""
+
     def test_init_with_defaults(self):
         """Test initialization with default values."""
         merger = MergeDedupRerank(self.mock_embedding)
@@ -54,8 +61,12 @@ class TestMergeDedupRerank(unittest.TestCase):
         self.assertFalse(merger.near_neighbor_first)
         self.assertIsNone(merger.custom_related_information)
 
-    def test_init_with_parameters(self):
+    @patch("hugegraph_llm.operators.common_op.merge_dedup_rerank.llm_settings")
+    def test_init_with_parameters(self, mock_llm_settings):
         """Test initialization with provided parameters."""
+        # Mock the reranker_type to allow reranker method
+        mock_llm_settings.reranker_type = "mock_reranker"
+
         merger = MergeDedupRerank(
             self.mock_embedding,
             topk_return_results=5,
@@ -81,6 +92,10 @@ class TestMergeDedupRerank(unittest.TestCase):
         with self.assertRaises(ValueError):
             MergeDedupRerank(self.mock_embedding, priority=True)
 
+
+class TestMergeDedupRerankBleu(BaseMergeDedupRerankTest):
+    """Test BLEU scoring and ranking functionality."""
+    
     def test_get_bleu_score(self):
         """Test the get_bleu_score function."""
         query = "artificial intelligence"
@@ -119,9 +134,17 @@ class TestMergeDedupRerank(unittest.TestCase):
         mock_bleu_rerank.assert_called_once()
         self.assertEqual(len(reranked), 2)
 
+
+class TestMergeDedupRerankReranker(BaseMergeDedupRerankTest):
+    """Test external reranker integration."""
+    
+    @patch("hugegraph_llm.operators.common_op.merge_dedup_rerank.llm_settings")
     @patch("hugegraph_llm.operators.common_op.merge_dedup_rerank.Rerankers")
-    def test_dedup_and_rerank_reranker(self, mock_rerankers_class):
+    def test_dedup_and_rerank_reranker(self, mock_rerankers_class, mock_llm_settings):
         """Test the _dedup_and_rerank method with reranker method."""
+        # Mock the reranker_type to allow reranker method
+        mock_llm_settings.reranker_type = "mock_reranker"
+        
         # Setup mock for reranker
         mock_reranker = MagicMock()
         mock_reranker.get_rerank_lists.return_value = ["result3", "result1"]
@@ -141,6 +164,69 @@ class TestMergeDedupRerank(unittest.TestCase):
         self.assertEqual(len(reranked), 2)
         self.assertEqual(reranked[0], "result3")
 
+    @patch("hugegraph_llm.operators.common_op.merge_dedup_rerank.llm_settings")
+    @patch("hugegraph_llm.operators.common_op.merge_dedup_rerank.Rerankers")
+    def test_rerank_with_vertex_degree(self, mock_rerankers_class, mock_llm_settings):
+        """Test the _rerank_with_vertex_degree method."""
+        # Mock the reranker_type to allow reranker method
+        mock_llm_settings.reranker_type = "mock_reranker"
+        
+        # Setup mock for reranker
+        mock_reranker = MagicMock()
+        mock_reranker.get_rerank_lists.side_effect = [
+            ["vertex1_1", "vertex1_2"],
+            ["vertex2_1", "vertex2_2"],
+        ]
+        mock_rerankers_instance = MagicMock()
+        mock_rerankers_instance.get_reranker.return_value = mock_reranker
+        mock_rerankers_class.return_value = mock_rerankers_instance
+
+        # Create merger with reranker method and near_neighbor_first
+        merger = MergeDedupRerank(self.mock_embedding, method="reranker", near_neighbor_first=True)
+
+        # Create test data
+        results = ["result1", "result2"]
+        vertex_degree_list = [["vertex1_1", "vertex1_2"], ["vertex2_1", "vertex2_2"]]
+        knowledge_with_degree = {
+            "result1": ["vertex1_1", "vertex2_1"],
+            "result2": ["vertex1_2", "vertex2_2"],
+        }
+
+        # Call the method
+        reranked = merger._rerank_with_vertex_degree(
+            self.query, results, 2, vertex_degree_list, knowledge_with_degree
+        )
+
+        # Verify that reranker was called for each vertex degree list
+        self.assertEqual(mock_reranker.get_rerank_lists.call_count, 2)
+
+        # Verify the results
+        self.assertEqual(len(reranked), 2)
+
+    def test_rerank_with_vertex_degree_no_list(self):
+        """Test the _rerank_with_vertex_degree method with no vertex degree list."""
+        # Create merger
+        merger = MergeDedupRerank(self.mock_embedding)
+
+        # Mock the _dedup_and_rerank method
+        merger._dedup_and_rerank = MagicMock()
+        merger._dedup_and_rerank.return_value = ["result1", "result2"]
+
+        # Call the method with empty vertex_degree_list
+        reranked = merger._rerank_with_vertex_degree(
+            self.query, ["result1", "result2"], 2, [], {}
+        )
+
+        # Verify that _dedup_and_rerank was called
+        merger._dedup_and_rerank.assert_called_once()
+
+        # Verify the results
+        self.assertEqual(reranked, ["result1", "result2"])
+
+
+class TestMergeDedupRerankRun(BaseMergeDedupRerankTest):
+    """Test main run functionality with different search configurations."""
+    
     def test_run_with_vector_and_graph_search(self):
         """Test the run method with both vector and graph search."""
         # Create merger
@@ -242,61 +328,6 @@ class TestMergeDedupRerank(unittest.TestCase):
         # Verify the results
         self.assertEqual(result["vector_result"], [])
         self.assertEqual(result["graph_result"], ["graph1", "graph2", "graph3"])
-
-    @patch("hugegraph_llm.operators.common_op.merge_dedup_rerank.Rerankers")
-    def test_rerank_with_vertex_degree(self, mock_rerankers_class):
-        """Test the _rerank_with_vertex_degree method."""
-        # Setup mock for reranker
-        mock_reranker = MagicMock()
-        mock_reranker.get_rerank_lists.side_effect = [
-            ["vertex1_1", "vertex1_2"],
-            ["vertex2_1", "vertex2_2"],
-        ]
-        mock_rerankers_instance = MagicMock()
-        mock_rerankers_instance.get_reranker.return_value = mock_reranker
-        mock_rerankers_class.return_value = mock_rerankers_instance
-
-        # Create merger with reranker method and near_neighbor_first
-        merger = MergeDedupRerank(self.mock_embedding, method="reranker", near_neighbor_first=True)
-
-        # Create test data
-        results = ["result1", "result2"]
-        vertex_degree_list = [["vertex1_1", "vertex1_2"], ["vertex2_1", "vertex2_2"]]
-        knowledge_with_degree = {
-            "result1": ["vertex1_1", "vertex2_1"],
-            "result2": ["vertex1_2", "vertex2_2"],
-        }
-
-        # Call the method
-        reranked = merger._rerank_with_vertex_degree(
-            self.query, results, 2, vertex_degree_list, knowledge_with_degree
-        )
-
-        # Verify that reranker was called for each vertex degree list
-        self.assertEqual(mock_reranker.get_rerank_lists.call_count, 2)
-
-        # Verify the results
-        self.assertEqual(len(reranked), 2)
-
-    def test_rerank_with_vertex_degree_no_list(self):
-        """Test the _rerank_with_vertex_degree method with no vertex degree list."""
-        # Create merger
-        merger = MergeDedupRerank(self.mock_embedding)
-
-        # Mock the _dedup_and_rerank method
-        merger._dedup_and_rerank = MagicMock()
-        merger._dedup_and_rerank.return_value = ["result1", "result2"]
-
-        # Call the method with empty vertex_degree_list
-        reranked = merger._rerank_with_vertex_degree(
-            self.query, ["result1", "result2"], 2, [], {}
-        )
-
-        # Verify that _dedup_and_rerank was called
-        merger._dedup_and_rerank.assert_called_once()
-
-        # Verify the results
-        self.assertEqual(reranked, ["result1", "result2"])
 
 
 if __name__ == "__main__":

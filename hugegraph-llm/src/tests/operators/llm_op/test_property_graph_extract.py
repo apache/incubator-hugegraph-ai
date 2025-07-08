@@ -62,45 +62,52 @@ class TestPropertyGraphExtract(unittest.TestCase):
 
         # Sample LLM responses
         self.llm_responses = [
-            """[
-                {
-                    "type": "vertex",
-                    "label": "person",
-                    "properties": {
-                        "name": "Tom Hanks",
-                        "age": "1956"
-                    }
-                }
-            ]""",
-            """[
-                {
-                    "type": "vertex",
-                    "label": "movie",
-                    "properties": {
-                        "title": "Forrest Gump",
-                        "year": "1994"
-                    }
-                },
-                {
-                    "type": "edge",
-                    "label": "acted_in",
-                    "properties": {
-                        "role": "Forrest Gump"
-                    },
-                    "source": {
+            """{
+                "vertices": [
+                    {
+                        "type": "vertex",
                         "label": "person",
                         "properties": {
-                            "name": "Tom Hanks"
-                        }
-                    },
-                    "target": {
-                        "label": "movie",
-                        "properties": {
-                            "title": "Forrest Gump"
+                            "name": "Tom Hanks",
+                            "age": "1956"
                         }
                     }
-                }
-            ]""",
+                ],
+                "edges": []
+            }""",
+            """{
+                "vertices": [
+                    {
+                        "type": "vertex",
+                        "label": "movie",
+                        "properties": {
+                            "title": "Forrest Gump",
+                            "year": "1994"
+                        }
+                    }
+                ],
+                "edges": [
+                    {
+                        "type": "edge",
+                        "label": "acted_in",
+                        "properties": {
+                            "role": "Forrest Gump"
+                        },
+                        "source": {
+                            "label": "person",
+                            "properties": {
+                                "name": "Tom Hanks"
+                            }
+                        },
+                        "target": {
+                            "label": "movie",
+                            "properties": {
+                                "title": "Forrest Gump"
+                            }
+                        }
+                    }
+                ]
+            }""",
         ]
 
     def test_init(self):
@@ -211,15 +218,18 @@ class TestPropertyGraphExtract(unittest.TestCase):
         extractor = PropertyGraphExtract(llm=self.mock_llm)
 
         # JSON with invalid item type
-        text = """[
-            {
-                "type": "invalid_type",
-                "label": "person",
-                "properties": {
-                    "name": "Tom Hanks"
+        text = """{
+            "vertices": [
+                {
+                    "type": "invalid_type",
+                    "label": "person",
+                    "properties": {
+                        "name": "Tom Hanks"
+                    }
                 }
-            }
-        ]"""
+            ],
+            "edges": []
+        }"""
 
         result = extractor._extract_and_filter_label(self.schema, text)
 
@@ -230,15 +240,18 @@ class TestPropertyGraphExtract(unittest.TestCase):
         extractor = PropertyGraphExtract(llm=self.mock_llm)
 
         # JSON with invalid label
-        text = """[
-            {
-                "type": "vertex",
-                "label": "invalid_label",
-                "properties": {
-                    "name": "Tom Hanks"
+        text = """{
+            "vertices": [
+                {
+                    "type": "vertex",
+                    "label": "invalid_label",
+                    "properties": {
+                        "name": "Tom Hanks"
+                    }
                 }
-            }
-        ]"""
+            ],
+            "edges": []
+        }"""
 
         result = extractor._extract_and_filter_label(self.schema, text)
 
@@ -249,13 +262,16 @@ class TestPropertyGraphExtract(unittest.TestCase):
         extractor = PropertyGraphExtract(llm=self.mock_llm)
 
         # JSON with missing necessary keys
-        text = """[
-            {
-                "type": "vertex",
-                "label": "person"
-                // Missing properties key
-            }
-        ]"""
+        text = """{
+            "vertices": [
+                {
+                    "type": "vertex",
+                    "label": "person"
+                    // Missing properties key
+                }
+            ],
+            "edges": []
+        }"""
 
         result = extractor._extract_and_filter_label(self.schema, text)
 

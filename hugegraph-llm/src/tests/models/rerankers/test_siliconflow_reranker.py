@@ -102,10 +102,38 @@ class TestSiliconReranker(unittest.TestCase):
         documents = []
 
         # Call the method
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError) as cm:
             self.reranker.get_rerank_lists(query, documents, top_n=1)
+        
+        # Verify the error message
+        self.assertIn("Documents list cannot be empty", str(cm.exception))
 
-    def test_get_rerank_lists_top_n_zero(self):
+    def test_get_rerank_lists_negative_top_n(self):
+        # Test with negative top_n
+        query = "What is the capital of China?"
+        documents = ["Beijing is the capital of China."]
+
+        # Call the method
+        with self.assertRaises(ValueError) as cm:
+            self.reranker.get_rerank_lists(query, documents, top_n=-1)
+        
+        # Verify the error message
+        self.assertIn("'top_n' should be non-negative", str(cm.exception))
+
+    def test_get_rerank_lists_top_n_exceeds_documents(self):
+        # Test with top_n greater than number of documents
+        query = "What is the capital of China?"
+        documents = ["Beijing is the capital of China."]
+
+        # Call the method
+        with self.assertRaises(ValueError) as cm:
+            self.reranker.get_rerank_lists(query, documents, top_n=5)
+        
+        # Verify the error message
+        self.assertIn("'top_n' should be less than or equal to the number of documents", str(cm.exception))
+
+    @patch("requests.post")
+    def test_get_rerank_lists_top_n_zero(self, mock_post):
         # Test with top_n=0
         query = "What is the capital of China?"
         documents = ["Beijing is the capital of China."]
@@ -115,3 +143,5 @@ class TestSiliconReranker(unittest.TestCase):
 
         # Assertions
         self.assertEqual(result, [])
+        # Verify that no API call was made due to short-circuit logic
+        mock_post.assert_not_called()

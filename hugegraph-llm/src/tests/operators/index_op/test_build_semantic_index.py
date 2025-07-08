@@ -38,6 +38,8 @@ class TestBuildSemanticIndex(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
 
         # Patch the resource_path and huge_settings
+        # Note: resource_path is currently a string variable, not a function,
+        # so we patch it with a string value for os.path.join() compatibility
         self.patcher1 = patch(
             "hugegraph_llm.operators.index_op.build_semantic_index.resource_path", self.temp_dir
         )
@@ -136,7 +138,11 @@ class TestBuildSemanticIndex(unittest.TestCase):
 
         # Mock _get_embeddings_parallel
         builder._get_embeddings_parallel = MagicMock()
-        builder._get_embeddings_parallel.return_value = [[0.1, 0.2, 0.3], [0.1, 0.2, 0.3]]
+        builder._get_embeddings_parallel.return_value = [
+            [0.1, 0.2, 0.3],
+            [0.1, 0.2, 0.3],
+            [0.1, 0.2, 0.3],
+        ]
 
         # Create a context with vertices that have proper format for PRIMARY_KEY strategy
         context = {"vertices": ["label1:name1", "label2:name2", "label3:name3"]}
@@ -166,7 +172,7 @@ class TestBuildSemanticIndex(unittest.TestCase):
         # Get the actual arguments passed to add
         add_args = self.mock_vector_index.add.call_args
         # Check that the embeddings and vertices are correct
-        self.assertEqual(add_args[0][0], [[0.1, 0.2, 0.3], [0.1, 0.2, 0.3]])
+        self.assertEqual(add_args[0][0], [[0.1, 0.2, 0.3], [0.1, 0.2, 0.3], [0.1, 0.2, 0.3]])
         self.assertEqual(set(add_args[0][1]), set(["label1:name1", "label2:name2", "label3:name3"]))
 
         # Check if to_index_file was called with the correct path
