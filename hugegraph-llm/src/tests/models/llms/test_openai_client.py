@@ -31,7 +31,9 @@ class TestOpenAIClient(unittest.TestCase):
             MagicMock(message=MagicMock(content="Paris"))
         ]
         self.mock_completion_response.usage = MagicMock()
-        self.mock_completion_response.usage.model_dump_json.return_value = '{"prompt_tokens": 10, "completion_tokens": 5}'
+        self.mock_completion_response.usage.model_dump_json.return_value = (
+            '{"prompt_tokens": 10, "completion_tokens": 5}'
+        )
 
         # Create mock streaming chunks
         self.mock_streaming_chunks = [
@@ -156,12 +158,12 @@ class TestOpenAIClient(unittest.TestCase):
         """Test agenerate_streaming method with mocked async OpenAI client."""
         # Setup mock async client with streaming response
         mock_async_client = MagicMock()
-        
+
         # Create async generator for streaming chunks
         async def async_streaming_chunks():
             for chunk in self.mock_streaming_chunks:
                 yield chunk
-        
+
         mock_async_client.chat.completions.create = AsyncMock(return_value=async_streaming_chunks())
         mock_async_openai_class.return_value = mock_async_client
 
@@ -170,7 +172,7 @@ class TestOpenAIClient(unittest.TestCase):
 
         async def run_async_streaming_test():
             collected_tokens = []
-            
+
             def on_token_callback(chunk):
                 collected_tokens.append(chunk)
 
@@ -202,12 +204,12 @@ class TestOpenAIClient(unittest.TestCase):
         # Setup mock client to raise OpenAI 的认证错误
         from openai import AuthenticationError
         mock_client = MagicMock()
-        
+
         # Create a properly formatted AuthenticationError
         mock_response = MagicMock()
         mock_response.status_code = 401
         mock_response.headers = {}
-        
+
         auth_error = AuthenticationError(
             message="Invalid API key",
             response=mock_response,
@@ -218,7 +220,7 @@ class TestOpenAIClient(unittest.TestCase):
 
         # Test the method
         openai_client = OpenAIClient(model_name="gpt-3.5-turbo")
-        
+
         # 调用后应返回认证失败的错误消息
         result = openai_client.generate(prompt="What is the capital of France?")
         self.assertEqual(result, "Error: The provided OpenAI API key is invalid")

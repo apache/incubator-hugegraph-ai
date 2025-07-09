@@ -17,7 +17,7 @@
 
 # pylint: disable=protected-access,no-member
 import unittest
-from contextlib import contextmanager
+
 from unittest.mock import MagicMock, patch
 
 from hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph import Commit2Graph
@@ -192,10 +192,10 @@ class TestCommit2Graph(unittest.TestCase):
         """Test _handle_graph_creation method with NotFoundError."""
         # Setup mock function that raises NotFoundError
         mock_func = MagicMock(side_effect=NotFoundError("Not found"))
-        
+
         # Call the method and verify it handles the exception
         result = self.commit2graph._handle_graph_creation(mock_func, "arg1", "arg2")
-        
+
         # Verify behavior
         mock_func.assert_called_once_with("arg1", "arg2")
         self.assertIsNone(result)
@@ -204,10 +204,10 @@ class TestCommit2Graph(unittest.TestCase):
         """Test _handle_graph_creation method with CreateError."""
         # Setup mock function that raises CreateError
         mock_func = MagicMock(side_effect=CreateError("Create error"))
-        
+
         # Call the method and verify it handles the exception
         result = self.commit2graph._handle_graph_creation(mock_func, "arg1", "arg2")
-        
+
         # Verify behavior
         mock_func.assert_called_once_with("arg1", "arg2")
         self.assertIsNone(result)
@@ -382,10 +382,10 @@ class TestCommit2Graph(unittest.TestCase):
         """Test _check_property_data_type method with valid data types."""
         # Test TEXT type
         self.assertTrue(self.commit2graph._check_property_data_type("TEXT", "SINGLE", "Tom Hanks"))
-        
+
         # Test INT type
         self.assertTrue(self.commit2graph._check_property_data_type("INT", "SINGLE", 67))
-        
+
         # Test LIST type with valid items
         self.assertTrue(self.commit2graph._check_property_data_type("TEXT", "LIST", ["hobby1", "hobby2"]))
 
@@ -393,13 +393,13 @@ class TestCommit2Graph(unittest.TestCase):
         """Test _check_property_data_type method with invalid data types."""
         # Test INT type with string value (should fail)
         self.assertFalse(self.commit2graph._check_property_data_type("INT", "SINGLE", "67"))
-        
+
         # Test TEXT type with int value (should fail)
         self.assertFalse(self.commit2graph._check_property_data_type("TEXT", "SINGLE", 67))
-        
+
         # Test LIST type with non-list value (should fail)
         self.assertFalse(self.commit2graph._check_property_data_type("TEXT", "LIST", "not_a_list"))
-        
+
         # Test LIST type with invalid item types (should fail)
         self.assertFalse(self.commit2graph._check_property_data_type("INT", "LIST", [1, "2", 3]))
 
@@ -408,20 +408,20 @@ class TestCommit2Graph(unittest.TestCase):
         # Test BOOLEAN type
         self.assertTrue(self.commit2graph._check_property_data_type("BOOLEAN", "SINGLE", True))
         self.assertFalse(self.commit2graph._check_property_data_type("BOOLEAN", "SINGLE", "true"))
-        
+
         # Test FLOAT/DOUBLE type
         self.assertTrue(self.commit2graph._check_property_data_type("FLOAT", "SINGLE", 3.14))
         self.assertTrue(self.commit2graph._check_property_data_type("DOUBLE", "SINGLE", 3.14))
         self.assertFalse(self.commit2graph._check_property_data_type("FLOAT", "SINGLE", "3.14"))
-        
+
         # Test DATE type (format: yyyy-MM-dd)
         self.assertTrue(self.commit2graph._check_property_data_type("DATE", "SINGLE", "2024-01-01"))
         self.assertFalse(self.commit2graph._check_property_data_type("DATE", "SINGLE", "2024/01/01"))
         self.assertFalse(self.commit2graph._check_property_data_type("DATE", "SINGLE", "01-01-2024"))
-        
+
         # Test empty LIST
         self.assertTrue(self.commit2graph._check_property_data_type("TEXT", "LIST", []))
-        
+
         # Test unsupported data type
         with self.assertRaises(ValueError):
             self.commit2graph._check_property_data_type("UNSUPPORTED", "SINGLE", "value")
@@ -457,20 +457,20 @@ class TestCommit2Graph(unittest.TestCase):
         """Test schema_free_mode method with empty triples."""
         # Use helper method to set up schema mocks
         schema_mocks = self._setup_schema_mocks()
-        
+
         # Mock the client.graph() methods
         mock_graph = MagicMock()
         self.mock_client.graph.return_value = mock_graph
-        
+
         # Call the method with empty triples
         self.commit2graph.schema_free_mode([])
-        
+
         # Verify that schema methods were still called (schema creation happens regardless)
         schema_mocks["property_key"].assert_called_once_with("name")
         schema_mocks["vertex_label"].assert_called_once_with("vertex")
         schema_mocks["edge_label"].assert_called_once_with("edge")
         self.assertEqual(schema_mocks["index_label"].call_count, 2)
-        
+
         # Verify that graph operations were not called
         mock_graph.addVertex.assert_not_called()
         mock_graph.addEdge.assert_not_called()
@@ -528,7 +528,7 @@ class TestCommit2Graph(unittest.TestCase):
         # Verify that addVertex was called with stripped strings
         mock_graph.addVertex.assert_any_call("vertex", {"name": "Tom Hanks"}, id="Tom Hanks")
         mock_graph.addVertex.assert_any_call("vertex", {"name": "Forrest Gump"}, id="Forrest Gump")
-        
+
         # Verify that addEdge was called with stripped predicate
         mock_graph.addEdge.assert_called_once_with("edge", "vertex_id", "vertex_id", {"name": "acted_in"})
 

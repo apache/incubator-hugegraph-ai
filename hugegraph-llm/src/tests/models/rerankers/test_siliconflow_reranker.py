@@ -104,7 +104,7 @@ class TestSiliconReranker(unittest.TestCase):
         # Call the method
         with self.assertRaises(ValueError) as cm:
             self.reranker.get_rerank_lists(query, documents, top_n=1)
-        
+
         # Verify the error message
         self.assertIn("Documents list cannot be empty", str(cm.exception))
 
@@ -116,7 +116,7 @@ class TestSiliconReranker(unittest.TestCase):
         # Call the method
         with self.assertRaises(ValueError) as cm:
             self.reranker.get_rerank_lists(query, documents, top_n=-1)
-        
+
         # Verify the error message
         self.assertIn("'top_n' should be non-negative", str(cm.exception))
 
@@ -128,7 +128,7 @@ class TestSiliconReranker(unittest.TestCase):
         # Call the method
         with self.assertRaises(ValueError) as cm:
             self.reranker.get_rerank_lists(query, documents, top_n=5)
-        
+
         # Verify the error message
         self.assertIn("'top_n' should be less than or equal to the number of documents", str(cm.exception))
 
