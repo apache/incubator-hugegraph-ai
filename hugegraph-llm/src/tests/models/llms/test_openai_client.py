@@ -18,7 +18,6 @@
 import asyncio
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
-from types import SimpleNamespace
 
 from hugegraph_llm.models.llms.openai import OpenAIClient
 
@@ -200,17 +199,29 @@ class TestOpenAIClient(unittest.TestCase):
     @patch("hugegraph_llm.models.llms.openai.OpenAI")
     def test_generate_authentication_error(self, mock_openai_class):
         """Test generate method with authentication error."""
-        # Setup mock client to raise authentication error
+        # Setup mock client to raise OpenAI 的认证错误
+        from openai import AuthenticationError
         mock_client = MagicMock()
-        mock_client.chat.completions.create.side_effect = Exception("Authentication error")
+        
+        # Create a properly formatted AuthenticationError
+        mock_response = MagicMock()
+        mock_response.status_code = 401
+        mock_response.headers = {}
+        
+        auth_error = AuthenticationError(
+            message="Invalid API key",
+            response=mock_response,
+            body={"error": {"message": "Invalid API key"}}
+        )
+        mock_client.chat.completions.create.side_effect = auth_error
         mock_openai_class.return_value = mock_client
 
         # Test the method
         openai_client = OpenAIClient(model_name="gpt-3.5-turbo")
         
-        # The method should raise an exception for authentication errors
-        with self.assertRaises(Exception):
-            openai_client.generate(prompt="What is the capital of France?")
+        # 调用后应返回认证失败的错误消息
+        result = openai_client.generate(prompt="What is the capital of France?")
+        self.assertEqual(result, "Error: The provided OpenAI API key is invalid")
 
     @patch("hugegraph_llm.models.llms.openai.tiktoken.encoding_for_model")
     def test_num_tokens_from_string(self, mock_encoding_for_model):

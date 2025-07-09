@@ -160,49 +160,57 @@ class TestCommit2Graph(unittest.TestCase):
         property_label_map = {
             "name": {"data_type": "TEXT", "cardinality": "SINGLE"},
             "age": {"data_type": "INT", "cardinality": "SINGLE"},
+            "hobbies": {"data_type": "TEXT", "cardinality": "LIST"},
         }
 
-        # Test with missing property
+        # Test with missing property (SINGLE cardinality)
         input_properties = {"name": "Tom Hanks"}
         self.commit2graph._set_default_property("age", input_properties, property_label_map)
-
-        # Verify that the default value was set
         self.assertEqual(input_properties["age"], 0)
 
-        # Test with existing property - should not change the value
-        input_properties = {"name": "Tom Hanks", "age": 67}  # Use integer instead of string
+        # Test with missing property (LIST cardinality)
+        input_properties_2 = {"name": "Tom Hanks"}
+        self.commit2graph._set_default_property("hobbies", input_properties_2, property_label_map)
+        self.assertEqual(input_properties_2["hobbies"], [])
 
-        # Patch the method to avoid changing the existing value
-        with patch.object(self.commit2graph, "_set_default_property", return_value=None):
-            # This is just a placeholder call, the actual method is patched
-            self.commit2graph._set_default_property("age", input_properties, property_label_map)
+    def test_handle_graph_creation_success(self):
+        """Test _handle_graph_creation method with successful creation."""
+        # Setup mocks
+        mock_func = MagicMock()
+        mock_func.return_value = "success"
 
-        # Verify that the existing value was not changed
-        self.assertEqual(input_properties["age"], 67)
+        # Call the method
+        result = self.commit2graph._handle_graph_creation(mock_func, "arg1", "arg2", kwarg1="value1")
 
-    def _create_mock_handle_graph_creation(self, side_effect=None, return_value="success"):
-        """Helper method to create mock handle_graph_creation implementation."""
-        def handle_graph_creation(func, *args, **kwargs):
-            try:
-                if side_effect:
-                    # Still call func to satisfy the assertion, but func will raise the exception
-                    func(*args, **kwargs)
-                return func(*args, **kwargs) if return_value == "success" else return_value
-            except (NotFoundError, CreateError):
-                return None
-            except Exception as e:
-                raise e
-        return handle_graph_creation
+        # Verify that the function was called with the correct arguments
+        mock_func.assert_called_once_with("arg1", "arg2", kwarg1="value1")
 
-    @contextmanager
-    def _temporary_method_replacement(self, obj, method_name, replacement):
-        """Context manager to temporarily replace a method."""
-        original_method = getattr(obj, method_name)
-        setattr(obj, method_name, replacement)
-        try:
-            yield
-        finally:
-            setattr(obj, method_name, original_method)
+        # Verify the result
+        self.assertEqual(result, "success")
+
+    def test_handle_graph_creation_not_found(self):
+        """Test _handle_graph_creation method with NotFoundError."""
+        # Setup mock function that raises NotFoundError
+        mock_func = MagicMock(side_effect=NotFoundError("Not found"))
+        
+        # Call the method and verify it handles the exception
+        result = self.commit2graph._handle_graph_creation(mock_func, "arg1", "arg2")
+        
+        # Verify behavior
+        mock_func.assert_called_once_with("arg1", "arg2")
+        self.assertIsNone(result)
+
+    def test_handle_graph_creation_create_error(self):
+        """Test _handle_graph_creation method with CreateError."""
+        # Setup mock function that raises CreateError
+        mock_func = MagicMock(side_effect=CreateError("Create error"))
+        
+        # Call the method and verify it handles the exception
+        result = self.commit2graph._handle_graph_creation(mock_func, "arg1", "arg2")
+        
+        # Verify behavior
+        mock_func.assert_called_once_with("arg1", "arg2")
+        self.assertIsNone(result)
 
     def _setup_schema_mocks(self):
         """Helper method to set up common schema mocks."""
@@ -264,51 +272,6 @@ class TestCommit2Graph(unittest.TestCase):
             "index_label": mock_index_label,
         }
 
-    def test_handle_graph_creation_success(self):
-        """Test _handle_graph_creation method with successful creation."""
-        # Setup mocks
-        mock_func = MagicMock()
-        mock_func.return_value = "success"
-
-        # Call the method
-        result = self.commit2graph._handle_graph_creation(mock_func, "arg1", "arg2", kwarg1="value1")
-
-        # Verify that the function was called with the correct arguments
-        mock_func.assert_called_once_with("arg1", "arg2", kwarg1="value1")
-
-        # Verify the result
-        self.assertEqual(result, "success")
-
-    def test_handle_graph_creation_not_found(self):
-        """Test _handle_graph_creation method with NotFoundError."""
-        # Use helper method
-        mock_implementation = self._create_mock_handle_graph_creation(side_effect=NotFoundError("Not found"))
-        
-        # Setup mock function
-        mock_func = MagicMock()
-        mock_func.side_effect = NotFoundError("Not found")
-        
-        # Use context manager for method replacement
-        with self._temporary_method_replacement(self.commit2graph, "_handle_graph_creation", mock_implementation):
-            result = self.commit2graph._handle_graph_creation(mock_func, "arg1", "arg2")
-            mock_func.assert_called_once_with("arg1", "arg2")
-            self.assertIsNone(result)
-
-    def test_handle_graph_creation_create_error(self):
-        """Test _handle_graph_creation method with CreateError."""
-        # Use helper method
-        mock_implementation = self._create_mock_handle_graph_creation(side_effect=CreateError("Create error"))
-        
-        # Setup mock function
-        mock_func = MagicMock()
-        mock_func.side_effect = CreateError("Create error")
-        
-        # Use context manager for method replacement
-        with self._temporary_method_replacement(self.commit2graph, "_handle_graph_creation", mock_implementation):
-            result = self.commit2graph._handle_graph_creation(mock_func, "arg1", "arg2")
-            mock_func.assert_called_once_with("arg1", "arg2")
-            self.assertIsNone(result)
-
     @patch("hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph._create_property")
     @patch("hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph._handle_graph_creation")
     def test_init_schema_if_need(self, mock_handle_graph_creation, mock_create_property):
@@ -340,10 +303,10 @@ class TestCommit2Graph(unittest.TestCase):
         mock_handle_graph_creation.return_value = MagicMock(id="vertex_id")
         mock_check_property_data_type.return_value = True
 
-        # Create vertices and edges with the correct format
+        # Create vertices with proper data types according to schema
         vertices = [
-            {"label": "person", "properties": {"name": "Tom Hanks", "age": 67}},  # Use integer instead of string
-            {"label": "movie", "properties": {"title": "Forrest Gump", "year": 1994}},  # Use integer instead of string
+            {"label": "person", "properties": {"name": "Tom Hanks", "age": 67}},
+            {"label": "movie", "properties": {"title": "Forrest Gump", "year": 1994}},
         ]
 
         edges = [
@@ -360,6 +323,108 @@ class TestCommit2Graph(unittest.TestCase):
 
         # Verify that _handle_graph_creation was called for each vertex and edge
         self.assertEqual(mock_handle_graph_creation.call_count, 3)  # 2 vertices + 1 edge
+
+    @patch("hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph._handle_graph_creation")
+    def test_load_into_graph_with_data_type_validation_success(self, mock_handle_graph_creation):
+        """Test load_into_graph method with successful data type validation."""
+        # Setup mocks
+        mock_handle_graph_creation.return_value = MagicMock(id="vertex_id")
+
+        # Create vertices with correct data types matching schema expectations
+        vertices = [
+            {"label": "person", "properties": {"name": "Tom Hanks", "age": 67}},  # age: INT -> int
+            {"label": "movie", "properties": {"title": "Forrest Gump", "year": 1994}},  # year: INT -> int
+        ]
+
+        edges = [
+            {
+                "label": "acted_in",
+                "properties": {"role": "Forrest Gump"},  # role: TEXT -> str
+                "outV": "person:Tom Hanks",
+                "inV": "movie:Forrest Gump",
+            }
+        ]
+
+        # Call the method - should succeed with correct data types
+        self.commit2graph.load_into_graph(vertices, edges, self.schema)
+
+        # Verify that _handle_graph_creation was called for each vertex and edge
+        self.assertEqual(mock_handle_graph_creation.call_count, 3)  # 2 vertices + 1 edge
+
+    @patch("hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph.Commit2Graph._handle_graph_creation")
+    def test_load_into_graph_with_data_type_validation_failure(self, mock_handle_graph_creation):
+        """Test load_into_graph method with data type validation failure."""
+        # Setup mocks
+        mock_handle_graph_creation.return_value = MagicMock(id="vertex_id")
+
+        # Create vertices with incorrect data types (strings for INT fields)
+        vertices = [
+            {"label": "person", "properties": {"name": "Tom Hanks", "age": "67"}},  # age should be int, not str
+            {"label": "movie", "properties": {"title": "Forrest Gump", "year": "1994"}},  # year should be int, not str
+        ]
+
+        edges = [
+            {
+                "label": "acted_in",
+                "properties": {"role": "Forrest Gump"},
+                "outV": "person:Tom Hanks",
+                "inV": "movie:Forrest Gump",
+            }
+        ]
+
+        # Call the method - should skip vertices due to data type validation failure
+        self.commit2graph.load_into_graph(vertices, edges, self.schema)
+
+        # Verify that _handle_graph_creation was called only for the edge (vertices were skipped)
+        self.assertEqual(mock_handle_graph_creation.call_count, 1)  # Only 1 edge, vertices skipped
+
+    def test_check_property_data_type_success(self):
+        """Test _check_property_data_type method with valid data types."""
+        # Test TEXT type
+        self.assertTrue(self.commit2graph._check_property_data_type("TEXT", "SINGLE", "Tom Hanks"))
+        
+        # Test INT type
+        self.assertTrue(self.commit2graph._check_property_data_type("INT", "SINGLE", 67))
+        
+        # Test LIST type with valid items
+        self.assertTrue(self.commit2graph._check_property_data_type("TEXT", "LIST", ["hobby1", "hobby2"]))
+
+    def test_check_property_data_type_failure(self):
+        """Test _check_property_data_type method with invalid data types."""
+        # Test INT type with string value (should fail)
+        self.assertFalse(self.commit2graph._check_property_data_type("INT", "SINGLE", "67"))
+        
+        # Test TEXT type with int value (should fail)
+        self.assertFalse(self.commit2graph._check_property_data_type("TEXT", "SINGLE", 67))
+        
+        # Test LIST type with non-list value (should fail)
+        self.assertFalse(self.commit2graph._check_property_data_type("TEXT", "LIST", "not_a_list"))
+        
+        # Test LIST type with invalid item types (should fail)
+        self.assertFalse(self.commit2graph._check_property_data_type("INT", "LIST", [1, "2", 3]))
+
+    def test_check_property_data_type_edge_cases(self):
+        """Test _check_property_data_type method with edge cases."""
+        # Test BOOLEAN type
+        self.assertTrue(self.commit2graph._check_property_data_type("BOOLEAN", "SINGLE", True))
+        self.assertFalse(self.commit2graph._check_property_data_type("BOOLEAN", "SINGLE", "true"))
+        
+        # Test FLOAT/DOUBLE type
+        self.assertTrue(self.commit2graph._check_property_data_type("FLOAT", "SINGLE", 3.14))
+        self.assertTrue(self.commit2graph._check_property_data_type("DOUBLE", "SINGLE", 3.14))
+        self.assertFalse(self.commit2graph._check_property_data_type("FLOAT", "SINGLE", "3.14"))
+        
+        # Test DATE type (format: yyyy-MM-dd)
+        self.assertTrue(self.commit2graph._check_property_data_type("DATE", "SINGLE", "2024-01-01"))
+        self.assertFalse(self.commit2graph._check_property_data_type("DATE", "SINGLE", "2024/01/01"))
+        self.assertFalse(self.commit2graph._check_property_data_type("DATE", "SINGLE", "01-01-2024"))
+        
+        # Test empty LIST
+        self.assertTrue(self.commit2graph._check_property_data_type("TEXT", "LIST", []))
+        
+        # Test unsupported data type
+        with self.assertRaises(ValueError):
+            self.commit2graph._check_property_data_type("UNSUPPORTED", "SINGLE", "value")
 
     def test_schema_free_mode(self):
         """Test schema_free_mode method."""
@@ -387,6 +452,109 @@ class TestCommit2Graph(unittest.TestCase):
         # Verify that addVertex and addEdge were called for each triple
         self.assertEqual(mock_graph.addVertex.call_count, 4)  # 2 subjects + 2 objects
         self.assertEqual(mock_graph.addEdge.call_count, 2)  # 2 predicates
+
+    def test_schema_free_mode_empty_triples(self):
+        """Test schema_free_mode method with empty triples."""
+        # Use helper method to set up schema mocks
+        schema_mocks = self._setup_schema_mocks()
+        
+        # Mock the client.graph() methods
+        mock_graph = MagicMock()
+        self.mock_client.graph.return_value = mock_graph
+        
+        # Call the method with empty triples
+        self.commit2graph.schema_free_mode([])
+        
+        # Verify that schema methods were still called (schema creation happens regardless)
+        schema_mocks["property_key"].assert_called_once_with("name")
+        schema_mocks["vertex_label"].assert_called_once_with("vertex")
+        schema_mocks["edge_label"].assert_called_once_with("edge")
+        self.assertEqual(schema_mocks["index_label"].call_count, 2)
+        
+        # Verify that graph operations were not called
+        mock_graph.addVertex.assert_not_called()
+        mock_graph.addEdge.assert_not_called()
+
+    def test_schema_free_mode_single_triple(self):
+        """Test schema_free_mode method with single triple."""
+        # Use helper method to set up schema mocks
+        schema_mocks = self._setup_schema_mocks()
+
+        # Mock the client.graph() methods
+        mock_graph = MagicMock()
+        self.mock_client.graph.return_value = mock_graph
+        mock_graph.addVertex.return_value = MagicMock(id="vertex_id")
+        mock_graph.addEdge.return_value = MagicMock()
+
+        # Create single triple
+        triples = [["Alice", "knows", "Bob"]]
+
+        # Call the method
+        self.commit2graph.schema_free_mode(triples)
+
+        # Verify that schema methods were called
+        schema_mocks["property_key"].assert_called_once_with("name")
+        schema_mocks["vertex_label"].assert_called_once_with("vertex")
+        schema_mocks["edge_label"].assert_called_once_with("edge")
+        self.assertEqual(schema_mocks["index_label"].call_count, 2)
+
+        # Verify that addVertex and addEdge were called for single triple
+        self.assertEqual(mock_graph.addVertex.call_count, 2)  # 1 subject + 1 object
+        self.assertEqual(mock_graph.addEdge.call_count, 1)  # 1 predicate
+
+    def test_schema_free_mode_with_whitespace(self):
+        """Test schema_free_mode method with triples containing whitespace."""
+        # Use helper method to set up schema mocks
+        schema_mocks = self._setup_schema_mocks()
+
+        # Mock the client.graph() methods
+        mock_graph = MagicMock()
+        self.mock_client.graph.return_value = mock_graph
+        mock_graph.addVertex.return_value = MagicMock(id="vertex_id")
+        mock_graph.addEdge.return_value = MagicMock()
+
+        # Create triples with whitespace (should be stripped)
+        triples = [["  Tom Hanks  ", "  acted_in  ", "  Forrest Gump  "]]
+
+        # Call the method
+        self.commit2graph.schema_free_mode(triples)
+
+        # Verify that schema methods were called
+        schema_mocks["property_key"].assert_called_once_with("name")
+        schema_mocks["vertex_label"].assert_called_once_with("vertex")
+        schema_mocks["edge_label"].assert_called_once_with("edge")
+        self.assertEqual(schema_mocks["index_label"].call_count, 2)
+
+        # Verify that addVertex was called with stripped strings
+        mock_graph.addVertex.assert_any_call("vertex", {"name": "Tom Hanks"}, id="Tom Hanks")
+        mock_graph.addVertex.assert_any_call("vertex", {"name": "Forrest Gump"}, id="Forrest Gump")
+        
+        # Verify that addEdge was called with stripped predicate
+        mock_graph.addEdge.assert_called_once_with("edge", "vertex_id", "vertex_id", {"name": "acted_in"})
+
+    def test_schema_free_mode_invalid_triple_format(self):
+        """Test schema_free_mode method with invalid triple format."""
+        # Use helper method to set up schema mocks
+        schema_mocks = self._setup_schema_mocks()
+
+        # Mock the client.graph() methods
+        mock_graph = MagicMock()
+        self.mock_client.graph.return_value = mock_graph
+        mock_graph.addVertex.return_value = MagicMock(id="vertex_id")
+        mock_graph.addEdge.return_value = MagicMock()
+
+        # Create invalid triples (wrong length)
+        invalid_triples = [["Alice", "knows"], ["Bob", "works_at", "Company", "extra"]]
+
+        # Call the method - should raise ValueError due to unpacking
+        with self.assertRaises(ValueError):
+            self.commit2graph.schema_free_mode(invalid_triples)
+
+        # Verify that schema methods were still called (schema creation happens first)
+        schema_mocks["property_key"].assert_called_once_with("name")
+        schema_mocks["vertex_label"].assert_called_once_with("vertex")
+        schema_mocks["edge_label"].assert_called_once_with("edge")
+        self.assertEqual(schema_mocks["index_label"].call_count, 2)
 
 
 if __name__ == "__main__":

@@ -180,7 +180,7 @@ class TestKeywordExtract(unittest.TestCase):
         context = {"language": "spanish", "max_keywords": 10}
 
         # Call the method
-        result = self.extractor.run(context)
+        self.extractor.run(context)
 
         # Verify that the parameters were updated
         self.assertEqual(self.extractor._language, "spanish")

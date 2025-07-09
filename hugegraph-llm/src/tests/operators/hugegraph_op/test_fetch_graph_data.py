@@ -16,7 +16,7 @@
 # under the License.
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from hugegraph_llm.operators.hugegraph_op.fetch_graph_data import FetchGraphData
 

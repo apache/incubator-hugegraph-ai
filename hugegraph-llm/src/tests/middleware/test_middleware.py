@@ -18,7 +18,7 @@
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI
 from hugegraph_llm.middleware.middleware import UseTimeMiddleware
 
 

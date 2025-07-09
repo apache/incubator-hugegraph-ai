@@ -16,10 +16,8 @@
 # under the License.
 
 # pylint: disable=protected-access,unused-variable
-import asyncio
 import unittest
-from unittest.mock import AsyncMock, MagicMock, patch
-from types import MethodType
+from unittest.mock import MagicMock, patch
 
 from hugegraph_llm.operators.hugegraph_op.graph_rag_query import GraphRAGQuery
 from pyhugegraph.client import PyHugeClient
