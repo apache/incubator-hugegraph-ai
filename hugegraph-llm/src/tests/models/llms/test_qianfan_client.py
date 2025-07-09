@@ -183,7 +183,7 @@ class TestQianfanClient(unittest.TestCase):
 
         # Test streaming generation
         response_generator = qianfan_client.generate_streaming(
-            prompt="What is the capital of China?", 
+            prompt="What is the capital of China?",
             on_token_callback=on_token_callback
         )
 
