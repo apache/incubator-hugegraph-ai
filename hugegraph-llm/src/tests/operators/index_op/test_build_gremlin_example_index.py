@@ -45,12 +45,25 @@ class TestBuildGremlinExampleIndex(unittest.TestCase):
         self.patcher1 = patch(
             "hugegraph_llm.operators.index_op.build_gremlin_example_index.resource_path", self.temp_dir
         )
-        self.mock_resource_path = self.patcher1.start()
+        self.patcher1.start()
+
+        # Mock the new utility functions
+        self.patcher2 = patch("hugegraph_llm.operators.index_op.build_gremlin_example_index.get_index_folder_name")
+        self.mock_get_index_folder_name = self.patcher2.start()
+        self.mock_get_index_folder_name.return_value = "hugegraph"
+        
+        self.patcher3 = patch("hugegraph_llm.operators.index_op.build_gremlin_example_index.get_filename_prefix")
+        self.mock_get_filename_prefix = self.patcher3.start()
+        self.mock_get_filename_prefix.return_value = "test_prefix"
+        
+        self.patcher4 = patch("hugegraph_llm.operators.index_op.build_gremlin_example_index.get_embeddings_parallel")
+        self.mock_get_embeddings_parallel = self.patcher4.start()
+        self.mock_get_embeddings_parallel.return_value = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]
 
         # Mock VectorIndex
         self.mock_vector_index = MagicMock(spec=VectorIndex)
-        self.patcher2 = patch("hugegraph_llm.operators.index_op.build_gremlin_example_index.VectorIndex")
-        self.mock_vector_index_class = self.patcher2.start()
+        self.patcher5 = patch("hugegraph_llm.operators.index_op.build_gremlin_example_index.VectorIndex")
+        self.mock_vector_index_class = self.patcher5.start()
         self.mock_vector_index_class.return_value = self.mock_vector_index
 
     def tearDown(self):
@@ -60,6 +73,9 @@ class TestBuildGremlinExampleIndex(unittest.TestCase):
         # Stop the patchers
         self.patcher1.stop()
         self.patcher2.stop()
+        self.patcher3.stop()
+        self.patcher4.stop()
+        self.patcher5.stop()
 
     def test_init(self):
         # Test initialization
@@ -71,8 +87,8 @@ class TestBuildGremlinExampleIndex(unittest.TestCase):
         # Check if the examples are set correctly
         self.assertEqual(builder.examples, self.examples)
 
-        # Check if the index_dir is set correctly
-        expected_index_dir = os.path.join(self.temp_dir, "gremlin_examples")
+        # Check if the index_dir is set correctly (now includes folder structure)
+        expected_index_dir = os.path.join(self.temp_dir, "hugegraph", "gremlin_examples")
         self.assertEqual(builder.index_dir, expected_index_dir)
 
     def test_run_with_examples(self):
@@ -85,21 +101,19 @@ class TestBuildGremlinExampleIndex(unittest.TestCase):
         # Run the builder
         result = builder.run(context)
 
-        # Check if get_text_embedding was called for each example
-        self.assertEqual(self.mock_embedding.get_text_embedding.call_count, 2)
-        self.mock_embedding.get_text_embedding.assert_any_call("g.V().hasLabel('person')")
-        self.mock_embedding.get_text_embedding.assert_any_call("g.V().hasLabel('movie')")
+        # Check if get_embeddings_parallel was called
+        self.mock_get_embeddings_parallel.assert_called_once()
 
         # Check if VectorIndex was initialized with the correct dimension
         self.mock_vector_index_class.assert_called_once_with(3)  # dimension of [0.1, 0.2, 0.3]
 
         # Check if add was called with the correct arguments
-        expected_embeddings = [[0.1, 0.2, 0.3], [0.1, 0.2, 0.3]]
+        expected_embeddings = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]  # from mock return value
         self.mock_vector_index.add.assert_called_once_with(expected_embeddings, self.examples)
 
-        # Check if to_index_file was called with the correct path
-        expected_index_dir = os.path.join(self.temp_dir, "gremlin_examples")
-        self.mock_vector_index.to_index_file.assert_called_once_with(expected_index_dir)
+        # Check if to_index_file was called with the correct path and prefix
+        expected_index_dir = os.path.join(self.temp_dir, "hugegraph", "gremlin_examples")
+        self.mock_vector_index.to_index_file.assert_called_once_with(expected_index_dir, "test_prefix")
 
         # Check if the context is updated correctly
         expected_context = {"embed_dim": 3}
@@ -110,11 +124,14 @@ class TestBuildGremlinExampleIndex(unittest.TestCase):
         builder = BuildGremlinExampleIndex(self.mock_embedding, [])
 
         # Create a context
-        context = {}
+        context = {"test": "value"}
 
-        # Run the builder
-        with self.assertRaises(IndexError):
-            builder.run(context)
+        # The run method should handle empty examples gracefully
+        result = builder.run(context)
+        
+        # Should return embed_dim as 0 for empty examples
+        self.assertEqual(result["embed_dim"], 0)
+        self.assertEqual(result["test"], "value")  # Original context should be preserved
 
         # Check if VectorIndex was not initialized
         self.mock_vector_index_class.assert_not_called()

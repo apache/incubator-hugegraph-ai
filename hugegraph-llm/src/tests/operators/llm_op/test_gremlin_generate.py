@@ -36,13 +36,13 @@ class TestGremlinGenerateSynthesize(unittest.TestCase):
             ],
             "edgeLabels": [{"name": "acted_in", "sourceLabel": "person", "targetLabel": "movie"}],
         }
-        
+
         cls.sample_vertices = ["person:1", "movie:2"]
-        
+
         cls.sample_query = "Find all movies that Tom Hanks acted in"
-        
+
         cls.sample_custom_prompt = "Custom prompt template: {query}, {schema}, {example}, {vertices}"
-        
+
         cls.sample_examples = [
             {"query": "who is Tom Hanks", "gremlin": "g.V().has('person', 'name', 'Tom Hanks')"},
             {
@@ -50,19 +50,19 @@ class TestGremlinGenerateSynthesize(unittest.TestCase):
                 "gremlin": "g.V().has('person', 'name', 'Tom Hanks').out('acted_in')",
             },
         ]
-        
+
         cls.sample_gremlin_response = (
             "Here is the Gremlin query:\n```gremlin\n"
             "g.V().has('person', 'name', 'Tom Hanks').out('acted_in')\n```"
         )
-        
+
         cls.sample_gremlin_query = "g.V().has('person', 'name', 'Tom Hanks').out('acted_in')"
 
     def setUp(self):
         """Set up instance-level fixtures for each test."""
         # Create mock LLM (fresh for each test)
         self.mock_llm = self._create_mock_llm()
-        
+
         # Use class-level fixtures
         self.schema = self.sample_schema
         self.vertices = self.sample_vertices

@@ -95,7 +95,7 @@ class TestMergeDedupRerankInit(BaseMergeDedupRerankTest):
 
 class TestMergeDedupRerankBleu(BaseMergeDedupRerankTest):
     """Test BLEU scoring and ranking functionality."""
-    
+
     def test_get_bleu_score(self):
         """Test the get_bleu_score function."""
         query = "artificial intelligence"
@@ -137,14 +137,14 @@ class TestMergeDedupRerankBleu(BaseMergeDedupRerankTest):
 
 class TestMergeDedupRerankReranker(BaseMergeDedupRerankTest):
     """Test external reranker integration."""
-    
+
     @patch("hugegraph_llm.operators.common_op.merge_dedup_rerank.llm_settings")
     @patch("hugegraph_llm.operators.common_op.merge_dedup_rerank.Rerankers")
     def test_dedup_and_rerank_reranker(self, mock_rerankers_class, mock_llm_settings):
         """Test the _dedup_and_rerank method with reranker method."""
         # Mock the reranker_type to allow reranker method
         mock_llm_settings.reranker_type = "mock_reranker"
-        
+
         # Setup mock for reranker
         mock_reranker = MagicMock()
         mock_reranker.get_rerank_lists.return_value = ["result3", "result1"]
@@ -170,7 +170,7 @@ class TestMergeDedupRerankReranker(BaseMergeDedupRerankTest):
         """Test the _rerank_with_vertex_degree method."""
         # Mock the reranker_type to allow reranker method
         mock_llm_settings.reranker_type = "mock_reranker"
-        
+
         # Setup mock for reranker
         mock_reranker = MagicMock()
         mock_reranker.get_rerank_lists.side_effect = [
@@ -226,7 +226,7 @@ class TestMergeDedupRerankReranker(BaseMergeDedupRerankTest):
 
 class TestMergeDedupRerankRun(BaseMergeDedupRerankTest):
     """Test main run functionality with different search configurations."""
-    
+
     def test_run_with_vector_and_graph_search(self):
         """Test the run method with both vector and graph search."""
         # Create merger

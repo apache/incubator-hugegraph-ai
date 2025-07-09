@@ -50,6 +50,10 @@ class MockEmbedding(BaseEmbedding):
         # Async version returns the same as the sync version
         return self.get_text_embedding(text)
 
+    async def async_get_texts_embeddings(self, texts):
+        # Async version of get_texts_embeddings
+        return [await self.async_get_text_embedding(text) for text in texts]
+
     def get_llm_type(self):
         return "mock"
 

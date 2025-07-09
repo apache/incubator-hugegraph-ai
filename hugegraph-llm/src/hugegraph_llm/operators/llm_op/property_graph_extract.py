@@ -155,6 +155,9 @@ class PropertyGraphExtract:
                     if not self.NECESSARY_ITEM_KEYS.issubset(item.keys()):
                         log.warning("Invalid item keys '%s'.", item.keys())
                         continue
+                    if item["type"] != item_type:
+                        log.warning("Invalid %s type '%s' has been ignored.", item_type, item["type"])
+                        continue
                     if item["label"] not in valid_labels:
                         log.warning(
                             "Invalid %s label '%s' has been ignored.",

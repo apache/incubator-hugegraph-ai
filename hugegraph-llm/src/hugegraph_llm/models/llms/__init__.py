@@ -14,3 +14,18 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
+"""
+LLM models package for HugeGraph-LLM.
+
+This package contains various LLM client implementations including:
+- OpenAI clients
+- Qianfan clients  
+- Ollama clients
+- LiteLLM clients
+"""
+
+# Import base class to make it available at package level
+from .base import BaseLLM
+
+__all__ = ["BaseLLM"]

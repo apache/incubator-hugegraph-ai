@@ -28,7 +28,7 @@ class TestGraphRAGQuery(unittest.TestCase):
         """Set up test fixtures."""
         # Store original methods for restoration
         self._original_methods = {}
-        
+
         # Mock the PyHugeClient
         self.mock_client = MagicMock()
 
@@ -218,17 +218,17 @@ class TestGraphRAGQuery(unittest.TestCase):
 
             # Create a new instance for this test to avoid interference
             test_instance = GraphRAGQuery()
-            
+
             # Reset the mock to clear constructor calls
             mock_client_class.reset_mock()
-            
+
             # Set client to None to force initialization
             test_instance._client = None
-            
+
             # Patch isinstance to always return False for PyHugeClient
             def mock_isinstance(obj, class_or_tuple):
                 return False
-            
+
             with patch("hugegraph_llm.operators.hugegraph_op.graph_rag_query.isinstance", side_effect=mock_isinstance):
                 # Run the method
                 test_instance.init_client(context)
@@ -244,10 +244,10 @@ class TestGraphRAGQuery(unittest.TestCase):
         # Patch PyHugeClient to avoid constructor issues
         with patch("hugegraph_llm.operators.hugegraph_op.graph_rag_query.PyHugeClient") as mock_client_class:
             mock_client_class.return_value = MagicMock()
-            
+
             # Create a mock PyHugeClient with proper spec to pass isinstance check
             mock_provided_client = MagicMock(spec=PyHugeClient)
-            
+
             context = {
                 "graph_client": mock_provided_client,
                 "url": "http://127.0.0.1:8080",
@@ -259,7 +259,7 @@ class TestGraphRAGQuery(unittest.TestCase):
 
             # Create a new instance for this test
             test_instance = GraphRAGQuery()
-            
+
             # Set client to None to force initialization
             test_instance._client = None
 
@@ -269,7 +269,7 @@ class TestGraphRAGQuery(unittest.TestCase):
                 if obj is mock_provided_client:
                     return True
                 return False
-            
+
             with patch("hugegraph_llm.operators.hugegraph_op.graph_rag_query.isinstance", side_effect=mock_isinstance):
                 # Run the method
                 test_instance.init_client(context)
@@ -282,10 +282,10 @@ class TestGraphRAGQuery(unittest.TestCase):
         # Patch PyHugeClient to avoid constructor issues
         with patch("hugegraph_llm.operators.hugegraph_op.graph_rag_query.PyHugeClient") as mock_client_class:
             mock_client_class.return_value = MagicMock()
-            
+
             # Create a mock client
             existing_client = MagicMock()
-            
+
             context = {
                 "url": "http://127.0.0.1:8080",
                 "graph": "hugegraph",
@@ -296,7 +296,7 @@ class TestGraphRAGQuery(unittest.TestCase):
 
             # Create a new instance for this test
             test_instance = GraphRAGQuery()
-            
+
             # Set existing client
             test_instance._client = existing_client
 

@@ -19,13 +19,15 @@
 
 import json
 import os
-import sys
 import unittest
 from unittest.mock import patch
 
-# Add parent directory to sys.path to import test_utils
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from test_utils import create_test_document, should_skip_external, with_mock_openai_client
+# 导入测试工具
+from src.tests.test_utils import (
+    create_test_document,
+    should_skip_external,
+    with_mock_openai_client,
+)
 
 
 # Create mock classes to replace missing modules
@@ -64,7 +66,7 @@ class KGConstructor:
                 {"type": "Person", "name": "李四", "properties": {"occupation": "Data Scientist"}},
                 {"type": "Person", "name": "张三", "properties": {"occupation": "Software Engineer"}},
             ]
-        if "ABC公司" in document.content:
+        if "ABC Company" in document.content or "ABC公司" in document.content:
             return [
                 {
                     "type": "Company",
@@ -76,7 +78,7 @@ class KGConstructor:
 
     def extract_relations(self, document):
         # Mock relation extraction
-        if "张三" in document.content and "ABC公司" in document.content:
+        if "张三" in document.content and ("ABC Company" in document.content or "ABC公司" in document.content):
             return [
                 {
                     "source": {"type": "Person", "name": "张三"},
@@ -104,7 +106,7 @@ class KGConstructor:
             entities.extend(self.extract_entities(doc))
             relations.extend(self.extract_relations(doc))
 
-        # Deduplicate
+        # Deduplicate entities
         unique_entities = []
         entity_names = set()
         for entity in entities:
@@ -189,8 +191,8 @@ class TestKGConstruction(unittest.TestCase):
             self.kg_constructor, "extract_entities", return_value=mock_entities
         ), patch.object(self.kg_constructor, "extract_relations", return_value=mock_relations):
 
-            # Construct knowledge graph
-            kg = self.kg_constructor.construct_from_documents(self.test_docs)
+            # Construct knowledge graph - use only one document to avoid duplicate relations from mocking
+            kg = self.kg_constructor.construct_from_documents([self.test_docs[0]])
 
             # Verify knowledge graph
             self.assertIsNotNone(kg)

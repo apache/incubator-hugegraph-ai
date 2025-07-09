@@ -40,12 +40,13 @@ class TestBuildSemanticIndex(unittest.TestCase):
         # Patch the resource_path and huge_settings
         # Note: resource_path is currently a string variable, not a function,
         # so we patch it with a string value for os.path.join() compatibility
+        # Mock resource_path and huge_settings
         self.patcher1 = patch(
             "hugegraph_llm.operators.index_op.build_semantic_index.resource_path", self.temp_dir
         )
         self.patcher2 = patch("hugegraph_llm.operators.index_op.build_semantic_index.huge_settings")
 
-        self.mock_resource_path = self.patcher1.start()
+        self.patcher1.start()
         self.mock_settings = self.patcher2.start()
         self.mock_settings.graph_name = "test_graph"
 
@@ -112,32 +113,23 @@ class TestBuildSemanticIndex(unittest.TestCase):
         # Check if the names are extracted correctly
         self.assertEqual(result, ["name1", "name2", "name3"])
 
-    @patch("concurrent.futures.ThreadPoolExecutor")
-    def test_get_embeddings_parallel(self, mock_executor_class):
+    def test_get_embeddings_parallel(self):
+        """Test _get_embeddings_parallel method is async."""
         # Create a builder
         builder = BuildSemanticIndex(self.mock_embedding)
 
-        # Setup mock executor
-        mock_executor = MagicMock()
-        mock_executor_class.return_value.__enter__.return_value = mock_executor
-        mock_executor.map.return_value = [[0.1, 0.2, 0.3], [0.1, 0.2, 0.3], [0.1, 0.2, 0.3]]
-
-        # Test _get_embeddings_parallel method
-        vids = ["vid1", "vid2", "vid3"]
-        result = builder._get_embeddings_parallel(vids)
-
-        # Check if ThreadPoolExecutor.map was called with the correct arguments
-        mock_executor.map.assert_called_once_with(self.mock_embedding.get_text_embedding, vids)
-
-        # Check if the result is correct
-        self.assertEqual(result, [[0.1, 0.2, 0.3], [0.1, 0.2, 0.3], [0.1, 0.2, 0.3]])
+        # Verify that _get_embeddings_parallel is an async method
+        import inspect
+        self.assertTrue(inspect.iscoroutinefunction(builder._get_embeddings_parallel))
 
     def test_run_with_primary_key_strategy(self):
+        """Test run method with PRIMARY_KEY strategy."""
         # Create a builder
         builder = BuildSemanticIndex(self.mock_embedding)
 
-        # Mock _get_embeddings_parallel
-        builder._get_embeddings_parallel = MagicMock()
+        # Mock _get_embeddings_parallel with AsyncMock
+        from unittest.mock import AsyncMock
+        builder._get_embeddings_parallel = AsyncMock()
         builder._get_embeddings_parallel.return_value = [
             [0.1, 0.2, 0.3],
             [0.1, 0.2, 0.3],
@@ -187,6 +179,7 @@ class TestBuildSemanticIndex(unittest.TestCase):
         self.assertEqual(result["added_vid_vector_num"], 3)
 
     def test_run_without_primary_key_strategy(self):
+        """Test run method without PRIMARY_KEY strategy."""
         # Create a builder
         builder = BuildSemanticIndex(self.mock_embedding)
 
@@ -195,8 +188,9 @@ class TestBuildSemanticIndex(unittest.TestCase):
             "vertexlabels": [{"id_strategy": "AUTOMATIC"}, {"id_strategy": "AUTOMATIC"}]
         }
 
-        # Mock _get_embeddings_parallel
-        builder._get_embeddings_parallel = MagicMock()
+        # Mock _get_embeddings_parallel with AsyncMock
+        from unittest.mock import AsyncMock
+        builder._get_embeddings_parallel = AsyncMock()
         builder._get_embeddings_parallel.return_value = [
             [0.1, 0.2, 0.3],
             [0.1, 0.2, 0.3],

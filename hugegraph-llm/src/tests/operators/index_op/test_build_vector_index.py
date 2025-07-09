@@ -39,7 +39,7 @@ class TestBuildVectorIndex(unittest.TestCase):
         self.patcher1 = patch("hugegraph_llm.operators.index_op.build_vector_index.resource_path", self.temp_dir)
         self.patcher2 = patch("hugegraph_llm.operators.index_op.build_vector_index.huge_settings")
 
-        self.mock_resource_path = self.patcher1.start()
+        self.patcher1.start()
         self.mock_settings = self.patcher2.start()
         self.mock_settings.graph_name = "test_graph"
 

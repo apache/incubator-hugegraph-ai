@@ -64,48 +64,48 @@ class TestPropertyGraphExtract(unittest.TestCase):
         self.llm_responses = [
             """{
                 "vertices": [
-                    {
-                        "type": "vertex",
-                        "label": "person",
-                        "properties": {
-                            "name": "Tom Hanks",
-                            "age": "1956"
-                        }
+                {
+                    "type": "vertex",
+                    "label": "person",
+                    "properties": {
+                        "name": "Tom Hanks",
+                        "age": "1956"
                     }
+                }
                 ],
                 "edges": []
             }""",
             """{
                 "vertices": [
-                    {
-                        "type": "vertex",
-                        "label": "movie",
-                        "properties": {
-                            "title": "Forrest Gump",
-                            "year": "1994"
-                        }
+                {
+                    "type": "vertex",
+                    "label": "movie",
+                    "properties": {
+                        "title": "Forrest Gump",
+                        "year": "1994"
+                    }
                     }
                 ],
                 "edges": [
-                    {
-                        "type": "edge",
-                        "label": "acted_in",
+                {
+                    "type": "edge",
+                    "label": "acted_in",
+                    "properties": {
+                        "role": "Forrest Gump"
+                    },
+                    "source": {
+                        "label": "person",
                         "properties": {
-                            "role": "Forrest Gump"
-                        },
-                        "source": {
-                            "label": "person",
-                            "properties": {
-                                "name": "Tom Hanks"
-                            }
-                        },
-                        "target": {
-                            "label": "movie",
-                            "properties": {
-                                "title": "Forrest Gump"
-                            }
+                            "name": "Tom Hanks"
+                        }
+                    },
+                    "target": {
+                        "label": "movie",
+                        "properties": {
+                            "title": "Forrest Gump"
                         }
                     }
+                }
                 ]
             }""",
         ]
@@ -220,13 +220,13 @@ class TestPropertyGraphExtract(unittest.TestCase):
         # JSON with invalid item type
         text = """{
             "vertices": [
-                {
-                    "type": "invalid_type",
-                    "label": "person",
-                    "properties": {
-                        "name": "Tom Hanks"
-                    }
+            {
+                "type": "invalid_type",
+                "label": "person",
+                "properties": {
+                    "name": "Tom Hanks"
                 }
+            }
             ],
             "edges": []
         }"""
@@ -242,13 +242,13 @@ class TestPropertyGraphExtract(unittest.TestCase):
         # JSON with invalid label
         text = """{
             "vertices": [
-                {
-                    "type": "vertex",
-                    "label": "invalid_label",
-                    "properties": {
-                        "name": "Tom Hanks"
-                    }
+            {
+                "type": "vertex",
+                "label": "invalid_label",
+                "properties": {
+                    "name": "Tom Hanks"
                 }
+            }
             ],
             "edges": []
         }"""
@@ -264,11 +264,11 @@ class TestPropertyGraphExtract(unittest.TestCase):
         # JSON with missing necessary keys
         text = """{
             "vertices": [
-                {
-                    "type": "vertex",
-                    "label": "person"
-                    // Missing properties key
-                }
+            {
+                "type": "vertex",
+                "label": "person"
+                // Missing properties key
+            }
             ],
             "edges": []
         }"""
