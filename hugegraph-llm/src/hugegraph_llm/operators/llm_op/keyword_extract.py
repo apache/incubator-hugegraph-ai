@@ -136,7 +136,7 @@ class KeywordExtract:
 
 
 class MultiLingualTextRank:
-    def __init__(self, keyword_num, window_size, mask_words):
+    def __init__(self, keyword_num=5, window_size=5, mask_words=""):
         self.top_k = keyword_num
         self.window = window_size
         self.graph = None
