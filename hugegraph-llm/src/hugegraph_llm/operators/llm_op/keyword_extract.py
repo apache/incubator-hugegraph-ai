@@ -150,12 +150,18 @@ class MultiLingualTextRank:
         # 定义停用词库，从文件加载
         self.stopwords = {'zh': {}, 'en': {}}
         resource_path = importlib.resources.files(EXTRACT_STOPWORDS)
-        with resource_path.joinpath('chinese').open(encoding='utf-8') as f:
-            # 读取文件所有行到一个列表中
-            self.stopwords['zh'] = {line.strip() for line in f}
-        with resource_path.joinpath('english').open(encoding='utf-8') as f:
-            # 读取文件所有行到一个列表中
-            self.stopwords['en'] = {line.strip() for line in f}
+        try:
+            with resource_path.joinpath('chinese').open(encoding='utf-8') as f:
+                self.stopwords['zh'] = {line.strip() for line in f}
+        except FileNotFoundError:
+            log.error("Chinese stopwords file not found, using empty set")
+            self.stopwords['zh'] = set()
+        try:
+            with resource_path.joinpath('english').open(encoding='utf-8') as f:
+                self.stopwords['en'] = {line.strip() for line in f}
+        except FileNotFoundError:
+            log.error("English stopwords file not found, using empty set")
+            self.stopwords['en'] = set()
 
         # 定义特殊词列表，支持用户传入自定义特殊词，防止中文分词时切分特殊单词
 
@@ -191,7 +197,7 @@ class MultiLingualTextRank:
             if self.mask_words:
                 escaped_words = [re.escape(word) for word in self.mask_words]
                 mask_words_pattern = r'(?<![a-zA-Z0-9])(' + '|'.join(
-                    escaped_words) + r')(?<![a-zA-Z0-9])'
+                    escaped_words) + r')(?![a-zA-Z0-9])'
                 all_patterns = [mask_words_pattern] + all_patterns
 
             special_regex = re.compile('|'.join(all_patterns))
