@@ -147,7 +147,6 @@ class MultiLingualTextRank:
             'en': ('NN', 'NNS', 'NNP', 'NNPS', 'VB', 'VBG', 'VBN', 'VBZ')
         }
 
-        # 定义停用词库，从文件加载
         self.stopwords = {'zh': {}, 'en': {}}
         resource_path = importlib.resources.files(EXTRACT_STOPWORDS)
         try:
@@ -165,7 +164,7 @@ class MultiLingualTextRank:
 
         # 定义特殊词列表，支持用户传入自定义特殊词，防止中文分词时切分特殊单词
 
-        self.mask_words = list(filter(None, mask_words.split(',')))
+        self.mask_words = list(filter(None, (mask_words or "").split(',')))
 
     def _preprocess(self, text, lang):
         """
