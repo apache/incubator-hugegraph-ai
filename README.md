@@ -35,6 +35,7 @@ cd incubator-hugegraph-ai
 cp docker/env.template docker/.env
 # Edit docker/.env to set your PROJECT_PATH
 cd docker
+# same as `docker-compose` (Legacy)
 docker compose -f docker-compose-network.yml up -d
 
 # Access services:
