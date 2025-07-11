@@ -35,7 +35,8 @@ cd incubator-hugegraph-ai
 cp docker/env.template docker/.env
 # Edit docker/.env to set your PROJECT_PATH
 cd docker
-docker-compose -f docker-compose-network.yml up -d
+# same as `docker-compose` (Legacy)
+docker compose -f docker-compose-network.yml up -d
 
 # Access services:
 # - HugeGraph Server: http://localhost:8080
