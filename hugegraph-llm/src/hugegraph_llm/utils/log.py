@@ -44,7 +44,18 @@ log = init_logger(
 uvicorn_logger = logging.getLogger("uvicorn")
 uvicorn_logger.handlers.clear()
 uvicorn_logger.handlers.extend(root_logger.handlers)
-uvicorn_logger.setLevel(INFO)
+uvicorn_logger.setLevel(logging.WARNING)  # Change to WARNING to reduce output
+
+# Also configure uvicorn.access and uvicorn.error
+uvicorn_access = logging.getLogger("uvicorn.access")
+uvicorn_access.handlers.clear()
+uvicorn_access.handlers.extend(root_logger.handlers)
+uvicorn_access.setLevel(logging.WARNING)  # Only show warnings and errors
+
+uvicorn_error = logging.getLogger("uvicorn.error")
+uvicorn_error.handlers.clear()
+uvicorn_error.handlers.extend(root_logger.handlers)
+uvicorn_error.setLevel(logging.WARNING)  # Only show warnings and errors
 
 # Configure Gradio logging
 gradio_logger = logging.getLogger("gradio")
@@ -57,3 +68,23 @@ watchfiles_logger = logging.getLogger("watchfiles")
 watchfiles_logger.handlers.clear()
 watchfiles_logger.handlers.extend(root_logger.handlers)
 watchfiles_logger.setLevel(logging.ERROR)
+
+# Suppress third-party libraries logging
+third_party_loggers = {
+    "httpx": logging.WARNING,           # HTTP client library (general HTTP requests)
+    "httpcore": logging.WARNING,        # HTTP core library
+    "faiss": logging.WARNING,           # Vector search library
+    "faiss.loader": logging.WARNING,    # Faiss loader
+    "apscheduler": logging.WARNING,     # Task scheduler
+    "apscheduler.scheduler": logging.WARNING,
+    "apscheduler.executors": logging.WARNING,
+    "client": logging.WARNING,          # Generic client logs
+    "pyhugegraph": logging.WARNING,     # PyHugeGraph client
+    "urllib3": logging.WARNING,         # URL library
+    "requests": logging.WARNING,        # Requests library
+    "gradio": logging.WARNING,          # Gradio library (if you want to suppress more)
+}
+
+for logger_name, log_level in third_party_loggers.items():
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(log_level)
