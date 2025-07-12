@@ -21,8 +21,10 @@ from hugegraph_llm.config.models.base_prompt_config import BasePromptConfig
 
 # pylint: disable=C0301
 class PromptConfig(BasePromptConfig):
+    def __init__(self, llm_config_object):
+        self.llm_settings = llm_config_object
     # Data is detached from llm_op/answer_synthesize.py
-    answer_prompt: str = """You are an expert in the fields of knowledge graphs and natural language processing.
+    answer_prompt_EN: str = """You are an expert in the fields of knowledge graphs and natural language processing.
 
 Please provide precise and accurate answers based on the following context information, which is sorted in order of importance from high to low, without using any fabricated knowledge.
 
@@ -43,7 +45,7 @@ Answer:
     default_question: str = """Who is Sarah ?"""
 
     # Note: Users should modify the prompt(examples) according to the real schema and text (property_graph_extract.py)
-    extract_graph_prompt: str = """## Main Task
+    extract_graph_prompt_EN: str = """## Main Task
 Given the following graph schema and a piece of text, your task is to analyze the text and extract information that fits into the schema's structure, formatting the information into vertices and edges as specified.
 
 ## Basic Rules:
@@ -154,7 +156,7 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
     text2gql_graph_schema: str = "hugegraph"
 
     # Extracted from llm_op/keyword_extract.py
-    keywords_extract_prompt: str = """Instructions:
+    keywords_extract_prompt_EN: str = """Instructions:
     Please perform the following tasks on the text below:
     1. Extract keywords from the text:
        - Minimum 0, maximum MAX_KEYWORDS keywords.
@@ -186,7 +188,7 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
     {question}
     """
 
-    gremlin_generate_prompt = """
+    gremlin_generate_prompt_EN = """
 You are an expert in graph query language (Gremlin). Your role is to understand the schema of the graph, recognize the intent behind user queries, and generate accurate Gremlin code based on the given instructions.
 
 ### Tasks
@@ -239,7 +241,7 @@ Generate Gremlin from the Following User Query:
 The generated Gremlin is:
 """
 
-    doc_input_text: str = """Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with since 2010.
+    doc_input_text_EN: str = """Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with since 2010.
 James, in his professional life, works as a journalist. Additionally, Sarah is the proud owner of the website
 www.sarahsplace.com, while James manages his own webpage, though the specific URL is not mentioned here.
 These two individuals, Sarah and James, have not only forged a strong personal bond as roommates but have also
@@ -424,4 +426,6 @@ Your goal is to generate a new, tailored "Graph Extract Prompt Header" based on 
 {user_scenario}
 
 ## Your Generated "Graph Extract Prompt Header":
+## Language Requirement:
+Please generate the prompt in {language} language.
 """
