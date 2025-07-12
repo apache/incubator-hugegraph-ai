@@ -55,7 +55,8 @@ class PromptGenerate:
             few_shot_text=few_shot_example.get('text', ''),
             few_shot_prompt=few_shot_example.get('prompt', ''),
             user_text=source_text,
-            user_scenario=scenario
+            user_scenario=scenario,
+            language=prompt_tpl.llm_settings.language
         )
         log.debug("Meta-prompt sent to LLM: %s", meta_prompt)
         generated_prompt = self.llm.generate(prompt=meta_prompt)

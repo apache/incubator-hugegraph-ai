@@ -25,12 +25,12 @@ from .hugegraph_config import HugeGraphConfig
 from .admin_config import AdminConfig
 from .llm_config import LLMConfig
 
-prompt = PromptConfig()
+llm_settings = LLMConfig()
+prompt = PromptConfig(llm_settings)
 prompt.ensure_yaml_file_exists()
 
 huge_settings = HugeGraphConfig()
 admin_settings = AdminConfig()
-llm_settings = LLMConfig()
 
 package_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 resource_path = os.path.join(package_path, "resources")
