@@ -28,4 +28,4 @@ if __name__ == "__main__":
         huge_settings.generate_env()
         admin_settings.generate_env()
         llm_settings.generate_env()
-        PromptConfig().generate_yaml_file()
+        PromptConfig(llm_settings).generate_yaml_file()
