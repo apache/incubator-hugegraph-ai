@@ -18,7 +18,7 @@
 import json
 from typing import AsyncGenerator, Generator, Optional, List, Dict, Any, Callable
 
-import qianfan
+from openai import OpenAI
 from retry import retry
 
 from hugegraph_llm.config import llm_settings
@@ -27,12 +27,13 @@ from hugegraph_llm.utils.log import log
 
 
 class QianfanClient(BaseLLM):
-    def __init__(self, model_name: Optional[str] = "ernie-4.5-8k-preview",
-                 api_key: Optional[str] = None, secret_key: Optional[str] = None):
-        qianfan.get_config().AK = api_key or llm_settings.qianfan_chat_api_key
-        qianfan.get_config().SK = secret_key or llm_settings.qianfan_chat_secret_key
+    def __init__(self, model_name: Optional[str] = "ernie-3.5-8k",
+                 api_key: Optional[str] = None, base_url: Optional[str] = None):
+        self.client = OpenAI(
+            api_key=api_key or llm_settings.qianfan_chat_api_key,
+            base_url=base_url or llm_settings.qianfan_base_url,
+        )
         self.chat_model = model_name
-        self.chat_comp = qianfan.ChatCompletion()
 
     @retry(tries=3, delay=1)
     def generate(
@@ -44,13 +45,17 @@ class QianfanClient(BaseLLM):
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
 
-        response = self.chat_comp.do(model=self.chat_model, messages=messages)
-        if response.code != 200:
-            raise Exception(
-                f"Request failed with code {response.code}, message: {response.body['error_msg']}"
-            )
-        log.info("Token usage: %s", json.dumps(response.body["usage"]))
-        return response.body["result"]
+        response = self.client.chat.completions.create(
+            model=self.chat_model,
+            messages=messages
+        )
+        
+        log.info("Token usage: %s", json.dumps({
+            "prompt_tokens": response.usage.prompt_tokens,
+            "completion_tokens": response.usage.completion_tokens,
+            "total_tokens": response.usage.total_tokens
+        }))
+        return response.choices[0].message.content
 
     @retry(tries=3, delay=1)
     async def agenerate(
@@ -62,13 +67,17 @@ class QianfanClient(BaseLLM):
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
 
-        response = await self.chat_comp.ado(model=self.chat_model, messages=messages)
-        if response.code != 200:
-            raise Exception(
-                f"Request failed with code {response.code}, message: {response.body['error_msg']}"
-            )
-        log.info("Token usage: %s", json.dumps(response.body["usage"]))
-        return response.body["result"]
+        response = await self.client.chat.completions.create(
+            model=self.chat_model,
+            messages=messages
+        )
+        
+        log.info("Token usage: %s", json.dumps({
+            "prompt_tokens": response.usage.prompt_tokens,
+            "completion_tokens": response.usage.completion_tokens,
+            "total_tokens": response.usage.total_tokens
+        }))
+        return response.choices[0].message.content
 
     def generate_streaming(
             self,
@@ -80,11 +89,18 @@ class QianfanClient(BaseLLM):
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
 
-        for msg in self.chat_comp.do(messages=messages, model=self.chat_model, stream=True):
-            token = msg.body['result']
-            if on_token_callback:
-                on_token_callback(token)
-            yield token
+        stream = self.client.chat.completions.create(
+            model=self.chat_model,
+            messages=messages,
+            stream=True
+        )
+        
+        for chunk in stream:
+            if chunk.choices[0].delta.content is not None:
+                token = chunk.choices[0].delta.content
+                if on_token_callback:
+                    on_token_callback(token)
+                yield token
 
     async def agenerate_streaming(
             self,
@@ -97,12 +113,17 @@ class QianfanClient(BaseLLM):
             messages = [{"role": "user", "content": prompt}]
 
         try:
-            async_generator = await self.chat_comp.ado(messages=messages, model=self.chat_model, stream=True)
-            async for msg in async_generator:
-                chunk = msg.body['result']
-                if on_token_callback:
-                    on_token_callback(chunk)
-                yield chunk
+            stream = await self.client.chat.completions.create(
+                model=self.chat_model,
+                messages=messages,
+                stream=True
+            )
+            async for chunk in stream:
+                if chunk.choices[0].delta.content is not None:
+                    token = chunk.choices[0].delta.content
+                    if on_token_callback:
+                        on_token_callback(token)
+                    yield token
         except Exception as e:
             print(f"Retrying LLM call {e}")
             raise e
@@ -111,11 +132,10 @@ class QianfanClient(BaseLLM):
         return len(string)
 
     def max_allowed_token_length(self) -> int:
-        # TODO: replace with config way
         return 6000
 
     def get_llm_type(self) -> str:
-        return "qianfan_wenxin"
+        return "qianfan_wenxin_v2"
 
 
 if __name__ == "__main__":

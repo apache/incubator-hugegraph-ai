@@ -18,7 +18,7 @@
 
 from typing import Optional, List
 
-import qianfan
+from openai import OpenAI
 
 from hugegraph_llm.config import llm_settings
 
@@ -36,33 +36,34 @@ class QianFanEmbedding:
             self,
             model_name: str = "embedding-v1",
             api_key: Optional[str] = None,
-            secret_key: Optional[str] = None
+            base_url: Optional[str] = None
     ):
-        qianfan.get_config().AK = api_key or llm_settings.qianfan_embedding_api_key
-        qianfan.get_config().SK = secret_key or llm_settings.qianfan_embedding_secret_key
+        self.client = OpenAI(
+            api_key=api_key or llm_settings.qianfan_embedding_api_key,
+            base_url=base_url or llm_settings.qianfan_base_url,
+        )
         self.embedding_model_name = model_name
-        self.client = qianfan.Embedding()
 
     def get_text_embedding(self, text: str) -> List[float]:
-        """ Usage refer: https://cloud.baidu.com/doc/WENXINWORKSHOP/s/hlmokk9qn"""
-        response = self.client.do(
+        """ Usage refer v2 API documentation"""
+        response = self.client.embeddings.create(
             model=self.embedding_model_name,
-            texts=[text]
+            input=[text]
         )
-        return response["body"]["data"][0]["embedding"]
+        return response.data[0].embedding
 
     def get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """ Usage refer: https://cloud.baidu.com/doc/WENXINWORKSHOP/s/hlmokk9qn"""
-        response = self.client.do(
+        """ Usage refer v2 API documentation"""
+        response = self.client.embeddings.create(
             model=self.embedding_model_name,
-            texts=texts
+            input=texts
         )
-        return [data["embedding"] for data in response["body"]["data"]]
+        return [data.embedding for data in response.data]
 
     async def async_get_text_embedding(self, text: str) -> List[float]:
-        """ Usage refer: https://cloud.baidu.com/doc/WENXINWORKSHOP/s/hlmokk9qn"""
-        response = await self.client.ado(
+        """ Usage refer v2 API documentation"""
+        response = await self.client.embeddings.create(
             model=self.embedding_model_name,
-            texts=[text]
+            input=[text]
         )
-        return response["body"]["data"][0]["embedding"]
+        return response.data[0].embedding

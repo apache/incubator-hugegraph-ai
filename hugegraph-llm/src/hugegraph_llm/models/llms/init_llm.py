@@ -30,11 +30,11 @@ class LLMs:
         self.text2gql_llm_type = llm_settings.text2gql_llm_type
 
     def get_chat_llm(self):
-        if self.chat_llm_type == "qianfan_wenxin":
+        if self.chat_llm_type == "qianfan_wenxin_v2":
             return QianfanClient(
                 model_name=llm_settings.qianfan_chat_language_model,
                 api_key=llm_settings.qianfan_chat_api_key,
-                secret_key=llm_settings.qianfan_chat_secret_key
+                base_url=llm_settings.qianfan_base_url
             )
         if self.chat_llm_type == "openai":
             return OpenAIClient(
@@ -59,11 +59,11 @@ class LLMs:
         raise Exception("chat llm type is not supported !")
 
     def get_extract_llm(self):
-        if self.extract_llm_type == "qianfan_wenxin":
+        if self.extract_llm_type == "qianfan_wenxin_v2":
             return QianfanClient(
                 model_name=llm_settings.qianfan_extract_language_model,
                 api_key=llm_settings.qianfan_extract_api_key,
-                secret_key=llm_settings.qianfan_extract_secret_key
+                base_url=llm_settings.qianfan_base_url
             )
         if self.extract_llm_type == "openai":
             return OpenAIClient(
@@ -88,11 +88,11 @@ class LLMs:
         raise Exception("extract llm type is not supported !")
 
     def get_text2gql_llm(self):
-        if self.text2gql_llm_type == "qianfan_wenxin":
+        if self.text2gql_llm_type == "qianfan_wenxin_v2":
             return QianfanClient(
                 model_name=llm_settings.qianfan_text2gql_language_model,
                 api_key=llm_settings.qianfan_text2gql_api_key,
-                secret_key=llm_settings.qianfan_text2gql_secret_key
+                base_url=llm_settings.qianfan_base_url
             )
         if self.text2gql_llm_type == "openai":
             return OpenAIClient(

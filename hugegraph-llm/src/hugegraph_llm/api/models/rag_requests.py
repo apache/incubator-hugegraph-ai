@@ -91,15 +91,13 @@ class GraphRAGRequest(BaseModel):
 
 class LLMConfigRequest(BaseModel):
     llm_type: str
-    # The common parameters shared by OpenAI, Qianfan Wenxin,
+    # The common parameters shared by OpenAI, Qianfan Wenxin v2,
     # and OLLAMA platforms.
     api_key: str
     api_base: str
     language_model: str
     # Openai-only properties
     max_tokens: str = None
-    # qianfan-wenxin-only properties
-    secret_key: str = None
     # ollama-only properties
     # TODO: replace to url later
     host: str = None
