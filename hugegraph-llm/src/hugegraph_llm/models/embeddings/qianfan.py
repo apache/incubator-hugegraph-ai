@@ -18,7 +18,7 @@
 
 from typing import Optional, List
 
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 
 from hugegraph_llm.config import llm_settings
 
@@ -42,6 +42,10 @@ class QianFanEmbedding:
             api_key=api_key or llm_settings.qianfan_embedding_api_key,
             base_url=base_url or llm_settings.qianfan_base_url,
         )
+        self.aclient = AsyncOpenAI(
+            api_key=api_key or llm_settings.qianfan_embedding_api_key,
+            base_url=base_url or llm_settings.qianfan_base_url,
+        )
         self.embedding_model_name = model_name
 
     def get_text_embedding(self, text: str) -> List[float]:
@@ -62,7 +66,7 @@ class QianFanEmbedding:
 
     async def async_get_text_embedding(self, text: str) -> List[float]:
         """ Usage refer v2 API documentation"""
-        response = await self.client.embeddings.create(
+        response = await self.aclient.embeddings.create(
             model=self.embedding_model_name,
             input=[text]
         )

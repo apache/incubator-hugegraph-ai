@@ -18,7 +18,7 @@
 import json
 from typing import AsyncGenerator, Generator, Optional, List, Dict, Any, Callable
 
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 from retry import retry
 
 from hugegraph_llm.config import llm_settings
@@ -30,6 +30,10 @@ class QianfanClient(BaseLLM):
     def __init__(self, model_name: Optional[str] = "ernie-3.5-8k",
                  api_key: Optional[str] = None, base_url: Optional[str] = None):
         self.client = OpenAI(
+            api_key=api_key or llm_settings.qianfan_chat_api_key,
+            base_url=base_url or llm_settings.qianfan_base_url,
+        )
+        self.aclient = AsyncOpenAI(
             api_key=api_key or llm_settings.qianfan_chat_api_key,
             base_url=base_url or llm_settings.qianfan_base_url,
         )
@@ -67,7 +71,7 @@ class QianfanClient(BaseLLM):
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
 
-        response = await self.client.chat.completions.create(
+        response = await self.aclient.chat.completions.create(
             model=self.chat_model,
             messages=messages
         )
@@ -113,7 +117,7 @@ class QianfanClient(BaseLLM):
             messages = [{"role": "user", "content": prompt}]
 
         try:
-            stream = await self.client.chat.completions.create(
+            stream = await self.aclient.chat.completions.create(
                 model=self.chat_model,
                 messages=messages,
                 stream=True
