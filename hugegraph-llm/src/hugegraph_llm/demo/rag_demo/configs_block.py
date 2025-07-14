@@ -99,9 +99,9 @@ def test_api_connection(url, method="GET", headers=None, params=None, body=None,
 
 def config_qianfan_model(arg1, arg2, arg3=None, settings_prefix=None, origin_call=None) -> int:
     setattr(llm_settings, f"qianfan_{settings_prefix}_api_key", arg1)
-    setattr(llm_settings, f"qianfan_base_url", arg2)
+    setattr(llm_settings, "qianfan_base_url", arg2)
     setattr(llm_settings, f"qianfan_{settings_prefix}_language_model", arg3)
-    
+
     # Test v2 API connection using OpenAI SDK compatible endpoint
     test_url = f"{arg2}/chat/completions"
     headers = {"Authorization": f"Bearer {arg1}"}
