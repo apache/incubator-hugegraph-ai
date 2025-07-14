@@ -53,7 +53,7 @@ class QianfanClient(BaseLLM):
             model=self.chat_model,
             messages=messages
         )
-        
+
         log.info("Token usage: %s", json.dumps({
             "prompt_tokens": response.usage.prompt_tokens,
             "completion_tokens": response.usage.completion_tokens,
@@ -75,7 +75,7 @@ class QianfanClient(BaseLLM):
             model=self.chat_model,
             messages=messages
         )
-        
+
         log.info("Token usage: %s", json.dumps({
             "prompt_tokens": response.usage.prompt_tokens,
             "completion_tokens": response.usage.completion_tokens,
@@ -98,7 +98,7 @@ class QianfanClient(BaseLLM):
             messages=messages,
             stream=True
         )
-        
+
         for chunk in stream:
             if chunk.choices[0].delta.content is not None:
                 token = chunk.choices[0].delta.content
@@ -146,3 +146,4 @@ if __name__ == "__main__":
     client = QianfanClient()
     print(client.generate(prompt="What is the capital of China?"))
     print(client.generate(messages=[{"role": "user", "content": "What is the capital of China?"}]))
+
