@@ -185,7 +185,7 @@ class MultiLingualTextRank:
             re.compile(word)
             return word
         except re.error:
-            escaped_words = [re.escape(word)]
+            escaped_words = re.escape(word)
             mask_words_pattern = r'(?<![a-zA-Z0-9])(' + '|'.join(
                 escaped_words) + r')(?![a-zA-Z0-9])'
             return mask_words_pattern
@@ -221,7 +221,6 @@ class MultiLingualTextRank:
 
         special_regex = re.compile('|'.join(all_patterns))
         masked_text = special_regex.sub(_create_placeholder, text)
-        print(masked_text)
 
         # 2. 清理 (Cleaning)
         final_patterns_to_keep = [
@@ -234,24 +233,26 @@ class MultiLingualTextRank:
         text_for_jieba = ' '.join(clean_tokens)
 
         # 3. 在分词前，将所有占位符作为一个完整的词添加到 jieba 词典中
-        for placeholder in placeholder_map:
-            jieba.add_word(placeholder, tag='SPTK')
+        try:
+            for placeholder in placeholder_map:
+                jieba.add_word(placeholder, tag='SPTK')
 
-        # 4. 分词与恢复
-        stop_words = self.stopwords.get('zh', set())
-        jieba_tokens = pseg.cut(text_for_jieba)
+            # 4. 分词与恢复
+            stop_words = self.stopwords.get('zh', set())
+            jieba_tokens = pseg.cut(text_for_jieba)
 
-        for word, flag in jieba_tokens:
-            if word in placeholder_map:
-                restored_word = placeholder_map[word]
-                words.append(restored_word)
-            else:
-                if len(word) > 1 and flag in self.pos_filter['zh'] and word not in stop_words:
-                    words.append(word)
+            for word, flag in jieba_tokens:
+                if word in placeholder_map:
+                    restored_word = placeholder_map[word]
+                    words.append(restored_word)
+                else:
+                    if len(word) > 1 and flag in self.pos_filter['zh'] and word not in stop_words:
+                        words.append(word)
 
         # 5. 清除 jieba 词典
-        for placeholder in placeholder_map:
-            jieba.del_word(placeholder)
+        finally:
+            for placeholder in placeholder_map:
+                jieba.del_word(placeholder)
 
         return words
 
