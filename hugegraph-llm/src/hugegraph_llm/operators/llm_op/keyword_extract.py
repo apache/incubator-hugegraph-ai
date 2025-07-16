@@ -100,8 +100,14 @@ class KeywordExtract:
         start_time = time.perf_counter()
         try:
             keywords = self._textrank_model.extract_keywords(self._query, self._language)
-        except (TypeError, FileNotFoundError, MemoryError, ValueError) as e:
-            log.error("TextRank Keyword extraction error: %s", e)
+        except FileNotFoundError as e:
+            log.error("TextRank resource file not found: %s", e)
+            keywords = []
+        except (TypeError, ValueError) as e:
+            log.error("TextRank parameter error: %s", e)
+            keywords = []
+        except MemoryError as e:
+            log.error("TextRank memory error (text too large?): %s", e)
             keywords = []
         log.debug("TextRank Keyword extraction time: %.2fs",
                   time.perf_counter() - start_time)
@@ -147,24 +153,28 @@ class MultiLingualTextRank:
             'en': ('NN', 'NNS', 'NNP', 'NNPS', 'VB', 'VBG', 'VBN', 'VBZ')
         }
 
-        self.stopwords = {'zh': {}, 'en': {}}
+        self.stopwords = {'zh': set(), 'en': set()}
+
+        # 定义特殊词列表，支持用户传入自定义特殊词，防止中文分词时切分特殊单词
+
+        self.mask_words = list(filter(None, (mask_words or "").split(',')))
+
+        self.stopwords_loaded = False
+
+    def _load_stopwords(self):
+        if self.stopwords_loaded:
+            return
         resource_path = importlib.resources.files(EXTRACT_STOPWORDS)
         try:
             with resource_path.joinpath('chinese').open(encoding='utf-8') as f:
                 self.stopwords['zh'] = {line.strip() for line in f}
         except FileNotFoundError:
             log.error("Chinese stopwords file not found, using empty set")
-            self.stopwords['zh'] = set()
         try:
             with resource_path.joinpath('english').open(encoding='utf-8') as f:
                 self.stopwords['en'] = {line.strip() for line in f}
         except FileNotFoundError:
             log.error("English stopwords file not found, using empty set")
-            self.stopwords['en'] = set()
-
-        # 定义特殊词列表，支持用户传入自定义特殊词，防止中文分词时切分特殊单词
-
-        self.mask_words = list(filter(None, (mask_words or "").split(',')))
 
     def _preprocess(self, text, lang):
         """
@@ -287,20 +297,23 @@ class MultiLingualTextRank:
         """
         主函数：执行完整的关键词提取流程
         """
-        # 1. 文本预处理
+        # 1. 停止词载入
+        self._load_stopwords()
+
+        # 2. 文本预处理
         words = self._preprocess(text, lang)
         if not words:
             return []
 
-        # 2. 构建图
+        # 3. 构建图
         self._build_graph(words)
 
-        # 3. 运行 TextRank
+        # 4. 运行 TextRank
         if not self.graph or self.graph.number_of_nodes() == 0:
             return []
         ranks = self._rank_nodes()
 
-        # 4. 提取 Top-K 关键词
+        # 5. 提取 Top-K 关键词
         top_keywords = sorted(ranks, key=ranks.get, reverse=True)[:self.top_k]
 
         return top_keywords
