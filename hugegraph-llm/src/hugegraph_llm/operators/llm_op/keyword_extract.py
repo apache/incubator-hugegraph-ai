@@ -26,6 +26,7 @@ import jieba
 import jieba.posseg as pseg
 import networkx as nx
 import nltk
+import regex
 
 from hugegraph_llm.config import prompt
 from hugegraph_llm.models.llms.base import BaseLLM
@@ -186,19 +187,25 @@ class MultiLingualTextRank:
             return False
         return True
 
-    def _regex_test(self, word: str):
-        if not isinstance(word, str) or len(word) > 100:
+    def _regex_test(self, word: str, text: str, max_len: int = 100, timeout_seconds: int = 1):
+        if not isinstance(word, str) or len(word) > max_len:
             return ""
         if len(word.strip()) == 0:
             return ""
         try:
-            # 尝试编译该字符串
-            re.compile(word, re.TIMEOUT if hasattr(re, 'TIMEOUT') else 0)
+            pattern = regex.compile(word, regex.V1)
+            pattern.search(text, timeout=timeout_seconds)
             return word
-        except (re.error, OverflowError):
+        except regex.error:
             escaped_words = re.escape(word)
             mask_words_pattern = r'(?<![a-zA-Z0-9])(' + escaped_words + r')(?![a-zA-Z0-9])'
             return mask_words_pattern
+        except OverflowError as e:
+            log.error("OverflowError: Regex timeout exceeded: %s", e)
+            return ""
+        except TimeoutError as e:
+            log.error("TimeoutError: Regex timeout exceeded: %s", e)
+            return ""
 
     def _zh_preprocess(self, text):
         """
@@ -226,7 +233,7 @@ class MultiLingualTextRank:
             r'\b\d+[,.]\d+\b',
         ]
         if self.mask_words:
-            mask_words_pattern = [self._regex_test(word) for word in self.mask_words]
+            mask_words_pattern = [self._regex_test(word, text) for word in self.mask_words]
             all_patterns = mask_words_pattern + all_patterns
 
         special_regex = re.compile('|'.join(all_patterns))
@@ -264,8 +271,8 @@ class MultiLingualTextRank:
             for placeholder in placeholder_map:
                 try:
                     jieba.del_word(placeholder)
-                except Exception as e:
-                    log.error(f"Error deleting word from jieba dictionary: {e}")
+                except TypeError as e:
+                    log.error("Error deleting word from jieba dictionary: %s", e)
 
         return words
 
@@ -339,15 +346,15 @@ class MultiLingualTextRank:
 
         # 2. 参数验证
         # TODO: Change to use machine learning models if its accuracy is acceptable
-        if not lang or not isinstance(lang, str):
-            log.warning("Invalid language parameter: %s, defaulting to 'en'", lang)
+        if not lang or not isinstance(lang, str) or lang not in ["chinese", "english"]:
+            log.warning("Invalid language parameter: %s, defaulting to 'english'", lang)
             lang = 'english'
 
         # 3. 文本预处理
         words = []
-        if lang.startswith('chinese'):
+        if lang == 'chinese':
             words = self._zh_preprocess(text)
-        elif lang.startswith('english'):
+        elif lang == 'english':
             words = self._en_preprocess(text)
         if not words:
             return []
