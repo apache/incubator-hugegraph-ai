@@ -163,18 +163,21 @@ class MultiLingualTextRank:
 
     def _load_stopwords(self):
         if self.stopwords_loaded:
-            return
+            return True
         resource_path = importlib.resources.files(EXTRACT_STOPWORDS)
         try:
             with resource_path.joinpath('chinese').open(encoding='utf-8') as f:
                 self.stopwords['zh'] = {line.strip() for line in f}
         except FileNotFoundError:
             log.error("Chinese stopwords file not found, using empty set")
+            return False
         try:
             with resource_path.joinpath('english').open(encoding='utf-8') as f:
                 self.stopwords['en'] = {line.strip() for line in f}
         except FileNotFoundError:
             log.error("English stopwords file not found, using empty set")
+            return False
+        return True
 
     def _preprocess(self, text, lang):
         """
@@ -298,7 +301,8 @@ class MultiLingualTextRank:
         主函数：执行完整的关键词提取流程
         """
         # 1. 停止词载入
-        self._load_stopwords()
+        if not self._load_stopwords():
+            return []
 
         # 2. 文本预处理
         words = self._preprocess(text, lang)
