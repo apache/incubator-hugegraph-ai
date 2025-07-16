@@ -314,7 +314,7 @@ def create_rag_block():
                     extraction_method_input = gr.Radio(choices=["LLM", "TextRank"], value="TextRank", label="Keywords Extraction Method")
                     max_keyword_num = gr.Number(value=5, label="Max Keywords Num", precision=5)
                 with gr.Row():
-                    language_input = gr.Radio(choices=["en", "zh"], value="en", label="Language")
+                    language_input = gr.Radio(choices=["english", "chinese"], value="english", label="Language")
                     sliding_window_size = gr.Slider(2, 10, 5, label="Sliding window size of TextRank", step=1, interactive=True)
 
             def toggle_slider(enable):

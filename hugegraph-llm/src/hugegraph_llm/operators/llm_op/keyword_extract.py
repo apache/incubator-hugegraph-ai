@@ -19,6 +19,7 @@ import importlib.resources
 import re
 import time
 from collections import defaultdict
+from dataclasses import dataclass, asdict
 from typing import Any, Dict, Optional, Set
 
 import jieba
@@ -37,6 +38,13 @@ KEYWORDS_EXTRACT_TPL = prompt.keywords_extract_prompt
 EXTRACT_STOPWORDS = 'hugegraph_llm.resources.nltk_data.corpora.stopwords'
 
 
+@dataclass
+class TextRankConfig:
+    keyword_num: int = 5
+    window_size: int = 5
+    mask_words: str = ""
+
+
 class KeywordExtract:
     def __init__(
         self,
@@ -44,9 +52,9 @@ class KeywordExtract:
         llm: Optional[BaseLLM] = None,
         max_keywords: int = 5,
         extract_template: Optional[str] = None,
-        language: str = "en",
+        language: str = "english",
         extract_method: str = "TextRank",  # 新增关键词提取方法设置
-        textrank_kwargs: Optional[Dict] = None,  # TextRank 参数
+        textrank_kwargs: Optional[TextRankConfig] = None,  # TextRank 参数
     ):
         self._llm = llm
         self._query = text
@@ -54,7 +62,8 @@ class KeywordExtract:
         self._max_keywords = max_keywords
         self._extract_template = extract_template or KEYWORDS_EXTRACT_TPL
         self._extract_method = extract_method  # 新增关键词提取方法设置
-        self._textrank_model = MultiLingualTextRank(**textrank_kwargs)  # TextRank 参数
+        self._textrank_kwargs = asdict(textrank_kwargs)
+        self._textrank_model = MultiLingualTextRank(**self._textrank_kwargs)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._query is None:
@@ -149,11 +158,11 @@ class MultiLingualTextRank:
 
         # 定义中英文的候选词性
         self.pos_filter = {
-            'zh': ('n', 'nr', 'ns', 'nt', 'nrt', 'nz', 'v', 'vd', 'vn', "eng"),
-            'en': ('NN', 'NNS', 'NNP', 'NNPS', 'VB', 'VBG', 'VBN', 'VBZ')
+            'chinese': ('n', 'nr', 'ns', 'nt', 'nrt', 'nz', 'v', 'vd', 'vn', "eng"),
+            'english': ('NN', 'NNS', 'NNP', 'NNPS', 'VB', 'VBG', 'VBN', 'VBZ')
         }
 
-        self.stopwords = {'zh': set(), 'en': set()}
+        self.stopwords = {'chinese': set(), 'english': set()}
 
         # 定义特殊词列表，支持用户传入自定义特殊词，防止中文分词时切分特殊单词
         self.mask_words = list(filter(None, (mask_words or "").split(',')))
@@ -165,34 +174,35 @@ class MultiLingualTextRank:
         resource_path = importlib.resources.files(EXTRACT_STOPWORDS)
         try:
             with resource_path.joinpath('chinese').open(encoding='utf-8') as f:
-                self.stopwords['zh'] = {line.strip() for line in f}
+                self.stopwords['chinese'] = {line.strip() for line in f}
         except FileNotFoundError:
             log.error("Chinese stopwords file not found, using empty set")
             return False
         try:
             with resource_path.joinpath('english').open(encoding='utf-8') as f:
-                self.stopwords['en'] = {line.strip() for line in f}
+                self.stopwords['english'] = {line.strip() for line in f}
         except FileNotFoundError:
             log.error("English stopwords file not found, using empty set")
             return False
         return True
 
     def _regex_test(self, word: str):
-        if not isinstance(word, str):
+        if not isinstance(word, str) or len(word) > 100:
+            return ""
+        if len(word.strip()) == 0:
             return ""
         try:
             # 尝试编译该字符串
-            re.compile(word)
+            re.compile(word, re.TIMEOUT if hasattr(re, 'TIMEOUT') else 0)
             return word
-        except re.error:
+        except (re.error, OverflowError):
             escaped_words = re.escape(word)
-            mask_words_pattern = r'(?<![a-zA-Z0-9])(' + '|'.join(
-                escaped_words) + r')(?![a-zA-Z0-9])'
+            mask_words_pattern = r'(?<![a-zA-Z0-9])(' + escaped_words + r')(?![a-zA-Z0-9])'
             return mask_words_pattern
 
     def _zh_preprocess(self, text):
         """
-        'zh': 遮蔽特殊词 -> 占位符与过滤词输入 -> 清理 -> 中文分词 -> 恢复特殊词 -> 过滤。
+        'chinese': 遮蔽特殊词 -> 占位符与过滤词输入 -> 清理 -> 中文分词 -> 恢复特殊词 -> 过滤。
         """
         words = []
 
@@ -238,7 +248,7 @@ class MultiLingualTextRank:
                 jieba.add_word(placeholder, tag='SPTK')
 
             # 4. 分词与恢复
-            stop_words = self.stopwords.get('zh', set())
+            stop_words = self.stopwords.get('chinese', set())
             jieba_tokens = pseg.cut(text_for_jieba)
 
             for word, flag in jieba_tokens:
@@ -246,13 +256,16 @@ class MultiLingualTextRank:
                     restored_word = placeholder_map[word]
                     words.append(restored_word)
                 else:
-                    if len(word) > 1 and flag in self.pos_filter['zh'] and word not in stop_words:
+                    if len(word) > 1 and flag in self.pos_filter['chinese'] and word not in stop_words:
                         words.append(word)
 
         # 5. 清除 jieba 词典
         finally:
             for placeholder in placeholder_map:
-                jieba.del_word(placeholder)
+                try:
+                    jieba.del_word(placeholder)
+                except Exception as e:
+                    log.error(f"Error deleting word from jieba dictionary: {e}")
 
         return words
 
@@ -274,13 +287,13 @@ class MultiLingualTextRank:
         tokens = combined_pattern.findall(text)
         text_for_nltk = ' '.join(tokens)
 
-        stop_words = self.stopwords.get('en', set())
+        stop_words = self.stopwords.get('english', set())
         text_for_nltk = text_for_nltk.lower()
         nltk_tokens = nltk.word_tokenize(text_for_nltk)
         pos_tags = nltk.pos_tag(nltk_tokens)
 
         for word, flag in pos_tags:
-            if len(word) > 1 and flag in self.pos_filter['en'] and word not in stop_words:
+            if len(word) > 1 and flag in self.pos_filter['english'] and word not in stop_words:
                 words.append(word)
         return words
 
@@ -328,13 +341,13 @@ class MultiLingualTextRank:
         # TODO: Change to use machine learning models if its accuracy is acceptable
         if not lang or not isinstance(lang, str):
             log.warning("Invalid language parameter: %s, defaulting to 'en'", lang)
-            lang = 'en'
+            lang = 'english'
 
         # 3. 文本预处理
         words = []
-        if lang.startswith('zh'):
+        if lang.startswith('chinese'):
             words = self._zh_preprocess(text)
-        elif lang.startswith('en'):
+        elif lang.startswith('english'):
             words = self._en_preprocess(text)
         if not words:
             return []
