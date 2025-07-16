@@ -56,6 +56,8 @@ dependencies = [
     "rich~=13.9.4",
     "apscheduler~=3.10.4",
     "litellm~=1.61.13",
+    "networkx~=3.4.2",
+    "scipy~=1.15.3",
     "hugegraph-python-client",
 ]
 [project.urls]
