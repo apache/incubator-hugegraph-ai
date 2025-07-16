@@ -156,9 +156,7 @@ class MultiLingualTextRank:
         self.stopwords = {'zh': set(), 'en': set()}
 
         # 定义特殊词列表，支持用户传入自定义特殊词，防止中文分词时切分特殊单词
-
         self.mask_words = list(filter(None, (mask_words or "").split(',')))
-
         self.stopwords_loaded = False
 
     def _load_stopwords(self):
@@ -179,94 +177,115 @@ class MultiLingualTextRank:
             return False
         return True
 
-    def _preprocess(self, text, lang):
+    def _regex_test(self, word: str):
+        if not isinstance(word, str):
+            return ""
+        try:
+            # 尝试编译该字符串
+            re.compile(word)
+            return word
+        except re.error:
+            escaped_words = [re.escape(word)]
+            mask_words_pattern = r'(?<![a-zA-Z0-9])(' + '|'.join(
+                escaped_words) + r')(?![a-zA-Z0-9])'
+            return mask_words_pattern
+
+    def _zh_preprocess(self, text):
         """
-        - 'en': 清理、分词、标注、过滤。
-        - 'zh': 遮蔽特殊词 -> 占位符与过滤词输入 -> 清理 -> 中文分词 -> 恢复特殊词 -> 过滤。
+        'zh': 遮蔽特殊词 -> 占位符与过滤词输入 -> 清理 -> 中文分词 -> 恢复特殊词 -> 过滤。
         """
         words = []
-        if lang.startswith('zh'):
 
-            # 1. 遮蔽 (Masking)
-            placeholder_id_counter = 0
-            placeholder_map = {}
+        # 1. 遮蔽 (Masking)
+        placeholder_id_counter = 0
+        placeholder_map = {}
 
-            def _create_placeholder(match_obj):
-                nonlocal placeholder_id_counter
-                original_word = match_obj.group(0)
-                _placeholder = f"__SPECIAL_TOKEN_{placeholder_id_counter}__"
-                placeholder_map[_placeholder] = original_word
-                placeholder_id_counter += 1
-                return _placeholder
+        def _create_placeholder(match_obj):
+            nonlocal placeholder_id_counter
+            original_word = match_obj.group(0)
+            _placeholder = f"__SPECIAL_TOKEN_{placeholder_id_counter}__"
+            placeholder_map[_placeholder] = original_word
+            placeholder_id_counter += 1
+            return _placeholder
 
-            # 特殊词与短语匹配模式
-            all_patterns = [
-                r'(?:https?://|www\.)[\w\-\.\/\:?=&%#]+',
-                r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
-                r'\b\w+(?:[-’\']\w+)+\b',
-                r'\b\d+[,.]\d+\b',
-            ]
-            if self.mask_words:
-                escaped_words = [re.escape(word) for word in self.mask_words]
-                mask_words_pattern = r'(?<![a-zA-Z0-9])(' + '|'.join(
-                    escaped_words) + r')(?![a-zA-Z0-9])'
-                all_patterns = [mask_words_pattern] + all_patterns
+        # 特殊词与短语匹配模式
+        all_patterns = [
+            r'(?:https?://|www\.)[\w\-\.\/\:?=&%#]+',
+            r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
+            r'\b\w+(?:[-’\']\w+)+\b',
+            r'\b\d+[,.]\d+\b',
+        ]
+        if self.mask_words:
+            mask_words_pattern = [self._regex_test(word) for word in self.mask_words]
+            all_patterns = mask_words_pattern + all_patterns
 
-            special_regex = re.compile('|'.join(all_patterns))
-            masked_text = special_regex.sub(_create_placeholder, text)
+        special_regex = re.compile('|'.join(all_patterns))
+        masked_text = special_regex.sub(_create_placeholder, text)
+        print(masked_text)
 
-            # 2. 清理 (Cleaning)
-            final_patterns_to_keep = [
-                r'__SPECIAL_TOKEN_\d+__',
-                r'\b\w+\b',
-                r'[\u4e00-\u9fff]+'
-            ]
-            final_token_regex = re.compile('|'.join(final_patterns_to_keep))
-            clean_tokens = final_token_regex.findall(masked_text)
-            text_for_jieba = ' '.join(clean_tokens)
+        # 2. 清理 (Cleaning)
+        final_patterns_to_keep = [
+            r'__SPECIAL_TOKEN_\d+__',
+            r'\b\w+\b',
+            r'[\u4e00-\u9fff]+'
+        ]
+        final_token_regex = re.compile('|'.join(final_patterns_to_keep))
+        clean_tokens = final_token_regex.findall(masked_text)
+        text_for_jieba = ' '.join(clean_tokens)
 
-            # 3. 在分词前，将所有占位符作为一个完整的词添加到 jieba 词典中
-            for placeholder in placeholder_map:
-                jieba.add_word(placeholder, tag='SPTK')
+        # 3. 在分词前，将所有占位符作为一个完整的词添加到 jieba 词典中
+        for placeholder in placeholder_map:
+            jieba.add_word(placeholder, tag='SPTK')
 
-            # 4. 分词与恢复
-            stop_words = self.stopwords.get('zh', set())
-            jieba_tokens = pseg.cut(text_for_jieba)
+        # 4. 分词与恢复
+        stop_words = self.stopwords.get('zh', set())
+        jieba_tokens = pseg.cut(text_for_jieba)
 
-            for word, flag in jieba_tokens:
-                if word in placeholder_map:
-                    restored_word = placeholder_map[word]
-                    words.append(restored_word)
-                else:
-                    if len(word) > 1 and flag in self.pos_filter['zh'] and word not in stop_words:
-                        words.append(word)
-
-        elif lang.startswith('en'):
-
-            all_patterns_to_keep = [
-                r'https?://\S+|www\.\S+',
-                r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
-                r'\b\w+(?:[-’\']\w+)+\b',
-                r'\b\d+[,.]\d+\b',
-                r'\b\w+\b'
-            ]
-            combined_pattern = re.compile('|'.join(all_patterns_to_keep), re.IGNORECASE)
-            tokens = combined_pattern.findall(text)
-            text_for_nltk = ' '.join(tokens)
-
-            stop_words = self.stopwords.get('en', set())
-            text_for_nltk = text_for_nltk.lower()
-            nltk_tokens = nltk.word_tokenize(text_for_nltk)
-            pos_tags = nltk.pos_tag(nltk_tokens)
-
-            for word, flag in pos_tags:
-                if len(word) > 1 and flag in self.pos_filter['en'] and word not in stop_words:
+        for word, flag in jieba_tokens:
+            if word in placeholder_map:
+                restored_word = placeholder_map[word]
+                words.append(restored_word)
+            else:
+                if len(word) > 1 and flag in self.pos_filter['zh'] and word not in stop_words:
                     words.append(word)
+
+        # 5. 清除 jieba 词典
+        for placeholder in placeholder_map:
+            jieba.del_word(placeholder)
+
+        return words
+
+    def _en_preprocess(self, text):
+        """
+        - 'en': 清理、分词、标注、过滤。
+        """
+
+        words = []
+
+        all_patterns_to_keep = [
+            r'https?://\S+|www\.\S+',
+            r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
+            r'\b\w+(?:[-’\']\w+)+\b',
+            r'\b\d+[,.]\d+\b',
+            r'\b\w+\b'
+        ]
+        combined_pattern = re.compile('|'.join(all_patterns_to_keep), re.IGNORECASE)
+        tokens = combined_pattern.findall(text)
+        text_for_nltk = ' '.join(tokens)
+
+        stop_words = self.stopwords.get('en', set())
+        text_for_nltk = text_for_nltk.lower()
+        nltk_tokens = nltk.word_tokenize(text_for_nltk)
+        pos_tags = nltk.pos_tag(nltk_tokens)
+
+        for word, flag in pos_tags:
+            if len(word) > 1 and flag in self.pos_filter['en'] and word not in stop_words:
+                words.append(word)
         return words
 
     def _build_graph(self, words):
         """
-        构建词共现图（修改后）
+        构建词共现图
         """
         self.graph = nx.Graph()
         unique_words = set(words)
@@ -304,20 +323,31 @@ class MultiLingualTextRank:
         if not self._load_stopwords():
             return []
 
-        # 2. 文本预处理
-        words = self._preprocess(text, lang)
+        # 2. 参数验证
+        # TODO: Change to use machine learning models if its accuracy is acceptable
+        if not lang or not isinstance(lang, str):
+            log.warning("Invalid language parameter: %s, defaulting to 'en'", lang)
+            lang = 'en'
+
+        # 3. 文本预处理
+        words = []
+        if lang.startswith('zh'):
+            words = self._zh_preprocess(text)
+        elif lang.startswith('en'):
+            words = self._en_preprocess(text)
         if not words:
             return []
 
-        # 3. 构建图
+        # 4. 构建图
         self._build_graph(words)
 
-        # 4. 运行 TextRank
+        # 5. 运行 TextRank
         if not self.graph or self.graph.number_of_nodes() == 0:
             return []
         ranks = self._rank_nodes()
 
-        # 5. 提取 Top-K 关键词
+        # 6. 提取 Top-K 关键词
         top_keywords = sorted(ranks, key=ranks.get, reverse=True)[:self.top_k]
 
         return top_keywords
+

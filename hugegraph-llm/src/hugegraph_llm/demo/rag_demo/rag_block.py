@@ -23,6 +23,7 @@ from typing import AsyncGenerator, Literal, Optional, Tuple
 import gradio as gr
 import pandas as pd
 from gradio.utils import NamedString
+
 from hugegraph_llm.config import huge_settings, llm_settings, prompt, resource_path
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
@@ -296,7 +297,7 @@ def create_rag_block():
             )
             mask_words_input = gr.Textbox(
                 label="TextRank mask words",
-                info="""Enter any words you want to protect from being split during Chinese word segmentation(e.g., C++, website URLs). Separate each entry with a comma.""",
+                info="""Enter any words or regular expressions you want to protect from being split during Chinese word segmentation(e.g., C++, website URLs). Separate each with a comma.""",
                 show_copy_button=True,
                 lines=7,
             )
