@@ -34,7 +34,7 @@ from hugegraph_llm.utils.graph_index_utils import (
     clean_all_graph_data,
     update_vid_embedding,
     extract_graph,
-    import_graph_data,
+    import_graph_data, build_schema,
 )
 from hugegraph_llm.utils.hugegraph_utils import check_graph_db_connection
 from hugegraph_llm.utils.log import log
@@ -84,6 +84,25 @@ def load_example_names():
     except (FileNotFoundError, json.JSONDecodeError):
         return ["No available examples"]
 
+def load_query_examples():
+    """Load query examples from JSON file"""
+    try:
+        examples_path = os.path.join(resource_path, "prompt_examples", "query_examples.json")
+        with open(examples_path, 'r', encoding='utf-8') as f:
+            examples = json.load(f)
+        return json.dumps(examples, indent=2)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return "[]"
+
+def load_schema_fewshot_examples():
+    """Load few-shot examples from a JSON file"""
+    try:
+        examples_path = os.path.join(resource_path, "prompt_examples", "schema_examples.json")
+        with open(examples_path, 'r', encoding='utf-8') as f:
+            examples = json.load(f)
+        return json.dumps(examples, indent=2)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return "[]"
 
 def update_example_preview(example_name):
     """Update the display content based on the selected example name."""
@@ -103,9 +122,8 @@ def update_example_preview(example_name):
         log.warning("Could not update example preview: %s", e)
     return "", "", ""
 
-
 def _create_prompt_helper_block(demo, input_text, info_extract_template):
-    with gr.Accordion("Assist in generating graph extraction prompts", open=True):
+    with gr.Accordion("Graph Extraction Prompt Generator", open=False):
         gr.Markdown(
             "Provide your **original text** and **expected scenario**, "
             "then select a reference example to generate a high-quality graph extraction prompt."
@@ -153,6 +171,13 @@ def _create_prompt_helper_block(demo, input_text, info_extract_template):
             outputs=[example_desc_preview, example_text_preview, example_prompt_preview]
         )
 
+
+def _build_schema_and_provide_feedback(input_text, query_example, few_shot):
+    gr.Info("Generating schema, please wait...")
+    # Call the original build_schema function
+    generated_schema = build_schema(input_text, query_example, few_shot)
+    gr.Info("Schema generated successfully!")
+    return generated_schema
 
 def create_vector_graph_block():
     # pylint: disable=no-member
@@ -213,8 +238,31 @@ def create_vector_graph_block():
             graph_extract_bt = gr.Button("Extract Graph Data (1)", variant="primary")
             graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=True)
             graph_index_rebuild_bt = gr.Button("Update Vid Embedding")
+
         gr.Markdown("---")
+        with gr.Accordion("Graph Schema Generator", open=False):
+            gr.Markdown(
+                "Provide **query examples** and **few-shot examples**, "
+                "then click **Generate Schema** to automatically create graph schema."
+            )
+            with gr.Row():
+                query_example = gr.Code(
+                    value=load_query_examples(),
+                    label="Query Examples",
+                    language="json",
+                    lines=10,
+                    max_lines=15
+                )
+                few_shot = gr.Code(
+                    value=load_schema_fewshot_examples(),
+                    label="Few-shot Example",
+                    language="json",
+                    lines=10,
+                    max_lines=15
+                )
+                build_schema_bt = gr.Button("Generate Schema", variant="primary")
         _create_prompt_helper_block(demo, input_text, info_extract_template)
+
         vector_index_btn0.click(get_vector_index_info, outputs=out).then(
             store_prompt,
             inputs=[input_text, input_schema, info_extract_template],
@@ -253,6 +301,16 @@ def create_vector_graph_block():
             update_vid_embedding).then(
             store_prompt,
             inputs=[input_text, input_schema, info_extract_template],
+        )
+
+        # TODO: we should store the examples after the user changed them.
+        build_schema_bt.click(
+            _build_schema_and_provide_feedback,
+            inputs=[input_text, query_example, few_shot],
+            outputs=[input_schema]
+        ).then(
+            store_prompt,
+            inputs=[input_text, input_schema, info_extract_template],  # TODO: Store the updated examples
         )
 
         def on_tab_select(input_f, input_t, evt: gr.SelectData):

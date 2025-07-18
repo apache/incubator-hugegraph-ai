@@ -137,3 +137,44 @@ def import_graph_data(data: str, schema: str) -> Union[str, Dict[str, Any]]:
         # Note: can't use gr.Error here
         gr.Warning(str(e) + " Please check the graph data format/type carefully.")
         return data
+
+def build_schema(input_text, query_example, few_shot):
+    context = {
+        "raw_texts": [input_text] if input_text else [],
+        "query_examples": [],
+        "few_shot_schema": {}
+    }
+
+    if few_shot:
+        try:
+            context["few_shot_schema"] = json.loads(few_shot)
+        except json.JSONDecodeError as e:
+            raise gr.Error(f"Few Shot Schema is not in a valid JSON format: {e}") from e
+
+    if query_example:
+        try:
+            parsed_examples = json.loads(query_example)
+            # Validate and retain the description and gremlin fields
+            context["query_examples"] = [
+                {
+                    "description": ex.get("description", ""),
+                    "gremlin": ex.get("gremlin", "")
+                }
+                for ex in parsed_examples
+                if isinstance(ex, dict) and "description" in ex and "gremlin" in ex
+            ]
+        except json.JSONDecodeError as e:
+            raise gr.Error(f"Query Examples is not in a valid JSON format: {e}") from e
+
+    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
+    try:
+        schema = builder.build_schema().run(context)
+    except Exception as e:
+        log.error("Failed to generate schema: %s", e)
+        raise gr.Error(f"Schema generation failed: {e}") from e
+    try:
+        formatted_schema = json.dumps(schema, ensure_ascii=False, indent=2)
+        return formatted_schema
+    except (TypeError, ValueError) as e:
+        log.error("Failed to format schema: %s", e)
+        return str(schema)
