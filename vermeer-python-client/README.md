@@ -38,33 +38,37 @@ This section provides examples of how to use the `vermeer-python-client`.
 ### Initialize the Client
 
 ```python
-from pyvermeer.client import VermeerClient
+from pyvermeer.client.client import PyVermeerClient
 
 # Initialize the client
-client = VermeerClient(host="127.0.0.1", port="8080")
+client = PyVermeerClient(ip="127.0.0.1", port=8688, token="", log_level="DEBUG")
 print("Client initialized successfully.")
 ```
 
-### Example: Running a Graph Algorithm
+### Example: Creating a Task
 
 ```python
-# Placeholder for running a graph algorithm example
-try:
-  result = client.run_algorithm(name="pagerank", params={"alpha": 0.85, "max_iter": 10})
-  print(f"PageRank results: {result}")
-except Exception as e:
-  print(f"Error running algorithm: {e}")
-```
+from pyvermeer.structure.task_data import TaskCreateRequest
 
-### Example: Managing Jobs
-
-```python
-# Placeholder for managing jobs example
+# Example for creating a task
 try:
-  job_status = client.get_job_status(job_id="some_job_id")
-  print(f"Job status: {job_status}")
+    create_response = client.tasks.create_task(
+        create_task=TaskCreateRequest(
+            task_type='load',
+            graph_name='DEFAULT-example',
+            params={
+                "load.hg_pd_peers": "[\"127.0.0.1:8686\"]",
+                "load.hugegraph_name": "DEFAULT/example/g",
+                "load.hugegraph_password": "xxx",
+                "load.hugegraph_username": "xxx",
+                "load.parallel": "10",
+                "load.type": "hugegraph"
+            },
+        )
+    )
+    print(f"Create task response: {create_response.to_dict()}")
 except Exception as e:
-  print(f"Error getting job status: {e}")
+    print(f"Error creating task: {e}")
 ```
 
 Other info is under 🚧 (Welcome to add more docs for it)
