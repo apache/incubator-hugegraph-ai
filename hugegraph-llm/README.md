@@ -60,7 +60,7 @@ You can choose one of the following two deployment methods:
 2. Configure the uv environment by using the official installer to install uv. See the [uv documentation](https://docs.astral.sh/uv/configuration/installer/) for other installation methods
     ```bash
     # You could try pipx or pip to install uv when meet network issues, refer the uv doc for more details
-    curl -LsSf https://astral.sh/uv/install.sh | sh  - # install the latest version like 0.7.3+
+    curl -LsSf https://astral.sh/uv/install.sh | sh # install the latest version like 0.7.3+
     ```
 
 3. Clone this project
