@@ -17,7 +17,7 @@
 
 [project]
 name = "vermeer-python-client" # Standardized name
-version = "0.1.0" # From setup.py
+version = "1.5.0" # Unified with root version
 description = "Python client for Vermeer" # Placeholder, update if a better one is available
 authors = [
     { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" }, # Assuming same authors
@@ -30,14 +30,10 @@ maintainers = [
 ]
 
 dependencies = [
-    # These were in requirements.txt.
-    # Versions will be managed by the root pyproject.toml's optional-dependencies for "vermeer"
-    "decorator", # Was decorator~=5.1.1
-    "requests",  # Was requests~=2.32.0
-    "setuptools",# Was setuptools~=78.1.1
-    "urllib3",   # Was urllib3~=2.2.2
-    "rich",      # Was rich~=13.9.4
-    "python-dateutil~=2.9.0", # Kept version as it's specific to vermeer
+    # Vermeer specific dependencies
+    "python-dateutil~=2.9.0",
+    # Following dependencies moved to root:
+    # decorator, requests, setuptools, urllib3, rich - in common-deps
 ]
 
 [project.urls]
@@ -55,8 +51,6 @@ packages = ["src/pyvermeer"] # Based on the setup.py's find_packages and package
 include = [
     "src/pyvermeer",
     "README.md",
-    # "LICENSE", # Omitted as not found in ls output
-    # "NOTICE",  # Omitted as not found in ls output
 ]
 
 [tool.hatch.metadata]
