@@ -44,22 +44,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-uv-${{ matrix.python-version }}-
 
-      # TODO: use pyproject.toml later
-      - name: Install dependencies
+      - name: Install dependencies with uv sync
         run: |
-          uv venv && source .venv/bin/activate
-          uv pip install pytest
-          uv pip install ./hugegraph-python-client
+          uv sync --extra python-client --extra dev
 
       - name: Test example
         run: |
-          ls -al && source .venv/bin/activate
+          ls -al
           export PYTHONPATH=$(pwd)/hugegraph-python-client/src
           echo ${PYTHONPATH}
-          python hugegraph-python-client/src/pyhugegraph/example/hugegraph_example.py
+          uv run python hugegraph-python-client/src/pyhugegraph/example/hugegraph_example.py
 
       - name: Test with pytest
         run: |
-          ls -al ../ && source ../.venv/bin/activate
-          pytest
+          uv run pytest
         working-directory: hugegraph-python-client
