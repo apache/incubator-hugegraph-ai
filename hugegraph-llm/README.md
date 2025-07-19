@@ -163,7 +163,8 @@ cd incubator-hugegraph-ai/
 
 # 4. Create virtual env and install dependencies
 # Should be run in the project root directory.
-uv venv && source .venv/bin/activate
+uv venv --python 3.10
+source .venv/bin/activate
 # 'uv sync' is more robust. Use '--extra all' to install all optional dependencies.
 uv sync --extra all
 cd hugegraph-llm/
