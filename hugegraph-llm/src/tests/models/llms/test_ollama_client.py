@@ -15,13 +15,20 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
 import unittest
 
+from hugegraph_llm.models.llms.ollama import OllamaClient
 
-class TestNLTKHelper(unittest.TestCase):
-    def test_stopwords(self):
-        from hugegraph_llm.operators.common_op.nltk_helper import NLTKHelper
-        nltk_helper = NLTKHelper()
-        stopwords = nltk_helper.stopwords()
-        print(stopwords)
+
+class TestOllamaClient(unittest.TestCase):
+    def test_generate(self):
+        ollama_client = OllamaClient(model="llama3:8b-instruct-fp16")
+        response = ollama_client.generate(prompt="What is the capital of France?")
+        print(response)
+
+    def test_stream_generate(self):
+        ollama_client = OllamaClient(model="llama3:8b-instruct-fp16")
+        def on_token_callback(chunk):
+            print(chunk, end="", flush=True)
+        ollama_client.generate_streaming(prompt="What is the capital of France?",
+                                         on_token_callback=on_token_callback)
