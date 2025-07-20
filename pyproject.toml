@@ -44,8 +44,11 @@ dev = [
     "pytest-cov~=5.0.0",
     "pylint~=3.0.0",
 ]
-all = ["hugegraph-ai[llm,ml,python-client,vermeer]"]
 
+build = ["nuitka"]
+
+all = ["hugegraph-ai[llm,ml,python-client,vermeer]"]
+nk = ["hugegraph-ai[llm,ml,python-client,vermeer,build]"]
 
 [project.urls]
 homepage = "https://hugegraph.apache.org/"
