@@ -25,20 +25,17 @@ authors = [
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10,<3.12"
-maintainers = [
-    { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
-]
 
 
 dependencies = [
-    # Common dependencies (previously in root's common-deps)
+    # Common dependencies
     "decorator",
     "requests",
     "setuptools",
     "urllib3",
     "rich",
     
-    # Data processing dependencies (previously in root's data-deps)
+    # Data processing dependencies
     "numpy",
     "pandas",
     "pydantic",

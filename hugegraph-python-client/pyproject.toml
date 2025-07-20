@@ -27,7 +27,7 @@ license = "Apache-2.0"
 requires-python = ">=3.9"
 
 dependencies = [
-    # Common dependencies (previously in root's common-deps)
+    # Common dependencies
     "decorator",
     "requests",
     "setuptools",
@@ -36,9 +36,9 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/apache/incubator-hugegraph-ai"
-"Repository" = "https://github.com/apache/incubator-hugegraph-ai"
-"Bug Tracker" = "https://github.com/apache/incubator-hugegraph-ai/issues"
+homepage = "https://github.com/apache/incubator-hugegraph-ai"
+repository = "https://github.com/apache/incubator-hugegraph-ai"
+"bug tracker" = "https://github.com/apache/incubator-hugegraph-ai/issues"
 
 [build-system]
 requires = ["hatchling"]
