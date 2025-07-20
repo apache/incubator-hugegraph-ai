@@ -69,4 +69,4 @@ hugegraph-python-client/uv.lock
 
 # Temporary files
 *.tmp
-*.temp 
+*.temp

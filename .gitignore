@@ -152,6 +152,8 @@ venv.bak/
 # Rope project settings
 .ropeproject
 
+.pre-commit-config.yaml
+
 # mkdocs documentation
 /site
 

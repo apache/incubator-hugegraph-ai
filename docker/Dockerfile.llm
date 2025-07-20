@@ -13,7 +13,7 @@ COPY . .
 RUN cd /home/work/ && \
     uv venv && \
     . .venv/bin/activate && \
-    uv sync --extra all
+    uv sync --extra ai
 
 # Stage 2: Runtime stage
 FROM python:3.10.16-slim-bookworm
