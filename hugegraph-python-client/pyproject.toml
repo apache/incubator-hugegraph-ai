@@ -27,7 +27,12 @@ license = "Apache-2.0"
 requires-python = ">=3.9"
 
 dependencies = [
-    # Core dependencies moved to root's common-deps
+    # Common dependencies (previously in root's common-deps)
+    "decorator",
+    "requests",
+    "setuptools",
+    "urllib3",
+    "rich",
 ]
 
 [project.urls]
