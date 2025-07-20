@@ -16,11 +16,11 @@
 # under the License.
 
 [project]
-name = "vermeer-python-client" # Standardized name
-version = "1.5.0" # Unified with root version
-description = "Python client for Vermeer" # Placeholder, update if a better one is available
+name = "vermeer-python-client"
+version = "1.5.0" # Independently managed version for the vermeer-python-client package
+description = "A Python client library for interacting with Vermeer, a tool for managing and analyzing large-scale graph data."
 authors = [
-    { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" }, # Assuming same authors
+    { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" }
 ]
 readme = "README.md"
 license = "Apache-2.0" # Assuming Apache-2.0, consistent with others
