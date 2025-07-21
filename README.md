@@ -42,9 +42,6 @@ This project uses [uv](https://github.com/astral-sh/uv) for package management a
     ```
 
 2.  **Create and Activate a Virtual Environment:**
-    It's highly recommended to work within a virtual environment. 
-    
-    If you fail to execute the script using powershell in a Windows environment, [refer to link](https://learn.microsoft.com/zh-cn/powershell/module/microsoft.powershell.core/about/about_execution_policies?view=powershell-7.5)
     
     ```bash
     # Create a virtual environment in .venv directory

@@ -51,8 +51,7 @@ jobs:
       - name: Test example
         run: |
           ls -al
-          export PYTHONPATH=$(pwd)/hugegraph-python-client/src
-          echo ${PYTHONPATH}
+          export PYTHONPATH=$(pwd)/hugegraph-python-client/src && echo ${PYTHONPATH}
           uv run python hugegraph-python-client/src/pyhugegraph/example/hugegraph_example.py
 
       - name: Test with pytest

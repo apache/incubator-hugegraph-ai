@@ -79,7 +79,6 @@ include = [
     "README.md",
     "LICENSE",
     "NOTICE",
-    "MANIFEST.in"
 ]
 
 [tool.hatch.metadata]

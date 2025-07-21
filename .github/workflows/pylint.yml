@@ -1,3 +1,4 @@
+# TODO: replace by ruff & mypy soon
 name: "Pylint"
 
 on:
