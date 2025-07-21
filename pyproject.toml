@@ -59,12 +59,13 @@ changelog = "https://github.com/apache/incubator-hugegraph-ai/releases"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-# Comment explaining that this is an example and can be overridden
+# NOTE: If you experience slow download speeds, uncomment the lines below to use mirror source
 # [[tool.uv.index]]
 # url = "https://pypi.tuna.tsinghua.edu.cn/simple" # Example mirror for users in China
 # default = true
 #
-# Users can override this in their personal configuration with: uv config --global index.url https://pypi.org/simple
+# Alternatively, configure globally: uv config --global index.url https://pypi.tuna.tsinghua.edu.cn/simple
+# To reset to default: uv config --global index.url https://pypi.org/simple
 
 [tool.hatch.metadata] # Keep this if hatch is still used by submodules, otherwise remove
 allow-direct-references = true

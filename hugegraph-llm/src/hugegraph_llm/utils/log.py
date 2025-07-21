@@ -23,6 +23,7 @@ LOG_DIR = "logs"
 os.makedirs(LOG_DIR, exist_ok=True)
 LOG_FILE = os.path.join(LOG_DIR, "llm-server.log")
 INFO = logging.INFO
+WARNING = logging.WARNING
 
 # Initialize the root logger first with Rich handler
 root_logger = init_logger(
@@ -44,24 +45,24 @@ log = init_logger(
 uvicorn_logger = logging.getLogger("uvicorn")
 uvicorn_logger.handlers.clear()
 uvicorn_logger.handlers.extend(root_logger.handlers)
-uvicorn_logger.setLevel(logging.WARNING)  # Change to WARNING to reduce output
+uvicorn_logger.setLevel(WARNING)  # Change to WARNING to reduce output
 
 # Also configure uvicorn.access and uvicorn.error
 uvicorn_access = logging.getLogger("uvicorn.access")
 uvicorn_access.handlers.clear()
 uvicorn_access.handlers.extend(root_logger.handlers)
-uvicorn_access.setLevel(logging.WARNING)  # Only show warnings and errors
+uvicorn_access.setLevel(WARNING)  # Only show warnings and errors
 
 uvicorn_error = logging.getLogger("uvicorn.error")
 uvicorn_error.handlers.clear()
 uvicorn_error.handlers.extend(root_logger.handlers)
-uvicorn_error.setLevel(logging.WARNING)  # Only show warnings and errors
+uvicorn_error.setLevel(WARNING)  # Only show warnings and errors
 
 # Configure Gradio logging
-gradio_logger = logging.getLogger("gradio")
-gradio_logger.handlers.clear()  # remove default handlers
-gradio_logger.handlers.extend(root_logger.handlers)
-gradio_logger.setLevel(INFO)
+# gradio_logger = logging.getLogger("gradio")
+# gradio_logger.handlers.clear()  # remove default handlers
+# gradio_logger.handlers.extend(root_logger.handlers)
+# gradio_logger.setLevel(WARNING)
 
 # Suppress `watchfiles` logging
 watchfiles_logger = logging.getLogger("watchfiles")
@@ -71,18 +72,17 @@ watchfiles_logger.setLevel(logging.ERROR)
 
 # Suppress third-party libraries logging
 third_party_loggers = {
-    "httpx": logging.WARNING,           # HTTP client library (general HTTP requests)
-    "httpcore": logging.WARNING,        # HTTP core library
-    "faiss": logging.WARNING,           # Vector search library
-    "faiss.loader": logging.WARNING,    # Faiss loader
-    "apscheduler": logging.WARNING,     # Task scheduler
-    "apscheduler.scheduler": logging.WARNING,
-    "apscheduler.executors": logging.WARNING,
-    "client": logging.WARNING,          # Generic client logs
-    "pyhugegraph": logging.WARNING,     # PyHugeGraph client
-    "urllib3": logging.WARNING,         # URL library
-    "requests": logging.WARNING,        # Requests library
-    "gradio": logging.WARNING,          # Gradio library (if you want to suppress more)
+    "httpx": WARNING,  # HTTP client library (general HTTP requests)
+    "httpcore": WARNING,  # HTTP core library
+    "faiss": WARNING,  # Vector search library
+    "faiss.loader": WARNING,  # Faiss loader
+    "apscheduler": WARNING,  # Task scheduler
+    "apscheduler.scheduler": WARNING,
+    "apscheduler.executors": WARNING,
+    "pyhugegraph": INFO,  # PyHugeGraph client
+    "urllib3": WARNING,  # URL library
+    "requests": WARNING,  # Requests library
+    "gradio": WARNING,  # Already configured above
 }
 
 for logger_name, log_level in third_party_loggers.items():

@@ -55,6 +55,8 @@ cd incubator-hugegraph-ai
 
 # 3. Install dependencies with workspace management
 # uv sync automatically creates venv (.venv) and installs base dependencies
+# NOTE: If download is slow, uncomment mirror lines in pyproject.toml or use: uv config --global index.url https://pypi.tuna.tsinghua.edu.cn/simple
+# Or create local uv.toml with mirror settings to avoid git diff (see uv.toml example in root)
 uv sync --extra llm  # Install LLM-specific dependencies
 # Or install all optional dependencies: uv sync --all-extras
 
