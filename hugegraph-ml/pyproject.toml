@@ -17,5 +17,55 @@
 
 
 [build-system]
-requires = ["setuptools>=64", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hugegraph-ml"
+version = "1.5.0"
+description = "Machine learning extensions for Apache HugeGraph."
+authors = [
+    { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
+]
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+
+dependencies = [
+    # ML specific dependencies
+    "dgl",
+    "ogb",
+    "catboost",
+    "category-encoders",
+    "torch",
+    "tqdm",
+    "packaging",
+    "torchdata",
+    "PyYAML",
+    "hugegraph-python-client",
+    # Common data dependencies managed by root
+    "numpy",
+    "pandas",
+    "pydantic",
+]
+
+[project.urls]
+homepage = "https://hugegraph.apache.org/"
+repository = "https://github.com/apache/incubator-hugegraph-ai"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hugegraph_ml"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/hugegraph_ml",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.uv.sources]
+hugegraph-python-client = { path = "../hugegraph-python-client", editable = true }

@@ -16,14 +16,17 @@
 # under the License.
 
 import os
+import sys
+from pathlib import Path
+
 import yaml
 
+from hugegraph_llm.utils.anchor import get_project_root
 from hugegraph_llm.utils.log import log
 
 dir_name = os.path.dirname
-package_path = dir_name(dir_name(dir_name(dir_name(dir_name(os.path.abspath(__file__))))))
 F_NAME = "config_prompt.yaml"
-yaml_file_path = os.path.join(package_path, f"src/hugegraph_llm/resources/demo/{F_NAME}")
+yaml_file_path = os.path.join(os.getcwd(), "src/hugegraph_llm/resources/demo", F_NAME)
 
 
 class BasePromptConfig:
@@ -36,8 +39,21 @@ class BasePromptConfig:
     text2gql_graph_schema: str = ''
     gremlin_generate_prompt: str = ''
     doc_input_text: str = ''
+    generate_extract_prompt_template: str = ''
 
     def ensure_yaml_file_exists(self):
+        current_dir = Path.cwd().resolve()
+        project_root = get_project_root()
+        if current_dir == project_root:
+            log.info("Current working directory is the project root, proceeding to run the app.")
+        else:
+            error_msg = (
+                f"Current working directory is not the project root. "
+                f"Please run this script from the project root directory: {project_root}\n"
+                f"Current directory: {current_dir}"
+            )
+            log.error(error_msg)
+            sys.exit(1)
         if os.path.exists(yaml_file_path):
             log.info("Loading prompt file '%s' successfully.", F_NAME)
             with open(yaml_file_path, "r", encoding="utf-8") as file:
@@ -63,7 +79,9 @@ class BasePromptConfig:
             "\n".join([f"    {line}" for line in self.keywords_extract_prompt.splitlines()])
         )
         indented_doc_input_text = "\n".join([f"  {line}" for line in self.doc_input_text.splitlines()])
-
+        indented_generate_extract_prompt = "\n".join(
+            [f"  {line}" for line in self.generate_extract_prompt_template.splitlines()]
+        ) + "\n"
         # This can be extended to add storage fields according to the data needs to be stored
         yaml_content = f"""graph_schema: |
 {indented_schema}
@@ -92,6 +110,8 @@ gremlin_generate_prompt: |
 doc_input_text: |
 {indented_doc_input_text}
 
+generate_extract_prompt_template: |
+{indented_generate_extract_prompt}
 """
         with open(yaml_file_path, "w", encoding="utf-8") as file:
             file.write(yaml_content)

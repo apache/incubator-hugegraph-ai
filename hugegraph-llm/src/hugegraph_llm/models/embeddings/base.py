@@ -20,6 +20,7 @@ from enum import Enum
 from typing import List, Union
 
 import numpy as np
+from typing_extensions import deprecated
 
 
 class SimilarityMode(str, Enum):
@@ -53,6 +54,8 @@ def similarity(
 class BaseEmbedding(ABC):
     """Embedding wrapper should take in a text and return a vector."""
 
+    # TODO: replace all the usage by get_texts_embeddings() & remove it in the future
+    @deprecated("Use get_texts_embeddings() instead in the future.")
     @abstractmethod
     def get_text_embedding(
             self,
@@ -60,6 +63,30 @@ class BaseEmbedding(ABC):
     ) -> List[float]:
         """Comment"""
 
+    @abstractmethod
+    def get_texts_embeddings(
+            self,
+            texts: List[str]
+    ) -> List[List[float]]:
+        """Get embeddings for multiple texts in a single batch.
+        
+        This method should efficiently process multiple texts at once by leveraging
+        the embedding model's batching capabilities, which is typically more efficient
+        than processing texts individually.
+        
+        Parameters
+        ----------
+        texts : List[str]
+            A list of text strings to be embedded.
+            
+        Returns
+        -------
+        List[List[float]]
+            A list of embedding vectors, where each vector is a list of floats.
+            The order of embeddings should match the order of input texts.
+        """
+
+    # TODO: [PR-238] Add & implement batch processing for async_get_texts_embeddings (refactor here)
     @abstractmethod
     async def async_get_text_embedding(
             self,

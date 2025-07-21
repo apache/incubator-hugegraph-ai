@@ -149,6 +149,9 @@ class OpenAIClient(BaseLLM):
             )
 
             for chunk in completions:
+                if not chunk.choices:
+                    log.debug("Received empty choices in streaming chunk: %s", chunk)
+                    continue
                 delta = chunk.choices[0].delta
                 if delta.content:
                     token = delta.content
@@ -186,6 +189,9 @@ class OpenAIClient(BaseLLM):
                 stream=True
             )
             async for chunk in completions:
+                if not chunk.choices:
+                    log.debug("Received empty choices in streaming chunk: %s", chunk)
+                    continue
                 delta = chunk.choices[0].delta
                 if delta.content:
                     token = delta.content
@@ -206,7 +212,7 @@ class OpenAIClient(BaseLLM):
             raise e
 
     def num_tokens_from_string(self, string: str) -> int:
-        """Get token count from string."""
+        """Get token count from a string."""
         encoding = tiktoken.encoding_for_model(self.model)
         num_tokens = len(encoding.encode(string))
         return num_tokens
