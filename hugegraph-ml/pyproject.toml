@@ -29,32 +29,29 @@ authors = [
 ]
 readme = "README.md"
 license = "Apache-2.0"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 
 dependencies = [
-    "dgl~=2.1.0",
-    "ogb~=1.3.6",
-    "pandas~=2.2.3",
-    "catboost~=1.2.3",
-    "category_encoders~=2.6.3",
-    "numpy~=1.24.4",
-    "torch==2.2.0",
-    "tqdm~=4.66.5",
-    "packaging~=24.1",
-    "torchdata~=0.7.0",
-    "PyYAML~=6.0.2",
-    "pydantic~=2.9.2",
-    "hugegraph-python-client"
+    # ML specific dependencies
+    "dgl",
+    "ogb",
+    "catboost",
+    "category-encoders",
+    "torch",
+    "tqdm",
+    "packaging",
+    "torchdata",
+    "PyYAML",
+    "hugegraph-python-client",
+    # Common data dependencies managed by root
+    "numpy",
+    "pandas",
+    "pydantic",
 ]
 
 [project.urls]
 homepage = "https://hugegraph.apache.org/"
 repository = "https://github.com/apache/incubator-hugegraph-ai"
-
-# If you want to modify the network configuration file of the project, then you can modify this part
-[[tool.uv.index]]
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
-default = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hugegraph_ml"]
@@ -71,4 +68,4 @@ include = [
 allow-direct-references = true
 
 [tool.uv.sources]
-hugegraph-python-client = { path = "../hugegraph-python-client/", editable = true }
+hugegraph-python-client = { path = "../hugegraph-python-client", editable = true }

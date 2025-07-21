@@ -27,25 +27,33 @@ license = "Apache-2.0"
 requires-python = ">=3.9"
 
 dependencies = [
-    "decorator~=5.1.1",
-    "requests~=2.32.0",
-    "setuptools~=70.0.0",
-    "urllib3~=2.2.2",
-    "rich~=13.9.4",
+    # Common dependencies
+    "decorator",
+    "requests",
+    "setuptools",
+    "urllib3",
+    "rich",
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/apache/incubator-hugegraph-ai"
-"Repository" = "https://github.com/apache/incubator-hugegraph-ai"
-"Bug Tracker" = "https://github.com/apache/incubator-hugegraph-ai/issues"
+homepage = "https://github.com/apache/incubator-hugegraph-ai"
+repository = "https://github.com/apache/incubator-hugegraph-ai"
+bug_tracker = "https://github.com/apache/incubator-hugegraph-ai/issues"
 
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-exclude = ["tests"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/pyhugegraph"]
 
-[tool.setuptools]
-package-dir = {"" = "src"}
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/pyhugegraph",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true

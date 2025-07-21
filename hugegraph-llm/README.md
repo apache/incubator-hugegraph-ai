@@ -78,16 +78,16 @@ For development and customization:
 # 1. Start HugeGraph Server
 docker run -itd --name=server -p 8080:8080 hugegraph/hugegraph
 
-# 2. Install UV package manager
+# 2. Install UV package manager (if not already installed)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 3. Clone and setup project
 git clone https://github.com/apache/incubator-hugegraph-ai.git
 cd incubator-hugegraph-ai/hugegraph-llm
 
-# 4. Create virtual environment and install dependencies
-uv venv && source .venv/bin/activate
-uv pip install -e .
+# 4. Install dependencies and activate environment
+uv sync  # Automatically creates .venv and installs dependencies
+source .venv/bin/activate  # Activate once - all commands below assume this environment
 
 # 5. Launch RAG demo
 python -m hugegraph_llm.demo.rag_demo.app
@@ -99,16 +99,21 @@ python -m hugegraph_llm.demo.rag_demo.app --host 127.0.0.1 --port 18001
 
 #### Additional Setup (Optional)
 
+> [!NOTE]
+> The following commands assume you're in the activated virtual environment from step 4 above
+
 ```bash
 # Download NLTK stopwords for better text processing
-python ./hugegraph_llm/operators/common_op/nltk_helper.py
+python ./src/hugegraph_llm/operators/common_op/nltk_helper.py
 
 # Update configuration files
 python -m hugegraph_llm.config.generate --update
 ```
 
 > [!TIP]
-> Check our [Quick Start Guide](https://github.com/apache/incubator-hugegraph-ai/blob/main/hugegraph-llm/quick_start.md) for detailed usage examples and query logic explanations.
+> - `uv sync` automatically creates virtual environment (.venv) and installs all dependencies
+> - Activate once with `source .venv/bin/activate` - all subsequent commands assume this environment
+> - Check our [Quick Start Guide](https://github.com/apache/incubator-hugegraph-ai/blob/main/hugegraph-llm/quick_start.md) for detailed usage examples
 
 ## 💡 Usage Examples
 
