@@ -23,7 +23,7 @@ authors = [
     { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" }
 ]
 readme = "README.md"
-license = "Apache-2.0" # Assuming Apache-2.0, consistent with others
+license = "Apache-2.0"
 requires-python = ">=3.9"
 
 dependencies = [
@@ -39,8 +39,8 @@ dependencies = [
 ]
 
 [project.urls]
-homepage = "https://hugegraph.apache.org/" # Placeholder, update if specific URL exists
-repository = "https://github.com/apache/incubator-hugegraph-ai" # Placeholder
+homepage = "https://hugegraph.apache.org/"
+repository = "https://github.com/apache/incubator-hugegraph-ai"
 
 [build-system]
 requires = ["hatchling"] # Using hatchling like other submodules for consistency

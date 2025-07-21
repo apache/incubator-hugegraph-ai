@@ -3,7 +3,7 @@ FROM python:3.10.16-bookworm AS builder
 
 WORKDIR /build/
 
-# Use uv instead of poetry for a more efficient, elegant, and unified py env management```
+# Use uv instead of poetry for a more efficient, elegant, and unified py env management
 RUN pip install --no-cache-dir uv
 
 # 1.1 Copy source code (merged for efficiency)
