@@ -46,17 +46,17 @@ dev = [
 ]
 
 build = ["nuitka"]
-
-ai = ["hugegraph-ai[llm,python-client]"]
-nk-ai = ["hugegraph-ai[llm,python-client,build]"]
-
-all = ["hugegraph-ai[llm,ml,python-client,vermeer]"]
+# TODO: ensure we need 'ai'
+ai = ["hugegraph-llm", "hugegraph-python-client"]
+nk-ai = ["hugegraph-llm", "hugegraph-python-client", "nuitka"]
+all = ["hugegraph-python-client", "hugegraph-llm", "hugegraph-ml", "vermeer-python-client"]
 
 [project.urls]
 homepage = "https://hugegraph.apache.org/"
 repository = "https://github.com/apache/incubator-hugegraph-ai"
-documentation = "https://hugegraph.apache.org/docs/quickstart/hugegraph-ai/" # General AI docs
-"Bug Tracker" = "https://github.com/apache/incubator-hugegraph-ai/issues"
+documentation = "https://hugegraph.apache.org/docs/quickstart/hugegraph-ai/"
+bug_tracker = "https://github.com/apache/incubator-hugegraph-ai/issues"
+changelog = "https://github.com/apache/incubator-hugegraph-ai/releases"
 
 [build-system]
 requires = ["hatchling"]
@@ -67,16 +67,15 @@ build-backend = "hatchling.build"
 # url = "https://pypi.tuna.tsinghua.edu.cn/simple" # Example mirror for users in China
 # default = true
 #
-# Users can override this in their personal configuration with:
-# uv config --global index.url https://pypi.org/simple
+# Users can override this in their personal configuration with: uv config --global index.url https://pypi.org/simple
 
 [tool.hatch.metadata] # Keep this if hatch is still used by submodules, otherwise remove
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = [
-    "hugegraph-llm/src",
-    "hugegraph-python-client/src"
+    "hugegraph-llm",
+    "hugegraph-python-client"
 ]
 
 [tool.hatch.build.targets.sdist]
@@ -98,20 +97,20 @@ members = [
 constraint-dependencies = [
     # Common dependencies
     "decorator~=5.1.1",
-    "requests~=2.32.0",
-    "setuptools~=70.0.0",
+    "requests~=2.32.0", # TODO: use httpx instead of urllib3 directly
+    "setuptools~=70.0.0", # TODO: remove it when we use hatchling well
     "urllib3~=2.2.2",
     "rich~=13.9.4",
 
     # Data processing dependencies
     "numpy~=1.24.4",
-    "pandas~=2.2.3",
+    "pandas~=2.2.3", # TODO: replace by polars(rust) in the future
     "pydantic~=2.10.6",
 
     # LLM dependencies
     "openai~=1.61.0",
     "ollama~=0.4.8",
-    "qianfan~=0.3.18",
+    "qianfan~=0.3.18", # TODO: remove it
     "retry~=0.9.2",
     "tiktoken~=0.7.0",
     "nltk~=3.9.1",

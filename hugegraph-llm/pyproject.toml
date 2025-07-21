@@ -64,7 +64,7 @@ dependencies = [
 homepage = "https://hugegraph.apache.org/"
 repository = "https://github.com/apache/incubator-hugegraph-ai"
 documentation = "https://hugegraph.apache.org/docs/quickstart/hugegraph-ai/"
-"Bug Tracker" = "https://github.com/apache/incubator-hugegraph-ai/issues"
+bug_tracker = "https://github.com/apache/incubator-hugegraph-ai/issues"
 
 [build-system]
 requires = ["hatchling"]
