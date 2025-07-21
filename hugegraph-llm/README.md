@@ -86,6 +86,8 @@ git clone https://github.com/apache/incubator-hugegraph-ai.git
 cd incubator-hugegraph-ai/hugegraph-llm
 
 # 4. Install dependencies and activate environment
+# NOTE: If download is slow, uncomment mirror lines in ../pyproject.toml or use: uv config --global index.url https://pypi.tuna.tsinghua.edu.cn/simple
+# Or create local uv.toml with mirror settings to avoid git diff (see uv.toml example in root)
 uv sync  # Automatically creates .venv and installs dependencies
 source .venv/bin/activate  # Activate once - all commands below assume this environment
 
