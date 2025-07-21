@@ -45,10 +45,7 @@ dev = [
     "pylint~=3.0.0",
 ]
 
-build = ["nuitka"]
-# TODO: ensure we need 'ai'
-ai = ["hugegraph-llm", "hugegraph-python-client"]
-nk-ai = ["hugegraph-llm", "hugegraph-python-client", "nuitka"]
+nk-llm = ["hugegraph-llm", "hugegraph-python-client", "nuitka"]
 all = ["hugegraph-python-client", "hugegraph-llm", "hugegraph-ml", "vermeer-python-client"]
 
 [project.urls]
