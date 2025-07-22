@@ -83,9 +83,10 @@ class KeywordExtract:
         if self._extract_method == "TextRank":
             # 使用 TextRank 提取关键词
             keywords = self._extract_with_textrank()
-        else:
+        elif self._extract_method == "LLM":
             # 使用 LLM 提取关键词
             keywords = self._extract_with_llm()
+        # TODO add hybrid keyword extract method
         keywords = {k.replace("'", "") for k in keywords}
         context["keywords"] = list(keywords)[:self._max_keywords]
         log.info("User Query: %s\nKeywords: %s", self._query, context["keywords"])

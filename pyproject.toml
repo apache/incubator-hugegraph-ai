@@ -125,7 +125,7 @@ constraint-dependencies = [
     "pydantic-settings~=2.6.1",
     "apscheduler~=3.10.4",
     "litellm~=1.61.13",
-    "scipy"
+
 
     # ML dependencies
     "dgl~=2.1.0",
