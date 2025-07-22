@@ -15,14 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 import yaml
 
-from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.anchor import get_project_root
+from hugegraph_llm.utils.log import log
 
 dir_name = os.path.dirname
 F_NAME = "config_prompt.yaml"
@@ -39,6 +39,7 @@ class BasePromptConfig:
     text2gql_graph_schema: str = ''
     gremlin_generate_prompt: str = ''
     doc_input_text: str = ''
+    generate_extract_prompt_template: str = ''
 
     def ensure_yaml_file_exists(self):
         current_dir = Path.cwd().resolve()
@@ -78,7 +79,9 @@ class BasePromptConfig:
             "\n".join([f"    {line}" for line in self.keywords_extract_prompt.splitlines()])
         )
         indented_doc_input_text = "\n".join([f"  {line}" for line in self.doc_input_text.splitlines()])
-
+        indented_generate_extract_prompt = "\n".join(
+            [f"  {line}" for line in self.generate_extract_prompt_template.splitlines()]
+        ) + "\n"
         # This can be extended to add storage fields according to the data needs to be stored
         yaml_content = f"""graph_schema: |
 {indented_schema}
@@ -107,6 +110,8 @@ gremlin_generate_prompt: |
 doc_input_text: |
 {indented_doc_input_text}
 
+generate_extract_prompt_template: |
+{indented_generate_extract_prompt}
 """
         with open(yaml_file_path, "w", encoding="utf-8") as file:
             file.write(yaml_content)

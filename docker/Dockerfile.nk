@@ -3,21 +3,23 @@ FROM python:3.10.16-bookworm AS builder
 
 WORKDIR /build/
 
-# 1.1 Copy source code
-COPY hugegraph-python-client/ ./hugegraph-python-client/
-COPY hugegraph-llm/ ./hugegraph-llm/
+# Use uv instead of poetry for a more efficient, elegant, and unified py env management
+RUN pip install --no-cache-dir uv
+
+# 1.1 Copy source code (merged for efficiency)
+COPY . .
 
 # 1.2 Install dependency
 RUN apt update && \
     apt install -y --no-install-recommends build-essential patchelf && \
-    python -m pip install nuitka && \
-    pip install ./hugegraph-python-client && \
-    pip install -r ./hugegraph-llm/requirements.txt && \
+    uv venv && \
+    . .venv/bin/activate && \
+    uv sync --extra nk-llm && \
     cd hugegraph-llm/src && \
     export PYTHONPATH=/build/hugegraph-llm/src && \
     python -m nuitka --follow-imports --standalone --include-package-data=safehttpx,groovy,gradio,litellm,jieba --include-module=hugegraph_llm.demo.rag_demo.app,litellm.litellm_core_utils.tokenizers --include-data-dir=./hugegraph_llm/resources=hugegraph_llm/resources ./hugegraph_llm/demo/rag_demo/app.py && \
     mv app.* ..
-    
+
 # Stage 2: Runtime stage
 FROM python:3.10.16-slim-bookworm
 LABEL maintainer="HugeGraph Docker Maintainers <dev@hugegraph.apache.org>"
