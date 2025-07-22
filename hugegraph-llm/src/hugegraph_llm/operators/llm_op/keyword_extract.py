@@ -22,9 +22,9 @@ from collections import defaultdict
 from dataclasses import dataclass, asdict
 from typing import Any, Dict, Optional, Set
 
+import igraph as ig
 import jieba
 import jieba.posseg as pseg
-import networkx as nx
 import nltk
 import regex
 
@@ -224,7 +224,6 @@ class MultiLingualTextRank:
             placeholder_map[_placeholder] = original_word
             placeholder_id_counter += 1
             return _placeholder
-
         # 特殊词与短语匹配模式
         all_patterns = [
             r'(?:https?://|www\.)[\w\-\.\/\:?=&%#]+',
@@ -308,11 +307,10 @@ class MultiLingualTextRank:
         """
         构建词共现图
         """
-        self.graph = nx.Graph()
-        unique_words = set(words)
-        self.graph.add_nodes_from(unique_words)
+        unique_words = list(set(words))
 
         if len(unique_words) < self.window:
+            self.graph = None
             return
 
         edge_weights = defaultdict(int)
@@ -320,21 +318,36 @@ class MultiLingualTextRank:
             for j in range(i + 1, i + self.window):
                 if j < len(words):
                     word2 = words[j]
-                    # 确保两个词不相同，避免自环
                     if word1 != word2:
-                        edge_weights[(word1, word2)] += 1
+                        pair = tuple(sorted((word1, word2)))
+                        edge_weights[pair] += 1
 
-        for (word1, word2), weight in edge_weights.items():
-            self.graph.add_edge(word1, word2, weight=weight)
+        graph = ig.Graph(directed=False)
+        graph.add_vertices(unique_words)
+
+        edges = list(edge_weights.keys())
+        weights = list(edge_weights.values())
+
+        graph.add_edges(edges)
+        graph.es['weight'] = weights
+
+        self.graph = graph
 
     def _rank_nodes(self):
         """
         运行 PageRank 算法
         """
         # 如果图中没有节点，直接返回空字典
-        if not self.graph or not self.graph.nodes():
+        if not self.graph or self.graph.vcount() == 0:
             return {}
-        return nx.pagerank(self.graph, alpha=0.85, weight='weight')
+
+        pagerank_scores = self.graph.pagerank(
+            directed=False,
+            damping=0.85,
+            weights='weight')
+
+        node_names = self.graph.vs['name']
+        return dict(zip(node_names, pagerank_scores))
 
     def extract_keywords(self, text, lang):
         """
@@ -345,7 +358,6 @@ class MultiLingualTextRank:
             return []
 
         # 2. 参数验证
-        # TODO: Change to use machine learning models if its accuracy is acceptable
         if not lang or not isinstance(lang, str) or lang not in ["chinese", "english"]:
             log.warning("Invalid language parameter: %s, defaulting to 'english'", lang)
             lang = 'english'
@@ -363,7 +375,7 @@ class MultiLingualTextRank:
         self._build_graph(words)
 
         # 5. 运行 TextRank
-        if not self.graph or self.graph.number_of_nodes() == 0:
+        if not self.graph or self.graph.vcount() == 0:
             return []
         ranks = self._rank_nodes()
 
