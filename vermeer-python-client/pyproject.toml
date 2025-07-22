@@ -17,37 +17,43 @@
 
 [project]
 name = "vermeer-python-client"
-version = "1.5.0"
-description = "A Python SDK for Apache Vermeer."
+version = "1.5.0" # Independently managed version for the vermeer-python-client package
+description = "A Python client library for interacting with Vermeer, a tool for managing and analyzing large-scale graph data."
 authors = [
-    { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
+    { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" }
 ]
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.9"
+
 dependencies = [
-    "decorator~=5.1.1",
-    "requests~=2.32.0",
-    "urllib3~=2.2.2",
+    # Common dependencies
+    "decorator",
+    "requests",
+    "setuptools",
+    "urllib3",
+    "rich",
+    
+    # Vermeer specific dependencies
+    "python-dateutil",
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/apache/incubator-hugegraph-ai"
-"Repository" = "https://github.com/apache/incubator-hugegraph-ai"
-"Bug Tracker" = "https://github.com/apache/incubator-hugegraph-ai/issues"
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0",
-    "black>=23.0.0",
-    "isort>=5.0.0",
-    "flake8>=6.0.0",
-]
+homepage = "https://hugegraph.apache.org/"
+repository = "https://github.com/apache/incubator-hugegraph-ai"
 
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"] # Using hatchling like other submodules for consistency
+build-backend = "hatchling.build"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-exclude = ["tests"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/pyvermeer"] # Based on the setup.py's find_packages and package_dir
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/pyvermeer",
+    "README.md",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true

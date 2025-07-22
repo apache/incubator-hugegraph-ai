@@ -24,12 +24,13 @@ To install from the source, clone the repository and install the required depend
 git clone https://github.com/apache/incubator-hugegraph-ai.git
 cd incubator-hugegraph-ai/hugegraph-python-client
 
-# Normal install 
-uv pip install .
-
-# (Optional) install the devel version
-uv pip install -e .
+# Use uv sync to install dependencies (workspace member)
+uv sync  # Automatically creates .venv and installs dependencies
+source .venv/bin/activate  # Activate once - all commands below assume this environment
 ```
+
+> [!NOTE]
+> All usage examples below assume you're in the activated virtual environment
 
 ## Usage
 
