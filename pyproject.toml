@@ -105,7 +105,7 @@ constraint-dependencies = [
     "pandas~=2.2.3", # TODO: replace by polars(rust) in the future
     "pydantic~=2.10.6",
     "scipy~=1.15.3",
-    "python-igraph~=0.11.9"
+    "python-igraph~=0.11.9",
 
     # LLM dependencies
     "openai~=1.61.0",
