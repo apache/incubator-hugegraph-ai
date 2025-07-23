@@ -699,13 +699,13 @@ class SEALData(object):
 
     def __call__(self, split_type):
         if split_type == "train":
-            pass
+            subsample_ratio = self.subsample_ratio
         else:
-            pass
+            subsample_ratio = 1
 
         path = osp.join(
             self.save_dir or "",
-            "f{self.prefix}_{split_type}_{self.hop}-hop_{subsample_ratio}-subsample.bin",
+            f"{self.prefix}_{split_type}_{self.hop}-hop_{subsample_ratio}-subsample.bin",
         )
 
         if osp.exists(path):
