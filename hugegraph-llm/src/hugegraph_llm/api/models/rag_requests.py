@@ -91,7 +91,7 @@ class GraphRAGRequest(BaseModel):
 
 class LLMConfigRequest(BaseModel):
     llm_type: str
-    # The common parameters shared by OpenAI, Qianfan Wenxin v2,
+    # The common parameters shared by OpenAI, LiteLLM,
     # and OLLAMA platforms.
     api_key: str
     api_base: str

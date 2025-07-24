@@ -72,13 +72,11 @@ def init_rag_ui() -> gr.Interface:
         llm_config_input = textbox_array_llm_config
          = if settings.llm_type == openai [settings.openai_api_key, settings.openai_api_base, settings.openai_language_model, settings.openai_max_tokens]
          = else if settings.llm_type == ollama [settings.ollama_host, settings.ollama_port, settings.ollama_language_model, ""]
-         = else if settings.llm_type == qianfan_wenxin_v2 [settings.qianfan_api_key, settings.qianfan_base_url, settings.qianfan_language_model, ""]
          = else ["","","", ""]
 
         embedding_config_input = textbox_array_embedding_config
          = if settings.embedding_type == openai [settings.openai_api_key, settings.openai_api_base, settings.openai_embedding_model]
          = else if settings.embedding_type == ollama [settings.ollama_host, settings.ollama_port, settings.ollama_embedding_model]
-         = else if settings.embedding_type == qianfan_wenxin_v2 [settings.qianfan_api_key, settings.qianfan_base_url, settings.qianfan_embedding_model]
          = else ["","",""]
 
         reranker_config_input = textbox_array_reranker_config
