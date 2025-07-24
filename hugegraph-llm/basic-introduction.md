@@ -4,59 +4,42 @@ This file provides guidance to AI coding tools and developers when working with 
 
 ## Project Overview
 
-HugeGraph-LLM is a comprehensive toolkit that bridges graph databases and large language models, part of the Apache HugeGraph AI ecosystem. It enables seamless integration between HugeGraph and LLMs for building intelligent applications with three main capabilities: Knowledge Graph Construction, Graph-Enhanced RAG, and Text2Gremlin query generation.
+HugeGraph-LLM is a comprehensive toolkit that bridges graph databases and large language models, 
+part of the Apache HugeGraph AI ecosystem. It enables seamless integration between HugeGraph and LLMs for building 
+intelligent applications with three main capabilities: Knowledge Graph Construction, Graph-Enhanced RAG, 
+and Text2Gremlin query generation.
 
 ## Tech Stack
 
-- **Language**: Python 3.10+ (UV package manager required)
+- **Language**: Python 3.10+ (uv package manager required)
 - **Framework**: FastAPI + Gradio for web interfaces
-- **Graph Database**: HugeGraph Server 1.3+ (recommended: 1.5+)
+- **Graph Database**: HugeGraph Server 1.5+
 - **LLM Integration**: LiteLLM (supports OpenAI, Ollama, Qianfan, etc.)
-- **Vector Operations**: FAISS, NumPy, Pandas
-- **Key Dependencies**: hugegraph-python-client, LangChain, NLTK, Jieba
+- **Vector Operations**: FAISS, NumPy, and will support multiple Vector DB soon
+- **Code style**: ruff & mypy (on the way, soon)
+- **Key Dependencies**: hugegraph-python-client
 
 ## Essential Commands
 
-### Setup and Development
-```bash
-# Install UV package manager (if not installed)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Install dependencies and create virtual environment
-uv sync
-
-# Activate virtual environment
-source .venv/bin/activate
-
-# Generate configuration files
-python -m hugegraph_llm.config.generate --update
-
-# Download NLTK data (required for text processing)
-python ./src/hugegraph_llm/operators/common_op/nltk_helper.py
-```
-
 ### Running the Application
 ```bash
+# Install dependencies and create virtual environment (uv already installed)
+uv sync
+# Activate virtual environment
+source .venv/bin/activate
 # Launch main RAG demo application
 python -m hugegraph_llm.demo.rag_demo.app
-
 # Custom host/port
 python -m hugegraph_llm.demo.rag_demo.app --host 127.0.0.1 --port 18001
 ```
 
 ### Testing
 ```bash
-# Run tests (located in src/tests/)
+pytest src/tests/
+# Or using unittest
 python -m unittest discover src/tests/
 ```
-
-### Docker Deployment
-```bash
-# Full stack deployment
-cd docker
-cp env.template .env  # Edit PROJECT_PATH
-docker-compose -f docker-compose-network.yml up -d
-```
+PS: we skip Docker Deployment details here.
 
 ## Architecture Overview
 
@@ -89,10 +72,10 @@ docker-compose -f docker-compose-network.yml up -d
 
 ### Configuration Management
 
-- Main config: `.env` file (generate with config.generate module)
+- Main config: `.env` file (generate with `config.generate` module)
 - Prompt config: `src/hugegraph_llm/resources/demo/config_prompt.yaml`
 - HugeGraph connection settings in environment variables
-- LLM provider configuration through LiteLLM
+- LLM provider configuration through `LiteLLM` & `openai/ollama` client
 
 ## Development Workflow
 
@@ -104,8 +87,7 @@ docker-compose -f docker-compose-network.yml up -d
 
 ## Important Notes
 
-- Always use UV package manager instead of pip for dependency management
-- HugeGraph Server must be accessible before running the application
-- NLTK data download is required for text processing operations
-- Configuration generation must be run after any major environment changes
-- The system supports multiple LLM providers through LiteLLM abstraction
+- Always use `uv` package manager instead of `pip` for dependency management
+- HugeGraph Server must be accessible while running the app
+- The system supports multiple LLM providers through `LiteLLM` abstraction
+- Each file should be better < 600 lines for maintainability
