@@ -74,8 +74,8 @@ class BasePromptConfig:
                     setattr(self, key, value)
 
             # Check if the language in the .env file matches the language in the YAML file
-            env_lang = (self.llm_settings.language.lower() 
-                       if hasattr(self, 'llm_settings') and self.llm_settings.language 
+            env_lang = (self.llm_settings.language.lower()
+                       if hasattr(self, 'llm_settings') and self.llm_settings.language
                        else 'en')
             yaml_lang = data.get('_language_generated', 'en').lower()
             if env_lang.strip() != yaml_lang.strip():
