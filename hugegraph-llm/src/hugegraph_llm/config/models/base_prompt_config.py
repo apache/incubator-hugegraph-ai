@@ -29,7 +29,8 @@ F_NAME = "config_prompt.yaml"
 yaml_file_path = os.path.join(os.getcwd(), "src/hugegraph_llm/resources/demo", F_NAME)
 
 
-class LiteralStr(str): pass
+class LiteralStr(str):
+    pass
 
 def literal_str_representer(dumper, data):
     return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
@@ -72,15 +73,17 @@ class BasePromptConfig:
                 for key, value in data.items():
                     setattr(self, key, value)
 
-            # Check if the language in the .env file matches the language in the YAML file        
-            env_lang = self.llm_settings.language.lower() if hasattr(self, 'llm_settings') and self.llm_settings.language else 'en'
+            # Check if the language in the .env file matches the language in the YAML file
+            env_lang = (self.llm_settings.language.lower() 
+                       if hasattr(self, 'llm_settings') and self.llm_settings.language 
+                       else 'en')
             yaml_lang = data.get('_language_generated', 'en').lower()
-            
             if env_lang.strip() != yaml_lang.strip():
                 log.warning(
-                    f"Prompt was changed '.env' language is '{env_lang}', "
-                    f"but '{F_NAME}' was generated for '{yaml_lang}'. "
-                    f"Regenerating the prompt file..."
+                    "Prompt was changed '.env' language is '%s', "
+                    "but '%s' was generated for '%s'. "
+                    "Regenerating the prompt file...",
+                    env_lang, F_NAME, yaml_lang
                 )
                 if self.llm_settings.language.lower() == "cn":
                     self.answer_prompt = self.answer_prompt_CN
@@ -89,7 +92,7 @@ class BasePromptConfig:
                     self.keywords_extract_prompt = self.keywords_extract_prompt_CN
                     self.doc_input_text = self.doc_input_text_CN
                 else:
-                    self.answer_prompt = self.answer_prompt_EN 
+                    self.answer_prompt = self.answer_prompt_EN
                     self.extract_graph_prompt = self.extract_graph_prompt_EN
                     self.gremlin_generate_prompt = self.gremlin_generate_prompt_EN
                     self.keywords_extract_prompt = self.keywords_extract_prompt_EN
@@ -135,7 +138,7 @@ class BasePromptConfig:
             self.keywords_extract_prompt = self.keywords_extract_prompt_CN
             self.doc_input_text = self.doc_input_text_CN
         else:
-            self.answer_prompt = self.answer_prompt_EN 
+            self.answer_prompt = self.answer_prompt_EN
             self.extract_graph_prompt = self.extract_graph_prompt_EN
             self.gremlin_generate_prompt = self.gremlin_generate_prompt_EN
             self.keywords_extract_prompt = self.keywords_extract_prompt_EN
