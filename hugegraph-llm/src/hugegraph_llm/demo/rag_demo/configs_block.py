@@ -162,7 +162,7 @@ def apply_reranker_config(
 
 
 def apply_graph_config(url, name, user, pwd, gs, origin_call=None) -> int:
-    # Add URL prefix automatically to improve user experience
+    # Add URL prefix automatically to improve the user experience
     if url and not (url.startswith('http://') or url.startswith('https://')):
         url = f"http://{url}"
 
@@ -183,40 +183,41 @@ def apply_graph_config(url, name, user, pwd, gs, origin_call=None) -> int:
     return response
 
 
-def apply_llm_config(current_llm_config, arg1, arg2, arg3, arg4, origin_call=None) -> int:
+def apply_llm_config(current_llm_config, api_key_or_host, api_base_or_port, model_name, max_tokens,
+                     origin_call=None) -> int:
     log.debug("current llm in apply_llm_config is %s", current_llm_config)
     llm_option = getattr(llm_settings, f"{current_llm_config}_llm_type")
     log.debug("llm option in apply_llm_config is %s", llm_option)
     status_code = -1
 
     if llm_option == "openai":
-        setattr(llm_settings, f"openai_{current_llm_config}_api_key", arg1)
-        setattr(llm_settings, f"openai_{current_llm_config}_api_base", arg2)
-        setattr(llm_settings, f"openai_{current_llm_config}_language_model", arg3)
-        setattr(llm_settings, f"openai_{current_llm_config}_tokens", int(arg4))
+        setattr(llm_settings, f"openai_{current_llm_config}_api_key", api_key_or_host)
+        setattr(llm_settings, f"openai_{current_llm_config}_api_base", api_base_or_port)
+        setattr(llm_settings, f"openai_{current_llm_config}_language_model", model_name)
+        setattr(llm_settings, f"openai_{current_llm_config}_tokens", int(max_tokens))
 
         test_url = getattr(llm_settings, f"openai_{current_llm_config}_api_base") + "/chat/completions"
         data = {
-            "model": arg3,
+            "model": model_name,
             "temperature": 0.01,
             "messages": [{"role": "user", "content": "test"}],
         }
-        headers = {"Authorization": f"Bearer {arg1}"}
+        headers = {"Authorization": f"Bearer {api_key_or_host}"}
         status_code = test_api_connection(test_url, method="POST", headers=headers, body=data, origin_call=origin_call)
 
     elif llm_option == "ollama/local":
-        setattr(llm_settings, f"ollama_{current_llm_config}_host", arg1)
-        setattr(llm_settings, f"ollama_{current_llm_config}_port", int(arg2))
-        setattr(llm_settings, f"ollama_{current_llm_config}_language_model", arg3)
-        status_code = test_api_connection(f"http://{arg1}:{arg2}", origin_call=origin_call)
+        setattr(llm_settings, f"ollama_{current_llm_config}_host", api_key_or_host)
+        setattr(llm_settings, f"ollama_{current_llm_config}_port", int(api_base_or_port))
+        setattr(llm_settings, f"ollama_{current_llm_config}_language_model", model_name)
+        status_code = test_api_connection(f"http://{api_key_or_host}:{api_base_or_port}", origin_call=origin_call)
 
     elif llm_option == "litellm":
-        setattr(llm_settings, f"litellm_{current_llm_config}_api_key", arg1)
-        setattr(llm_settings, f"litellm_{current_llm_config}_api_base", arg2)
-        setattr(llm_settings, f"litellm_{current_llm_config}_language_model", arg3)
-        setattr(llm_settings, f"litellm_{current_llm_config}_tokens", int(arg4))
+        setattr(llm_settings, f"litellm_{current_llm_config}_api_key", api_key_or_host)
+        setattr(llm_settings, f"litellm_{current_llm_config}_api_base", api_base_or_port)
+        setattr(llm_settings, f"litellm_{current_llm_config}_language_model", model_name)
+        setattr(llm_settings, f"litellm_{current_llm_config}_tokens", int(max_tokens))
 
-        status_code = test_litellm_chat(arg1, arg2, arg3, int(arg4))
+        status_code = test_litellm_chat(api_key_or_host, api_base_or_port, model_name, int(max_tokens))
 
     gr.Info("Configured!")
     llm_settings.update_env()
