@@ -7,7 +7,7 @@
 HugeGraph-LLM is a comprehensive toolkit that combines the power of graph databases with large language models. It enables seamless integration between HugeGraph and LLMs for building intelligent applications.
 
 ### Key Features
-- 🏗️ **Knowledge Graph Construction** - Build KGs automatically using LLMs + HugeGraph  
+- 🏗️ **Knowledge Graph Construction** - Build KGs automatically using LLMs + HugeGraph
 - 🗣️ **Natural Language Querying** - Operate graph databases using natural language (Gremlin/Cypher)
 - 🔍 **Graph-Enhanced RAG** - Leverage knowledge graphs to improve answer accuracy (GraphRAG & Graph Agent)
 
@@ -32,6 +32,8 @@ The fastest way to get started with both HugeGraph Server and RAG Service:
 # 1. Set up environment
 cp docker/env.template docker/.env
 # Edit docker/.env and set PROJECT_PATH to your actual project path
+# If there is not a configuration file (named .env) under hugegraph-llm, run the following command
+cd hugegraph-llm && touch .env && cd ..
 
 # 2. Deploy services
 cd docker
@@ -164,7 +166,7 @@ graph LR
     B --> C[Extract Info]
     C --> D[Commit to HugeGraph]
     D --> E[Execute Pipeline]
-    
+
     style A fill:#fff2cc
     style B fill:#d5e8d4
     style C fill:#dae8fc
@@ -202,7 +204,7 @@ graph TD
     C --> D[Retrieve Graph Context]
     D --> E[Rerank Results]
     E --> F[Generate Answer]
-    
+
     style A fill:#e3f2fd
     style B fill:#f3e5f5
     style C fill:#e8f5e8
