@@ -6,7 +6,7 @@
 
 ⭐️ 本 AI Coding 工作流仍在迭代和实践中，欢迎大家体验使用。这是一个开放且持续演进的工作流，我们非常欢迎并鼓励社区成员将自己的最佳实践和宝贵经验融入其中。如果您有任何改进建议，请通过提交 **Issue** 来发起讨论，或直接通过 **Pull Request** 贡献您的智慧。
 
-## 快速启动(Qucik Start)
+## 快速启动(Quick Start)
 
 - 将目录下的[basic.md](./basic.md)移至你使用的 AI Coding System 的 basic / system rule，如 CLAUDE.md, role.mdc(Always Apply), copilot-instructions.md 等
 
@@ -73,7 +73,7 @@
 
 ## 项目规范
 
-[base_instruction.md](./{module_name}/base-introdction.md)
+模块下 base_instruction.md(./{module_name}/base-introdction.md)
 
 ## 测试规范
 
