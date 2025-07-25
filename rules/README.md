@@ -10,7 +10,7 @@
 
 - 将目录下的[basic.md](./basic.md)移至你使用的 AI Coding System 的 basic / system rule，如 CLAUDE.md, role.mdc(Always Apply), copilot-instructions.md 等
 
-- 将本 README attach 给 AI，让他明白工作流流程。每个流程开始前，需要确保已经阅读过相关指导文档。不要让 AI**自动执行流程**，如果出现该情况，需要及时 STOP 并告诉他(可以选择固化为 memory 的方式)
+- 将本 README 附给 AI，让他明白工作流流程。每个流程开始前，需要确保已经阅读过相关指导文档。不要让 AI**自动执行流程**，如果出现该情况，需要及时 STOP 并告诉他(可以选择固化为 memory 的方式)
 
 - STEP1~3 模型推荐 Think 类模型(o3, gemini-2.5-pro，Deepseek-R1), STEP4 模型推荐（Claude, gemini-2.5-pro, Kimi-K2, Qwen3-Coder 等）
 
@@ -32,7 +32,7 @@
 
 - **2. 明确批准 (Explicit Approval)**: 在每个阶段结束时，AI 助手必须暂停并获得用户的**明确批准**后，才能进入下一阶段。这是建立信任和确保方向正确的关键。
 
-- **3. 调研优先 (Research First)**: **在提出任何设计、计划或代码实现之前，必须优先对现有代码库进行充分的调研。** 主动寻找可复用的组件、模式和配置，遵循奥卡姆剃刀原则，避免不必要的重复劳动。此原则是后续所有阶段的强制前置步骤。
+- **3. 调研优先 (Research First)**: **在提出任何设计、计划或代码实现之前，必须优先对现有代码库进行充分的调研。** 主动寻找可复用的组件、模式和配置，遵循奥卡姆剃刀原则，避免不必要地重复劳动。此原则是后续所有阶段的强制前置步骤。
 
 - **4. 迭代循环 (Iterative Loop)**: 工作流并非严格线性。如果在后续阶段（如“规划”或“执行”）发现了足以影响架构决策的新信息，**必须主动暂停并返回到之前的“设计”或“需求”阶段**进行修订，以确保最终方案的质量。
 
@@ -73,8 +73,8 @@
 
 ## 项目规范
 
-模块下 base_instruction.md(./{module_name}/base-introdction.md)
+模块下 base_introdction.md(./{module_name}/base-introduction.md)
 
 ## 测试规范
 
-🚧
+🚧ing..
