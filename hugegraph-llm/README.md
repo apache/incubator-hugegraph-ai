@@ -223,6 +223,18 @@ After running the demo, configuration files are automatically generated:
 
 **LLM Provider Support**: This project uses [LiteLLM](https://docs.litellm.ai/docs/providers) for multi-provider LLM support.
 
+## 🤖 Developer Guidelines
+
+> [!IMPORTANT]
+> **For developers contributing to hugegraph-llm with AI coding assistance:**
+> 
+> - **Code Analysis**: Follow comprehensive analysis methodology in `../rules/prompts/project-deep.md`
+> - **Documentation**: Maintain structured documentation standards from `../rules/prompts/project-general.md`
+> - **Quality Standards**: Ensure type annotations, proper testing, and consistent patterns
+> - **Business Logic**: Focus on graph-LLM integration logic and RAG pipeline optimization
+> 
+> These guidelines ensure consistent code quality and maintainable graph-AI integrations.
+
 ## 📚 Additional Resources
 
 - **Graph Visualization**: Use [HugeGraph Hubble](https://hub.docker.com/r/hugegraph/hubble) for data analysis and schema management

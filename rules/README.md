@@ -73,8 +73,9 @@
 
 ## 项目规范
 
-模块下 base_introdction.md(./{module_name}/base-introduction.md)
+每个模块下的 `base_introduction.md`介绍各自模块的最核心的结构/概览，可直接重命名为 GEMINI/CLAUDE/copilot.md 给 `LLM Coding` 
+作为默认参考考 (./{module_name}/base-introduction.md)
 
 ## 测试规范
 
-🚧ing..
+🚧ing.. (TBD)

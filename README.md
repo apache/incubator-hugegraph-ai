@@ -163,6 +163,18 @@ And here are links of other repositories:
 
 We welcome contributions! Please see our [contribution guidelines](https://hugegraph.apache.org/docs/contribution-guidelines/) for details.
 
+### 🤖 AI Coding Guidelines for Developers
+
+> [!IMPORTANT]
+> **For project contributors using AI coding tools**, please follow these guidelines:
+> 
+> - **Documentation Standards**: Follow the structured documentation approach outlined in `rules/prompts/project-general.md`
+> - **Deep Analysis**: When analyzing complex features, refer to `rules/prompts/project-deep.md` for comprehensive code analysis methodology
+> - **Code Quality**: Maintain consistency with existing patterns and ensure proper type annotations
+> - **Testing**: Follow TDD principles and ensure comprehensive test coverage for new features
+> 
+> These guidelines help maintain code quality and documentation consistency across the project.
+
 **Development Setup:**
 ```bash
 # 1. Clone and navigate to project
@@ -191,7 +203,6 @@ uv add --group dev pytest-mock  # Add to dev group
 
 **Key Points:**
 - Use [GitHub Desktop](https://desktop.github.com/) for easier PR management
-- Use/Refer AI Coding basic rules (🚧 ing, on the way)
 - Check existing issues before reporting bugs
 
 [![contributors graph](https://contrib.rocks/image?repo=apache/incubator-hugegraph-ai)](https://github.com/apache/incubator-hugegraph-ai/graphs/contributors)
