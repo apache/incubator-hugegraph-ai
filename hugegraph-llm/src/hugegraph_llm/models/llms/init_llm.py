@@ -18,7 +18,6 @@
 
 from hugegraph_llm.models.llms.ollama import OllamaClient
 from hugegraph_llm.models.llms.openai import OpenAIClient
-from hugegraph_llm.models.llms.qianfan import QianfanClient
 from hugegraph_llm.models.llms.litellm import LiteLLMClient
 from hugegraph_llm.config import llm_settings
 
@@ -30,12 +29,6 @@ class LLMs:
         self.text2gql_llm_type = llm_settings.text2gql_llm_type
 
     def get_chat_llm(self):
-        if self.chat_llm_type == "qianfan_wenxin":
-            return QianfanClient(
-                model_name=llm_settings.qianfan_chat_language_model,
-                api_key=llm_settings.qianfan_chat_api_key,
-                secret_key=llm_settings.qianfan_chat_secret_key
-            )
         if self.chat_llm_type == "openai":
             return OpenAIClient(
                 api_key=llm_settings.openai_chat_api_key,
@@ -59,12 +52,6 @@ class LLMs:
         raise Exception("chat llm type is not supported !")
 
     def get_extract_llm(self):
-        if self.extract_llm_type == "qianfan_wenxin":
-            return QianfanClient(
-                model_name=llm_settings.qianfan_extract_language_model,
-                api_key=llm_settings.qianfan_extract_api_key,
-                secret_key=llm_settings.qianfan_extract_secret_key
-            )
         if self.extract_llm_type == "openai":
             return OpenAIClient(
                 api_key=llm_settings.openai_extract_api_key,
@@ -88,12 +75,6 @@ class LLMs:
         raise Exception("extract llm type is not supported !")
 
     def get_text2gql_llm(self):
-        if self.text2gql_llm_type == "qianfan_wenxin":
-            return QianfanClient(
-                model_name=llm_settings.qianfan_text2gql_language_model,
-                api_key=llm_settings.qianfan_text2gql_api_key,
-                secret_key=llm_settings.qianfan_text2gql_secret_key
-            )
         if self.text2gql_llm_type == "openai":
             return OpenAIClient(
                 api_key=llm_settings.openai_text2gql_api_key,

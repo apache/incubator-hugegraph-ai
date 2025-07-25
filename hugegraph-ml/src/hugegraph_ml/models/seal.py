@@ -49,6 +49,7 @@ from ogb.linkproppred import DglLinkPropPredDataset, Evaluator
 from scipy.sparse.csgraph import shortest_path
 from tqdm import tqdm
 
+
 class GCN(nn.Module):
     """
     GCN Model
@@ -704,7 +705,7 @@ class SEALData(object):
 
         path = osp.join(
             self.save_dir or "",
-            "f{self.prefix}_{split_type}_{self.hop}-hop_{subsample_ratio}-subsample.bin"
+            f"{self.prefix}_{split_type}_{self.hop}-hop_{subsample_ratio}-subsample.bin",
         )
 
         if osp.exists(path):
