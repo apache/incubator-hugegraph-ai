@@ -30,8 +30,8 @@ The fastest way to get started with both HugeGraph Server and RAG Service:
 
 ```bash
 # 1. Set up environment
-cp docker/env.template docker/.env
-# Edit docker/.env and set PROJECT_PATH to your actual project path
+cp docker/env.template hugegraph-llm/.env
+# Edit hugegraph-llm/.env and set PROJECT_PATH to your actual project path
 
 # 2. Deploy services
 cd docker
