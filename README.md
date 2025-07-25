@@ -168,12 +168,14 @@ We welcome contributions! Please see our [contribution guidelines](https://hugeg
 > [!IMPORTANT]
 > **For project contributors using AI coding tools**, please follow these guidelines:
 > 
-> - **Documentation Standards**: Follow the structured documentation approach outlined in `rules/prompts/project-general.md`
-> - **Deep Analysis**: When analyzing complex features, refer to `rules/prompts/project-deep.md` for comprehensive code analysis methodology
+> - **Start Here**: First read `rules/README.md` for the complete AI-assisted development workflow
+> - **Module Context**: When `basic-introduction.md` exists in any module, rename it as context for your LLM (e.g., `CLAUDE.md`, `copilot-instructions.md`)
+> - **Documentation Standards**: Follow the structured documentation approach in `rules/prompts/project-general.md`
+> - **Deep Analysis**: For complex features, refer to `rules/prompts/project-deep.md` for comprehensive code analysis methodology
 > - **Code Quality**: Maintain consistency with existing patterns and ensure proper type annotations
 > - **Testing**: Follow TDD principles and ensure comprehensive test coverage for new features
 > 
-> These guidelines help maintain code quality and documentation consistency across the project.
+> These guidelines ensure consistent code quality and maintainable development workflow with AI assistance.
 
 **Development Setup:**
 ```bash

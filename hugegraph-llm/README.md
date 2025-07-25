@@ -228,6 +228,8 @@ After running the demo, configuration files are automatically generated:
 > [!IMPORTANT]
 > **For developers contributing to hugegraph-llm with AI coding assistance:**
 > 
+> - **Start Here**: First read `../rules/README.md` for the complete AI-assisted development workflow
+> - **Module Context**: Rename `basic-introduction.md` in this directory as context for your LLM (e.g., `CLAUDE.md`, `copilot-instructions.md`)
 > - **Code Analysis**: Follow comprehensive analysis methodology in `../rules/prompts/project-deep.md`
 > - **Documentation**: Maintain structured documentation standards from `../rules/prompts/project-general.md`
 > - **Quality Standards**: Ensure type annotations, proper testing, and consistent patterns

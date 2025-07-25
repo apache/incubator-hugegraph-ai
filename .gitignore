@@ -135,6 +135,37 @@ celerybeat.pid
 # prompt config
 config_prompt.yaml*
 
+# AI-IDE prompt files (generated from basic-introduction.md)
+
+# Claude Projects
+CLAUDE.md
+CLAUDE_*.md
+
+# Gemini/Google
+GEMINI.md
+GEMINI_*.md
+gemini.md
+gemini_*.md
+
+# GitHub Copilot / Microsoft
+copilot-instructions.md
+.copilot-instructions.md
+
+# Cursor IDE
+cursor-instructions.md
+.cursor-instructions.md
+cursor.md
+
+# Windsurf/Codeium
+windsurf.md
+windsurf-instructions.md
+codeium.md
+codeium-instructions.md
+
+# Other AI coding assistants
+.ai-instructions.md
+*.ai-prompt.md
+
 # Environments
 .env
 .env.bak
