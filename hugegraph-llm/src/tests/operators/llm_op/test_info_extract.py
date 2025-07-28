@@ -76,48 +76,53 @@ class TestInfoExtract(unittest.TestCase):
         graph = {"triples": [], "vertices": [], "edges": [], "schema": self.schema}
         extract_triples_by_regex_with_schema(self.schema, self.llm_output, graph)
         graph.pop("triples")
-        self.assertEqual(
-            graph,
+        
+        # Convert dict_values to list for comparison
+        expected_vertices = [
             {
-                "vertices": [
-                    {
-                        "name": "Alice",
-                        "label": "person",
-                        "properties": {"name": "Alice", "age": "25", "occupation": "lawyer"},
-                    },
-                    {
-                        "name": "Bob",
-                        "label": "person",
-                        "properties": {"name": "Bob", "occupation": "journalist"},
-                    },
-                    {
-                        "name": "www.alice.com",
-                        "label": "webpage",
-                        "properties": {"name": "www.alice.com", "url": "www.alice.com"},
-                    },
-                    {
-                        "name": "www.bob.com",
-                        "label": "webpage",
-                        "properties": {"name": "www.bob.com", "url": "www.bob.com"},
-                    },
-                ],
-                "edges": [{"start": "Alice", "end": "Bob", "type": "roommate", "properties": {}}],
-                "schema": {
-                    "vertices": [
-                        {"vertex_label": "person", "properties": ["name", "age", "occupation"]},
-                        {"vertex_label": "webpage", "properties": ["name", "url"]},
-                    ],
-                    "edges": [
-                        {
-                            "edge_label": "roommate",
-                            "source_vertex_label": "person",
-                            "target_vertex_label": "person",
-                            "properties": [],
-                        }
-                    ],
-                },
+                "id": "person-Alice",
+                "name": "Alice",
+                "label": "person",
+                "properties": {"name": "Alice", "age": "25", "occupation": "lawyer"},
             },
-        )
+            {
+                "id": "person-Bob",
+                "name": "Bob",
+                "label": "person",
+                "properties": {"name": "Bob", "occupation": "journalist"},
+            },
+            {
+                "id": "webpage-www.alice.com",
+                "name": "www.alice.com",
+                "label": "webpage",
+                "properties": {"name": "www.alice.com", "url": "www.alice.com"},
+            },
+            {
+                "id": "webpage-www.bob.com",
+                "name": "www.bob.com",
+                "label": "webpage",
+                "properties": {"name": "www.bob.com", "url": "www.bob.com"},
+            },
+        ]
+        
+        expected_edges = [
+            {
+                "start": "person-Alice",
+                "end": "person-Bob",
+                "type": "roommate",
+                "properties": {}
+            }
+        ]
+        
+        # Sort vertices and edges for consistent comparison
+        actual_vertices = sorted(graph["vertices"], key=lambda x: x["id"])
+        expected_vertices = sorted(expected_vertices, key=lambda x: x["id"])
+        actual_edges = sorted(graph["edges"], key=lambda x: (x["start"], x["end"]))
+        expected_edges = sorted(expected_edges, key=lambda x: (x["start"], x["end"]))
+        
+        self.assertEqual(actual_vertices, expected_vertices)
+        self.assertEqual(actual_edges, expected_edges)
+        self.assertEqual(graph["schema"], self.schema)
 
     def test_extract_by_regex(self):
         graph = {"triples": []}

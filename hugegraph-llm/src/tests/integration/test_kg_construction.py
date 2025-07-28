@@ -76,7 +76,7 @@ class KGConstructor:
 
     def extract_relations(self, document):
         # Mock relation extraction
-        if "张三" in document.content and "ABC公司" in document.content:
+        if "张三" in document.content and "ABC Company" in document.content:
             return [
                 {
                     "source": {"type": "Person", "name": "张三"},

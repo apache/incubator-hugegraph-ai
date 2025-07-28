@@ -56,11 +56,15 @@ class Document:
 
     def __init__(self, content: str, metadata: Optional[Union[Dict[str, Any], Metadata]] = None):
         """Initialize a document with content and metadata.
-
         Args:
             content: The text content of the document.
             metadata: Metadata associated with the document. Can be a dictionary or Metadata object.
+        
+        Raises:
+            ValueError: If content is None or empty string.
         """
+        if not content:
+            raise ValueError("Document content cannot be None or empty")
         self.content = content
         if metadata is None:
             self.metadata = {}
