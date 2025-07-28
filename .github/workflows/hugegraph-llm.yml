@@ -51,52 +51,28 @@ jobs:
         uv venv
         source .venv/bin/activate
         uv pip install pytest pytest-cov
-        uv pip install -r hugegraph-llm/requirements.txt
+        uv pip install -r ./hugegraph-llm/requirements.txt
         
     # Install local hugegraph-python-client first
     - name: Install hugegraph-python-client
       run: |
         source .venv/bin/activate
         # Use uv to install local package
-        uv pip install -e hugegraph-python-client/
-        uv pip install -e hugegraph-llm/
+        uv pip install -e ./hugegraph-python-client/
+        uv pip install -e ./hugegraph-llm/
         # Verify installation
         echo "=== Installed packages ==="
         uv pip list | grep hugegraph
         echo "=== Python path ==="
         python -c "import sys; [print(p) for p in sys.path]"
 
-    - name: Run core unit tests
+    - name: Run unit tests
       run: |
         source .venv/bin/activate
         export PYTHONPATH=$(pwd)/hugegraph-llm/src
         export SKIP_EXTERNAL_SERVICES=true
         cd hugegraph-llm
-        python -m pytest src/tests/config/ src/tests/document/ src/tests/middleware/ src/tests/test_utils.py -v --tb=short
-
-    - name: Run operator tests
-      run: |
-        source .venv/bin/activate
-        export PYTHONPATH=$(pwd)/hugegraph-llm/src
-        export SKIP_EXTERNAL_SERVICES=true
-        cd hugegraph-llm
-        python -m pytest src/tests/operators/ -v --tb=short
-
-    - name: Run model tests
-      run: |
-        source .venv/bin/activate
-        export PYTHONPATH=$(pwd)/hugegraph-llm/src
-        export SKIP_EXTERNAL_SERVICES=true
-        cd hugegraph-llm
-        python -m pytest src/tests/models/ -v --tb=short
-
-    - name: Run indices tests
-      run: |
-        source .venv/bin/activate
-        export PYTHONPATH=$(pwd)/hugegraph-llm/src
-        export SKIP_EXTERNAL_SERVICES=true
-        cd hugegraph-llm
-        python -m pytest src/tests/indices/ -v --tb=short
+        python -m pytest src/tests/config/ src/tests/document/ src/tests/middleware/ src/tests/operators/ src/tests/models/ src/tests/indices/ src/tests/test_utils.py -v --tb=short
 
     - name: Run integration tests
       run: |
@@ -104,7 +80,7 @@ jobs:
         export PYTHONPATH=$(pwd)/hugegraph-llm/src
         export SKIP_EXTERNAL_SERVICES=true
         cd hugegraph-llm
-        python -m pytest src/tests/integration/ -v --tb=short
+        python -m pytest src/tests/integration/test_graph_rag_pipeline.py src/tests/integration/test_kg_construction.py src/tests/integration/test_rag_pipeline.py -v --tb=short
 
     - name: Generate test coverage report
       run: |
