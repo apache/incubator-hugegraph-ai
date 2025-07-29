@@ -18,7 +18,7 @@
 from typing import Optional, Literal, List
 from enum import Enum
 from fastapi import Query
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from hugegraph_llm.config import prompt
 
@@ -143,7 +143,7 @@ class GremlinGenerateRequest(BaseModel):
     )
 
     @classmethod
-    @validator('gremlin_prompt')
+    @field_validator('gremlin_prompt')
     def validate_prompt_placeholders(cls, v):
         if v is not None:
             required_placeholders = ['{query}', '{schema}', '{example}', '{vertices}', '{properties}']
