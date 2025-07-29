@@ -142,6 +142,7 @@ class GremlinGenerateRequest(BaseModel):
         """
     )
 
+    @classmethod
     @validator('gremlin_prompt')
     def validate_prompt_placeholders(cls, v):
         if v is not None:

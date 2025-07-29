@@ -196,7 +196,7 @@ def rag_http_api(
         except HTTPException as e:
             raise e
         except Exception as e:
-            log.error(f"Error in text2gremlin_api: {e}")
+            log.error("Error in text2gremlin_api: %s", e)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected error occurred during Gremlin generation.",

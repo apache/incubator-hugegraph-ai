@@ -89,7 +89,6 @@ def gremlin_generate(
     # FIXME: schema is not used in gremlin_generate() step, no context for it (enhance the logic here)
     updated_schema = sm.simple_schema(schema) if short_schema else schema
     store_schema(str(updated_schema), inp, gremlin_prompt)
-    
     # Define which outputs are requested
     output_types = {
         "match_result": True,
@@ -98,7 +97,6 @@ def gremlin_generate(
         "template_execution_result": True,
         "raw_execution_result": True
     }
-    
     if requested_outputs:
         # Reset all to False first
         for key in output_types:
@@ -107,14 +105,12 @@ def gremlin_generate(
         for key in requested_outputs:
             if key in output_types:
                 output_types[key] = True
-    
     # Always need to query examples and generate gremlin
     context = (
         generator.example_index_query(example_num)
         .gremlin_generate_synthesize(updated_schema, gremlin_prompt)
         .run(query=inp)
     )
-    
     # Execute template query only if needed
     if output_types["template_execution_result"]:
         try:
@@ -123,7 +119,6 @@ def gremlin_generate(
             context["template_exec_res"] = f"{e}"
     else:
         context["template_exec_res"] = ""
-    
     # Execute raw query only if needed
     if output_types["raw_execution_result"]:
         try:
@@ -132,7 +127,6 @@ def gremlin_generate(
             context["raw_exec_res"] = f"{e}"
     else:
         context["raw_exec_res"] = ""
-    
     match_result = json.dumps(context.get("match_result", "No Results"), ensure_ascii=False, indent=2)
     return (
         match_result,
@@ -263,34 +257,29 @@ def gremlin_generate_selective(
         "template_execution_result",
         "raw_execution_result",
     ]
-    
     if not requested_outputs:  # None or empty list
         requested_outputs = output_keys
-    
     # Handle potential error case
     original_results = gremlin_generate(
         inp, example_num, schema_input, gremlin_prompt_input, requested_outputs
     )
-    
     outputs_dict: Dict[str, Any] = {}
-    
     # Handle the case where gremlin_generate might return a 2-tuple error message
     if isinstance(original_results, tuple) and len(original_results) == 2 and isinstance(original_results[0], str):
         # This indicates an error from gremlin_generate (e.g., "Invalid JSON schema...")
         # In this case, we can return the error message for relevant fields or a general error
-        if "match_result" in requested_outputs: # Or any other default error field
-             outputs_dict["match_result"] = original_results[0]
-             outputs_dict["error_detail"] = original_results[1] # usually empty string from original
+        if "match_result" in requested_outputs:  # Or any other default error field
+            outputs_dict["match_result"] = original_results[0]
+            outputs_dict["error_detail"] = original_results[1]  # usually empty string from original
         # Or, more simply, return a dictionary indicating the error.
         # For simplicity, if an error tuple is returned, and match_result is requested, we populate it.
         # This part might need refinement based on how errors should be structured in the selective output.
         # For now, if an error tuple is returned, and "match_result" is requested, it gets the error message.
         # Other requested fields will be absent.
-        return outputs_dict # Early exit if gremlin_generate returned an error tuple
-    
+        return outputs_dict  # Early exit if gremlin_generate returned an error tuple
     # Process normal results
-    match_res_orig, template_gremlin_orig, raw_gremlin_orig, template_exec_res_orig, raw_exec_res_orig = original_results
-    
+    (match_res_orig, template_gremlin_orig, raw_gremlin_orig,
+     template_exec_res_orig, raw_exec_res_orig) = original_results
     output_mapping = {
         "match_result": match_res_orig,
         "template_gremlin": template_gremlin_orig,
@@ -298,9 +287,8 @@ def gremlin_generate_selective(
         "template_execution_result": template_exec_res_orig,
         "raw_execution_result": raw_exec_res_orig
     }
-    
     for key in requested_outputs:
         if key in output_mapping:
             outputs_dict[key] = output_mapping[key]
-    
+
     return outputs_dict
