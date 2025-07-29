@@ -126,7 +126,6 @@ def rag_http_api(
                 ]
                 user_result = {key: result[key] for key in params if key in result}
                 return {"graph_recall": user_result}
-            # Note: Maybe only for qianfan/wenxin
             return {"graph_recall": json.dumps(result)}
 
         except TypeError as e:
@@ -151,8 +150,6 @@ def rag_http_api(
 
         if req.llm_type == "openai":
             res = apply_llm_conf(req.api_key, req.api_base, req.language_model, req.max_tokens, origin_call="http")
-        elif req.llm_type == "qianfan_wenxin":
-            res = apply_llm_conf(req.api_key, req.secret_key, req.language_model, None, origin_call="http")
         else:
             res = apply_llm_conf(req.host, req.port, req.language_model, None, origin_call="http")
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
@@ -163,8 +160,6 @@ def rag_http_api(
 
         if req.llm_type == "openai":
             res = apply_embedding_conf(req.api_key, req.api_base, req.language_model, origin_call="http")
-        elif req.llm_type == "qianfan_wenxin":
-            res = apply_embedding_conf(req.api_key, req.api_base, None, origin_call="http")
         else:
             res = apply_embedding_conf(req.host, req.port, req.language_model, origin_call="http")
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))

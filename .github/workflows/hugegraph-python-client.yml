@@ -39,32 +39,22 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            .venv
             ~/.cache/uv
-            ~/.cache/pip
-          # TODO: switch to pyproject.toml after uv adoption
-          key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('hugegraph-python-client/requirements.txt') }}
+          key: ${{ runner.os }}-uv-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
           restore-keys: |
-            ${{ runner.os }}-venv-${{ matrix.python-version }}-
-            ${{ runner.os }}-venv-
+            ${{ runner.os }}-uv-${{ matrix.python-version }}-
 
-      # TODO: use pyproject.toml later
-      - name: Install dependencies
-        if: steps.cache-deps.outputs.cache-hit != 'true'
+      - name: Install dependencies with uv sync
         run: |
-          uv venv && source .venv/bin/activate
-          uv pip install pytest
-          uv pip install -r ./hugegraph-python-client/requirements.txt  # TODO: use uv pip install ./hugegraph-python-client later
+          uv sync --extra python-client --extra dev
 
       - name: Test example
         run: |
-          ls -al && source .venv/bin/activate
-          export PYTHONPATH=$(pwd)/hugegraph-python-client/src
-          echo ${PYTHONPATH}
-          python hugegraph-python-client/src/pyhugegraph/example/hugegraph_example.py
+          ls -al
+          export PYTHONPATH=$(pwd)/hugegraph-python-client/src && echo ${PYTHONPATH}
+          uv run python hugegraph-python-client/src/pyhugegraph/example/hugegraph_example.py
 
       - name: Test with pytest
         run: |
-          ls -al ../ && source ../.venv/bin/activate
-          pytest
+          uv run pytest
         working-directory: hugegraph-python-client

@@ -32,10 +32,11 @@ The implemented algorithm models can be found in the [models](./src/hugegraph_ml
 
 ## Environment Requirements
 
-- python 3.9+
-- hugegraph-server 1.0+
+- python 3.9+ (standalone module, not part of workspace)
+- hugegraph-server 1.0+ (recommended: 1.5+)
+- [uv](https://docs.astral.sh/uv/) 0.7+ (for dependency management)
 
-## Preparation
+## Installation
 
 1. Start the HugeGraph database, you can do it via
    Docker/[Binary packages](https://hugegraph.apache.org/docs/download/download/).
@@ -43,26 +44,30 @@ The implemented algorithm models can be found in the [models](./src/hugegraph_ml
    to [docker-link](https://hub.docker.com/r/hugegraph/hugegraph) & [deploy-doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev)
    for guidance
 
-2. Clone this project
+2. Clone and setup the project:
 
    ```bash
    git clone https://github.com/apache/incubator-hugegraph-ai.git
+   cd incubator-hugegraph-ai/hugegraph-ml
    ```
 
-3. Install [hugegraph-python-client](../hugegraph-python-client) and [hugegraph-ml](../hugegraph-ml)
+3. Install dependencies using uv:
 
    ```bash
-   cd ./incubator-hugegraph-ai # better to use virtualenv (source venv/bin/activate) 
-   pip install ./hugegraph-python-client
-   cd ./hugegraph-ml/
-   pip install -e .
+   # uv sync automatically creates .venv and installs all dependencies
+   uv sync
+   # Activate virtual environment for easier command usage
+   source .venv/bin/activate
    ```
 
-4. Enter the project directory
+4. Navigate to source directory for examples:
 
    ```bash
-   cd ./hugegraph-ml/src
+   cd ./src
    ```
+
+> [!NOTE]
+> All examples below assume you're in the activated virtual environment
 
 ## Examples
 
