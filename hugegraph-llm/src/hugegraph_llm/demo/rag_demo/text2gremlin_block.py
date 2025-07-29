@@ -64,32 +64,30 @@ def build_example_vector_index(temp_file) -> dict:
     return builder.example_index_build(examples).run()
 
 
-def gremlin_generate(
-    inp, example_num, schema, gremlin_prompt, requested_outputs: Optional[List[str]] = None
-) -> Union[tuple[str, str], tuple[str, Any, Any, Any, Any]]:
-    generator = GremlinGenerator(llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding())
-    sm = SchemaManager(graph_name=schema)
+def _process_schema(schema, generator, sm):
+    """Process and validate schema input"""
     short_schema = False
+    if not schema:
+        return None, short_schema
+    
+    schema = schema.strip()
+    if not schema.startswith("{"):
+        short_schema = True
+        log.info("Try to get schema from graph '%s'", schema)
+        generator.import_schema(from_hugegraph=schema)
+        schema = sm.schema.getSchema()
+    else:
+        try:
+            schema = json.loads(schema)
+            generator.import_schema(from_user_defined=schema)
+        except json.JSONDecodeError as e:
+            log.error("Invalid JSON schema provided: %s", e)
+            return None, None  # Error case
+    return schema, short_schema
 
-    if schema:
-        schema = schema.strip()
-        if not schema.startswith("{"):
-            short_schema = True
-            log.info("Try to get schema from graph '%s'", schema)
-            generator.import_schema(from_hugegraph=schema)
-            # FIXME: update the logic here
-            schema = sm.schema.getSchema()
-        else:
-            try:
-                schema = json.loads(schema)
-                generator.import_schema(from_user_defined=schema)
-            except json.JSONDecodeError as e:
-                log.error("Invalid JSON schema provided: %s", e)
-                return "Invalid JSON schema, please check the format carefully.", ""
-    # FIXME: schema is not used in gremlin_generate() step, no context for it (enhance the logic here)
-    updated_schema = sm.simple_schema(schema) if short_schema else schema
-    store_schema(str(updated_schema), inp, gremlin_prompt)
-    # Define which outputs are requested
+
+def _configure_output_types(requested_outputs):
+    """Configure which outputs are requested"""
     output_types = {
         "match_result": True,
         "template_gremlin": True,
@@ -98,20 +96,16 @@ def gremlin_generate(
         "raw_execution_result": True
     }
     if requested_outputs:
-        # Reset all to False first
         for key in output_types:
             output_types[key] = False
-        # Then set requested ones to True
         for key in requested_outputs:
             if key in output_types:
                 output_types[key] = True
-    # Always need to query examples and generate gremlin
-    context = (
-        generator.example_index_query(example_num)
-        .gremlin_generate_synthesize(updated_schema, gremlin_prompt)
-        .run(query=inp)
-    )
-    # Execute template query only if needed
+    return output_types
+
+
+def _execute_queries(context, output_types):
+    """Execute gremlin queries based on output requirements"""
     if output_types["template_execution_result"]:
         try:
             context["template_exec_res"] = run_gremlin_query(query=context["result"])
@@ -119,7 +113,7 @@ def gremlin_generate(
             context["template_exec_res"] = f"{e}"
     else:
         context["template_exec_res"] = ""
-    # Execute raw query only if needed
+    
     if output_types["raw_execution_result"]:
         try:
             context["raw_exec_res"] = run_gremlin_query(query=context["raw_result"])
@@ -127,6 +121,31 @@ def gremlin_generate(
             context["raw_exec_res"] = f"{e}"
     else:
         context["raw_exec_res"] = ""
+
+
+def gremlin_generate(
+    inp, example_num, schema, gremlin_prompt, requested_outputs: Optional[List[str]] = None
+) -> Union[tuple[str, str], tuple[str, Any, Any, Any, Any]]:
+    generator = GremlinGenerator(llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding())
+    sm = SchemaManager(graph_name=schema)
+    
+    processed_schema, short_schema = _process_schema(schema, generator, sm)
+    if processed_schema is None and short_schema is None:
+        return "Invalid JSON schema, please check the format carefully.", ""
+    
+    updated_schema = sm.simple_schema(processed_schema) if short_schema else processed_schema
+    store_schema(str(updated_schema), inp, gremlin_prompt)
+    
+    output_types = _configure_output_types(requested_outputs)
+    
+    context = (
+        generator.example_index_query(example_num)
+        .gremlin_generate_synthesize(updated_schema, gremlin_prompt)
+        .run(query=inp)
+    )
+    
+    _execute_queries(context, output_types)
+    
     match_result = json.dumps(context.get("match_result", "No Results"), ensure_ascii=False, indent=2)
     return (
         match_result,
@@ -277,9 +296,13 @@ def gremlin_generate_selective(
         # For now, if an error tuple is returned, and "match_result" is requested, it gets the error message.
         # Other requested fields will be absent.
         return outputs_dict  # Early exit if gremlin_generate returned an error tuple
-    # Process normal results
-    (match_res_orig, template_gremlin_orig, raw_gremlin_orig,
-     template_exec_res_orig, raw_exec_res_orig) = original_results
+    # Process normal results (expecting 5-tuple)
+    if len(original_results) == 5:
+        (match_res_orig, template_gremlin_orig, raw_gremlin_orig,
+         template_exec_res_orig, raw_exec_res_orig) = original_results
+    else:
+        # Fallback for unexpected tuple length
+        return {"error": "Unexpected results format from gremlin_generate"}
     output_mapping = {
         "match_result": match_res_orig,
         "template_gremlin": template_gremlin_orig,
