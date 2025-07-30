@@ -58,58 +58,72 @@ jobs:
         ls -la
         echo "Checking hugegraph-llm directory:"
         ls -la hugegraph-llm/
-        echo "Checking if requirements.txt exists:"
-        if [ -f "hugegraph-llm/requirements.txt" ]; then
-          echo "✓ requirements.txt found"
-          ls -la hugegraph-llm/requirements.txt
-        else
-          echo "✗ requirements.txt not found"
-        fi
+        echo "Checking dependency files:"
+        ls -la hugegraph-llm/requirements.txt hugegraph-llm/pyproject.toml 2>/dev/null || echo "Some dependency files not found"
+        
         echo "=== Installing Dependencies ==="
-        # Try requirements.txt first, fallback to pyproject.toml
-        if [ -f "hugegraph-llm/requirements.txt" ]; then
-          echo "Installing from requirements.txt..."
-          uv pip install -r hugegraph-llm/requirements.txt
-        else
-          echo "requirements.txt not found, installing from pyproject.toml..."
+        # Prioritize pyproject.toml over requirements.txt for modern dependency management
+        if [ -f "hugegraph-llm/pyproject.toml" ]; then
+          echo "Installing from pyproject.toml (preferred)..."
           cd hugegraph-llm
+          # Install dependencies first, then install package in editable mode
           uv pip install -e .
           cd ..
+          echo "✓ Installed from pyproject.toml"
+        elif [ -f "hugegraph-llm/requirements.txt" ]; then
+          echo "Installing from requirements.txt (fallback)..."
+          uv pip install -r hugegraph-llm/requirements.txt
+          echo "✓ Installed from requirements.txt"
+        else
+          echo "✗ No dependency files found!"
+          exit 1
         fi
         
-    # Install local hugegraph-python-client first
-    - name: Install hugegraph-python-client
+    # Verify and complete package installation
+    - name: Verify installation
       run: |
         source .venv/bin/activate
-        # Use uv to install local package
+        echo "=== Installing hugegraph-python-client ==="
         uv pip install -e ./hugegraph-python-client/
+        
+        echo "=== Final package verification ==="
+        # Re-install hugegraph-llm to ensure all dependencies are resolved
         uv pip install -e ./hugegraph-llm/
-        # Verify installation
+        
         echo "=== Installed packages ==="
         uv pip list | grep hugegraph
+        
         echo "=== Python path ==="
         python -c "import sys; [print(p) for p in sys.path]"
+        
+        echo "=== Testing critical imports ==="
+        python -c "from hugegraph_llm.models.llms.qianfan import QianfanClient; print('✓ QianfanClient imported successfully')" || echo "✗ QianfanClient import failed"
+        python -c "from hugegraph_llm.models.llms.base import BaseLLM; print('✓ BaseLLM imported successfully')" || echo "✗ BaseLLM import failed"
+        python -c "import hugegraph_llm; print('✓ hugegraph_llm module imported successfully')" || echo "✗ hugegraph_llm import failed"
 
     - name: Run unit tests
       run: |
         source .venv/bin/activate
-        export PYTHONPATH=$(pwd)/hugegraph-llm/src
         export SKIP_EXTERNAL_SERVICES=true
         cd hugegraph-llm
+        echo "=== Running unit tests ==="
+        echo "Current directory: $(pwd)"
+        echo "Testing import before pytest..."
+        python -c "from hugegraph_llm.models.llms.qianfan import QianfanClient; print('✓ Import successful')"
         python -m pytest src/tests/config/ src/tests/document/ src/tests/middleware/ src/tests/operators/ src/tests/models/ src/tests/indices/ src/tests/test_utils.py -v --tb=short
 
     - name: Run integration tests
       run: |
         source .venv/bin/activate
-        export PYTHONPATH=$(pwd)/hugegraph-llm/src
         export SKIP_EXTERNAL_SERVICES=true
         cd hugegraph-llm
+        echo "=== Running integration tests ==="
         python -m pytest src/tests/integration/test_graph_rag_pipeline.py src/tests/integration/test_kg_construction.py src/tests/integration/test_rag_pipeline.py -v --tb=short
 
     - name: Generate test coverage report
       run: |
         source .venv/bin/activate
-        export PYTHONPATH=$(pwd)/hugegraph-llm/src
         export SKIP_EXTERNAL_SERVICES=true
         cd hugegraph-llm
+        echo "=== Generating test coverage report ==="
         python -m pytest src/tests/ --cov=hugegraph_llm --cov-report=xml --cov-report=term-missing --cov-fail-under=70
