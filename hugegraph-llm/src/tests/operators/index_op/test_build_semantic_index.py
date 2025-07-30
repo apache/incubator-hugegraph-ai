@@ -22,7 +22,6 @@ import shutil
 import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
-import asyncio
 
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding

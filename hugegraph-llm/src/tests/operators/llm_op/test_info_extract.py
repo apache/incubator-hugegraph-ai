@@ -76,7 +76,6 @@ class TestInfoExtract(unittest.TestCase):
         graph = {"triples": [], "vertices": [], "edges": [], "schema": self.schema}
         extract_triples_by_regex_with_schema(self.schema, self.llm_output, graph)
         graph.pop("triples")
-        
         # Convert dict_values to list for comparison
         expected_vertices = [
             {
@@ -104,7 +103,7 @@ class TestInfoExtract(unittest.TestCase):
                 "properties": {"name": "www.bob.com", "url": "www.bob.com"},
             },
         ]
-        
+
         expected_edges = [
             {
                 "start": "person-Alice",
@@ -113,13 +112,13 @@ class TestInfoExtract(unittest.TestCase):
                 "properties": {}
             }
         ]
-        
+
         # Sort vertices and edges for consistent comparison
         actual_vertices = sorted(graph["vertices"], key=lambda x: x["id"])
         expected_vertices = sorted(expected_vertices, key=lambda x: x["id"])
         actual_edges = sorted(graph["edges"], key=lambda x: (x["start"], x["end"]))
         expected_edges = sorted(expected_edges, key=lambda x: (x["start"], x["end"]))
-        
+
         self.assertEqual(actual_vertices, expected_vertices)
         self.assertEqual(actual_edges, expected_edges)
         self.assertEqual(graph["schema"], self.schema)

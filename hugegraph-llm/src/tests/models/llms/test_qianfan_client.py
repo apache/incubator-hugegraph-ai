@@ -19,9 +19,15 @@ import asyncio
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
 
-from hugegraph_llm.models.llms.qianfan import QianfanClient
+try:
+    from hugegraph_llm.models.llms.qianfan import QianfanClient
+    QIANFAN_AVAILABLE = True
+except ImportError:
+    QIANFAN_AVAILABLE = False
+    QianfanClient = None
 
 
+@unittest.skipIf(not QIANFAN_AVAILABLE, "QianfanClient not available")
 class TestQianfanClient(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures with mocked qianfan configuration."""
