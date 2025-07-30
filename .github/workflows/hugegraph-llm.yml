@@ -116,9 +116,20 @@ jobs:
           python -c "import hugegraph_llm; print('✓ hugegraph_llm imported with PYTHONPATH')" || echo "✗ Still failed"
         }
         
-        echo "Testing specific module imports..."
+        echo "Testing specific module imports step by step..."
+        echo "Testing BaseLLM..."
         python -c "from hugegraph_llm.models.llms.base import BaseLLM; print('✓ BaseLLM imported successfully')" || echo "✗ BaseLLM import failed"
-        python -c "from hugegraph_llm.models.llms.qianfan import QianfanClient; print('✓ QianfanClient imported successfully')" || echo "✗ QianfanClient import failed"
+        
+        echo "Testing external qianfan dependency..."
+        python -c "import qianfan; print('✓ qianfan library available')" || echo "✗ qianfan library not available"
+        
+        echo "Testing QianfanClient..."
+        python -c "from hugegraph_llm.models.llms.qianfan import QianfanClient; print('✓ QianfanClient imported successfully')" || {
+          echo "✗ QianfanClient import failed, checking dependencies..."
+          python -c "from hugegraph_llm.config import llm_settings; print('✓ llm_settings available')" || echo "✗ llm_settings failed"
+          python -c "from hugegraph_llm.utils.log import log; print('✓ log available')" || echo "✗ log failed"
+          python -c "from retry import retry; print('✓ retry available')" || echo "✗ retry failed"
+        }
 
     - name: Run unit tests
       run: |
@@ -137,7 +148,30 @@ jobs:
         python -c "import hugegraph_llm; print('✓ Package available')" || echo "Package not directly importable"
         
         echo "Testing import before pytest..."
-        python -c "from hugegraph_llm.models.llms.qianfan import QianfanClient; print('✓ Import successful')"
+        echo "Step 1: Testing basic hugegraph_llm import..."
+        python -c "import hugegraph_llm; print('✓ hugegraph_llm imported')"
+        
+        echo "Step 2: Testing models module..."
+        python -c "from hugegraph_llm import models; print('✓ models imported')" || echo "✗ models import failed"
+        
+        echo "Step 3: Testing models.llms module..."
+        python -c "from hugegraph_llm.models import llms; print('✓ llms imported')" || echo "✗ llms import failed"
+        
+        echo "Step 4: Testing base LLM..."
+        python -c "from hugegraph_llm.models.llms.base import BaseLLM; print('✓ BaseLLM imported')" || echo "✗ BaseLLM import failed"
+        
+        echo "Step 5: Testing config import..."
+        python -c "from hugegraph_llm.config import llm_settings; print('✓ llm_settings imported')" || echo "✗ llm_settings import failed"
+        
+        echo "Step 6: Testing utils.log import..."
+        python -c "from hugegraph_llm.utils.log import log; print('✓ log imported')" || echo "✗ log import failed"
+        
+        echo "Step 7: Testing external dependencies..."
+        python -c "import qianfan; print('✓ qianfan library imported')" || echo "✗ qianfan library import failed"
+        python -c "from retry import retry; print('✓ retry library imported')" || echo "✗ retry library import failed"
+        
+        echo "Step 8: Testing qianfan module import..."
+        python -c "from hugegraph_llm.models.llms.qianfan import QianfanClient; print('✓ QianfanClient imported successfully')" || echo "✗ QianfanClient import failed"
         
         echo "Running pytest with proper environment..."
         python -m pytest src/tests/config/ src/tests/document/ src/tests/middleware/ src/tests/operators/ src/tests/models/ src/tests/indices/ src/tests/test_utils.py -v --tb=short
