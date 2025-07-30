@@ -27,7 +27,7 @@ This package contains model implementations for:
 # This enables import statements like: from hugegraph_llm.models import llms
 # Making subpackages accessible
 from . import llms
-from . import embeddings  
+from . import embeddings
 from . import rerankers
 
 __all__ = ["llms", "embeddings", "rerankers"]
