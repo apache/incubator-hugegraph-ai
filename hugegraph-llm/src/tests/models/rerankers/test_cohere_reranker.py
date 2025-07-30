@@ -102,7 +102,7 @@ class TestCohereReranker(unittest.TestCase):
         documents = []
 
         # Call the method
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             self.reranker.get_rerank_lists(query, documents, top_n=1)
 
     def test_get_rerank_lists_top_n_zero(self):
