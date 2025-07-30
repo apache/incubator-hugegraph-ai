@@ -40,7 +40,7 @@ jobs:
           .venv
           ~/.cache/uv
           ~/.cache/pip
-        key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('hugegraph-llm/requirements.txt') }}
+        key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('hugegraph-llm/requirements.txt', 'hugegraph-llm/pyproject.toml') }}
         restore-keys: |
           ${{ runner.os }}-venv-${{ matrix.python-version }}-
           ${{ runner.os }}-venv-
@@ -51,7 +51,31 @@ jobs:
         uv venv
         source .venv/bin/activate
         uv pip install pytest pytest-cov
-        uv pip install -r ./hugegraph-llm/requirements.txt
+        # Debug: Check current directory and file existence
+        echo "=== Debug Information ==="
+        echo "Current working directory: $(pwd)"
+        echo "Listing current directory:"
+        ls -la
+        echo "Checking hugegraph-llm directory:"
+        ls -la hugegraph-llm/
+        echo "Checking if requirements.txt exists:"
+        if [ -f "hugegraph-llm/requirements.txt" ]; then
+          echo "✓ requirements.txt found"
+          ls -la hugegraph-llm/requirements.txt
+        else
+          echo "✗ requirements.txt not found"
+        fi
+        echo "=== Installing Dependencies ==="
+        # Try requirements.txt first, fallback to pyproject.toml
+        if [ -f "hugegraph-llm/requirements.txt" ]; then
+          echo "Installing from requirements.txt..."
+          uv pip install -r hugegraph-llm/requirements.txt
+        else
+          echo "requirements.txt not found, installing from pyproject.toml..."
+          cd hugegraph-llm
+          uv pip install -e .
+          cd ..
+        fi
         
     # Install local hugegraph-python-client first
     - name: Install hugegraph-python-client
