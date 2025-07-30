@@ -1,221 +1,250 @@
-# hugegraph-llm [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/apache/incubator-hugegraph-ai)
+# HugeGraph-LLM [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/apache/incubator-hugegraph-ai)
 
-## 1. Summary
+> **Bridge the gap between Graph Databases and Large Language Models**
 
-The `hugegraph-llm` is a tool for the implementation and research related to large language models.
-This project includes runnable demos, it can also be used as a third-party library.
+## 🎯 Overview
 
-As we know, graph systems can help large models address challenges like timeliness and hallucination,
-while large models can help graph systems with cost-related issues.
+HugeGraph-LLM is a comprehensive toolkit that combines the power of graph databases with large language models. It enables seamless integration between HugeGraph and LLMs for building intelligent applications.
 
-With this project, we aim to reduce the cost of using graph systems and decrease the complexity of 
-building knowledge graphs. This project will offer more applications and integration solutions for 
-graph systems and large language models.
-1.  Construct knowledge graph by LLM + HugeGraph
-2.  Use natural language to operate graph databases (Gremlin/Cypher)
-3.  Knowledge graph supplements answer context (GraphRAG → Graph Agent)
+### Key Features
+- 🏗️ **Knowledge Graph Construction** - Build KGs automatically using LLMs + HugeGraph
+- 🗣️ **Natural Language Querying** - Operate graph databases using natural language (Gremlin/Cypher)
+- 🔍 **Graph-Enhanced RAG** - Leverage knowledge graphs to improve answer accuracy (GraphRAG & Graph Agent)
 
-## 2. Environment Requirements
+For detailed source code doc, visit our [DeepWiki](https://deepwiki.com/apache/incubator-hugegraph-ai) page. (Recommended)
+
+## 📋 Prerequisites
+
 > [!IMPORTANT]
-> - python 3.10+ (not tested in 3.12)
-> - hugegraph-server 1.3+ (better to use 1.5+)
-> - uv 0.7+
+> - **Python**: 3.10+ (not tested on 3.12)
+> - **HugeGraph Server**: 1.3+ (recommended: 1.5+)
+> - **UV Package Manager**: 0.7+
 
-## 3. Preparation
+## 🚀 Quick Start
 
-### 3.1 Docker
+Choose your preferred deployment method:
 
-**Docker Deployment**  
-   Alternatively, you can deploy HugeGraph-AI using Docker:
-   - Ensure you have Docker installed
-   - We provide two container images:
-     - **Image 1**: [hugegraph/rag](https://hub.docker.com/r/hugegraph/rag/tags)  
-       For building and running the RAG functionality, suitable for quick deployment and development
-     - **Image 2**: [hugegraph/rag-bin](https://hub.docker.com/r/hugegraph/rag-bin/tags)  
-       Binary version compiled with Nuitka for more stable and efficient performance in production
-   - Pull the Docker images:
-     ```bash
-     docker pull hugegraph/rag:latest # Pull Image 1
-     docker pull hugegraph/rag-bin:latest # Pull Image 2
-     ```
-   - Start the Docker container:
-     ```bash
-     docker run -it --name rag -p 8001:8001 hugegraph/rag bash
-     docker run -it --name rag-bin -p 8001:8001 hugegraph/rag-bin bash
-     ```
-   - Start the Graph RAG demo:
-     ```bash
-     # For Image 1
-     python ./src/hugegraph_llm/demo/rag_demo/app.py # or run python -m hugegraph_llm.demo.rag_demo.app
+### Option 1: Docker Compose (Recommended)
 
-     # For Image 2
-     ./app.dist/app.bin
-     ```
-   - Access the interface at http://localhost:8001
+The fastest way to get started with both HugeGraph Server and RAG Service:
 
-### 3.2 Build from Source
+```bash
+# 1. Set up environment
+cp docker/env.template docker/.env
+# Edit docker/.env and set PROJECT_PATH to your actual project path
+# If there is not a configuration file (named .env) under hugegraph-llm, run the following command
+cd hugegraph-llm && touch .env && cd ..
 
-1. Start the HugeGraph database, you can run it via [Docker](https://hub.docker.com/r/hugegraph/hugegraph)/[Binary Package](https://hugegraph.apache.org/docs/download/download/).
-    There is a simple method by docker:  
-    ```bash
-   docker run -itd --name=server -p 8080:8080 hugegraph/hugegraph
-    ```  
-   You can refer to the detailed documents [doc](https://hugegraph.apache.org/docs/quickstart/hugegraph-server/#31-use-docker-container-convenient-for-testdev) for more guidance.
+# 2. Deploy services
+cd docker
+docker-compose -f docker-compose-network.yml up -d
 
-2. Configuring the uv environment, Use the official installer to install uv, See the [uv documentation](https://docs.astral.sh/uv/configuration/installer/) for other installation methods   
-    ```bash
-    # You could try pipx or pip to install uv when meet network issues, refer the uv doc for more details
-    curl -LsSf https://astral.sh/uv/install.sh | sh  - # install the latest version like 0.7.3+
-    ```
+# 3. Verify deployment
+docker-compose -f docker-compose-network.yml ps
 
-3. Clone this project
-    ```bash
-    git clone https://github.com/apache/incubator-hugegraph-ai.git
-    ```
-4. Configuration dependency environment
-    ```bash
-    cd incubator-hugegraph-ai/hugegraph-llm
-    uv venv && source .venv/bin/activate
-    uv pip install -e .
-    ```  
-    If dependency download fails or too slow due to network issues, it is recommended to modify `hugegraph-llm/pyproject.toml`.
+# 4. Access services
+# HugeGraph Server: http://localhost:8080
+# RAG Service: http://localhost:8001
+```
 
-5. Start the gradio interactive demo of **Graph RAG**, you can run with the following command and open http://127.0.0.1:8001 after starting
-    ```bash
-    python -m hugegraph_llm.demo.rag_demo.app  # same as "uv run xxx"
-    ```
-    The default host is `0.0.0.0` and the port is `8001`. You can change them by passing command line arguments`--host` and `--port`.  
-    ```bash
-    python -m hugegraph_llm.demo.rag_demo.app --host 127.0.0.1 --port 18001
-    ```
-   
-6. After running the web demo, the config file `.env` will be automatically generated at the path `hugegraph-llm/.env`.    Additionally, a prompt-related configuration file `config_prompt.yaml` will also be generated at the path `hugegraph-llm/src/hugegraph_llm/resources/demo/config_prompt.yaml`.
-    You can modify the content on the web page, and it will be automatically saved to the configuration file after the corresponding feature is triggered.  You can also modify the file directly without restarting the web application; refresh the page to load your latest changes.  
-    (Optional)To regenerate the config file, you can use `config.generate` with `-u` or `--update`.  
-    ```bash
-    python -m hugegraph_llm.config.generate --update
-    ```
-    Note: `Litellm` support multi-LLM provider, refer [litellm.ai](https://docs.litellm.ai/docs/providers) to config it
-7. (__Optional__) You could use 
-    [hugegraph-hubble](https://hugegraph.apache.org/docs/quickstart/hugegraph-hubble/#21-use-docker-convenient-for-testdev) 
-    to visit the graph data, could run it via [Docker/Docker-Compose](https://hub.docker.com/r/hugegraph/hubble) 
-    for guidance. (Hubble is a graph-analysis dashboard that includes data loading/schema management/graph traverser/display).
-8. (__Optional__) offline download NLTK stopwords  
-    ```bash
-    python ./hugegraph_llm/operators/common_op/nltk_helper.py
-    ```
-> [!TIP]   
-> You can also refer to our [quick-start](https://github.com/apache/incubator-hugegraph-ai/blob/main/hugegraph-llm/quick_start.md) doc to understand how to use it & the basic query logic 🚧
+### Option 2: Individual Docker Containers
 
-## 4 Examples
+For more control over individual components:
 
-### 4.1 Build a knowledge graph in HugeGraph through LLM
+#### Available Images
+- **`hugegraph/rag`** - Development image with source code access
+- **`hugegraph/rag-bin`** - Production-optimized binary (compiled with Nuitka)
 
-#### 4.1.1 Build a knowledge graph through the gradio interactive interface
+```bash
+# 1. Create network
+docker network create -d bridge hugegraph-net
 
-**Parameter description:**  
+# 2. Start HugeGraph Server
+docker run -itd --name=server -p 8080:8080 --network hugegraph-net hugegraph/hugegraph
 
-- Docs:
-  - text: Build rag index from plain text
-  - file: Upload file(s) which should be <u>TXT</u> or <u>.docx</u> (Multiple files can be selected together)
-- [Schema](https://hugegraph.apache.org/docs/clients/restful-api/schema/): (Except **2 types**)
-  - User-defined Schema (JSON format, follow the [template](https://github.com/apache/incubator-hugegraph-ai/blob/aff3bbe25fa91c3414947a196131be812c20ef11/hugegraph-llm/src/hugegraph_llm/config/config_data.py#L125) 
-  to modify it)
-  - Specify the name of the HugeGraph graph instance, it will automatically get the schema from it (like 
-  **"hugegraph"**)
-- Graph extract head: The user-defined prompt of graph extracting
-- If it already exists the graph data, you should click "**Rebuild vid Index**" to update the index
+# 3. Start RAG Service
+docker pull hugegraph/rag:latest
+docker run -itd --name rag \
+  -v /path/to/your/hugegraph-llm/.env:/home/work/hugegraph-llm/.env \
+  -p 8001:8001 --network hugegraph-net hugegraph/rag
 
-![gradio-config](https://hugegraph.apache.org/docs/images/gradio-kg.png)
+# 4. Monitor logs
+docker logs -f rag
+```
 
-#### 4.1.2 Build a knowledge graph through code
+### Option 3: Build from Source
 
-The `KgBuilder` class is used to construct a knowledge graph. Here is a brief usage guide:
+For development and customization:
 
-1. **Initialization**: The `KgBuilder` class is initialized with an instance of a language model. 
-This can be obtained from the `LLMs` class.  
-    Initialize the LLMs instance, get the LLM, and then create a task instance `KgBuilder` for graph construction. `KgBuilder` defines multiple operators, and users can freely combine them according to their needs. (tip: `print_result()` can print the result of each step in the console, without affecting the overall execution logic)
+```bash
+# 1. Start HugeGraph Server
+docker run -itd --name=server -p 8080:8080 hugegraph/hugegraph
 
-    ```python
-    from hugegraph_llm.models.llms.init_llm import LLMs
-    from hugegraph_llm.operators.kg_construction_task import KgBuilder
-    
-    TEXT = ""
-    builder = KgBuilder(LLMs().get_chat_llm())
-    (
-        builder
-        .import_schema(from_hugegraph="talent_graph").print_result()
-        .chunk_split(TEXT).print_result()
-        .extract_info(extract_type="property_graph").print_result()
-        .commit_to_hugegraph()
-        .run()
-    )
-    ```
-    ![gradio-config](https://hugegraph.apache.org/docs/images/kg-uml.png)
-2. **Import Schema**: The `import_schema` method is used to import a schema from a source. The source can be a HugeGraph instance, a user-defined schema, or an extraction result. The method `print_result` can be chained to print the result.
-    ```python
-    # Import schema from a HugeGraph instance
-    builder.import_schema(from_hugegraph="xxx").print_result()
-    # Import schema from an extraction result
-    builder.import_schema(from_extraction="xxx").print_result()
-    # Import schema from user-defined schema
-    builder.import_schema(from_user_defined="xxx").print_result()
-    ```
-3. **Chunk Split**: The `chunk_split` method is used to split the input text into chunks. The text should be passed as a string argument to the method.
-    ```python
-    # Split the input text into documents
-    builder.chunk_split(TEXT, split_type="document").print_result()
-    # Split the input text into paragraphs
-    builder.chunk_split(TEXT, split_type="paragraph").print_result()
-    # Split the input text into sentences
-    builder.chunk_split(TEXT, split_type="sentence").print_result()
-    ```
-4. **Extract Info**: The `extract_info` method is used to extract info from a text. The text should be passed as a string argument to the method.
-    ```python
-    TEXT = "Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with since 2010."
-    # extract property graph from the input text
-    builder.extract_info(extract_type="property_graph").print_result()
-    # extract triples from the input text
-    builder.extract_info(extract_type="property_graph").print_result()
-    ```
-5. **Commit to HugeGraph**: The `commit_to_hugegraph` method is used to commit the constructed knowledge graph to a HugeGraph instance.
-    ```python
-    builder.commit_to_hugegraph().print_result()
-    ```
-6. **Run**: The `run` method is used to execute the chained operations.
-    ```python
-    builder.run()
-    ```
-    The methods of the `KgBuilder` class can be chained together to perform a sequence of operations.
+# 2. Install UV package manager (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-### 4.2 Retrieval augmented generation (RAG) based on HugeGraph
+# 3. Clone and setup project
+git clone https://github.com/apache/incubator-hugegraph-ai.git
+cd incubator-hugegraph-ai/hugegraph-llm
 
-The `RAGPipeline` class is used to integrate HugeGraph with large language models to provide retrieval-augmented generation capabilities.
-Here is a brief usage guide:
+# 4. Install dependencies and activate environment
+# NOTE: If download is slow, uncomment mirror lines in ../pyproject.toml or use: uv config --global index.url https://pypi.tuna.tsinghua.edu.cn/simple
+# Or create local uv.toml with mirror settings to avoid git diff (see uv.toml example in root)
+uv sync  # Automatically creates .venv and installs dependencies
+source .venv/bin/activate  # Activate once - all commands below assume this environment
 
-1. **Extract Keyword**: Extract keywords and expand synonyms.
-    ```python
-    from hugegraph_llm.operators.graph_rag_task import RAGPipeline
-    graph_rag = RAGPipeline()
-    graph_rag.extract_keywords(text="Tell me about Al Pacino.").print_result()
-    ```
-2. **Match Vid from Keywords**: Match the nodes with the keywords in the graph.
-    ```python
-    graph_rag.keywords_to_vid().print_result()
-    ```
-3. **Query Graph for Rag**: Retrieve the corresponding keywords and their multi-degree associated relationships from HugeGraph.
-     ```python
-     graph_rag.query_graphdb(max_deep=2, max_graph_items=30).print_result()
-     ```
-4. **Rerank Searched Result**: Rerank the searched results based on the similarity between the question and the results.
-     ```python
-     graph_rag.merge_dedup_rerank().print_result()
-     ```
-5. **Synthesize Answer**: Summarize the results and organize the language to answer the question.
-    ```python
-    graph_rag.synthesize_answer(vector_only_answer=False, graph_only_answer=True).print_result()
-    ```
-6. **Run**: The `run` method is used to execute the above operations.
-    ```python
-    graph_rag.run(verbose=True)
-    ```
+# 5. Launch RAG demo
+python -m hugegraph_llm.demo.rag_demo.app
+# Access at: http://127.0.0.1:8001
+
+# 6. (Optional) Custom host/port
+python -m hugegraph_llm.demo.rag_demo.app --host 127.0.0.1 --port 18001
+```
+
+#### Additional Setup (Optional)
+
+> [!NOTE]
+> The following commands assume you're in the activated virtual environment from step 4 above
+
+```bash
+# Download NLTK stopwords for better text processing
+python ./src/hugegraph_llm/operators/common_op/nltk_helper.py
+
+# Update configuration files
+python -m hugegraph_llm.config.generate --update
+```
+
+> [!TIP]
+> - `uv sync` automatically creates virtual environment (.venv) and installs all dependencies
+> - Activate once with `source .venv/bin/activate` - all subsequent commands assume this environment
+> - Check our [Quick Start Guide](https://github.com/apache/incubator-hugegraph-ai/blob/main/hugegraph-llm/quick_start.md) for detailed usage examples
+
+## 💡 Usage Examples
+
+### Knowledge Graph Construction
+
+#### Interactive Web Interface
+
+Use the Gradio interface for visual knowledge graph building:
+
+**Input Options:**
+- **Text**: Direct text input for RAG index creation
+- **Files**: Upload TXT or DOCX files (multiple selection supported)
+
+**Schema Configuration:**
+- **Custom Schema**: JSON format following our [template](https://github.com/apache/incubator-hugegraph-ai/blob/aff3bbe25fa91c3414947a196131be812c20ef11/hugegraph-llm/src/hugegraph_llm/config/config_data.py#L125)
+- **HugeGraph Schema**: Use existing graph instance schema (e.g., "hugegraph")
+
+![Knowledge Graph Builder](https://hugegraph.apache.org/docs/images/gradio-kg.png)
+
+#### Programmatic Construction
+
+Build knowledge graphs with code using the `KgBuilder` class:
+
+```python
+from hugegraph_llm.models.llms.init_llm import LLMs
+from hugegraph_llm.operators.kg_construction_task import KgBuilder
+
+# Initialize and chain operations
+TEXT = "Your input text here..."
+builder = KgBuilder(LLMs().get_chat_llm())
+
+(
+    builder
+    .import_schema(from_hugegraph="talent_graph").print_result()
+    .chunk_split(TEXT).print_result()
+    .extract_info(extract_type="property_graph").print_result()
+    .commit_to_hugegraph()
+    .run()
+)
+```
+
+**Pipeline Workflow:**
+```mermaid
+graph LR
+    A[Import Schema] --> B[Chunk Split]
+    B --> C[Extract Info]
+    C --> D[Commit to HugeGraph]
+    D --> E[Execute Pipeline]
+
+    style A fill:#fff2cc
+    style B fill:#d5e8d4
+    style C fill:#dae8fc
+    style D fill:#f8cecc
+    style E fill:#e1d5e7
+```
+
+### Graph-Enhanced RAG
+
+Leverage HugeGraph for retrieval-augmented generation:
+
+```python
+from hugegraph_llm.operators.graph_rag_task import RAGPipeline
+
+# Initialize RAG pipeline
+graph_rag = RAGPipeline()
+
+# Execute RAG workflow
+(
+    graph_rag
+    .extract_keywords(text="Tell me about Al Pacino.")
+    .keywords_to_vid()
+    .query_graphdb(max_deep=2, max_graph_items=30)
+    .merge_dedup_rerank()
+    .synthesize_answer(vector_only_answer=False, graph_only_answer=True)
+    .run(verbose=True)
+)
+```
+
+**RAG Pipeline Flow:**
+```mermaid
+graph TD
+    A[User Query] --> B[Extract Keywords]
+    B --> C[Match Graph Nodes]
+    C --> D[Retrieve Graph Context]
+    D --> E[Rerank Results]
+    E --> F[Generate Answer]
+
+    style A fill:#e3f2fd
+    style B fill:#f3e5f5
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+    style E fill:#fce4ec
+    style F fill:#e0f2f1
+```
+
+## 🔧 Configuration
+
+After running the demo, configuration files are automatically generated:
+
+- **Environment**: `hugegraph-llm/.env`
+- **Prompts**: `hugegraph-llm/src/hugegraph_llm/resources/demo/config_prompt.yaml`
+
+> [!NOTE]
+> Configuration changes are automatically saved when using the web interface. For manual changes, simply refresh the page to load updates.
+
+**LLM Provider Support**: This project uses [LiteLLM](https://docs.litellm.ai/docs/providers) for multi-provider LLM support.
+
+## 🤖 Developer Guidelines
+
+> [!IMPORTANT]
+> **For developers contributing to hugegraph-llm with AI coding assistance:**
+> 
+> - **Start Here**: First read `../rules/README.md` for the complete AI-assisted development workflow
+> - **Module Context**: Rename `basic-introduction.md` in this directory as context for your LLM (e.g., `CLAUDE.md`, `copilot-instructions.md`)
+> - **Code Analysis**: Follow comprehensive analysis methodology in `../rules/prompts/project-deep.md`
+> - **Documentation**: Maintain structured documentation standards from `../rules/prompts/project-general.md`
+> - **Quality Standards**: Ensure type annotations, proper testing, and consistent patterns
+> - **Business Logic**: Focus on graph-LLM integration logic and RAG pipeline optimization
+> 
+> These guidelines ensure consistent code quality and maintainable graph-AI integrations.
+
+## 📚 Additional Resources
+
+- **Graph Visualization**: Use [HugeGraph Hubble](https://hub.docker.com/r/hugegraph/hubble) for data analysis and schema management
+- **API Documentation**: Explore our REST API endpoints for integration
+- **Community**: Join our discussions and contribute to the project
+
+---
+
+**License**: Apache License 2.0 | **Community**: [Apache HugeGraph](https://hugegraph.apache.org/)

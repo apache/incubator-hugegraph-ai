@@ -25,10 +25,10 @@ from .models import BaseConfig
 class LLMConfig(BaseConfig):
     """LLM settings"""
 
-    chat_llm_type: Literal["openai", "litellm", "ollama/local", "qianfan_wenxin"] = "openai"
-    extract_llm_type: Literal["openai", "litellm", "ollama/local", "qianfan_wenxin"] = "openai"
-    text2gql_llm_type: Literal["openai", "litellm", "ollama/local", "qianfan_wenxin"] = "openai"
-    embedding_type: Optional[Literal["openai", "litellm", "ollama/local", "qianfan_wenxin"]] = "openai"
+    chat_llm_type: Literal["openai", "litellm", "ollama/local"] = "openai"
+    extract_llm_type: Literal["openai", "litellm", "ollama/local"] = "openai"
+    text2gql_llm_type: Literal["openai", "litellm", "ollama/local"] = "openai"
+    embedding_type: Optional[Literal["openai", "litellm", "ollama/local"]] = "openai"
     reranker_type: Optional[Literal["cohere", "siliconflow"]] = None
     # 1. OpenAI settings
     openai_chat_api_base: Optional[str] = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
@@ -63,29 +63,7 @@ class LLMConfig(BaseConfig):
     ollama_embedding_host: Optional[str] = "127.0.0.1"
     ollama_embedding_port: Optional[int] = 11434
     ollama_embedding_model: Optional[str] = None
-    # 4. QianFan/WenXin settings
-    # TODO: update to one token key mode
-    qianfan_chat_api_key: Optional[str] = None
-    qianfan_chat_secret_key: Optional[str] = None
-    qianfan_chat_access_token: Optional[str] = None
-    qianfan_extract_api_key: Optional[str] = None
-    qianfan_extract_secret_key: Optional[str] = None
-    qianfan_extract_access_token: Optional[str] = None
-    qianfan_text2gql_api_key: Optional[str] = None
-    qianfan_text2gql_secret_key: Optional[str] = None
-    qianfan_text2gql_access_token: Optional[str] = None
-    qianfan_embedding_api_key: Optional[str] = None
-    qianfan_embedding_secret_key: Optional[str] = None
-    # 4.1 URL settings
-    qianfan_url_prefix: Optional[str] = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
-    qianfan_chat_url: Optional[str] = qianfan_url_prefix + "/chat/"
-    qianfan_chat_language_model: Optional[str] = "ERNIE-Speed-128K"
-    qianfan_extract_language_model: Optional[str] = "ERNIE-Speed-128K"
-    qianfan_text2gql_language_model: Optional[str] = "ERNIE-Speed-128K"
-    qianfan_embed_url: Optional[str] = qianfan_url_prefix + "/embeddings/"
-    # refer https://cloud.baidu.com/doc/WENXINWORKSHOP/s/alj562vvu to get more details
-    qianfan_embedding_model: Optional[str] = "embedding-v1"
-    # 5. LiteLLM settings
+    # 4. LiteLLM settings
     litellm_chat_api_key: Optional[str] = None
     litellm_chat_api_base: Optional[str] = None
     litellm_chat_language_model: Optional[str] = "openai/gpt-4.1-mini"

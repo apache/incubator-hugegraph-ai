@@ -1,3 +1,4 @@
+# TODO: replace by ruff & mypy soon
 name: "Pylint"
 
 on:
@@ -41,18 +42,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv venv && source .venv/bin/activate
-          uv pip install pylint pytest
-          uv pip install ./hugegraph-python-client
-          uv pip install ./hugegraph-llm
-          uv pip install ./hugegraph-ml
+          uv sync --extra all --extra dev
 
       - name: Check DGL version
         run: |
-          source .venv/bin/activate
-          python -c "import dgl; print(dgl.__version__)"
+          uv run python -c "import dgl; print(dgl.__version__)"
 
       - name: Analysing the code with pylint
         run: |
-          source .venv/bin/activate
-          bash ./style/code_format_and_analysis.sh -p
+          uv run bash ./style/code_format_and_analysis.sh -p
