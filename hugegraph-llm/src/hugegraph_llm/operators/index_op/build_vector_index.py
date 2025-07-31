@@ -30,7 +30,7 @@ from hugegraph_llm.utils.log import log
 class BuildVectorIndex:
     def __init__(self, embedding: BaseEmbedding):
         self.embedding = embedding
-        self.folder_name = huge_settings.graph_name if huge_settings.graph_space is None else f"{huge_settings.graph_space}_{huge_settings.graph_name}"
+        self.folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
         self.index_dir = str(os.path.join(resource_path, self.folder_name, "chunks"))
         self.vector_index = VectorIndex.from_index_file(
             self.index_dir,
@@ -48,5 +48,7 @@ class BuildVectorIndex:
             chunks_embedding.append(self.embedding.get_text_embedding(chunk))
         if len(chunks_embedding) > 0:
             self.vector_index.add(chunks_embedding, chunks)
-            self.vector_index.to_index_file(self.index_dir, llm_settings.embedding_type, getattr(self.embedding, "model_name", None))
+            self.vector_index.to_index_file(self.index_dir,
+                                            embedding_type=llm_settings.embedding_type,
+                                            model_name=getattr(self.embedding, "model_name", None))
         return context

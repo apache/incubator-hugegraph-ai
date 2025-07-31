@@ -39,6 +39,8 @@ class BuildGremlinExampleIndex:
         if len(self.examples) > 0:
             vector_index = VectorIndex(embed_dim)
             vector_index.add(examples_embedding, self.examples)
-            vector_index.to_index_file(self.index_dir, llm_settings.embedding_type, getattr(self.embedding, "model_name", None))
+            vector_index.to_index_file(self.index_dir,
+                                       embedding_type=llm_settings.embedding_type,
+                                       model_name=getattr(self.embedding, "model_name", None))
         context["embed_dim"] = embed_dim
         return context

@@ -40,7 +40,7 @@ class LiteLLMEmbedding(BaseEmbedding):
     ) -> None:
         self.api_key = api_key
         self.api_base = api_base
-        self.model = model_name
+        self.model_name = model_name
 
     @retry(
         stop=stop_after_attempt(3),
@@ -51,7 +51,7 @@ class LiteLLMEmbedding(BaseEmbedding):
         """Get embedding for a single text."""
         try:
             response = embedding(
-                model=self.model,
+                model=self.model_name,
                 input=text,
                 api_key=self.api_key,
                 api_base=self.api_base,
@@ -66,7 +66,7 @@ class LiteLLMEmbedding(BaseEmbedding):
         """Get embeddings for multiple texts."""
         try:
             response = embedding(
-                model=self.model,
+                model=self.model_name,
                 input=texts,
                 api_key=self.api_key,
                 api_base=self.api_base,
@@ -81,7 +81,7 @@ class LiteLLMEmbedding(BaseEmbedding):
         """Get embedding for a single text asynchronously."""
         try:
             response = await aembedding(
-                model=self.model,
+                model=self.model_name,
                 input=text,
                 api_key=self.api_key,
                 api_base=self.api_base,

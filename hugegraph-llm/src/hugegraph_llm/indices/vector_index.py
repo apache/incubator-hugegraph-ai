@@ -60,7 +60,10 @@ class VectorIndex:
                 properties = pkl.load(f)
         except (RuntimeError, pkl.UnpicklingError, OSError) as e:
             log.error("Failed to load index files for model '%s': %s", model_name or "default", e)
-            raise RuntimeError(f"Could not load index files for model '{model_name or 'default'}'.") from e
+            raise RuntimeError(
+                f"Could not load index files for model '{model_name or 'default'}'. "
+                f"Original error ({type(e).__name__}): {e}"
+            ) from e
 
         if faiss_index.ntotal != len(properties):
             raise RuntimeError(

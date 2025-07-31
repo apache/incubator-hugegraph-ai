@@ -37,9 +37,11 @@ class SemanticIdQuery:
             topk_per_keyword: int = huge_settings.topk_per_keyword,
             vector_dis_threshold: float = huge_settings.vector_dis_threshold,
     ):
-        self.folder_name = huge_settings.graph_name if huge_settings.graph_space is None else f"{huge_settings.graph_space}_{huge_settings.graph_name}"
+        self.folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
         self.index_dir = str(os.path.join(resource_path, self.folder_name, "graph_vids"))
-        self.vector_index = VectorIndex.from_index_file(self.index_dir, llm_settings.embedding_type, getattr(embedding, "model_name", None))
+        self.vector_index = VectorIndex.from_index_file(self.index_dir,
+                                                        embedding_type=llm_settings.embedding_type,
+                                                        model_name=getattr(embedding, "model_name", None))
         self.embedding = embedding
         self.by = by
         self.topk_per_query = topk_per_query

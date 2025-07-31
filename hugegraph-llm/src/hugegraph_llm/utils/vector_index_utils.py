@@ -57,7 +57,7 @@ def read_documents(input_file, input_text):
 
 # pylint: disable=C0301
 def get_vector_index_info():
-    folder_name = huge_settings.graph_name if huge_settings.graph_space is None else f"{huge_settings.graph_space}_{huge_settings.graph_name}"
+    folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
     chunk_vector_index = VectorIndex.from_index_file(
         str(os.path.join(resource_path, folder_name, "chunks")),
         embedding_type=llm_settings.embedding_type,
@@ -79,7 +79,7 @@ def get_vector_index_info():
 
 
 def clean_vector_index():
-    folder_name = huge_settings.graph_name if huge_settings.graph_space is None else f"{huge_settings.graph_space}_{huge_settings.graph_name}"
+    folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
     VectorIndex.clean(str(os.path.join(resource_path, folder_name, "chunks")),
                       embedding_type=llm_settings.embedding_type,
                       model_name=getattr(Embeddings().get_embedding(), "model_name", None))

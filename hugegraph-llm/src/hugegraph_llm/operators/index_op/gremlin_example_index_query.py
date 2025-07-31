@@ -23,14 +23,12 @@ import pandas as pd
 from tqdm import tqdm
 
 from hugegraph_llm.config import resource_path, llm_settings
+from hugegraph_llm.indices.vector_index import INDEX_FILE_NAME, PROPERTIES_FILE_NAME
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.utils.file_utils import get_model_filename
 from hugegraph_llm.utils.log import log
-
-INDEX_FILE_NAME = "index.faiss"
-PROPERTIES_FILE_NAME = "properties.pkl"
 
 
 class GremlinExampleIndexQuery:
@@ -39,11 +37,17 @@ class GremlinExampleIndexQuery:
         self.num_examples = num_examples
         self.index_dir = os.path.join(resource_path, "gremlin_examples")
         self._ensure_index_exists()
-        self.vector_index = VectorIndex.from_index_file(self.index_dir, llm_settings.embedding_type, getattr(embedding, "model_name", None))
+        self.vector_index = VectorIndex.from_index_file(self.index_dir,
+                                                        embedding_type=llm_settings.embedding_type,
+                                                        model_name=getattr(self.embedding, "model_name", None))
 
     def _ensure_index_exists(self):
-        index_name = get_model_filename(INDEX_FILE_NAME, llm_settings.embedding_type, getattr(self.embedding, "model_name", None))
-        properties_name = get_model_filename(PROPERTIES_FILE_NAME, llm_settings.embedding_type, getattr(self.embedding, "model_name", None))
+        index_name = get_model_filename(INDEX_FILE_NAME,
+                                        embedding_type=llm_settings.embedding_type,
+                                        model_name=getattr(self.embedding, "model_name", None))
+        properties_name = get_model_filename(PROPERTIES_FILE_NAME,
+                                             embedding_type=llm_settings.embedding_type,
+                                             model_name=getattr(self.embedding, "model_name", None))
         if not (
             os.path.exists(os.path.join(self.index_dir, index_name))
             and os.path.exists(os.path.join(self.index_dir, properties_name))
@@ -70,7 +74,9 @@ class GremlinExampleIndexQuery:
                      total=len(properties)))
         vector_index = VectorIndex(len(embeddings[0]))
         vector_index.add(embeddings, properties)
-        vector_index.to_index_file(self.index_dir, llm_settings.embedding_type, getattr(self.embedding, "model_name", None))
+        vector_index.to_index_file(self.index_dir,
+                                   embedding_type=llm_settings.embedding_type,
+                                   model_name=getattr(self.embedding, "model_name", None))
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context.get("query")

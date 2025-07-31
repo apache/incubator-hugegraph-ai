@@ -31,9 +31,11 @@ from hugegraph_llm.utils.log import log
 
 class BuildSemanticIndex:
     def __init__(self, embedding: BaseEmbedding):
-        self.folder_name = huge_settings.graph_name if huge_settings.graph_space is None else f"{huge_settings.graph_space}_{huge_settings.graph_name}"
+        self.folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
         self.index_dir = str(os.path.join(resource_path, self.folder_name, "graph_vids"))
-        self.vid_index = VectorIndex.from_index_file(self.index_dir, llm_settings.embedding_type, getattr(embedding, "model_name", None))
+        self.vid_index = VectorIndex.from_index_file(self.index_dir,
+                                                     embedding_type=llm_settings.embedding_type,
+                                                     model_name=getattr(embedding, "model_name", None))
         self.embedding = embedding
         self.sm = SchemaManager(huge_settings.graph_name)
 
@@ -84,7 +86,9 @@ class BuildSemanticIndex:
             added_embeddings = asyncio.run(self._get_embeddings_parallel(vids_to_process))
             log.info("Building vector index for %s vertices...", len(added_vids))
             self.vid_index.add(added_embeddings, added_vids)
-            self.vid_index.to_index_file(self.index_dir, llm_settings.embedding_type, getattr(self.embedding, "model_name", None))
+            self.vid_index.to_index_file(self.index_dir,
+                                         embedding_type=llm_settings.embedding_type,
+                                         model_name=getattr(self.embedding, "model_name", None))
         else:
             log.debug("No update vertices to build vector index.")
         context.update({

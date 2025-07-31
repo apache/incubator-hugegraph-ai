@@ -36,9 +36,11 @@ from ..operators.kg_construction_task import KgBuilder
 def get_graph_index_info():
     builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     graph_summary_info = builder.fetch_graph_data().run()
-    folder_name = huge_settings.graph_name if huge_settings.graph_space is None else f"{huge_settings.graph_space}_{huge_settings.graph_name}"
+    folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
     index_dir = str(os.path.join(resource_path, folder_name, "graph_vids"))
-    vector_index = VectorIndex.from_index_file(index_dir, llm_settings.embedding_type, getattr(builder.embedding, "model_name", None))
+    vector_index = VectorIndex.from_index_file(index_dir,
+                                               embedding_type=llm_settings.embedding_type,
+                                               model_name=getattr(builder.embedding, "model_name", None))
     graph_summary_info["vid_index"] = {
         "embed_dim": vector_index.index.d,
         "num_vectors": vector_index.index.ntotal,
@@ -48,7 +50,7 @@ def get_graph_index_info():
 
 
 def clean_all_graph_index():
-    folder_name = huge_settings.graph_name if huge_settings.graph_space is None else f"{huge_settings.graph_space}_{huge_settings.graph_name}"
+    folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
     VectorIndex.clean(
         str(os.path.join(resource_path, folder_name, "graph_vids")),
         llm_settings.embedding_type,
@@ -146,6 +148,7 @@ def import_graph_data(data: str, schema: str) -> Union[str, Dict[str, Any]]:
         # Note: can't use gr.Error here
         gr.Warning(str(e) + " Please check the graph data format/type carefully.")
         return data
+
 
 def build_schema(input_text, query_example, few_shot):
     context = {

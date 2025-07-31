@@ -24,8 +24,8 @@ from .base import BaseEmbedding
 
 
 class OllamaEmbedding(BaseEmbedding):
-    def __init__(self, model: str, host: str = "127.0.0.1", port: int = 11434, **kwargs):
-        self.model_name = model
+    def __init__(self, model_name: str, host: str = "127.0.0.1", port: int = 11434, **kwargs):
+        self.model_name = model_name
         self.client = ollama.Client(host=f"http://{host}:{port}", **kwargs)
         self.async_client = ollama.AsyncClient(host=f"http://{host}:{port}", **kwargs)
         self.embedding_dimension = None
