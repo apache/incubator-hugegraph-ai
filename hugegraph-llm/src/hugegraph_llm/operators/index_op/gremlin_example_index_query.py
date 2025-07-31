@@ -35,8 +35,8 @@ class GremlinExampleIndexQuery:
         self.embedding = embedding or Embeddings().get_embedding()
         self.num_examples = num_examples
         self.index_dir = os.path.join(resource_path, "gremlin_examples")
-        self._ensure_index_exists()
         self.index_prefix = get_model_prefix(llm_settings.embedding_type, getattr(self.embedding, "model_name", None))
+        self._ensure_index_exists()
         self.vector_index = VectorIndex.from_index_file(self.index_dir, self.index_prefix)
 
     def _ensure_index_exists(self):
