@@ -17,7 +17,8 @@
 
 from typing import List, Optional
 
-from litellm import embedding, RateLimitError, APIError, APIConnectionError, aembedding
+from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from hugegraph_llm.utils.log import log
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -25,8 +26,7 @@ from tenacity import (
     retry_if_exception_type,
 )
 
-from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.utils.log import log
+from litellm import embedding, RateLimitError, APIError, APIConnectionError, aembedding
 
 
 class LiteLLMEmbedding(BaseEmbedding):
@@ -77,17 +77,17 @@ class LiteLLMEmbedding(BaseEmbedding):
             log.error("Error in LiteLLM batch embedding call: %s", e)
             raise
 
-    async def async_get_text_embedding(self, text: str) -> List[float]:
+    async def async_get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Get embedding for a single text asynchronously."""
         try:
             response = await aembedding(
                 model=self.model_name,
-                input=text,
+                input=texts,
                 api_key=self.api_key,
                 api_base=self.api_base,
             )
             log.info("Token usage: %s", response.usage)
-            return response.data[0]["embedding"]
+            return [data["embedding"] for data in response.data]
         except (RateLimitError, APIConnectionError, APIError) as e:
             log.error("Error in async LiteLLM embedding call: %s", e)
             raise

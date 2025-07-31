@@ -14,12 +14,12 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
 import json
 import os
 
 import docx
 import gradio as gr
-
 from hugegraph_llm.config import resource_path, huge_settings, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
@@ -61,7 +61,8 @@ def get_vector_index_info():
     chunk_vector_index = VectorIndex.from_index_file(
         str(os.path.join(resource_path, folder_name, "chunks")),
         embedding_type=llm_settings.embedding_type,
-        model_name=getattr(Embeddings().get_embedding(), "model_name", None)
+        model_name=getattr(Embeddings().get_embedding(), "model_name", None),
+        record_miss=False
     )
     graph_vid_vector_index = VectorIndex.from_index_file(
         str(os.path.join(resource_path, folder_name, "graph_vids")),

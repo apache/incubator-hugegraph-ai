@@ -19,7 +19,6 @@
 from typing import List
 
 import ollama
-
 from .base import BaseEmbedding
 
 
@@ -53,7 +52,21 @@ class OllamaEmbedding(BaseEmbedding):
         response = self.client.embed(model=self.model_name, input=texts)["embeddings"]
         return [list(inner_sequence) for inner_sequence in response]
 
-    # TODO: Add & implement batch processing for async_get_texts_embeddings (refactor here)
-    async def async_get_text_embedding(self, text: str) -> List[float]:
-        response = await self.async_client.embeddings(model=self.model_name, prompt=text)
-        return list(response["embedding"])
+    async def async_get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
+        """Get embeddings for multiple texts in a single batch asynchronously.
+
+        Returns
+        -------
+        List[List[float]]
+            A list of embedding vectors, where each vector is a list of floats.
+            The order of embeddings matches the order of input texts.
+        """
+        if not hasattr(self.client, "embed"):
+            error_message = (
+                "The required 'embed' method was not found on the Ollama client. "
+                "Please ensure your ollama library is up-to-date and supports batch embedding. "
+            )
+            raise AttributeError(error_message)
+        response = await self.async_client.embed(model=self.model_name, input=texts)
+        return [list(inner_sequence) for inner_sequence in response["embeddings"]]
+

@@ -22,7 +22,6 @@ from typing import List, Any, Set, Union
 
 import faiss
 import numpy as np
-
 from hugegraph_llm.utils.file_utils import get_model_filename
 from hugegraph_llm.utils.log import log
 
@@ -38,7 +37,7 @@ class VectorIndex:
         self.properties = []
 
     @staticmethod
-    def from_index_file(dir_path: str, embedding_type: str = None, model_name: str = None) -> "VectorIndex":
+    def from_index_file(dir_path: str, embedding_type: str = None, model_name: str = None,record_miss:bool = True) -> "VectorIndex":
         """Load index from files, supporting model-specific filenames.
 
         This method loads a Faiss index and its corresponding properties from a directory.
@@ -49,9 +48,10 @@ class VectorIndex:
         """
         index_file = os.path.join(dir_path, get_model_filename(INDEX_FILE_NAME, embedding_type, model_name))
         properties_file = os.path.join(dir_path, get_model_filename(PROPERTIES_FILE_NAME, embedding_type, model_name))
-
-        if not os.path.exists(index_file) or not os.path.exists(properties_file):
-            log.warning("Index files not found for model '%s', creating a new empty index.", model_name or "default")
+        miss_files = [f for f in [index_file, properties_file] if not os.path.exists(f)]
+        if miss_files:
+            if record_miss:
+                log.warning("Missing vector files: %s. \nNeed create a new one for it.", ", ".join(miss_files))
             return VectorIndex()
 
         try:

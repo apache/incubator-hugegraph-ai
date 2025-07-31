@@ -16,14 +16,14 @@
 # under the License.
 
 
+import asyncio
 import os
 from typing import Dict, Any
-
-from tqdm import tqdm
 
 from hugegraph_llm.config import huge_settings, resource_path, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel
 from hugegraph_llm.utils.log import log
 
 
@@ -44,8 +44,7 @@ class BuildVectorIndex:
         chunks_embedding = []
         log.debug("Building vector index for %s chunks...", len(context["chunks"]))
         # TODO: use async_get_texts_embedding instead of single sync method
-        for chunk in tqdm(chunks):
-            chunks_embedding.append(self.embedding.get_text_embedding(chunk))
+        chunks_embedding = asyncio.run(get_embeddings_parallel(self.embedding, chunks))
         if len(chunks_embedding) > 0:
             self.vector_index.add(chunks_embedding, chunks)
             self.vector_index.to_index_file(self.index_dir,
