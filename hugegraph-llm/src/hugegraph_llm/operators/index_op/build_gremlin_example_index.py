@@ -19,7 +19,7 @@
 import os
 from typing import Dict, Any, List
 
-from hugegraph_llm.config import resource_path
+from hugegraph_llm.config import resource_path, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 
@@ -39,6 +39,6 @@ class BuildGremlinExampleIndex:
         if len(self.examples) > 0:
             vector_index = VectorIndex(embed_dim)
             vector_index.add(examples_embedding, self.examples)
-            vector_index.to_index_file(self.index_dir)
+            vector_index.to_index_file(self.index_dir, llm_settings.embedding_type, getattr(self.embedding, "model_name", None))
         context["embed_dim"] = embed_dim
         return context

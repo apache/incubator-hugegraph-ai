@@ -36,9 +36,9 @@ from ..operators.kg_construction_task import KgBuilder
 def get_graph_index_info():
     builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     graph_summary_info = builder.fetch_graph_data().run()
-    base_dir = str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids"))
-    index_dir = os.path.join(base_dir, llm_settings.embedding_type)
-    vector_index = VectorIndex.from_index_file(index_dir, getattr(builder.embedding, "model_name", None))
+    folder_name = huge_settings.graph_name if huge_settings.graph_space is None else f"{huge_settings.graph_space}_{huge_settings.graph_name}"
+    index_dir = str(os.path.join(resource_path, folder_name, "graph_vids"))
+    vector_index = VectorIndex.from_index_file(index_dir, llm_settings.embedding_type, getattr(builder.embedding, "model_name", None))
     graph_summary_info["vid_index"] = {
         "embed_dim": vector_index.index.d,
         "num_vectors": vector_index.index.ntotal,
@@ -48,10 +48,15 @@ def get_graph_index_info():
 
 
 def clean_all_graph_index():
+    folder_name = huge_settings.graph_name if huge_settings.graph_space is None else f"{huge_settings.graph_space}_{huge_settings.graph_name}"
     VectorIndex.clean(
-        str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids", llm_settings.embedding_type)),
+        str(os.path.join(resource_path, folder_name, "graph_vids")),
+        llm_settings.embedding_type,
         getattr(Embeddings().get_embedding(), "model_name", None))
-    VectorIndex.clean(str(os.path.join(resource_path, "gremlin_examples")))
+    VectorIndex.clean(
+        str(os.path.join(resource_path, "gremlin_examples")),
+        llm_settings.embedding_type,
+        getattr(Embeddings().get_embedding(), "model_name", None))
     log.warning("Clear graph index and text2gql index successfully!")
     gr.Info("Clear graph index and text2gql index successfully!")
 

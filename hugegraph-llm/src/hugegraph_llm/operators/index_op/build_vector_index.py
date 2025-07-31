@@ -21,7 +21,7 @@ from typing import Dict, Any
 
 from tqdm import tqdm
 
-from hugegraph_llm.config import huge_settings, resource_path
+from hugegraph_llm.config import huge_settings, resource_path, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.utils.log import log
@@ -30,8 +30,12 @@ from hugegraph_llm.utils.log import log
 class BuildVectorIndex:
     def __init__(self, embedding: BaseEmbedding):
         self.embedding = embedding
-        self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "chunks"))
-        self.vector_index = VectorIndex.from_index_file(self.index_dir)
+        self.folder_name = huge_settings.graph_name if huge_settings.graph_space is None else f"{huge_settings.graph_space}_{huge_settings.graph_name}"
+        self.index_dir = str(os.path.join(resource_path, self.folder_name, "chunks"))
+        self.vector_index = VectorIndex.from_index_file(
+            self.index_dir,
+            llm_settings.embedding_type,
+            getattr(embedding, "model_name", None))
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if "chunks" not in context:
@@ -44,5 +48,5 @@ class BuildVectorIndex:
             chunks_embedding.append(self.embedding.get_text_embedding(chunk))
         if len(chunks_embedding) > 0:
             self.vector_index.add(chunks_embedding, chunks)
-            self.vector_index.to_index_file(self.index_dir)
+            self.vector_index.to_index_file(self.index_dir, llm_settings.embedding_type, getattr(self.embedding, "model_name", None))
         return context

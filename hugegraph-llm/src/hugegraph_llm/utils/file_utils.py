@@ -15,10 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-def get_model_filename(base_name: str, model_name: str = None) -> str:
+def get_model_filename(base_name: str, embedding_type: str = None, model_name: str = None) -> str:
     """Generate filename based on model name."""
-    if not model_name or model_name.strip() == "":
+    if not model_name or model_name.strip() == "" or not embedding_type or embedding_type.strip() == "":
         return base_name
     # Sanitize model_name to prevent path traversal or invalid filename chars
+    safe_embedding_type = embedding_type.replace("/", "_").replace("\\", "_").strip()
     safe_model_name = model_name.replace("/", "_").replace("\\", "_").strip()
-    return f"{safe_model_name}_{base_name}"
+    return f"{safe_embedding_type}_{safe_model_name}_{base_name}"

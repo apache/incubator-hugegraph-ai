@@ -57,10 +57,15 @@ def read_documents(input_file, input_text):
 
 # pylint: disable=C0301
 def get_vector_index_info():
+    folder_name = huge_settings.graph_name if huge_settings.graph_space is None else f"{huge_settings.graph_space}_{huge_settings.graph_name}"
     chunk_vector_index = VectorIndex.from_index_file(
-        str(os.path.join(resource_path, huge_settings.graph_name, "chunks")))
+        str(os.path.join(resource_path, folder_name, "chunks")),
+        embedding_type=llm_settings.embedding_type,
+        model_name=getattr(Embeddings().get_embedding(), "model_name", None)
+    )
     graph_vid_vector_index = VectorIndex.from_index_file(
-        str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids", llm_settings.embedding_type)),
+        str(os.path.join(resource_path, folder_name, "graph_vids")),
+        embedding_type=llm_settings.embedding_type,
         model_name=getattr(Embeddings().get_embedding(), "model_name", None)
     )
     return json.dumps({
@@ -74,7 +79,10 @@ def get_vector_index_info():
 
 
 def clean_vector_index():
-    VectorIndex.clean(str(os.path.join(resource_path, huge_settings.graph_name, "chunks")))
+    folder_name = huge_settings.graph_name if huge_settings.graph_space is None else f"{huge_settings.graph_space}_{huge_settings.graph_name}"
+    VectorIndex.clean(str(os.path.join(resource_path, folder_name, "chunks")),
+                      embedding_type=llm_settings.embedding_type,
+                      model_name=getattr(Embeddings().get_embedding(), "model_name", None))
     gr.Info("Clean vector index successfully!")
 
 

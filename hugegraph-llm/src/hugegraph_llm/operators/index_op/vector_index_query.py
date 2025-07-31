@@ -19,7 +19,7 @@
 import os
 from typing import Dict, Any
 
-from hugegraph_llm.config import resource_path, huge_settings
+from hugegraph_llm.config import resource_path, huge_settings, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.utils.log import log
@@ -29,8 +29,9 @@ class VectorIndexQuery:
     def __init__(self, embedding: BaseEmbedding, topk: int = 3):
         self.embedding = embedding
         self.topk = topk
-        self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "chunks"))
-        self.vector_index = VectorIndex.from_index_file(self.index_dir)
+        self.folder_name = huge_settings.graph_name if huge_settings.graph_space is None else f"{huge_settings.graph_space}_{huge_settings.graph_name}"
+        self.index_dir = str(os.path.join(resource_path, self.folder_name, "chunks"))
+        self.vector_index = VectorIndex.from_index_file(self.index_dir, llm_settings.embedding_type, getattr(embedding, "model_name", None))
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context.get("query")
