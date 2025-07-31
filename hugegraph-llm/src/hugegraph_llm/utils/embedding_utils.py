@@ -24,7 +24,9 @@ from tqdm import tqdm
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 
 
-async def get_embeddings_parallel(embedding: BaseEmbedding, vids: list[str]) -> list[Any]:
+async def get_embeddings_parallel(
+    embedding: BaseEmbedding, vids: list[str]
+) -> list[Any]:
     """Get embeddings for texts in parallel.
 
     This function processes text embeddings asynchronously in parallel, using batching and semaphore
@@ -45,17 +47,11 @@ async def get_embeddings_parallel(embedding: BaseEmbedding, vids: list[str]) -> 
     """
     batch_size = 1000
 
-    async def get_embeddings_async(vid_list: list[str]) -> Any:
-        # Executes sync embedding method in a thread pool via loop.run_in_executor, combining async programming
-        # with multi-threading capabilities.
-        # This pattern avoids blocking the event loop and prepares for a future fully async pipeline.
-        return await embedding.async_get_texts_embeddings(vid_list)
-
     # Split vids into batches of size batch_size
-    vid_batches = [vids[i:i + batch_size] for i in range(0, len(vids), batch_size)]
+    vid_batches = [vids[i : i + batch_size] for i in range(0, len(vids), batch_size)]
 
     # Create tasks for each batch
-    tasks = [get_embeddings_async(batch) for batch in vid_batches]
+    tasks = [embedding.async_get_texts_embeddings(batch) for batch in vid_batches]
 
     embeddings = []
     with tqdm(total=len(tasks)) as pbar:
