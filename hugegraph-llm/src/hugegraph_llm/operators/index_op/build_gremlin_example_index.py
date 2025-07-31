@@ -36,6 +36,7 @@ class BuildGremlinExampleIndex:
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         # !: We have assumed that self.example is not empty
         queries = [example["query"] for example in self.examples]
+        # TODO: refactor function chain async to avoid blocking
         examples_embedding = asyncio.run(get_embeddings_parallel(self.embedding, queries))
         embed_dim = len(examples_embedding[0])
         if len(self.examples) > 0:

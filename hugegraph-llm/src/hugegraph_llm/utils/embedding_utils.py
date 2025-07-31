@@ -41,11 +41,11 @@ async def get_embeddings_parallel(
                   order as the input vids list.
 
     Note:
-        - Uses a semaphore to limit maximum concurrency to 10
-        - Processes texts in batches of 1000
+        - Note: Uses a semaphore to limit maximum concurrency if we need
+        - Processes texts in batches of 500
         - Displays progress using a progress bar
     """
-    batch_size = 1000
+    batch_size = 500
 
     # Split vids into batches of size batch_size
     vid_batches = [vids[i : i + batch_size] for i in range(0, len(vids), batch_size)]

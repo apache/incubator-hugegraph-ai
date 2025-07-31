@@ -14,6 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
 import json
 import os
 
@@ -55,10 +56,13 @@ def read_documents(input_file, input_text):
     return texts
 
 
-#pylint: disable=C0301
+# pylint: disable=C0301
 def get_vector_index_info():
-    chunk_vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "chunks")))
-    graph_vid_vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids")))
+    chunk_vector_index = VectorIndex.from_index_file(
+        str(os.path.join(resource_path, huge_settings.graph_name, "chunks")), record_miss=False,
+    )
+    graph_vid_vector_index = VectorIndex.from_index_file(str(os.path.join(resource_path,
+                                                                          huge_settings.graph_name, "graph_vids")))
     return json.dumps({
         "embed_dim": chunk_vector_index.index.d,
         "vector_info": {
