@@ -72,8 +72,6 @@ class VectorIndex:
         vector_index = VectorIndex(embed_dim)
         vector_index.index = faiss_index
         vector_index.properties = properties
-        print(properties)
-        print(faiss_index)
         return vector_index
 
     def to_index_file(self, dir_path: str, embedding_type: str = None, model_name: str = None):
