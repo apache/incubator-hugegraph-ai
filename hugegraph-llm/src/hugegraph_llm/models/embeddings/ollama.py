@@ -69,4 +69,3 @@ class OllamaEmbedding(BaseEmbedding):
             raise AttributeError(error_message)
         response = await self.async_client.embed(model=self.model_name, input=texts)
         return [list(inner_sequence) for inner_sequence in response["embeddings"]]
-

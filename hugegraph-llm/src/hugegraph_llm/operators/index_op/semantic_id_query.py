@@ -22,6 +22,7 @@ from typing import Dict, Any, Literal, List, Tuple
 from hugegraph_llm.config import resource_path, huge_settings, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from hugegraph_llm.utils.embedding_utils import get_model_prefix
 from hugegraph_llm.utils.log import log
 from pyhugegraph.client import PyHugeClient
 
@@ -39,9 +40,8 @@ class SemanticIdQuery:
     ):
         self.folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
         self.index_dir = str(os.path.join(resource_path, self.folder_name, "graph_vids"))
-        self.vector_index = VectorIndex.from_index_file(self.index_dir,
-                                                        embedding_type=llm_settings.embedding_type,
-                                                        model_name=getattr(embedding, "model_name", None))
+        self.index_prefix = get_model_prefix(llm_settings.embedding_type, getattr(embedding, "model_name", None))
+        self.vector_index = VectorIndex.from_index_file(self.index_dir, self.index_prefix)
         self.embedding = embedding
         self.by = by
         self.topk_per_query = topk_per_query

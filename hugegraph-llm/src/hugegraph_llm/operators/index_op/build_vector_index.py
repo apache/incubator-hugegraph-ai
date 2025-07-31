@@ -23,7 +23,7 @@ from typing import Dict, Any
 from hugegraph_llm.config import huge_settings, resource_path, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel
+from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel, get_model_prefix
 from hugegraph_llm.utils.log import log
 
 
@@ -32,10 +32,11 @@ class BuildVectorIndex:
         self.embedding = embedding
         self.folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
         self.index_dir = str(os.path.join(resource_path, self.folder_name, "chunks"))
-        self.vector_index = VectorIndex.from_index_file(
-            self.index_dir,
+        self.index_prefix = get_model_prefix(
             llm_settings.embedding_type,
-            getattr(embedding, "model_name", None))
+            getattr(self.embedding, "model_name", None)
+        )
+        self.vector_index = VectorIndex.from_index_file(self.index_dir, self.index_prefix)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if "chunks" not in context:
@@ -47,7 +48,5 @@ class BuildVectorIndex:
         chunks_embedding = asyncio.run(get_embeddings_parallel(self.embedding, chunks))
         if len(chunks_embedding) > 0:
             self.vector_index.add(chunks_embedding, chunks)
-            self.vector_index.to_index_file(self.index_dir,
-                                            embedding_type=llm_settings.embedding_type,
-                                            model_name=getattr(self.embedding, "model_name", None))
+            self.vector_index.to_index_file(self.index_dir, self.index_prefix)
         return context
