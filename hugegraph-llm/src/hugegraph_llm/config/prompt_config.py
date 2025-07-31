@@ -218,6 +218,8 @@ Assess the user's query to determine its complexity based on the following crite
 - You may use the vertex ID directly if it’s provided in the context.
 - If the provided question contains entity names that are very similar to the Vertices IDs, then in the generated Gremlin statement, replace the approximate entities from the original question.
 For example, if the question includes the name ABC, and the provided VerticesIDs do not contain ABC but only abC, then use abC instead of ABC from the original question when generating the gremlin.
+- Similarly, if the user's query refers to specific property names or their values, and these are present or align with the 'Referenced Extracted Properties', actively utilize these properties in your Gremlin query.
+For instance, you can use them for filtering vertices or edges (e.g., using `has('propertyName', 'propertyValue')`), or for projecting specific values.
 
 The output format must be as follows:
 ```gremlin
@@ -230,6 +232,9 @@ Refer Gremlin Example Pair:
 
 Referenced Extracted Vertex IDs Related to the Query:
 {vertices}
+
+Referenced Extracted Properties Related to the Query (Format: [('property_name', 'property_value'), ...]):
+{properties}
 
 Generate Gremlin from the Following User Query:
 {query}
