@@ -16,12 +16,14 @@
 # under the License.
 
 
+import asyncio
 import os
 from typing import Dict, Any, List
 
 from hugegraph_llm.config import resource_path
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel
 
 
 # FIXME: we need keep the logic same with build_semantic_index.py
@@ -32,9 +34,10 @@ class BuildGremlinExampleIndex:
         self.embedding = embedding
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        examples_embedding = []
-        for example in self.examples:
-            examples_embedding.append(self.embedding.get_text_embedding(example["query"]))
+        # !: We have assumed that self.example is not empty
+        queries = [example["query"] for example in self.examples]
+        # TODO: refactor function chain async to avoid blocking
+        examples_embedding = asyncio.run(get_embeddings_parallel(self.embedding, queries))
         embed_dim = len(examples_embedding[0])
         if len(self.examples) > 0:
             vector_index = VectorIndex(embed_dim)

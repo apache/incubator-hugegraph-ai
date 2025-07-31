@@ -37,11 +37,13 @@ class VectorIndex:
         self.properties = []
 
     @staticmethod
-    def from_index_file(dir_path: str) -> "VectorIndex":
+    def from_index_file(dir_path: str, record_miss: bool = True) -> "VectorIndex":
         index_file = os.path.join(dir_path, INDEX_FILE_NAME)
         properties_file = os.path.join(dir_path, PROPERTIES_FILE_NAME)
-        if not os.path.exists(index_file) or not os.path.exists(properties_file):
-            log.warning("No index file found, create a new one.")
+        miss_files = [f for f in [index_file, properties_file] if not os.path.exists(f)]
+        if miss_files:
+            if record_miss:
+                log.warning("Missing vector files: %s. \nNeed create a new one for it.", ", ".join(miss_files))
             return VectorIndex()
 
         faiss_index = faiss.read_index(index_file)
