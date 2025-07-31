@@ -75,7 +75,7 @@ class SemanticIdQuery:
     def _fuzzy_match_vids(self, keywords: List[str]) -> List[str]:
         fuzzy_match_result = []
         for keyword in keywords:
-            keyword_vector = self.embedding.get_text_embedding(keyword)
+            keyword_vector = self.embedding.get_texts_embeddings([keyword])[0]
             results = self.vector_index.search(keyword_vector, top_k=self.topk_per_keyword,
                                                dis_threshold=float(self.vector_dis_threshold))
             if results:
@@ -86,7 +86,7 @@ class SemanticIdQuery:
         graph_query_list = set()
         if self.by == "query":
             query = context["query"]
-            query_vector = self.embedding.get_text_embedding(query)
+            query_vector = self.embedding.get_texts_embeddings([query])[0]
             results = self.vector_index.search(query_vector, top_k=self.topk_per_query)
             if results:
                 graph_query_list.update(results[:self.topk_per_query])
