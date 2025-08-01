@@ -82,7 +82,7 @@ def get_vector_index_info():
 
 
 def clean_vector_index():
-    folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
+    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
     filename_prefix = get_filename_prefix(llm_settings.embedding_type,
                                   getattr(Embeddings().get_embedding(), "model_name", None))
     VectorIndex.clean(str(os.path.join(resource_path, folder_name, "chunks")), filename_prefix)
