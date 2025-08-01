@@ -20,10 +20,10 @@ import asyncio
 import os
 from typing import Dict, Any, List
 
-from hugegraph_llm.config import resource_path
+from hugegraph_llm.config import resource_path, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel
+from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel, get_filename_prefix
 
 
 # FIXME: we need keep the logic same with build_semantic_index.py
@@ -32,6 +32,7 @@ class BuildGremlinExampleIndex:
         self.index_dir = os.path.join(resource_path, "gremlin_examples")
         self.examples = examples
         self.embedding = embedding
+        self.filename_prefix = get_filename_prefix(llm_settings.embedding_type, getattr(embedding, "model_name", None))
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         # !: We have assumed that self.example is not empty
@@ -42,6 +43,6 @@ class BuildGremlinExampleIndex:
         if len(self.examples) > 0:
             vector_index = VectorIndex(embed_dim)
             vector_index.add(examples_embedding, self.examples)
-            vector_index.to_index_file(self.index_dir)
+            vector_index.to_index_file(self.index_dir, self.filename_prefix)
         context["embed_dim"] = embed_dim
         return context
