@@ -84,7 +84,8 @@ def get_filename_prefix(embedding_type: str = None, model_name: str = None) -> s
 
 
 def get_index_folder_name(graph_name: str, space_name: str = None) -> str:
-    if space_name:
-        return f"{space_name}_{graph_name}"
+    if not space_name or space_name.strip() == "":
+        folder_name = graph_name
     else:
-        return graph_name
+        folder_name = f"{space_name}_{graph_name}"
+    return folder_name
