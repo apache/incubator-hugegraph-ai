@@ -24,7 +24,7 @@ from hugegraph_llm.config import resource_path, huge_settings, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
-from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel, get_model_prefix
+from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel, get_filename_prefix
 from hugegraph_llm.utils.log import log
 
 
@@ -32,8 +32,8 @@ class BuildSemanticIndex:
     def __init__(self, embedding: BaseEmbedding):
         self.folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
         self.index_dir = str(os.path.join(resource_path, self.folder_name, "graph_vids"))
-        self.index_prefix = get_model_prefix(llm_settings.embedding_type, getattr(embedding, "model_name", None))
-        self.vid_index = VectorIndex.from_index_file(self.index_dir, self.index_prefix)
+        self.filename_prefix = get_filename_prefix(llm_settings.embedding_type, getattr(embedding, "model_name", None))
+        self.vid_index = VectorIndex.from_index_file(self.index_dir, self.filename_prefix)
         self.embedding = embedding
         self.sm = SchemaManager(huge_settings.graph_name)
 
@@ -65,7 +65,7 @@ class BuildSemanticIndex:
             )
             log.info("Building vector index for %s vertices...", len(added_vids))
             self.vid_index.add(added_embeddings, added_vids)
-            self.vid_index.to_index_file(self.index_dir, self.index_prefix)
+            self.vid_index.to_index_file(self.index_dir, self.filename_prefix)
         else:
             log.debug("No update vertices to build vector index.")
         context.update(

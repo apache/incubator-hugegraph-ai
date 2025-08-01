@@ -23,7 +23,7 @@ from typing import Dict, Any, Union, Optional
 
 import gradio as gr
 
-from .embedding_utils import get_model_prefix
+from .embedding_utils import get_filename_prefix
 from .hugegraph_utils import get_hg_client, clean_hg_data
 from .log import log
 from .vector_index_utils import read_documents
@@ -39,8 +39,8 @@ def get_graph_index_info():
     graph_summary_info = builder.fetch_graph_data().run()
     folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
     index_dir = str(os.path.join(resource_path, folder_name, "graph_vids"))
-    index_prefix = get_model_prefix(llm_settings.embedding_type, getattr(builder.embedding, "model_name", None))
-    vector_index = VectorIndex.from_index_file(index_dir, index_prefix)
+    filename_prefix = get_filename_prefix(llm_settings.embedding_type, getattr(builder.embedding, "model_name", None))
+    vector_index = VectorIndex.from_index_file(index_dir, filename_prefix)
     graph_summary_info["vid_index"] = {
         "embed_dim": vector_index.index.d,
         "num_vectors": vector_index.index.ntotal,
@@ -51,14 +51,14 @@ def get_graph_index_info():
 
 def clean_all_graph_index():
     folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
-    index_prefix = get_model_prefix(llm_settings.embedding_type,
+    filename_prefix = get_filename_prefix(llm_settings.embedding_type,
                                     getattr(Embeddings().get_embedding(), "model_name", None))
     VectorIndex.clean(
         str(os.path.join(resource_path, folder_name, "graph_vids")),
-        index_prefix)
+        filename_prefix)
     VectorIndex.clean(
         str(os.path.join(resource_path, "gremlin_examples")),
-        index_prefix)
+        filename_prefix)
     log.warning("Clear graph index and text2gql index successfully!")
     gr.Info("Clear graph index and text2gql index successfully!")
 

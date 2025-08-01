@@ -73,7 +73,7 @@ async def get_embeddings_parallel(embedding: BaseEmbedding, vids: list[str]) -> 
     return embeddings
 
 
-def get_model_prefix(embedding_type: str = None, model_name: str = None) -> str:
+def get_filename_prefix(embedding_type: str = None, model_name: str = None) -> str:
     """Generate filename based on model name."""
     if not model_name or model_name.strip() == "" or not embedding_type or embedding_type.strip() == "":
         return ""

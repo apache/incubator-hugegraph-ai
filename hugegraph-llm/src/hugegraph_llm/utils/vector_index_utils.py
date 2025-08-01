@@ -26,7 +26,7 @@ from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
-from hugegraph_llm.utils.embedding_utils import get_model_prefix
+from hugegraph_llm.utils.embedding_utils import get_filename_prefix
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 
 
@@ -60,16 +60,16 @@ def read_documents(input_file, input_text):
 # pylint: disable=C0301
 def get_vector_index_info():
     folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
-    index_prefix = get_model_prefix(llm_settings.embedding_type,
+    filename_prefix = get_filename_prefix(llm_settings.embedding_type,
                                     getattr(Embeddings().get_embedding(), "model_name", None))
     chunk_vector_index = VectorIndex.from_index_file(
         str(os.path.join(resource_path, folder_name, "chunks")),
-        index_prefix,
+        filename_prefix,
         record_miss=False
     )
     graph_vid_vector_index = VectorIndex.from_index_file(
         str(os.path.join(resource_path, folder_name, "graph_vids")),
-        index_prefix
+        filename_prefix
     )
     return json.dumps({
         "embed_dim": chunk_vector_index.index.d,
@@ -83,9 +83,9 @@ def get_vector_index_info():
 
 def clean_vector_index():
     folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
-    index_prefix = get_model_prefix(llm_settings.embedding_type,
+    filename_prefix = get_filename_prefix(llm_settings.embedding_type,
                                   getattr(Embeddings().get_embedding(), "model_name", None))
-    VectorIndex.clean(str(os.path.join(resource_path, folder_name, "chunks")), index_prefix)
+    VectorIndex.clean(str(os.path.join(resource_path, folder_name, "chunks")), filename_prefix)
     gr.Info("Clean vector index successfully!")
 
 

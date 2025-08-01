@@ -37,7 +37,7 @@ class VectorIndex:
         self.properties = []
 
     @staticmethod
-    def from_index_file(dir_path: str, index_prefix: str = None, record_miss: bool = True) -> "VectorIndex":
+    def from_index_file(dir_path: str, filename_prefix: str = None, record_miss: bool = True) -> "VectorIndex":
         """Load index from files, supporting model-specific filenames.
 
         This method loads a Faiss index and its corresponding properties from a directory.
@@ -46,8 +46,8 @@ class VectorIndex:
         It also performs a consistency check to ensure the number of vectors in the index
         matches the number of properties.
         """
-        index_name = f"{index_prefix}_{INDEX_FILE_NAME}" if index_prefix else INDEX_FILE_NAME
-        property_name = f"{index_prefix}_{PROPERTIES_FILE_NAME}" if index_prefix else PROPERTIES_FILE_NAME
+        index_name = f"{filename_prefix}_{INDEX_FILE_NAME}" if filename_prefix else INDEX_FILE_NAME
+        property_name = f"{filename_prefix}_{PROPERTIES_FILE_NAME}" if filename_prefix else PROPERTIES_FILE_NAME
         index_file = os.path.join(dir_path, index_name)
         properties_file = os.path.join(dir_path, property_name)
         miss_files = [f for f in [index_file, properties_file] if not os.path.exists(f)]
@@ -79,13 +79,13 @@ class VectorIndex:
         vector_index.properties = properties
         return vector_index
 
-    def to_index_file(self, dir_path: str, index_prefix: str = None):
+    def to_index_file(self, dir_path: str, filename_prefix: str = None):
         """Save index to files, supporting model-specific filenames."""
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
 
-        index_name = f"{index_prefix}_{INDEX_FILE_NAME}" if index_prefix else INDEX_FILE_NAME
-        property_name = f"{index_prefix}_{PROPERTIES_FILE_NAME}" if index_prefix else PROPERTIES_FILE_NAME
+        index_name = f"{filename_prefix}_{INDEX_FILE_NAME}" if filename_prefix else INDEX_FILE_NAME
+        property_name = f"{filename_prefix}_{PROPERTIES_FILE_NAME}" if filename_prefix else PROPERTIES_FILE_NAME
         index_file = os.path.join(dir_path, index_name)
         properties_file = os.path.join(dir_path, property_name)
         faiss.write_index(self.index, index_file)
@@ -133,14 +133,14 @@ class VectorIndex:
         return results
 
     @staticmethod
-    def clean(dir_path: str, index_prefix: str = None):
+    def clean(dir_path: str, filename_prefix: str = None):
         """Clean index files, supporting model-specific filenames.
 
         This method deletes the index and properties files associated with a specific model.
         If model_name is None, it targets the default files.
         """
-        index_name = f"{index_prefix}_{INDEX_FILE_NAME}" if index_prefix else INDEX_FILE_NAME
-        property_name = f"{index_prefix}_{PROPERTIES_FILE_NAME}" if index_prefix else PROPERTIES_FILE_NAME
+        index_name = f"{filename_prefix}_{INDEX_FILE_NAME}" if filename_prefix else INDEX_FILE_NAME
+        property_name = f"{filename_prefix}_{PROPERTIES_FILE_NAME}" if filename_prefix else PROPERTIES_FILE_NAME
         index_file = os.path.join(dir_path, index_name)
         properties_file = os.path.join(dir_path, property_name)
 
