@@ -81,3 +81,10 @@ def get_filename_prefix(embedding_type: str = None, model_name: str = None) -> s
     safe_embedding_type = embedding_type.replace("/", "_").replace("\\", "_").strip()
     safe_model_name = model_name.replace("/", "_").replace("\\", "_").strip()
     return f"{safe_embedding_type}_{safe_model_name}"
+
+
+def get_index_folder_name(graph_name: str, space_name: str = None) -> str:
+    if space_name:
+        return f"{space_name}_{graph_name}"
+    else:
+        return graph_name

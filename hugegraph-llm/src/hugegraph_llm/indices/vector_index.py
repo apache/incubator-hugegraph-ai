@@ -61,15 +61,15 @@ class VectorIndex:
             with open(properties_file, "rb") as f:
                 properties = pkl.load(f)
         except (RuntimeError, pkl.UnpicklingError, OSError) as e:
-            log.error("Failed to load index files for model '%s': %s", index_name or "default", e)
+            log.error("Failed to load index files for model '%s': %s", filename_prefix or "default", e)
             raise RuntimeError(
-                f"Could not load index files for model '{index_name or 'default'}'. "
+                f"Could not load index files for model '{filename_prefix or 'default'}'. "
                 f"Original error ({type(e).__name__}): {e}"
             ) from e
 
         if faiss_index.ntotal != len(properties):
             raise RuntimeError(
-                f"Data inconsistency: index for model '{index_name or 'default'}' has "
+                f"Data inconsistency: index for model '{filename_prefix or 'default'}' has "
                 f"{faiss_index.ntotal} vectors, but {len(properties)} properties."
             )
 

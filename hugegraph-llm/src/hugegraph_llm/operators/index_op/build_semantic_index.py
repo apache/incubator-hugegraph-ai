@@ -24,13 +24,13 @@ from hugegraph_llm.config import resource_path, huge_settings, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
-from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel, get_filename_prefix
+from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel, get_filename_prefix, get_index_folder_name
 from hugegraph_llm.utils.log import log
 
 
 class BuildSemanticIndex:
     def __init__(self, embedding: BaseEmbedding):
-        self.folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
+        self.folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
         self.index_dir = str(os.path.join(resource_path, self.folder_name, "graph_vids"))
         self.filename_prefix = get_filename_prefix(llm_settings.embedding_type, getattr(embedding, "model_name", None))
         self.vid_index = VectorIndex.from_index_file(self.index_dir, self.filename_prefix)

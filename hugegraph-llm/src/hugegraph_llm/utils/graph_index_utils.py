@@ -23,7 +23,7 @@ from typing import Dict, Any, Union, Optional
 
 import gradio as gr
 
-from .embedding_utils import get_filename_prefix
+from .embedding_utils import get_filename_prefix, get_index_folder_name
 from .hugegraph_utils import get_hg_client, clean_hg_data
 from .log import log
 from .vector_index_utils import read_documents
@@ -37,7 +37,7 @@ from ..operators.kg_construction_task import KgBuilder
 def get_graph_index_info():
     builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     graph_summary_info = builder.fetch_graph_data().run()
-    folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
+    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
     index_dir = str(os.path.join(resource_path, folder_name, "graph_vids"))
     filename_prefix = get_filename_prefix(llm_settings.embedding_type, getattr(builder.embedding, "model_name", None))
     vector_index = VectorIndex.from_index_file(index_dir, filename_prefix)
@@ -50,7 +50,7 @@ def get_graph_index_info():
 
 
 def clean_all_graph_index():
-    folder_name = "_".join(filter(None, [huge_settings.graph_space, huge_settings.graph_name]))
+    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
     filename_prefix = get_filename_prefix(llm_settings.embedding_type,
                                     getattr(Embeddings().get_embedding(), "model_name", None))
     VectorIndex.clean(
