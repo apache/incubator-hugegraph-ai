@@ -219,6 +219,16 @@ After running the demo, configuration files are automatically generated:
 
 - **Environment**: `hugegraph-llm/.env`
 - **Prompts**: `hugegraph-llm/src/hugegraph_llm/resources/demo/config_prompt.yaml`
+### Language Support
+
+The system supports both English and Chinese prompts. To switch languages:
+
+1. **Edit `.env` file**: Change `LANGUAGE=en` to `LANGUAGE=CN` (or vice versa)
+2. **Restart the application**: The system will automatically regenerate prompts in the selected language
+
+**Supported Values:**
+- `LANGUAGE=EN` - English prompts (default)
+- `LANGUAGE=CN` - Chinese prompts (中文提示词)
 
 > [!NOTE]
 > Configuration changes are automatically saved when using the web interface. For manual changes, simply refresh the page to load updates.
@@ -229,14 +239,14 @@ After running the demo, configuration files are automatically generated:
 
 > [!IMPORTANT]
 > **For developers contributing to hugegraph-llm with AI coding assistance:**
-> 
+>
 > - **Start Here**: First read `../rules/README.md` for the complete AI-assisted development workflow
 > - **Module Context**: Rename `basic-introduction.md` in this directory as context for your LLM (e.g., `CLAUDE.md`, `copilot-instructions.md`)
 > - **Code Analysis**: Follow comprehensive analysis methodology in `../rules/prompts/project-deep.md`
 > - **Documentation**: Maintain structured documentation standards from `../rules/prompts/project-general.md`
 > - **Quality Standards**: Ensure type annotations, proper testing, and consistent patterns
 > - **Business Logic**: Focus on graph-LLM integration logic and RAG pipeline optimization
-> 
+>
 > These guidelines ensure consistent code quality and maintainable graph-AI integrations.
 
 ## 📚 Additional Resources
