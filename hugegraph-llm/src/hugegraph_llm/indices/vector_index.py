@@ -41,7 +41,7 @@ class VectorIndex:
         """Load index from files, supporting model-specific filenames.
 
         This method loads a Faiss index and its corresponding properties from a directory.
-        It handles model-specific filenames by using the get_model_filename utility.
+        It handles model-specific filenames by constructing them inline using f-strings.
         If the specified files are not found, it returns a new, empty VectorIndex instance.
         It also performs a consistency check to ensure the number of vectors in the index
         matches the number of properties.
