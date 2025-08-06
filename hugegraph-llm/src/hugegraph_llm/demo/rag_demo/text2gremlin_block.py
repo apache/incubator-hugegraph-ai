@@ -17,7 +17,6 @@
 
 import json
 import os
-import shutil
 from datetime import datetime
 from typing import Any, Tuple, Dict, Union, Literal
 
@@ -62,6 +61,7 @@ def build_example_vector_index(temp_file) -> dict:
         log.info("Copying file to: %s", file_name)
         target_file = os.path.join(resource_path, folder_name, "gremlin_examples", file_name)
         try:
+            import shutil
             shutil.copy2(full_path, target_file)
             log.info("Successfully copied file to: %s", target_file)
         except (OSError, IOError) as e:
@@ -216,9 +216,9 @@ def graph_rag_recall(
     store_schema(prompt.text2gql_graph_schema, query, gremlin_prompt)
     rag = RAGPipeline()
     rag.extract_keywords().keywords_to_vid(
-            vector_dis_threshold=vector_dis_threshold,
-            topk_per_keyword=topk_per_keyword,
-        )
+        vector_dis_threshold=vector_dis_threshold,
+        topk_per_keyword=topk_per_keyword,
+    )
 
     if not get_vertex_only:
         rag.import_schema(huge_settings.graph_name).query_graphdb(
