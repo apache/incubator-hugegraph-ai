@@ -32,6 +32,7 @@ The fastest way to get started with both HugeGraph Server and RAG Service:
 # 1. Set up environment
 cp docker/env.template docker/.env
 # Edit docker/.env and set PROJECT_PATH to your actual project path
+# See "config.md" for all available configuration options
 # If there is not a configuration file (named .env) under hugegraph-llm, run the following command
 cd hugegraph-llm && touch .env && cd ..
 
@@ -86,6 +87,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # 3. Clone and setup project
 git clone https://github.com/apache/incubator-hugegraph-ai.git
 cd incubator-hugegraph-ai/hugegraph-llm
+
+# Configure environment (see config.md for detailed options), .env will auto create if not exists
 
 # 4. Install dependencies and activate environment
 # NOTE: If download is slow, uncomment mirror lines in ../pyproject.toml or use: uv config --global index.url https://pypi.tuna.tsinghua.edu.cn/simple
