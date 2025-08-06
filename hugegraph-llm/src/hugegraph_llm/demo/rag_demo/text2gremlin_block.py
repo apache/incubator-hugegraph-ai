@@ -56,12 +56,18 @@ def build_example_vector_index(temp_file) -> dict:
         full_path = os.path.join(resource_path, "demo", "text2gremlin.csv")
     else:
         full_path = temp_file.name
-        name, ext = os.path.splitext(full_path)
+        name, ext = os.path.splitext(temp_file.name)
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         _, file_name = os.path.split(f"{name}_{timestamp}{ext}")
-        print(file_name)
-        origin_file = str(os.path.join(resource_path, folder_name, "gremlin_examples", file_name))
-        shutil.copy2(full_path, origin_file)
+        log.info("Copying file to: %s", file_name)
+        target_file = os.path.join(resource_path, folder_name, "gremlin_examples", file_name)
+        try:
+            shutil.copy2(full_path, target_file)
+            log.info("Successfully copied file to: %s", target_file)
+        except (OSError, IOError) as e:
+            log.error("Failed to copy file: %s", e)
+            return {"error": f"Failed to copy file: {e}"}
+        full_path = target_file
     if full_path.endswith(".json"):
         with open(full_path, "r", encoding="utf-8") as f:
             examples = json.load(f)
