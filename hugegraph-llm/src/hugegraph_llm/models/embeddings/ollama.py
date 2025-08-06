@@ -19,13 +19,12 @@
 from typing import List
 
 import ollama
-
 from .base import BaseEmbedding
 
 
 class OllamaEmbedding(BaseEmbedding):
-    def __init__(self, model: str, host: str = "127.0.0.1", port: int = 11434, **kwargs):
-        self.model = model
+    def __init__(self, model_name: str, host: str = "127.0.0.1", port: int = 11434, **kwargs):
+        self.model_name = model_name
         self.client = ollama.Client(host=f"http://{host}:{port}", **kwargs)
         self.async_client = ollama.AsyncClient(host=f"http://{host}:{port}", **kwargs)
         self.embedding_dimension = None
@@ -50,7 +49,7 @@ class OllamaEmbedding(BaseEmbedding):
             )
             raise AttributeError(error_message)
 
-        response = self.client.embed(model=self.model, input=texts)["embeddings"]
+        response = self.client.embed(model=self.model_name, input=texts)["embeddings"]
         return [list(inner_sequence) for inner_sequence in response]
 
     async def async_get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
@@ -68,5 +67,5 @@ class OllamaEmbedding(BaseEmbedding):
                 "Please ensure your ollama library is up-to-date and supports batch embedding. "
             )
             raise AttributeError(error_message)
-        response = await self.async_client.embed(model=self.model, input=texts)
+        response = await self.async_client.embed(model=self.model_name, input=texts)
         return [list(inner_sequence) for inner_sequence in response["embeddings"]]
