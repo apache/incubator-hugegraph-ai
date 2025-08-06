@@ -37,30 +37,57 @@ class VectorIndex:
         self.properties = []
 
     @staticmethod
-    def from_index_file(dir_path: str, record_miss: bool = True) -> "VectorIndex":
-        index_file = os.path.join(dir_path, INDEX_FILE_NAME)
-        properties_file = os.path.join(dir_path, PROPERTIES_FILE_NAME)
+    def from_index_file(dir_path: str, filename_prefix: str = None, record_miss: bool = True) -> "VectorIndex":
+        """Load index from files, supporting model-specific filenames.
+
+        This method loads a Faiss index and its corresponding properties from a directory.
+        It handles model-specific filenames by constructing them inline using f-strings.
+        If the specified files are not found, it returns a new, empty VectorIndex instance.
+        It also performs a consistency check to ensure the number of vectors in the index
+        matches the number of properties.
+        """
+        index_name = f"{filename_prefix}_{INDEX_FILE_NAME}" if filename_prefix else INDEX_FILE_NAME
+        property_name = f"{filename_prefix}_{PROPERTIES_FILE_NAME}" if filename_prefix else PROPERTIES_FILE_NAME
+        index_file = os.path.join(dir_path, index_name)
+        properties_file = os.path.join(dir_path, property_name)
         miss_files = [f for f in [index_file, properties_file] if not os.path.exists(f)]
         if miss_files:
             if record_miss:
                 log.warning("Missing vector files: %s. \nNeed create a new one for it.", ", ".join(miss_files))
             return VectorIndex()
 
-        faiss_index = faiss.read_index(index_file)
+        try:
+            faiss_index = faiss.read_index(index_file)
+            with open(properties_file, "rb") as f:
+                properties = pkl.load(f)
+        except (RuntimeError, pkl.UnpicklingError, OSError) as e:
+            log.error("Failed to load index files for model '%s': %s", filename_prefix or "default", e)
+            raise RuntimeError(
+                f"Could not load index files for model '{filename_prefix or 'default'}'. "
+                f"Original error ({type(e).__name__}): {e}"
+            ) from e
+
+        if faiss_index.ntotal != len(properties):
+            raise RuntimeError(
+                f"Data inconsistency: index for model '{filename_prefix or 'default'}' has "
+                f"{faiss_index.ntotal} vectors, but {len(properties)} properties."
+            )
+
         embed_dim = faiss_index.d
-        with open(properties_file, "rb") as f:
-            properties = pkl.load(f)
         vector_index = VectorIndex(embed_dim)
         vector_index.index = faiss_index
         vector_index.properties = properties
         return vector_index
 
-    def to_index_file(self, dir_path: str):
+    def to_index_file(self, dir_path: str, filename_prefix: str = None):
+        """Save index to files, supporting model-specific filenames."""
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
 
-        index_file = os.path.join(dir_path, INDEX_FILE_NAME)
-        properties_file = os.path.join(dir_path, PROPERTIES_FILE_NAME)
+        index_name = f"{filename_prefix}_{INDEX_FILE_NAME}" if filename_prefix else INDEX_FILE_NAME
+        property_name = f"{filename_prefix}_{PROPERTIES_FILE_NAME}" if filename_prefix else PROPERTIES_FILE_NAME
+        index_file = os.path.join(dir_path, index_name)
+        properties_file = os.path.join(dir_path, property_name)
         faiss.write_index(self.index, index_file)
         with open(properties_file, "wb") as f:
             pkl.dump(self.properties, f)
@@ -106,10 +133,21 @@ class VectorIndex:
         return results
 
     @staticmethod
-    def clean(dir_path: str):
-        index_file = os.path.join(dir_path, INDEX_FILE_NAME)
-        properties_file = os.path.join(dir_path, PROPERTIES_FILE_NAME)
-        if os.path.exists(index_file):
-            os.remove(index_file)
-        if os.path.exists(properties_file):
-            os.remove(properties_file)
+    def clean(dir_path: str, filename_prefix: str = None):
+        """Clean index files, supporting model-specific filenames.
+
+        This method deletes the index and properties files associated with a specific model.
+        If model_name is None, it targets the default files.
+        """
+        index_name = f"{filename_prefix}_{INDEX_FILE_NAME}" if filename_prefix else INDEX_FILE_NAME
+        property_name = f"{filename_prefix}_{PROPERTIES_FILE_NAME}" if filename_prefix else PROPERTIES_FILE_NAME
+        index_file = os.path.join(dir_path, index_name)
+        properties_file = os.path.join(dir_path, property_name)
+
+        for file in [index_file, properties_file]:
+            if os.path.exists(file):
+                try:
+                    os.remove(file)
+                    log.info("Removed index file: %s", file)
+                except OSError as e:
+                    log.error("Error removing file %s: %s", file, e)

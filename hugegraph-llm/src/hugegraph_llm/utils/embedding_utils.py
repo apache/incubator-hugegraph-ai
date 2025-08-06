@@ -71,3 +71,21 @@ async def get_embeddings_parallel(embedding: BaseEmbedding, vids: list[str]) -> 
             embeddings.extend(batch_embeddings)
 
     return embeddings
+
+
+def get_filename_prefix(embedding_type: str = None, model_name: str = None) -> str:
+    """Generate filename based on model name."""
+    if not (model_name and model_name.strip() and embedding_type and embedding_type.strip()):
+        return ""
+    # Sanitize model_name to prevent path traversal or invalid filename chars
+    safe_embedding_type = embedding_type.replace("/", "_").replace("\\", "_").strip()
+    safe_model_name = model_name.replace("/", "_").replace("\\", "_").strip()
+    return f"{safe_embedding_type}_{safe_model_name}"
+
+
+def get_index_folder_name(graph_name: str, space_name: str = None) -> str:
+    if not (space_name and space_name.strip()):
+        folder_name = graph_name
+    else:
+        folder_name = f"{space_name}_{graph_name}"
+    return folder_name
