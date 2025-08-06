@@ -22,7 +22,7 @@ from typing import Dict, Any, List
 
 import pandas as pd
 
-from hugegraph_llm.config import resource_path, llm_settings
+from hugegraph_llm.config import resource_path, llm_settings, huge_settings
 from hugegraph_llm.indices.vector_index import VectorIndex, INDEX_FILE_NAME, PROPERTIES_FILE_NAME
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
@@ -34,7 +34,7 @@ class GremlinExampleIndexQuery:
     def __init__(self, embedding: BaseEmbedding = None, num_examples: int = 1):
         self.embedding = embedding or Embeddings().get_embedding()
         self.num_examples = num_examples
-        self.folder_name = get_index_folder_name(llm_settings.graph_name, llm_settings.graph_space)
+        self.folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
         self.index_dir = str(os.path.join(resource_path, self.folder_name, "gremlin_examples"))
         self.filename_prefix = get_filename_prefix(llm_settings.embedding_type,
                                                    getattr(self.embedding, "model_name", None))
