@@ -24,7 +24,7 @@ from .models import BaseConfig
 
 class LLMConfig(BaseConfig):
     """LLM settings"""
-
+    language: Literal["EN", "CN"] = "EN"
     chat_llm_type: Literal["openai", "litellm", "ollama/local"] = "openai"
     extract_llm_type: Literal["openai", "litellm", "ollama/local"] = "openai"
     text2gql_llm_type: Literal["openai", "litellm", "ollama/local"] = "openai"
