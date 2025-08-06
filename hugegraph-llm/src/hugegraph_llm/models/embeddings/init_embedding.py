@@ -16,11 +16,10 @@
 # under the License.
 
 
-from hugegraph_llm.models.embeddings.openai import OpenAIEmbedding
-from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
-from hugegraph_llm.models.embeddings.qianfan import QianFanEmbedding
-from hugegraph_llm.models.embeddings.litellm import LiteLLMEmbedding
 from hugegraph_llm.config import llm_settings
+from hugegraph_llm.models.embeddings.litellm import LiteLLMEmbedding
+from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
+from hugegraph_llm.models.embeddings.openai import OpenAIEmbedding
 
 
 class Embeddings:
@@ -36,15 +35,9 @@ class Embeddings:
             )
         if self.embedding_type == "ollama/local":
             return OllamaEmbedding(
-                model=llm_settings.ollama_embedding_model,
+                model_name=llm_settings.ollama_embedding_model,
                 host=llm_settings.ollama_embedding_host,
                 port=llm_settings.ollama_embedding_port
-            )
-        if self.embedding_type == "qianfan_wenxin":
-            return QianFanEmbedding(
-                model_name=llm_settings.qianfan_embedding_model,
-                api_key=llm_settings.qianfan_embedding_api_key,
-                secret_key=llm_settings.qianfan_embedding_secret_key
             )
         if self.embedding_type == "litellm":
             return LiteLLMEmbedding(

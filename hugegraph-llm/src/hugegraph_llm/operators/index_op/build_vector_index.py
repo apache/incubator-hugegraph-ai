@@ -16,22 +16,27 @@
 # under the License.
 
 
+import asyncio
 import os
 from typing import Dict, Any
 
-from tqdm import tqdm
-
-from hugegraph_llm.config import huge_settings, resource_path
+from hugegraph_llm.config import huge_settings, resource_path, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel, get_filename_prefix, get_index_folder_name
 from hugegraph_llm.utils.log import log
 
 
 class BuildVectorIndex:
     def __init__(self, embedding: BaseEmbedding):
         self.embedding = embedding
-        self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "chunks"))
-        self.vector_index = VectorIndex.from_index_file(self.index_dir)
+        self.folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
+        self.index_dir = str(os.path.join(resource_path, self.folder_name, "chunks"))
+        self.filename_prefix = get_filename_prefix(
+            llm_settings.embedding_type,
+            getattr(self.embedding, "model_name", None)
+        )
+        self.vector_index = VectorIndex.from_index_file(self.index_dir, self.filename_prefix)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if "chunks" not in context:
@@ -40,9 +45,8 @@ class BuildVectorIndex:
         chunks_embedding = []
         log.debug("Building vector index for %s chunks...", len(context["chunks"]))
         # TODO: use async_get_texts_embedding instead of single sync method
-        for chunk in tqdm(chunks):
-            chunks_embedding.append(self.embedding.get_text_embedding(chunk))
+        chunks_embedding = asyncio.run(get_embeddings_parallel(self.embedding, chunks))
         if len(chunks_embedding) > 0:
             self.vector_index.add(chunks_embedding, chunks)
-            self.vector_index.to_index_file(self.index_dir)
+            self.vector_index.to_index_file(self.index_dir, self.filename_prefix)
         return context

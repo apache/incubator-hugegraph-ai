@@ -34,7 +34,7 @@ dependencies = [
     "setuptools",
     "urllib3",
     "rich",
-    
+
     # Data processing dependencies
     "numpy",
     "pandas",
@@ -42,10 +42,10 @@ dependencies = [
     "scipy",
     "python-igraph",
     
+
     # LLM specific dependencies
     "openai",
     "ollama",
-    "qianfan",
     "retry",
     "tiktoken",
     "nltk",
