@@ -249,7 +249,6 @@ carved out their distinctive digital presence through their respective webpages,
 and experiences.
 """
 
-    # TODO: we should switch the prompt automatically based on the language (like using context['language'])
     answer_prompt_CN: str = """你是知识图谱和自然语言处理领域的专家。
 你的任务是基于给定的上下文提供精确和准确的答案。
 
