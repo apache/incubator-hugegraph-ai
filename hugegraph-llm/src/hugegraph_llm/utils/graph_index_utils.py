@@ -57,7 +57,7 @@ def clean_all_graph_index():
         str(os.path.join(resource_path, folder_name, "graph_vids")),
         filename_prefix)
     VectorIndex.clean(
-        str(os.path.join(resource_path, "gremlin_examples")),
+        str(os.path.join(resource_path, folder_name, "gremlin_examples")),
         filename_prefix)
     log.warning("Clear graph index and text2gql index successfully!")
     gr.Info("Clear graph index and text2gql index successfully!")

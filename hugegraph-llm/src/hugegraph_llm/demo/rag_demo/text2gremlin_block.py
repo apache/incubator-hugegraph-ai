@@ -17,6 +17,8 @@
 
 import json
 import os
+import shutil
+from datetime import datetime
 from typing import Any, Tuple, Dict, Union, Literal
 
 import gradio as gr
@@ -28,6 +30,7 @@ from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
+from hugegraph_llm.utils.embedding_utils import get_index_folder_name
 from hugegraph_llm.utils.hugegraph_utils import run_gremlin_query
 from hugegraph_llm.utils.log import log
 
@@ -45,10 +48,20 @@ def store_schema(schema, question, gremlin_prompt):
 
 
 def build_example_vector_index(temp_file) -> dict:
+    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
+    index_path = os.path.join(resource_path, folder_name, "gremlin_examples")
+    if not os.path.exists(index_path):
+        os.makedirs(index_path)
     if temp_file is None:
         full_path = os.path.join(resource_path, "demo", "text2gremlin.csv")
     else:
         full_path = temp_file.name
+        name, ext = os.path.splitext(full_path)
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        _, file_name = os.path.split(f"{name}_{timestamp}{ext}")
+        print(file_name)
+        origin_file = str(os.path.join(resource_path, folder_name, "gremlin_examples", file_name))
+        shutil.copy2(full_path, origin_file)
     if full_path.endswith(".json"):
         with open(full_path, "r", encoding="utf-8") as f:
             examples = json.load(f)
