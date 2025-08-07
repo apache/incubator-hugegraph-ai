@@ -40,12 +40,13 @@ class TestBuildSemanticIndex(unittest.TestCase):
         # Patch the resource_path and huge_settings
         # Note: resource_path is currently a string variable, not a function,
         # so we patch it with a string value for os.path.join() compatibility
+        # Mock resource_path and huge_settings
         self.patcher1 = patch(
             "hugegraph_llm.operators.index_op.build_semantic_index.resource_path", self.temp_dir
         )
         self.patcher2 = patch("hugegraph_llm.operators.index_op.build_semantic_index.huge_settings")
 
-        self.mock_resource_path = self.patcher1.start()
+        self.patcher1.start()
         self.mock_settings = self.patcher2.start()
         self.mock_settings.graph_name = "test_graph"
 

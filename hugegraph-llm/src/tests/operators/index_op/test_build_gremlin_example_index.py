@@ -45,7 +45,7 @@ class TestBuildGremlinExampleIndex(unittest.TestCase):
         self.patcher1 = patch(
             "hugegraph_llm.operators.index_op.build_gremlin_example_index.resource_path", self.temp_dir
         )
-        self.mock_resource_path = self.patcher1.start()
+        self.patcher1.start()
 
         # Mock VectorIndex
         self.mock_vector_index = MagicMock(spec=VectorIndex)

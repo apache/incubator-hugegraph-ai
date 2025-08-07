@@ -33,12 +33,15 @@ class BuildGremlinExampleIndex:
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         examples_embedding = []
-        for example in self.examples:
-            examples_embedding.append(self.embedding.get_text_embedding(example["query"]))
-        embed_dim = len(examples_embedding[0])
+        embed_dim = 0
+        
         if len(self.examples) > 0:
+            for example in self.examples:
+                examples_embedding.append(self.embedding.get_text_embedding(example["query"]))
+            embed_dim = len(examples_embedding[0])
             vector_index = VectorIndex(embed_dim)
             vector_index.add(examples_embedding, self.examples)
             vector_index.to_index_file(self.index_dir)
+            
         context["embed_dim"] = embed_dim
         return context
