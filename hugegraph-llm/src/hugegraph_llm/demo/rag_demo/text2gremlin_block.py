@@ -19,7 +19,7 @@ import json
 import os
 from datetime import datetime
 from dataclasses import dataclass
-from typing import Any, Tuple, Dict, Union, Literal, Optional, List
+from typing import Any, Tuple, Dict, Literal, Optional, List
 
 import gradio as gr
 import pandas as pd
@@ -50,9 +50,9 @@ class GremlinResult:
     def error(cls, message: str) -> 'GremlinResult':
         """Create an error result"""
         return cls(success=False, match_result=message, error_message=message)
-    
+
     @classmethod
-    def success_result(cls, match_result: str, template_gremlin: str, 
+    def success_result(cls, match_result: str, template_gremlin: str,
                       raw_gremlin: str, template_exec: str, raw_exec: str) -> 'GremlinResult':
         """Create a successful result"""
         return cls(
@@ -119,7 +119,7 @@ def _process_schema(schema, generator, sm):
     short_schema = False
     if not schema:
         return None, short_schema
-    
+
     schema = schema.strip()
     if not schema.startswith("{"):
         short_schema = True
@@ -163,7 +163,7 @@ def _execute_queries(context, output_types):
             context["template_exec_res"] = f"{e}"
     else:
         context["template_exec_res"] = ""
-    
+
     if output_types["raw_execution_result"]:
         try:
             context["raw_exec_res"] = run_gremlin_query(query=context["raw_result"])
@@ -178,24 +178,24 @@ def gremlin_generate(
 ) -> GremlinResult:
     generator = GremlinGenerator(llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding())
     sm = SchemaManager(graph_name=schema)
-    
+
     processed_schema, short_schema = _process_schema(schema, generator, sm)
     if processed_schema is None and short_schema is None:
         return GremlinResult.error("Invalid JSON schema, please check the format carefully.")
-    
+
     updated_schema = sm.simple_schema(processed_schema) if short_schema else processed_schema
     store_schema(str(updated_schema), inp, gremlin_prompt)
-    
+
     output_types = _configure_output_types(requested_outputs)
-    
+
     context = (
         generator.example_index_query(example_num)
         .gremlin_generate_synthesize(updated_schema, gremlin_prompt)
         .run(query=inp)
     )
-    
+
     _execute_queries(context, output_types)
-    
+
     match_result = json.dumps(context.get("match_result", "No Results"), ensure_ascii=False, indent=2)
     return GremlinResult.success_result(
         match_result=match_result,
@@ -229,10 +229,10 @@ def simple_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
 def gremlin_generate_for_ui(inp, example_num, schema, gremlin_prompt):
     """UI wrapper for gremlin_generate that returns tuple for Gradio compatibility"""
     result = gremlin_generate(inp, example_num, schema, gremlin_prompt)
-    
+
     if not result.success:
         return result.match_result, "", "", "", ""
-    
+
     return (
         result.match_result,
         result.template_gremlin or "",
@@ -245,9 +245,9 @@ def gremlin_generate_for_ui(inp, example_num, schema, gremlin_prompt):
 def create_text2gremlin_block() -> Tuple:
     gr.Markdown(
         """## Build Vector Template Index (Optional)
-    > Uploaded CSV file should be in `query,gremlin` format below:    
-    > e.g. `who is peter?`,`g.V().has('name', 'peter')`    
-    > JSON file should be in format below:  
+    > Uploaded CSV file should be in `query,gremlin` format below:
+    > e.g. `who is peter?`,`g.V().has('name', 'peter')`
+    > JSON file should be in format below:
     > e.g. `[{"query":"who is peter", "gremlin":"g.V().has('name', 'peter')"}]`
     """
     )
@@ -344,13 +344,13 @@ def gremlin_generate_selective(
     ]
     if not requested_outputs:  # None or empty list
         requested_outputs = output_keys
-    
+
     result = gremlin_generate(
         inp, example_num, schema_input, gremlin_prompt_input, requested_outputs
     )
-    
+
     outputs_dict: Dict[str, Any] = {}
-    
+
     if not result.success:
         # Handle error case
         if "match_result" in requested_outputs:
@@ -358,7 +358,7 @@ def gremlin_generate_selective(
         if result.error_message:
             outputs_dict["error_detail"] = result.error_message
         return outputs_dict
-    
+
     # Handle successful case
     output_mapping = {
         "match_result": result.match_result,
@@ -367,9 +367,9 @@ def gremlin_generate_selective(
         "template_execution_result": result.template_exec_result,
         "raw_execution_result": result.raw_exec_result,
     }
-    
+
     for key in requested_outputs:
         if key in output_mapping:
             outputs_dict[key] = output_mapping[key]
-    
+
     return outputs_dict
