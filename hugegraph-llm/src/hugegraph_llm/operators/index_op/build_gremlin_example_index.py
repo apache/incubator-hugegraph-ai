@@ -36,7 +36,6 @@ class BuildGremlinExampleIndex:
         self.filename_prefix = get_filename_prefix(llm_settings.embedding_type, getattr(embedding, "model_name", None))
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        examples_embedding = []
         embed_dim = 0
         
         if len(self.examples) > 0:
