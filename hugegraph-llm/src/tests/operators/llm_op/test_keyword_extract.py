@@ -28,8 +28,9 @@ class TestKeywordExtract(unittest.TestCase):
     def setUp(self):
         # Create mock LLM
         self.mock_llm = MagicMock(spec=BaseLLM)
+        # Updated to match expected format: "keyword:score"
         self.mock_llm.generate.return_value = (
-            "KEYWORDS: artificial intelligence, machine learning, neural networks"
+            "KEYWORDS: artificial intelligence:0.9, machine learning:0.8, neural networks:0.7"
         )
 
         # Sample query
@@ -37,9 +38,9 @@ class TestKeywordExtract(unittest.TestCase):
             "What are the latest advancements in artificial intelligence and machine learning?"
         )
 
-        # Create KeywordExtract instance
+        # Create KeywordExtract instance (language is now set from llm_settings)
         self.extractor = KeywordExtract(
-            text=self.query, llm=self.mock_llm, max_keywords=5, language="english"
+            text=self.query, llm=self.mock_llm, max_keywords=5
         )
 
     def test_init_with_parameters(self):
@@ -47,7 +48,7 @@ class TestKeywordExtract(unittest.TestCase):
         self.assertEqual(self.extractor._query, self.query)
         self.assertEqual(self.extractor._llm, self.mock_llm)
         self.assertEqual(self.extractor._max_keywords, 5)
-        self.assertEqual(self.extractor._language, "english")
+        # Language is now set from llm_settings, will be converted in run()
         self.assertIsNotNone(self.extractor._extract_template)
 
     def test_init_with_defaults(self):
@@ -56,7 +57,7 @@ class TestKeywordExtract(unittest.TestCase):
         self.assertIsNone(extractor._query)
         self.assertIsNone(extractor._llm)
         self.assertEqual(extractor._max_keywords, 5)
-        self.assertEqual(extractor._language, "english")
+        # Language is now set from llm_settings
         self.assertIsNotNone(extractor._extract_template)
 
     def test_init_with_custom_template(self):
@@ -94,7 +95,7 @@ class TestKeywordExtract(unittest.TestCase):
         # Setup mock
         mock_llm = MagicMock(spec=BaseLLM)
         mock_llm.generate.return_value = (
-            "KEYWORDS: artificial intelligence, machine learning, neural networks"
+            "KEYWORDS: artificial intelligence:0.9, machine learning:0.8, neural networks:0.7"
         )
         mock_llms_instance = MagicMock()
         mock_llms_instance.get_extract_llm.return_value = mock_llm
@@ -118,9 +119,11 @@ class TestKeywordExtract(unittest.TestCase):
 
         # Verify the result
         self.assertIn("keywords", result)
-        self.assertTrue(any("artificial intelligence" in kw for kw in result["keywords"]))
-        self.assertTrue(any("machine learning" in kw for kw in result["keywords"]))
-        self.assertTrue(any("neural networks" in kw for kw in result["keywords"]))
+        # Keywords are now returned as a dict with scores
+        keywords = result["keywords"]
+        self.assertIn("artificial intelligence", keywords)
+        self.assertIn("machine learning", keywords)
+        self.assertIn("neural networks", keywords)
 
     def test_run_with_no_query_in_init_but_in_context(self):
         """Test run method with no query in init but provided in context."""
@@ -170,21 +173,20 @@ class TestKeywordExtract(unittest.TestCase):
         # Verify the assertion message
         self.assertIn("Invalid LLM Object", str(cm.exception))
 
-    @patch("hugegraph_llm.operators.common_op.nltk_helper.NLTKHelper.stopwords")
-    def test_run_with_context_parameters(self, mock_stopwords):
+    def test_run_with_context_parameters(self):
         """Test run method with parameters provided in context."""
-        # Mock stopwords to avoid file not found error
-        mock_stopwords.return_value = {"el", "la", "los", "las", "y", "en", "de"}
-
-        # Create context with language and max_keywords
-        context = {"language": "spanish", "max_keywords": 10}
+        # Create context with max_keywords
+        context = {"max_keywords": 10}
 
         # Call the method
-        self.extractor.run(context)
+        result = self.extractor.run(context)
 
-        # Verify that the parameters were updated
-        self.assertEqual(self.extractor._language, "spanish")
+        # Verify that the max_keywords parameter was updated
         self.assertEqual(self.extractor._max_keywords, 10)
+        # Language is set from llm_settings and converted in run()
+        self.assertIn(self.extractor._language, ["english", "chinese"])
+        # Verify result has keywords
+        self.assertIn("keywords", result)
 
     def test_run_with_existing_call_count(self):
         """Test run method with existing call_count in context."""
@@ -200,84 +202,73 @@ class TestKeywordExtract(unittest.TestCase):
     def test_extract_keywords_from_response_with_start_token(self):
         """Test _extract_keywords_from_response method with start token."""
         response = (
-            "Some text\nKEYWORDS: artificial intelligence, machine learning, "
-            "neural networks\nMore text"
+            "Some text\nKEYWORDS: artificial intelligence:0.9, machine learning:0.8, "
+            "neural networks:0.7\nMore text"
         )
         keywords = self.extractor._extract_keywords_from_response(
             response, lowercase=False, start_token="KEYWORDS:"
         )
 
-        # Check for keywords with or without leading space
-        self.assertTrue(any(kw.strip() == "artificial intelligence" for kw in keywords))
-        self.assertTrue(any(kw.strip() == "machine learning" for kw in keywords))
-        self.assertTrue(any(kw.strip() == "neural networks" for kw in keywords))
+        # Check for keywords - now returns dict with scores
+        self.assertIn("artificial intelligence", keywords)
+        self.assertIn("machine learning", keywords)
+        self.assertIn("neural networks", keywords)
 
     def test_extract_keywords_from_response_without_start_token(self):
         """Test _extract_keywords_from_response method without start token."""
-        response = "artificial intelligence, machine learning, neural networks"
+        response = "artificial intelligence:0.9, machine learning:0.8, neural networks:0.7"
         keywords = self.extractor._extract_keywords_from_response(response, lowercase=False)
 
-        # Check for keywords with or without leading space
-        self.assertTrue(any(kw.strip() == "artificial intelligence" for kw in keywords))
-        self.assertTrue(any(kw.strip() == "machine learning" for kw in keywords))
-        self.assertTrue(any(kw.strip() == "neural networks" for kw in keywords))
+        # Check for keywords - now returns dict with scores
+        self.assertIn("artificial intelligence", keywords)
+        self.assertIn("machine learning", keywords)
+        self.assertIn("neural networks", keywords)
 
     def test_extract_keywords_from_response_with_lowercase(self):
         """Test _extract_keywords_from_response method with lowercase=True."""
-        response = "KEYWORDS: Artificial Intelligence, Machine Learning, Neural Networks"
+        response = "KEYWORDS: Artificial Intelligence:0.9, Machine Learning:0.8, Neural Networks:0.7"
         keywords = self.extractor._extract_keywords_from_response(
             response, lowercase=True, start_token="KEYWORDS:"
         )
 
-        # Check for keywords with or without leading space
-        self.assertTrue(any(kw.strip() == "artificial intelligence" for kw in keywords))
-        self.assertTrue(any(kw.strip() == "machine learning" for kw in keywords))
-        self.assertTrue(any(kw.strip() == "neural networks" for kw in keywords))
+        # Check for keywords in lowercase - now returns dict with scores
+        self.assertIn("artificial intelligence", keywords)
+        self.assertIn("machine learning", keywords)
+        self.assertIn("neural networks", keywords)
 
     def test_extract_keywords_from_response_with_multi_word_tokens(self):
         """Test _extract_keywords_from_response method with multi-word tokens."""
-        # Patch NLTKHelper to return a fixed set of stopwords
-        with patch(
-            "hugegraph_llm.operators.llm_op.keyword_extract.NLTKHelper"
-        ) as mock_nltk_helper_class:
-            mock_nltk_helper = MagicMock()
-            mock_nltk_helper.stopwords.return_value = {"the", "and", "of", "in"}
-            mock_nltk_helper_class.return_value = mock_nltk_helper
+        response = "KEYWORDS: artificial intelligence:0.9, machine learning:0.8"
+        keywords = self.extractor._extract_keywords_from_response(
+            response, start_token="KEYWORDS:"
+        )
 
-            response = "KEYWORDS: artificial intelligence, machine learning"
-            keywords = self.extractor._extract_keywords_from_response(
-                response, start_token="KEYWORDS:"
-            )
-
-            # Should include both the full phrases and individual non-stopwords
-            self.assertTrue(any(kw.strip() == "artificial intelligence" for kw in keywords))
-            self.assertIn("artificial", keywords)
-            self.assertIn("intelligence", keywords)
-            self.assertTrue(any(kw.strip() == "machine learning" for kw in keywords))
-            self.assertIn("machine", keywords)
-            self.assertIn("learning", keywords)
+        # Should include the keywords - returns dict with scores
+        self.assertIn("artificial intelligence", keywords)
+        self.assertIn("machine learning", keywords)
+        # Verify scores
+        self.assertEqual(keywords["artificial intelligence"], 0.9)
+        self.assertEqual(keywords["machine learning"], 0.8)
 
     def test_extract_keywords_from_response_with_single_character_tokens(self):
         """Test _extract_keywords_from_response method with single character tokens."""
-        response = "KEYWORDS: a, artificial intelligence, b, machine learning"
+        response = "KEYWORDS: a:0.5, artificial intelligence:0.9, b:0.3, machine learning:0.8"
         keywords = self.extractor._extract_keywords_from_response(response, start_token="KEYWORDS:")
 
-        # Single character tokens should be filtered out
-        self.assertNotIn("a", keywords)
-        self.assertNotIn("b", keywords)
-        # Check for keywords with or without leading space
-        self.assertTrue(any(kw.strip() == "artificial intelligence" for kw in keywords))
-        self.assertTrue(any(kw.strip() == "machine learning" for kw in keywords))
+        # Single character tokens will be included if they have scores
+        # Check for multi-word keywords
+        self.assertIn("artificial intelligence", keywords)
+        self.assertIn("machine learning", keywords)
 
     def test_extract_keywords_from_response_with_apostrophes(self):
         """Test _extract_keywords_from_response method with apostrophes."""
-        response = "KEYWORDS: artificial intelligence, machine's learning, neural's networks"
+        response = "KEYWORDS: artificial intelligence:0.9, machine's learning:0.8, neural's networks:0.7"
         keywords = self.extractor._extract_keywords_from_response(response, start_token="KEYWORDS:")
 
-        # Check for keywords with or without apostrophes and leading spaces
-        self.assertTrue(any(kw.strip() == "artificial intelligence" for kw in keywords))
-        self.assertTrue(any("machine" in kw and "learning" in kw for kw in keywords))
-        self.assertTrue(any("neural" in kw and "networks" in kw for kw in keywords))
+        # Check for keywords - apostrophes are preserved
+        self.assertIn("artificial intelligence", keywords)
+        self.assertIn("machine's learning", keywords)
+        self.assertIn("neural's networks", keywords)
 
 
 if __name__ == "__main__":
