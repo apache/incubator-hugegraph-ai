@@ -30,14 +30,14 @@ class TestOllamaEmbedding(unittest.TestCase):
     @unittest.skipIf(os.getenv("SKIP_EXTERNAL_SERVICES", "false").lower() == "true",
                      "Skipping external service tests")
     def test_get_text_embedding(self):
-        ollama_embedding = OllamaEmbedding(model="quentinz/bge-large-zh-v1.5")
+        ollama_embedding = OllamaEmbedding(model_name="quentinz/bge-large-zh-v1.5")
         embedding = ollama_embedding.get_text_embedding("hello world")
         print(embedding)
 
     @unittest.skipIf(os.getenv("SKIP_EXTERNAL_SERVICES", "false").lower() == "true",
                      "Skipping external service tests")
     def test_get_cosine_similarity(self):
-        ollama_embedding = OllamaEmbedding(model="quentinz/bge-large-zh-v1.5")
+        ollama_embedding = OllamaEmbedding(model_name="quentinz/bge-large-zh-v1.5")
         embedding1 = ollama_embedding.get_text_embedding("hello world")
         embedding2 = ollama_embedding.get_text_embedding("bye world")
         similarity = OllamaEmbedding.similarity(embedding1, embedding2, SimilarityMode.DEFAULT)
