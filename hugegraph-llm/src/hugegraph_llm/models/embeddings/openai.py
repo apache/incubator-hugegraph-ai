@@ -31,11 +31,11 @@ class OpenAIEmbedding:
         api_key = api_key or ''
         self.client = OpenAI(api_key=api_key, base_url=api_base)
         self.aclient = AsyncOpenAI(api_key=api_key, base_url=api_base)
-        self.embedding_model_name = model_name
+        self.model_name = model_name
 
     def get_text_embedding(self, text: str) -> List[float]:
         """Comment"""
-        response = self.client.embeddings.create(input=text, model=self.embedding_model_name)
+        response = self.client.embeddings.create(input=text, model=self.model_name)
         return response.data[0].embedding
 
     def get_texts_embeddings(
@@ -59,10 +59,26 @@ class OpenAIEmbedding:
             A list of embedding vectors, where each vector is a list of floats.
             The order of embeddings matches the order of input texts.
         """
-        response = self.client.embeddings.create(input=texts, model=self.embedding_model_name)
+        response = self.client.embeddings.create(input=texts, model=self.model_name)
         return [data.embedding for data in response.data]
 
-    async def async_get_text_embedding(self, text: str) -> List[float]:
-        """Comment"""
-        response = await self.aclient.embeddings.create(input=text, model=self.embedding_model_name)
-        return response.data[0].embedding
+    async def async_get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
+        """Get embeddings for multiple texts in a single batch asynchronously.
+        
+        This method should efficiently process multiple texts at once by leveraging
+        the embedding model's batching capabilities, which is typically more efficient
+        than processing texts individually.
+
+        Parameters
+        ----------
+        texts : List[str]
+            A list of text strings to be embedded.
+            
+        Returns
+        -------
+        List[List[float]]
+            A list of embedding vectors, where each vector is a list of floats.
+            The order of embeddings should match the order of input texts.
+        """
+        response = await self.aclient.embeddings.create(input=texts, model=self.model_name)
+        return [data.embedding for data in response.data]
