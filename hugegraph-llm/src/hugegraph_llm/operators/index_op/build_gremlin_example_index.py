@@ -36,14 +36,18 @@ class BuildGremlinExampleIndex:
         self.filename_prefix = get_filename_prefix(llm_settings.embedding_type, getattr(embedding, "model_name", None))
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        # !: We have assumed that self.example is not empty
-        queries = [example["query"] for example in self.examples]
-        # TODO: refactor function chain async to avoid blocking
-        examples_embedding = asyncio.run(get_embeddings_parallel(self.embedding, queries))
-        embed_dim = len(examples_embedding[0])
+        embed_dim = 0
+
         if len(self.examples) > 0:
+            # Use the new async parallel embedding approach from upstream
+            queries = [example["query"] for example in self.examples]
+            # TODO: refactor function chain async to avoid blocking
+            examples_embedding = asyncio.run(get_embeddings_parallel(self.embedding, queries))
+            embed_dim = len(examples_embedding[0])
+
             vector_index = VectorIndex(embed_dim)
             vector_index.add(examples_embedding, self.examples)
             vector_index.to_index_file(self.index_dir, self.filename_prefix)
+
         context["embed_dim"] = embed_dim
         return context
