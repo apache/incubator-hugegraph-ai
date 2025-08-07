@@ -17,6 +17,7 @@
 
 import json
 import os
+from datetime import datetime
 from dataclasses import dataclass
 from typing import Any, Tuple, Dict, Union, Literal, Optional, List
 
@@ -29,6 +30,7 @@ from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.graph_rag_task import RAGPipeline
 from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
+from hugegraph_llm.utils.embedding_utils import get_index_folder_name
 from hugegraph_llm.utils.hugegraph_utils import run_gremlin_query
 from hugegraph_llm.utils.log import log
 
@@ -76,10 +78,27 @@ def store_schema(schema, question, gremlin_prompt):
 
 
 def build_example_vector_index(temp_file) -> dict:
+    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
+    index_path = os.path.join(resource_path, folder_name, "gremlin_examples")
+    if not os.path.exists(index_path):
+        os.makedirs(index_path)
     if temp_file is None:
         full_path = os.path.join(resource_path, "demo", "text2gremlin.csv")
     else:
         full_path = temp_file.name
+        name, ext = os.path.splitext(temp_file.name)
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        _, file_name = os.path.split(f"{name}_{timestamp}{ext}")
+        log.info("Copying file to: %s", file_name)
+        target_file = os.path.join(resource_path, folder_name, "gremlin_examples", file_name)
+        try:
+            import shutil
+            shutil.copy2(full_path, target_file)
+            log.info("Successfully copied file to: %s", target_file)
+        except (OSError, IOError) as e:
+            log.error("Failed to copy file: %s", e)
+            return {"error": f"Failed to copy file: {e}"}
+        full_path = target_file
     if full_path.endswith(".json"):
         with open(full_path, "r", encoding="utf-8") as f:
             examples = json.load(f)
@@ -287,9 +306,9 @@ def graph_rag_recall(
     store_schema(prompt.text2gql_graph_schema, query, gremlin_prompt)
     rag = RAGPipeline()
     rag.extract_keywords().keywords_to_vid(
-            vector_dis_threshold=vector_dis_threshold,
-            topk_per_keyword=topk_per_keyword,
-        )
+        vector_dis_threshold=vector_dis_threshold,
+        topk_per_keyword=topk_per_keyword,
+    )
 
     if not get_vertex_only:
         rag.import_schema(huge_settings.graph_name).query_graphdb(
