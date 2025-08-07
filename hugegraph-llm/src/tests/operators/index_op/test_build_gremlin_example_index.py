@@ -51,11 +51,11 @@ class TestBuildGremlinExampleIndex(unittest.TestCase):
         self.patcher2 = patch("hugegraph_llm.operators.index_op.build_gremlin_example_index.get_index_folder_name")
         self.mock_get_index_folder_name = self.patcher2.start()
         self.mock_get_index_folder_name.return_value = "hugegraph"
-        
+
         self.patcher3 = patch("hugegraph_llm.operators.index_op.build_gremlin_example_index.get_filename_prefix")
         self.mock_get_filename_prefix = self.patcher3.start()
         self.mock_get_filename_prefix.return_value = "test_prefix"
-        
+
         self.patcher4 = patch("hugegraph_llm.operators.index_op.build_gremlin_example_index.get_embeddings_parallel")
         self.mock_get_embeddings_parallel = self.patcher4.start()
         self.mock_get_embeddings_parallel.return_value = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]
@@ -128,7 +128,7 @@ class TestBuildGremlinExampleIndex(unittest.TestCase):
 
         # The run method should handle empty examples gracefully
         result = builder.run(context)
-        
+
         # Should return embed_dim as 0 for empty examples
         self.assertEqual(result["embed_dim"], 0)
         self.assertEqual(result["test"], "value")  # Original context should be preserved
