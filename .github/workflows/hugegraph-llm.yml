@@ -51,179 +51,35 @@ jobs:
         uv venv
         source .venv/bin/activate
         uv pip install pytest pytest-cov
-        # Debug: Check current directory and file existence
-        echo "=== Debug Information ==="
-        echo "Current working directory: $(pwd)"
-        echo "Listing current directory:"
-        ls -la
-        echo "Checking hugegraph-llm directory:"
-        ls -la hugegraph-llm/
-        echo "Checking dependency files:"
-        ls -la hugegraph-llm/requirements.txt hugegraph-llm/pyproject.toml 2>/dev/null || echo "Some dependency files not found"
         
-        echo "=== Installing Dependencies ==="
-        # Prioritize pyproject.toml over requirements.txt for modern dependency management
         if [ -f "hugegraph-llm/pyproject.toml" ]; then
-          echo "Installing from pyproject.toml (preferred)..."
           cd hugegraph-llm
-          echo "Installing dependencies first..."
-          # Install dependencies first, then install package in editable mode
           uv pip install -e .
-          echo "Checking if package was installed correctly..."
-          uv pip show hugegraph-llm || echo "Package not found in pip list"
-          
-          echo "Verifying critical dependencies after initial install..."
-          echo "Checking qianfan..."
-          uv pip show qianfan || {
-            echo "qianfan missing, installing explicitly with version..."
-            uv pip install 'qianfan~=0.3.18'
-          }
-          echo "Checking retry..."
-          uv pip show retry || {
-            echo "retry missing, installing explicitly..."
-            uv pip install 'retry~=0.9.2'
-          }
+          uv pip install 'qianfan~=0.3.18' 'retry~=0.9.2'
           cd ..
-          echo "✓ Installed from pyproject.toml with dependency verification"
         elif [ -f "hugegraph-llm/requirements.txt" ]; then
-          echo "Installing from requirements.txt (fallback)..."
           uv pip install -r hugegraph-llm/requirements.txt
-          echo "✓ Installed from requirements.txt"
         else
-          echo "✗ No dependency files found!"
+          echo "No dependency files found!"
           exit 1
         fi
         
-    # Verify and complete package installation
-    - name: Verify installation
+    - name: Install packages
       run: |
         source .venv/bin/activate
-        echo "=== Installing hugegraph-python-client ==="
         uv pip install -e ./hugegraph-python-client/
-        
-        echo "=== Final package verification ==="
-        # Re-install hugegraph-llm to ensure all dependencies are resolved
         uv pip install -e ./hugegraph-llm/
-        echo "Checking final package installation..."
-        uv pip show hugegraph-llm || echo "hugegraph-llm package not found in pip list"
-        
-        echo "=== Verifying critical dependencies ==="
-        echo "Checking qianfan library..."
-        uv pip show qianfan || {
-          echo "qianfan not found, installing explicitly..."
-          uv pip install qianfan~=0.3.18
-        }
-        echo "Checking retry library..."
-        uv pip show retry || {
-          echo "retry not found, installing explicitly..."
-          uv pip install retry~=0.9.2
-        }
-        
-        echo "=== Testing dependency imports ==="
-        python -c "import qianfan; print('✓ qianfan available')" || echo "✗ qianfan still not available"
-        python -c "from retry import retry; print('✓ retry available')" || echo "✗ retry not available"
-        
-        echo "Checking package location and structure..."
-        python -c "import hugegraph_llm; print(f'Package location: {hugegraph_llm.__file__}')" || echo "Could not locate package"
-        
-        echo "=== Installed packages ==="
-        uv pip list | grep hugegraph
-        
-        echo "=== Python path ==="
-        python -c "import sys; [print(p) for p in sys.path]"
-        
-        echo "=== Testing critical imports ==="
-        echo "Checking package installation..."
-        python -c "import pkg_resources; print('✓ pkg_resources working')"
-        python -c "import sys; print('Python path:', sys.path[:3])"
-        
-        echo "Testing basic hugegraph_llm import..."
-        python -c "import hugegraph_llm; print('✓ hugegraph_llm module imported successfully')" || {
-          echo "✗ hugegraph_llm import failed, trying with src path..."
-          export PYTHONPATH="$(pwd)/hugegraph-llm/src:$PYTHONPATH"
-          python -c "import hugegraph_llm; print('✓ hugegraph_llm imported with PYTHONPATH')" || echo "✗ Still failed"
-        }
-        
-        echo "Testing specific module imports step by step..."
-        echo "Testing BaseLLM..."
-        python -c "from hugegraph_llm.models.llms.base import BaseLLM; print('✓ BaseLLM imported successfully')" || echo "✗ BaseLLM import failed"
-        
-        echo "Testing external qianfan dependency..."
-        python -c "import qianfan; print('✓ qianfan library available')" || echo "✗ qianfan library not available"
-        
-        echo "Testing QianfanClient..."
-        python -c "from hugegraph_llm.models.llms.qianfan import QianfanClient; print('✓ QianfanClient imported successfully')" || {
-          echo "✗ QianfanClient import failed, checking dependencies..."
-          python -c "from hugegraph_llm.config import llm_settings; print('✓ llm_settings available')" || echo "✗ llm_settings failed"
-          python -c "from hugegraph_llm.utils.log import log; print('✓ log available')" || echo "✗ log failed"
-          python -c "from retry import retry; print('✓ retry available')" || echo "✗ retry failed"
-        }
 
     - name: Run unit tests
       run: |
         source .venv/bin/activate
         export SKIP_EXTERNAL_SERVICES=true
         cd hugegraph-llm
-        echo "=== Running unit tests ==="
-        echo "Current directory: $(pwd)"
-        
-        echo "Setting up Python environment for src layout..."
-        # Always set PYTHONPATH for src layout to ensure imports work
         export PYTHONPATH="$(pwd)/src:$PYTHONPATH"
-        echo "PYTHONPATH set to: $PYTHONPATH"
         
-        echo "Verifying package is accessible..."
-        python -c "import hugegraph_llm; print('✓ Package available')" || echo "Package not directly importable"
-        
-        echo "Testing import before pytest..."
-        echo "Step 1: Testing basic hugegraph_llm import..."
-        python -c "import hugegraph_llm; print('✓ hugegraph_llm imported')"
-        
-        echo "Step 2: Testing models module..."
-        python -c "from hugegraph_llm import models; print('✓ models imported')" || echo "✗ models import failed"
-        
-        echo "Step 3: Testing models.llms module..."
-        python -c "from hugegraph_llm.models import llms; print('✓ llms imported')" || echo "✗ llms import failed"
-        
-        echo "Step 4: Testing base LLM..."
-        python -c "from hugegraph_llm.models.llms.base import BaseLLM; print('✓ BaseLLM imported')" || echo "✗ BaseLLM import failed"
-        
-        echo "Step 5: Testing config import..."
-        python -c "from hugegraph_llm.config import llm_settings; print('✓ llm_settings imported')" || echo "✗ llm_settings import failed"
-        
-        echo "Step 6: Testing utils.log import..."
-        python -c "from hugegraph_llm.utils.log import log; print('✓ log imported')" || echo "✗ log import failed"
-        
-        echo "Step 7: Testing external dependencies..."
-        python -c "import qianfan; print('✓ qianfan library imported')" || {
-          echo "✗ qianfan library import failed, attempting to fix..."
-          uv pip install 'qianfan~=0.3.18'
-          python -c "import qianfan; print('✓ qianfan library imported after fix')" || echo "✗ qianfan still failing"
-        }
-        python -c "from retry import retry; print('✓ retry library imported')" || {
-          echo "✗ retry library import failed, attempting to fix..."
-          uv pip install 'retry~=0.9.2'
-          python -c "from retry import retry; print('✓ retry library imported after fix')" || echo "✗ retry still failing"
-        }
-        
-        echo "Step 8: Testing qianfan module import..."
-        python -c "from hugegraph_llm.models.llms.qianfan import QianfanClient; print('✓ QianfanClient imported successfully')" || {
-          echo "✗ QianfanClient import failed, checking dependencies..."
-          echo "Final dependency check:"
-          python -c "import qianfan; print('qianfan OK')" || echo "qianfan still missing"
-          python -c "from retry import retry; print('retry OK')" || echo "retry still missing"
-          python -c "from hugegraph_llm.config import llm_settings; print('config OK')" || echo "config missing"
-          python -c "from hugegraph_llm.utils.log import log; print('log OK')" || echo "log missing"
-          python -c "from hugegraph_llm.models.llms.base import BaseLLM; print('BaseLLM OK')" || echo "BaseLLM missing"
-        }
-        
-        echo "Running pytest with proper environment..."
-        # Check if QianfanClient can be imported, if not, exclude qianfan tests
         if python -c "from hugegraph_llm.models.llms.qianfan import QianfanClient" 2>/dev/null; then
-          echo "QianfanClient available, running all tests..."
           python -m pytest src/tests/config/ src/tests/document/ src/tests/middleware/ src/tests/operators/ src/tests/models/ src/tests/indices/ src/tests/test_utils.py -v --tb=short
         else
-          echo "QianfanClient not available, excluding qianfan tests..."
           python -m pytest src/tests/config/ src/tests/document/ src/tests/middleware/ src/tests/operators/ src/tests/models/ src/tests/indices/ src/tests/test_utils.py -v --tb=short --ignore=src/tests/models/llms/test_qianfan_client.py
         fi
 
@@ -232,16 +88,5 @@ jobs:
         source .venv/bin/activate
         export SKIP_EXTERNAL_SERVICES=true
         cd hugegraph-llm
-        echo "=== Running integration tests ==="
-        # Set PYTHONPATH for src layout
         export PYTHONPATH="$(pwd)/src:$PYTHONPATH"
-        echo "PYTHONPATH set to: $PYTHONPATH"
-        
-        echo "Checking QianfanClient availability for integration tests..."
-        if python -c "from hugegraph_llm.models.llms.qianfan import QianfanClient" 2>/dev/null; then
-          echo "QianfanClient available, running all integration tests..."
-        else
-          echo "QianfanClient not available, but continuing with integration tests..."
-        fi
-        
         python -m pytest src/tests/integration/test_graph_rag_pipeline.py src/tests/integration/test_kg_construction.py src/tests/integration/test_rag_pipeline.py -v --tb=short
