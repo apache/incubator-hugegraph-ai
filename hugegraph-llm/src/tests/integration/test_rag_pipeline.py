@@ -203,7 +203,7 @@ class TestRAGPipeline(unittest.TestCase):
     def test_document_loading_and_splitting(self):
         """测试文档加载和分割"""
         # 创建临时文件
-        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(mode="w+", delete=False, encoding="utf-8") as temp_file:
             temp_file.write("这是一个测试文档。\n它包含多个段落。\n\n这是第二个段落。")
             temp_file_path = temp_file.name
 
