@@ -17,6 +17,7 @@
 
 import json
 import os
+from dataclasses import dataclass
 from typing import Any, Tuple, Dict, Union, Literal, Optional, List
 
 import gradio as gr
@@ -30,6 +31,36 @@ from hugegraph_llm.operators.gremlin_generate_task import GremlinGenerator
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.utils.hugegraph_utils import run_gremlin_query
 from hugegraph_llm.utils.log import log
+
+
+@dataclass
+class GremlinResult:
+    """Standardized result class for gremlin_generate function"""
+    success: bool
+    match_result: str
+    template_gremlin: Optional[str] = None
+    raw_gremlin: Optional[str] = None
+    template_exec_result: Optional[str] = None
+    raw_exec_result: Optional[str] = None
+    error_message: Optional[str] = None
+
+    @classmethod
+    def error(cls, message: str) -> 'GremlinResult':
+        """Create an error result"""
+        return cls(success=False, match_result=message, error_message=message)
+    
+    @classmethod
+    def success_result(cls, match_result: str, template_gremlin: str, 
+                      raw_gremlin: str, template_exec: str, raw_exec: str) -> 'GremlinResult':
+        """Create a successful result"""
+        return cls(
+            success=True,
+            match_result=match_result,
+            template_gremlin=template_gremlin,
+            raw_gremlin=raw_gremlin,
+            template_exec_result=template_exec,
+            raw_exec_result=raw_exec
+        )
 
 
 def store_schema(schema, question, gremlin_prompt):
@@ -125,13 +156,13 @@ def _execute_queries(context, output_types):
 
 def gremlin_generate(
     inp, example_num, schema, gremlin_prompt, requested_outputs: Optional[List[str]] = None
-) -> Union[tuple[str, str], tuple[str, Any, Any, Any, Any]]:
+) -> GremlinResult:
     generator = GremlinGenerator(llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding())
     sm = SchemaManager(graph_name=schema)
     
     processed_schema, short_schema = _process_schema(schema, generator, sm)
     if processed_schema is None and short_schema is None:
-        return "Invalid JSON schema, please check the format carefully.", ""
+        return GremlinResult.error("Invalid JSON schema, please check the format carefully.")
     
     updated_schema = sm.simple_schema(processed_schema) if short_schema else processed_schema
     store_schema(str(updated_schema), inp, gremlin_prompt)
@@ -147,12 +178,12 @@ def gremlin_generate(
     _execute_queries(context, output_types)
     
     match_result = json.dumps(context.get("match_result", "No Results"), ensure_ascii=False, indent=2)
-    return (
-        match_result,
-        context["result"],
-        context["raw_result"],
-        context["template_exec_res"],
-        context["raw_exec_res"],
+    return GremlinResult.success_result(
+        match_result=match_result,
+        template_gremlin=context["result"],
+        raw_gremlin=context["raw_result"],
+        template_exec=context["template_exec_res"],
+        raw_exec=context["raw_exec_res"],
     )
 
 
@@ -174,6 +205,22 @@ def simple_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
             mini_schema["edgelabels"].append(new_edge)
 
     return mini_schema
+
+
+def gremlin_generate_for_ui(inp, example_num, schema, gremlin_prompt):
+    """UI wrapper for gremlin_generate that returns tuple for Gradio compatibility"""
+    result = gremlin_generate(inp, example_num, schema, gremlin_prompt)
+    
+    if not result.success:
+        return result.match_result, "", "", "", ""
+    
+    return (
+        result.match_result,
+        result.template_gremlin or "",
+        result.raw_gremlin or "",
+        result.template_exec_result or "",
+        result.raw_exec_result or ""
+    )
 
 
 def create_text2gremlin_block() -> Tuple:
@@ -216,7 +263,7 @@ def create_text2gremlin_block() -> Tuple:
             )
             btn = gr.Button("Text2Gremlin", variant="primary")
     btn.click(  # pylint: disable=no-member
-        fn=gremlin_generate,
+        fn=gremlin_generate_for_ui,
         inputs=[input_box, example_num_slider, schema_box, prompt_box],
         outputs=[match, initialized_out, raw_out, tmpl_exec_out, raw_exec_out],
     )
@@ -278,40 +325,32 @@ def gremlin_generate_selective(
     ]
     if not requested_outputs:  # None or empty list
         requested_outputs = output_keys
-    # Handle potential error case
-    original_results = gremlin_generate(
+    
+    result = gremlin_generate(
         inp, example_num, schema_input, gremlin_prompt_input, requested_outputs
     )
+    
     outputs_dict: Dict[str, Any] = {}
-    # Handle the case where gremlin_generate might return a 2-tuple error message
-    if isinstance(original_results, tuple) and len(original_results) == 2 and isinstance(original_results[0], str):
-        # This indicates an error from gremlin_generate (e.g., "Invalid JSON schema...")
-        # In this case, we can return the error message for relevant fields or a general error
-        if "match_result" in requested_outputs:  # Or any other default error field
-            outputs_dict["match_result"] = original_results[0]
-            outputs_dict["error_detail"] = original_results[1]  # usually empty string from original
-        # Or, more simply, return a dictionary indicating the error.
-        # For simplicity, if an error tuple is returned, and match_result is requested, we populate it.
-        # This part might need refinement based on how errors should be structured in the selective output.
-        # For now, if an error tuple is returned, and "match_result" is requested, it gets the error message.
-        # Other requested fields will be absent.
-        return outputs_dict  # Early exit if gremlin_generate returned an error tuple
-    # Process normal results (expecting 5-tuple)
-    if len(original_results) == 5:
-        (match_res_orig, template_gremlin_orig, raw_gremlin_orig,
-         template_exec_res_orig, raw_exec_res_orig) = original_results
-    else:
-        # Fallback for unexpected tuple length
-        return {"error": "Unexpected results format from gremlin_generate"}
+    
+    if not result.success:
+        # Handle error case
+        if "match_result" in requested_outputs:
+            outputs_dict["match_result"] = result.match_result
+        if result.error_message:
+            outputs_dict["error_detail"] = result.error_message
+        return outputs_dict
+    
+    # Handle successful case
     output_mapping = {
-        "match_result": match_res_orig,
-        "template_gremlin": template_gremlin_orig,
-        "raw_gremlin": raw_gremlin_orig,
-        "template_execution_result": template_exec_res_orig,
-        "raw_execution_result": raw_exec_res_orig
+        "match_result": result.match_result,
+        "template_gremlin": result.template_gremlin,
+        "raw_gremlin": result.raw_gremlin,
+        "template_execution_result": result.template_exec_result,
+        "raw_execution_result": result.raw_exec_result,
     }
+    
     for key in requested_outputs:
         if key in output_mapping:
             outputs_dict[key] = output_mapping[key]
-
+    
     return outputs_dict
