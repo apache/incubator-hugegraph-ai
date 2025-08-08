@@ -18,7 +18,8 @@
 import json
 import os
 from datetime import datetime
-from typing import Any, Tuple, Dict, Union, Literal
+from dataclasses import dataclass
+from typing import Any, Tuple, Dict, Literal, Optional, List
 
 import gradio as gr
 import pandas as pd
@@ -32,6 +33,36 @@ from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.utils.embedding_utils import get_index_folder_name
 from hugegraph_llm.utils.hugegraph_utils import run_gremlin_query
 from hugegraph_llm.utils.log import log
+
+
+@dataclass
+class GremlinResult:
+    """Standardized result class for gremlin_generate function"""
+    success: bool
+    match_result: str
+    template_gremlin: Optional[str] = None
+    raw_gremlin: Optional[str] = None
+    template_exec_result: Optional[str] = None
+    raw_exec_result: Optional[str] = None
+    error_message: Optional[str] = None
+
+    @classmethod
+    def error(cls, message: str) -> 'GremlinResult':
+        """Create an error result"""
+        return cls(success=False, match_result=message, error_message=message)
+
+    @classmethod
+    def success_result(cls, match_result: str, template_gremlin: str,
+                      raw_gremlin: str, template_exec: str, raw_exec: str) -> 'GremlinResult':
+        """Create a successful result"""
+        return cls(
+            success=True,
+            match_result=match_result,
+            template_gremlin=template_gremlin,
+            raw_gremlin=raw_gremlin,
+            template_exec_result=template_exec,
+            raw_exec_result=raw_exec
+        )
 
 
 def store_schema(schema, question, gremlin_prompt):
@@ -83,52 +114,95 @@ def build_example_vector_index(temp_file) -> dict:
     return builder.example_index_build(examples).run()
 
 
+def _process_schema(schema, generator, sm):
+    """Process and validate schema input"""
+    short_schema = False
+    if not schema:
+        return None, short_schema
+
+    schema = schema.strip()
+    if not schema.startswith("{"):
+        short_schema = True
+        log.info("Try to get schema from graph '%s'", schema)
+        generator.import_schema(from_hugegraph=schema)
+        schema = sm.schema.getSchema()
+    else:
+        try:
+            schema = json.loads(schema)
+            generator.import_schema(from_user_defined=schema)
+        except json.JSONDecodeError as e:
+            log.error("Invalid JSON schema provided: %s", e)
+            return None, None  # Error case
+    return schema, short_schema
+
+
+def _configure_output_types(requested_outputs):
+    """Configure which outputs are requested"""
+    output_types = {
+        "match_result": True,
+        "template_gremlin": True,
+        "raw_gremlin": True,
+        "template_execution_result": True,
+        "raw_execution_result": True
+    }
+    if requested_outputs:
+        for key in output_types:
+            output_types[key] = False
+        for key in requested_outputs:
+            if key in output_types:
+                output_types[key] = True
+    return output_types
+
+
+def _execute_queries(context, output_types):
+    """Execute gremlin queries based on output requirements"""
+    if output_types["template_execution_result"]:
+        try:
+            context["template_exec_res"] = run_gremlin_query(query=context["result"])
+        except Exception as e:  # pylint: disable=broad-except
+            context["template_exec_res"] = f"{e}"
+    else:
+        context["template_exec_res"] = ""
+
+    if output_types["raw_execution_result"]:
+        try:
+            context["raw_exec_res"] = run_gremlin_query(query=context["raw_result"])
+        except Exception as e:  # pylint: disable=broad-except
+            context["raw_exec_res"] = f"{e}"
+    else:
+        context["raw_exec_res"] = ""
+
+
 def gremlin_generate(
-    inp, example_num, schema, gremlin_prompt
-) -> Union[tuple[str, str], tuple[str, Any, Any, Any, Any]]:
+    inp, example_num, schema, gremlin_prompt, requested_outputs: Optional[List[str]] = None
+) -> GremlinResult:
     generator = GremlinGenerator(llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding())
     sm = SchemaManager(graph_name=schema)
-    short_schema = False
 
-    if schema:
-        schema = schema.strip()
-        if not schema.startswith("{"):
-            short_schema = True
-            log.info("Try to get schema from graph '%s'", schema)
-            generator.import_schema(from_hugegraph=schema)
-            # FIXME: update the logic here
-            schema = sm.schema.getSchema()
-        else:
-            try:
-                schema = json.loads(schema)
-                generator.import_schema(from_user_defined=schema)
-            except json.JSONDecodeError as e:
-                log.error("Invalid JSON schema provided: %s", e)
-                return "Invalid JSON schema, please check the format carefully.", ""
-    # FIXME: schema is not used in gremlin_generate() step, no context for it (enhance the logic here)
-    updated_schema = sm.simple_schema(schema) if short_schema else schema
+    processed_schema, short_schema = _process_schema(schema, generator, sm)
+    if processed_schema is None and short_schema is None:
+        return GremlinResult.error("Invalid JSON schema, please check the format carefully.")
+
+    updated_schema = sm.simple_schema(processed_schema) if short_schema else processed_schema
     store_schema(str(updated_schema), inp, gremlin_prompt)
+
+    output_types = _configure_output_types(requested_outputs)
+
     context = (
         generator.example_index_query(example_num)
         .gremlin_generate_synthesize(updated_schema, gremlin_prompt)
         .run(query=inp)
     )
-    try:
-        context["template_exec_res"] = run_gremlin_query(query=context["result"])
-    except Exception as e:  # pylint: disable=broad-except
-        context["template_exec_res"] = f"{e}"
-    try:
-        context["raw_exec_res"] = run_gremlin_query(query=context["raw_result"])
-    except Exception as e:  # pylint: disable=broad-except
-        context["raw_exec_res"] = f"{e}"
+
+    _execute_queries(context, output_types)
 
     match_result = json.dumps(context.get("match_result", "No Results"), ensure_ascii=False, indent=2)
-    return (
-        match_result,
-        context["result"],
-        context["raw_result"],
-        context["template_exec_res"],
-        context["raw_exec_res"],
+    return GremlinResult.success_result(
+        match_result=match_result,
+        template_gremlin=context["result"],
+        raw_gremlin=context["raw_result"],
+        template_exec=context["template_exec_res"],
+        raw_exec=context["raw_exec_res"],
     )
 
 
@@ -152,12 +226,28 @@ def simple_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
     return mini_schema
 
 
+def gremlin_generate_for_ui(inp, example_num, schema, gremlin_prompt):
+    """UI wrapper for gremlin_generate that returns tuple for Gradio compatibility"""
+    result = gremlin_generate(inp, example_num, schema, gremlin_prompt)
+
+    if not result.success:
+        return result.match_result, "", "", "", ""
+
+    return (
+        result.match_result,
+        result.template_gremlin or "",
+        result.raw_gremlin or "",
+        result.template_exec_result or "",
+        result.raw_exec_result or ""
+    )
+
+
 def create_text2gremlin_block() -> Tuple:
     gr.Markdown(
         """## Build Vector Template Index (Optional)
-    > Uploaded CSV file should be in `query,gremlin` format below:    
-    > e.g. `who is peter?`,`g.V().has('name', 'peter')`    
-    > JSON file should be in format below:  
+    > Uploaded CSV file should be in `query,gremlin` format below:
+    > e.g. `who is peter?`,`g.V().has('name', 'peter')`
+    > JSON file should be in format below:
     > e.g. `[{"query":"who is peter", "gremlin":"g.V().has('name', 'peter')"}]`
     """
     )
@@ -192,7 +282,7 @@ def create_text2gremlin_block() -> Tuple:
             )
             btn = gr.Button("Text2Gremlin", variant="primary")
     btn.click(  # pylint: disable=no-member
-        fn=gremlin_generate,
+        fn=gremlin_generate_for_ui,
         inputs=[input_box, example_num_slider, schema_box, prompt_box],
         outputs=[match, initialized_out, raw_out, tmpl_exec_out, raw_exec_out],
     )
@@ -233,3 +323,53 @@ def graph_rag_recall(
         )
     context = rag.run(verbose=True, query=query, graph_search=True)
     return context
+
+def gremlin_generate_selective(
+    inp: str,
+    example_num: int,
+    schema_input: str,
+    gremlin_prompt_input: str,
+    requested_outputs: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """
+    Wraps the gremlin_generate function to return a dictionary of outputs
+    based on the requested_outputs list of strings.
+    """
+    output_keys = [
+        "match_result",
+        "template_gremlin",
+        "raw_gremlin",
+        "template_execution_result",
+        "raw_execution_result",
+    ]
+    if not requested_outputs:  # None or empty list
+        requested_outputs = output_keys
+
+    result = gremlin_generate(
+        inp, example_num, schema_input, gremlin_prompt_input, requested_outputs
+    )
+
+    outputs_dict: Dict[str, Any] = {}
+
+    if not result.success:
+        # Handle error case
+        if "match_result" in requested_outputs:
+            outputs_dict["match_result"] = result.match_result
+        if result.error_message:
+            outputs_dict["error_detail"] = result.error_message
+        return outputs_dict
+
+    # Handle successful case
+    output_mapping = {
+        "match_result": result.match_result,
+        "template_gremlin": result.template_gremlin,
+        "raw_gremlin": result.raw_gremlin,
+        "template_execution_result": result.template_exec_result,
+        "raw_execution_result": result.raw_exec_result,
+    }
+
+    for key in requested_outputs:
+        if key in output_mapping:
+            outputs_dict[key] = output_mapping[key]
+
+    return outputs_dict
