@@ -25,7 +25,7 @@ from hugegraph_llm.config import prompt
 
 class GraphConfigRequest(BaseModel):
     url: str = Query('127.0.0.1:8080', description="hugegraph client url.")
-    name: str = Query('hugegraph', description="hugegraph client name.")
+    graph: str = Query('hugegraph', description="hugegraph client name.")
     user: str = Query('', description="hugegraph client user.")
     pwd: str = Query('', description="hugegraph client pwd.")
     gs: str = None
@@ -142,11 +142,11 @@ class GremlinGenerateRequest(BaseModel):
         """
     )
 
-    @classmethod
     @field_validator('gremlin_prompt')
+    @classmethod
     def validate_prompt_placeholders(cls, v):
         if v is not None:
-            required_placeholders = ['{query}', '{schema}', '{example}', '{vertices}', '{properties}']
+            required_placeholders = ['{query}', '{schema}', '{example}', '{vertices}']
             missing = [p for p in required_placeholders if p not in v]
             if missing:
                 raise ValueError(f"Prompt template is missing required placeholders: {', '.join(missing)}")

@@ -81,7 +81,7 @@ def rag_http_api(
     def set_graph_config(req):
         if req.client_config:
             huge_settings.graph_url = req.client_config.url
-            huge_settings.graph_name = req.client_config.name
+            huge_settings.graph_name = req.client_config.graph
             huge_settings.graph_user = req.client_config.user
             huge_settings.graph_pwd = req.client_config.pwd
             huge_settings.graph_space = req.client_config.gs
