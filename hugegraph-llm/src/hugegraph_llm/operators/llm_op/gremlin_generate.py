@@ -62,7 +62,12 @@ class GremlinGenerateSynthesize:
         if not vertices:
             return None
         return "\n".join([f"- '{vid}'" for vid in vertices])
-
+        
+    def _format_properties(self, properties: Optional[List[tuple]]) -> Optional[str]:
+        if not properties:
+            return None
+        return str(properties)
+        
     async def async_generate(self, context: Dict[str, Any]):
         async_tasks = {}
         query = context.get("query")
@@ -72,6 +77,7 @@ class GremlinGenerateSynthesize:
             schema=self.schema,
             example=self._format_examples(examples=raw_example),
             vertices=self._format_vertices(vertices=self.vertices),
+            properties=self._format_properties(properties=None),
         )
         async_tasks["raw_answer"] = asyncio.create_task(self.llm.agenerate(prompt=raw_prompt))
 
@@ -81,6 +87,7 @@ class GremlinGenerateSynthesize:
             schema=self.schema,
             example=self._format_examples(examples=examples),
             vertices=self._format_vertices(vertices=self.vertices),
+            properties=self._format_properties(properties=None),
         )
         async_tasks["initialized_answer"] = asyncio.create_task(self.llm.agenerate(prompt=init_prompt))
 
@@ -102,6 +109,7 @@ class GremlinGenerateSynthesize:
             schema=self.schema,
             example=self._format_examples(examples=raw_example),
             vertices=self._format_vertices(vertices=self.vertices),
+            properties=self._format_properties(properties=None),
         )
         raw_response = self.llm.generate(prompt=raw_prompt)
 
@@ -111,6 +119,7 @@ class GremlinGenerateSynthesize:
             schema=self.schema,
             example=self._format_examples(examples=examples),
             vertices=self._format_vertices(vertices=self.vertices),
+            properties=self._format_properties(properties=None),
         )
         initialized_response = self.llm.generate(prompt=init_prompt)
 
