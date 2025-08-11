@@ -220,6 +220,8 @@ Assess the user's query to determine its complexity based on the following crite
 - You may use the vertex ID directly if it’s provided in the context.
 - If the provided question contains entity names that are very similar to the Vertices IDs, then in the generated Gremlin statement, replace the approximate entities from the original question.
 For example, if the question includes the name ABC, and the provided VerticesIDs do not contain ABC but only abC, then use abC instead of ABC from the original question when generating the gremlin.
+- Similarly, if the user's query refers to specific property names or their values, and these are present or align with the 'Referenced Extracted Properties', actively utilize these properties in your Gremlin query.
+For instance, you can use them for filtering vertices or edges (e.g., using `has('propertyName', 'propertyValue')`), or for projecting specific values.
 
 The output format must be as follows:
 ```gremlin
@@ -232,6 +234,9 @@ Refer Gremlin Example Pair:
 
 Referenced Extracted Vertex IDs Related to the Query:
 {vertices}
+
+Referenced Extracted Properties Related to the Query (Format: [('property_name', 'property_value'), ...]):
+{properties}
 
 Generate Gremlin from the Following User Query:
 {query}
@@ -334,6 +339,7 @@ and experiences.
 - 如果在上下文中提供了顶点 ID，可以直接使用。
 - 如果提供的问题包含与顶点 ID 非常相似的实体名称，则在生成的 Gremlin 语句中替换原始问题中的近似实体。
 例如，如果问题包含名称 ABC，而提供的顶点 ID 不包含 ABC 而只有 abC，则在生成 gremlin 时使用 abC 而不是原始问题中的 ABC。
+- 同样地，如果用户查询中提及特定的属性名称或属性值，并且这些属性在"查询相关的已提取属性"中存在或匹配，请在生成的 Gremlin 查询中充分利用这些属性信息。比如可以用它们进行顶点或边的过滤（如使用 `has('属性名', '属性值')`），或者用于特定值的投影查询。
 
 输出格式必须如下：
 ```gremlin
@@ -346,6 +352,9 @@ g.V().limit(10)
 
 与查询相关的已提取顶点 ID：
 {vertices}
+
+查询相关的已提取属性（格式：[('属性名', '属性值'), ...]）：
+{properties}
 
 从以下用户查询生成 Gremlin：
 {query}

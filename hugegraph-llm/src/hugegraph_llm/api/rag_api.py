@@ -26,6 +26,7 @@ from hugegraph_llm.api.models.rag_requests import (
     LLMConfigRequest,
     RerankerConfigRequest,
     GraphRAGRequest,
+    GremlinGenerateRequest,
 )
 from hugegraph_llm.config import huge_settings
 from hugegraph_llm.api.models.rag_response import RAGResponse
@@ -41,6 +42,7 @@ def rag_http_api(
     apply_llm_conf,
     apply_embedding_conf,
     apply_reranker_conf,
+    gremlin_generate_selective_func,
 ):
     @router.post("/rag", status_code=status.HTTP_200_OK)
     def rag_answer_api(req: RAGRequest):
@@ -79,7 +81,7 @@ def rag_http_api(
     def set_graph_config(req):
         if req.client_config:
             huge_settings.graph_url = req.client_config.url
-            huge_settings.graph_name = req.client_config.name
+            huge_settings.graph_name = req.client_config.graph
             huge_settings.graph_user = req.client_config.user
             huge_settings.graph_pwd = req.client_config.pwd
             huge_settings.graph_space = req.client_config.gs
@@ -173,3 +175,29 @@ def rag_http_api(
         else:
             res = status.HTTP_501_NOT_IMPLEMENTED
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
+
+    @router.post("/text2gremlin", status_code=status.HTTP_200_OK)
+    def text2gremlin_api(req: GremlinGenerateRequest):
+        try:
+            set_graph_config(req)
+
+            output_types_str_list = None
+            if req.output_types:
+                output_types_str_list = [ot.value for ot in req.output_types]
+
+            response_dict = gremlin_generate_selective_func(
+                inp=req.query,
+                example_num=req.example_num,
+                schema_input=huge_settings.graph_name,
+                gremlin_prompt_input=req.gremlin_prompt,
+                requested_outputs=output_types_str_list,
+            )
+            return response_dict
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            log.error("Error in text2gremlin_api: %s", e)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected error occurred during Gremlin generation.",
+            ) from e
