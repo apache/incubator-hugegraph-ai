@@ -54,7 +54,7 @@ class KeywordExtract:
         max_keywords: int = 5,
         extract_template: Optional[str] = None,
         language: str = "english",
-        extract_method: str = "TextRank",  # 新增关键词提取方法设置
+        extract_method: str = "Hybrid",  # "Hybrid", "LLM", "TextRank"
         textrank_kwargs: Optional[TextRankConfig] = None,  # TextRank 参数
     ):
         self._llm = llm
@@ -62,8 +62,8 @@ class KeywordExtract:
         self._language = language.lower()
         self._max_keywords = max_keywords
         self._extract_template = extract_template or KEYWORDS_EXTRACT_TPL
-        self._extract_method = extract_method  # 新增关键词提取方法设置
-        self._textrank_kwargs = asdict(textrank_kwargs)
+        self._extract_method = extract_method
+        self._textrank_kwargs = asdict(textrank_kwargs) if textrank_kwargs else {}
         self._textrank_model = MultiLingualTextRank(**self._textrank_kwargs)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -86,7 +86,11 @@ class KeywordExtract:
         elif self._extract_method == "LLM":
             # 使用 LLM 提取关键词
             keywords = self._extract_with_llm()
-        # TODO add hybrid keyword extract method
+        elif self._extract_method == "Hybrid":
+            keywords = self._extract_with_hybrid()
+        else:
+            raise ValueError(f"Invalid extract_method: {self._extract_method}")
+
         keywords = {k.replace("'", "") for k in keywords}
         context["keywords"] = list(keywords)[:self._max_keywords]
         log.info("User Query: %s\nKeywords: %s", self._query, context["keywords"])
@@ -123,6 +127,45 @@ class KeywordExtract:
         log.debug("TextRank Keyword extraction time: %.2fs",
                   time.perf_counter() - start_time)
         return set(filter(None, keywords))
+
+    def _extract_with_hybrid(self) -> Set[str]:
+        """
+        Hybrid mode with a "Full-Match Intersection" strategy.
+        The priority order is:
+        1. Intersection keywords (LLM phrases fully matched by TextRank parts).
+        2. Remaining LLM keywords.
+        3. Remaining TextRank keywords.
+        Returns a list to preserve the priority order.
+        """
+        llm_keywords = self._extract_with_llm()
+        textrank_keywords = self._extract_with_textrank()
+        log.debug("LLM keywords: %s, TextRank keywords: %s", llm_keywords, textrank_keywords)
+
+        intersection_keywords = set()
+        used_textrank_for_intersection = set()
+
+        for lk in llm_keywords:
+            # Split multi-word keywords by space or other delimiters
+            parts = re.split(r'\s+', lk)
+            if len(parts) > 1:
+                # Multi-word phrase: check if all parts are in TextRank
+                if all(part.lower() in textrank_keywords for part in parts):
+                    intersection_keywords.add(lk)
+                    used_textrank_for_intersection.update(part.lower() for part in parts)
+            else:
+                # Single-word keyword: check for direct existence
+                if lk in textrank_keywords:
+                    intersection_keywords.add(lk)
+                    used_textrank_for_intersection.add(lk)
+
+        remaining_llm = llm_keywords - intersection_keywords
+        remaining_textrank = textrank_keywords - used_textrank_for_intersection
+
+        ordered_keywords = list(intersection_keywords) + list(remaining_llm) + list(remaining_textrank)
+        print(ordered_keywords)
+        ordered_keywords = ordered_keywords[: self._max_keywords]
+        print(ordered_keywords)
+        return set(ordered_keywords)
 
     def _extract_keywords_from_response(
         self,
