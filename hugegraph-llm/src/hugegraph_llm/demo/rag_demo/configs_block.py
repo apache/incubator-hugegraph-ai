@@ -21,6 +21,7 @@ from functools import partial
 from typing import Optional
 
 import gradio as gr
+import urllib.parse as _urlparse
 import requests
 from dotenv import dotenv_values
 from requests.auth import HTTPBasicAuth
@@ -31,6 +32,15 @@ from hugegraph_llm.models.llms.litellm import LiteLLMClient
 from hugegraph_llm.utils.log import log
 
 current_llm = "chat"
+
+
+def _validate_url_safe(url: str) -> None:
+    """Basic SSRF guard: allow only http/https and forbid unexpected schemes."""
+    parsed = _urlparse.urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        raise gr.Error("Only http/https URLs are allowed for connection test.")
+    if not parsed.netloc:
+        raise gr.Error("URL missing hostname.")
 
 
 def test_litellm_embedding(api_key, api_base, model_name, model_dim) -> int:
@@ -71,6 +81,7 @@ def test_litellm_chat(api_key, api_base, model_name, max_tokens: int) -> int:
 def test_api_connection(url, method="GET", headers=None, params=None, body=None, auth=None, origin_call=None) -> int:
     # TODO: use fastapi.request / starlette instead?
     log.debug("Request URL: %s", url)
+    _validate_url_safe(url)
     try:
         if method.upper() == "GET":
             resp = requests.get(url, headers=headers, params=params, timeout=(1.0, 5.0), auth=auth)
