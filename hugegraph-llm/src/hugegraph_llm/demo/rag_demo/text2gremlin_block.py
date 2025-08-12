@@ -60,12 +60,16 @@ class GremlinResult:
 
     @classmethod
     def success_result(
+<<<<<<< HEAD
         cls,
         match_result: str,
         template_gremlin: str,
         raw_gremlin: str,
         template_exec: str,
         raw_exec: str,
+=======
+        cls, match_result: str, template_gremlin: str, raw_gremlin: str, template_exec: str, raw_exec: str
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
     ) -> "GremlinResult":
         """Create a successful result"""
         return cls(
@@ -101,8 +105,12 @@ def build_example_vector_index(temp_file) -> dict:
         os.makedirs(index_path)
 =======
     vector_index = get_vector_index_class(index_settings.now_vector_index)
+<<<<<<< HEAD
     assert vector_index, 'vector db name is error'
 >>>>>>> 38dce0b (feat(llm): vector db finished)
+=======
+    assert vector_index, "vector db name is error"
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
     if temp_file is None:
         full_path = os.path.join(resource_path, "demo", "text2gremlin.csv")
     else:
@@ -115,6 +123,10 @@ def build_example_vector_index(temp_file) -> dict:
         try:
             import shutil
 
+<<<<<<< HEAD
+=======
+            os.makedirs(os.path.dirname(target_file), exist_ok=True)
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
             shutil.copy2(full_path, target_file)
             log.info("Successfully copied file to: %s", target_file)
         except (OSError, IOError) as e:
@@ -296,11 +308,19 @@ def gremlin_generate_for_ui(inp, example_num, schema, gremlin_prompt):
     )
 
     return (
+<<<<<<< HEAD
         match_result_str,
         res.get("template_gremlin", "") or "",
         res.get("raw_gremlin", "") or "",
         res.get("template_execution_result", "") or "",
         res.get("raw_execution_result", "") or "",
+=======
+        result.match_result,
+        result.template_gremlin or "",
+        result.raw_gremlin or "",
+        result.template_exec_result or "",
+        result.raw_exec_result or "",
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
     )
 
 
@@ -435,9 +455,7 @@ def gremlin_generate_selective(
     if not requested_outputs:  # None or empty list
         requested_outputs = output_keys
 
-    result = gremlin_generate(
-        inp, example_num, schema_input, gremlin_prompt_input, requested_outputs
-    )
+    result = gremlin_generate(inp, example_num, schema_input, gremlin_prompt_input, requested_outputs)
 
     outputs_dict: Dict[str, Any] = {}
 

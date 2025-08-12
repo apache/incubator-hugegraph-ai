@@ -78,7 +78,7 @@ def get_vector_index_info():
     )
 
     return json.dumps(
-        {**vector_index_entity.get_vector_index_info(), 'now_vector_index': index_settings.now_vector_index},
+        {**vector_index_entity.get_vector_index_info(), "now_vector_index": index_settings.now_vector_index},
         ensure_ascii=False,
         indent=2,
     )

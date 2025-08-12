@@ -179,7 +179,7 @@ class QdrantVectorIndex(VectorStoreBase):
 
     @staticmethod
     def clean(*name: str):
-        name_str = '_'.join(name)
+        name_str = "_".join(name)
         client = QdrantClient(
             host=index_settings.qdrant_host, port=index_settings.qdrant_port, api_key=index_settings.qdrant_api_key
         )
@@ -192,7 +192,7 @@ class QdrantVectorIndex(VectorStoreBase):
     @staticmethod
     def from_name(embed_dim: int, *name: str) -> "QdrantVectorIndex":
         assert index_settings.qdrant_host, "Qdrant host is not configured"
-        name_str = '_'.join(name)
+        name_str = "_".join(name)
         return QdrantVectorIndex(
             name=name_str,
             host=index_settings.qdrant_host,
@@ -203,7 +203,7 @@ class QdrantVectorIndex(VectorStoreBase):
 
     @staticmethod
     def exist(*name: str) -> bool:
-        name_str = '_'.join(name)
+        name_str = "_".join(name)
         client = QdrantClient(
             host=index_settings.qdrant_host, port=index_settings.qdrant_port, api_key=index_settings.qdrant_api_key
         )

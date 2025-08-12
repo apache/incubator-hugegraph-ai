@@ -31,9 +31,7 @@ class AuthManager(HugeParamsBase):
         return self._invoke_request(params=params)
 
     @router.http("POST", "auth/users")
-    def create_user(
-        self, user_name, user_password, user_phone=None, user_email=None
-    ) -> Optional[Dict]:
+    def create_user(self, user_name, user_password, user_phone=None, user_email=None) -> Optional[Dict]:
         return self._invoke_request(
             data=json.dumps(
                 {
@@ -118,9 +116,7 @@ class AuthManager(HugeParamsBase):
         return self._invoke_request()
 
     @router.http("PUT", "auth/accesses/{access_id}")
-    def modify_accesses(
-        self, access_id, access_description  # pylint: disable=unused-argument
-    ) -> Optional[Dict]:
+    def modify_accesses(self, access_id, access_description) -> Optional[Dict]:  # pylint: disable=unused-argument
         # The permission of access can\'t be updated
         data = {"access_description": access_description}
         return self._invoke_request(data=json.dumps(data))
@@ -134,9 +130,7 @@ class AuthManager(HugeParamsBase):
         return self._invoke_request()
 
     @router.http("POST", "auth/targets")
-    def create_target(
-        self, target_name, target_graph, target_url, target_resources
-    ) -> Optional[Dict]:
+    def create_target(self, target_name, target_graph, target_url, target_resources) -> Optional[Dict]:
         return self._invoke_request(
             data=json.dumps(
                 {
@@ -173,9 +167,7 @@ class AuthManager(HugeParamsBase):
         )
 
     @router.http("GET", "auth/targets/{target_id}")
-    def get_target(
-        self, target_id, response=None  # pylint: disable=unused-argument
-    ) -> Optional[Dict]:
+    def get_target(self, target_id, response=None) -> Optional[Dict]:  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("GET", "auth/targets")
@@ -192,9 +184,7 @@ class AuthManager(HugeParamsBase):
         return self._invoke_request()
 
     @router.http("PUT", "auth/belongs/{belong_id}")
-    def update_belong(
-        self, belong_id, description  # pylint: disable=unused-argument
-    ) -> Optional[Dict]:
+    def update_belong(self, belong_id, description) -> Optional[Dict]:  # pylint: disable=unused-argument
         data = {"belong_description": description}
         return self._invoke_request(data=json.dumps(data))
 

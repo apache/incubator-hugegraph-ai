@@ -20,10 +20,7 @@ import json
 import re
 
 REGEX = (
-    r"Nodes:\s+(.*?)\s?\s?"
-    r"Relationships:\s?\s?"
-    r"NodesSchemas:\s+(.*?)\s?\s?"
-    r"RelationshipsSchemas:\s?\s?(.*)"
+    r"Nodes:\s+(.*?)\s?\s?" r"Relationships:\s?\s?" r"NodesSchemas:\s+(.*?)\s?\s?" r"RelationshipsSchemas:\s?\s?(.*)"
 )
 INTERNAL_REGEX = r"\[(.*?)\]"
 JSON_REGEX = r"\{.*\}"

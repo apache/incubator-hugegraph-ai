@@ -224,7 +224,7 @@ class MilvusVectorIndex(VectorStoreBase):
 
     @staticmethod
     def clean(*name: str):
-        name_str = '_'.join(name)
+        name_str = "_".join(name)
         connections.connect(
             host=index_settings.milvus_host,
             port=index_settings.milvus_port,
@@ -236,7 +236,7 @@ class MilvusVectorIndex(VectorStoreBase):
 
     @staticmethod
     def from_name(embed_dim: int, *name: str) -> "MilvusVectorIndex":
-        name_str = '_'.join(name)
+        name_str = "_".join(name)
         assert index_settings.milvus_host, "Qdrant host is not configured"
         return MilvusVectorIndex(
             name_str,
@@ -249,7 +249,7 @@ class MilvusVectorIndex(VectorStoreBase):
 
     @staticmethod
     def exist(*name: str) -> bool:
-        name_str = '_'.join(name)
+        name_str = "_".join(name)
         connections.connect(
             host=index_settings.milvus_host,
             port=index_settings.milvus_port,

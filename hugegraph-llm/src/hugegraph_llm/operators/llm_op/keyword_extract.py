@@ -64,9 +64,7 @@ class KeywordExtract:
         end_time = time.perf_counter()
         log.debug("Keyword extraction time: %.2f seconds", end_time - start_time)
 
-        keywords = self._extract_keywords_from_response(
-            response=response, lowercase=False, start_token="KEYWORDS:"
-        )
+        keywords = self._extract_keywords_from_response(response=response, lowercase=False, start_token="KEYWORDS:")
         keywords = {k.replace("'", "") for k in keywords}
         context["keywords"] = list(keywords)
         log.info("User Query: %s\nKeywords: %s", self._query, context["keywords"])
@@ -87,11 +85,15 @@ class KeywordExtract:
 
         for match in matches:
             match = match[len(start_token) :].strip()
+<<<<<<< HEAD
             keywords.extend(
                 k.lower() if lowercase else k
                 for k in re.split(r"[,，]+", match)
                 if len(k.strip()) > 1
             )
+=======
+            keywords.extend(k.lower() if lowercase else k for k in re.split(r"[,，]+", match) if len(k.strip()) > 1)
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
 
         # if the keyword consists of multiple words, split into sub-words (removing stopwords)
         results = set(keywords)

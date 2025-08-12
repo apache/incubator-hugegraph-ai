@@ -62,9 +62,7 @@ class AnswerSynthesize:
         context_head_str, context_tail_str = self.init_llm(context)
 
         if self._context_body is not None:
-            context_str = (
-                f"{context_head_str}\n" f"{self._context_body}\n" f"{context_tail_str}".strip("\n")
-            )
+            context_str = f"{context_head_str}\n" f"{self._context_body}\n" f"{context_tail_str}".strip("\n")
 
             final_prompt = self._prompt_template.format(
                 context_str=context_str, query_str=self._question
@@ -74,13 +72,7 @@ class AnswerSynthesize:
 
         graph_result_context, vector_result_context = self.handle_vector_graph(context)
         context = asyncio.run(
-            self.async_generate(
-                context,
-                context_head_str,
-                context_tail_str,
-                vector_result_context,
-                graph_result_context,
-            )
+            self.async_generate(context, context_head_str, context_tail_str, vector_result_context, graph_result_context)
         )
         return context
 
@@ -119,9 +111,7 @@ class AnswerSynthesize:
         context_head_str, context_tail_str = self.init_llm(context)
 
         if self._context_body is not None:
-            context_str = (
-                f"{context_head_str}\n" f"{self._context_body}\n" f"{context_tail_str}".strip("\n")
-            )
+            context_str = f"{context_head_str}\n" f"{self._context_body}\n" f"{context_tail_str}".strip("\n")
 
             final_prompt = self._prompt_template.format(
                 context_str=context_str, query_str=self._question
@@ -151,11 +141,7 @@ class AnswerSynthesize:
             final_prompt = self._question
             async_tasks["raw_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
         if self._vector_only_answer:
-            context_str = (
-                f"{context_head_str}\n"
-                f"{vector_result_context}\n"
-                f"{context_tail_str}".strip("\n")
-            )
+            context_str = f"{context_head_str}\n" f"{vector_result_context}\n" f"{context_tail_str}".strip("\n")
 
             final_prompt = self._prompt_template.format(
                 context_str=context_str, query_str=self._question
@@ -164,11 +150,7 @@ class AnswerSynthesize:
                 self._llm.agenerate(prompt=final_prompt)
             )
         if self._graph_only_answer:
-            context_str = (
-                f"{context_head_str}\n"
-                f"{graph_result_context}\n"
-                f"{context_tail_str}".strip("\n")
-            )
+            context_str = f"{context_head_str}\n" f"{graph_result_context}\n" f"{context_tail_str}".strip("\n")
 
             final_prompt = self._prompt_template.format(
                 context_str=context_str, query_str=self._question
@@ -180,16 +162,10 @@ class AnswerSynthesize:
             context_body_str = f"{vector_result_context}\n{graph_result_context}"
             if context.get("graph_ratio", 0.5) < 0.5:
                 context_body_str = f"{graph_result_context}\n{vector_result_context}"
-            context_str = (
-                f"{context_head_str}\n" f"{context_body_str}\n" f"{context_tail_str}".strip("\n")
-            )
+            context_str = f"{context_head_str}\n" f"{context_body_str}\n" f"{context_tail_str}".strip("\n")
 
-            final_prompt = self._prompt_template.format(
-                context_str=context_str, query_str=self._question
-            )
-            async_tasks["graph_vector_task"] = asyncio.create_task(
-                self._llm.agenerate(prompt=final_prompt)
-            )
+            final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
+            async_tasks["graph_vector_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
 
         async_tasks_mapping = {
             "raw_task": "raw_answer",
@@ -204,14 +180,7 @@ class AnswerSynthesize:
                 context[context_key] = response
                 log.debug("Query Answer: %s", response)
 
-        ops = sum(
-            [
-                self._raw_answer,
-                self._vector_only_answer,
-                self._graph_only_answer,
-                self._graph_vector_answer,
-            ]
-        )
+        ops = sum([self._raw_answer, self._vector_only_answer, self._graph_only_answer, self._graph_vector_answer])
         context["call_count"] = context.get("call_count", 0) + ops
         return context
 
@@ -235,11 +204,7 @@ class AnswerSynthesize:
             )
             auto_id += 1
         if self._vector_only_answer:
-            context_str = (
-                f"{context_head_str}\n"
-                f"{vector_result_context}\n"
-                f"{context_tail_str}".strip("\n")
-            )
+            context_str = f"{context_head_str}\n" f"{vector_result_context}\n" f"{context_tail_str}".strip("\n")
 
             final_prompt = self._prompt_template.format(
                 context_str=context_str, query_str=self._question
@@ -251,11 +216,7 @@ class AnswerSynthesize:
             )
             auto_id += 1
         if self._graph_only_answer:
-            context_str = (
-                f"{context_head_str}\n"
-                f"{graph_result_context}\n"
-                f"{context_tail_str}".strip("\n")
-            )
+            context_str = f"{context_head_str}\n" f"{graph_result_context}\n" f"{context_tail_str}".strip("\n")
 
             final_prompt = self._prompt_template.format(
                 context_str=context_str, query_str=self._question
@@ -270,9 +231,7 @@ class AnswerSynthesize:
             context_body_str = f"{vector_result_context}\n{graph_result_context}"
             if context.get("graph_ratio", 0.5) < 0.5:
                 context_body_str = f"{graph_result_context}\n{vector_result_context}"
-            context_str = (
-                f"{context_head_str}\n" f"{context_body_str}\n" f"{context_tail_str}".strip("\n")
-            )
+            context_str = f"{context_head_str}\n" f"{context_body_str}\n" f"{context_tail_str}".strip("\n")
 
             final_prompt = self._prompt_template.format(
                 context_str=context_str, query_str=self._question
@@ -284,14 +243,7 @@ class AnswerSynthesize:
             )
             auto_id += 1
 
-        ops = sum(
-            [
-                self._raw_answer,
-                self._vector_only_answer,
-                self._graph_only_answer,
-                self._graph_vector_answer,
-            ]
-        )
+        ops = sum([self._raw_answer, self._vector_only_answer, self._graph_only_answer, self._graph_vector_answer])
         context["call_count"] = context.get("call_count", 0) + ops
 
         async_tasks = [asyncio.create_task(anext(gen)) for gen in async_generators]

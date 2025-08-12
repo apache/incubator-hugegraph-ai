@@ -46,12 +46,7 @@ class UseTimeMiddleware(BaseHTTPMiddleware):
             "%s - Args: %s, IP: %s, URL: %s",
             request.method,
             request.query_params,
-<<<<<<< HEAD
-            request.client.host,
+            request.client.host,  # type: ignore
             request.url,
-=======
-            request.client.host, # type: ignore
-            request.url
->>>>>>> 38dce0b (feat(llm): vector db finished)
         )
         return response

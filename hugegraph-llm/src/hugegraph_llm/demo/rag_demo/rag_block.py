@@ -383,7 +383,9 @@ def create_rag_block():
                         0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False
                     )
 
-                graph_vector_radio.change(toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio)  # pylint: disable=no-member
+                graph_vector_radio.change(
+                    toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio
+                )  # pylint: disable=no-member
                 near_neighbor_first = gr.Checkbox(
                     value=False,
                     label="Near neighbor first(Optional)",

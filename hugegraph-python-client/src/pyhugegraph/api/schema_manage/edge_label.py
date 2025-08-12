@@ -150,9 +150,7 @@ class EdgeLabel(HugeParamsBase):
     def eliminate(self):
         name = self._parameter_holder.get_value("name")
         user_data = (
-            self._parameter_holder.get_value("user_data")
-            if self._parameter_holder.get_value("user_data")
-            else {}
+            self._parameter_holder.get_value("user_data") if self._parameter_holder.get_value("user_data") else {}
         )
         path = f"schema/edgelabels/{name}?action=eliminate"
         data = {"name": name, "user_data": user_data}

@@ -68,9 +68,7 @@ def test_litellm_chat(api_key, api_base, model_name, max_tokens: int) -> int:
     return 200
 
 
-def test_api_connection(
-    url, method="GET", headers=None, params=None, body=None, auth=None, origin_call=None
-) -> int:
+def test_api_connection(url, method="GET", headers=None, params=None, body=None, auth=None, origin_call=None) -> int:
     # TODO: use fastapi.request / starlette instead?
     log.debug("Request URL: %s", url)
     try:
@@ -249,9 +247,13 @@ def apply_llm_config(
         setattr(llm_settings, f"openai_{current_llm_config}_language_model", model_name)
         setattr(llm_settings, f"openai_{current_llm_config}_tokens", int(max_tokens))
 
+<<<<<<< HEAD
         test_url = (
             getattr(llm_settings, f"openai_{current_llm_config}_api_base") + "/chat/completions"
         )
+=======
+        test_url = getattr(llm_settings, f"openai_{current_llm_config}_api_base") + "/chat/completions"
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
         data = {
             "model": model_name,
             "temperature": 0.01,
@@ -259,6 +261,7 @@ def apply_llm_config(
         }
 <<<<<<< HEAD
         headers = {"Authorization": f"Bearer {api_key_or_host}"}
+<<<<<<< HEAD
         status_code = test_api_connection(
             test_url, method="POST", headers=headers, body=data, origin_call=origin_call
         )
@@ -271,14 +274,15 @@ def apply_llm_config(
             arg1, arg2, arg3, settings_prefix=current_llm_config, origin_call=origin_call
         )  # pylint: disable=C0301
 >>>>>>> 38dce0b (feat(llm): vector db finished)
+=======
+        status_code = test_api_connection(test_url, method="POST", headers=headers, body=data, origin_call=origin_call)
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
 
     elif llm_option == "ollama/local":
         setattr(llm_settings, f"ollama_{current_llm_config}_host", api_key_or_host)
         setattr(llm_settings, f"ollama_{current_llm_config}_port", int(api_base_or_port))
         setattr(llm_settings, f"ollama_{current_llm_config}_language_model", model_name)
-        status_code = test_api_connection(
-            f"http://{api_key_or_host}:{api_base_or_port}", origin_call=origin_call
-        )
+        status_code = test_api_connection(f"http://{api_key_or_host}:{api_base_or_port}", origin_call=origin_call)
 
     elif llm_option == "litellm":
         setattr(llm_settings, f"litellm_{current_llm_config}_api_key", api_key_or_host)
@@ -286,9 +290,7 @@ def apply_llm_config(
         setattr(llm_settings, f"litellm_{current_llm_config}_language_model", model_name)
         setattr(llm_settings, f"litellm_{current_llm_config}_tokens", int(max_tokens))
 
-        status_code = test_litellm_chat(
-            api_key_or_host, api_base_or_port, model_name, int(max_tokens)
-        )
+        status_code = test_litellm_chat(api_key_or_host, api_base_or_port, model_name, int(max_tokens))
 
     gr.Info("Configured!")
     llm_settings.update_env()
@@ -502,16 +504,12 @@ def create_configs_block() -> list:
                 llm_config_button = gr.Button("Apply configuration")
                 llm_config_button.click(apply_llm_config_with_chat_op, inputs=llm_config_input)
                 # Determine whether there are Settings in the.env file
-                env_path = os.path.join(
-                    os.getcwd(), ".env"
-                )  # Load .env from the current working directory
+                env_path = os.path.join(os.getcwd(), ".env")  # Load .env from the current working directory
                 env_vars = dotenv_values(env_path)
                 api_extract_key = env_vars.get("OPENAI_EXTRACT_API_KEY")
                 api_text2sql_key = env_vars.get("OPENAI_TEXT2GQL_API_KEY")
                 if not api_extract_key:
-                    llm_config_button.click(
-                        apply_llm_config_with_text2gql_op, inputs=llm_config_input
-                    )
+                    llm_config_button.click(apply_llm_config_with_text2gql_op, inputs=llm_config_input)
                 if not api_text2sql_key:
 <<<<<<< HEAD
                     llm_config_button.click(
@@ -524,7 +522,7 @@ def create_configs_block() -> list:
 =======
                     llm_config_button.click(apply_llm_config_with_extract_op, inputs=llm_config_input)
 
-        with gr.Tab(label='mini_tasks'):
+        with gr.Tab(label="mini_tasks"):
             extract_llm_dropdown = gr.Dropdown(
                 choices=["openai", "litellm", "qianfan_wenxin", "ollama/local"],
 >>>>>>> 38dce0b (feat(llm): vector db finished)
@@ -663,6 +661,9 @@ def create_configs_block() -> list:
                 llm_config_button.click(apply_llm_config_with_extract_op, inputs=llm_config_input)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
         with gr.Tab(label="text2gql"):
             text2gql_llm_dropdown = gr.Dropdown(
                 choices=["openai", "litellm", "ollama/local"],

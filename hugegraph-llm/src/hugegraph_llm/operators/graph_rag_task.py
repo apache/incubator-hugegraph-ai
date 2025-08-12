@@ -251,12 +251,16 @@ class RAGPipeline:
         """
         if len(self._operators) == 0:
 <<<<<<< HEAD
+<<<<<<< HEAD
             self.extract_keywords().query_graphdb(
                 max_graph_items=kwargs.get("max_graph_items")
             ).synthesize_answer()
 =======
             self.extract_keywords().query_graphdb(max_graph_items=kwargs.get('max_graph_items')).synthesize_answer()
 >>>>>>> 38dce0b (feat(llm): vector db finished)
+=======
+            self.extract_keywords().query_graphdb(max_graph_items=kwargs.get("max_graph_items")).synthesize_answer()
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
 
         context = kwargs
 

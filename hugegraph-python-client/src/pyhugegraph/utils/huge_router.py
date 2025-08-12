@@ -145,9 +145,7 @@ def http(method: str, path: str) -> Callable:
 
 class RouterMixin:
 
-    def _invoke_request_registered(
-        self, placeholders: dict = None, validator=ResponseValidation(), **kwargs: Any
-    ):
+    def _invoke_request_registered(self, placeholders: dict = None, validator=ResponseValidation(), **kwargs: Any):
         """
         Make an HTTP request using the stored partial request function.
         Args:

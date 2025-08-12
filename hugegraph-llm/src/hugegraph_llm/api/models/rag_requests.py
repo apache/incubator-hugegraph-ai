@@ -64,9 +64,13 @@ class RAGRequest(BaseModel):
         description="TopK results returned for each keyword \
                                    extracted from the query, by default only the most similar one is returned.",
     )
+<<<<<<< HEAD
     client_config: Optional[GraphConfigRequest] = Query(
         None, description="hugegraph server config."
     )
+=======
+    client_config: Optional[GraphConfigRequest] = Query(None, description="hugegraph server config.")
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
 
     # Keep prompt params in the end
     answer_prompt: Optional[str] = Query(
@@ -163,9 +167,13 @@ class GremlinOutputType(str, Enum):
 
 class GremlinGenerateRequest(BaseModel):
     query: str
+<<<<<<< HEAD
     example_num: Optional[int] = Query(
         0, description="Number of Gremlin templates to use.(0 means no templates)"
     )
+=======
+    example_num: Optional[int] = Query(0, description="Number of Gremlin templates to use.(0 means no templates)")
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
     gremlin_prompt: Optional[str] = Query(
         prompt.gremlin_generate_prompt,
         description="Prompt for the Text2Gremlin query.",

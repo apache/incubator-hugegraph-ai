@@ -58,11 +58,7 @@ from hugegraph_llm.utils.vector_index_utils import build_vector_index, clean_vec
 
 def store_prompt(doc, schema, example_prompt):
     # update env variables: doc, schema and example_prompt
-    if (
-        prompt.doc_input_text != doc
-        or prompt.graph_schema != schema
-        or prompt.extract_graph_prompt != example_prompt
-    ):
+    if prompt.doc_input_text != doc or prompt.graph_schema != schema or prompt.extract_graph_prompt != example_prompt:
         prompt.doc_input_text = doc
         prompt.graph_schema = schema
         prompt.extract_graph_prompt = example_prompt
@@ -104,11 +100,15 @@ def load_query_examples():
         language = getattr(
             prompt,
             "language",
+<<<<<<< HEAD
             (
                 getattr(prompt.llm_settings, "language", "EN")
                 if hasattr(prompt, "llm_settings")
                 else "EN"
             ),
+=======
+            getattr(prompt.llm_settings, "language", "EN") if hasattr(prompt, "llm_settings") else "EN",
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
         )
         if language.upper() == "CN":
             examples_path = os.path.join(resource_path, "prompt_examples", "query_examples_CN.json")
@@ -509,3 +509,165 @@ async def timely_update_vid_embedding(interval_seconds: int = 3600):
         except Exception as e:
             log.warning("Failed to execute update_vid_embedding: %s", e, exc_info=True)
         await asyncio.sleep(interval_seconds)
+<<<<<<< HEAD
+=======
+
+
+def create_vector_graph_block():
+    # pylint: disable=no-member
+    # pylint: disable=C0301
+    # pylint: disable=unexpected-keyword-arg
+    gr.Markdown(
+        """## Build Vector/Graph Index & Extract Knowledge Graph
+- Docs:
+  - text: Build rag index from plain text
+  - file: Upload file(s) which should be <u>TXT</u> or <u>.docx</u> (Multiple files can be selected together)
+- [Schema](https://hugegraph.apache.org/docs/clients/restful-api/schema/): (Accept **2 types**)
+  - User-defined Schema (JSON format, follow the [template](https://github.com/apache/incubator-hugegraph-ai/blob/aff3bbe25fa91c3414947a196131be812c20ef11/hugegraph-llm/src/hugegraph_llm/config/config_data.py#L125)
+  to modify it)
+  - Specify the name of the HugeGraph graph instance, it will automatically get the schema from it (like
+  **"hugegraph"**)
+- Graph Extract Prompt Header: The user-defined prompt of graph extracting
+- If already exist the graph data, you should click "**Rebuild vid Index**" to update the index
+"""
+    )
+
+    with gr.Row():
+        with gr.Column():
+            with gr.Tab("text") as tab_upload_text:
+                input_text = gr.Textbox(
+                    value=prompt.doc_input_text, label="Input Doc(s)", lines=20, show_copy_button=True
+                )
+            with gr.Tab("file") as tab_upload_file:
+                input_file = gr.File(
+                    value=None,
+                    label="Docs (multi-files can be selected together)",
+                    file_count="multiple",
+                )
+        input_schema = gr.Code(value=prompt.graph_schema, label="Graph Schema", language="json", lines=15, max_lines=29)
+        info_extract_template = gr.Code(
+            value=prompt.extract_graph_prompt,
+            label="Graph Extract Prompt Header",
+            language="markdown",
+            lines=15,
+            max_lines=29,
+        )
+
+        out = gr.Code(label="Output Info", language="json", elem_classes="code-container-edit")
+
+    with gr.Row():
+        with gr.Accordion("Get RAG Info", open=False):
+            with gr.Column():
+                vector_index_btn0 = gr.Button("Get Vector Index Info", size="sm")
+                graph_index_btn0 = gr.Button("Get Graph Index Info", size="sm")
+        with gr.Accordion("Clear RAG Data", open=False):
+            with gr.Column():
+                vector_index_btn1 = gr.Button("Clear Chunks Vector Index", size="sm")
+                graph_index_btn1 = gr.Button("Clear Graph Vid Vector Index", size="sm")
+                graph_data_btn0 = gr.Button("Clear Graph Data", size="sm")
+        vector_import_bt = gr.Button("Import into Vector", variant="primary")
+        graph_extract_bt = gr.Button("Extract Graph Data (1)", variant="primary")
+        graph_loading_bt = gr.Button("Load into GraphDB (2)", interactive=True)
+        graph_index_rebuild_bt = gr.Button("Update Vid Embedding")
+
+    gr.Markdown("---")
+    with gr.Accordion("Graph Schema Generator", open=False):
+        gr.Markdown(
+            "Provide **query examples** and **few-shot examples**, "
+            "then click **Generate Schema** to automatically create graph schema."
+        )
+        with gr.Row():
+            query_example = gr.Code(
+                value=load_query_examples(),
+                label="Query Examples",
+                language="json",
+                lines=10,
+                max_lines=15,
+            )
+            few_shot = gr.Code(
+                value=load_schema_fewshot_examples(),
+                label="Few-shot Example",
+                language="json",
+                lines=10,
+                max_lines=15,
+            )
+            build_schema_bt = gr.Button("Generate Schema", variant="primary")
+
+    # 事件绑定
+    vector_index_btn0.click(get_vector_index_info, outputs=out).then(
+        store_prompt,
+        inputs=[input_text, input_schema, info_extract_template],
+    )
+    vector_index_btn1.click(clean_vector_index).then(
+        store_prompt,
+        inputs=[input_text, input_schema, info_extract_template],
+    )
+    vector_import_bt.click(build_vector_index, inputs=[input_file, input_text], outputs=out).then(
+        store_prompt,
+        inputs=[input_text, input_schema, info_extract_template],
+    )
+    graph_index_btn0.click(get_graph_index_info, outputs=out).then(
+        store_prompt,
+        inputs=[input_text, input_schema, info_extract_template],
+    )
+    graph_index_btn1.click(clean_all_graph_index).then(
+        store_prompt,
+        inputs=[input_text, input_schema, info_extract_template],
+    )
+    graph_data_btn0.click(clean_all_graph_data).then(
+        store_prompt,
+        inputs=[input_text, input_schema, info_extract_template],
+    )
+    graph_index_rebuild_bt.click(update_vid_embedding, outputs=out).then(
+        store_prompt,
+        inputs=[input_text, input_schema, info_extract_template],
+    )
+
+    graph_extract_bt.click(
+        extract_graph, inputs=[input_file, input_text, input_schema, info_extract_template], outputs=[out]
+    ).then(
+        store_prompt,
+        inputs=[input_text, input_schema, info_extract_template],
+    )
+
+    graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(
+        update_vid_embedding
+    ).then(
+        store_prompt,
+        inputs=[input_text, input_schema, info_extract_template],
+    )
+
+    build_schema_bt.click(
+        lambda it, qe, fs: extract_graph([], it, prompt.graph_schema, prompt.extract_graph_prompt),
+        inputs=[input_text, query_example, few_shot],
+        outputs=[input_schema],
+    ).then(
+        store_prompt,
+        inputs=[
+            input_text,
+            input_schema,
+            info_extract_template,
+        ],
+    )
+
+    def on_tab_select(input_f, input_t, evt: gr.SelectData):
+        print(f"You selected {evt.value} at {evt.index} from {evt.target}")
+        if evt.value == "file":
+            return input_f, ""
+        if evt.value == "text":
+            return [], input_t
+        return [], ""
+
+    tab_upload_file.select(
+        fn=on_tab_select,
+        inputs=[input_file, input_text],
+        outputs=[input_file, input_text],
+    )
+    tab_upload_text.select(
+        fn=on_tab_select,
+        inputs=[input_file, input_text],
+        outputs=[input_file, input_text],
+    )
+
+    return input_text, input_schema, info_extract_template
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)

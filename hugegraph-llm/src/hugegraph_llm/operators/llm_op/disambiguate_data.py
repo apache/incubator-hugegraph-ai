@@ -51,10 +51,14 @@ class DisambiguateData:
             llm_output = self.llm.generate(prompt=prompt)
             data["triples"] = []
             extract_triples_by_regex(llm_output, data)
+<<<<<<< HEAD
             print(
                 f"LLM {self.__class__.__name__} input:{prompt} \n"
                 f" output: {llm_output} \n data: {data}"
             )
+=======
+            print(f"LLM {self.__class__.__name__} input:{prompt} \n" f" output: {llm_output} \n data: {data}")
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
             data["call_count"] = data.get("call_count", 0) + 1
 
         return data

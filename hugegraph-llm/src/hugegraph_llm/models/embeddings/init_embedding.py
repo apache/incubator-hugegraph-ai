@@ -65,7 +65,7 @@ class Embeddings:
 
     def get_embedding(self):
         if self.embedding_type == "openai":
-            assert llm_settings.openai_embedding_model_dim, 'openai_embedding_model_dim is need'
+            assert llm_settings.openai_embedding_model_dim, "openai_embedding_model_dim is need"
             return OpenAIEmbedding(
                 embedding_dimension=llm_settings.openai_embedding_model_dim,
                 model_name=llm_settings.openai_embedding_model,
@@ -73,7 +73,7 @@ class Embeddings:
                 api_base=llm_settings.openai_embedding_api_base,
             )
         if self.embedding_type == "ollama/local":
-            assert llm_settings.ollama_embedding_model_dim, 'ollama_embedding_model_dim is need'
+            assert llm_settings.ollama_embedding_model_dim, "ollama_embedding_model_dim is need"
             return OllamaEmbedding(
 <<<<<<< HEAD
                 model_name=llm_settings.ollama_embedding_model,

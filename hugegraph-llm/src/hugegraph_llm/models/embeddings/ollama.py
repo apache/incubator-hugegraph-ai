@@ -29,7 +29,7 @@ class OllamaEmbedding(BaseEmbedding):
 =======
     def __init__(
         self,
-        model: str = 'quentinz/bge-large-zh-v1.5',
+        model: str = "quentinz/bge-large-zh-v1.5",
         embedding_dimension: int = 1024,
         host: str = "127.0.0.1",
         port: int = 11434,

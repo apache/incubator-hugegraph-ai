@@ -93,9 +93,7 @@ def init_rag_ui() -> gr.Interface:
         textbox_array_graph_config = create_configs_block()
 
         with gr.Tab(label="1. Build RAG Index 💡"):
-            textbox_input_text, textbox_input_schema, textbox_info_extract_template = (
-                create_vector_graph_block()
-            )
+            textbox_input_text, textbox_input_schema, textbox_info_extract_template = create_vector_graph_block()
         with gr.Tab(label="2. (Graph)RAG & User Functions 📖"):
             (
                 textbox_inp,
@@ -104,9 +102,7 @@ def init_rag_ui() -> gr.Interface:
                 textbox_custom_related_information,
             ) = create_rag_block()
         with gr.Tab(label="3. Text2gremlin ⚙️"):
-            textbox_gremlin_inp, textbox_gremlin_schema, textbox_gremlin_prompt = (
-                create_text2gremlin_block()
-            )
+            textbox_gremlin_inp, textbox_gremlin_schema, textbox_gremlin_prompt = create_text2gremlin_block()
         with gr.Tab(label="4. Graph Tools 🚧"):
             create_other_block()
         with gr.Tab(label="5. Admin Tools 🛠"):

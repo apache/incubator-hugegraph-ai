@@ -140,10 +140,14 @@ def write_backup_file(client, backup_subdir, filename, query, all_pk_flag):
         elif filename == "vertices.json":
             data_full = client.gremlin().exec(query)["data"][0]["vertices"]
             data = (
+<<<<<<< HEAD
                 [
                     {key: value for key, value in vertex.items() if key != "id"}
                     for vertex in data_full
                 ]
+=======
+                [{key: value for key, value in vertex.items() if key != "id"} for vertex in data_full]
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
                 if all_pk_flag
                 else data_full
             )
@@ -164,9 +168,7 @@ def write_backup_file(client, backup_subdir, filename, query, all_pk_flag):
 def manage_backup_retention():
     try:
         backup_dirs = [
-            os.path.join(BACKUP_DIR, d)
-            for d in os.listdir(BACKUP_DIR)
-            if os.path.isdir(os.path.join(BACKUP_DIR, d))
+            os.path.join(BACKUP_DIR, d) for d in os.listdir(BACKUP_DIR) if os.path.isdir(os.path.join(BACKUP_DIR, d))
         ]
         backup_dirs.sort(key=os.path.getctime)
         if len(backup_dirs) > MAX_BACKUP_DIRS:

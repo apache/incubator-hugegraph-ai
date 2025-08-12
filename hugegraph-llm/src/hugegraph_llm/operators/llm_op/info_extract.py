@@ -76,8 +76,12 @@ The extracted text is: {text}"""
     if schema:
         return schema_real_prompt
     log.warning(
+<<<<<<< HEAD
         "Recommend to provide a graph schema to improve the extraction accuracy. "
         "Now using the default schema."
+=======
+        "Recommend to provide a graph schema to improve the extraction accuracy. " "Now using the default schema."
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
     )
     return text_based_prompt
 
@@ -107,9 +111,13 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
         # TODO: use a more efficient way to compare the extract & input property
         p_lower = p.lower()
         for vertex in schema["vertices"]:
+<<<<<<< HEAD
             if vertex["vertex_label"] == label and any(
                 pp.lower() == p_lower for pp in vertex["properties"]
             ):
+=======
+            if vertex["vertex_label"] == label and any(pp.lower() == p_lower for pp in vertex["properties"]):
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
                 id = f"{label}-{s}"
                 if id not in vertices_dict:
                     vertices_dict[id] = {
@@ -126,6 +134,7 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
                 source_label = edge["source_vertex_label"]
                 source_id = f"{source_label}-{s}"
                 if source_id not in vertices_dict:
+<<<<<<< HEAD
                     vertices_dict[source_id] = {
                         "id": source_id,
                         "name": s,
@@ -149,6 +158,14 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
                         "properties": {},
                     }
                 )
+=======
+                    vertices_dict[source_id] = {"id": source_id, "name": s, "label": source_label, "properties": {}}
+                target_label = edge["target_vertex_label"]
+                target_id = f"{target_label}-{o}"
+                if target_id not in vertices_dict:
+                    vertices_dict[target_id] = {"id": target_id, "name": o, "label": target_label, "properties": {}}
+                graph["edges"].append({"start": source_id, "end": target_id, "type": label, "properties": {}})
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
                 break
     graph["vertices"] = list(vertices_dict.values())
 
@@ -199,7 +216,11 @@ class InfoExtract:
 
     def _filter_long_id(self, graph) -> Dict[str, List[Any]]:
         graph["vertices"] = [vertex for vertex in graph["vertices"] if self.valid(vertex["id"])]
+<<<<<<< HEAD
         graph["edges"] = [
             edge for edge in graph["edges"] if self.valid(edge["start"]) and self.valid(edge["end"])
         ]
+=======
+        graph["edges"] = [edge for edge in graph["edges"] if self.valid(edge["start"]) and self.valid(edge["end"])]
+>>>>>>> 87ee5d3 (style: format code with black line-length 120)
         return graph
