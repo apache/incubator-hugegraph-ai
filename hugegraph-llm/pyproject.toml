@@ -39,6 +39,9 @@ dependencies = [
     "numpy",
     "pandas",
     "pydantic",
+    "scipy",
+    "python-igraph",
+    
 
     # LLM specific dependencies
     "openai",
