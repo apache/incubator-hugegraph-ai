@@ -99,10 +99,6 @@ line-length = 120
 indent-width = 4
 extend-exclude = []
 extend-select = ["I"]
-<<<<<<< HEAD
-=======
-extend-select = ["I"]
->>>>>>> 56bcac3 (feat(llm): import sort && change name)
 
 [tool.ruff.format]
 quote-style = "preserve"
