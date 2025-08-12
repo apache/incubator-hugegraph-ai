@@ -42,6 +42,32 @@ def _validate_url_safe(url: str) -> None:
     if not parsed.netloc:
         raise gr.Error("URL missing hostname.")
 
+    # 防止 SSRF：禁止访问本地主机或内网地址
+    hostname = parsed.hostname or ""
+    # IPv4 私有网段
+    private_ipv4_networks = [
+        ("10.",),
+        ("172.", range(16, 32)),
+        ("192.168.",),
+        ("127.",),
+        ("0.",),
+    ]
+
+    def _is_private_ipv4(host: str) -> bool:
+        for prefix in private_ipv4_networks:
+            base = prefix[0]
+            if host.startswith(base):
+                # 处理 172.16.0.0/12 特例
+                if len(prefix) == 1:
+                    return True
+                if int(host.split(".")[1]) in prefix[1]:
+                    return True
+        return False
+
+    # IPv6 localhost
+    if hostname in {"localhost", "::1"} or _is_private_ipv4(hostname):
+        raise gr.Error("Connection to localhost or private network addresses is not allowed.")
+
 
 def test_litellm_embedding(api_key, api_base, model_name, model_dim) -> int:
     llm_client = LiteLLMEmbedding(
