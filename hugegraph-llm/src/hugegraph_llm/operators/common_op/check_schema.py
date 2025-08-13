@@ -16,7 +16,7 @@
 # under the License.
 
 
-from typing import Any, Optional, Dict
+from typing import Any, Dict, Optional
 
 from hugegraph_llm.enums.property_cardinality import PropertyCardinality
 from hugegraph_llm.enums.property_data_type import PropertyDataType

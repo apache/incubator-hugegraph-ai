@@ -20,8 +20,8 @@ import os
 from functools import partial
 from typing import Optional
 
-import gradio as gr
 import urllib.parse as _urlparse
+import gradio as gr
 import requests
 from dotenv import dotenv_values
 from requests.auth import HTTPBasicAuth
