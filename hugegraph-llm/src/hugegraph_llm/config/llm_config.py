@@ -63,11 +63,10 @@ class LLMConfig(BaseConfig):
     ollama_text2gql_port: int = 11434
     ollama_text2gql_language_model: str | None = None
     ollama_embedding_host: str = "127.0.0.1"
-    ollama_embedding_port: int = int(11434)
-    ollama_embedding_model: str = 'quentinz/bge-large-zh-v1.5'
-    ollama_embedding_model_dim: Optional[int] = (
-        int(os.getenv("OLLAMA_EMBEDDING_MODEL_DIM")) if os.getenv("OLLAMA_EMBEDDING_MODEL_DIM") else None  # type:ignore
-    )
+    ollama_embedding_port: int = 11434
+    ollama_embedding_model: str = "quentinz/bge-large-zh-v1.5"
+    _env_ollama_dim = os.getenv("OLLAMA_EMBEDDING_MODEL_DIM")
+    ollama_embedding_model_dim: Optional[int] = int(_env_ollama_dim) if _env_ollama_dim else None
 
     # 4. QianFan/WenXin settings
     # TODO: update to one token key mode
