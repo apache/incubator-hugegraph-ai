@@ -44,10 +44,8 @@ def rag_answer(
     answer_prompt: str,
     keywords_extract_prompt: str,
     keywords_extract_method: str,
-    language: str,
     mask_words: str,
     max_keywords_num: int = 5,
-    window_size: int = 5,
     gremlin_tmpl_num: Optional[int] = -1,
     gremlin_prompt: Optional[str] = None,
     max_graph_items=30,
@@ -72,6 +70,7 @@ def rag_answer(
         keywords_extract_prompt,
         text,
         vector_only_answer,
+        mask_words
     )
     if raw_answer is False and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
@@ -83,10 +82,8 @@ def rag_answer(
     if graph_search:
         rag.extract_keywords(
             extract_template=keywords_extract_prompt,
-            language=language,
             max_keywords=max_keywords_num,
             extract_method=keywords_extract_method,
-            window_size=window_size,
             mask_words=mask_words
         ).keywords_to_vid(
             vector_dis_threshold=vector_dis_threshold,
@@ -138,6 +135,7 @@ def update_ui_configs(
     keywords_extract_prompt,
     text,
     vector_only_answer,
+    mask_words,
 ):
     gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
     should_update_prompt = (
@@ -146,6 +144,7 @@ def update_ui_configs(
         or prompt.keywords_extract_prompt != keywords_extract_prompt
         or prompt.gremlin_generate_prompt != gremlin_prompt
         or prompt.custom_rerank_info != custom_related_information
+        or prompt.maskword_input_text != mask_words
     )
     if should_update_prompt:
         prompt.custom_rerank_info = custom_related_information
@@ -153,6 +152,7 @@ def update_ui_configs(
         prompt.answer_prompt = answer_prompt
         prompt.keywords_extract_prompt = keywords_extract_prompt
         prompt.gremlin_generate_prompt = gremlin_prompt
+        prompt.maskword_input_text = mask_words
         prompt.update_yaml_file()
     vector_search = vector_only_answer or graph_vector_answer
     graph_search = graph_only_answer or graph_vector_answer
@@ -171,10 +171,8 @@ async def rag_answer_streaming(
     answer_prompt: str,
     keywords_extract_prompt: str,
     keywords_extract_method: str,
-    language: str,
     mask_words: str,
     max_keywords_num: int = 5,
-    window_size: int = 5,
     gremlin_tmpl_num: Optional[int] = -1,
     gremlin_prompt: Optional[str] = None,
 ) -> AsyncGenerator[Tuple[str, str, str, str], None]:
@@ -195,6 +193,7 @@ async def rag_answer_streaming(
         keywords_extract_prompt,
         text,
         vector_only_answer,
+        mask_words
     )
     if raw_answer is False and not vector_search and not graph_search:
         gr.Warning("Please select at least one generate mode.")
@@ -208,10 +207,8 @@ async def rag_answer_streaming(
         rag.extract_keywords(
             extract_template=keywords_extract_prompt,
             extract_method=keywords_extract_method,
-            language=language,
             mask_words=mask_words,
-            max_keywords=max_keywords_num,
-            window_size=window_size
+            max_keywords=max_keywords_num
         ).keywords_to_vid().import_schema(
             huge_settings.graph_name
         ).query_graphdb(
@@ -296,8 +293,11 @@ def create_rag_block():
                 lines=7,
             )
             mask_words_input = gr.Textbox(
+                value=prompt.maskword_input_text,
                 label="TextRank mask words",
-                info="""Enter any words or regular expressions you want to protect from being split during Chinese word segmentation(e.g., C++, website URLs). Separate each with a comma.""",
+                info=r"""Enter words or regular expressions to protect during word segmentation. 
+                    Separate items with a comma and enclose regular expressions in "/".
+                    (Example: C++,/https?://\S+|www\.\S+/,//)""",
                 show_copy_button=True,
                 lines=7,
             )
@@ -311,11 +311,9 @@ def create_rag_block():
                 graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
             with gr.Column():
                 with gr.Row():
-                    extraction_method_input = gr.Radio(choices=["LLM", "TextRank"], value="TextRank", label="Keywords Extraction Method")
+                    extraction_method_input = gr.Radio(choices=["LLM", "Hybrid", "TextRank"],
+                                                       value="Hybrid", label="Keywords Extraction Method")
                     max_keyword_num = gr.Number(value=5, label="Max Keywords Num", precision=5)
-                with gr.Row():
-                    language_input = gr.Radio(choices=["english", "chinese"], value="english", label="Language")
-                    sliding_window_size = gr.Slider(2, 10, 5, label="Sliding window size of TextRank", step=1, interactive=True)
 
             def toggle_slider(enable):
                 return gr.update(interactive=enable)
@@ -360,10 +358,8 @@ def create_rag_block():
             answer_prompt_input,
             keywords_extract_prompt_input,
             extraction_method_input,
-            language_input,
             mask_words_input,
             max_keyword_num,
-            sliding_window_size,
             example_num,
         ],
         outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
@@ -430,10 +426,8 @@ def create_rag_block():
         answer_prompt: str,
         keywords_extract_prompt: str,
         keywords_extraction_method: str,
-        language: str,
         mask_words: str,
         keyword_num: int,
-        window_size: int,
         answer_max_line_count_ui: int = 1,
         progress=gr.Progress(track_tqdm=True),
     ):
@@ -454,10 +448,8 @@ def create_rag_block():
                 answer_prompt,
                 keywords_extract_prompt,
                 keywords_extraction_method,
-                language,
                 mask_words,
                 keyword_num,
-                window_size,
             )
             df.at[index, "Basic LLM Answer"] = basic_llm_answer
             df.at[index, "Vector-only Answer"] = vector_only_answer
@@ -492,14 +484,12 @@ def create_rag_block():
             answer_prompt_input,
             keywords_extract_prompt_input,
             extraction_method_input,
-            language_input,
             mask_words_input,
             max_keyword_num,
-            sliding_window_size,
             answer_max_line_count,
         ],
         outputs=[qa_dataframe, gr.File(label="Download Answered File", min_width=40)],
     )
     questions_file.change(read_file_to_excel, questions_file, [qa_dataframe, answer_max_line_count])
     answer_max_line_count.change(change_showing_excel, answer_max_line_count, qa_dataframe)
-    return inp, answer_prompt_input, keywords_extract_prompt_input, custom_related_information
+    return inp, answer_prompt_input, keywords_extract_prompt_input, custom_related_information, mask_words_input

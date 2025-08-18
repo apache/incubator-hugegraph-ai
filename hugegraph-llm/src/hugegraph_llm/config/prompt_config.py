@@ -428,3 +428,4 @@ Your goal is to generate a new, tailored "Graph Extract Prompt Header" based on 
 ## Language Requirement:
 Please generate the prompt in {language} language.
 """
+    maskword_input_text: str = """"""

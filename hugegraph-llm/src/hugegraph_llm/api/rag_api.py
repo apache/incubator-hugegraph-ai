@@ -27,10 +27,11 @@ from hugegraph_llm.api.models.rag_requests import (
     RerankerConfigRequest,
     GraphRAGRequest,
 )
-from hugegraph_llm.config import huge_settings
 from hugegraph_llm.api.models.rag_response import RAGResponse
+from hugegraph_llm.config import huge_settings
 from hugegraph_llm.config import llm_settings, prompt
 from hugegraph_llm.utils.log import log
+
 
 # pylint: disable=too-many-statements
 def rag_http_api(
@@ -60,9 +61,11 @@ def rag_http_api(
             topk_return_results=req.topk_return_results,
             vector_dis_threshold=req.vector_dis_threshold,
             topk_per_keyword=req.topk_per_keyword,
+            keywords_extract_method=req.extract_method,
             # Keep prompt params in the end
             custom_related_information=req.custom_priority_info,
             answer_prompt=req.answer_prompt or prompt.answer_prompt,
+            mask_words=req.mask_words or prompt.maskword_input_text,
             keywords_extract_prompt=req.keywords_extract_prompt or prompt.keywords_extract_prompt,
             gremlin_prompt=req.gremlin_prompt or prompt.gremlin_generate_prompt,
         )

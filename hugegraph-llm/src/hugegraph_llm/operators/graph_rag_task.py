@@ -31,7 +31,7 @@ from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
-from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract, TextRankConfig
+from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
 from hugegraph_llm.utils.decorators import log_operator_time, log_time, record_rpm
 
 
@@ -69,9 +69,7 @@ class RAGPipeline:
         self,
         text: Optional[str] = None,
         max_keywords: int = 5,
-        language: str = "english",
-        extract_method: str = "TextRank",
-        window_size: int = 5,
+        extract_method: str = "Hybrid",
         mask_words: str = "",
         extract_template: Optional[str] = None,
     ):
@@ -80,10 +78,8 @@ class RAGPipeline:
 
         :param text: Text to extract keywords from.
         :param max_keywords: Maximum number of keywords to extract.
-        :param language: Language of the text.
         :param extract_template: Template for keyword extraction.
         :param extract_method: Method for Keyword extraction
-        :param window_size: Sliding window size of TextRank.
         :param mask_words: Filter words for TextRank in Chinese word segmentation
         :return: Self-instance for chaining.
         """
@@ -91,14 +87,9 @@ class RAGPipeline:
             KeywordExtract(
                 text=text,
                 max_keywords=max_keywords,
-                language=language,
                 extract_template=extract_template,
                 extract_method=extract_method,
-                textrank_kwargs=TextRankConfig(
-                    keyword_num=max_keywords,
-                    window_size=window_size,
-                    mask_words=mask_words,
-                ),
+                mask_words=mask_words
             )
         )
         return self
