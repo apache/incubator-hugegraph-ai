@@ -125,8 +125,8 @@ class KeywordExtract:
         tr_lower = {t.lower() for t in textrank_keywords}
         log.debug("LLM keywords: %s, TextRank keywords: %s", llm_keywords, textrank_keywords)
 
-        intersection_keywords = list()
-        used_tr_keywords = list()
+        intersection_keywords = []
+        used_tr_keywords = []
 
         for lk in llm_keywords:
             word = lk.lower()

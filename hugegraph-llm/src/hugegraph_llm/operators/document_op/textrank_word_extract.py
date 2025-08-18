@@ -28,8 +28,27 @@ import regex
 from hugegraph_llm.utils.anchor import get_project_root
 from hugegraph_llm.utils.log import log
 
+NLTK_DATA_PATH = os.path.join(get_project_root(), 'src/hugegraph_llm/resources/nltk_data')
 EXTRACT_STOPWORDS = 'hugegraph_llm.resources.nltk_data.corpora.stopwords'
-nltk.data.path.insert(0, os.path.join(get_project_root(), 'src/hugegraph_llm/resources/nltk_data'))
+
+
+def download_nltk_data_if_needed():
+    required_packages = ['punkt', 'punkt_tab', 'averaged_perceptron_tagger', "averaged_perceptron_tagger_eng"]
+
+    if not os.path.exists(NLTK_DATA_PATH):
+        os.makedirs(NLTK_DATA_PATH)
+
+    # 将我们的本地目录添加到 NLTK 的搜索路径中
+    if NLTK_DATA_PATH not in nltk.data.path:
+        nltk.data.path.insert(0, NLTK_DATA_PATH)
+
+    for package in required_packages:
+        try:
+            nltk.data.find(
+                f'tokenizers/{package}' if package == 'punkt' else f'taggers/{package}')
+        except LookupError:
+            log.info("Download NLTK package %s for TextRank", package)
+            nltk.download(package, download_dir=NLTK_DATA_PATH)
 
 
 class MultiLingualTextRank:
@@ -50,6 +69,7 @@ class MultiLingualTextRank:
         self.chinese_pattern = re.compile('[\u4e00-\u9fa5]')
 
     def _load_stopwords(self):
+        download_nltk_data_if_needed()
         if self.stopwords_loaded:
             return True
         resource_path = importlib.resources.files(EXTRACT_STOPWORDS)
@@ -166,24 +186,21 @@ class MultiLingualTextRank:
 
     def _build_graph(self, words):
         unique_words = list(set(words))
+        name_to_idx = {word: idx for idx, word in enumerate(unique_words)}
         edge_weights = defaultdict(int)
         for i, word1 in enumerate(words):
-            for j in range(i + 1, i + self.window):
+            for j in range(i + 1, min(i + self.window + 1, len(words))):
                 if j < len(words):
                     word2 = words[j]
                     if word1 != word2:
                         pair = tuple(sorted((word1, word2)))
                         edge_weights[pair] += 1
 
-        graph = ig.Graph(directed=False)
-        graph.add_vertices(unique_words)
-
-        edges = list(edge_weights.keys())
-        weights = list(edge_weights.values())
-
-        graph.add_edges(edges)
-        graph.es['weight'] = weights
-
+        graph = ig.Graph(n=len(unique_words), directed=False)
+        graph.vs['name'] = unique_words
+        edges_idx = [(name_to_idx[a], name_to_idx[b]) for (a, b) in edge_weights.keys()]
+        graph.add_edges(edges_idx)
+        graph.es['weight'] = list(edge_weights.values())
         self.graph = graph
 
     def _rank_nodes(self):
@@ -195,7 +212,8 @@ class MultiLingualTextRank:
         return dict(zip(node_names, pagerank_scores))
 
     def extract_keywords(self, text):
-        # 1. 停止词载入
+
+        # 1. 停止词与 nltk 模型载入
         if not self._load_stopwords():
             return []
 
