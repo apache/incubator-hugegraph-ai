@@ -44,8 +44,10 @@ def download_nltk_data_if_needed():
 
     for package in required_packages:
         try:
-            nltk.data.find(
-                f'tokenizers/{package}' if package == 'punkt' else f'taggers/{package}')
+            if package in['punkt', 'punkt_tab']:
+                nltk.data.find(f'tokenizers/{package}')
+            else:
+                nltk.data.find(f'taggers/{package}')
         except LookupError:
             log.info("Download NLTK package %s for TextRank", package)
             nltk.download(package, download_dir=NLTK_DATA_PATH)
@@ -104,13 +106,12 @@ class MultiLingualTextRank:
             log.error("Failed to compile or test pattern '%s...': %s", pattern, e)
             return None
 
-    def _load_maskwords(self, text):
-        mask_patterns = [
-            r'https?://\S+|www\.\S+',
-            r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
-            r'\b\w+(?:[-’\']\w+)+\b',
-            r'\b\d+[,.]\d+\b',
-        ]
+    def _word_mask(self, text):
+
+        placeholder_id_counter = 0
+        placeholder_map = {}
+        mask_patterns = []
+
         for word in self.mask_words:
             word = word.strip()
             if not isinstance(word, str) or len(word) > self.max_len or not word:
@@ -122,19 +123,6 @@ class MultiLingualTextRank:
             else:
                 mask_patterns.append(self._build_word_regex(word))
 
-        return mask_patterns
-
-    def _multi_preprocess(self, text):
-        # 1. 初始化
-        words = []
-        ch_tokens = []
-        en_stop_words = self.stopwords.get('english', set())
-        ch_stop_words = self.stopwords.get('chinese', set())
-
-        # 2. 屏蔽特殊词
-        placeholder_id_counter = 0
-        placeholder_map = {}
-
         def _create_placeholder(match_obj):
             nonlocal placeholder_id_counter
             original_word = match_obj.group(0)
@@ -143,11 +131,13 @@ class MultiLingualTextRank:
             placeholder_id_counter += 1
             return _placeholder
 
-        mask_patterns = self._load_maskwords(text)
         special_regex = regex.compile('|'.join(mask_patterns))
         masked_text = special_regex.sub(_create_placeholder, text)
 
-        # 3. 保留词设置，清洗过滤标点符号，进行分层
+        return masked_text, placeholder_map
+
+    @staticmethod
+    def _get_valid_tokens(masked_text):
         patterns_to_keep = [
             r'__shieldword_\d+__',
             r'\b\w+\b',
@@ -158,6 +148,20 @@ class MultiLingualTextRank:
         text_for_nltk = ' '.join(tokens)
         nltk_tokens = nltk.word_tokenize(text_for_nltk)
         pos_tags = nltk.pos_tag(nltk_tokens)
+        return pos_tags
+
+    def _multi_preprocess(self, text):
+        # 1. 初始化
+        words = []
+        ch_tokens = []
+        en_stop_words = self.stopwords.get('english', set())
+        ch_stop_words = self.stopwords.get('chinese', set())
+
+        # 2. 屏蔽特殊词
+        masked_text, placeholder_map = self._word_mask(text)
+
+        # 3. 清洗过滤标点符号与无效 token
+        pos_tags = self._get_valid_tokens(masked_text)
 
         # 4. 英文分词
         for word, flag in pos_tags:
@@ -182,7 +186,7 @@ class MultiLingualTextRank:
                     ch_words.append(word)
             words = words[:idx] + ch_words + words[idx+1:]
 
-        return list(set(words))
+        return words
 
     def _build_graph(self, words):
         unique_words = list(set(words))

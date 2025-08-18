@@ -428,4 +428,9 @@ Your goal is to generate a new, tailored "Graph Extract Prompt Header" based on 
 ## Language Requirement:
 Please generate the prompt in {language} language.
 """
-    maskword_input_text: str = """"""
+
+    maskword_input_text: str = r"""/'https?://\S+|www\.\S+/,
+            /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/,
+            /\b\w+(?:[-’\']\w+)+\b/,
+            /\b\d+[,.]\d+\b/
+"""

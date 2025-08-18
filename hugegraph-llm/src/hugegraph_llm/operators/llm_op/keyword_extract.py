@@ -106,7 +106,7 @@ class KeywordExtract:
             log.error("TextRank parameter error: %s", e)
             keywords = []
         except MemoryError as e:
-            log.error("TextRank memory error (text too large?): %s", e)
+            log.critical("TextRank memory error (text too large?): %s", e)
             keywords = []
         log.debug("TextRank Keyword extraction time: %.2f seconds",
                   time.perf_counter() - start_time)
@@ -135,7 +135,8 @@ class KeywordExtract:
                 # Multi-word phrase: check if all parts are in TextRank
                 if all(part in tr_lower for part in parts):
                     intersection_keywords.append(word)
-                    used_tr_keywords.append(part for part in parts)
+                    for part in parts:
+                        used_tr_keywords.extend(part)
             else:
                 # Single-word keyword: check for direct existence
                 if word in tr_lower:
