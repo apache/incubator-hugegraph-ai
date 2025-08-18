@@ -58,7 +58,10 @@ class KeywordExtract:
             self._llm = LLMs().get_extract_llm()
             assert isinstance(self._llm, BaseLLM), "Invalid LLM Object."
 
-        self._language = context.get("language", self._language).lower()
+        lang = context.get("language", self._language).lower()
+        if lang in ("en", "zh"):
+            lang = "english" if lang == "en" else "chinese"
+        self._language = lang
         self._max_keywords = context.get("max_keywords", self._max_keywords)
 
         if self._extract_method == "TextRank":
@@ -116,33 +119,33 @@ class KeywordExtract:
         1. Intersection keywords (LLM phrases fully matched by TextRank parts).
         2. Remaining LLM keywords.
         3. Remaining TextRank keywords.
-        Returns a list to preserve the priority order.
         """
         llm_keywords = self._extract_with_llm()
         textrank_keywords = self._extract_with_textrank()
+        tr_lower = {t.lower() for t in textrank_keywords}
         log.debug("LLM keywords: %s, TextRank keywords: %s", llm_keywords, textrank_keywords)
 
-        intersection_keywords = set()
-        used_textrank_for_intersection = set()
+        intersection_keywords = list()
+        used_tr_keywords = list()
 
         for lk in llm_keywords:
-            # Split multi-word keywords by space or other delimiters
-            parts = re.split(r'\s+', lk)
+            word = lk.lower()
+            parts = re.split(r'\s+', word)
             if len(parts) > 1:
                 # Multi-word phrase: check if all parts are in TextRank
-                if all(part.lower() in textrank_keywords for part in parts):
-                    intersection_keywords.add(lk)
-                    used_textrank_for_intersection.update(part.lower() for part in parts)
+                if all(part in tr_lower for part in parts):
+                    intersection_keywords.append(word)
+                    used_tr_keywords.append(part for part in parts)
             else:
                 # Single-word keyword: check for direct existence
-                if lk in textrank_keywords:
-                    intersection_keywords.add(lk)
-                    used_textrank_for_intersection.add(lk)
+                if word in tr_lower:
+                    intersection_keywords.append(word)
+                    used_tr_keywords.append(word)
 
-        remaining_llm = llm_keywords - intersection_keywords
-        remaining_textrank = textrank_keywords - used_textrank_for_intersection
+        remaining_llm = [lk for lk in llm_keywords if lk.lower() not in intersection_keywords]
+        remaining_textrank = [trk for trk in textrank_keywords if trk.lower() not in used_tr_keywords]
 
-        ordered_keywords = list(intersection_keywords) + list(remaining_llm) + list(remaining_textrank)
+        ordered_keywords = intersection_keywords + remaining_llm + remaining_textrank
         ordered_keywords = ordered_keywords[:self._max_keywords]
         return set(ordered_keywords)
 

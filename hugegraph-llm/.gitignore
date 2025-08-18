@@ -1,7 +1,7 @@
 src/hugegraph_llm/resources/*
-!/src/hugegraph_llm/resources/demo/*
-!/src/hugegraph_llm/resources/nltk_data/*
-!/src/hugegraph_llm/resources/prompt_examples/*
+!/src/hugegraph_llm/resources/demo/
+!/src/hugegraph_llm/resources/nltk_data/
+!/src/hugegraph_llm/resources/prompt_examples/
 
 
 uv.lock

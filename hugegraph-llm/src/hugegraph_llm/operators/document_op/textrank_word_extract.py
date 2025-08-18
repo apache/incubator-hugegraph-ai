@@ -16,29 +16,24 @@
 # under the License.
 
 import importlib.resources
+import os
 import re
 from collections import defaultdict
-from dataclasses import dataclass
 
 import igraph as ig
 import jieba.posseg as pseg
 import nltk
 import regex
 
+from hugegraph_llm.utils.anchor import get_project_root
 from hugegraph_llm.utils.log import log
 
 EXTRACT_STOPWORDS = 'hugegraph_llm.resources.nltk_data.corpora.stopwords'
-
-
-@dataclass
-class TextRankConfig:
-    keyword_num: int = 5
-    window_size: int = 2
-    mask_words: str = ""
+nltk.data.path.insert(0, os.path.join(get_project_root(), 'src/hugegraph_llm/resources/nltk_data'))
 
 
 class MultiLingualTextRank:
-    def __init__(self, keyword_num: int = 5, window_size: int = 5, mask_words: str = ""):
+    def __init__(self, keyword_num: int = 5, window_size: int = 2, mask_words: str = ""):
         self.top_k = keyword_num
         self.window = window_size
         self.graph = None
@@ -78,12 +73,15 @@ class MultiLingualTextRank:
 
     @staticmethod
     def _regex_test(pattern: str, text: str):
+        pattern = pattern[1:-1].strip()
+        if len(pattern) == 0:
+            return None
         try:
             test_pattern = regex.compile(pattern, regex.V1)
             test_pattern.search(text, timeout=1)
             return pattern
         except (regex.error, OverflowError, TimeoutError) as e:
-            log.error(f"Failed to compile or test pattern '{pattern}...': {e}")
+            log.error("Failed to compile or test pattern '%s...': %s", pattern, e)
             return None
 
     def _load_maskwords(self, text):
@@ -98,9 +96,9 @@ class MultiLingualTextRank:
             if not isinstance(word, str) or len(word) > self.max_len or not word:
                 continue
             if word.startswith('/') and word.endswith('/'):
-                word = word[1:-1]
-                if len(word) > 0 and word.strip():
-                    mask_patterns.append(self._regex_test(word, text))
+                pattern = self._regex_test(word, text)
+                if pattern:
+                    mask_patterns.append(pattern)
             else:
                 mask_patterns.append(self._build_word_regex(word))
 
@@ -126,7 +124,7 @@ class MultiLingualTextRank:
             return _placeholder
 
         mask_patterns = self._load_maskwords(text)
-        special_regex = re.compile('|'.join(mask_patterns))
+        special_regex = regex.compile('|'.join(mask_patterns))
         masked_text = special_regex.sub(_create_placeholder, text)
 
         # 3. 保留词设置，清洗过滤标点符号，进行分层
@@ -154,6 +152,7 @@ class MultiLingualTextRank:
                         ch_tokens.append(word)
 
         # 5. 中文分词
+        ch_tokens = list(set(ch_tokens))
         for ch_token in ch_tokens:
             idx = words.index(ch_token)
             ch_words = []

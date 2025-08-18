@@ -295,7 +295,7 @@ def create_rag_block():
             mask_words_input = gr.Textbox(
                 value=prompt.maskword_input_text,
                 label="TextRank mask words",
-                info=r"""Enter words or regular expressions to protect during word segmentation. 
+                info=r"""Enter words or regular expressions to protect during word segmentation.
                     Separate items with a comma and enclose regular expressions in "/".
                     (Example: C++,/https?://\S+|www\.\S+/,//)""",
                 show_copy_button=True,
