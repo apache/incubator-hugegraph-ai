@@ -61,7 +61,7 @@ class MultiLingualTextRank:
         self.max_len = 100
 
         self.pos_filter = {
-            'chinese': ('n', 'nr', 'ns', 'nt', 'nrt', 'nz', 'v', 'vd', 'vn', "eng"),
+            'chinese': ('n', 'nr', 'ns', 'nt', 'nrt', 'nz', 'v', 'vd', 'vn', "eng", "j", "l"),
             'english': ('NN', 'NNS', 'NNP', 'NNPS', 'VB', 'VBG', 'VBN', 'VBZ')
         }
 
@@ -118,7 +118,7 @@ class MultiLingualTextRank:
                 continue
             if word.startswith('/') and word.endswith('/'):
                 pattern = self._regex_test(word, text)
-                if pattern:
+                if pattern is not None:
                     mask_patterns.append(pattern)
             else:
                 mask_patterns.append(self._build_word_regex(word))
@@ -131,10 +131,11 @@ class MultiLingualTextRank:
             placeholder_id_counter += 1
             return _placeholder
 
-        special_regex = regex.compile('|'.join(mask_patterns))
-        masked_text = special_regex.sub(_create_placeholder, text)
+        if mask_patterns:
+            special_regex = regex.compile('|'.join(mask_patterns), regex.V1)
+            text = special_regex.sub(_create_placeholder, text)
 
-        return masked_text, placeholder_map
+        return text, placeholder_map
 
     @staticmethod
     def _get_valid_tokens(masked_text):
@@ -169,7 +170,7 @@ class MultiLingualTextRank:
             if word in placeholder_map:
                 words.append(placeholder_map[word])
             else:
-                if len(word) > 1 and flag in self.pos_filter['english'] and word not in en_stop_words:
+                if len(word) >= 1 and flag in self.pos_filter['english'] and word not in en_stop_words:
                     # 存在中文字符会重新分词，否则加入分词
                     words.append(word)
                     if self.chinese_pattern.search(word):
@@ -182,7 +183,7 @@ class MultiLingualTextRank:
             ch_words = []
             jieba_tokens = pseg.cut(ch_token)
             for word, flag in jieba_tokens:
-                if len(word) > 1 and flag in self.pos_filter['chinese'] and word not in ch_stop_words:
+                if len(word) >= 1 and flag in self.pos_filter['chinese'] and word not in ch_stop_words:
                     ch_words.append(word)
             words = words[:idx] + ch_words + words[idx+1:]
 
@@ -194,11 +195,10 @@ class MultiLingualTextRank:
         edge_weights = defaultdict(int)
         for i, word1 in enumerate(words):
             for j in range(i + 1, min(i + self.window + 1, len(words))):
-                if j < len(words):
-                    word2 = words[j]
-                    if word1 != word2:
-                        pair = tuple(sorted((word1, word2)))
-                        edge_weights[pair] += 1
+                word2 = words[j]
+                if word1 != word2:
+                    pair = tuple(sorted((word1, word2)))
+                    edge_weights[pair] += 1
 
         graph = ig.Graph(n=len(unique_words), directed=False)
         graph.vs['name'] = unique_words

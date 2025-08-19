@@ -126,7 +126,7 @@ class KeywordExtract:
         log.debug("LLM keywords: %s, TextRank keywords: %s", llm_keywords, textrank_keywords)
 
         intersection_keywords = []
-        used_tr_keywords = []
+        used_tr_lower = set()
 
         for lk in llm_keywords:
             word = lk.lower()
@@ -134,17 +134,17 @@ class KeywordExtract:
             if len(parts) > 1:
                 # Multi-word phrase: check if all parts are in TextRank
                 if all(part in tr_lower for part in parts):
-                    intersection_keywords.append(word)
-                    for part in parts:
-                        used_tr_keywords.extend(part)
+                    intersection_keywords.append(lk)
+                    used_tr_lower.update(parts)
             else:
                 # Single-word keyword: check for direct existence
                 if word in tr_lower:
-                    intersection_keywords.append(word)
-                    used_tr_keywords.append(word)
+                    intersection_keywords.append(lk)
+                    used_tr_lower.add(word)
 
-        remaining_llm = [lk for lk in llm_keywords if lk.lower() not in intersection_keywords]
-        remaining_textrank = [trk for trk in textrank_keywords if trk.lower() not in used_tr_keywords]
+        inter_lower = {k.lower() for k in intersection_keywords}
+        remaining_llm = [lk for lk in llm_keywords if lk.lower() not in inter_lower]
+        remaining_textrank = [trk for trk in textrank_keywords if trk.lower() not in used_tr_lower]
 
         ordered_keywords = intersection_keywords + remaining_llm + remaining_textrank
         ordered_keywords = ordered_keywords[:self._max_keywords]
