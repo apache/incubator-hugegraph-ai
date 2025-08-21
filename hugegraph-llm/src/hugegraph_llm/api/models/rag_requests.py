@@ -46,6 +46,7 @@ class RAGRequest(BaseModel):
     topk_return_results: int = Query(20, description="Number of sorted results to return finally.")
     vector_dis_threshold: float = Query(0.9, description="Threshold for vector similarity\
                                          (results greater than this will be ignored).")
+    extract_method: str = Query("Hybrid", description="Method to extract keywords from the text.")
     topk_per_keyword: int = Query(1, description="TopK results returned for each keyword \
                                    extracted from the query, by default only the most similar one is returned.")
     client_config: Optional[GraphConfigRequest] = Query(None, description="hugegraph server config.")
@@ -55,6 +56,10 @@ class RAGRequest(BaseModel):
     keywords_extract_prompt: Optional[str] = Query(
         prompt.keywords_extract_prompt,
         description="Prompt for extracting keywords from query.",
+    )
+    mask_words: Optional[str] = Query(
+        prompt.maskword_input_text,
+        description="Mask words to be protected during word segmentation.",
     )
     gremlin_tmpl_num: int = Query(1, description="Number of Gremlin templates to use.")
     gremlin_prompt: Optional[str] = Query(

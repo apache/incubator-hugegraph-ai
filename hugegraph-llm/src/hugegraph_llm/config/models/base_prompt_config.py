@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 import yaml
@@ -49,6 +49,7 @@ class BasePromptConfig:
     doc_input_text: str = ""
     _language_generated: str = ""
     generate_extract_prompt_template: str = ""
+    maskword_input_text: str = ""
 
     def ensure_yaml_file_exists(self):
         current_dir = Path.cwd().resolve()
@@ -117,6 +118,7 @@ class BasePromptConfig:
             "doc_input_text": to_literal(self.doc_input_text),
             "_language_generated": str(self.llm_settings.language).lower().strip(),
             "generate_extract_prompt_template": to_literal(self.generate_extract_prompt_template),
+            "maskword_input_text": to_literal(self.maskword_input_text),
         }
         with open(yaml_file_path, "w", encoding="utf-8") as file:
             yaml.dump(data, file, allow_unicode=True, sort_keys=False, default_flow_style=False)
