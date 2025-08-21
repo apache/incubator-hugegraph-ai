@@ -15,8 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import importlib.resources
-import os
 import re
 from collections import defaultdict
 
@@ -25,32 +23,8 @@ import jieba.posseg as pseg
 import nltk
 import regex
 
-from hugegraph_llm.utils.anchor import get_project_root
+from hugegraph_llm.operators.common_op.nltk_helper import NLTKHelper
 from hugegraph_llm.utils.log import log
-
-NLTK_DATA_PATH = os.path.join(get_project_root(), 'src/hugegraph_llm/resources/nltk_data')
-EXTRACT_STOPWORDS = 'hugegraph_llm.resources.nltk_data.corpora.stopwords'
-
-
-def download_nltk_data_if_needed():
-    required_packages = ['punkt', 'punkt_tab', 'averaged_perceptron_tagger', "averaged_perceptron_tagger_eng"]
-
-    if not os.path.exists(NLTK_DATA_PATH):
-        os.makedirs(NLTK_DATA_PATH)
-
-    # 将我们的本地目录添加到 NLTK 的搜索路径中
-    if NLTK_DATA_PATH not in nltk.data.path:
-        nltk.data.path.insert(0, NLTK_DATA_PATH)
-
-    for package in required_packages:
-        try:
-            if package in['punkt', 'punkt_tab']:
-                nltk.data.find(f'tokenizers/{package}')
-            else:
-                nltk.data.find(f'taggers/{package}')
-        except LookupError:
-            log.info("Download NLTK package %s for TextRank", package)
-            nltk.download(package, download_dir=NLTK_DATA_PATH)
 
 
 class MultiLingualTextRank:
@@ -65,29 +39,9 @@ class MultiLingualTextRank:
             'english': ('NN', 'NNS', 'NNP', 'NNPS', 'VB', 'VBG', 'VBN', 'VBZ')
         }
 
-        self.stopwords = {'chinese': set(), 'english': set()}
-        self.stopwords_loaded = False
+        self.nltk_helper = NLTKHelper()
         self.mask_words = list(filter(None, (mask_words or "").split(',')))
-        self.chinese_pattern = re.compile('[\u4e00-\u9fa5]')
 
-    def _load_stopwords(self):
-        download_nltk_data_if_needed()
-        if self.stopwords_loaded:
-            return True
-        resource_path = importlib.resources.files(EXTRACT_STOPWORDS)
-        try:
-            with resource_path.joinpath('chinese').open(encoding='utf-8') as f:
-                self.stopwords['chinese'] = {line.strip() for line in f}
-        except FileNotFoundError:
-            log.error("Chinese stopwords file not found, using empty set")
-            return False
-        try:
-            with resource_path.joinpath('english').open(encoding='utf-8') as f:
-                self.stopwords['english'] = {line.strip() for line in f}
-        except FileNotFoundError:
-            log.error("English stopwords file not found, using empty set")
-            return False
-        return True
 
     @staticmethod
     def _build_word_regex(word: str):
@@ -155,8 +109,8 @@ class MultiLingualTextRank:
         # 1. 初始化
         words = []
         ch_tokens = []
-        en_stop_words = self.stopwords.get('english', set())
-        ch_stop_words = self.stopwords.get('chinese', set())
+        en_stop_words = self.nltk_helper.stopwords(lang='english')
+        ch_stop_words = self.nltk_helper.stopwords(lang='chinese')
 
         # 2. 屏蔽特殊词
         masked_text, placeholder_map = self._word_mask(text)
@@ -173,7 +127,7 @@ class MultiLingualTextRank:
                 if len(word) >= 1 and flag in self.pos_filter['english'] and word not in en_stop_words:
                     # 存在中文字符会重新分词，否则加入分词
                     words.append(word)
-                    if self.chinese_pattern.search(word):
+                    if re.compile('[\u4e00-\u9fa5]').search(word):
                         ch_tokens.append(word)
 
         # 5. 中文分词
@@ -212,29 +166,25 @@ class MultiLingualTextRank:
             return {}
 
         pagerank_scores = self.graph.pagerank(directed=False, damping=0.85, weights='weight')
+        pagerank_scores = [scores/max(pagerank_scores) for scores in pagerank_scores]
         node_names = self.graph.vs['name']
         return dict(zip(node_names, pagerank_scores))
 
-    def extract_keywords(self, text):
-
-        # 1. 停止词与 nltk 模型载入
-        if not self._load_stopwords():
-            return []
+    def extract_keywords(self, text) -> dict:
+        # 1. nltk 模型载入
+        self.nltk_helper.check_nltk_data()
 
         # 2. 文本预处理
         words = self._multi_preprocess(text)
         if not words:
-            return []
+            return {}
 
         # 3. 构建图，运行 PageRank 算法
         unique_words = list(set(words))
+        ranks = dict(zip(unique_words, [0] * len(unique_words)))
         if len(unique_words) > self.window:
             self._build_graph(words)
             if not self.graph or self.graph.vcount() == 0:
-                return []
+                return {}
             ranks = self._rank_nodes()
-            top_keywords = sorted(ranks, key=ranks.get, reverse=True)[:self.top_k]
-        else:
-            top_keywords = unique_words
-
-        return top_keywords
+        return ranks

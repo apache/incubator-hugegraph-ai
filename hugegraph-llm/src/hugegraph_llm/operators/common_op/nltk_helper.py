@@ -52,6 +52,23 @@ class NLTKHelper:
 
         return self._stopwords[lang]
 
+    def check_nltk_data(self):
+        required_packages = ['punkt', 'punkt_tab', 'averaged_perceptron_tagger', "averaged_perceptron_tagger_eng"]
+        cache_dir = self.get_cache_dir()
+        nltk_data_dir = os.environ.get("NLTK_DATA", cache_dir)
+
+        if nltk_data_dir not in nltk.data.path:
+            nltk.data.path.append(nltk_data_dir)
+
+        for package in required_packages:
+            try:
+                if package in ['punkt', 'punkt_tab']:
+                    nltk.data.find(f'tokenizers/{package}')
+                else:
+                    nltk.data.find(f'taggers/{package}')
+            except LookupError:
+                nltk.download(package, download_dir=nltk_data_dir)
+
     @staticmethod
     def get_cache_dir() -> str:
         """Locate a platform-appropriate cache directory for hugegraph-llm,

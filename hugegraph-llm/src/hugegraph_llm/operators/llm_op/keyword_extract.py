@@ -17,7 +17,9 @@
 
 import re
 import time
-from typing import Any, Dict, Optional, Set
+from typing import Any, Dict, Optional, List
+
+import jieba.posseg as pseg
 
 from hugegraph_llm.config import prompt
 from hugegraph_llm.models.llms.base import BaseLLM
@@ -64,26 +66,28 @@ class KeywordExtract:
         self._language = lang
         self._max_keywords = context.get("max_keywords", self._max_keywords)
 
-        if self._extract_method == "TextRank":
-            # 使用 TextRank 提取关键词
-            keywords = self._extract_with_textrank()
-        elif self._extract_method == "LLM":
+        if self._extract_method == "LLM":
             # 使用 LLM 提取关键词
             keywords = self._extract_with_llm()
+        elif self._extract_method == "TextRank":
+            # 使用 TextRank 提取关键词
+            ranks = self._extract_with_textrank()
+            keywords = [] if not ranks else sorted(ranks, key=ranks.get, reverse=True)
         elif self._extract_method == "Hybrid":
+            # 使用 混合方法 提取关键词
             keywords = self._extract_with_hybrid()
         else:
             raise ValueError(f"Invalid extract_method: {self._extract_method}")
 
-        keywords = {k.replace("'", "") for k in keywords}
-        context["keywords"] = list(keywords)[:self._max_keywords]
+        keywords = [k.replace("'", "") for k in keywords]
+        context["keywords"] = keywords[:self._max_keywords]
         log.info("User Query: %s\nKeywords: %s", self._query, context["keywords"])
 
         # extracting keywords & expanding synonyms increase the call count by 1
         context["call_count"] = context.get("call_count", 0) + 1
         return context
 
-    def _extract_with_llm(self) -> Set[str]:
+    def _extract_with_llm(self) -> List[str]:
         prompt_run = f"{self._extract_template.format(question=self._query, max_keywords=self._max_keywords)}"
         start_time = time.perf_counter()
         response = self._llm.generate(prompt=prompt_run)
@@ -94,85 +98,99 @@ class KeywordExtract:
         )
         return keywords
 
-    def _extract_with_textrank(self) -> Set[str]:
+    def _extract_with_textrank(self) -> Dict:
         """ TextRank 提取模式 """
         start_time = time.perf_counter()
+        ranks = {}
         try:
-            keywords = self._textrank_model.extract_keywords(self._query)
-        except FileNotFoundError as e:
-            log.error("TextRank resource file not found: %s", e)
-            keywords = []
+            ranks = self._textrank_model.extract_keywords(self._query)
         except (TypeError, ValueError) as e:
             log.error("TextRank parameter error: %s", e)
-            keywords = []
         except MemoryError as e:
             log.critical("TextRank memory error (text too large?): %s", e)
-            keywords = []
+        end_time = time.perf_counter()
         log.debug("TextRank Keyword extraction time: %.2f seconds",
-                  time.perf_counter() - start_time)
-        return set(filter(None, keywords))
+                  end_time - start_time)
+        return ranks
 
-    def _extract_with_hybrid(self) -> Set[str]:
+    def _extract_with_hybrid(self) -> List[str]:
         """
-        Hybrid mode with a "Full-Match Intersection" strategy.
-        The priority order is:
-        1. Intersection keywords (LLM phrases fully matched by TextRank parts).
-        2. Remaining LLM keywords.
-        3. Remaining TextRank keywords.
+        Hybrid mode extraction
+        Source Scores: Intersection: 1.0, only from llm: 0.8, only from textrank: 0.5
+        TextRank Scores: scores from TextRank, for llm long keywords, its scores is sum of its token's scores
+        len Scores:
         """
-        llm_keywords = self._extract_with_llm()
-        textrank_keywords = self._extract_with_textrank()
-        tr_lower = {t.lower() for t in textrank_keywords}
-        log.debug("LLM keywords: %s, TextRank keywords: %s", llm_keywords, textrank_keywords)
+        start_time = time.perf_counter()
+        llm_keywords = self._extract_with_llm()[:self._max_keywords]
+        ranks = self._extract_with_textrank()
+        scores_w = [0.5, 0.3, 0.2]
 
-        intersection_keywords = []
-        used_tr_lower = set()
+        scores_map = {}
+        token_map = {}
+        lower_ranks = {k.lower(): v for k, v in ranks.items()}
 
+        # 1. LLM parts
         for lk in llm_keywords:
-            word = lk.lower()
-            parts = re.split(r'\s+', word)
-            if len(parts) > 1:
-                # Multi-word phrase: check if all parts are in TextRank
-                if all(part in tr_lower for part in parts):
-                    intersection_keywords.append(lk)
-                    used_tr_lower.update(parts)
+            parts = re.split(r'\s+', lk.lower())
+            scores_map[lk] = 0
+            token_map[lk] = len(parts)
+            if all(part in lower_ranks for part in parts):
+                scores_map[lk] += 1 * scores_w[0]
             else:
-                # Single-word keyword: check for direct existence
-                if word in tr_lower:
-                    intersection_keywords.append(lk)
-                    used_tr_lower.add(word)
+                scores_map[lk] += 0.8 * scores_w[0]
+            for part in parts:
+                if part in lower_ranks:
+                    scores_map[lk] += lower_ranks[part] * scores_w[1]
 
-        inter_lower = {k.lower() for k in intersection_keywords}
-        remaining_llm = [lk for lk in llm_keywords if lk.lower() not in inter_lower]
-        remaining_textrank = [trk for trk in textrank_keywords if trk.lower() not in used_tr_lower]
+        # 2. TextRank parts
+        for word, score in ranks.items():
+            if word not in scores_map:
+                token_map[word] = 1
+                scores_map[word] = 0.5 * scores_w[0] + score * scores_w[1]
 
-        ordered_keywords = intersection_keywords + remaining_llm + remaining_textrank
-        ordered_keywords = ordered_keywords[:self._max_keywords]
-        return set(ordered_keywords)
+        # 3. calculate scores
+        if len(scores_map) > self._max_keywords:
+            max_token_len = max(token_map.values())
+            scores_map = {k: v + token_map[k] * scores_w[2] / max_token_len for k, v in scores_map.items()}
+            ordered_keywords = sorted(scores_map, key=scores_map.get, reverse=True)
+        else:
+            ordered_keywords = scores_map.keys()
+
+        end_time = time.perf_counter()
+        log.debug("Hybrid Keyword extraction time: %.2f seconds", end_time - start_time)
+        return ordered_keywords
 
     def _extract_keywords_from_response(
         self,
         response: str,
         lowercase: bool = True,
         start_token: str = "",
-    ) -> Set[str]:
-        keywords = []
+    ) -> List[str]:
+
+        lower_keywords: set[str] = set()
+        results = []
+
         # use re.escape(start_token) if start_token contains special chars like */&/^ etc.
         matches = re.findall(rf'{start_token}[^\n]+\n?', response)
 
         for match in matches:
             match = match[len(start_token):].strip()
-            keywords.extend(
-                k.lower() if lowercase else k
-                for k in re.split(r"[,，]+", match)
-                if len(k.strip()) > 1
-            )
+            if match not in lower_keywords:
+                for k in re.split(r"[,，]+", match):
+                    word = k.strip()
+                    if len(word) > 1 and word not in lower_keywords:
+                        results.append(word.lower() if lowercase else word)
+                        lower_keywords.add(word.lower())
 
         # if the keyword consists of multiple words, split into sub-words (removing stopwords)
-        results = set(keywords)
-        for token in keywords:
-            sub_tokens = re.findall(r"\w+", token)
+        for token in results:
+            if re.compile('[\u4e00-\u9fa5]').search(token) is None:
+                sub_tokens = re.findall(r"\w+", token)
+            else:
+                sub_tokens = pseg.cut(token)
             if len(sub_tokens) > 1:
-                results.update(
-                    w for w in sub_tokens if w not in NLTKHelper().stopwords(lang=self._language))
+                for w in sub_tokens:
+                    if w not in NLTKHelper().stopwords(lang=self._language) and w not in lower_keywords:
+                        results.append(w.lower() if lowercase else w)
+                        lower_keywords.add(w.lower())
         return results
