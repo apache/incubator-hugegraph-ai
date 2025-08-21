@@ -50,24 +50,45 @@ class NLTKHelper:
                 nltk.download("stopwords", download_dir=nltk_data_dir)
             self._stopwords[lang] = stopwords.words(lang)
 
+        # final check
+        final_stopwords = self._stopwords[lang]
+        if final_stopwords is None:
+            return []
+
         return self._stopwords[lang]
 
     def check_nltk_data(self):
-        required_packages = ['punkt', 'punkt_tab', 'averaged_perceptron_tagger', "averaged_perceptron_tagger_eng"]
+
         cache_dir = self.get_cache_dir()
         nltk_data_dir = os.environ.get("NLTK_DATA", cache_dir)
+        nltk.data.path.append(os.path.join(resource_path, "nltk_data"))
 
         if nltk_data_dir not in nltk.data.path:
             nltk.data.path.append(nltk_data_dir)
 
+        required_packages = {
+            'punkt': False,
+            'punkt_tab': False,
+            'averaged_perceptron_tagger': False,
+            "averaged_perceptron_tagger_eng": False}
         for package in required_packages:
             try:
                 if package in ['punkt', 'punkt_tab']:
                     nltk.data.find(f'tokenizers/{package}')
                 else:
                     nltk.data.find(f'taggers/{package}')
+                required_packages[package] = True
             except LookupError:
                 nltk.download(package, download_dir=nltk_data_dir)
+
+        check_flag = all(required_packages.values())
+        if not check_flag:
+            for package in required_packages:
+                if nltk.data.find(f'tokenizers/{package}') or nltk.data.find(f'taggers/{package}'):
+                    required_packages[package] = True
+
+        check_flag = all(required_packages.values())
+        return check_flag
 
     @staticmethod
     def get_cache_dir() -> str:

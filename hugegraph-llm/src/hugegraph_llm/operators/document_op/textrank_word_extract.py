@@ -171,7 +171,9 @@ class MultiLingualTextRank:
 
     def extract_keywords(self, text) -> dict:
         # 1. nltk 模型载入
-        NLTKHelper().check_nltk_data()
+
+        if not NLTKHelper().check_nltk_data():
+            return {}
 
         # 2. 文本预处理
         words = self._multi_preprocess(text)
