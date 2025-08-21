@@ -127,6 +127,7 @@ class KeywordExtract:
 
         scores_map = {}
         token_map = {}
+        word_set = set()
         lower_ranks = {k.lower(): v for k, v in ranks.items()}
 
         # 1. LLM parts
@@ -134,6 +135,7 @@ class KeywordExtract:
             parts = re.split(r'\s+', lk.lower())
             scores_map[lk] = 0
             token_map[lk] = len(parts)
+            word_set.add(lk.lower())
             if all(part in lower_ranks for part in parts):
                 scores_map[lk] += 1 * scores_w[0]
             else:
@@ -144,7 +146,7 @@ class KeywordExtract:
 
         # 2. TextRank parts
         for word, score in ranks.items():
-            if word not in scores_map:
+            if word.lower() not in word_set:
                 token_map[word] = 1
                 scores_map[word] = 0.5 * scores_w[0] + score * scores_w[1]
 
@@ -154,7 +156,7 @@ class KeywordExtract:
             scores_map = {k: v + token_map[k] * scores_w[2] / max_token_len for k, v in scores_map.items()}
             ordered_keywords = sorted(scores_map, key=scores_map.get, reverse=True)
         else:
-            ordered_keywords = scores_map.keys()
+            ordered_keywords = list(scores_map.keys())
 
         end_time = time.perf_counter()
         log.debug("Hybrid Keyword extraction time: %.2f seconds", end_time - start_time)
@@ -182,15 +184,20 @@ class KeywordExtract:
                         results.append(word.lower() if lowercase else word)
                         lower_keywords.add(word.lower())
 
+        sub_tokens = []
         # if the keyword consists of multiple words, split into sub-words (removing stopwords)
-        for token in results:
+        for token in list(results):
             if re.compile('[\u4e00-\u9fa5]').search(token) is None:
                 sub_tokens = re.findall(r"\w+", token)
             else:
-                sub_tokens = pseg.cut(token)
+                sub_tokens = [w for (w, _flag) in pseg.cut(token)]
             if len(sub_tokens) > 1:
                 for w in sub_tokens:
-                    if w not in NLTKHelper().stopwords(lang=self._language) and w not in lower_keywords:
-                        results.append(w.lower() if lowercase else w)
-                        lower_keywords.add(w.lower())
+                    lw = w.lower()
+                    if lw not in NLTKHelper().stopwords(lang=self._language) and lw not in lower_keywords:
+                        sub_tokens.append(lw if lowercase else w)
+                        lower_keywords.add(lw)
+        if sub_tokens:
+            results.extend(sub_tokens)
+
         return results

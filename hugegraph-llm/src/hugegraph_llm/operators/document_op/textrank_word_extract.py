@@ -39,7 +39,6 @@ class MultiLingualTextRank:
             'english': ('NN', 'NNS', 'NNP', 'NNPS', 'VB', 'VBG', 'VBN', 'VBZ')
         }
 
-        self.nltk_helper = NLTKHelper()
         self.mask_words = list(filter(None, (mask_words or "").split(',')))
 
 
@@ -109,8 +108,8 @@ class MultiLingualTextRank:
         # 1. 初始化
         words = []
         ch_tokens = []
-        en_stop_words = self.nltk_helper.stopwords(lang='english')
-        ch_stop_words = self.nltk_helper.stopwords(lang='chinese')
+        en_stop_words = NLTKHelper().stopwords(lang='english')
+        ch_stop_words = NLTKHelper().stopwords(lang='chinese')
 
         # 2. 屏蔽特殊词
         masked_text, placeholder_map = self._word_mask(text)
@@ -172,7 +171,7 @@ class MultiLingualTextRank:
 
     def extract_keywords(self, text) -> dict:
         # 1. nltk 模型载入
-        self.nltk_helper.check_nltk_data()
+        NLTKHelper().check_nltk_data()
 
         # 2. 文本预处理
         words = self._multi_preprocess(text)
