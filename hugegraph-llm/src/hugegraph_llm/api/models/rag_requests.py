@@ -15,17 +15,17 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Optional, Literal
-
+from typing import Optional, Literal, List
+from enum import Enum
 from fastapi import Query
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from hugegraph_llm.config import prompt
 
 
 class GraphConfigRequest(BaseModel):
     url: str = Query('127.0.0.1:8080', description="hugegraph client url.")
-    name: str = Query('hugegraph', description="hugegraph client name.")
+    graph: str = Query('hugegraph', description="hugegraph client name.")
     user: str = Query('', description="hugegraph client user.")
     pwd: str = Query('', description="hugegraph client pwd.")
     gs: str = None
@@ -119,3 +119,40 @@ class RerankerConfigRequest(BaseModel):
 class LogStreamRequest(BaseModel):
     admin_token: Optional[str] = None
     log_file: Optional[str] = "llm-server.log"
+
+class GremlinOutputType(str, Enum):
+    MATCH_RESULT = "match_result"
+    TEMPLATE_GREMLIN = "template_gremlin"
+    RAW_GREMLIN = "raw_gremlin"
+    TEMPLATE_EXECUTION_RESULT = "template_execution_result"
+    RAW_EXECUTION_RESULT = "raw_execution_result"
+
+class GremlinGenerateRequest(BaseModel):
+    query: str
+    example_num: Optional[int] = Query(
+        0,
+        description="Number of Gremlin templates to use.(0 means no templates)"
+    )
+    gremlin_prompt: Optional[str] = Query(
+        prompt.gremlin_generate_prompt,
+        description="Prompt for the Text2Gremlin query.",
+    )
+    client_config: Optional[GraphConfigRequest] = Query(None, description="hugegraph server config.")
+    output_types: Optional[List[GremlinOutputType]] = Query(
+        default=[GremlinOutputType.TEMPLATE_GREMLIN],
+        description="""
+        a list can contain "match_result","template_gremlin",
+        "raw_gremlin","template_execution_result","raw_execution_result"
+        You can specify which type of result do you need. Empty means all types.
+        """
+    )
+
+    @field_validator('gremlin_prompt')
+    @classmethod
+    def validate_prompt_placeholders(cls, v):
+        if v is not None:
+            required_placeholders = ['{query}', '{schema}', '{example}', '{vertices}']
+            missing = [p for p in required_placeholders if p not in v]
+            if missing:
+                raise ValueError(f"Prompt template is missing required placeholders: {', '.join(missing)}")
+        return v
