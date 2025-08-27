@@ -41,6 +41,7 @@ class VectorIndexQuery:
         self.topk = topk
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         self.folder_name = get_index_folder_name(
             huge_settings.graph_name, huge_settings.graph_space
         )
@@ -52,6 +53,9 @@ class VectorIndexQuery:
 =======
         self.vector_index = vector_index.from_name(embedding.get_embedding_dim(), huge_settings.graph_name, "chunks")
 >>>>>>> 38dce0b (feat(llm): vector db finished)
+=======
+        self.vector_index = vector_index.from_name(embedding.get_embedding_dim(), huge_settings.graph_name, "chunks")
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context.get("query")

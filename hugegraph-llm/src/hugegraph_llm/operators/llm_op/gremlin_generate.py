@@ -54,6 +54,7 @@ class GremlinGenerateSynthesize:
         example_strings = []
         for example in examples:
 <<<<<<< HEAD
+<<<<<<< HEAD
             example_strings.append(
                 f"- query: {example['query']}\n"
                 f"- gremlin:\n```gremlin\n{example['gremlin']}\n```"
@@ -61,6 +62,9 @@ class GremlinGenerateSynthesize:
 =======
             example_strings.append(f"- query: {example['query']}\n- gremlin:\n```gremlin\n{example['gremlin']}\n```")
 >>>>>>> 38dce0b (feat(llm): vector db finished)
+=======
+            example_strings.append(f"- query: {example['query']}\n- gremlin:\n```gremlin\n{example['gremlin']}\n```")
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
         return "\n\n".join(example_strings)
 
     def _format_vertices(self, vertices: Optional[List[str]]) -> Optional[str]:
@@ -94,9 +98,7 @@ class GremlinGenerateSynthesize:
             vertices=self._format_vertices(vertices=self.vertices),
             properties=self._format_properties(properties=None),
         )
-        async_tasks["initialized_answer"] = asyncio.create_task(
-            self.llm.agenerate(prompt=init_prompt)
-        )
+        async_tasks["initialized_answer"] = asyncio.create_task(self.llm.agenerate(prompt=init_prompt))
 
         raw_response = await async_tasks["raw_answer"]
         initialized_response = await async_tasks["initialized_answer"]

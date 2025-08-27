@@ -101,6 +101,7 @@ def load_query_examples():
             prompt,
             "language",
 <<<<<<< HEAD
+<<<<<<< HEAD
             (
                 getattr(prompt.llm_settings, "language", "EN")
                 if hasattr(prompt, "llm_settings")
@@ -109,6 +110,9 @@ def load_query_examples():
 =======
             getattr(prompt.llm_settings, "language", "EN") if hasattr(prompt, "llm_settings") else "EN",
 >>>>>>> 87ee5d3 (style: format code with black line-length 120)
+=======
+            (getattr(prompt.llm_settings, "language", "EN") if hasattr(prompt, "llm_settings") else "EN"),
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
         )
         if language.upper() == "CN":
             examples_path = os.path.join(resource_path, "prompt_examples", "query_examples_CN.json")

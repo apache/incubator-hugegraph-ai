@@ -349,19 +349,20 @@ def create_rag_block():
 
         with gr.Column(scale=1):
             with gr.Row():
+<<<<<<< HEAD
                 raw_radio = gr.Radio(
                     choices=[True, False], value=False, label="Basic LLM Answer"
                 )
                 vector_only_radio = gr.Radio(
                     choices=[True, False], value=False, label="Vector-only Answer"
                 )
+=======
+                raw_radio = gr.Radio(choices=[True, False], value=False, label="Basic LLM Answer")
+                vector_only_radio = gr.Radio(choices=[True, False], value=False, label="Vector-only Answer")
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
             with gr.Row():
-                graph_only_radio = gr.Radio(
-                    choices=[True, False], value=True, label="Graph-only Answer"
-                )
-                graph_vector_radio = gr.Radio(
-                    choices=[True, False], value=False, label="Graph-Vector Answer"
-                )
+                graph_only_radio = gr.Radio(choices=[True, False], value=True, label="Graph-only Answer")
+                graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
 
             def toggle_slider(enable):
                 return gr.update(interactive=enable)
@@ -379,13 +380,9 @@ def create_rag_block():
                         label="Template Num (<0 means disable text2gql) ",
                         precision=0,
                     )
-                    graph_ratio = gr.Slider(
-                        0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False
-                    )
+                    graph_ratio = gr.Slider(0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False)
 
-                graph_vector_radio.change(
-                    toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio
-                )  # pylint: disable=no-member
+                graph_vector_radio.change(toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio)  # pylint: disable=no-member
                 near_neighbor_first = gr.Checkbox(
                     value=False,
                     label="Near neighbor first(Optional)",
@@ -514,9 +511,7 @@ def create_rag_block():
 
     with gr.Row():
         with gr.Column():
-            questions_file = gr.File(
-                file_types=[".xlsx", ".csv"], label="Questions File (.xlsx & csv)"
-            )
+            questions_file = gr.File(file_types=[".xlsx", ".csv"], label="Questions File (.xlsx & csv)")
         with gr.Column():
             test_template_file = os.path.join(
                 resource_path, "demo", "questions_template.xlsx"

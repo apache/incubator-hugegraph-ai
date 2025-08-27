@@ -62,11 +62,13 @@ class AnswerSynthesize:
         context_head_str, context_tail_str = self.init_llm(context)
 
         if self._context_body is not None:
+<<<<<<< HEAD
             context_str = f"{context_head_str}\n" f"{self._context_body}\n" f"{context_tail_str}".strip("\n")
+=======
+            context_str = f"{context_head_str}\n{self._context_body}\n{context_tail_str}".strip("\n")
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
 
-            final_prompt = self._prompt_template.format(
-                context_str=context_str, query_str=self._question
-            )
+            final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
             response = self._llm.generate(prompt=final_prompt)
             return {"answer": response}
 
@@ -96,9 +98,7 @@ class AnswerSynthesize:
             vector_result_context = "No (vector)phrase related to the query."
         graph_result = context.get("graph_result")
         if graph_result:
-            graph_context_head = context.get(
-                "graph_context_head", "Knowledge from graphdb for the query:\n"
-            )
+            graph_context_head = context.get("graph_context_head", "Knowledge from graphdb for the query:\n")
             graph_result_context = graph_context_head + "\n".join(
                 f"{i + 1}. {res}" for i, res in enumerate(graph_result)
             )
@@ -111,11 +111,13 @@ class AnswerSynthesize:
         context_head_str, context_tail_str = self.init_llm(context)
 
         if self._context_body is not None:
+<<<<<<< HEAD
             context_str = f"{context_head_str}\n" f"{self._context_body}\n" f"{context_tail_str}".strip("\n")
+=======
+            context_str = f"{context_head_str}\n{self._context_body}\n{context_tail_str}".strip("\n")
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
 
-            final_prompt = self._prompt_template.format(
-                context_str=context_str, query_str=self._question
-            )
+            final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
             response = self._llm.generate(prompt=final_prompt)
             yield {"answer": response}
             return
@@ -141,28 +143,32 @@ class AnswerSynthesize:
             final_prompt = self._question
             async_tasks["raw_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
         if self._vector_only_answer:
+<<<<<<< HEAD
             context_str = f"{context_head_str}\n" f"{vector_result_context}\n" f"{context_tail_str}".strip("\n")
+=======
+            context_str = f"{context_head_str}\n{vector_result_context}\n{context_tail_str}".strip("\n")
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
 
-            final_prompt = self._prompt_template.format(
-                context_str=context_str, query_str=self._question
-            )
-            async_tasks["vector_only_task"] = asyncio.create_task(
-                self._llm.agenerate(prompt=final_prompt)
-            )
+            final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
+            async_tasks["vector_only_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
         if self._graph_only_answer:
+<<<<<<< HEAD
             context_str = f"{context_head_str}\n" f"{graph_result_context}\n" f"{context_tail_str}".strip("\n")
+=======
+            context_str = f"{context_head_str}\n{graph_result_context}\n{context_tail_str}".strip("\n")
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
 
-            final_prompt = self._prompt_template.format(
-                context_str=context_str, query_str=self._question
-            )
-            async_tasks["graph_only_task"] = asyncio.create_task(
-                self._llm.agenerate(prompt=final_prompt)
-            )
+            final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
+            async_tasks["graph_only_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
         if self._graph_vector_answer:
             context_body_str = f"{vector_result_context}\n{graph_result_context}"
             if context.get("graph_ratio", 0.5) < 0.5:
                 context_body_str = f"{graph_result_context}\n{vector_result_context}"
+<<<<<<< HEAD
             context_str = f"{context_head_str}\n" f"{context_body_str}\n" f"{context_tail_str}".strip("\n")
+=======
+            context_str = f"{context_head_str}\n{context_body_str}\n{context_tail_str}".strip("\n")
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
 
             final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
             async_tasks["graph_vector_task"] = asyncio.create_task(self._llm.agenerate(prompt=final_prompt))
@@ -198,17 +204,17 @@ class AnswerSynthesize:
         if self._raw_answer:
             final_prompt = self._question
             async_generators.append(
-                self.__llm_generate_with_meta_info(
-                    task_id=auto_id, target_key="raw_answer", prompt=final_prompt
-                )
+                self.__llm_generate_with_meta_info(task_id=auto_id, target_key="raw_answer", prompt=final_prompt)
             )
             auto_id += 1
         if self._vector_only_answer:
+<<<<<<< HEAD
             context_str = f"{context_head_str}\n" f"{vector_result_context}\n" f"{context_tail_str}".strip("\n")
+=======
+            context_str = f"{context_head_str}\n{vector_result_context}\n{context_tail_str}".strip("\n")
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
 
-            final_prompt = self._prompt_template.format(
-                context_str=context_str, query_str=self._question
-            )
+            final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
             async_generators.append(
                 self.__llm_generate_with_meta_info(
                     task_id=auto_id, target_key="vector_only_answer", prompt=final_prompt
@@ -216,26 +222,28 @@ class AnswerSynthesize:
             )
             auto_id += 1
         if self._graph_only_answer:
+<<<<<<< HEAD
             context_str = f"{context_head_str}\n" f"{graph_result_context}\n" f"{context_tail_str}".strip("\n")
+=======
+            context_str = f"{context_head_str}\n{graph_result_context}\n{context_tail_str}".strip("\n")
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
 
-            final_prompt = self._prompt_template.format(
-                context_str=context_str, query_str=self._question
-            )
+            final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
             async_generators.append(
-                self.__llm_generate_with_meta_info(
-                    task_id=auto_id, target_key="graph_only_answer", prompt=final_prompt
-                )
+                self.__llm_generate_with_meta_info(task_id=auto_id, target_key="graph_only_answer", prompt=final_prompt)
             )
             auto_id += 1
         if self._graph_vector_answer:
             context_body_str = f"{vector_result_context}\n{graph_result_context}"
             if context.get("graph_ratio", 0.5) < 0.5:
                 context_body_str = f"{graph_result_context}\n{vector_result_context}"
+<<<<<<< HEAD
             context_str = f"{context_head_str}\n" f"{context_body_str}\n" f"{context_tail_str}".strip("\n")
+=======
+            context_str = f"{context_head_str}\n{context_body_str}\n{context_tail_str}".strip("\n")
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
 
-            final_prompt = self._prompt_template.format(
-                context_str=context_str, query_str=self._question
-            )
+            final_prompt = self._prompt_template.format(context_str=context_str, query_str=self._question)
             async_generators.append(
                 self.__llm_generate_with_meta_info(
                     task_id=auto_id, target_key="graph_vector_answer", prompt=final_prompt

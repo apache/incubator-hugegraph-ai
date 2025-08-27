@@ -22,7 +22,6 @@ from pyhugegraph.client import PyHugeClient
 
 
 class FetchGraphData:
-
     def __init__(self, graph: PyHugeClient):
         self.graph = graph
 

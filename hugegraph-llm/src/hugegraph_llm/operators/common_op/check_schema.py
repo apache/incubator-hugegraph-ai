@@ -72,9 +72,7 @@ class CheckSchema:
         property_label_set = {label["name"] for label in property_labels}
         return property_labels, property_label_set
 
-    def _process_vertex_labels(
-        self, schema: Dict[str, Any], property_labels: list, property_label_set: set
-    ) -> None:
+    def _process_vertex_labels(self, schema: Dict[str, Any], property_labels: list, property_label_set: set) -> None:
         for vertex_label in schema["vertexlabels"]:
             self._validate_vertex_label(vertex_label)
             properties = vertex_label["properties"]
@@ -86,9 +84,7 @@ class CheckSchema:
             vertex_label["nullable_keys"] = nullable_keys
             self._add_missing_properties(properties, property_labels, property_label_set)
 
-    def _process_edge_labels(
-        self, schema: Dict[str, Any], property_labels: list, property_label_set: set
-    ) -> None:
+    def _process_edge_labels(self, schema: Dict[str, Any], property_labels: list, property_label_set: set) -> None:
         for edge_label in schema["edgelabels"]:
             self._validate_edge_label(edge_label)
             properties = edge_label.get("properties", [])
@@ -111,14 +107,8 @@ class CheckSchema:
 
     def _validate_edge_label(self, edge_label: Dict[str, Any]) -> None:
         check_type(edge_label, dict, "EdgeLabel in input data is not a dictionary.")
-        if (
-            "name" not in edge_label
-            or "source_label" not in edge_label
-            or "target_label" not in edge_label
-        ):
-            log_and_raise(
-                "EdgeLabel in input data does not contain 'name', 'source_label', 'target_label'."
-            )
+        if "name" not in edge_label or "source_label" not in edge_label or "target_label" not in edge_label:
+            log_and_raise("EdgeLabel in input data does not contain 'name', 'source_label', 'target_label'.")
         check_type(edge_label["name"], str, "'name' in edge_label is not of correct type.")
         check_type(
             edge_label["source_label"],
@@ -137,9 +127,7 @@ class CheckSchema:
         new_keys = [key for key in keys if key in label["properties"]]
         return new_keys
 
-    def _add_missing_properties(
-        self, properties: list, property_labels: list, property_label_set: set
-    ) -> None:
+    def _add_missing_properties(self, properties: list, property_labels: list, property_label_set: set) -> None:
         for prop in properties:
             if prop not in property_label_set:
                 property_labels.append(

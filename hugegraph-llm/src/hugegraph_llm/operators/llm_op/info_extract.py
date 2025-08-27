@@ -75,6 +75,7 @@ The extracted text is: {text}"""
 
     if schema:
         return schema_real_prompt
+<<<<<<< HEAD
     log.warning(
 <<<<<<< HEAD
         "Recommend to provide a graph schema to improve the extraction accuracy. "
@@ -83,6 +84,9 @@ The extracted text is: {text}"""
         "Recommend to provide a graph schema to improve the extraction accuracy. " "Now using the default schema."
 >>>>>>> 87ee5d3 (style: format code with black line-length 120)
     )
+=======
+    log.warning("Recommend to provide a graph schema to improve the extraction accuracy. Now using the default schema.")
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
     return text_based_prompt
 
 
@@ -112,12 +116,16 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
         p_lower = p.lower()
         for vertex in schema["vertices"]:
 <<<<<<< HEAD
+<<<<<<< HEAD
             if vertex["vertex_label"] == label and any(
                 pp.lower() == p_lower for pp in vertex["properties"]
             ):
 =======
             if vertex["vertex_label"] == label and any(pp.lower() == p_lower for pp in vertex["properties"]):
 >>>>>>> 87ee5d3 (style: format code with black line-length 120)
+=======
+            if vertex["vertex_label"] == label and any(pp.lower() == p_lower for pp in vertex["properties"]):
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
                 id = f"{label}-{s}"
                 if id not in vertices_dict:
                     vertices_dict[id] = {
@@ -217,10 +225,14 @@ class InfoExtract:
     def _filter_long_id(self, graph) -> Dict[str, List[Any]]:
         graph["vertices"] = [vertex for vertex in graph["vertices"] if self.valid(vertex["id"])]
 <<<<<<< HEAD
+<<<<<<< HEAD
         graph["edges"] = [
             edge for edge in graph["edges"] if self.valid(edge["start"]) and self.valid(edge["end"])
         ]
 =======
         graph["edges"] = [edge for edge in graph["edges"] if self.valid(edge["start"]) and self.valid(edge["end"])]
 >>>>>>> 87ee5d3 (style: format code with black line-length 120)
+=======
+        graph["edges"] = [edge for edge in graph["edges"] if self.valid(edge["start"]) and self.valid(edge["end"])]
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
         return graph

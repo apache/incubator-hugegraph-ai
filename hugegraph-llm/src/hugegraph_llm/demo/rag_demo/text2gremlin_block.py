@@ -219,9 +219,14 @@ def _execute_queries(context, output_types):
 def gremlin_generate(
     inp, example_num, schema, gremlin_prompt, requested_outputs: Optional[List[str]] = None
 ) -> GremlinResult:
+<<<<<<< HEAD
     generator = GremlinGenerator(
         llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding()
     )
+=======
+    vector_index = get_vector_index_class(index_settings.now_vector_index)
+    generator = GremlinGenerator(llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding())
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
     sm = SchemaManager(graph_name=schema)
 
     processed_schema, short_schema = _process_schema(schema, generator, sm)
@@ -241,9 +246,7 @@ def gremlin_generate(
 
     _execute_queries(context, output_types)
 
-    match_result = json.dumps(
-        context.get("match_result", "No Results"), ensure_ascii=False, indent=2
-    )
+    match_result = json.dumps(context.get("match_result", "No Results"), ensure_ascii=False, indent=2)
     return GremlinResult.success_result(
         match_result=match_result,
         template_gremlin=context["result"],
@@ -267,11 +270,7 @@ def simple_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
     if "edgelabels" in schema:
         mini_schema["edgelabels"] = []
         for edge in schema["edgelabels"]:
-            new_edge = {
-                key: edge[key]
-                for key in ["name", "source_label", "target_label", "properties"]
-                if key in edge
-            }
+            new_edge = {key: edge[key] for key in ["name", "source_label", "target_label", "properties"] if key in edge}
             mini_schema["edgelabels"].append(new_edge)
 
     return mini_schema
@@ -369,9 +368,7 @@ def create_text2gremlin_block() -> Tuple:
             )
 
         with gr.Column(scale=1):
-            example_num_slider = gr.Slider(
-                minimum=0, maximum=10, step=1, value=2, label="Number of refer examples"
-            )
+            example_num_slider = gr.Slider(minimum=0, maximum=10, step=1, value=2, label="Number of refer examples")
             schema_box = gr.Textbox(
                 value=prompt.text2gql_graph_schema, label="Schema", lines=2, show_copy_button=True
             )

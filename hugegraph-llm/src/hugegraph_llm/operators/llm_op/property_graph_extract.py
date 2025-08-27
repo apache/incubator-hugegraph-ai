@@ -126,11 +126,15 @@ class PropertyGraphExtract:
         if not json_match:
             log.critical(
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "Invalid property graph! No JSON object found, "
                 "please check the output format example in prompt."
 =======
                 "Invalid property graph! No JSON object found, " "please check the output format example in prompt."
 >>>>>>> 87ee5d3 (style: format code with black line-length 120)
+=======
+                "Invalid property graph! No JSON object found, please check the output format example in prompt."
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
             )
             return []
         json_str = json_match.group(1).strip()
@@ -139,11 +143,7 @@ class PropertyGraphExtract:
         try:
             property_graph = json.loads(json_str)
             # Expect property_graph to be a dict with keys "vertices" and "edges"
-            if not (
-                isinstance(property_graph, dict)
-                and "vertices" in property_graph
-                and "edges" in property_graph
-            ):
+            if not (isinstance(property_graph, dict) and "vertices" in property_graph and "edges" in property_graph):
                 log.critical("Invalid property graph format; expecting 'vertices' and 'edges'.")
                 return items
 
@@ -171,7 +171,5 @@ class PropertyGraphExtract:
             process_items(property_graph["vertices"], vertex_label_set, "vertex")
             process_items(property_graph["edges"], edge_label_set, "edge")
         except json.JSONDecodeError:
-            log.critical(
-                "Invalid property graph JSON! Please check the extracted JSON data carefully"
-            )
+            log.critical("Invalid property graph JSON! Please check the extracted JSON data carefully")
         return items

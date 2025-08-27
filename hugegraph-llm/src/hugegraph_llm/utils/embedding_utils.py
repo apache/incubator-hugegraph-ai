@@ -24,9 +24,7 @@ from tqdm import tqdm
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 
 
-async def _get_batch_with_progress(
-    embedding: BaseEmbedding, batch: list[str], pbar: tqdm
-) -> list[Any]:
+async def _get_batch_with_progress(embedding: BaseEmbedding, batch: list[str], pbar: tqdm) -> list[Any]:
     result = await embedding.async_get_texts_embeddings(batch)
     pbar.update(1)
     return result

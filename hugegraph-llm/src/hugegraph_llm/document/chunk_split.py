@@ -38,6 +38,7 @@ class ChunkSplitter:
             raise ValueError("Argument `language` must be zh or en!")
         if split_type == "paragraph":
 <<<<<<< HEAD
+<<<<<<< HEAD
             self.text_splitter = RecursiveCharacterTextSplitter(
                 chunk_size=500, chunk_overlap=30, separators=separators
             )
@@ -50,6 +51,11 @@ class ChunkSplitter:
         elif split_type == "sentence":
             self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=50, chunk_overlap=0, separators=separators)
 >>>>>>> 87ee5d3 (style: format code with black line-length 120)
+=======
+            self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=30, separators=separators)
+        elif split_type == "sentence":
+            self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=50, chunk_overlap=0, separators=separators)
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
         else:
             raise ValueError("Arg `type` must be paragraph, sentence!")
 

@@ -32,7 +32,5 @@ class Rerankers:
                 model=llm_settings.reranker_model,
             )
         if self.reranker_type == "siliconflow":
-            return SiliconReranker(
-                api_key=llm_settings.reranker_api_key, model=llm_settings.reranker_model
-            )
+            return SiliconReranker(api_key=llm_settings.reranker_api_key, model=llm_settings.reranker_model)
         raise Exception("Reranker type is not supported!")

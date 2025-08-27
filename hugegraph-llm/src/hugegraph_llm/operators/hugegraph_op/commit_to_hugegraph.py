@@ -42,9 +42,7 @@ class Commit2Graph:
         edges = data.get("edges", [])
         print(f"get schema {schema}")
         if not vertices and not edges:
-            log.critical(
-                "(Loading) Both vertices and edges are empty. Please check the input data again."
-            )
+            log.critical("(Loading) Both vertices and edges are empty. Please check the input data again.")
             raise ValueError("Both vertices and edges input are empty.")
 
         if not schema:
@@ -148,9 +146,7 @@ class Commit2Graph:
                 continue
 
             # TODO: we could try batch add vertices first, setback to single-mode if failed
-            vid = self._handle_graph_creation(
-                self.client.graph().addVertex, input_label, input_properties
-            ).id
+            vid = self._handle_graph_creation(self.client.graph().addVertex, input_label, input_properties).id
             vertex["id"] = vid
 
         for edge in edges:
@@ -197,19 +193,13 @@ class Commit2Graph:
 
     def schema_free_mode(self, data):
         self.schema.propertyKey("name").asText().ifNotExist().create()
-        self.schema.vertexLabel("vertex").useCustomizeStringId().properties(
-            "name"
-        ).ifNotExist().create()
+        self.schema.vertexLabel("vertex").useCustomizeStringId().properties("name").ifNotExist().create()
         self.schema.edgeLabel("edge").sourceLabel("vertex").targetLabel("vertex").properties(
             "name"
         ).ifNotExist().create()
 
-        self.schema.indexLabel("vertexByName").onV("vertex").by(
-            "name"
-        ).secondary().ifNotExist().create()
-        self.schema.indexLabel("edgeByName").onE("edge").by(
-            "name"
-        ).secondary().ifNotExist().create()
+        self.schema.indexLabel("vertexByName").onV("vertex").by("name").secondary().ifNotExist().create()
+        self.schema.indexLabel("edgeByName").onE("edge").by("name").secondary().ifNotExist().create()
 
         for item in data:
             s, p, o = (element.strip() for element in item)

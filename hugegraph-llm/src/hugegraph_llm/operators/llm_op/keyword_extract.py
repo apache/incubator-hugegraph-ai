@@ -86,6 +86,7 @@ class KeywordExtract:
         for match in matches:
             match = match[len(start_token) :].strip()
 <<<<<<< HEAD
+<<<<<<< HEAD
             keywords.extend(
                 k.lower() if lowercase else k
                 for k in re.split(r"[,，]+", match)
@@ -94,13 +95,14 @@ class KeywordExtract:
 =======
             keywords.extend(k.lower() if lowercase else k for k in re.split(r"[,，]+", match) if len(k.strip()) > 1)
 >>>>>>> 87ee5d3 (style: format code with black line-length 120)
+=======
+            keywords.extend(k.lower() if lowercase else k for k in re.split(r"[,，]+", match) if len(k.strip()) > 1)
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
 
         # if the keyword consists of multiple words, split into sub-words (removing stopwords)
         results = set(keywords)
         for token in keywords:
             sub_tokens = re.findall(r"\w+", token)
             if len(sub_tokens) > 1:
-                results.update(
-                    w for w in sub_tokens if w not in NLTKHelper().stopwords(lang=self._language)
-                )
+                results.update(w for w in sub_tokens if w not in NLTKHelper().stopwords(lang=self._language))
         return results

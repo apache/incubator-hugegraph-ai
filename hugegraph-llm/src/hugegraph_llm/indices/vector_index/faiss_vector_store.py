@@ -66,9 +66,7 @@ class FaissVectorIndex(VectorStoreBase):
         self.properties = [p for i, p in enumerate(self.properties) if i not in indices]
         return remove_num
 
-    def search(
-        self, query_vector: List[float], top_k: int, dis_threshold: float = 0.9
-    ) -> List[Any]:
+    def search(self, query_vector: List[float], top_k: int, dis_threshold: float = 0.9) -> List[Any]:
         if self.index.ntotal == 0:
             return []
 

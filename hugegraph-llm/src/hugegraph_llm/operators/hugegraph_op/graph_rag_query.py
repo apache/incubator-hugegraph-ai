@@ -150,7 +150,7 @@ class GraphRAGQuery:
             if context["graph_result"]:
                 context["graph_result_flag"] = 1
                 context["graph_context_head"] = (
-                    f"The following are graph query result " f"from gremlin query `{gremlin}`.\n"
+                    f"The following are graph query result from gremlin query `{gremlin}`.\n"
                 )
         except Exception as e:  # pylint: disable=broad-except
             log.error(e)
@@ -196,8 +196,8 @@ class GraphRAGQuery:
                 log.debug("Kneighbor gremlin query: %s", gremlin_query)
                 paths.extend(self._client.gremlin().exec(gremlin=gremlin_query)["data"])
 
-            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = (
-                self._format_graph_query_result(query_paths=paths)
+            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_graph_query_result(
+                query_paths=paths
             )
 
             # TODO: we may need to optimize the logic here with global deduplication (may lack some single vertex)
@@ -220,21 +220,17 @@ class GraphRAGQuery:
                 max_deep=self._max_deep,
                 max_items=self._max_items,
             )
-            log.warning(
-                "Unable to find vid, downgraded to property query, please confirm if it meets expectation."
-            )
+            log.warning("Unable to find vid, downgraded to property query, please confirm if it meets expectation.")
 
             paths: List[Any] = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
-            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = (
-                self._format_graph_query_result(query_paths=paths)
+            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_graph_query_result(
+                query_paths=paths
             )
 
         context["graph_result"] = list(graph_chain_knowledge)
         if context["graph_result"]:
             context["graph_result_flag"] = 0
-            context["vertex_degree_list"] = [
-                list(vertex_degree) for vertex_degree in vertex_degree_list
-            ]
+            context["vertex_degree_list"] = [list(vertex_degree) for vertex_degree in vertex_degree_list]
             context["knowledge_with_degree"] = knowledge_with_degree
             context["graph_context_head"] = (
                 f"The following are graph knowledge in {self._max_deep} depth, e.g:\n"
@@ -276,9 +272,7 @@ class GraphRAGQuery:
             knowledge.add(node_str)
         return knowledge
 
-    def _format_graph_query_result(
-        self, query_paths
-    ) -> Tuple[Set[str], List[Set[str]], Dict[str, List[str]]]:
+    def _format_graph_query_result(self, query_paths) -> Tuple[Set[str], List[Set[str]], Dict[str, List[str]]]:
         use_id_to_match = self._prop_to_match is None
         subgraph = set()
         subgraph_with_degree = {}
@@ -288,9 +282,7 @@ class GraphRAGQuery:
 
         for path in query_paths:
             # 1. Process each path
-            path_str, vertex_with_degree = self._process_path(
-                path, use_id_to_match, v_cache, e_cache
-            )
+            path_str, vertex_with_degree = self._process_path(path, use_id_to_match, v_cache, e_cache)
             subgraph.add(path_str)
             subgraph_with_degree[path_str] = vertex_with_degree
             # 2. Update vertex degree list
@@ -352,9 +344,7 @@ class GraphRAGQuery:
             return flat_rel, prior_edge_str_len, depth
 
         node_cache.add(matched_str)
-        props_str = ", ".join(
-            f"{k}: {self._limit_property_query(v, 'v')}" for k, v in item["props"].items() if v
-        )
+        props_str = ", ".join(f"{k}: {self._limit_property_query(v, 'v')}" for k, v in item["props"].items() if v)
 
         # TODO: we may remove label id or replace with label name
         if matched_str in v_cache:
@@ -377,14 +367,10 @@ class GraphRAGQuery:
         use_id_to_match: bool,
         e_cache: Set[Tuple[str, str, str]],
     ) -> Tuple[str, int]:
-        props_str = ", ".join(
-            f"{k}: {self._limit_property_query(v, 'e')}" for k, v in item["props"].items() if v
-        )
+        props_str = ", ".join(f"{k}: {self._limit_property_query(v, 'e')}" for k, v in item["props"].items() if v)
         props_str = f"{{{props_str}}}" if props_str else ""
         prev_matched_str = (
-            raw_flat_rel[i - 1]["id"]
-            if use_id_to_match
-            else (raw_flat_rel)[i - 1]["props"][self._prop_to_match]
+            raw_flat_rel[i - 1]["id"] if use_id_to_match else (raw_flat_rel)[i - 1]["props"][self._prop_to_match]
         )
 
         edge_key = (item["inV"], item["label"], item["outV"])
@@ -394,16 +380,12 @@ class GraphRAGQuery:
         else:
             edge_label = item["label"]
 
-        edge_str = (
-            f"--[{edge_label}]-->" if item["outV"] == prev_matched_str else f"<--[{edge_label}]--"
-        )
+        edge_str = f"--[{edge_label}]-->" if item["outV"] == prev_matched_str else f"<--[{edge_label}]--"
         path_str += edge_str
         prior_edge_str_len = len(edge_str)
         return path_str, prior_edge_str_len
 
-    def _update_vertex_degree_list(
-        self, vertex_degree_list: List[Set[str]], nodes_with_degree: List[str]
-    ) -> None:
+    def _update_vertex_degree_list(self, vertex_degree_list: List[Set[str]], nodes_with_degree: List[str]) -> None:
         for depth, node_str in enumerate(nodes_with_degree):
             if depth >= len(vertex_degree_list):
                 vertex_degree_list.append(set())
@@ -439,9 +421,7 @@ class GraphRAGQuery:
         relationships = schema.getRelations()
 
         self._schema = (
-            f"Vertex properties: {vertex_schema}\n"
-            f"Edge properties: {edge_schema}\n"
-            f"Relationships: {relationships}\n"
+            f"Vertex properties: {vertex_schema}\nEdge properties: {edge_schema}\nRelationships: {relationships}\n"
         )
         log.debug("Link(Relation): %s", relationships)
         return self._schema

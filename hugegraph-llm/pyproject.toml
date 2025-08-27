@@ -61,6 +61,12 @@ dependencies = [
     "hugegraph-python-client",
     "pycgraph",
 ]
+
+[project.optional-dependencies]
+vectordb = [
+    "pymilvus==2.5.9",
+    "qdrant-client==1.14.2",
+]
 [project.urls]
 homepage = "https://hugegraph.apache.org/"
 repository = "https://github.com/apache/incubator-hugegraph-ai"
@@ -98,6 +104,9 @@ disallow_untyped_defs = false
 line-length = 120
 indent-width = 4
 extend-exclude = []
+
+# TODO: move this config in the root pyproject.toml & add more rules for it
+[tool.ruff.lint]
 extend-select = ["I"]
 
 [tool.ruff.format]

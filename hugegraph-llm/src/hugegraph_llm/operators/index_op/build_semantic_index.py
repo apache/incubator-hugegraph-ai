@@ -42,6 +42,7 @@ from hugegraph_llm.utils.log import log
 
 class BuildSemanticIndex:
 <<<<<<< HEAD
+<<<<<<< HEAD
     def __init__(self, embedding: BaseEmbedding):
         self.folder_name = get_index_folder_name(
             huge_settings.graph_name, huge_settings.graph_space
@@ -55,6 +56,10 @@ class BuildSemanticIndex:
     def __init__(self, embedding: BaseEmbedding, vector_index: type[VectorStoreBase]):
         self.vid_index = vector_index.from_name(embedding.get_embedding_dim(), huge_settings.graph_name, "graph_vids")
 >>>>>>> 38dce0b (feat(llm): vector db finished)
+=======
+    def __init__(self, embedding: BaseEmbedding, vector_index: type[VectorStoreBase]):
+        self.vid_index = vector_index.from_name(embedding.get_embedding_dim(), huge_settings.graph_name, "graph_vids")
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
         self.embedding = embedding
         self.sm = SchemaManager(huge_settings.graph_name)
 

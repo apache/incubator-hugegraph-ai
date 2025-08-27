@@ -17,10 +17,10 @@
 
 import json
 import os
+import urllib.parse as _urlparse
 from functools import partial
 from typing import Optional
 
-import urllib.parse as _urlparse
 import gradio as gr
 import requests
 from dotenv import dotenv_values
@@ -178,6 +178,7 @@ def apply_embedding_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
         headers = {"Authorization": f"Bearer {arg1}"}
         data = {"model": arg3, "input": "test"}
 <<<<<<< HEAD
+<<<<<<< HEAD
         status_code = test_api_connection(
             test_url, method="POST", headers=headers, body=data, origin_call=origin_call
         )
@@ -188,6 +189,9 @@ def apply_embedding_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
         llm_settings.qianfan_embedding_model = arg3
         llm_settings.qianfan_embedding_model_dim = arg4
 >>>>>>> 38dce0b (feat(llm): vector db finished)
+=======
+        status_code = test_api_connection(test_url, method="POST", headers=headers, body=data, origin_call=origin_call)
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
     elif embedding_option == "ollama/local":
         llm_settings.ollama_embedding_host = arg1
         llm_settings.ollama_embedding_port = int(arg2)
@@ -285,12 +289,16 @@ def apply_llm_config(
         setattr(llm_settings, f"openai_{current_llm_config}_tokens", int(max_tokens))
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         test_url = (
             getattr(llm_settings, f"openai_{current_llm_config}_api_base") + "/chat/completions"
         )
 =======
         test_url = getattr(llm_settings, f"openai_{current_llm_config}_api_base") + "/chat/completions"
 >>>>>>> 87ee5d3 (style: format code with black line-length 120)
+=======
+        test_url = getattr(llm_settings, f"openai_{current_llm_config}_api_base") + "/chat/completions"
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
         data = {
             "model": model_name,
             "temperature": 0.01,
@@ -298,6 +306,7 @@ def apply_llm_config(
         }
 <<<<<<< HEAD
         headers = {"Authorization": f"Bearer {api_key_or_host}"}
+<<<<<<< HEAD
 <<<<<<< HEAD
         status_code = test_api_connection(
             test_url, method="POST", headers=headers, body=data, origin_call=origin_call
@@ -314,6 +323,9 @@ def apply_llm_config(
 =======
         status_code = test_api_connection(test_url, method="POST", headers=headers, body=data, origin_call=origin_call)
 >>>>>>> 87ee5d3 (style: format code with black line-length 120)
+=======
+        status_code = test_api_connection(test_url, method="POST", headers=headers, body=data, origin_call=origin_call)
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
 
     elif llm_option == "ollama/local":
         setattr(llm_settings, f"ollama_{current_llm_config}_host", api_key_or_host)
@@ -390,9 +402,7 @@ def create_configs_block() -> list:
                 ),
             ]
         graph_config_button = gr.Button("Apply Configuration")
-    graph_config_button.click(
-        apply_graph_config, inputs=graph_config_input
-    )  # pylint: disable=no-member
+    graph_config_button.click(apply_graph_config, inputs=graph_config_input)  # pylint: disable=no-member
 
     # TODO : use OOP to refactor the following code
     with gr.Accordion("2. Set up the LLM.", open=False):
@@ -549,9 +559,13 @@ def create_configs_block() -> list:
                     llm_config_button.click(apply_llm_config_with_text2gql_op, inputs=llm_config_input)
                 if not api_text2sql_key:
 <<<<<<< HEAD
+<<<<<<< HEAD
                     llm_config_button.click(
                         apply_llm_config_with_extract_op, inputs=llm_config_input
                     )
+=======
+                    llm_config_button.click(apply_llm_config_with_extract_op, inputs=llm_config_input)
+>>>>>>> 8e0bf08 (chore: mark vectordb optional)
 
         with gr.Tab(label="mini_tasks"):
             extract_llm_dropdown = gr.Dropdown(

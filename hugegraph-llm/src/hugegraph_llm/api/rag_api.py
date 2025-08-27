@@ -167,9 +167,7 @@ def rag_http_api(
         llm_settings.embedding_type = req.llm_type
 
         if req.llm_type == "openai":
-            res = apply_embedding_conf(
-                req.api_key, req.api_base, req.language_model, origin_call="http"
-            )
+            res = apply_embedding_conf(req.api_key, req.api_base, req.language_model, origin_call="http")
         else:
             res = apply_embedding_conf(req.host, req.port, req.language_model, origin_call="http")
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
@@ -179,9 +177,7 @@ def rag_http_api(
         llm_settings.reranker_type = req.reranker_type
 
         if req.reranker_type == "cohere":
-            res = apply_reranker_conf(
-                req.api_key, req.reranker_model, req.cohere_base_url, origin_call="http"
-            )
+            res = apply_reranker_conf(req.api_key, req.reranker_model, req.cohere_base_url, origin_call="http")
         elif req.reranker_type == "siliconflow":
             res = apply_reranker_conf(req.api_key, req.reranker_model, None, origin_call="http")
         else:
