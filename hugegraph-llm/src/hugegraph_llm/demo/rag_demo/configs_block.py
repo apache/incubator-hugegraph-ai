@@ -71,10 +71,7 @@ def _validate_url_safe(url: str) -> None:
 
 def test_litellm_embedding(api_key, api_base, model_name, model_dim) -> int:
     llm_client = LiteLLMEmbedding(
-<<<<<<< HEAD
-=======
         embedding_dimension=model_dim,
->>>>>>> 38dce0b (feat(llm): vector db finished)
         api_key=api_key,
         api_base=api_base,
         model_name=model_name,
@@ -354,13 +351,16 @@ def create_configs_block() -> list:
         with gr.Row():
             graph_config_input = [
                 gr.Textbox(
-                    value=lambda: huge_settings.graph_url,
+                    value=huge_settings.graph_url,
                     label="url",
                     info="IP:PORT (e.g. 127.0.0.1:8080) or full URL (e.g. http://127.0.0.1:8080)",
                 ),
                 gr.Textbox(
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a255aed (fix cycle import & add docs)
                     value=huge_settings.graph_name,
                     label="graph",
                     info="The graph name of HugeGraph-Server instance",
@@ -372,6 +372,7 @@ def create_configs_block() -> list:
                 ),
                 gr.Textbox(
                     value=huge_settings.graph_pwd,
+<<<<<<< HEAD
                     label="pwd",
                     type="password",
                     info="Password for graph server auth",
@@ -390,13 +391,15 @@ def create_configs_block() -> list:
 >>>>>>> 38dce0b (feat(llm): vector db finished)
 =======
                     value=lambda: huge_settings.graph_pwd,
+=======
+>>>>>>> a255aed (fix cycle import & add docs)
                     label="pwd",
                     type="password",
                     info="Password for graph server auth",
 >>>>>>> f42fa9b (feat(llm): use lambda)
                 ),
                 gr.Textbox(
-                    value=lambda: huge_settings.graph_space,
+                    value=huge_settings.graph_space,
                     label="graphspace (Optional)",
                     info="Namespace for multi-tenant scenarios (leave empty if not using graphspaces)",
                 ),
@@ -432,6 +435,9 @@ def create_configs_block() -> list:
                         gr.Textbox(
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a255aed (fix cycle import & add docs)
                             value=getattr(llm_settings, "openai_chat_api_key"),
                             label="api_key",
                             type="password",
@@ -511,6 +517,7 @@ def create_configs_block() -> list:
                         gr.Textbox(
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                             value=getattr(llm_settings, "litellm_chat_api_key"),
                             label="api_key",
                             type="password",
@@ -519,17 +526,20 @@ def create_configs_block() -> list:
 >>>>>>> 38dce0b (feat(llm): vector db finished)
 =======
                             value=lambda: getattr(llm_settings, "litellm_chat_api_key"),
+=======
+                            value=getattr(llm_settings, "litellm_chat_api_key"),
+>>>>>>> a255aed (fix cycle import & add docs)
                             label="api_key",
                             type="password",
 >>>>>>> f42fa9b (feat(llm): use lambda)
                         ),
                         gr.Textbox(
-                            value=lambda: getattr(llm_settings, "litellm_chat_api_base"),
+                            value=getattr(llm_settings, "litellm_chat_api_base"),
                             label="api_base",
                             info="If you want to use the default api_base, please keep it blank",
                         ),
                         gr.Textbox(
-                            value=lambda: getattr(llm_settings, "litellm_chat_language_model"),
+                            value=getattr(llm_settings, "litellm_chat_language_model"),
                             label="model_name",
                             info="Please refer to https://docs.litellm.ai/docs/providers",
                         ),
@@ -590,6 +600,9 @@ def create_configs_block() -> list:
                         gr.Textbox(
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a255aed (fix cycle import & add docs)
                             value=getattr(llm_settings, "openai_extract_api_key"),
                             label="api_key",
                             type="password",
@@ -671,6 +684,7 @@ def create_configs_block() -> list:
                         gr.Textbox(
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                             value=getattr(llm_settings, "litellm_extract_api_key"),
                             label="api_key",
                             type="password",
@@ -679,17 +693,20 @@ def create_configs_block() -> list:
 >>>>>>> 38dce0b (feat(llm): vector db finished)
 =======
                             value=lambda: getattr(llm_settings, "litellm_extract_api_key"),
+=======
+                            value=getattr(llm_settings, "litellm_extract_api_key"),
+>>>>>>> a255aed (fix cycle import & add docs)
                             label="api_key",
                             type="password",
 >>>>>>> f42fa9b (feat(llm): use lambda)
                         ),
                         gr.Textbox(
-                            value=lambda: getattr(llm_settings, "litellm_extract_api_base"),
+                            value=getattr(llm_settings, "litellm_extract_api_base"),
                             label="api_base",
                             info="If you want to use the default api_base, please keep it blank",
                         ),
                         gr.Textbox(
-                            value=lambda: getattr(llm_settings, "litellm_extract_language_model"),
+                            value=getattr(llm_settings, "litellm_extract_language_model"),
                             label="model_name",
                             info="Please refer to https://docs.litellm.ai/docs/providers",
                         ),
@@ -736,6 +753,9 @@ def create_configs_block() -> list:
                         gr.Textbox(
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a255aed (fix cycle import & add docs)
                             value=getattr(llm_settings, "openai_text2gql_api_key"),
                             label="api_key",
                             type="password",
@@ -1058,15 +1078,19 @@ def create_configs_block() -> list:
             )
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     with gr.Accordion("5. Set up the vector database.", open=False):
+=======
+    with gr.Accordion("5. Set up the vector engine.", open=False):
+>>>>>>> a255aed (fix cycle import & add docs)
         engine_selector = gr.Dropdown(
             choices=["Faiss", "Milvus", "Qdrant"],
-            value=lambda: index_settings.now_vector_index,
-            label="Select vector database.",
+            value=index_settings.cur_vector_index,
+            label="Select vector engine.",
         )
         engine_selector.select(
-            fn=lambda engine: setattr(index_settings, "now_vector_index", engine),
+            fn=lambda engine: setattr(index_settings, "cur_vector_index", engine),
             inputs=[engine_selector],
         )
 >>>>>>> 38dce0b (feat(llm): vector db finished)
@@ -1078,7 +1102,7 @@ def get_header_with_language_indicator(language: str) -> str:
     language_class = language.lower()
 
     if language == "CN":
-        title_text = "当前prompt语言: 中文 (CN)"
+        title_text = "当前 prompt 语言：中文 (CN)"
     else:
         title_text = "Current prompt Language: English (EN)"
     html_content = f"""

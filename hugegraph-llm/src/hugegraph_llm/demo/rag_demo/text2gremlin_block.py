@@ -99,6 +99,7 @@ def store_schema(schema, question, gremlin_prompt):
 
 def build_example_vector_index(temp_file) -> dict:
 <<<<<<< HEAD
+<<<<<<< HEAD
     folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
     index_path = os.path.join(resource_path, folder_name, "gremlin_examples")
     if not os.path.exists(index_path):
@@ -109,6 +110,9 @@ def build_example_vector_index(temp_file) -> dict:
     assert vector_index, 'vector db name is error'
 >>>>>>> 38dce0b (feat(llm): vector db finished)
 =======
+=======
+    vector_index = get_vector_index_class(index_settings.cur_vector_index)
+>>>>>>> a255aed (fix cycle import & add docs)
     assert vector_index, "vector db name is error"
 >>>>>>> 87ee5d3 (style: format code with black line-length 120)
     if temp_file is None:
@@ -220,11 +224,15 @@ def gremlin_generate(
     inp, example_num, schema, gremlin_prompt, requested_outputs: Optional[List[str]] = None
 ) -> GremlinResult:
 <<<<<<< HEAD
+<<<<<<< HEAD
     generator = GremlinGenerator(
         llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding()
     )
 =======
     vector_index = get_vector_index_class(index_settings.now_vector_index)
+=======
+    vector_index = get_vector_index_class(index_settings.cur_vector_index)
+>>>>>>> a255aed (fix cycle import & add docs)
     generator = GremlinGenerator(llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding())
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)
     sm = SchemaManager(graph_name=schema)
@@ -406,12 +414,16 @@ def graph_rag_recall(
     rag.extract_keywords().keywords_to_vid(
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
         vector_index=index_settings.now_vector_index,
 >>>>>>> 38dce0b (feat(llm): vector db finished)
 =======
         vector_index_str=index_settings.now_vector_index,
 >>>>>>> dd3b085 (feat(llm):  nexpected-keyword-arg,unused-import)
+=======
+        vector_index_str=index_settings.cur_vector_index,
+>>>>>>> a255aed (fix cycle import & add docs)
         vector_dis_threshold=vector_dis_threshold,
         topk_per_keyword=topk_per_keyword,
     )

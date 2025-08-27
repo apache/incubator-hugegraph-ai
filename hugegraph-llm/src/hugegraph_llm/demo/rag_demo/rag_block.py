@@ -82,10 +82,10 @@ def rag_answer(
 =======
     rag = RAGPipeline()
     if vector_search:
-        rag.query_vector_index(vector_index_str=index_settings.now_vector_index)
+        rag.query_vector_index(vector_index_str=index_settings.cur_vector_index)
     if graph_search:
         rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid(
-            vector_index_str=index_settings.now_vector_index,
+            vector_index_str=index_settings.cur_vector_index,
             vector_dis_threshold=vector_dis_threshold,
             topk_per_keyword=topk_per_keyword,
         ).import_schema(huge_settings.graph_name).query_graphdb(
@@ -228,10 +228,10 @@ async def rag_answer_streaming(
 =======
     rag = RAGPipeline()
     if vector_search:
-        rag.query_vector_index(vector_index_str=index_settings.now_vector_index)
+        rag.query_vector_index(vector_index_str=index_settings.cur_vector_index)
     if graph_search:
         rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid(
-            vector_index_str=index_settings.now_vector_index
+            vector_index_str=index_settings.cur_vector_index
         ).import_schema(huge_settings.graph_name).query_graphdb(
             num_gremlin_generate_example=gremlin_tmpl_num,
             gremlin_prompt=gremlin_prompt,

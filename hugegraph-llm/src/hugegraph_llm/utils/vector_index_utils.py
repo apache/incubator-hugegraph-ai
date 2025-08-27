@@ -72,26 +72,33 @@ def read_documents(input_file, input_text):
 
 # pylint: disable=C0301
 def get_vector_index_info():
-    vector_index = get_vector_index_class(index_settings.now_vector_index)
+    vector_index = get_vector_index_class(index_settings.cur_vector_index)
     vector_index_entity = vector_index.from_name(
         Embeddings().get_embedding().get_embedding_dim(), huge_settings.graph_name, "chunks"
     )
 
     return json.dumps(
+<<<<<<< HEAD
         {**vector_index_entity.get_vector_index_info(), "now_vector_index": index_settings.now_vector_index},
+=======
+        {
+            **vector_index_entity.get_vector_index_info(),
+            "cur_vector_index": index_settings.cur_vector_index,
+        },
+>>>>>>> a255aed (fix cycle import & add docs)
         ensure_ascii=False,
         indent=2,
     )
 
 
 def clean_vector_index():
-    vector_index = get_vector_index_class(index_settings.now_vector_index)
+    vector_index = get_vector_index_class(index_settings.cur_vector_index)
     vector_index.clean(huge_settings.graph_name, "chunks")
     gr.Info("Clean vector index successfully!")
 
 
 def build_vector_index(input_file, input_text):
-    vector_index = get_vector_index_class(index_settings.now_vector_index)
+    vector_index = get_vector_index_class(index_settings.cur_vector_index)
     if input_file and input_text:
         raise gr.Error("Please only choose one between file and text.")
     texts = read_documents(input_file, input_text)

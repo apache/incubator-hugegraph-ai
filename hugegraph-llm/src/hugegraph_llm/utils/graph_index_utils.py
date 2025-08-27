@@ -51,6 +51,7 @@ def get_graph_index_info():
     builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     graph_summary_info = builder.fetch_graph_data().run()
 <<<<<<< HEAD
+<<<<<<< HEAD
     folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
     filename_prefix = get_filename_prefix(
         llm_settings.embedding_type, getattr(Embeddings().get_embedding(), "model_name", None)
@@ -59,7 +60,10 @@ def get_graph_index_info():
         str(os.path.join(resource_path, folder_name, "graph_vids")), filename_prefix, record_miss=False
     )
 =======
-    vector_index = get_vector_index_class(index_settings.now_vector_index)
+    vector_index = get_vector_index_class(index_settings.cur_vector_index)
+=======
+    vector_index = get_vector_index_class(index_settings.cur_vector_index)
+>>>>>>> a255aed (fix cycle import & add docs)
     vector_index_entity = vector_index.from_name(
         Embeddings().get_embedding().get_embedding_dim(), huge_settings.graph_name, "chunks"
     )
@@ -172,14 +176,7 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
 
 
 def update_vid_embedding():
-<<<<<<< HEAD
     scheduler = SchedulerSingleton.get_instance()
-=======
-    vector_index = get_vector_index_class(index_settings.now_vector_index)
-    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
-    builder.fetch_graph_data().build_vertex_id_semantic_index(vector_index)
-    log.debug("Operators: %s", builder.operators)
->>>>>>> 38dce0b (feat(llm): vector db finished)
     try:
         return scheduler.schedule_flow("update_vid_embeddings")
     except Exception as e:  # pylint: disable=broad-exception-caught

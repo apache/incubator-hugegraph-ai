@@ -20,10 +20,9 @@ __all__ = ["huge_settings", "admin_settings", "llm_settings", "resource_path", "
 
 import os
 
-from hugegraph_llm.config.index_config import IndexConfig
-
 from .admin_config import AdminConfig
 from .hugegraph_config import HugeGraphConfig
+from .index_config import IndexConfig
 from .llm_config import LLMConfig
 from .prompt_config import PromptConfig
 
