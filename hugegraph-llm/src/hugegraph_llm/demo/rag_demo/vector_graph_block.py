@@ -90,9 +90,7 @@ def generate_prompt_for_ui(source_text, scenario, example_name):
 def load_example_names():
     """Load all candidate examples"""
     try:
-        examples_path = os.path.join(
-            resource_path, "prompt_examples", "prompt_examples.json"
-        )
+        examples_path = os.path.join(resource_path, "prompt_examples", "prompt_examples.json")
         with open(examples_path, "r", encoding="utf-8") as f:
             examples = json.load(f)
         return [example.get("name", "Unnamed example") for example in examples]
@@ -127,22 +125,16 @@ def load_query_examples():
 >>>>>>> 3aeef7d (fix)
         )
         if language.upper() == "CN":
-            examples_path = os.path.join(
-                resource_path, "prompt_examples", "query_examples_CN.json"
-            )
+            examples_path = os.path.join(resource_path, "prompt_examples", "query_examples_CN.json")
         else:
-            examples_path = os.path.join(
-                resource_path, "prompt_examples", "query_examples.json"
-            )
+            examples_path = os.path.join(resource_path, "prompt_examples", "query_examples.json")
 
         with open(examples_path, "r", encoding="utf-8") as f:
             examples = json.load(f)
         return json.dumps(examples, indent=2, ensure_ascii=False)
     except (FileNotFoundError, json.JSONDecodeError):
         try:
-            examples_path = os.path.join(
-                resource_path, "prompt_examples", "query_examples.json"
-            )
+            examples_path = os.path.join(resource_path, "prompt_examples", "query_examples.json")
             with open(examples_path, "r", encoding="utf-8") as f:
                 examples = json.load(f)
             return json.dumps(examples, indent=2, ensure_ascii=False)
@@ -153,9 +145,7 @@ def load_query_examples():
 def load_schema_fewshot_examples():
     """Load few-shot examples from a JSON file"""
     try:
-        examples_path = os.path.join(
-            resource_path, "prompt_examples", "schema_examples.json"
-        )
+        examples_path = os.path.join(resource_path, "prompt_examples", "schema_examples.json")
         with open(examples_path, "r", encoding="utf-8") as f:
             examples = json.load(f)
         return json.dumps(examples, indent=2, ensure_ascii=False)
@@ -577,9 +567,7 @@ def create_vector_graph_block():
             max_lines=29,
         )
 
-        out = gr.Code(
-            label="Output Info", language="json", elem_classes="code-container-edit"
-        )
+        out = gr.Code(label="Output Info", language="json", elem_classes="code-container-edit")
 
     with gr.Row():
         with gr.Accordion("Get RAG Info", open=False):
@@ -628,9 +616,7 @@ def create_vector_graph_block():
         store_prompt,
         inputs=[input_text, input_schema, info_extract_template],
     )
-    vector_import_bt.click(
-        build_vector_index, inputs=[input_file, input_text], outputs=out
-    ).then(
+    vector_import_bt.click(build_vector_index, inputs=[input_file, input_text], outputs=out).then(
         store_prompt,
         inputs=[input_text, input_schema, info_extract_template],
     )
@@ -658,17 +644,15 @@ def create_vector_graph_block():
         inputs=[input_text, input_schema, info_extract_template],
     )
 
-    graph_loading_bt.click(
-        import_graph_data, inputs=[out, input_schema], outputs=[out]
-    ).then(update_vid_embedding).then(
+    graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(
+        update_vid_embedding
+    ).then(
         store_prompt,
         inputs=[input_text, input_schema, info_extract_template],
     )
 
     build_schema_bt.click(
-        lambda it, qe, fs: extract_graph(
-            [], it, prompt.graph_schema, prompt.extract_graph_prompt
-        ),
+        lambda it, qe, fs: extract_graph([], it, prompt.graph_schema, prompt.extract_graph_prompt),
         inputs=[input_text, query_example, few_shot],
         outputs=[input_schema],
     ).then(

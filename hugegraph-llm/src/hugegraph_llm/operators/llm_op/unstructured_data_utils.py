@@ -104,9 +104,7 @@ def nodes_schemas_text_to_list_of_dict(nodes_schemas):
             properties = json.loads(properties)
         except json.decoder.JSONDecodeError:
             properties = {}
-        result.append(
-            {"label": label, "primary_key": primary_key, "properties": properties}
-        )
+        result.append({"label": label, "primary_key": primary_key, "properties": properties})
     return result
 
 
@@ -118,9 +116,7 @@ def relationships_schemas_text_to_list_of_dict(relationships_schemas):
             continue
         start = relationships_schema_list[0].strip().replace('"', "")
         end = relationships_schema_list[2].strip().replace('"', "")
-        relationships_schema_type = (
-            relationships_schema_list[1].strip().replace('"', "")
-        )
+        relationships_schema_type = relationships_schema_list[1].strip().replace('"', "")
 
         properties = re.search(JSON_REGEX, relationships_schema)
         if properties is None:

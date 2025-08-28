@@ -41,9 +41,7 @@ class UseTimeMiddleware(BaseHTTPMiddleware):
             unit = "s"
 
         response.headers["X-Process-Time"] = f"{process_time:.2f} {unit}"
-        log.info(
-            "Request process time: %.2f ms, code=%d", process_time, response.status_code
-        )
+        log.info("Request process time: %.2f ms, code=%d", process_time, response.status_code)
         log.info(
             "%s - Args: %s, IP: %s, URL: %s",
             request.method,

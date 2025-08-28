@@ -17,13 +17,9 @@
 
 import json
 import os
-<<<<<<< HEAD
-from datetime import datetime
 from dataclasses import dataclass
-from typing import Any, Tuple, Dict, Literal, Optional, List
-=======
-from typing import Any, Dict, Literal, Tuple, Union
->>>>>>> 38dce0b (feat(llm): vector db finished)
+from datetime import datetime
+from typing import Any, Dict, List, Literal, Optional, Tuple
 
 import gradio as gr
 import pandas as pd
@@ -37,8 +33,7 @@ from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.utils.embedding_utils import get_index_folder_name
 from hugegraph_llm.utils.hugegraph_utils import run_gremlin_query
 from hugegraph_llm.utils.log import log
-<<<<<<< HEAD
-from hugegraph_llm.flows.scheduler import SchedulerSingleton
+from hugegraph_llm.utils.vector_index_utils import get_vector_index_class
 
 
 @dataclass
@@ -60,16 +55,12 @@ class GremlinResult:
 
     @classmethod
     def success_result(
-<<<<<<< HEAD
         cls,
         match_result: str,
         template_gremlin: str,
         raw_gremlin: str,
         template_exec: str,
         raw_exec: str,
-=======
-        cls, match_result: str, template_gremlin: str, raw_gremlin: str, template_exec: str, raw_exec: str
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
     ) -> "GremlinResult":
         """Create a successful result"""
         return cls(
@@ -80,9 +71,6 @@ class GremlinResult:
             template_exec_result=template_exec,
             raw_exec_result=raw_exec,
         )
-=======
-from hugegraph_llm.utils.vector_index_utils import get_vector_index_class
->>>>>>> 38dce0b (feat(llm): vector db finished)
 
 
 def store_schema(schema, question, gremlin_prompt):
@@ -98,23 +86,8 @@ def store_schema(schema, question, gremlin_prompt):
 
 
 def build_example_vector_index(temp_file) -> dict:
-<<<<<<< HEAD
-<<<<<<< HEAD
-    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
-    index_path = os.path.join(resource_path, folder_name, "gremlin_examples")
-    if not os.path.exists(index_path):
-        os.makedirs(index_path)
-=======
-    vector_index = get_vector_index_class(index_settings.now_vector_index)
-<<<<<<< HEAD
-    assert vector_index, 'vector db name is error'
->>>>>>> 38dce0b (feat(llm): vector db finished)
-=======
-=======
     vector_index = get_vector_index_class(index_settings.cur_vector_index)
->>>>>>> a255aed (fix cycle import & add docs)
     assert vector_index, "vector db name is error"
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
     if temp_file is None:
         full_path = os.path.join(resource_path, "demo", "text2gremlin.csv")
     else:
@@ -123,23 +96,12 @@ def build_example_vector_index(temp_file) -> dict:
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         _, file_name = os.path.split(f"{name}_{timestamp}{ext}")
         log.info("Copying file to: %s", file_name)
-<<<<<<< HEAD
+        folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
         target_file = os.path.join(resource_path, folder_name, "gremlin_examples", file_name)
-=======
-        folder_name = get_index_folder_name(
-            huge_settings.graph_name, huge_settings.graph_space
-        )
-        target_file = os.path.join(
-            resource_path, folder_name, "gremlin_examples", file_name
-        )
->>>>>>> 3aeef7d (fix)
         try:
             import shutil
 
-<<<<<<< HEAD
-=======
             os.makedirs(os.path.dirname(target_file), exist_ok=True)
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
             shutil.copy2(full_path, target_file)
             log.info("Successfully copied file to: %s", target_file)
         except (OSError, IOError) as e:
@@ -161,17 +123,8 @@ def build_example_vector_index(temp_file) -> dict:
     return builder.example_index_build(examples, vector_index=vector_index).run()
 
 
-<<<<<<< HEAD
 def _process_schema(schema, generator, sm):
     """Process and validate schema input"""
-=======
-def gremlin_generate(
-    inp, example_num, schema, gremlin_prompt
-) -> Union[tuple[str, str], tuple[str, Any, Any, Any, Any]]:
-    vector_index = get_vector_index_class(index_settings.now_vector_index)
-    generator = GremlinGenerator(llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding())
-    sm = SchemaManager(graph_name=schema)
->>>>>>> 38dce0b (feat(llm): vector db finished)
     short_schema = False
     if not schema:
         return None, short_schema
@@ -230,37 +183,23 @@ def _execute_queries(context, output_types):
 
 
 def gremlin_generate(
-    inp, example_num, schema, gremlin_prompt, requested_outputs: Optional[List[str]] = None
+    inp,
+    example_num,
+    schema,
+    gremlin_prompt,
+    requested_outputs: Optional[List[str]] = None,
 ) -> GremlinResult:
-<<<<<<< HEAD
-<<<<<<< HEAD
-    generator = GremlinGenerator(
-        llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding()
-    )
-=======
-    vector_index = get_vector_index_class(index_settings.now_vector_index)
-=======
     vector_index = get_vector_index_class(index_settings.cur_vector_index)
-<<<<<<< HEAD
->>>>>>> a255aed (fix cycle import & add docs)
-    generator = GremlinGenerator(llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding())
->>>>>>> 8e0bf08 (chore: mark vectordb optional)
-=======
     generator = GremlinGenerator(
         llm=LLMs().get_text2gql_llm(), embedding=Embeddings().get_embedding()
     )
->>>>>>> 3aeef7d (fix)
     sm = SchemaManager(graph_name=schema)
 
     processed_schema, short_schema = _process_schema(schema, generator, sm)
     if processed_schema is None and short_schema is None:
-        return GremlinResult.error(
-            "Invalid JSON schema, please check the format carefully."
-        )
+        return GremlinResult.error("Invalid JSON schema, please check the format carefully.")
 
-    updated_schema = (
-        sm.simple_schema(processed_schema) if short_schema else processed_schema
-    )
+    updated_schema = sm.simple_schema(processed_schema) if short_schema else processed_schema
     store_schema(str(updated_schema), inp, gremlin_prompt)
 
     output_types = _configure_output_types(requested_outputs)
@@ -292,11 +231,7 @@ def simple_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
     if "vertexlabels" in schema:
         mini_schema["vertexlabels"] = []
         for vertex in schema["vertexlabels"]:
-            new_vertex = {
-                key: vertex[key]
-                for key in ["id", "name", "properties"]
-                if key in vertex
-            }
+            new_vertex = {key: vertex[key] for key in ["id", "name", "properties"] if key in vertex}
             mini_schema["vertexlabels"].append(new_vertex)
 
     # Add necessary edgelabels items (4)
@@ -315,48 +250,17 @@ def simple_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
 
 def gremlin_generate_for_ui(inp, example_num, schema, gremlin_prompt):
     """UI wrapper for gremlin_generate that returns tuple for Gradio compatibility"""
-    # Execute via scheduler
-    try:
-        res = SchedulerSingleton.get_instance().schedule_flow(
-            "text2gremlin",
-            inp,
-            int(example_num) if isinstance(example_num, (int, float, str)) else 2,
-            schema,
-            gremlin_prompt,
-            [
-                "match_result",
-                "template_gremlin",
-                "raw_gremlin",
-                "template_execution_result",
-                "raw_execution_result",
-            ],
-        )
-    except Exception as e:  # pylint: disable=broad-except
-        log.error("UI text2gremlin error: %s", e)
-        return json.dumps({"error": str(e)}, ensure_ascii=False), "", "", "", ""
+    result = gremlin_generate(inp, example_num, schema, gremlin_prompt)
 
-    # Backward-compatible mapping for outputs
-    match_result = res.get("match_result", [])
-    match_result_str = (
-        json.dumps(match_result, ensure_ascii=False, indent=2)
-        if isinstance(match_result, (list, dict))
-        else str(match_result)
-    )
+    if not result.success:
+        return result.match_result, "", "", "", ""
 
     return (
-<<<<<<< HEAD
-        match_result_str,
-        res.get("template_gremlin", "") or "",
-        res.get("raw_gremlin", "") or "",
-        res.get("template_execution_result", "") or "",
-        res.get("raw_execution_result", "") or "",
-=======
         result.match_result,
         result.template_gremlin or "",
         result.raw_gremlin or "",
         result.template_exec_result or "",
         result.raw_exec_result or "",
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
     )
 
 
@@ -378,27 +282,23 @@ def create_text2gremlin_block() -> Tuple:
     with gr.Row():
         btn = gr.Button("Build Example Vector Index", variant="primary")
 
-    btn.click(
-        build_example_vector_index, inputs=[file], outputs=[out]
-    )  # pylint: disable=no-member
+    btn.click(build_example_vector_index, inputs=[file], outputs=[out])  # pylint: disable=no-member
     gr.Markdown("## Nature Language To Gremlin")
 
     with gr.Row():
         with gr.Column(scale=1):
             input_box = gr.Textbox(
-                value=prompt.default_question, label="Nature Language Query", show_copy_button=True
+                value=prompt.default_question,
+                label="Nature Language Query",
+                show_copy_button=True,
             )
             match = gr.Code(
                 label="Similar Template (TopN)",
                 language="javascript",
                 elem_classes="code-container-show",
             )
-            initialized_out = gr.Textbox(
-                label="Gremlin With Template", show_copy_button=True
-            )
-            raw_out = gr.Textbox(
-                label="Gremlin Without Template", show_copy_button=True
-            )
+            initialized_out = gr.Textbox(label="Gremlin With Template", show_copy_button=True)
+            raw_out = gr.Textbox(label="Gremlin Without Template", show_copy_button=True)
             tmpl_exec_out = gr.Code(
                 label="Query With Template Output",
                 language="json",
@@ -415,7 +315,10 @@ def create_text2gremlin_block() -> Tuple:
                 minimum=0, maximum=10, step=1, value=2, label="Number of refer examples"
             )
             schema_box = gr.Textbox(
-                value=prompt.text2gql_graph_schema, label="Schema", lines=2, show_copy_button=True
+                value=prompt.text2gql_graph_schema,
+                label="Schema",
+                lines=2,
+                show_copy_button=True,
             )
             prompt_box = gr.Textbox(
                 value=prompt.gremlin_generate_prompt,
@@ -449,18 +352,7 @@ def graph_rag_recall(
     store_schema(prompt.text2gql_graph_schema, query, gremlin_prompt)
     rag = RAGPipeline()
     rag.extract_keywords().keywords_to_vid(
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-        vector_index=index_settings.now_vector_index,
->>>>>>> 38dce0b (feat(llm): vector db finished)
-=======
-        vector_index_str=index_settings.now_vector_index,
->>>>>>> dd3b085 (feat(llm):  nexpected-keyword-arg,unused-import)
-=======
         vector_index_str=index_settings.cur_vector_index,
->>>>>>> a255aed (fix cycle import & add docs)
         vector_dis_threshold=vector_dis_threshold,
         topk_per_keyword=topk_per_keyword,
     )

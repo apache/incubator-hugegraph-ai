@@ -19,22 +19,11 @@
 import os
 from typing import Any, Dict, List, Literal, Tuple
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-from hugegraph_llm.config import resource_path, huge_settings, llm_settings
-from hugegraph_llm.indices.vector_index import VectorIndex
-=======
-from hugegraph_llm.config import resource_path, huge_settings, llm_settings
-from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
->>>>>>> 902fee5 (feat(llm): some type bug && revert to FaissVectorIndex)
-=======
 from pyhugegraph.client import PyHugeClient
 
 from hugegraph_llm.config import huge_settings, resource_path
 from hugegraph_llm.indices.vector_index.base import VectorStoreBase
->>>>>>> 38dce0b (feat(llm): vector db finished)
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.utils.embedding_utils import get_filename_prefix, get_index_folder_name
 from hugegraph_llm.utils.log import log
 
 
@@ -50,38 +39,10 @@ class SemanticIdQuery:
         topk_per_keyword: int = huge_settings.topk_per_keyword,
         vector_dis_threshold: float = huge_settings.vector_dis_threshold,
     ):
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-        self.folder_name = get_index_folder_name(
-            huge_settings.graph_name, huge_settings.graph_space
-        )
-        self.index_dir = str(os.path.join(resource_path, self.folder_name, "graph_vids"))
-        self.filename_prefix = get_filename_prefix(
-            llm_settings.embedding_type, getattr(embedding, "model_name", None)
-        )
-        self.vector_index = VectorIndex.from_index_file(self.index_dir, self.filename_prefix)
-=======
-        self.folder_name = get_index_folder_name(
-            huge_settings.graph_name, huge_settings.graph_space
-        )
-        self.index_dir = str(os.path.join(resource_path, self.folder_name, "graph_vids"))
-        self.filename_prefix = get_filename_prefix(
-            llm_settings.embedding_type, getattr(embedding, "model_name", None)
-        )
-        self.vector_index = FaissVectorIndex.from_index_file(self.index_dir, self.filename_prefix)
->>>>>>> 902fee5 (feat(llm): some type bug && revert to FaissVectorIndex)
-=======
         self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids"))
-=======
-        self.index_dir = str(
-            os.path.join(resource_path, huge_settings.graph_name, "graph_vids")
-        )
->>>>>>> 3aeef7d (fix)
         self.vector_index = vector_index.from_name(
             embedding.get_embedding_dim(), huge_settings.graph_name, "graph_vids"
         )
->>>>>>> 38dce0b (feat(llm): vector db finished)
         self.embedding = embedding
         self.by = by
         self.topk_per_query = topk_per_query
@@ -104,9 +65,7 @@ class SemanticIdQuery:
             possible_vids.update([f"{i + 1}:{keyword}" for keyword in keywords])
 
         vids_str = ",".join([f"'{vid}'" for vid in possible_vids])
-        resp = self._client.gremlin().exec(
-            SemanticIdQuery.ID_QUERY_TEMPL.format(vids_str=vids_str)
-        )
+        resp = self._client.gremlin().exec(SemanticIdQuery.ID_QUERY_TEMPL.format(vids_str=vids_str))
         searched_vids = [v["id"] for v in resp["data"]]
 
         unsearched_keywords = set(keywords)
@@ -120,17 +79,11 @@ class SemanticIdQuery:
     def _fuzzy_match_vids(self, keywords: List[str]) -> List[str]:
         fuzzy_match_result = []
         for keyword in keywords:
-<<<<<<< HEAD
-            keyword_vector = self.embedding.get_texts_embeddings([keyword])[0]
+            keyword_vector = self.embedding.get_text_embedding(keyword)
             results = self.vector_index.search(
                 keyword_vector,
                 top_k=self.topk_per_keyword,
                 dis_threshold=float(self.vector_dis_threshold),
-=======
-            keyword_vector = self.embedding.get_texts_embeddings([keyword])[0]
-            results = self.vector_index.search(
-                keyword_vector, top_k=self.topk_per_keyword, dis_threshold=float(self.vector_dis_threshold)
->>>>>>> 902fee5 (feat(llm): some type bug && revert to FaissVectorIndex)
             )
             if results:
                 fuzzy_match_result.extend(results[: self.topk_per_keyword])
@@ -140,7 +93,7 @@ class SemanticIdQuery:
         graph_query_list = set()
         if self.by == "query":
             query = context["query"]
-            query_vector = self.embedding.get_texts_embeddings([query])[0]
+            query_vector = self.embedding.get_text_embedding(query)
             results = self.vector_index.search(query_vector, top_k=self.topk_per_query)
             if results:
                 graph_query_list.update(results[: self.topk_per_query])

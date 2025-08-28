@@ -16,7 +16,7 @@
 # under the License.
 
 import re
-from typing import List, Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from hugegraph_llm.document.chunk_split import ChunkSplitter
 from hugegraph_llm.models.llms.base import BaseLLM
@@ -27,11 +27,11 @@ Extract Triples from the given text and graph schema
 
 ## Basic Rules
 1. The output format must be: (X,Y,Z) - LABEL
-In this format, Y must be a value from "properties" or "edge_label",
+In this format, Y must be a value from "properties" or "edge_label", 
 and LABEL must be X's vertex_label or Y's edge_label.
 2. Don't extract attribute/property fields that do not exist in the given schema
 3. Ensure the extract property is in the same type as the schema (like 'age' should be a number)
-4. Translate the given schema filed into Chinese if the given text is Chinese but the schema is in English (Optional)
+4. Translate the given schema filed into Chinese if the given text is Chinese but the schema is in English (Optional) 
 
 ## Example (Note: Update the example to correspond to the given text and schema)
 ### Input example:
@@ -75,24 +75,9 @@ The extracted text is: {text}"""
 
     if schema:
         return schema_real_prompt
-<<<<<<< HEAD
-<<<<<<< HEAD
-    log.warning(
-<<<<<<< HEAD
-        "Recommend to provide a graph schema to improve the extraction accuracy. "
-        "Now using the default schema."
-=======
-        "Recommend to provide a graph schema to improve the extraction accuracy. " "Now using the default schema."
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
-    )
-=======
-    log.warning("Recommend to provide a graph schema to improve the extraction accuracy. Now using the default schema.")
->>>>>>> 8e0bf08 (chore: mark vectordb optional)
-=======
     log.warning(
         "Recommend to provide a graph schema to improve the extraction accuracy. Now using the default schema."
     )
->>>>>>> 3aeef7d (fix)
     return text_based_prompt
 
 
@@ -121,23 +106,9 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
         # TODO: use a more efficient way to compare the extract & input property
         p_lower = p.lower()
         for vertex in schema["vertices"]:
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
             if vertex["vertex_label"] == label and any(
                 pp.lower() == p_lower for pp in vertex["properties"]
             ):
-=======
-            if vertex["vertex_label"] == label and any(pp.lower() == p_lower for pp in vertex["properties"]):
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
-=======
-            if vertex["vertex_label"] == label and any(pp.lower() == p_lower for pp in vertex["properties"]):
->>>>>>> 8e0bf08 (chore: mark vectordb optional)
-=======
-            if vertex["vertex_label"] == label and any(
-                pp.lower() == p_lower for pp in vertex["properties"]
-            ):
->>>>>>> 3aeef7d (fix)
                 id = f"{label}-{s}"
                 if id not in vertices_dict:
                     vertices_dict[id] = {
@@ -154,7 +125,6 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
                 source_label = edge["source_vertex_label"]
                 source_id = f"{source_label}-{s}"
                 if source_id not in vertices_dict:
-<<<<<<< HEAD
                     vertices_dict[source_id] = {
                         "id": source_id,
                         "name": s,
@@ -178,16 +148,8 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
                         "properties": {},
                     }
                 )
-=======
-                    vertices_dict[source_id] = {"id": source_id, "name": s, "label": source_label, "properties": {}}
-                target_label = edge["target_vertex_label"]
-                target_id = f"{target_label}-{o}"
-                if target_id not in vertices_dict:
-                    vertices_dict[target_id] = {"id": target_id, "name": o, "label": target_label, "properties": {}}
-                graph["edges"].append({"start": source_id, "end": target_id, "type": label, "properties": {}})
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
                 break
-    graph["vertices"] = list(vertices_dict.values())
+    graph["vertices"] = vertices_dict.values()
 
 
 class InfoExtract:
@@ -235,27 +197,8 @@ class InfoExtract:
         return True
 
     def _filter_long_id(self, graph) -> Dict[str, List[Any]]:
-<<<<<<< HEAD
         graph["vertices"] = [vertex for vertex in graph["vertices"] if self.valid(vertex["id"])]
-<<<<<<< HEAD
-<<<<<<< HEAD
         graph["edges"] = [
             edge for edge in graph["edges"] if self.valid(edge["start"]) and self.valid(edge["end"])
         ]
-=======
-        graph["edges"] = [edge for edge in graph["edges"] if self.valid(edge["start"]) and self.valid(edge["end"])]
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
-=======
-        graph["edges"] = [edge for edge in graph["edges"] if self.valid(edge["start"]) and self.valid(edge["end"])]
->>>>>>> 8e0bf08 (chore: mark vectordb optional)
-=======
-        graph["vertices"] = [
-            vertex for vertex in graph["vertices"] if self.valid(vertex["id"])
-        ]
-        graph["edges"] = [
-            edge
-            for edge in graph["edges"]
-            if self.valid(edge["start"]) and self.valid(edge["end"])
-        ]
->>>>>>> 3aeef7d (fix)
         return graph

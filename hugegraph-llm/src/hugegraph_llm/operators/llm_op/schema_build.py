@@ -117,13 +117,9 @@ class SchemaBuilder:
             raise ValueError("Context must be a dictionary")
         if "raw_texts" not in context or not isinstance(context["raw_texts"], list):
             raise ValueError("'raw_texts' must be a list[str]")
-        if "query_examples" not in context or not isinstance(
-            context["query_examples"], list
-        ):
+        if "query_examples" not in context or not isinstance(context["query_examples"], list):
             raise ValueError("'query_examples' must be a list[str]")
-        if "few_shot_schema" not in context or not isinstance(
-            context["few_shot_schema"], dict
-        ):
+        if "few_shot_schema" not in context or not isinstance(context["few_shot_schema"], dict):
             raise ValueError("'few_shot_schema' must be a dict")
 
         raw_texts = context["raw_texts"]

@@ -73,15 +73,11 @@ class MilvusVectorIndex(VectorStoreBase):
 
     def _create_collection(self):
         """Create a new collection in Milvus."""
-        id_field = FieldSchema(
-            name="id", dtype=DataType.INT64, is_primary=True, auto_id=True
-        )
+        id_field = FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True)
         vector_field = FieldSchema(
             name="embedding", dtype=DataType.FLOAT_VECTOR, dim=self.embed_dim
         )
-        property_field = FieldSchema(
-            name="property", dtype=DataType.VARCHAR, max_length=65535
-        )
+        property_field = FieldSchema(name="property", dtype=DataType.VARCHAR, max_length=65535)
         original_id_field = FieldSchema(name="original_id", dtype=DataType.INT64)
 
         schema = CollectionSchema(

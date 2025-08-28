@@ -22,14 +22,8 @@ import traceback
 from typing import Any, Dict, Optional, Union
 
 import gradio as gr
-from hugegraph_llm.flows.scheduler import SchedulerSingleton
 
-from .embedding_utils import get_filename_prefix, get_index_folder_name
-from .hugegraph_utils import get_hg_client, clean_hg_data
-from .log import log
-from .vector_index_utils import read_documents
-from ..config import resource_path, huge_settings, llm_settings
-from ..indices.vector_index.faiss_vector_store import FaissVectorIndex
+from ..config import huge_settings, index_settings, resource_path
 from ..models.embeddings.init_embedding import Embeddings
 from ..models.llms.init_llm import LLMs
 from ..operators.kg_construction_task import KgBuilder
@@ -39,19 +33,13 @@ from .vector_index_utils import get_vector_index_class, read_documents
 
 
 def get_graph_index_info():
-    builder = KgBuilder(
-        LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
-    )
+    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     graph_summary_info = builder.fetch_graph_data().run()
-    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
-    filename_prefix = get_filename_prefix(
-        llm_settings.embedding_type, getattr(Embeddings().get_embedding(), "model_name", None)
-    )
-    vector_index = FaissVectorIndex.from_index_file(
-        str(os.path.join(resource_path, folder_name, "graph_vids")), filename_prefix, record_miss=False
-    )
+    vector_index = get_vector_index_class(index_settings.cur_vector_index)
     vector_index_entity = vector_index.from_name(
-        Embeddings().get_embedding().get_embedding_dim(), huge_settings.graph_name, "chunks"
+        Embeddings().get_embedding().get_embedding_dim(),
+        huge_settings.graph_name,
+        "chunks",
     )
     vector_index_info = vector_index_entity.get_vector_index_info()
     graph_summary_info["vid_index"] = {
@@ -98,20 +86,16 @@ def parse_schema(schema: str, builder: KgBuilder) -> Optional[str]:
     return None
 
 
-def extract_graph_origin(input_file, input_text, schema, example_prompt) -> str:
+def extract_graph(input_file, input_text, schema, example_prompt) -> str:
     texts = read_documents(input_file, input_text)
-    builder = KgBuilder(
-        LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
-    )
+    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     if not schema:
         return "ERROR: please input with correct schema/format."
 
     error_message = parse_schema(schema, builder)
     if error_message:
         return error_message
-    builder.chunk_split(texts, "document", "zh").extract_info(
-        example_prompt, "property_graph"
-    )
+    builder.chunk_split(texts, "document", "zh").extract_info(example_prompt, "property_graph")
 
     try:
         context = builder.run()
@@ -136,38 +120,16 @@ def extract_graph_origin(input_file, input_text, schema, example_prompt) -> str:
         raise gr.Error(str(e))
 
 
-def extract_graph(input_file, input_text, schema, example_prompt) -> str:
-    texts = read_documents(input_file, input_text)
-    scheduler = SchedulerSingleton.get_instance()
-    if not schema:
-        return "ERROR: please input with correct schema/format."
-
-    builder = KgBuilder(
-        LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
-    )
-    if not schema:
-        return "ERROR: please input with correct schema/format."
-
-    error_message = parse_schema(schema, builder)
-    if error_message:
-        return error_message
-    builder.chunk_split(texts, "document", "zh").extract_info(
-        example_prompt, "property_graph"
-    )
-
-    try:
-        return scheduler.schedule_flow(
-            "graph_extract", schema, texts, example_prompt, "property_graph"
-        )
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        log.error(e)
-        raise gr.Error(str(e))
-
-
 def update_vid_embedding():
-    scheduler = SchedulerSingleton.get_instance()
+    vector_index = get_vector_index_class(index_settings.cur_vector_index)
+    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
+    builder.fetch_graph_data().build_vertex_id_semantic_index(vector_index)
+    log.debug("Operators: %s", builder.operators)
     try:
-        return scheduler.schedule_flow("update_vid_embeddings")
+        context = builder.run()
+        removed_num = context["removed_vid_vector_num"]
+        added_num = context["added_vid_vector_num"]
+        return f"Removed {removed_num} vectors, added {added_num} vectors."
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
         raise gr.Error(str(e))
@@ -177,9 +139,7 @@ def import_graph_data(data: str, schema: str) -> Union[str, Dict[str, Any]]:
     try:
         data_json = json.loads(data.strip())
         log.debug("Import graph data: %s", data)
-        builder = KgBuilder(
-            LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
-        )
+        builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
         if schema:
             error_message = parse_schema(schema, builder)
             if error_message:
@@ -198,10 +158,42 @@ def import_graph_data(data: str, schema: str) -> Union[str, Dict[str, Any]]:
 
 
 def build_schema(input_text, query_example, few_shot):
-    scheduler = SchedulerSingleton.get_instance()
+    context = {
+        "raw_texts": [input_text] if input_text else [],
+        "query_examples": [],
+        "few_shot_schema": {},
+    }
+
+    if few_shot:
+        try:
+            context["few_shot_schema"] = json.loads(few_shot)
+        except json.JSONDecodeError as e:
+            raise gr.Error(f"Few Shot Schema is not in a valid JSON format: {e}") from e
+
+    if query_example:
+        try:
+            parsed_examples = json.loads(query_example)
+            # Validate and retain the description and gremlin fields
+            context["query_examples"] = [
+                {
+                    "description": ex.get("description", ""),
+                    "gremlin": ex.get("gremlin", ""),
+                }
+                for ex in parsed_examples
+                if isinstance(ex, dict) and "description" in ex and "gremlin" in ex
+            ]
+        except json.JSONDecodeError as e:
+            raise gr.Error(f"Query Examples is not in a valid JSON format: {e}") from e
+
+    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
     try:
-        return scheduler.schedule_flow(
-            "build_schema", input_text, query_example, few_shot
-        )
+        schema = builder.build_schema().run(context)
+    except Exception as e:
+        log.error("Failed to generate schema: %s", e)
+        raise gr.Error(f"Schema generation failed: {e}") from e
+    try:
+        formatted_schema = json.dumps(schema, ensure_ascii=False, indent=2)
+        return formatted_schema
     except (TypeError, ValueError) as e:
-        raise gr.Error(f"Schema generation failed: {e}")
+        log.error("Failed to format schema: %s", e)
+        return str(schema)

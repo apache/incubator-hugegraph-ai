@@ -29,9 +29,7 @@ from pyhugegraph.client import PyHugeClient
 MAX_BACKUP_DIRS = 7
 MAX_VERTICES = 100000
 MAX_EDGES = 200000
-BACKUP_DIR = str(
-    os.path.join(resource_path, "backup-graph-data-4020", huge_settings.graph_name)
-)
+BACKUP_DIR = str(os.path.join(resource_path, "backup-graph-data-4020", huge_settings.graph_name))
 
 
 def run_gremlin_query(query, fmt=True):
@@ -58,33 +56,21 @@ def init_hg_test_data():
     schema.vertexLabel("Person").properties(
         "name", "birthDate"
     ).useCustomizeStringId().ifNotExist().create()
-    schema.vertexLabel("Movie").properties(
-        "name"
-    ).useCustomizeStringId().ifNotExist().create()
-    schema.edgeLabel("ActedIn").sourceLabel("Person").targetLabel(
-        "Movie"
-    ).ifNotExist().create()
+    schema.vertexLabel("Movie").properties("name").useCustomizeStringId().ifNotExist().create()
+    schema.edgeLabel("ActedIn").sourceLabel("Person").targetLabel("Movie").ifNotExist().create()
 
-    schema.indexLabel("PersonByName").onV("Person").by(
-        "name"
-    ).secondary().ifNotExist().create()
-    schema.indexLabel("MovieByName").onV("Movie").by(
-        "name"
-    ).secondary().ifNotExist().create()
+    schema.indexLabel("PersonByName").onV("Person").by("name").secondary().ifNotExist().create()
+    schema.indexLabel("MovieByName").onV("Movie").by("name").secondary().ifNotExist().create()
 
     graph = client.graph()
-    graph.addVertex(
-        "Person", {"name": "Al Pacino", "birthDate": "1940-04-25"}, id="Al Pacino"
-    )
+    graph.addVertex("Person", {"name": "Al Pacino", "birthDate": "1940-04-25"}, id="Al Pacino")
     graph.addVertex(
         "Person",
         {"name": "Robert De Niro", "birthDate": "1943-08-17"},
         id="Robert De Niro",
     )
     graph.addVertex("Movie", {"name": "The Godfather"}, id="The Godfather")
-    graph.addVertex(
-        "Movie", {"name": "The Godfather Part II"}, id="The Godfather Part II"
-    )
+    graph.addVertex("Movie", {"name": "The Godfather Part II"}, id="The Godfather Part II")
     graph.addVertex(
         "Movie",
         {"name": "The Godfather Coda The Death of Michael Corleone"},
@@ -93,9 +79,7 @@ def init_hg_test_data():
 
     graph.addEdge("ActedIn", "Al Pacino", "The Godfather", {})
     graph.addEdge("ActedIn", "Al Pacino", "The Godfather Part II", {})
-    graph.addEdge(
-        "ActedIn", "Al Pacino", "The Godfather Coda The Death of Michael Corleone", {}
-    )
+    graph.addEdge("ActedIn", "Al Pacino", "The Godfather Coda The Death of Michael Corleone", {})
     graph.addEdge("ActedIn", "Robert De Niro", "The Godfather Part II", {})
     schema.getSchema()
     graph.close()
@@ -134,9 +118,7 @@ def backup_data():
         }
 
         vertexlabels = client.schema().getSchema()["vertexlabels"]
-        all_pk_flag = all(
-            data.get("id_strategy") == "PRIMARY_KEY" for data in vertexlabels
-        )
+        all_pk_flag = all(data.get("id_strategy") == "PRIMARY_KEY" for data in vertexlabels)
 
         for filename, query in files.items():
             write_backup_file(client, backup_subdir, filename, query, all_pk_flag)
@@ -216,9 +198,7 @@ def manage_backup_retention():
 # TODO: In the path demo/rag_demo/configs_block.py,
 # there is a function test_api_connection that is similar to this function,
 # but it is not straightforward to reuse
-def check_graph_db_connection(
-    url: str, name: str, user: str, pwd: str, graph_space: str
-) -> bool:
+def check_graph_db_connection(url: str, name: str, user: str, pwd: str, graph_space: str) -> bool:
     try:
         if graph_space and graph_space.strip():
             test_url = f"{url}/graphspaces/{graph_space}/graphs/{name}/schema"
