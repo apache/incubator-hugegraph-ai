@@ -52,6 +52,7 @@ class SemanticIdQuery:
     ):
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         self.folder_name = get_index_folder_name(
             huge_settings.graph_name, huge_settings.graph_space
         )
@@ -72,6 +73,11 @@ class SemanticIdQuery:
 >>>>>>> 902fee5 (feat(llm): some type bug && revert to FaissVectorIndex)
 =======
         self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids"))
+=======
+        self.index_dir = str(
+            os.path.join(resource_path, huge_settings.graph_name, "graph_vids")
+        )
+>>>>>>> 3aeef7d (fix)
         self.vector_index = vector_index.from_name(
             embedding.get_embedding_dim(), huge_settings.graph_name, "graph_vids"
         )
@@ -98,7 +104,9 @@ class SemanticIdQuery:
             possible_vids.update([f"{i + 1}:{keyword}" for keyword in keywords])
 
         vids_str = ",".join([f"'{vid}'" for vid in possible_vids])
-        resp = self._client.gremlin().exec(SemanticIdQuery.ID_QUERY_TEMPL.format(vids_str=vids_str))
+        resp = self._client.gremlin().exec(
+            SemanticIdQuery.ID_QUERY_TEMPL.format(vids_str=vids_str)
+        )
         searched_vids = [v["id"] for v in resp["data"]]
 
         unsearched_keywords = set(keywords)

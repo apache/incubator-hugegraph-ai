@@ -76,6 +76,7 @@ The extracted text is: {text}"""
     if schema:
         return schema_real_prompt
 <<<<<<< HEAD
+<<<<<<< HEAD
     log.warning(
 <<<<<<< HEAD
         "Recommend to provide a graph schema to improve the extraction accuracy. "
@@ -87,6 +88,11 @@ The extracted text is: {text}"""
 =======
     log.warning("Recommend to provide a graph schema to improve the extraction accuracy. Now using the default schema.")
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)
+=======
+    log.warning(
+        "Recommend to provide a graph schema to improve the extraction accuracy. Now using the default schema."
+    )
+>>>>>>> 3aeef7d (fix)
     return text_based_prompt
 
 
@@ -117,6 +123,7 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
         for vertex in schema["vertices"]:
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             if vertex["vertex_label"] == label and any(
                 pp.lower() == p_lower for pp in vertex["properties"]
             ):
@@ -126,6 +133,11 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
 =======
             if vertex["vertex_label"] == label and any(pp.lower() == p_lower for pp in vertex["properties"]):
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)
+=======
+            if vertex["vertex_label"] == label and any(
+                pp.lower() == p_lower for pp in vertex["properties"]
+            ):
+>>>>>>> 3aeef7d (fix)
                 id = f"{label}-{s}"
                 if id not in vertices_dict:
                     vertices_dict[id] = {
@@ -223,6 +235,7 @@ class InfoExtract:
         return True
 
     def _filter_long_id(self, graph) -> Dict[str, List[Any]]:
+<<<<<<< HEAD
         graph["vertices"] = [vertex for vertex in graph["vertices"] if self.valid(vertex["id"])]
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -235,4 +248,14 @@ class InfoExtract:
 =======
         graph["edges"] = [edge for edge in graph["edges"] if self.valid(edge["start"]) and self.valid(edge["end"])]
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)
+=======
+        graph["vertices"] = [
+            vertex for vertex in graph["vertices"] if self.valid(vertex["id"])
+        ]
+        graph["edges"] = [
+            edge
+            for edge in graph["edges"]
+            if self.valid(edge["start"]) and self.valid(edge["end"])
+        ]
+>>>>>>> 3aeef7d (fix)
         return graph

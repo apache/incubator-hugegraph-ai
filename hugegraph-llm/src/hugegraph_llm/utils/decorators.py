@@ -23,7 +23,9 @@ from typing import Optional, Any, Callable
 from hugegraph_llm.utils.log import log
 
 
-def log_elapsed_time(start_time: float, func: Callable, args: tuple, msg: Optional[str]):
+def log_elapsed_time(
+    start_time: float, func: Callable, args: tuple, msg: Optional[str]
+):
     elapse_time = time.perf_counter() - start_time
     unit = "s"
     if elapse_time < 1:

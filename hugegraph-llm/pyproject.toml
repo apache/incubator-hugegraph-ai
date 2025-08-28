@@ -41,6 +41,7 @@ dependencies = [
     "pandas",
     "pydantic",
     "tqdm",
+    "tqdm",
 
     # LLM specific dependencies
     "openai",

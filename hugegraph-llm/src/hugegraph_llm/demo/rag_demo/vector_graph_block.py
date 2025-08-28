@@ -58,7 +58,11 @@ from hugegraph_llm.utils.vector_index_utils import build_vector_index, clean_vec
 
 def store_prompt(doc, schema, example_prompt):
     # update env variables: doc, schema and example_prompt
-    if prompt.doc_input_text != doc or prompt.graph_schema != schema or prompt.extract_graph_prompt != example_prompt:
+    if (
+        prompt.doc_input_text != doc
+        or prompt.graph_schema != schema
+        or prompt.extract_graph_prompt != example_prompt
+    ):
         prompt.doc_input_text = doc
         prompt.graph_schema = schema
         prompt.extract_graph_prompt = example_prompt
@@ -86,7 +90,9 @@ def generate_prompt_for_ui(source_text, scenario, example_name):
 def load_example_names():
     """Load all candidate examples"""
     try:
-        examples_path = os.path.join(resource_path, "prompt_examples", "prompt_examples.json")
+        examples_path = os.path.join(
+            resource_path, "prompt_examples", "prompt_examples.json"
+        )
         with open(examples_path, "r", encoding="utf-8") as f:
             examples = json.load(f)
         return [example.get("name", "Unnamed example") for example in examples]
@@ -102,29 +108,41 @@ def load_query_examples():
             "language",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 3aeef7d (fix)
             (
                 getattr(prompt.llm_settings, "language", "EN")
                 if hasattr(prompt, "llm_settings")
                 else "EN"
             ),
+<<<<<<< HEAD
 =======
             getattr(prompt.llm_settings, "language", "EN") if hasattr(prompt, "llm_settings") else "EN",
 >>>>>>> 87ee5d3 (style: format code with black line-length 120)
 =======
             (getattr(prompt.llm_settings, "language", "EN") if hasattr(prompt, "llm_settings") else "EN"),
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)
+=======
+>>>>>>> 3aeef7d (fix)
         )
         if language.upper() == "CN":
-            examples_path = os.path.join(resource_path, "prompt_examples", "query_examples_CN.json")
+            examples_path = os.path.join(
+                resource_path, "prompt_examples", "query_examples_CN.json"
+            )
         else:
-            examples_path = os.path.join(resource_path, "prompt_examples", "query_examples.json")
+            examples_path = os.path.join(
+                resource_path, "prompt_examples", "query_examples.json"
+            )
 
         with open(examples_path, "r", encoding="utf-8") as f:
             examples = json.load(f)
         return json.dumps(examples, indent=2, ensure_ascii=False)
     except (FileNotFoundError, json.JSONDecodeError):
         try:
-            examples_path = os.path.join(resource_path, "prompt_examples", "query_examples.json")
+            examples_path = os.path.join(
+                resource_path, "prompt_examples", "query_examples.json"
+            )
             with open(examples_path, "r", encoding="utf-8") as f:
                 examples = json.load(f)
             return json.dumps(examples, indent=2, ensure_ascii=False)
@@ -135,7 +153,9 @@ def load_query_examples():
 def load_schema_fewshot_examples():
     """Load few-shot examples from a JSON file"""
     try:
-        examples_path = os.path.join(resource_path, "prompt_examples", "schema_examples.json")
+        examples_path = os.path.join(
+            resource_path, "prompt_examples", "schema_examples.json"
+        )
         with open(examples_path, "r", encoding="utf-8") as f:
             examples = json.load(f)
         return json.dumps(examples, indent=2, ensure_ascii=False)
@@ -557,7 +577,9 @@ def create_vector_graph_block():
             max_lines=29,
         )
 
-        out = gr.Code(label="Output Info", language="json", elem_classes="code-container-edit")
+        out = gr.Code(
+            label="Output Info", language="json", elem_classes="code-container-edit"
+        )
 
     with gr.Row():
         with gr.Accordion("Get RAG Info", open=False):
@@ -606,7 +628,9 @@ def create_vector_graph_block():
         store_prompt,
         inputs=[input_text, input_schema, info_extract_template],
     )
-    vector_import_bt.click(build_vector_index, inputs=[input_file, input_text], outputs=out).then(
+    vector_import_bt.click(
+        build_vector_index, inputs=[input_file, input_text], outputs=out
+    ).then(
         store_prompt,
         inputs=[input_text, input_schema, info_extract_template],
     )
@@ -634,15 +658,17 @@ def create_vector_graph_block():
         inputs=[input_text, input_schema, info_extract_template],
     )
 
-    graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(
-        update_vid_embedding
-    ).then(
+    graph_loading_bt.click(
+        import_graph_data, inputs=[out, input_schema], outputs=[out]
+    ).then(update_vid_embedding).then(
         store_prompt,
         inputs=[input_text, input_schema, info_extract_template],
     )
 
     build_schema_bt.click(
-        lambda it, qe, fs: extract_graph([], it, prompt.graph_schema, prompt.extract_graph_prompt),
+        lambda it, qe, fs: extract_graph(
+            [], it, prompt.graph_schema, prompt.extract_graph_prompt
+        ),
         inputs=[input_text, query_example, few_shot],
         outputs=[input_schema],
     ).then(

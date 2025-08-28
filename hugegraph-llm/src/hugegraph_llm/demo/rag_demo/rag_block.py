@@ -137,7 +137,11 @@ def rag_answer(
             vector_dis_threshold=vector_dis_threshold,
             topk_per_keyword=topk_per_keyword,
         )
+<<<<<<< HEAD
         if res.get("switch_to_bleu"):
+=======
+        if context.get("switch_to_bleu"):
+>>>>>>> 3aeef7d (fix)
             gr.Warning(
                 "Online reranker fails, automatically switches to local bleu rerank."
             )
@@ -262,10 +266,20 @@ async def rag_answer_streaming(
             query=text,
             vector_search=vector_search,
             graph_search=graph_search,
+<<<<<<< HEAD
+=======
+        )
+        if context.get("switch_to_bleu"):
+            gr.Warning(
+                "Online reranker fails, automatically switches to local bleu rerank."
+            )
+        answer_synthesize = AnswerSynthesize(
+>>>>>>> 3aeef7d (fix)
             raw_answer=raw_answer,
             vector_only_answer=vector_only_answer,
             graph_only_answer=graph_only_answer,
             graph_vector_answer=graph_vector_answer,
+<<<<<<< HEAD
             graph_ratio=graph_ratio,
             rerank_method=rerank_method,
             near_neighbor_first=near_neighbor_first,
@@ -276,6 +290,12 @@ async def rag_answer_streaming(
             gremlin_prompt=gremlin_prompt,
         ):
             if res.get("switch_to_bleu"):
+=======
+            prompt_template=answer_prompt,
+        )
+        async for context in answer_synthesize.run_streaming(context):
+            if context.get("switch_to_bleu"):
+>>>>>>> 3aeef7d (fix)
                 gr.Warning(
                     "Online reranker fails, automatically switches to local bleu rerank."
                 )
@@ -349,19 +369,29 @@ def create_rag_block():
         with gr.Column(scale=1):
             with gr.Row():
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 3aeef7d (fix)
                 raw_radio = gr.Radio(
                     choices=[True, False], value=False, label="Basic LLM Answer"
                 )
                 vector_only_radio = gr.Radio(
                     choices=[True, False], value=False, label="Vector-only Answer"
                 )
+<<<<<<< HEAD
 =======
                 raw_radio = gr.Radio(choices=[True, False], value=False, label="Basic LLM Answer")
                 vector_only_radio = gr.Radio(choices=[True, False], value=False, label="Vector-only Answer")
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)
+=======
+>>>>>>> 3aeef7d (fix)
             with gr.Row():
-                graph_only_radio = gr.Radio(choices=[True, False], value=True, label="Graph-only Answer")
-                graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
+                graph_only_radio = gr.Radio(
+                    choices=[True, False], value=True, label="Graph-only Answer"
+                )
+                graph_vector_radio = gr.Radio(
+                    choices=[True, False], value=False, label="Graph-Vector Answer"
+                )
 
             def toggle_slider(enable):
                 return gr.update(interactive=enable)
@@ -379,9 +409,13 @@ def create_rag_block():
                         label="Template Num (<0 means disable text2gql) ",
                         precision=0,
                     )
-                    graph_ratio = gr.Slider(0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False)
+                    graph_ratio = gr.Slider(
+                        0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False
+                    )
 
-                graph_vector_radio.change(toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio)  # pylint: disable=no-member
+                graph_vector_radio.change(
+                    toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio
+                )  # pylint: disable=no-member
                 near_neighbor_first = gr.Checkbox(
                     value=False,
                     label="Near neighbor first(Optional)",
@@ -510,7 +544,9 @@ def create_rag_block():
 
     with gr.Row():
         with gr.Column():
-            questions_file = gr.File(file_types=[".xlsx", ".csv"], label="Questions File (.xlsx & csv)")
+            questions_file = gr.File(
+                file_types=[".xlsx", ".csv"], label="Questions File (.xlsx & csv)"
+            )
         with gr.Column():
             test_template_file = os.path.join(
                 resource_path, "demo", "questions_template.xlsx"

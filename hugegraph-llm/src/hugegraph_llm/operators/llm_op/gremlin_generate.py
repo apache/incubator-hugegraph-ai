@@ -48,11 +48,14 @@ class GremlinGenerateSynthesize:
             return match.group(1).strip()
         return response.strip()
 
-    def _format_examples(self, examples: Optional[List[Dict[str, str]]]) -> Optional[str]:
+    def _format_examples(
+        self, examples: Optional[List[Dict[str, str]]]
+    ) -> Optional[str]:
         if not examples:
             return None
         example_strings = []
         for example in examples:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
             example_strings.append(
@@ -65,6 +68,11 @@ class GremlinGenerateSynthesize:
 =======
             example_strings.append(f"- query: {example['query']}\n- gremlin:\n```gremlin\n{example['gremlin']}\n```")
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)
+=======
+            example_strings.append(
+                f"- query: {example['query']}\n- gremlin:\n```gremlin\n{example['gremlin']}\n```"
+            )
+>>>>>>> 3aeef7d (fix)
         return "\n\n".join(example_strings)
 
     def _format_vertices(self, vertices: Optional[List[str]]) -> Optional[str]:
@@ -80,7 +88,9 @@ class GremlinGenerateSynthesize:
     async def async_generate(self, context: Dict[str, Any]):
         async_tasks = {}
         query = context.get("query")
-        raw_example = [{"query": "who is peter", "gremlin": "g.V().has('name', 'peter')"}]
+        raw_example = [
+            {"query": "who is peter", "gremlin": "g.V().has('name', 'peter')"}
+        ]
         raw_prompt = self.gremlin_prompt.format(
             query=query,
             schema=self.schema,
@@ -88,7 +98,9 @@ class GremlinGenerateSynthesize:
             vertices=self._format_vertices(vertices=self.vertices),
             properties=self._format_properties(properties=None),
         )
-        async_tasks["raw_answer"] = asyncio.create_task(self.llm.agenerate(prompt=raw_prompt))
+        async_tasks["raw_answer"] = asyncio.create_task(
+            self.llm.agenerate(prompt=raw_prompt)
+        )
 
         examples = context.get("match_result")
         init_prompt = self.gremlin_prompt.format(
@@ -98,7 +110,9 @@ class GremlinGenerateSynthesize:
             vertices=self._format_vertices(vertices=self.vertices),
             properties=self._format_properties(properties=None),
         )
-        async_tasks["initialized_answer"] = asyncio.create_task(self.llm.agenerate(prompt=init_prompt))
+        async_tasks["initialized_answer"] = asyncio.create_task(
+            self.llm.agenerate(prompt=init_prompt)
+        )
 
         raw_response = await async_tasks["raw_answer"]
         initialized_response = await async_tasks["initialized_answer"]
@@ -116,7 +130,9 @@ class GremlinGenerateSynthesize:
 
     def sync_generate(self, context: Dict[str, Any]):
         query = context.get("query")
-        raw_example = [{"query": "who is peter", "gremlin": "g.V().has('name', 'peter')"}]
+        raw_example = [
+            {"query": "who is peter", "gremlin": "g.V().has('name', 'peter')"}
+        ]
         raw_prompt = self.gremlin_prompt.format(
             query=query,
             schema=self.schema,

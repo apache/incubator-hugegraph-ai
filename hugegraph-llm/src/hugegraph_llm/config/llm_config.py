@@ -32,16 +32,24 @@ class LLMConfig(BaseConfig):
     embedding_type: Optional[Literal["openai", "litellm", "ollama/local"]] = "openai"
     reranker_type: Optional[Literal["cohere", "siliconflow"]] = None
     # 1. OpenAI settings
-    openai_chat_api_base: str = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
+    openai_chat_api_base: str = os.environ.get(
+        "OPENAI_BASE_URL", "https://api.openai.com/v1"
+    )
     openai_chat_api_key: str | None = os.environ.get("OPENAI_API_KEY")
     openai_chat_language_model: str = "gpt-4.1-mini"
-    openai_extract_api_base: str = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
+    openai_extract_api_base: str = os.environ.get(
+        "OPENAI_BASE_URL", "https://api.openai.com/v1"
+    )
     openai_extract_api_key: str | None = os.environ.get("OPENAI_API_KEY")
     openai_extract_language_model: str = "gpt-4.1-mini"
-    openai_text2gql_api_base: str = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
+    openai_text2gql_api_base: str = os.environ.get(
+        "OPENAI_BASE_URL", "https://api.openai.com/v1"
+    )
     openai_text2gql_api_key: str | None = os.environ.get("OPENAI_API_KEY")
     openai_text2gql_language_model: str = "gpt-4.1-mini"
-    openai_embedding_api_base: str = os.environ.get("OPENAI_EMBEDDING_BASE_URL", "https://api.openai.com/v1")
+    openai_embedding_api_base: str = os.environ.get(
+        "OPENAI_EMBEDDING_BASE_URL", "https://api.openai.com/v1"
+    )
     openai_embedding_api_key: str | None = os.environ.get("OPENAI_EMBEDDING_API_KEY")
     openai_embedding_model: str = "text-embedding-3-small"
     openai_embedding_model_dim: int = 1536
@@ -49,7 +57,9 @@ class LLMConfig(BaseConfig):
     openai_extract_tokens: int = 256
     openai_text2gql_tokens: int = 4096
     # 2. Rerank settings
-    cohere_base_url: str = os.environ.get("CO_API_URL", "https://api.cohere.com/v1/rerank")
+    cohere_base_url: str = os.environ.get(
+        "CO_API_URL", "https://api.cohere.com/v1/rerank"
+    )
     reranker_api_key: Optional[str] = None
     reranker_model: Optional[str] = None
     # 3. Ollama settings

@@ -42,26 +42,40 @@ class GremlinExampleIndexQuery:
         self.num_examples = num_examples
         if not vector_index.exist("gremlin_examples"):
             log.warning("No gremlin example index found, will generate one.")
+<<<<<<< HEAD
             self.vector_index = vector_index.from_name(self.embedding.get_embedding_dim(), "gremlin_examples")
 <<<<<<< HEAD
 
 =======
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)
+=======
+            self.vector_index = vector_index.from_name(
+                self.embedding.get_embedding_dim(), "gremlin_examples"
+            )
+>>>>>>> 3aeef7d (fix)
             self._build_default_example_index()
         else:
-            self.vector_index = vector_index.from_name(self.embedding.get_embedding_dim(), "gremlin_examples")
+            self.vector_index = vector_index.from_name(
+                self.embedding.get_embedding_dim(), "gremlin_examples"
+            )
 
-    def _get_match_result(self, context: Dict[str, Any], query: str) -> List[Dict[str, Any]]:
+    def _get_match_result(
+        self, context: Dict[str, Any], query: str
+    ) -> List[Dict[str, Any]]:
         if self.num_examples <= 0:
             return []
 
         query_embedding = context.get("query_embedding")
         if not isinstance(query_embedding, list):
             query_embedding = self.embedding.get_texts_embeddings([query])[0]
-        return self.vector_index.search(query_embedding, self.num_examples, dis_threshold=1.8)
+        return self.vector_index.search(
+            query_embedding, self.num_examples, dis_threshold=1.8
+        )
 
     def _build_default_example_index(self):
-        properties = pd.read_csv(os.path.join(resource_path, "demo", "text2gremlin.csv")).to_dict(orient="records")
+        properties = pd.read_csv(
+            os.path.join(resource_path, "demo", "text2gremlin.csv")
+        ).to_dict(orient="records")
         from concurrent.futures import ThreadPoolExecutor
 
         # TODO: reuse the logic in build_semantic_index.py (consider extract the batch-embedding method)

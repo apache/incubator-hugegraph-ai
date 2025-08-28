@@ -69,7 +69,7 @@ def clear_llm_server_log():
 
 
 # Function to validate password and control access to logs
-def check_password(password, request = None):
+def check_password(password, request=None):
     client_ip = request.client.host if request else "Unknown IP"
     admin_token = admin_settings.admin_token
 
@@ -110,6 +110,7 @@ def create_admin_block():
         # Error message box, initially hidden
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         error_message = gr.Textbox(
             label="", visible=False, interactive=False, elem_classes="error-message"
         )
@@ -119,6 +120,11 @@ def create_admin_block():
 =======
         error_message = gr.Textbox(label="", visible=False, interactive=False, elem_classes="error-message")
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)
+=======
+        error_message = gr.Textbox(
+            label="", visible=False, interactive=False, elem_classes="error-message"
+        )
+>>>>>>> 3aeef7d (fix)
 
         # Button to submit password
         submit_button = gr.Button("Submit")
@@ -137,7 +143,9 @@ def create_admin_block():
                 with gr.Row():
                     with gr.Column():
                         # Button to clear LLM Server log, initially hidden
-                        clear_llm_server_button = gr.Button("Clear LLM Server Log", visible=False)
+                        clear_llm_server_button = gr.Button(
+                            "Clear LLM Server Log", visible=False
+                        )
                     with gr.Column():
                         # Button to refresh LLM Server log manually
                         refresh_llm_server_button = gr.Button(

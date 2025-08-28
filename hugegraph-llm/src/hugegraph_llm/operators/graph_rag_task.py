@@ -42,7 +42,9 @@ class RAGPipeline:
     querying graph databases and vector indices, merging and re-ranking results, and generating answers.
     """
 
-    def __init__(self, llm: Optional[BaseLLM] = None, embedding: Optional[BaseEmbedding] = None):
+    def __init__(
+        self, llm: Optional[BaseLLM] = None, embedding: Optional[BaseEmbedding] = None
+    ):
         """
         Initialize the RAGPipeline with optional LLM and embedding models.
 
@@ -253,6 +255,7 @@ class RAGPipeline:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             self.extract_keywords().query_graphdb(
                 max_graph_items=kwargs.get("max_graph_items")
             ).synthesize_answer()
@@ -265,6 +268,11 @@ class RAGPipeline:
 =======
             self.extract_keywords().query_graphdb(max_graph_items=kwargs.get("max_graph_items")).synthesize_answer()
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)
+=======
+            self.extract_keywords().query_graphdb(
+                max_graph_items=kwargs.get("max_graph_items")
+            ).synthesize_answer()
+>>>>>>> 3aeef7d (fix)
 
         context = kwargs
 

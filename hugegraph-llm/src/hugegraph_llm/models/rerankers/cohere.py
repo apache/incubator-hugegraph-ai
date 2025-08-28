@@ -31,10 +31,14 @@ class CohereReranker:
         self.base_url = base_url
         self.model = model
 
-    def get_rerank_lists(self, query: str, documents: List[str], top_n: Optional[int] = None) -> List[str]:
+    def get_rerank_lists(
+        self, query: str, documents: List[str], top_n: Optional[int] = None
+    ) -> List[str]:
         if not top_n:
             top_n = len(documents)
-        assert top_n <= len(documents), "'top_n' should be less than or equal to the number of documents"
+        assert top_n <= len(
+            documents
+        ), "'top_n' should be less than or equal to the number of documents"
 
         if top_n == 0:
             return []
@@ -53,7 +57,9 @@ class CohereReranker:
             "top_n": top_n,
             "documents": documents,
         }
-        response = requests.post(url, headers=headers, json=payload, timeout=(1.0, 10.0))
+        response = requests.post(
+            url, headers=headers, json=payload, timeout=(1.0, 10.0)
+        )
         response.raise_for_status()  # Raise an error for bad status codes
         results = response.json()["results"]
         sorted_docs = [documents[item["index"]] for item in results]

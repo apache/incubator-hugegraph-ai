@@ -24,7 +24,9 @@ from pydantic_settings import BaseSettings
 from hugegraph_llm.utils.log import log
 
 dir_name = os.path.dirname
-env_path = os.path.join(os.getcwd(), ".env")  # Load .env from the current working directory
+env_path = os.path.join(
+    os.getcwd(), ".env"
+)  # Load .env from the current working directory
 
 
 class BaseConfig(BaseSettings):
@@ -88,7 +90,9 @@ class BaseConfig(BaseSettings):
             # Step 2: Add missing config items to .env
             self._sync_object_to_env(env_config, config_dict)
         except Exception as e:
-            log.error("An error occurred when checking the .env variable file: %s", str(e))
+            log.error(
+                "An error occurred when checking the .env variable file: %s", str(e)
+            )
             raise
 
     def _sync_env_to_object(self, env_config, config_dict):
@@ -139,7 +143,9 @@ class BaseConfig(BaseSettings):
                 # Synchronize configurations between the object and .env file
                 self.check_env()
 
-            log.info("The %s file was loaded. Class: %s", env_path, self.__class__.__name__)
+            log.info(
+                "The %s file was loaded. Class: %s", env_path, self.__class__.__name__
+            )
         except Exception as e:
             log.error("An error occurred when initializing the configuration object: %s", str(e))
             raise

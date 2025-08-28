@@ -29,10 +29,14 @@ class SiliconReranker:
         self.api_key = api_key
         self.model = model
 
-    def get_rerank_lists(self, query: str, documents: List[str], top_n: Optional[int] = None) -> List[str]:
+    def get_rerank_lists(
+        self, query: str, documents: List[str], top_n: Optional[int] = None
+    ) -> List[str]:
         if not top_n:
             top_n = len(documents)
-        assert top_n <= len(documents), "'top_n' should be less than or equal to the number of documents"
+        assert top_n <= len(
+            documents
+        ), "'top_n' should be less than or equal to the number of documents"
 
         if top_n == 0:
             return []
@@ -54,7 +58,9 @@ class SiliconReranker:
             "content-type": Constants.HEADER_CONTENT_TYPE,
             "authorization": f"Bearer {self.api_key}",
         }
-        response = requests.post(url, json=payload, headers=headers, timeout=(1.0, 10.0))
+        response = requests.post(
+            url, json=payload, headers=headers, timeout=(1.0, 10.0)
+        )
         response.raise_for_status()  # Raise an error for bad status codes
         results = response.json()["results"]
         sorted_docs = [documents[item["index"]] for item in results]

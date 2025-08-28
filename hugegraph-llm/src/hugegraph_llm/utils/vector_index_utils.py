@@ -21,23 +21,12 @@ from typing import Type
 import docx
 import gradio as gr
 
-<<<<<<< HEAD
-from hugegraph_llm.config import resource_path, huge_settings, llm_settings
-from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
-from hugegraph_llm.models.embeddings.init_embedding import Embeddings, model_map
-from hugegraph_llm.flows.scheduler import SchedulerSingleton
-from hugegraph_llm.utils.embedding_utils import (
-    get_filename_prefix,
-    get_index_folder_name,
-)
-=======
 from hugegraph_llm.config import huge_settings, index_settings
 from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
 from hugegraph_llm.indices.vector_index.milvus_vector_store import MilvusVectorIndex
 from hugegraph_llm.indices.vector_index.qdrant_vector_store import QdrantVectorIndex
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
->>>>>>> 38dce0b (feat(llm): vector db finished)
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
 from hugegraph_llm.utils.hugegraph_utils import get_hg_client
@@ -62,7 +51,9 @@ def read_documents(input_file, input_text):
                 texts.append(text)
             elif full_path.endswith(".pdf"):
                 # TODO: support PDF file
-                raise gr.Error("PDF will be supported later! Try to upload text/docx now")
+                raise gr.Error(
+                    "PDF will be supported later! Try to upload text/docx now"
+                )
             else:
                 raise gr.Error("Please input txt or docx file.")
     else:
@@ -78,14 +69,10 @@ def get_vector_index_info():
     )
 
     return json.dumps(
-<<<<<<< HEAD
-        {**vector_index_entity.get_vector_index_info(), "now_vector_index": index_settings.now_vector_index},
-=======
         {
             **vector_index_entity.get_vector_index_info(),
             "cur_vector_index": index_settings.cur_vector_index,
         },
->>>>>>> a255aed (fix cycle import & add docs)
         ensure_ascii=False,
         indent=2,
     )
@@ -102,8 +89,14 @@ def build_vector_index(input_file, input_text):
     if input_file and input_text:
         raise gr.Error("Please only choose one between file and text.")
     texts = read_documents(input_file, input_text)
-    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
-    context = builder.chunk_split(texts, "paragraph", "zh").build_vector_index(vector_index).run()
+    builder = KgBuilder(
+        LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
+    )
+    context = (
+        builder.chunk_split(texts, "paragraph", "zh")
+        .build_vector_index(vector_index)
+        .run()
+    )
     return json.dumps(context, ensure_ascii=False, indent=2)
 
 

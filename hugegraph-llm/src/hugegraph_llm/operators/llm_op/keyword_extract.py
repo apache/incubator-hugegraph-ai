@@ -64,7 +64,9 @@ class KeywordExtract:
         end_time = time.perf_counter()
         log.debug("Keyword extraction time: %.2f seconds", end_time - start_time)
 
-        keywords = self._extract_keywords_from_response(response=response, lowercase=False, start_token="KEYWORDS:")
+        keywords = self._extract_keywords_from_response(
+            response=response, lowercase=False, start_token="KEYWORDS:"
+        )
         keywords = {k.replace("'", "") for k in keywords}
         context["keywords"] = list(keywords)
         log.info("User Query: %s\nKeywords: %s", self._query, context["keywords"])
@@ -87,22 +89,32 @@ class KeywordExtract:
             match = match[len(start_token) :].strip()
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 3aeef7d (fix)
             keywords.extend(
                 k.lower() if lowercase else k
                 for k in re.split(r"[,，]+", match)
                 if len(k.strip()) > 1
             )
+<<<<<<< HEAD
 =======
             keywords.extend(k.lower() if lowercase else k for k in re.split(r"[,，]+", match) if len(k.strip()) > 1)
 >>>>>>> 87ee5d3 (style: format code with black line-length 120)
 =======
             keywords.extend(k.lower() if lowercase else k for k in re.split(r"[,，]+", match) if len(k.strip()) > 1)
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)
+=======
+>>>>>>> 3aeef7d (fix)
 
         # if the keyword consists of multiple words, split into sub-words (removing stopwords)
         results = set(keywords)
         for token in keywords:
             sub_tokens = re.findall(r"\w+", token)
             if len(sub_tokens) > 1:
-                results.update(w for w in sub_tokens if w not in NLTKHelper().stopwords(lang=self._language))
+                results.update(
+                    w
+                    for w in sub_tokens
+                    if w not in NLTKHelper().stopwords(lang=self._language)
+                )
         return results

@@ -39,6 +39,7 @@ class ChunkSplitter:
         if split_type == "paragraph":
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             self.text_splitter = RecursiveCharacterTextSplitter(
                 chunk_size=500, chunk_overlap=30, separators=separators
             )
@@ -56,6 +57,15 @@ class ChunkSplitter:
         elif split_type == "sentence":
             self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=50, chunk_overlap=0, separators=separators)
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)
+=======
+            self.text_splitter = RecursiveCharacterTextSplitter(
+                chunk_size=500, chunk_overlap=30, separators=separators
+            )
+        elif split_type == "sentence":
+            self.text_splitter = RecursiveCharacterTextSplitter(
+                chunk_size=50, chunk_overlap=0, separators=separators
+            )
+>>>>>>> 3aeef7d (fix)
         else:
             raise ValueError("Arg `type` must be paragraph, sentence!")
 

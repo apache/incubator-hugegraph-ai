@@ -53,6 +53,7 @@ class DisambiguateData:
             extract_triples_by_regex(llm_output, data)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             print(
                 f"LLM {self.__class__.__name__} input:{prompt} \n"
                 f" output: {llm_output} \n data: {data}"
@@ -63,6 +64,11 @@ class DisambiguateData:
 =======
             print(f"LLM {self.__class__.__name__} input:{prompt} \n output: {llm_output} \n data: {data}")
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)
+=======
+            print(
+                f"LLM {self.__class__.__name__} input:{prompt} \n output: {llm_output} \n data: {data}"
+            )
+>>>>>>> 3aeef7d (fix)
             data["call_count"] = data.get("call_count", 0) + 1
 
         return data

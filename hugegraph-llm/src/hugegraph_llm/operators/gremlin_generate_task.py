@@ -40,10 +40,16 @@ class GremlinGenerator:
         return self
 
     def example_index_build(self, examples, vector_index: type[VectorStoreBase]):
-        self.operators.append(BuildGremlinExampleIndex(self.embedding, examples, vector_index=vector_index))
+        self.operators.append(
+            BuildGremlinExampleIndex(
+                self.embedding, examples, vector_index=vector_index
+            )
+        )
         return self
 
-    def import_schema(self, from_hugegraph=None, from_extraction=None, from_user_defined=None):
+    def import_schema(
+        self, from_hugegraph=None, from_extraction=None, from_user_defined=None
+    ):
         if from_hugegraph:
             self.operators.append(SchemaManager(from_hugegraph))
         elif from_user_defined:
@@ -55,13 +61,17 @@ class GremlinGenerator:
         return self
 
     def example_index_query(self, num_examples, vector_index: type[VectorStoreBase]):
-        self.operators.append(GremlinExampleIndexQuery(vector_index, self.embedding, num_examples))
+        self.operators.append(
+            GremlinExampleIndexQuery(vector_index, self.embedding, num_examples)
+        )
         return self
 
     def gremlin_generate_synthesize(
         self, schema, gremlin_prompt: Optional[str] = None, vertices: Optional[List[str]] = None
     ):
-        self.operators.append(GremlinGenerateSynthesize(self.llm, schema, vertices, gremlin_prompt))
+        self.operators.append(
+            GremlinGenerateSynthesize(self.llm, schema, vertices, gremlin_prompt)
+        )
         return self
 
     def print_result(self):
