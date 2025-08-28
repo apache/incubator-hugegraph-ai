@@ -18,12 +18,11 @@
 # pylint: disable=E1101
 
 import os
-from typing import AsyncGenerator, Literal, Optional, Tuple
+from typing import Any, AsyncGenerator, Literal, Optional, Tuple
 
 import gradio as gr
 from hugegraph_llm.flows.scheduler import SchedulerSingleton
 import pandas as pd
-from gradio.utils import NamedString
 
 <<<<<<< HEAD
 from hugegraph_llm.config import resource_path, prompt, llm_settings
@@ -437,7 +436,7 @@ def create_rag_block():
         resource_path, "demo", "questions_template.xlsx"
     )
 
-    def read_file_to_excel(file: NamedString, line_count: Optional[int] = None):
+    def read_file_to_excel(file: Any, line_count: Optional[int] = None):
         df = None
         if not file:
             return pd.DataFrame(), 1
