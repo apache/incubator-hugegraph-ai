@@ -37,7 +37,7 @@ class MultiLingualTextRank:
             'chinese': ('n', 'nr', 'ns', 'nt', 'nrt', 'nz', 'v', 'vd', 'vn', "eng", "j", "l"),
             'english': ('NN', 'NNS', 'NNP', 'NNPS', 'VB', 'VBG', 'VBN', 'VBZ')
         }
-        self.rules = [r"'https?://\S+|www\.\S+",
+        self.rules = [r"https?://\S+|www\.\S+",
                       r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
                       r"\b\w+(?:[-’\']\w+)+\b",
                       r"\b\d+[,.]\d+\b"]
@@ -93,10 +93,10 @@ class MultiLingualTextRank:
             if word in placeholder_map:
                 words.append(placeholder_map[word])
             else:
-                if len(word) >= 1 and flag in self.pos_filter['english'] and word not in en_stop_words:
+                if len(word) >= 1 and flag in self.pos_filter['english'] and word.lower() not in en_stop_words:
                     # 存在中文字符会重新分词，否则加入分词
                     words.append(word)
-                    if re.compile('[\u4e00-\u9fa5]').search(word):
+                    if re.compile('[\u4e00-\u9fff]').search(word):
                         ch_tokens.append(word)
 
         # 5. 需要进一步的话，中文分词
@@ -136,7 +136,8 @@ class MultiLingualTextRank:
             return {}
 
         pagerank_scores = self.graph.pagerank(directed=False, damping=0.85, weights='weight')
-        pagerank_scores = [scores/max(pagerank_scores) for scores in pagerank_scores]
+        if max(pagerank_scores) > 0:
+            pagerank_scores = [scores/max(pagerank_scores) for scores in pagerank_scores]
         node_names = self.graph.vs['name']
         return dict(zip(node_names, pagerank_scores))
 
@@ -153,7 +154,7 @@ class MultiLingualTextRank:
         # 3. 构建图，运行 PageRank 算法
         unique_words = list(set(words))
         ranks = dict(zip(unique_words, [0] * len(unique_words)))
-        if len(unique_words) > self.window:
+        if len(unique_words) > 1:
             self._build_graph(words)
             if not self.graph or self.graph.vcount() == 0:
                 return {}

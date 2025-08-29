@@ -391,7 +391,7 @@ g.V().limit(10)
 输出格式：
 - 仅输出一行内容，以 KEYWORDS: 为前缀，后跟列表项，关键词提取列表项为 关键词：重要性评分，评分建议保留两位小数，同义词提取列表项为对应的同义词，列表项之间用逗号分隔。抽取的关键词中不允许出现空格或空字符
 - 格式示例：
-KEYWORDS:关键词 1：分数 1，关键词 2：分数 2，...,关键词 n：分数 n
+KEYWORDS:关键词_1：分数_1，关键词_2：分数_2，...,关键词_n：分数_n
 
 MAX_KEYWORDS: {max_keywords}
 文本：
@@ -442,4 +442,3 @@ Your goal is to generate a new, tailored "Graph Extract Prompt Header" based on 
 ## Language Requirement:
 Please generate the prompt in {language} language.
 """
-

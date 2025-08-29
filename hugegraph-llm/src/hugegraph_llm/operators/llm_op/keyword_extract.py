@@ -168,9 +168,18 @@ class KeywordExtract:
         for match in matches:
             match = match.strip()
             for k in re.split(r"[,，]+", match):
-                lis = re.split(r"[:：]", k.strip())
-                word, score = lis[0].strip(), float(lis[1].strip())
-                if len(word) > 1:
-                    results[word.lower() if lowercase else word] = score
-
+                item = k.strip()
+                if not item:
+                    continue
+                parts = re.split(r"[:：]", item, maxsplit=1)
+                if len(parts) != 2:
+                    continue
+                word_raw, score_raw = parts[0].strip(), parts[1].strip()
+                if len(word_raw) > 0:
+                    try:
+                        score_val = float(score_raw)
+                    except ValueError:
+                        continue
+                    word_out = word_raw.lower() if lowercase else word_raw
+                    results[word_out] = score_val
         return results
