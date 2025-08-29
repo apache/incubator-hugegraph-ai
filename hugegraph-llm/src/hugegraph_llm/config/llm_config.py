@@ -30,6 +30,10 @@ class LLMConfig(BaseConfig):
     text2gql_llm_type: Literal["openai", "litellm", "ollama/local"] = "openai"
     embedding_type: Optional[Literal["openai", "litellm", "ollama/local"]] = "openai"
     reranker_type: Optional[Literal["cohere", "siliconflow"]] = None
+    keyword_extract_type: Literal["llm", "textrank", "hybrid"] = "llm"
+    windows_size: Optional[int] = 3
+    hybrid_llm_weights: Optional[float] = 0.5
+    # TODO: divide RAG part if necessary
     # 1. OpenAI settings
     openai_chat_api_base: Optional[str] = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
     openai_chat_api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")

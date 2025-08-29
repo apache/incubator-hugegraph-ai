@@ -68,9 +68,6 @@ class RAGPipeline:
     def extract_keywords(
         self,
         text: Optional[str] = None,
-        max_keywords: int = 5,
-        extract_method: str = "Hybrid",
-        mask_words: str = "",
         extract_template: Optional[str] = None,
     ):
         """
@@ -79,17 +76,12 @@ class RAGPipeline:
         :param text: Text to extract keywords from.
         :param max_keywords: Maximum number of keywords to extract.
         :param extract_template: Template for keyword extraction.
-        :param extract_method: Method for Keyword extraction
-        :param mask_words: Filter words for TextRank in Chinese word segmentation
         :return: Self-instance for chaining.
         """
         self._operators.append(
             KeywordExtract(
                 text=text,
-                max_keywords=max_keywords,
                 extract_template=extract_template,
-                extract_method=extract_method,
-                mask_words=mask_words
             )
         )
         return self

@@ -24,13 +24,12 @@ import nltk
 import regex
 
 from hugegraph_llm.operators.common_op.nltk_helper import NLTKHelper
-from hugegraph_llm.utils.log import log
 
 
 class MultiLingualTextRank:
-    def __init__(self, keyword_num: int = 5, window_size: int = 2, mask_words: str = ""):
+    def __init__(self, keyword_num: int = 5, window_size: int = 3):
         self.top_k = keyword_num
-        self.window = window_size
+        self.window = window_size if 0 < window_size <= 10 else 3
         self.graph = None
         self.max_len = 100
 
@@ -38,43 +37,15 @@ class MultiLingualTextRank:
             'chinese': ('n', 'nr', 'ns', 'nt', 'nrt', 'nz', 'v', 'vd', 'vn', "eng", "j", "l"),
             'english': ('NN', 'NNS', 'NNP', 'NNPS', 'VB', 'VBG', 'VBN', 'VBZ')
         }
-
-        self.mask_words = list(filter(None, (mask_words or "").split(',')))
-
-
-    @staticmethod
-    def _build_word_regex(word: str):
-        return rf'(?<![a-zA-Z0-9])({re.escape(word)})(?![a-zA-Z0-9])'
-
-    @staticmethod
-    def _regex_test(pattern: str, text: str):
-        pattern = pattern[1:-1].strip()
-        if len(pattern) == 0:
-            return None
-        try:
-            test_pattern = regex.compile(pattern, regex.V1)
-            test_pattern.search(text, timeout=1)
-            return pattern
-        except (regex.error, OverflowError, TimeoutError) as e:
-            log.error("Failed to compile or test pattern '%s...': %s", pattern, e)
-            return None
+        self.rules = [r"'https?://\S+|www\.\S+",
+                      r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+                      r"\b\w+(?:[-’\']\w+)+\b",
+                      r"\b\d+[,.]\d+\b"]
 
     def _word_mask(self, text):
 
         placeholder_id_counter = 0
         placeholder_map = {}
-        mask_patterns = []
-
-        for word in self.mask_words:
-            word = word.strip()
-            if not isinstance(word, str) or len(word) > self.max_len or not word:
-                continue
-            if word.startswith('/') and word.endswith('/'):
-                pattern = self._regex_test(word, text)
-                if pattern is not None:
-                    mask_patterns.append(pattern)
-            else:
-                mask_patterns.append(self._build_word_regex(word))
 
         def _create_placeholder(match_obj):
             nonlocal placeholder_id_counter
@@ -84,9 +55,8 @@ class MultiLingualTextRank:
             placeholder_id_counter += 1
             return _placeholder
 
-        if mask_patterns:
-            special_regex = regex.compile('|'.join(mask_patterns), regex.V1)
-            text = special_regex.sub(_create_placeholder, text)
+        special_regex = regex.compile('|'.join(self.rules), regex.V1)
+        text = special_regex.sub(_create_placeholder, text)
 
         return text, placeholder_map
 
@@ -129,16 +99,17 @@ class MultiLingualTextRank:
                     if re.compile('[\u4e00-\u9fa5]').search(word):
                         ch_tokens.append(word)
 
-        # 5. 中文分词
-        ch_tokens = list(set(ch_tokens))
-        for ch_token in ch_tokens:
-            idx = words.index(ch_token)
-            ch_words = []
-            jieba_tokens = pseg.cut(ch_token)
-            for word, flag in jieba_tokens:
-                if len(word) >= 1 and flag in self.pos_filter['chinese'] and word not in ch_stop_words:
-                    ch_words.append(word)
-            words = words[:idx] + ch_words + words[idx+1:]
+        # 5. 需要进一步的话，中文分词
+        if len(ch_tokens) > 0:
+            ch_tokens = list(set(ch_tokens))
+            for ch_token in ch_tokens:
+                idx = words.index(ch_token)
+                ch_words = []
+                jieba_tokens = pseg.cut(ch_token)
+                for word, flag in jieba_tokens:
+                    if len(word) >= 1 and flag in self.pos_filter['chinese'] and word not in ch_stop_words:
+                        ch_words.append(word)
+                words = words[:idx] + ch_words + words[idx+1:]
 
         return words
 
@@ -171,7 +142,6 @@ class MultiLingualTextRank:
 
     def extract_keywords(self, text) -> dict:
         # 1. nltk 模型载入
-
         if not NLTKHelper().check_nltk_data():
             return {}
 
