@@ -17,6 +17,7 @@
 
 import re
 from collections import defaultdict
+from typing import Dict
 
 import igraph as ig
 import jieba.posseg as pseg
@@ -38,7 +39,7 @@ class MultiLingualTextRank:
             'english': ('NN', 'NNS', 'NNP', 'NNPS', 'VB', 'VBG', 'VBN', 'VBZ')
         }
         self.rules = [r"https?://\S+|www\.\S+",
-                      r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+                      r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b",
                       r"\b\w+(?:[-’\']\w+)+\b",
                       r"\b\d+[,.]\d+\b"]
 
@@ -141,7 +142,7 @@ class MultiLingualTextRank:
         node_names = self.graph.vs['name']
         return dict(zip(node_names, pagerank_scores))
 
-    def extract_keywords(self, text) -> dict:
+    def extract_keywords(self, text) -> Dict[str, float]:
         # 1. nltk 模型载入
         if not NLTKHelper().check_nltk_data():
             return {}
@@ -152,7 +153,7 @@ class MultiLingualTextRank:
             return {}
 
         # 3. 构建图，运行 PageRank 算法
-        unique_words = list(set(words))
+        unique_words = list(dict.fromkeys(words))
         ranks = dict(zip(unique_words, [0] * len(unique_words)))
         if len(unique_words) > 1:
             self._build_graph(words)

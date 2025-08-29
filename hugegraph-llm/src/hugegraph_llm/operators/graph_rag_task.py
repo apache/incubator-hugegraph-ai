@@ -74,7 +74,6 @@ class RAGPipeline:
         Add a keyword extraction operator to the pipeline.
 
         :param text: Text to extract keywords from.
-        :param max_keywords: Maximum number of keywords to extract.
         :param extract_template: Template for keyword extraction.
         :return: Self-instance for chaining.
         """

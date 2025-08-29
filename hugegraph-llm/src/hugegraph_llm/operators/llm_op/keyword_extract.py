@@ -41,10 +41,10 @@ class KeywordExtract:
         self._language = "english"
         self._max_keywords = max_keywords
         self._extract_template = extract_template or KEYWORDS_EXTRACT_TPL
-        self._extract_method = llm_settings.keyword_extract_type
+        self._extract_method = llm_settings.keyword_extract_type.lower()
         self._textrank_model = MultiLingualTextRank(
             keyword_num=max_keywords,
-            window_size=llm_settings.windows_size)
+            window_size=llm_settings.window_size)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._query is None:
@@ -84,7 +84,7 @@ class KeywordExtract:
         context["call_count"] = context.get("call_count", 0) + 1
         return context
 
-    def _extract_with_llm(self) -> Dict:
+    def _extract_with_llm(self) -> Dict[str, float]:
         prompt_run = f"{self._extract_template.format(question=self._query, max_keywords=self._max_keywords)}"
         start_time = time.perf_counter()
         response = self._llm.generate(prompt=prompt_run)
@@ -95,7 +95,7 @@ class KeywordExtract:
         )
         return keywords
 
-    def _extract_with_textrank(self) -> Dict:
+    def _extract_with_textrank(self) -> Dict[str, float]:
         """ TextRank 提取模式 """
         start_time = time.perf_counter()
         ranks = {}
@@ -110,13 +110,15 @@ class KeywordExtract:
                   end_time - start_time)
         return ranks
 
-    def _extract_with_hybrid(self) -> Dict:
+    def _extract_with_hybrid(self) -> Dict[str, float]:
         """
         Hybrid mode extraction
         """
-        llm_weights = llm_settings.hybrid_llm_weights
         ranks = {}
-        if llm_weights < 0 or llm_weights > 1:
+
+        if isinstance(llm_settings.hybrid_llm_weights, float):
+            llm_weights = min(1.0, max(0.0, float(llm_settings.hybrid_llm_weights)))
+        else:
             llm_weights = 0.5
 
         start_time = time.perf_counter()
@@ -158,7 +160,7 @@ class KeywordExtract:
         response: str,
         lowercase: bool = True,
         start_token: str = "",
-    ) -> Dict:
+    ) -> Dict[str, float]:
 
         results = {}
 

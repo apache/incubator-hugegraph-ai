@@ -31,7 +31,7 @@ class LLMConfig(BaseConfig):
     embedding_type: Optional[Literal["openai", "litellm", "ollama/local"]] = "openai"
     reranker_type: Optional[Literal["cohere", "siliconflow"]] = None
     keyword_extract_type: Literal["llm", "textrank", "hybrid"] = "llm"
-    windows_size: Optional[int] = 3
+    window_size: Optional[int] = 3
     hybrid_llm_weights: Optional[float] = 0.5
     # TODO: divide RAG part if necessary
     # 1. OpenAI settings
