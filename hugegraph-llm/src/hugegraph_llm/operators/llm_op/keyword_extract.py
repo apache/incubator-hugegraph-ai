@@ -141,10 +141,15 @@ class KeywordExtract:
         else:
             # return the intersection if intersection count equals max_keywords
             if len(intersection_set) == self._max_keywords:
-                ranks = {k: llm_scores[k] for k in intersection_set}
+                for word in intersection_set:
+                    ranks[word] = 0
+                    if word in llm_scores:
+                        ranks[word] = llm_scores[word] * llm_weights
+                    if word in tr_scores:
+                        ranks[word] += tr_scores[word] * (1 - llm_weights)
             else:
                 # calculate the weighted sum of scores
-                for word in intersection_set:
+                for word in union_set:
                     ranks[word] = 0
                     if word in llm_scores:
                         ranks[word] = llm_scores[word] * llm_weights
