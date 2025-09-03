@@ -33,7 +33,7 @@ from hugegraph_llm.utils.log import log
 current_llm = "chat"
 
 
-def test_litellm_embedding(api_key, api_base, model_name, model_dim) -> int:
+def test_litellm_embedding(api_key, api_base, model_name) -> int:
     llm_client = LiteLLMEmbedding(
         api_key=api_key,
         api_base=api_base,
@@ -125,15 +125,13 @@ def config_qianfan_model(arg1, arg2, arg3=None, settings_prefix=None, origin_cal
     return status_code
 
 
-def apply_embedding_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
+def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
     status_code = -1
     embedding_option = llm_settings.embedding_type
-    arg4 = int(arg4)
     if embedding_option == "openai":
         llm_settings.openai_embedding_api_key = arg1
         llm_settings.openai_embedding_api_base = arg2
         llm_settings.openai_embedding_model = arg3
-        llm_settings.openai_embedding_model_dim = arg4
         test_url = llm_settings.openai_embedding_api_base + "/embeddings"
         headers = {"Authorization": f"Bearer {arg1}"}
         data = {"model": arg3, "input": "test"}
@@ -144,14 +142,12 @@ def apply_embedding_config(arg1, arg2, arg3, arg4, origin_call=None) -> int:
         llm_settings.ollama_embedding_host = arg1
         llm_settings.ollama_embedding_port = int(arg2)
         llm_settings.ollama_embedding_model = arg3
-        llm_settings.ollama_embedding_model_dim = arg4
         status_code = test_api_connection(f"http://{arg1}:{arg2}", origin_call=origin_call)
     elif embedding_option == "litellm":
         llm_settings.litellm_embedding_api_key = arg1
         llm_settings.litellm_embedding_api_base = arg2
         llm_settings.litellm_embedding_model = arg3
-        llm_settings.litellm_embedding_model_dim = arg4
-        status_code = test_litellm_embedding(arg1, arg2, arg3, arg4)
+        status_code = test_litellm_embedding(arg1, arg2, arg3)
     llm_settings.update_env()
     gr.Info("Configured!")
     return status_code
@@ -168,10 +164,10 @@ def apply_reranker_config(
     if reranker_option == "cohere":
         llm_settings.reranker_api_key = reranker_api_key
         llm_settings.reranker_model = reranker_model
-        llm_settings.cohere_base_url = cohere_base_url  # type:ignore
+        llm_settings.cohere_base_url = cohere_base_url
         headers = {"Authorization": f"Bearer {reranker_api_key}"}
         status_code = test_api_connection(
-            cohere_base_url.rsplit("/", 1)[0] + "/check-api-key",  # type:ignore
+            cohere_base_url.rsplit("/", 1)[0] + "/check-api-key",
             method="POST",
             headers=headers,
             origin_call=origin_call,
@@ -530,22 +526,22 @@ def create_configs_block() -> list:
                 elif llm_type == "litellm":
                     llm_config_input = [
                         gr.Textbox(
-                            value=lambda: getattr(llm_settings, "litellm_text2gql_api_key"),
+                            value=getattr(llm_settings, "litellm_text2gql_api_key"),
                             label="api_key",
                             type="password",
                         ),
                         gr.Textbox(
-                            value=lambda: getattr(llm_settings, "litellm_text2gql_api_base"),
+                            value=getattr(llm_settings, "litellm_text2gql_api_base"),
                             label="api_base",
                             info="If you want to use the default api_base, please keep it blank",
                         ),
                         gr.Textbox(
-                            value=lambda: getattr(llm_settings, "litellm_text2gql_language_model"),
+                            value=getattr(llm_settings, "litellm_text2gql_language_model"),
                             label="model_name",
                             info="Please refer to https://docs.litellm.ai/docs/providers",
                         ),
                         gr.Textbox(
-                            value=lambda: getattr(llm_settings, "litellm_text2gql_tokens"),
+                            value=getattr(llm_settings, "litellm_text2gql_tokens"),
                             label="max_token",
                         ),
                     ]
@@ -568,65 +564,52 @@ def create_configs_block() -> list:
                 with gr.Row():
                     embedding_config_input = [
                         gr.Textbox(
-                            value=lambda: llm_settings.openai_embedding_api_key,
+                            value=llm_settings.openai_embedding_api_key,
                             label="api_key",
                             type="password",
                         ),
                         gr.Textbox(
-                            value=lambda: llm_settings.openai_embedding_api_base,
+                            value=llm_settings.openai_embedding_api_base,
                             label="api_base",
                         ),
                         gr.Textbox(
-                            value=lambda: llm_settings.openai_embedding_model,
+                            value=llm_settings.openai_embedding_model,
                             label="model_name",
-                        ),
-                        gr.Textbox(
-                            value=lambda: str(llm_settings.openai_embedding_model_dim),
-                            label="model_dim",
                         ),
                     ]
             elif embedding_type == "ollama/local":
                 with gr.Row():
                     embedding_config_input = [
                         gr.Textbox(
-                            value=lambda: llm_settings.ollama_embedding_host,
+                            value=llm_settings.ollama_embedding_host,
                             label="host",
                         ),
                         gr.Textbox(
-                            value=lambda: str(llm_settings.ollama_embedding_port),
+                            value=str(llm_settings.ollama_embedding_port),
                             label="port",
                         ),
                         gr.Textbox(
-                            value=lambda: llm_settings.ollama_embedding_model,
+                            value=llm_settings.ollama_embedding_model,
                             label="model_name",
-                        ),
-                        gr.Textbox(
-                            value=lambda: str(llm_settings.ollama_embedding_model_dim),
-                            label="model_dim",
                         ),
                     ]
             elif embedding_type == "litellm":
                 with gr.Row():
                     embedding_config_input = [
                         gr.Textbox(
-                            value=lambda: getattr(llm_settings, "litellm_embedding_api_key"),
+                            value=getattr(llm_settings, "litellm_embedding_api_key"),
                             label="api_key",
                             type="password",
                         ),
                         gr.Textbox(
-                            value=lambda: getattr(llm_settings, "litellm_embedding_api_base"),
+                            value=getattr(llm_settings, "litellm_embedding_api_base"),
                             label="api_base",
                             info="If you want to use the default api_base, please keep it blank",
                         ),
                         gr.Textbox(
-                            value=lambda: getattr(llm_settings, "litellm_embedding_model"),
+                            value=getattr(llm_settings, "litellm_embedding_model"),
                             label="model_name",
                             info="Please refer to https://docs.litellm.ai/docs/embedding/supported_embedding",
-                        ),
-                        gr.Textbox(
-                            value=lambda: getattr(llm_settings, "litellm_embedding_model_dim"),
-                            label="model_dim",
-                            type="text",
                         ),
                     ]
             else:
@@ -634,12 +617,10 @@ def create_configs_block() -> list:
                     gr.Textbox(value="", visible=False),
                     gr.Textbox(value="", visible=False),
                     gr.Textbox(value="", visible=False),
-                    gr.Textbox(value="", visible=False),
                 ]
 
             embedding_config_button = gr.Button("Apply Configuration")
 
-            # Call the separate apply_embedding_configuration function here
             embedding_config_button.click(  # pylint: disable=no-member
                 fn=apply_embedding_config,
                 inputs=embedding_config_input,  # pylint: disable=no-member
@@ -715,7 +696,7 @@ def get_header_with_language_indicator(language: str) -> str:
     language_class = language.lower()
 
     if language == "CN":
-        title_text = "当前 prompt 语言：中文 (CN)"
+        title_text = "当前prompt语言: 中文 (CN)"
     else:
         title_text = "Current prompt Language: English (EN)"
     html_content = f"""

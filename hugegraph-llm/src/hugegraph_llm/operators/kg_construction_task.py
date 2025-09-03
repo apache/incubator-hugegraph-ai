@@ -34,28 +34,18 @@ from hugegraph_llm.operators.index_op.build_vector_index import BuildVectorIndex
 from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
 from hugegraph_llm.operators.llm_op.info_extract import InfoExtract
 from hugegraph_llm.operators.llm_op.property_graph_extract import PropertyGraphExtract
-<<<<<<< HEAD
 from hugegraph_llm.operators.llm_op.schema_build import SchemaBuilder
-from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_rpm
-from pyhugegraph.client import PyHugeClient
-=======
 from hugegraph_llm.utils.decorators import log_operator_time, log_time, record_rpm
->>>>>>> 38dce0b (feat(llm): vector db finished)
 
 
 class KgBuilder:
-<<<<<<< HEAD
     def __init__(
         self,
         llm: BaseLLM,
         embedding: Optional[BaseEmbedding] = None,
         graph: Optional[PyHugeClient] = None,
     ):
-        self.operators = []
-=======
-    def __init__(self, llm: BaseLLM, embedding: Optional[BaseEmbedding] = None, graph: Optional[PyHugeClient] = None):
         self.operators: List[Any] = []
->>>>>>> 902fee5 (feat(llm): some type bug && revert to FaissVectorIndex)
         self.llm = llm
         self.embedding = embedding
         self.graph = graph
@@ -119,8 +109,8 @@ class KgBuilder:
         self.operators.append(PrintResult())
         return self
 
-    def build_schema(self):
-        self.operators.append(SchemaBuilder(self.llm))
+    def build_schema(self, schema_prompt: Optional[str] = None):
+        self.operators.append(SchemaBuilder(self.llm, schema_prompt))
         return self
 
     @log_time("total time")
