@@ -173,4 +173,8 @@ class LLMs:
 if __name__ == "__main__":
     client = LLMs().get_chat_llm()
     print(client.generate(prompt="What is the capital of China?"))
-    print(client.generate(messages=[{"role": "user", "content": "What is the capital of China?"}]))
+    print(
+        client.generate(
+            messages=[{"role": "user", "content": "What is the capital of China?"}]
+        )
+    )

@@ -34,12 +34,18 @@ class GraphConfigRequest(BaseModel):
 class RAGRequest(BaseModel):
     query: str = Query(..., description="Query you want to ask")
     raw_answer: bool = Query(False, description="Use LLM to generate answer directly")
-    vector_only: bool = Query(False, description="Use LLM to generate answer with vector")
-    graph_only: bool = Query(True, description="Use LLM to generate answer with graph RAG only")
+    vector_only: bool = Query(
+        False, description="Use LLM to generate answer with vector"
+    )
+    graph_only: bool = Query(
+        True, description="Use LLM to generate answer with graph RAG only"
+    )
     graph_vector_answer: bool = Query(
         False, description="Use LLM to generate answer with vector & GraphRAG"
     )
-    graph_ratio: float = Query(0.5, description="The ratio of GraphRAG ans & vector ans")
+    graph_ratio: float = Query(
+        0.5, description="The ratio of GraphRAG ans & vector ans"
+    )
     rerank_method: Literal["bleu", "reranker"] = Query(
         "bleu", description="Method to rerank the results."
     )
@@ -53,7 +59,9 @@ class RAGRequest(BaseModel):
     max_graph_items: int = Query(
         30, description="Maximum number of items for GQL queries in graph."
     )
-    topk_return_results: int = Query(20, description="Number of sorted results to return finally.")
+    topk_return_results: int = Query(
+        20, description="Number of sorted results to return finally."
+    )
     vector_dis_threshold: float = Query(
         0.9,
         description="Threshold for vector similarity\
@@ -90,7 +98,9 @@ class GraphRAGRequest(BaseModel):
     max_graph_items: int = Query(
         30, description="Maximum number of items for GQL queries in graph."
     )
-    topk_return_results: int = Query(20, description="Number of sorted results to return finally.")
+    topk_return_results: int = Query(
+        20, description="Number of sorted results to return finally."
+    )
     vector_dis_threshold: float = Query(
         0.9,
         description="Threshold for vector similarity \
@@ -105,7 +115,9 @@ class GraphRAGRequest(BaseModel):
     client_config: Optional[GraphConfigRequest] = Query(
         None, description="hugegraph server config."
     )
-    get_vertex_only: bool = Query(False, description="return only keywords & vertex (early stop).")
+    get_vertex_only: bool = Query(
+        False, description="return only keywords & vertex (early stop)."
+    )
 
     gremlin_tmpl_num: int = Query(
         1,

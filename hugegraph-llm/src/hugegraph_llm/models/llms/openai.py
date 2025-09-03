@@ -52,7 +52,9 @@ class OpenAIClient(BaseLLM):
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=4, max=10),
-        retry=retry_if_exception_type((RateLimitError, APIConnectionError, APITimeoutError)),
+        retry=retry_if_exception_type(
+            (RateLimitError, APIConnectionError, APITimeoutError)
+        ),
     )
     def generate(
         self,
@@ -87,7 +89,9 @@ class OpenAIClient(BaseLLM):
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=4, max=10),
-        retry=retry_if_exception_type((RateLimitError, APIConnectionError, APITimeoutError)),
+        retry=retry_if_exception_type(
+            (RateLimitError, APIConnectionError, APITimeoutError)
+        ),
     )
     async def agenerate(
         self,
@@ -122,7 +126,9 @@ class OpenAIClient(BaseLLM):
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=4, max=10),
-        retry=retry_if_exception_type((RateLimitError, APIConnectionError, APITimeoutError)),
+        retry=retry_if_exception_type(
+            (RateLimitError, APIConnectionError, APITimeoutError)
+        ),
     )
     def generate_streaming(
         self,

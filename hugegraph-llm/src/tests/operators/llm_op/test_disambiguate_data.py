@@ -57,7 +57,9 @@ class TestDisambiguateData(unittest.TestCase):
                     "properties": {"name": "www.bob.com", "url": "www.bob.com"},
                 },
             ],
-            "edges": [{"start": "Alice", "end": "Bob", "type": "roommate", "properties": {}}],
+            "edges": [
+                {"start": "Alice", "end": "Bob", "type": "roommate", "properties": {}}
+            ],
             "schema": {
                 "vertices": [
                     {"vertex_label": "person", "properties": ["name", "age", "occupation"]},

@@ -67,7 +67,8 @@ def rag_http_api(
             # Keep prompt params in the end
             custom_related_information=req.custom_priority_info,
             answer_prompt=req.answer_prompt or prompt.answer_prompt,
-            keywords_extract_prompt=req.keywords_extract_prompt or prompt.keywords_extract_prompt,
+            keywords_extract_prompt=req.keywords_extract_prompt
+            or prompt.keywords_extract_prompt,
             gremlin_prompt=req.gremlin_prompt or prompt.gremlin_generate_prompt,
         )
         # TODO: we need more info in the response for users to understand the query logic
@@ -135,7 +136,9 @@ def rag_http_api(
 
         except TypeError as e:
             log.error("TypeError in graph_rag_recall_api: %s", e)
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+            ) from e
         except Exception as e:
             log.error("Unexpected error occurred: %s", e)
             raise HTTPException(
@@ -146,7 +149,9 @@ def rag_http_api(
     @router.post("/config/graph", status_code=status.HTTP_201_CREATED)
     def graph_config_api(req: GraphConfigRequest):
         # Accept status code
-        res = apply_graph_conf(req.url, req.name, req.user, req.pwd, req.gs, origin_call="http")
+        res = apply_graph_conf(
+            req.url, req.name, req.user, req.pwd, req.gs, origin_call="http"
+        )
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
 
     # TODO: restructure the implement of llm to three types, like "/config/chat_llm"
@@ -159,7 +164,9 @@ def rag_http_api(
                 req.api_key, req.api_base, req.language_model, req.max_tokens, origin_call="http"
             )
         else:
-            res = apply_llm_conf(req.host, req.port, req.language_model, None, origin_call="http")
+            res = apply_llm_conf(
+                req.host, req.port, req.language_model, None, origin_call="http"
+            )
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
 
     @router.post("/config/embedding", status_code=status.HTTP_201_CREATED)
@@ -171,7 +178,9 @@ def rag_http_api(
                 req.api_key, req.api_base, req.language_model, origin_call="http"
             )
         else:
-            res = apply_embedding_conf(req.host, req.port, req.language_model, origin_call="http")
+            res = apply_embedding_conf(
+                req.host, req.port, req.language_model, origin_call="http"
+            )
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
 
     @router.post("/config/rerank", status_code=status.HTTP_201_CREATED)
@@ -183,7 +192,9 @@ def rag_http_api(
                 req.api_key, req.reranker_model, req.cohere_base_url, origin_call="http"
             )
         elif req.reranker_type == "siliconflow":
-            res = apply_reranker_conf(req.api_key, req.reranker_model, None, origin_call="http")
+            res = apply_reranker_conf(
+                req.api_key, req.reranker_model, None, origin_call="http"
+            )
         else:
             res = status.HTTP_501_NOT_IMPLEMENTED
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))

@@ -34,9 +34,13 @@ def create_other_block():
         inp = gr.Textbox(
             value="g.V().limit(10)", label="Gremlin query", show_copy_button=True, lines=8
         )
-        out = gr.Code(label="Output", language="json", elem_classes="code-container-show")
+        out = gr.Code(
+            label="Output", language="json", elem_classes="code-container-show"
+        )
     btn = gr.Button("Run Gremlin query")
-    btn.click(fn=run_gremlin_query, inputs=[inp], outputs=out)  # pylint: disable=no-member
+    btn.click(
+        fn=run_gremlin_query, inputs=[inp], outputs=out
+    )  # pylint: disable=no-member
 
     gr.Markdown("---")
     with gr.Row():
@@ -51,7 +55,9 @@ def create_other_block():
             inp = []
             out = gr.Textbox(label="Init Graph Demo Result", show_copy_button=True)
         btn = gr.Button("(BETA) Init HugeGraph test data (🚧)")
-        btn.click(fn=init_hg_test_data, inputs=inp, outputs=out)  # pylint: disable=no-member
+        btn.click(
+            fn=init_hg_test_data, inputs=inp, outputs=out
+        )  # pylint: disable=no-member
 
 
 @asynccontextmanager

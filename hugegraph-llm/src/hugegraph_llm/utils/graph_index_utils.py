@@ -33,7 +33,9 @@ from .vector_index_utils import get_vector_index_class, read_documents
 
 
 def get_graph_index_info():
-    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
+    builder = KgBuilder(
+        LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
+    )
     graph_summary_info = builder.fetch_graph_data().run()
     vector_index = get_vector_index_class(index_settings.cur_vector_index)
     vector_index_entity = vector_index.from_name(
@@ -88,14 +90,18 @@ def parse_schema(schema: str, builder: KgBuilder) -> Optional[str]:
 
 def extract_graph(input_file, input_text, schema, example_prompt) -> str:
     texts = read_documents(input_file, input_text)
-    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
+    builder = KgBuilder(
+        LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
+    )
     if not schema:
         return "ERROR: please input with correct schema/format."
 
     error_message = parse_schema(schema, builder)
     if error_message:
         return error_message
-    builder.chunk_split(texts, "document", "zh").extract_info(example_prompt, "property_graph")
+    builder.chunk_split(texts, "document", "zh").extract_info(
+        example_prompt, "property_graph"
+    )
 
     try:
         context = builder.run()
@@ -122,7 +128,9 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
 
 def update_vid_embedding():
     vector_index = get_vector_index_class(index_settings.cur_vector_index)
-    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
+    builder = KgBuilder(
+        LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
+    )
     builder.fetch_graph_data().build_vertex_id_semantic_index(vector_index)
     log.debug("Operators: %s", builder.operators)
     try:
@@ -139,7 +147,9 @@ def import_graph_data(data: str, schema: str) -> Union[str, Dict[str, Any]]:
     try:
         data_json = json.loads(data.strip())
         log.debug("Import graph data: %s", data)
-        builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
+        builder = KgBuilder(
+            LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
+        )
         if schema:
             error_message = parse_schema(schema, builder)
             if error_message:
@@ -185,7 +195,9 @@ def build_schema(input_text, query_example, few_shot):
         except json.JSONDecodeError as e:
             raise gr.Error(f"Query Examples is not in a valid JSON format: {e}") from e
 
-    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
+    builder = KgBuilder(
+        LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
+    )
     try:
         schema = builder.build_schema().run(context)
     except Exception as e:

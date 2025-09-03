@@ -42,7 +42,9 @@ class RAGPipeline:
     querying graph databases and vector indices, merging and re-ranking results, and generating answers.
     """
 
-    def __init__(self, llm: Optional[BaseLLM] = None, embedding: Optional[BaseEmbedding] = None):
+    def __init__(
+        self, llm: Optional[BaseLLM] = None, embedding: Optional[BaseEmbedding] = None
+    ):
         """
         Initialize the RAGPipeline with optional LLM and embedding models.
 

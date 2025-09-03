@@ -114,7 +114,9 @@ def rag_answer(
             max_graph_items=max_graph_items,
         )
         if context.get("switch_to_bleu"):
-            gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
+            gr.Warning(
+                "Online reranker fails, automatically switches to local bleu rerank."
+            )
         return (
             context.get("raw_answer", ""),
             context.get("vector_only_answer", ""),
@@ -222,7 +224,9 @@ async def rag_answer_streaming(
             graph_search=graph_search,
         )
         if context.get("switch_to_bleu"):
-            gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
+            gr.Warning(
+                "Online reranker fails, automatically switches to local bleu rerank."
+            )
         answer_synthesize = AnswerSynthesize(
             raw_answer=raw_answer,
             vector_only_answer=vector_only_answer,
@@ -232,7 +236,9 @@ async def rag_answer_streaming(
         )
         async for context in answer_synthesize.run_streaming(context):
             if context.get("switch_to_bleu"):
-                gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
+                gr.Warning(
+                    "Online reranker fails, automatically switches to local bleu rerank."
+                )
             yield (
                 context.get("raw_answer", ""),
                 context.get("vector_only_answer", ""),
@@ -302,7 +308,9 @@ def create_rag_block():
 
         with gr.Column(scale=1):
             with gr.Row():
-                raw_radio = gr.Radio(choices=[True, False], value=False, label="Basic LLM Answer")
+                raw_radio = gr.Radio(
+                    choices=[True, False], value=False, label="Basic LLM Answer"
+                )
                 vector_only_radio = gr.Radio(
                     choices=[True, False], value=False, label="Vector-only Answer"
                 )
@@ -387,7 +395,9 @@ def create_rag_block():
     # FIXME: "demo" might conflict with the graph name, it should be modified.
     answers_path = os.path.join(resource_path, "demo", "questions_answers.xlsx")
     questions_path = os.path.join(resource_path, "demo", "questions.xlsx")
-    questions_template_path = os.path.join(resource_path, "demo", "questions_template.xlsx")
+    questions_template_path = os.path.join(
+        resource_path, "demo", "questions_template.xlsx"
+    )
 
     def read_file_to_excel(file: Any, line_count: Optional[int] = None):
         df = None
@@ -467,12 +477,18 @@ def create_rag_block():
                 file_types=[".xlsx", ".csv"], label="Questions File (.xlsx & csv)"
             )
         with gr.Column():
-            test_template_file = os.path.join(resource_path, "demo", "questions_template.xlsx")
+            test_template_file = os.path.join(
+                resource_path, "demo", "questions_template.xlsx"
+            )
             gr.File(value=test_template_file, label="Download Template File")
-            answer_max_line_count = gr.Number(1, label="Max Lines To Show", minimum=1, maximum=40)
+            answer_max_line_count = gr.Number(
+                1, label="Max Lines To Show", minimum=1, maximum=40
+            )
             answers_btn = gr.Button("Generate Answer (Batch)", variant="primary")
     # TODO: Set individual progress bars for dataframe
-    qa_dataframe = gr.DataFrame(label="Questions & Answers (Preview)", headers=tests_df_headers)
+    qa_dataframe = gr.DataFrame(
+        label="Questions & Answers (Preview)", headers=tests_df_headers
+    )
     answers_btn.click(
         several_rag_answer,
         inputs=[
@@ -490,8 +506,12 @@ def create_rag_block():
         ],
         outputs=[qa_dataframe, gr.File(label="Download Answered File", min_width=40)],
     )
-    questions_file.change(read_file_to_excel, questions_file, [qa_dataframe, answer_max_line_count])
-    answer_max_line_count.change(change_showing_excel, answer_max_line_count, qa_dataframe)
+    questions_file.change(
+        read_file_to_excel, questions_file, [qa_dataframe, answer_max_line_count]
+    )
+    answer_max_line_count.change(
+        change_showing_excel, answer_max_line_count, qa_dataframe
+    )
     return (
         inp,
         answer_prompt_input,

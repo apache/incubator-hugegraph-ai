@@ -28,7 +28,9 @@ COLLECTION_NAME_PREFIX = "hugegraph_llm_"
 
 
 class QdrantVectorIndex(VectorStoreBase):
-    def __init__(self, name: str, host: str, port: int, api_key=None, embed_dim: int = 1024):
+    def __init__(
+        self, name: str, host: str, port: int, api_key=None, embed_dim: int = 1024
+    ):
         self.embed_dim = embed_dim
         self.host = host
         self.port = port
@@ -115,7 +117,9 @@ class QdrantVectorIndex(VectorStoreBase):
 
         return remove_num
 
-    def search(self, query_vector: List[float], top_k: int = 5, dis_threshold: float = 0.9):
+    def search(
+        self, query_vector: List[float], top_k: int = 5, dis_threshold: float = 0.9
+    ):
         search_result = self.client.search(
             collection_name=self.name, query_vector=query_vector, limit=top_k
         )

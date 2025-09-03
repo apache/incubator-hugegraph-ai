@@ -51,7 +51,9 @@ def read_documents(input_file, input_text):
                 texts.append(text)
             elif full_path.endswith(".pdf"):
                 # TODO: support PDF file
-                raise gr.Error("PDF will be supported later! Try to upload text/docx now")
+                raise gr.Error(
+                    "PDF will be supported later! Try to upload text/docx now"
+                )
             else:
                 raise gr.Error("Please input txt or docx file.")
     else:
@@ -87,8 +89,14 @@ def build_vector_index(input_file, input_text):
     if input_file and input_text:
         raise gr.Error("Please only choose one between file and text.")
     texts = read_documents(input_file, input_text)
-    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
-    context = builder.chunk_split(texts, "paragraph", "zh").build_vector_index(vector_index).run()
+    builder = KgBuilder(
+        LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
+    )
+    context = (
+        builder.chunk_split(texts, "paragraph", "zh")
+        .build_vector_index(vector_index)
+        .run()
+    )
     return json.dumps(context, ensure_ascii=False, indent=2)
 
 

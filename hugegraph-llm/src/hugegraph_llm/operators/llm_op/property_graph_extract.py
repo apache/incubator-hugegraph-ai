@@ -67,9 +67,9 @@ def filter_item(schema, items) -> List[Dict[str, Any]]:
         item_type = item["type"]
         if item_type == "vertex":
             label = item["label"]
-            non_nullable_keys = set(properties_map[item_type][label]["properties"]).difference(
-                set(properties_map[item_type][label]["nullable_keys"])
-            )
+            non_nullable_keys = set(
+                properties_map[item_type][label]["properties"]
+            ).difference(set(properties_map[item_type][label]["nullable_keys"]))
             for key in non_nullable_keys:
                 if key not in item["properties"]:
                     item["properties"][key] = "NULL"
@@ -82,7 +82,9 @@ def filter_item(schema, items) -> List[Dict[str, Any]]:
 
 
 class PropertyGraphExtract:
-    def __init__(self, llm: BaseLLM, example_prompt: str = prompt.extract_graph_prompt) -> None:
+    def __init__(
+        self, llm: BaseLLM, example_prompt: str = prompt.extract_graph_prompt
+    ) -> None:
         self.llm = llm
         self.example_prompt = example_prompt
         self.NECESSARY_ITEM_KEYS = {"label", "type", "properties"}  # pylint: disable=invalid-name
@@ -148,7 +150,9 @@ class PropertyGraphExtract:
                 and "vertices" in property_graph
                 and "edges" in property_graph
             ):
-                log.critical("Invalid property graph format; expecting 'vertices' and 'edges'.")
+                log.critical(
+                    "Invalid property graph format; expecting 'vertices' and 'edges'."
+                )
                 return items
 
             # Create sets for valid vertex and edge labels based on the schema
@@ -158,7 +162,9 @@ class PropertyGraphExtract:
             def process_items(item_list, valid_labels, item_type):
                 for item in item_list:
                     if not isinstance(item, dict):
-                        log.warning("Invalid property graph item type '%s'.", type(item))
+                        log.warning(
+                            "Invalid property graph item type '%s'.", type(item)
+                        )
                         continue
                     if not self.NECESSARY_ITEM_KEYS.issubset(item.keys()):
                         log.warning("Invalid item keys '%s'.", item.keys())

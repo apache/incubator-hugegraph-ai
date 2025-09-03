@@ -32,7 +32,9 @@ async def _get_batch_with_progress(
     return result
 
 
-async def get_embeddings_parallel(embedding: BaseEmbedding, vids: list[str]) -> list[Any]:
+async def get_embeddings_parallel(
+    embedding: BaseEmbedding, vids: list[str]
+) -> list[Any]:
     """Get embeddings for texts in parallel.
 
     This function processes text embeddings asynchronously in parallel, using batching and semaphore
@@ -60,7 +62,9 @@ async def get_embeddings_parallel(embedding: BaseEmbedding, vids: list[str]) -> 
     embeddings = []
     with tqdm(total=len(vid_batches)) as pbar:
         # Create tasks for each batch with progress bar updates
-        tasks = [_get_batch_with_progress(embedding, batch, pbar) for batch in vid_batches]
+        tasks = [
+            _get_batch_with_progress(embedding, batch, pbar) for batch in vid_batches
+        ]
 
         # Use asyncio.gather() to preserve order
         batch_results = await asyncio.gather(*tasks)
@@ -74,7 +78,9 @@ async def get_embeddings_parallel(embedding: BaseEmbedding, vids: list[str]) -> 
 
 def get_filename_prefix(embedding_type: str = None, model_name: str = None) -> str:
     """Generate filename based on model name."""
-    if not (model_name and model_name.strip() and embedding_type and embedding_type.strip()):
+    if not (
+        model_name and model_name.strip() and embedding_type and embedding_type.strip()
+    ):
         return ""
     # Sanitize model_name to prevent path traversal or invalid filename chars
     safe_embedding_type = embedding_type.replace("/", "_").replace("\\", "_").strip()
