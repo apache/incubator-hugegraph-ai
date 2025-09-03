@@ -29,9 +29,7 @@ from hugegraph_llm.utils.log import log
 class OllamaClient(BaseLLM):
     """LLM wrapper should take in a prompt and return a string."""
 
-    def __init__(
-        self, model: str, host: str = "127.0.0.1", port: int = 11434, **kwargs
-    ):
+    def __init__(self, model: str, host: str = "127.0.0.1", port: int = 11434, **kwargs):
         self.model = model
         self.client = ollama.Client(host=f"http://{host}:{port}", **kwargs)
         self.async_client = ollama.AsyncClient(host=f"http://{host}:{port}", **kwargs)
@@ -101,9 +99,7 @@ class OllamaClient(BaseLLM):
 
         for chunk in self.client.chat(model=self.model, messages=messages, stream=True):
             if not chunk["message"]:
-                log.debug(
-                    "Received empty chunk['message'] in streaming chunk: %s", chunk
-                )
+                log.debug("Received empty chunk['message'] in streaming chunk: %s", chunk)
                 continue
             token = chunk["message"]["content"]
             if on_token_callback:

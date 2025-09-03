@@ -51,9 +51,7 @@ class KgBuilder:
         self.graph = graph
         self.result = None
 
-    def import_schema(
-        self, from_hugegraph=None, from_extraction=None, from_user_defined=None
-    ):
+    def import_schema(self, from_hugegraph=None, from_extraction=None, from_user_defined=None):
         if from_hugegraph:
             self.operators.append(SchemaManager(from_hugegraph))
         elif from_user_defined:

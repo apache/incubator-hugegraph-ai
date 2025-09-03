@@ -57,9 +57,7 @@ class BasePromptConfig:
         current_dir = Path.cwd().resolve()
         project_root = get_project_root()
         if current_dir == project_root:
-            log.info(
-                "Current working directory is the project root, proceeding to run the app."
-            )
+            log.info("Current working directory is the project root, proceeding to run the app.")
         else:
             error_msg = (
                 f"Current working directory is not the project root. "
@@ -124,9 +122,7 @@ class BasePromptConfig:
             "gremlin_generate_prompt": to_literal(self.gremlin_generate_prompt),
             "doc_input_text": to_literal(self.doc_input_text),
             "_language_generated": str(self.llm_settings.language).lower().strip(),
-            "generate_extract_prompt_template": to_literal(
-                self.generate_extract_prompt_template
-            ),
+            "generate_extract_prompt_template": to_literal(self.generate_extract_prompt_template),
         }
         with open(yaml_file_path, "w", encoding="utf-8") as file:
             yaml.dump(data, file, allow_unicode=True, sort_keys=False, default_flow_style=False)
@@ -154,9 +150,7 @@ class BasePromptConfig:
             self.keywords_extract_prompt = self.keywords_extract_prompt_EN
             self.doc_input_text = self.doc_input_text_EN
         self.save_to_yaml()
-        log.info(
-            "Prompt file '%s' has been generated with default values.", yaml_file_path
-        )
+        log.info("Prompt file '%s' has been generated with default values.", yaml_file_path)
 
     def update_yaml_file(self):
         self.save_to_yaml()

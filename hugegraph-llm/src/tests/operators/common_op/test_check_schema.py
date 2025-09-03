@@ -26,9 +26,7 @@ class TestCheckSchema(unittest.TestCase):
 
     def test_schema_check_with_valid_input(self):
         data = {
-            "vertexlabels": [
-                {"name": "person", "properties": ["name", "age", "occupation"]}
-            ],
+            "vertexlabels": [{"name": "person", "properties": ["name", "age", "occupation"]}],
             "edgelabels": [
                 {
                     "name": "knows",

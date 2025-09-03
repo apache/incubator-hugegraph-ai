@@ -138,8 +138,7 @@ class MergeDedupRerank:
 
         if self.method == "bleu":
             vertex_rerank_res = [
-                _bleu_rerank(query, vertex_degree) + [""]
-                for vertex_degree in vertex_degree_list
+                _bleu_rerank(query, vertex_degree) + [""] for vertex_degree in vertex_degree_list
             ]
 
         depth = len(vertex_degree_list)
@@ -147,14 +146,11 @@ class MergeDedupRerank:
             if result not in knowledge_with_degree:
                 knowledge_with_degree[result] = [result] + [""] * (depth - 1)
             if len(knowledge_with_degree[result]) < depth:
-                knowledge_with_degree[result] += [""] * (
-                    depth - len(knowledge_with_degree[result])
-                )
+                knowledge_with_degree[result] += [""] * (depth - len(knowledge_with_degree[result]))
 
         def sort_key(res: str) -> Tuple[int, ...]:
             return tuple(
-                vertex_rerank_res[i].index(knowledge_with_degree[res][i])
-                for i in range(depth)
+                vertex_rerank_res[i].index(knowledge_with_degree[res][i]) for i in range(depth)
             )
 
         sorted_results = sorted(results, key=sort_key)

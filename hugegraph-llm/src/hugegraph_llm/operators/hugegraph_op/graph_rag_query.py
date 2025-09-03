@@ -132,9 +132,7 @@ class GraphRAGQuery:
         query_embedding = context.get("query_embedding")
 
         self._gremlin_generator.clear()
-        self._gremlin_generator.example_index_query(
-            num_examples=self._num_gremlin_generate_example
-        )
+        self._gremlin_generator.example_index_query(num_examples=self._num_gremlin_generate_example)
         gremlin_response = self._gremlin_generator.gremlin_generate_synthesize(
             context["simple_schema"], vertices=vertices, gremlin_prompt=self._gremlin_prompt
         ).run(query=query, query_embedding=query_embedding)
@@ -148,9 +146,7 @@ class GraphRAGQuery:
             result = self._client.gremlin().exec(gremlin=gremlin)["data"]
             if result == [None]:
                 result = []
-            context["graph_result"] = [
-                json.dumps(item, ensure_ascii=False) for item in result
-            ]
+            context["graph_result"] = [json.dumps(item, ensure_ascii=False) for item in result]
             if context["graph_result"]:
                 context["graph_result_flag"] = 1
                 context["graph_context_head"] = (
@@ -228,9 +224,7 @@ class GraphRAGQuery:
                 "Unable to find vid, downgraded to property query, please confirm if it meets expectation."
             )
 
-            paths: List[Any] = self._client.gremlin().exec(gremlin=gremlin_query)[
-                "data"
-            ]
+            paths: List[Any] = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
             graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = (
                 self._format_graph_query_result(query_paths=paths)
             )
@@ -352,18 +346,14 @@ class GraphRAGQuery:
         use_id_to_match: bool,
         v_cache: Set[str],
     ) -> Tuple[str, int, int]:
-        matched_str = (
-            item["id"] if use_id_to_match else item["props"][self._prop_to_match]
-        )
+        matched_str = item["id"] if use_id_to_match else item["props"][self._prop_to_match]
         if matched_str in node_cache:
             flat_rel = flat_rel[:-prior_edge_str_len]
             return flat_rel, prior_edge_str_len, depth
 
         node_cache.add(matched_str)
         props_str = ", ".join(
-            f"{k}: {self._limit_property_query(v, 'v')}"
-            for k, v in item["props"].items()
-            if v
+            f"{k}: {self._limit_property_query(v, 'v')}" for k, v in item["props"].items() if v
         )
 
         # TODO: we may remove label id or replace with label name
@@ -388,9 +378,7 @@ class GraphRAGQuery:
         e_cache: Set[Tuple[str, str, str]],
     ) -> Tuple[str, int]:
         props_str = ", ".join(
-            f"{k}: {self._limit_property_query(v, 'e')}"
-            for k, v in item["props"].items()
-            if v
+            f"{k}: {self._limit_property_query(v, 'e')}" for k, v in item["props"].items() if v
         )
         props_str = f"{{{props_str}}}" if props_str else ""
         prev_matched_str = (
@@ -407,9 +395,7 @@ class GraphRAGQuery:
             edge_label = item["label"]
 
         edge_str = (
-            f"--[{edge_label}]-->"
-            if item["outV"] == prev_matched_str
-            else f"<--[{edge_label}]--"
+            f"--[{edge_label}]-->" if item["outV"] == prev_matched_str else f"<--[{edge_label}]--"
         )
         path_str += edge_str
         prior_edge_str_len = len(edge_str)
@@ -427,20 +413,14 @@ class GraphRAGQuery:
         schema = self._get_graph_schema()
         vertex_props_str, edge_props_str = schema.split("\n")[:2]
         # TODO: rename to vertex (also need update in the schema)
-        vertex_props_str = (
-            vertex_props_str[len("Vertex properties: ") :].strip("[").strip("]")
-        )
-        edge_props_str = (
-            edge_props_str[len("Edge properties: ") :].strip("[").strip("]")
-        )
+        vertex_props_str = vertex_props_str[len("Vertex properties: ") :].strip("[").strip("]")
+        edge_props_str = edge_props_str[len("Edge properties: ") :].strip("[").strip("]")
         vertex_labels = self._extract_label_names(vertex_props_str)
         edge_labels = self._extract_label_names(edge_props_str)
         return vertex_labels, edge_labels
 
     @staticmethod
-    def _extract_label_names(
-        source: str, head: str = "name: ", tail: str = ", "
-    ) -> List[str]:
+    def _extract_label_names(source: str, head: str = "name: ", tail: str = ", ") -> List[str]:
         result = []
         for s in source.split(head):
             end = s.find(tail)
@@ -466,9 +446,7 @@ class GraphRAGQuery:
         log.debug("Link(Relation): %s", relationships)
         return self._schema
 
-    def _limit_property_query(
-        self, value: Optional[str], item_type: str
-    ) -> Optional[str]:
+    def _limit_property_query(self, value: Optional[str], item_type: str) -> Optional[str]:
         # NOTE: we skip the filter for list/set type (e.g., list of string, add it if needed)
         if not self._limit_property or not isinstance(value, str):
             return value

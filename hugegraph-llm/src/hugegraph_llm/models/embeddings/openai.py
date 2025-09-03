@@ -91,7 +91,5 @@ class OpenAIEmbedding:
             A list of embedding vectors, where each vector is a list of floats.
             The order of embeddings should match the order of input texts.
         """
-        response = await self.aclient.embeddings.create(
-            input=texts, model=self.model_name
-        )
+        response = await self.aclient.embeddings.create(input=texts, model=self.model_name)
         return [data.embedding for data in response.data]

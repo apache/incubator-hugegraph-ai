@@ -39,9 +39,7 @@ class SemanticIdQuery:
         topk_per_keyword: int = huge_settings.topk_per_keyword,
         vector_dis_threshold: float = huge_settings.vector_dis_threshold,
     ):
-        self.index_dir = str(
-            os.path.join(resource_path, huge_settings.graph_name, "graph_vids")
-        )
+        self.index_dir = str(os.path.join(resource_path, huge_settings.graph_name, "graph_vids"))
         self.vector_index = vector_index.from_name(
             embedding.get_embedding_dim(), huge_settings.graph_name, "graph_vids"
         )
@@ -67,9 +65,7 @@ class SemanticIdQuery:
             possible_vids.update([f"{i + 1}:{keyword}" for keyword in keywords])
 
         vids_str = ",".join([f"'{vid}'" for vid in possible_vids])
-        resp = self._client.gremlin().exec(
-            SemanticIdQuery.ID_QUERY_TEMPL.format(vids_str=vids_str)
-        )
+        resp = self._client.gremlin().exec(SemanticIdQuery.ID_QUERY_TEMPL.format(vids_str=vids_str))
         searched_vids = [v["id"] for v in resp["data"]]
 
         unsearched_keywords = set(keywords)

@@ -48,9 +48,7 @@ class GremlinGenerateSynthesize:
             return match.group(1).strip()
         return response.strip()
 
-    def _format_examples(
-        self, examples: Optional[List[Dict[str, str]]]
-    ) -> Optional[str]:
+    def _format_examples(self, examples: Optional[List[Dict[str, str]]]) -> Optional[str]:
         if not examples:
             return None
         example_strings = []
@@ -88,9 +86,7 @@ class GremlinGenerateSynthesize:
     async def async_generate(self, context: Dict[str, Any]):
         async_tasks = {}
         query = context.get("query")
-        raw_example = [
-            {"query": "who is peter", "gremlin": "g.V().has('name', 'peter')"}
-        ]
+        raw_example = [{"query": "who is peter", "gremlin": "g.V().has('name', 'peter')"}]
         raw_prompt = self.gremlin_prompt.format(
             query=query,
             schema=self.schema,
@@ -98,9 +94,7 @@ class GremlinGenerateSynthesize:
             vertices=self._format_vertices(vertices=self.vertices),
             properties=self._format_properties(properties=None),
         )
-        async_tasks["raw_answer"] = asyncio.create_task(
-            self.llm.agenerate(prompt=raw_prompt)
-        )
+        async_tasks["raw_answer"] = asyncio.create_task(self.llm.agenerate(prompt=raw_prompt))
 
         examples = context.get("match_result")
         init_prompt = self.gremlin_prompt.format(
@@ -130,9 +124,7 @@ class GremlinGenerateSynthesize:
 
     def sync_generate(self, context: Dict[str, Any]):
         query = context.get("query")
-        raw_example = [
-            {"query": "who is peter", "gremlin": "g.V().has('name', 'peter')"}
-        ]
+        raw_example = [{"query": "who is peter", "gremlin": "g.V().has('name', 'peter')"}]
         raw_prompt = self.gremlin_prompt.format(
             query=query,
             schema=self.schema,

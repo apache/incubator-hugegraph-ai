@@ -143,9 +143,7 @@ def create_admin_block():
                 with gr.Row():
                     with gr.Column():
                         # Button to clear LLM Server log, initially hidden
-                        clear_llm_server_button = gr.Button(
-                            "Clear LLM Server Log", visible=False
-                        )
+                        clear_llm_server_button = gr.Button("Clear LLM Server Log", visible=False)
                     with gr.Column():
                         # Button to refresh LLM Server log manually
                         refresh_llm_server_button = gr.Button(

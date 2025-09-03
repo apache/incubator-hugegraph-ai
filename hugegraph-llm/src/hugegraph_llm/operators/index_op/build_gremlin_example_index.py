@@ -62,14 +62,10 @@ class BuildGremlinExampleIndex:
         # !: We have assumed that self.example is not empty
         queries = [example["query"] for example in self.examples]
         # TODO: refactor function chain async to avoid blocking
-        examples_embedding = asyncio.run(
-            get_embeddings_parallel(self.embedding, queries)
-        )
+        examples_embedding = asyncio.run(get_embeddings_parallel(self.embedding, queries))
         embed_dim = len(examples_embedding[0])
         if len(self.examples) > 0:
-            vector_index = self.vector_index.from_name(
-                embed_dim, self.vector_index_name
-            )
+            vector_index = self.vector_index.from_name(embed_dim, self.vector_index_name)
             vector_index.add(examples_embedding, self.examples)
 <<<<<<< HEAD
             vector_index.to_index_file(self.index_dir, self.filename_prefix)

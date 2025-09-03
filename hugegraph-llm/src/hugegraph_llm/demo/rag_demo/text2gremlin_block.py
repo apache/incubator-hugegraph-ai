@@ -96,12 +96,8 @@ def build_example_vector_index(temp_file) -> dict:
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         _, file_name = os.path.split(f"{name}_{timestamp}{ext}")
         log.info("Copying file to: %s", file_name)
-        folder_name = get_index_folder_name(
-            huge_settings.graph_name, huge_settings.graph_space
-        )
-        target_file = os.path.join(
-            resource_path, folder_name, "gremlin_examples", file_name
-        )
+        folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
+        target_file = os.path.join(resource_path, folder_name, "gremlin_examples", file_name)
         try:
             import shutil
 
@@ -201,13 +197,9 @@ def gremlin_generate(
 
     processed_schema, short_schema = _process_schema(schema, generator, sm)
     if processed_schema is None and short_schema is None:
-        return GremlinResult.error(
-            "Invalid JSON schema, please check the format carefully."
-        )
+        return GremlinResult.error("Invalid JSON schema, please check the format carefully.")
 
-    updated_schema = (
-        sm.simple_schema(processed_schema) if short_schema else processed_schema
-    )
+    updated_schema = sm.simple_schema(processed_schema) if short_schema else processed_schema
     store_schema(str(updated_schema), inp, gremlin_prompt)
 
     output_types = _configure_output_types(requested_outputs)
@@ -239,11 +231,7 @@ def simple_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
     if "vertexlabels" in schema:
         mini_schema["vertexlabels"] = []
         for vertex in schema["vertexlabels"]:
-            new_vertex = {
-                key: vertex[key]
-                for key in ["id", "name", "properties"]
-                if key in vertex
-            }
+            new_vertex = {key: vertex[key] for key in ["id", "name", "properties"] if key in vertex}
             mini_schema["vertexlabels"].append(new_vertex)
 
     # Add necessary edgelabels items (4)
@@ -294,9 +282,7 @@ def create_text2gremlin_block() -> Tuple:
     with gr.Row():
         btn = gr.Button("Build Example Vector Index", variant="primary")
 
-    btn.click(
-        build_example_vector_index, inputs=[file], outputs=[out]
-    )  # pylint: disable=no-member
+    btn.click(build_example_vector_index, inputs=[file], outputs=[out])  # pylint: disable=no-member
     gr.Markdown("## Nature Language To Gremlin")
 
     with gr.Row():
@@ -311,12 +297,8 @@ def create_text2gremlin_block() -> Tuple:
                 language="javascript",
                 elem_classes="code-container-show",
             )
-            initialized_out = gr.Textbox(
-                label="Gremlin With Template", show_copy_button=True
-            )
-            raw_out = gr.Textbox(
-                label="Gremlin Without Template", show_copy_button=True
-            )
+            initialized_out = gr.Textbox(label="Gremlin With Template", show_copy_button=True)
+            raw_out = gr.Textbox(label="Gremlin Without Template", show_copy_button=True)
             tmpl_exec_out = gr.Code(
                 label="Query With Template Output",
                 language="json",

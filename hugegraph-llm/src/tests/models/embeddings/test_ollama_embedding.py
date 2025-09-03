@@ -32,7 +32,5 @@ class TestOllamaEmbedding(unittest.TestCase):
         ollama_embedding = OllamaEmbedding(model_name="quentinz/bge-large-zh-v1.5")
         embedding1 = ollama_embedding.get_text_embedding("hello world")
         embedding2 = ollama_embedding.get_text_embedding("bye world")
-        similarity = OllamaEmbedding.similarity(
-            embedding1, embedding2, SimilarityMode.DEFAULT
-        )
+        similarity = OllamaEmbedding.similarity(embedding1, embedding2, SimilarityMode.DEFAULT)
         print(similarity)

@@ -40,9 +40,7 @@ class SchemaManager:
             mini_schema["vertexlabels"] = []
             for vertex in schema["vertexlabels"]:
                 new_vertex = {
-                    key: vertex[key]
-                    for key in ["id", "name", "properties"]
-                    if key in vertex
+                    key: vertex[key] for key in ["id", "name", "properties"] if key in vertex
                 }
                 mini_schema["vertexlabels"].append(new_vertex)
 
