@@ -21,6 +21,7 @@ from typing import Dict, Any, Optional, List
 
 import jieba
 
+from hugegraph_llm.config import llm_settings
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.common_op.nltk_helper import NLTKHelper
@@ -31,11 +32,10 @@ class WordExtract:
         self,
         text: Optional[str] = None,
         llm: Optional[BaseLLM] = None,
-        language: str = "english",
     ):
         self._llm = llm
         self._query = text
-        self._language = language.lower()
+        self._language = llm_settings.language.lower()
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._query is None:
@@ -48,8 +48,8 @@ class WordExtract:
             self._llm = LLMs().get_extract_llm()
             assert isinstance(self._llm, BaseLLM), "Invalid LLM Object."
 
-        if self._language in ("EN", "CN"):
-            self._language = "english" if self._language == "EN" else "chinese"
+        # 未传入值或者其他值，默认使用英文
+        self._language = "chinese" if self._language == "cn" else "english"
 
         keywords = jieba.lcut(self._query)
         keywords = self._filter_keywords(keywords, lowercase=False)

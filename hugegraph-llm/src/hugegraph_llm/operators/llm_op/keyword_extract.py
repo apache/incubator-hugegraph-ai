@@ -34,12 +34,11 @@ class KeywordExtract:
         text: Optional[str] = None,
         llm: Optional[BaseLLM] = None,
         max_keywords: int = 5,
-        language: str = "english",
         extract_template: Optional[str] = None,
     ):
         self._llm = llm
         self._query = text
-        self._language = language
+        self._language = llm_settings.language.lower()
         self._max_keywords = max_keywords
         self._extract_template = extract_template or KEYWORDS_EXTRACT_TPL
         self._extract_method = llm_settings.keyword_extract_type.lower()
@@ -58,8 +57,8 @@ class KeywordExtract:
             self._llm = LLMs().get_extract_llm()
             assert isinstance(self._llm, BaseLLM), "Invalid LLM Object."
 
-        if self._language in ("EN", "CN"):
-            self._language = "english" if self._language == "EN" else "chinese"
+        # 未传入值或者其他值，默认使用英文
+        self._language = "chinese" if self._language == "cn" else "english"
         self._max_keywords = context.get("max_keywords", self._max_keywords)
 
         if self._extract_method == "llm":
