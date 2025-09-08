@@ -48,7 +48,7 @@ class WordExtract:
             self._llm = LLMs().get_extract_llm()
             assert isinstance(self._llm, BaseLLM), "Invalid LLM Object."
 
-        # 未传入值或者其他值，默认使用英文
+        # 鏈紶鍏ュ�兼垨鑰呭叾浠栧�硷紝榛樿浣跨敤鑻辨枃
         self._language = "chinese" if self._language == "cn" else "english"
 
         keywords = jieba.lcut(self._query)
