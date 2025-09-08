@@ -54,12 +54,11 @@ class RAGPipeline:
         self._embedding = embedding or Embeddings().get_embedding()
         self._operators: List[Any] = []
 
-    def extract_word(self, text: Optional[str] = None, language: str = "english"):
+    def extract_word(self, text: Optional[str] = None):
         """
         Add a word extraction operator to the pipeline.
 
         :param text: Text to extract words from.
-        :param language: Language of the text.
         :return: Self-instance for chaining.
         """
         self._operators.append(WordExtract(text=text))
