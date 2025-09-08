@@ -48,10 +48,8 @@ class WordExtract:
             self._llm = LLMs().get_extract_llm()
             assert isinstance(self._llm, BaseLLM), "Invalid LLM Object."
 
-        if isinstance(context.get("language"), str):
-            self._language = context["language"].lower()
-        else:
-            context["language"] = self._language
+        if self._language in ("EN", "CN"):
+            self._language = "english" if self._language == "EN" else "chinese"
 
         keywords = jieba.lcut(self._query)
         keywords = self._filter_keywords(keywords, lowercase=False)

@@ -18,7 +18,7 @@
 
 from typing import Any, Dict, List, Literal, Optional
 
-from hugegraph_llm.config import huge_settings, prompt
+from hugegraph_llm.config import huge_settings, prompt, llm_settings
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.base import BaseLLM
@@ -62,7 +62,7 @@ class RAGPipeline:
         :param language: Language of the text.
         :return: Self-instance for chaining.
         """
-        self._operators.append(WordExtract(text=text, language=language))
+        self._operators.append(WordExtract(text=text, language=llm_settings.language))
         return self
 
     def extract_keywords(
@@ -81,6 +81,7 @@ class RAGPipeline:
             KeywordExtract(
                 text=text,
                 extract_template=extract_template,
+                language=llm_settings.language
             )
         )
         return self
