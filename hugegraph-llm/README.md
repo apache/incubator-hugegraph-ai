@@ -7,7 +7,7 @@
 HugeGraph-LLM is a comprehensive toolkit that combines the power of graph databases with large language models. It enables seamless integration between HugeGraph and LLMs for building intelligent applications.
 
 ### Key Features
-- 🏗️ **Knowledge Graph Construction** - Build KGs automatically using LLMs + HugeGraph  
+- 🏗️ **Knowledge Graph Construction** - Build KGs automatically using LLMs + HugeGraph
 - 🗣️ **Natural Language Querying** - Operate graph databases using natural language (Gremlin/Cypher)
 - 🔍 **Graph-Enhanced RAG** - Leverage knowledge graphs to improve answer accuracy (GraphRAG & Graph Agent)
 
@@ -32,6 +32,9 @@ The fastest way to get started with both HugeGraph Server and RAG Service:
 # 1. Set up environment
 cp docker/env.template docker/.env
 # Edit docker/.env and set PROJECT_PATH to your actual project path
+# See "config.md" for all available configuration options
+# If there is not a configuration file (named .env) under hugegraph-llm, run the following command
+cd hugegraph-llm && touch .env && cd ..
 
 # 2. Deploy services
 cd docker
@@ -84,6 +87,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # 3. Clone and setup project
 git clone https://github.com/apache/incubator-hugegraph-ai.git
 cd incubator-hugegraph-ai/hugegraph-llm
+
+# Configure environment (see config.md for detailed options), .env will auto create if not exists
 
 # 4. Install dependencies and activate environment
 # NOTE: If download is slow, uncomment mirror lines in ../pyproject.toml or use: uv config --global index.url https://pypi.tuna.tsinghua.edu.cn/simple
@@ -164,7 +169,7 @@ graph LR
     B --> C[Extract Info]
     C --> D[Commit to HugeGraph]
     D --> E[Execute Pipeline]
-    
+
     style A fill:#fff2cc
     style B fill:#d5e8d4
     style C fill:#dae8fc
@@ -202,7 +207,7 @@ graph TD
     C --> D[Retrieve Graph Context]
     D --> E[Rerank Results]
     E --> F[Generate Answer]
-    
+
     style A fill:#e3f2fd
     style B fill:#f3e5f5
     style C fill:#e8f5e8
@@ -217,11 +222,35 @@ After running the demo, configuration files are automatically generated:
 
 - **Environment**: `hugegraph-llm/.env`
 - **Prompts**: `hugegraph-llm/src/hugegraph_llm/resources/demo/config_prompt.yaml`
+### Language Support
+
+The system supports both English and Chinese prompts. To switch languages:
+
+1. **Edit `.env` file**: Change `LANGUAGE=en` to `LANGUAGE=CN` (or vice versa)
+2. **Restart the application**: The system will automatically regenerate prompts in the selected language
+
+**Supported Values:**
+- `LANGUAGE=EN` - English prompts (default)
+- `LANGUAGE=CN` - Chinese prompts (中文提示词)
 
 > [!NOTE]
 > Configuration changes are automatically saved when using the web interface. For manual changes, simply refresh the page to load updates.
 
 **LLM Provider Support**: This project uses [LiteLLM](https://docs.litellm.ai/docs/providers) for multi-provider LLM support.
+
+## 🤖 Developer Guidelines
+
+> [!IMPORTANT]
+> **For developers contributing to hugegraph-llm with AI coding assistance:**
+>
+> - **Start Here**: First read `../rules/README.md` for the complete AI-assisted development workflow
+> - **Module Context**: Rename `basic-introduction.md` in this directory as context for your LLM (e.g., `CLAUDE.md`, `copilot-instructions.md`)
+> - **Code Analysis**: Follow comprehensive analysis methodology in `../rules/prompts/project-deep.md`
+> - **Documentation**: Maintain structured documentation standards from `../rules/prompts/project-general.md`
+> - **Quality Standards**: Ensure type annotations, proper testing, and consistent patterns
+> - **Business Logic**: Focus on graph-LLM integration logic and RAG pipeline optimization
+>
+> These guidelines ensure consistent code quality and maintainable graph-AI integrations.
 
 ## 📚 Additional Resources
 

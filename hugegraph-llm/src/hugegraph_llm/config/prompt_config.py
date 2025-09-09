@@ -21,8 +21,10 @@ from hugegraph_llm.config.models.base_prompt_config import BasePromptConfig
 
 # pylint: disable=C0301
 class PromptConfig(BasePromptConfig):
+    def __init__(self, llm_config_object):
+        self.llm_settings = llm_config_object
     # Data is detached from llm_op/answer_synthesize.py
-    answer_prompt: str = """You are an expert in the fields of knowledge graphs and natural language processing.
+    answer_prompt_EN: str = """You are an expert in the fields of knowledge graphs and natural language processing.
 
 Please provide precise and accurate answers based on the following context information, which is sorted in order of importance from high to low, without using any fabricated knowledge.
 
@@ -43,7 +45,7 @@ Answer:
     default_question: str = """Who is Sarah ?"""
 
     # Note: Users should modify the prompt(examples) according to the real schema and text (property_graph_extract.py)
-    extract_graph_prompt: str = """## Main Task
+    extract_graph_prompt_EN: str = """## Main Task
 Given the following graph schema and a piece of text, your task is to analyze the text and extract information that fits into the schema's structure, formatting the information into vertices and edges as specified.
 
 ## Basic Rules:
@@ -154,7 +156,7 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
     text2gql_graph_schema: str = "hugegraph"
 
     # Extracted from llm_op/keyword_extract.py
-    keywords_extract_prompt: str = """Instructions:
+    keywords_extract_prompt_EN: str = """Instructions:
     Please perform the following tasks on the text below:
     1. Extract keywords from the text:
        - Minimum 0, maximum MAX_KEYWORDS keywords.
@@ -186,7 +188,7 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
     {question}
     """
 
-    gremlin_generate_prompt = """
+    gremlin_generate_prompt_EN = """
 You are an expert in graph query language (Gremlin). Your role is to understand the schema of the graph, recognize the intent behind user queries, and generate accurate Gremlin code based on the given instructions.
 
 ### Tasks
@@ -218,6 +220,8 @@ Assess the user's query to determine its complexity based on the following crite
 - You may use the vertex ID directly if it’s provided in the context.
 - If the provided question contains entity names that are very similar to the Vertices IDs, then in the generated Gremlin statement, replace the approximate entities from the original question.
 For example, if the question includes the name ABC, and the provided VerticesIDs do not contain ABC but only abC, then use abC instead of ABC from the original question when generating the gremlin.
+- Similarly, if the user's query refers to specific property names or their values, and these are present or align with the 'Referenced Extracted Properties', actively utilize these properties in your Gremlin query.
+For instance, you can use them for filtering vertices or edges (e.g., using `has('propertyName', 'propertyValue')`), or for projecting specific values.
 
 The output format must be as follows:
 ```gremlin
@@ -231,6 +235,9 @@ Refer Gremlin Example Pair:
 Referenced Extracted Vertex IDs Related to the Query:
 {vertices}
 
+Referenced Extracted Properties Related to the Query (Format: [('property_name', 'property_value'), ...]):
+{properties}
+
 Generate Gremlin from the Following User Query:
 {query}
 
@@ -239,7 +246,7 @@ Generate Gremlin from the Following User Query:
 The generated Gremlin is:
 """
 
-    doc_input_text: str = """Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with since 2010.
+    doc_input_text_EN: str = """Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with since 2010.
 James, in his professional life, works as a journalist. Additionally, Sarah is the proud owner of the website
 www.sarahsplace.com, while James manages his own webpage, though the specific URL is not mentioned here.
 These two individuals, Sarah and James, have not only forged a strong personal bond as roommates but have also
@@ -247,7 +254,6 @@ carved out their distinctive digital presence through their respective webpages,
 and experiences.
 """
 
-    # TODO: we should switch the prompt automatically based on the language (like using context['language'])
     answer_prompt_CN: str = """你是知识图谱和自然语言处理领域的专家。
 你的任务是基于给定的上下文提供精确和准确的答案。
 
@@ -333,6 +339,7 @@ and experiences.
 - 如果在上下文中提供了顶点 ID，可以直接使用。
 - 如果提供的问题包含与顶点 ID 非常相似的实体名称，则在生成的 Gremlin 语句中替换原始问题中的近似实体。
 例如，如果问题包含名称 ABC，而提供的顶点 ID 不包含 ABC 而只有 abC，则在生成 gremlin 时使用 abC 而不是原始问题中的 ABC。
+- 同样地，如果用户查询中提及特定的属性名称或属性值，并且这些属性在"查询相关的已提取属性"中存在或匹配，请在生成的 Gremlin 查询中充分利用这些属性信息。比如可以用它们进行顶点或边的过滤（如使用 `has('属性名', '属性值')`），或者用于特定值的投影查询。
 
 输出格式必须如下：
 ```gremlin
@@ -345,6 +352,9 @@ g.V().limit(10)
 
 与查询相关的已提取顶点 ID：
 {vertices}
+
+查询相关的已提取属性（格式：[('属性名', '属性值'), ...]）：
+{properties}
 
 从以下用户查询生成 Gremlin：
 {query}
@@ -424,4 +434,6 @@ Your goal is to generate a new, tailored "Graph Extract Prompt Header" based on 
 {user_scenario}
 
 ## Your Generated "Graph Extract Prompt Header":
+## Language Requirement:
+Please generate the prompt in {language} language.
 """

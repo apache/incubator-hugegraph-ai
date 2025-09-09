@@ -163,6 +163,20 @@ And here are links of other repositories:
 
 We welcome contributions! Please see our [contribution guidelines](https://hugegraph.apache.org/docs/contribution-guidelines/) for details.
 
+### 🤖 AI Coding Guidelines for Developers
+
+> [!IMPORTANT]
+> **For project contributors using AI coding tools**, please follow these guidelines:
+> 
+> - **Start Here**: First read `rules/README.md` for the complete AI-assisted development workflow
+> - **Module Context**: When `basic-introduction.md` exists in any module, rename it as context for your LLM (e.g., `CLAUDE.md`, `copilot-instructions.md`)
+> - **Documentation Standards**: Follow the structured documentation approach in `rules/prompts/project-general.md`
+> - **Deep Analysis**: For complex features, refer to `rules/prompts/project-deep.md` for comprehensive code analysis methodology
+> - **Code Quality**: Maintain consistency with existing patterns and ensure proper type annotations
+> - **Testing**: Follow TDD principles and ensure comprehensive test coverage for new features
+> 
+> These guidelines ensure consistent code quality and maintainable development workflow with AI assistance.
+
 **Development Setup:**
 ```bash
 # 1. Clone and navigate to project
@@ -191,7 +205,6 @@ uv add --group dev pytest-mock  # Add to dev group
 
 **Key Points:**
 - Use [GitHub Desktop](https://desktop.github.com/) for easier PR management
-- Use/Refer AI Coding basic rules (🚧 ing, on the way)
 - Check existing issues before reporting bugs
 
 [![contributors graph](https://contrib.rocks/image?repo=apache/incubator-hugegraph-ai)](https://github.com/apache/incubator-hugegraph-ai/graphs/contributors)

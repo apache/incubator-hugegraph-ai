@@ -32,10 +32,15 @@ from hugegraph_llm.demo.rag_demo.configs_block import (
     apply_reranker_config,
     apply_graph_config,
 )
+from hugegraph_llm.demo.rag_demo.configs_block import get_header_with_language_indicator
 from hugegraph_llm.demo.rag_demo.other_block import create_other_block
 from hugegraph_llm.demo.rag_demo.other_block import lifespan
 from hugegraph_llm.demo.rag_demo.rag_block import create_rag_block, rag_answer
-from hugegraph_llm.demo.rag_demo.text2gremlin_block import create_text2gremlin_block, graph_rag_recall
+from hugegraph_llm.demo.rag_demo.text2gremlin_block import (
+    create_text2gremlin_block,
+    graph_rag_recall,
+    gremlin_generate_selective,
+)
 from hugegraph_llm.demo.rag_demo.vector_graph_block import create_vector_graph_block
 from hugegraph_llm.resources.demo.css import CSS
 from hugegraph_llm.utils.log import log
@@ -62,7 +67,7 @@ def init_rag_ui() -> gr.Interface:
         title="HugeGraph RAG Platform",
         css=CSS,
     ) as hugegraph_llm_ui:
-        gr.Markdown("# HugeGraph RAG Platform 🚀")
+        gr.HTML(value=get_header_with_language_indicator(prompt.llm_settings.language))
 
         """
         TODO: leave a general idea of the unresolved part
@@ -72,13 +77,11 @@ def init_rag_ui() -> gr.Interface:
         llm_config_input = textbox_array_llm_config
          = if settings.llm_type == openai [settings.openai_api_key, settings.openai_api_base, settings.openai_language_model, settings.openai_max_tokens]
          = else if settings.llm_type == ollama [settings.ollama_host, settings.ollama_port, settings.ollama_language_model, ""]
-         = else if settings.llm_type == qianfan_wenxin [settings.qianfan_api_key, settings.qianfan_secret_key, settings.qianfan_language_model, ""]
          = else ["","","", ""]
 
         embedding_config_input = textbox_array_embedding_config
          = if settings.embedding_type == openai [settings.openai_api_key, settings.openai_api_base, settings.openai_embedding_model]
          = else if settings.embedding_type == ollama [settings.ollama_host, settings.ollama_port, settings.ollama_embedding_model]
-         = else if settings.embedding_type == qianfan_wenxin [settings.qianfan_api_key, settings.qianfan_secret_key, settings.qianfan_embedding_model]
          = else ["","",""]
 
         reranker_config_input = textbox_array_reranker_config
@@ -90,7 +93,9 @@ def init_rag_ui() -> gr.Interface:
         textbox_array_graph_config = create_configs_block()
 
         with gr.Tab(label="1. Build RAG Index 💡"):
-            textbox_input_text, textbox_input_schema, textbox_info_extract_template = create_vector_graph_block()
+            textbox_input_text, textbox_input_schema, textbox_info_extract_template = (
+                create_vector_graph_block()
+            )
         with gr.Tab(label="2. (Graph)RAG & User Functions 📖"):
             (
                 textbox_inp,
@@ -99,7 +104,9 @@ def init_rag_ui() -> gr.Interface:
                 textbox_custom_related_information,
             ) = create_rag_block()
         with gr.Tab(label="3. Text2gremlin ⚙️"):
-            textbox_gremlin_inp, textbox_gremlin_schema, textbox_gremlin_prompt = create_text2gremlin_block()
+            textbox_gremlin_inp, textbox_gremlin_schema, textbox_gremlin_prompt = (
+                create_text2gremlin_block()
+            )
         with gr.Tab(label="4. Graph Tools 🚧"):
             create_other_block()
         with gr.Tab(label="5. Admin Tools 🛠"):
@@ -125,7 +132,7 @@ def init_rag_ui() -> gr.Interface:
                 prompt.custom_rerank_info,
                 prompt.default_question,
                 huge_settings.graph_name,
-                prompt.gremlin_generate_prompt
+                prompt.gremlin_generate_prompt,
             )
 
         hugegraph_llm_ui.load(  # pylint: disable=E1101
@@ -158,7 +165,9 @@ def create_app():
     # settings.check_env()
     prompt.update_yaml_file()
     auth_enabled = admin_settings.enable_login.lower() == "true"
-    log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
+    log.info(
+        "(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled"
+    )
     api_auth = APIRouter(dependencies=[Depends(authenticate)] if auth_enabled else [])
 
     hugegraph_llm = init_rag_ui()
@@ -171,6 +180,7 @@ def create_app():
         apply_llm_config,
         apply_embedding_config,
         apply_reranker_config,
+        gremlin_generate_selective,
     )
     admin_http_api(api_auth, log_stream)
 
@@ -178,7 +188,10 @@ def create_app():
     # Mount Gradio inside FastAPI
     # TODO: support multi-user login when need
     app = gr.mount_gradio_app(
-        app, hugegraph_llm, path="/", auth=("rag", admin_settings.user_token) if auth_enabled else None
+        app,
+        hugegraph_llm,
+        path="/",
+        auth=("rag", admin_settings.user_token) if auth_enabled else None,
     )
 
     return app
@@ -190,4 +203,10 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8001, help="port")
     args = parser.parse_args()
 
-    uvicorn.run("hugegraph_llm.demo.rag_demo.app:create_app", host=args.host, port=args.port, factory=True, reload=True)
+    uvicorn.run(
+        "hugegraph_llm.demo.rag_demo.app:create_app",
+        host=args.host,
+        port=args.port,
+        factory=True,
+        reload=True,
+    )
