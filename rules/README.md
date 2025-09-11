@@ -16,6 +16,8 @@
 
 - 为了保证上下文质量，最佳实践是 STEP4(execute)时新开一个 Chat
 
+- ⭐️ 欢迎维护和补充各模块下的 AGENTS.md, 迭代为面向 AI 的最佳语料和规范
+
 ### 开发者阅读指南
 
 > 如果你是使用本 AI Coding 助手的开发者，请注意以下要点：
@@ -73,8 +75,10 @@
 
 ## 项目规范
 
-每个模块下的 `base_introduction.md`介绍各自模块的最核心的结构/概览，可直接重命名为 GEMINI/CLAUDE/copilot.md 给 `LLM Coding` 
-作为默认参考考 (./{module_name}/base-introduction.md)
+每个模块下的 `AGENTS.md`负责介绍各自模块的最核心的结构/概览（面向 AI），统一给 `LLM Coding`
+作为指导文档 (./{module_name}/AGENTS.md)
+
+- 命名参考[AGENTS.md](https://agents.md/)，也可重命名为 GEMINI/CLAUDE.md 等
 
 ## 测试规范
 
