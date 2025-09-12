@@ -57,18 +57,18 @@ class KeywordExtract:
             self._llm = LLMs().get_extract_llm()
             assert isinstance(self._llm, BaseLLM), "Invalid LLM Object."
 
-        # 未传入值或者其他值，默认使用英文
+        # Use English by default
         self._language = "chinese" if self._language == "cn" else "english"
         self._max_keywords = context.get("max_keywords", self._max_keywords)
 
         if self._extract_method == "llm":
-            # 使用 LLM 提取关键词
+            # LLM method
             ranks = self._extract_with_llm()
         elif self._extract_method == "textrank":
-            # 使用 TextRank 提取关键词
+            # TextRank method
             ranks = self._extract_with_textrank()
         elif self._extract_method == "hybrid":
-            # 使用 混合方法 提取关键词
+            # Hybrid method
             ranks = self._extract_with_hybrid()
         else:
             raise ValueError(f"Invalid extract_method: {self._extract_method}")
@@ -94,7 +94,7 @@ class KeywordExtract:
         return keywords
 
     def _extract_with_textrank(self) -> Dict[str, float]:
-        """ TextRank 提取模式 """
+        """ TextRank mode extraction """
         start_time = time.perf_counter()
         ranks = {}
         try:
@@ -109,9 +109,7 @@ class KeywordExtract:
         return ranks
 
     def _extract_with_hybrid(self) -> Dict[str, float]:
-        """
-        Hybrid mode extraction
-        """
+        """ Hybrid mode extraction """
         ranks = {}
 
         if isinstance(llm_settings.hybrid_llm_weights, float):
@@ -126,33 +124,16 @@ class KeywordExtract:
         lr_set = set(k for k in llm_scores)
         tr_set = set(k for k in tr_scores)
 
-        log.info("LLM extract Keywords: %s", lr_set)
-        log.info("TextRank extract Keywords: %s", tr_set)
+        log.info("LLM extract results: %s", llm_scores)
+        log.info("TextRank extract results: %s", tr_scores)
 
-        intersection_set = lr_set & tr_set
         union_set = lr_set | tr_set
-
-        # simply get union if the number of keywords is less than max_keywords
-        if len(union_set) < self._max_keywords:
-            ranks = llm_scores.copy()
-            ranks.update(tr_scores)
-        else:
-            # return the intersection if intersection count equals max_keywords
-            if len(intersection_set) == self._max_keywords:
-                for word in intersection_set:
-                    ranks[word] = 0
-                    if word in llm_scores:
-                        ranks[word] = llm_scores[word] * llm_weights
-                    if word in tr_scores:
-                        ranks[word] += tr_scores[word] * (1 - llm_weights)
-            else:
-                # calculate the weighted sum of scores
-                for word in union_set:
-                    ranks[word] = 0
-                    if word in llm_scores:
-                        ranks[word] = llm_scores[word] * llm_weights
-                    if word in tr_scores:
-                        ranks[word] += tr_scores[word] * (1-llm_weights)
+        for word in union_set:
+            ranks[word] = 0
+            if word in llm_scores:
+                ranks[word] += llm_scores[word] * llm_weights
+            if word in tr_scores:
+                ranks[word] += tr_scores[word] * (1-llm_weights)
 
         end_time = time.perf_counter()
         log.debug("Hybrid Keyword extraction time: %.2f seconds", end_time - start_time)

@@ -76,31 +76,26 @@ class MultiLingualTextRank:
         return pos_tags
 
     def _multi_preprocess(self, text):
-        # 1. 初始化
         words = []
         ch_tokens = []
         en_stop_words = NLTKHelper().stopwords(lang='english')
         ch_stop_words = NLTKHelper().stopwords(lang='chinese')
 
-        # 2. 屏蔽特殊词
+        # Filtering special words, cleansing punctuation marks, and filtering out invalid tokens
         masked_text, placeholder_map = self._word_mask(text)
-
-        # 3. 清洗过滤标点符号与无效 token
         pos_tags = self._get_valid_tokens(masked_text)
 
-        # 4. 英文分词
+        # English word segmentation
         for word, flag in pos_tags:
-            # 先检查占位符，如果是占位符则直接替换为原单词输出
             if word in placeholder_map:
                 words.append(placeholder_map[word])
             else:
                 if len(word) >= 1 and flag in self.pos_filter['english'] and word.lower() not in en_stop_words:
-                    # 存在中文字符会重新分词，否则加入分词
                     words.append(word)
                     if re.compile('[\u4e00-\u9fff]').search(word):
                         ch_tokens.append(word)
 
-        # 5. 需要进一步的话，中文分词
+        # Chinese word segmentation
         if len(ch_tokens) > 0:
             ch_tokens = list(set(ch_tokens))
             for ch_token in ch_tokens:
@@ -143,16 +138,14 @@ class MultiLingualTextRank:
         return dict(zip(node_names, pagerank_scores))
 
     def extract_keywords(self, text) -> Dict[str, float]:
-        # 1. nltk 模型载入
         if not NLTKHelper().check_nltk_data():
             return {}
 
-        # 2. 文本预处理
         words = self._multi_preprocess(text)
         if not words:
             return {}
 
-        # 3. 构建图，运行 PageRank 算法
+        # PageRank
         unique_words = list(dict.fromkeys(words))
         ranks = dict(zip(unique_words, [0] * len(unique_words)))
         if len(unique_words) > 1:

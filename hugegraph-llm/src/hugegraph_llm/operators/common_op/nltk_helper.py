@@ -15,16 +15,17 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
 import os
 import sys
 from pathlib import Path
 from typing import List, Optional, Dict
+from urllib.error import URLError, HTTPError
 
 import nltk
 from nltk.corpus import stopwords
 
 from hugegraph_llm.config import resource_path
+from hugegraph_llm.utils.log import log
 
 
 class NLTKHelper:
@@ -47,7 +48,12 @@ class NLTKHelper:
             try:
                 nltk.data.find("corpora/stopwords")
             except LookupError:
-                nltk.download("stopwords", download_dir=nltk_data_dir)
+                try:
+                    log.info("Download nltk package stopwords")
+                    nltk.download("stopwords", download_dir=nltk_data_dir)
+                    log.debug("NLTK package stopwords is already downloaded")
+                except (URLError, HTTPError, PermissionError) as e:
+                    log.info("Can't download package stopwords as error: %s", e)
             self._stopwords[lang] = stopwords.words(lang)
 
         # final check
@@ -79,13 +85,18 @@ class NLTKHelper:
                     nltk.data.find(f'taggers/{package}')
                 required_packages[package] = True
             except LookupError:
-                nltk.download(package, download_dir=nltk_data_dir)
+                try:
+                    log.info("Download nltk package %s", package)
+                    nltk.download(package, download_dir=nltk_data_dir)
+                except (URLError, HTTPError, PermissionError) as e:
+                    log.info("Can't download package %s as error: %s", package, e)
 
         check_flag = all(required_packages.values())
         if not check_flag:
             for package in required_packages:
                 if nltk.data.find(f'tokenizers/{package}') or nltk.data.find(f'taggers/{package}'):
                     required_packages[package] = True
+                    log.debug("Package %s is already downloaded", package)
 
         check_flag = all(required_packages.values())
         return check_flag
