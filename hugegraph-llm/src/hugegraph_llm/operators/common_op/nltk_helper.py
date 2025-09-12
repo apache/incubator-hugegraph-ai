@@ -53,10 +53,15 @@ class NLTKHelper:
                     nltk.download("stopwords", download_dir=nltk_data_dir)
                     log.debug("NLTK package stopwords is already downloaded")
                 except (URLError, HTTPError, PermissionError) as e:
-                    log.info("Can't download package stopwords as error: %s", e)
+                    log.warning("Can't download package stopwords as error: %s", e)
+        try:
             self._stopwords[lang] = stopwords.words(lang)
+        except LookupError as e:
+            log.warning("NLTK stopwords for lang=%s not found: %s; using empty list", lang, e)
+            self._stopwords[lang] = []
 
         # final check
+
         final_stopwords = self._stopwords[lang]
         if final_stopwords is None:
             return []
@@ -89,7 +94,7 @@ class NLTKHelper:
                     log.info("Download nltk package %s", package)
                     nltk.download(package, download_dir=nltk_data_dir)
                 except (URLError, HTTPError, PermissionError) as e:
-                    log.info("Can't download package %s as error: %s", package, e)
+                    log.warning("Can't download package %s as error: %s", package, e)
 
         check_flag = all(required_packages.values())
         if not check_flag:

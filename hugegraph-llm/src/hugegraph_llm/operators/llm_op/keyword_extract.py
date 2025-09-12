@@ -59,19 +59,25 @@ class KeywordExtract:
 
         # Use English by default
         self._language = "chinese" if self._language == "cn" else "english"
-        self._max_keywords = context.get("max_keywords", self._max_keywords)
+        mk = context.get("max_keywords", self._max_keywords)
+        try:
+            mk = int(mk)
+        except (TypeError, ValueError):
+            mk = self._max_keywords
+        self._max_keywords = max(1, mk)
 
-        if self._extract_method == "llm":
+        method = (context.get("extract_method", self._extract_method) or "hybrid").strip().lower()
+        if method == "llm":
             # LLM method
             ranks = self._extract_with_llm()
-        elif self._extract_method == "textrank":
+        elif method == "textrank":
             # TextRank method
             ranks = self._extract_with_textrank()
-        elif self._extract_method == "hybrid":
+        elif method == "hybrid":
             # Hybrid method
             ranks = self._extract_with_hybrid()
         else:
-            raise ValueError(f"Invalid extract_method: {self._extract_method}")
+            raise ValueError(f"Invalid extract_method: {method}")
 
         keywords = [] if not ranks else sorted(ranks, key=ranks.get, reverse=True)
         keywords = [k.replace("'", "") for k in keywords]
@@ -124,8 +130,8 @@ class KeywordExtract:
         lr_set = set(k for k in llm_scores)
         tr_set = set(k for k in tr_scores)
 
-        log.info("LLM extract results: %s", llm_scores)
-        log.info("TextRank extract results: %s", tr_scores)
+        log.debug("LLM extract results: %s", llm_scores)
+        log.debug("TextRank extract results: %s", tr_scores)
 
         union_set = lr_set | tr_set
         for word in union_set:
