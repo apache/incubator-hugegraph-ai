@@ -14,7 +14,8 @@
 #  limitations under the License.
 
 
-from PyCGraph import GPipeline
+from typing import Dict, Any
+from PyCGraph import GPipeline, GPipelineManager
 
 from hugegraph_llm.operators.common_op.check_schema import CheckSchemaNode
 from hugegraph_llm.operators.document_op.chunk_split import ChunkSplitNode
@@ -33,39 +34,88 @@ from hugegraph_llm.operators.llm_op.property_graph_extract import (
 
 
 class Scheduler:
-    def __init__(self):
-        pass
+    pipeline_pool: Dict[str, Any] = None
+    max_pipeline: int
+
+    def __init__(self, max_pipeline: int = 10):
+        self.pipeline_pool = {}
+        # pipeline_pool中应使用字典而不是集合，且GPipelineManager实例应赋值给manager，flow函数赋值给flow_func
+        self.pipeline_pool["build_vector_index"] = {
+            "manager": GPipelineManager(),
+            "flow_func": self.build_vector_index_flow,
+            "prepare_func": self.build_vector_index_prepare,
+            "post_func": self.build_vector_index_post,
+        }
+        self.pipeline_pool["graph_extract"] = {
+            "manager": GPipelineManager(),
+            "flow_func": self.graph_extract_flow,
+            "prepare_func": self.graph_extract_prepare,
+            "post_func": self.graph_extract_post,
+        }
+        self.max_pipeline = max_pipeline
 
     # TODO: Implement Agentic Workflow
-    def agentic_flow():
+    def agentic_flow(self):
         pass
+
+    def schedule_flow(self, flow: str, *args, **kwargs):
+        if flow not in self.pipeline_pool:
+            return "Unsupported workflow"
+        manager = self.pipeline_pool[flow]["manager"]
+        flow_func = self.pipeline_pool[flow]["flow_func"]
+        prepare_func = self.pipeline_pool[flow]["prepare_func"]
+        post_func = self.pipeline_pool[flow]["post_func"]
+        pipeline = manager.fetch()
+        if pipeline is None:
+            # 如果没有可用的pipeline，则直接调用对应的flow_func新建并执行流程
+            pipeline = flow_func(*args, **kwargs)
+            status = pipeline.init()
+            if status.isErr():
+                return "Error in flow init"
+            status = pipeline.run()
+            if status.isErr():
+                return "Error in flow execution"
+            res = post_func(pipeline)
+            manager.add(pipeline)
+            return res
+        else:
+            # 如果有可用的pipeline，可以在这里执行pipeline的run等操作
+            prepared_input = pipeline.getGParamWithNoEmpty("wkflow_input")
+            prepare_func(prepared_input, *args, **kwargs)
+            status = pipeline.run()
+            if status.isErr():
+                return f"Error in flow execution {status.getInfo()}"
+            res = post_func(pipeline)
+            manager.release(pipeline)
+            return res
 
     def _import_schema(
         self,
-        prepared_input: WkFlowInput,
         from_hugegraph=None,
         from_extraction=None,
         from_user_defined=None,
     ):
         if from_hugegraph:
-            prepared_input.graph_name = from_hugegraph
             return SchemaManagerNode()
         elif from_user_defined:
-            prepared_input.schema = from_user_defined
             return CheckSchemaNode()
         elif from_extraction:
             raise NotImplementedError("Not implemented yet")
         else:
             raise ValueError("No input data / invalid schema type")
 
+    def build_vector_index_prepare(self, prepared_input: WkFlowInput, texts):
+        prepared_input.texts = texts
+        prepared_input.language = "zh"
+        prepared_input.split_type = "paragraph"
+        return
+
     # Fixed flow
     def build_vector_index_flow(self, texts):
         pipeline = GPipeline()
         # prepare for workflow input
         prepared_input = WkFlowInput()
-        prepared_input.texts = texts
-        prepared_input.language = "zh"
-        prepared_input.split_type = "paragraph"
+        self.build_vector_index_prepare(prepared_input, texts)
 
         pipeline.createGParam(prepared_input, "wkflow_input")
         pipeline.createGParam(WkFlowState(), "wkflow_state")
@@ -75,23 +125,44 @@ class Scheduler:
         pipeline.registerGElement(chunk_split_node, set(), "chunk_split")
         pipeline.registerGElement(build_vector_node, {chunk_split_node}, "build_vector")
 
-        pipeline.init()
-        status = pipeline.run()
-        pipeline.destroy()
-        print(f"pipeline status {status.getInfo()}")
+        return pipeline
+
+    def build_vector_index_post(self, pipeline):
         res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
         return json.dumps(res, ensure_ascii=False, indent=2)
 
-    # 固定流程：图谱抽取
-    def graph_extract_flow(self, schema, texts, example_prompt, extract_type):
-        pipeline = GPipeline()
-        prepared_input = WkFlowInput()
+    def graph_extract_prepare(
+        self, prepared_input: WkFlowInput, schema, texts, example_prompt, extract_type
+    ):
         # prepare input data
         prepared_input.texts = texts
         prepared_input.language = "zh"
         prepared_input.split_type = "document"
         prepared_input.example_prompt = example_prompt
         prepared_input.schema = schema
+        schema = schema.strip()
+        if schema.startswith("{"):
+            try:
+                schema = json.loads(schema)
+                prepared_input.schema = schema
+            except json.JSONDecodeError:
+                log.error("Invalid JSON format in schema. Please check it again.")
+                return (
+                    "ERROR: Invalid JSON format in schema. Please check it carefully."
+                )
+        else:
+            log.info("Get schema '%s' from graphdb.", schema)
+            prepared_input.graph_name = schema
+        return
+
+    # 固定流程：图谱抽取
+    def graph_extract_flow(self, schema, texts, example_prompt, extract_type):
+        pipeline = GPipeline()
+        prepared_input = WkFlowInput()
+        # prepare input data
+        self.graph_extract_prepare(
+            prepared_input, schema, texts, example_prompt, extract_type
+        )
 
         pipeline.createGParam(prepared_input, "wkflow_input")
         pipeline.createGParam(WkFlowState(), "wkflow_state")
@@ -100,19 +171,15 @@ class Scheduler:
         if schema.startswith("{"):
             try:
                 schema = json.loads(schema)
-                schema_node = self._import_schema(
-                    prepared_input=prepared_input, from_user_defined=schema
-                )
+                schema_node = self._import_schema(from_user_defined=schema)
             except json.JSONDecodeError:
                 log.error("Invalid JSON format in schema. Please check it again.")
-                return (
+                raise (
                     "ERROR: Invalid JSON format in schema. Please check it carefully."
                 )
         else:
             log.info("Get schema '%s' from graphdb.", schema)
-            schema_node = self._import_schema(
-                prepared_input=prepared_input, from_hugegraph=schema
-            )
+            schema_node = self._import_schema(from_hugegraph=schema)
 
         chunk_split_node = ChunkSplitNode()
         graph_extract_node = None
@@ -126,8 +193,9 @@ class Scheduler:
             graph_extract_node, {schema_node, chunk_split_node}, "graph_extract"
         )
 
-        status = pipeline.process()
-        print(f"pipeline status {status.getInfo()}")
+        return pipeline
+
+    def graph_extract_post(self, pipeline):
         res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
         if not res["vertices"] and not res["edges"]:
             log.info("Please check the schema.(The schema may not match the Doc)")

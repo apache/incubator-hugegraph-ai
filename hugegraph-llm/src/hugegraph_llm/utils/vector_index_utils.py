@@ -110,4 +110,4 @@ def build_vector_index(input_file, input_text):
         raise gr.Error("Please only choose one between file and text.")
     texts = read_documents(input_file, input_text)
     scheduler = SchedulerSingleton.get_instance()
-    return scheduler.build_vector_index_flow(texts)
+    return scheduler.schedule_flow("build_vector_index", texts)

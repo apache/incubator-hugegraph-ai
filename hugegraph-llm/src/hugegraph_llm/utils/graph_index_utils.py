@@ -141,8 +141,8 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
         return "ERROR: please input with correct schema/format."
 
     try:
-        return scheduler.graph_extract_flow(
-            schema, texts, example_prompt, "property_graph"
+        return scheduler.schedule_flow(
+            "graph_extract", schema, texts, example_prompt, "property_graph"
         )
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
