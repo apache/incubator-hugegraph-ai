@@ -376,6 +376,7 @@ def create_vector_graph_block():
         # origin_out = gr.Textbox(visible=False)
         graph_extract_bt.click(
             extract_graph,
+            # extract_graph_origin,
             inputs=[input_file, input_text, input_schema, info_extract_template],
             outputs=[out],
         ).then(
