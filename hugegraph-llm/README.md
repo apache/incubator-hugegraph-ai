@@ -7,6 +7,7 @@
 HugeGraph-LLM is a comprehensive toolkit that combines the power of graph databases with large language models. It enables seamless integration between HugeGraph and LLMs for building intelligent applications.
 
 ### Key Features
+
 - 🏗️ **Knowledge Graph Construction** - Build KGs automatically using LLMs + HugeGraph
 - 🗣️ **Natural Language Querying** - Operate graph databases using natural language (Gremlin/Cypher)
 - 🔍 **Graph-Enhanced RAG** - Leverage knowledge graphs to improve answer accuracy (GraphRAG & Graph Agent)
@@ -16,6 +17,7 @@ For detailed source code doc, visit our [DeepWiki](https://deepwiki.com/apache/i
 ## 📋 Prerequisites
 
 > [!IMPORTANT]
+>
 > - **Python**: 3.10+ (not tested on 3.12)
 > - **HugeGraph Server**: 1.3+ (recommended: 1.5+)
 > - **UV Package Manager**: 0.7+
@@ -53,6 +55,7 @@ docker-compose -f docker-compose-network.yml ps
 For more control over individual components:
 
 #### Available Images
+
 - **`hugegraph/rag`** - Development image with source code access
 - **`hugegraph/rag-bin`** - Production-optimized binary (compiled with Nuitka)
 
@@ -118,6 +121,7 @@ python -m hugegraph_llm.config.generate --update
 ```
 
 > [!TIP]
+>
 > - `uv sync` automatically creates virtual environment (.venv) and installs all dependencies
 > - Activate once with `source .venv/bin/activate` - all subsequent commands assume this environment
 > - Check our [Quick Start Guide](https://github.com/apache/incubator-hugegraph-ai/blob/main/hugegraph-llm/quick_start.md) for detailed usage examples
@@ -131,10 +135,12 @@ python -m hugegraph_llm.config.generate --update
 Use the Gradio interface for visual knowledge graph building:
 
 **Input Options:**
+
 - **Text**: Direct text input for RAG index creation
 - **Files**: Upload TXT or DOCX files (multiple selection supported)
 
 **Schema Configuration:**
+
 - **Custom Schema**: JSON format following our [template](https://github.com/apache/incubator-hugegraph-ai/blob/aff3bbe25fa91c3414947a196131be812c20ef11/hugegraph-llm/src/hugegraph_llm/config/config_data.py#L125)
 - **HugeGraph Schema**: Use existing graph instance schema (e.g., "hugegraph")
 
@@ -163,6 +169,7 @@ builder = KgBuilder(LLMs().get_chat_llm())
 ```
 
 **Pipeline Workflow:**
+
 ```mermaid
 graph LR
     A[Import Schema] --> B[Chunk Split]
@@ -200,6 +207,7 @@ graph_rag = RAGPipeline()
 ```
 
 **RAG Pipeline Flow:**
+
 ```mermaid
 graph TD
     A[User Query] --> B[Extract Keywords]
@@ -222,6 +230,7 @@ After running the demo, configuration files are automatically generated:
 
 - **Environment**: `hugegraph-llm/.env`
 - **Prompts**: `hugegraph-llm/src/hugegraph_llm/resources/demo/config_prompt.yaml`
+
 ### Language Support
 
 The system supports both English and Chinese prompts. To switch languages:
@@ -230,6 +239,7 @@ The system supports both English and Chinese prompts. To switch languages:
 2. **Restart the application**: The system will automatically regenerate prompts in the selected language
 
 **Supported Values:**
+
 - `LANGUAGE=EN` - English prompts (default)
 - `LANGUAGE=CN` - Chinese prompts (中文提示词)
 
@@ -240,11 +250,10 @@ The system supports both English and Chinese prompts. To switch languages:
 
 ## 🤖 Developer Guidelines
 
-> [!IMPORTANT]
-> **For developers contributing to hugegraph-llm with AI coding assistance:**
+> [!IMPORTANT] > **For developers contributing to hugegraph-llm with AI coding assistance:**
 >
 > - **Start Here**: First read `../rules/README.md` for the complete AI-assisted development workflow
-> - **Module Context**: Rename `basic-introduction.md` in this directory as context for your LLM (e.g., `CLAUDE.md`, `copilot-instructions.md`)
+> - **Module Context**: Rename `AGENTS.md` in this directory as context for your LLM (e.g., `CLAUDE.md`, `copilot-instructions.md`)
 > - **Code Analysis**: Follow comprehensive analysis methodology in `../rules/prompts/project-deep.md`
 > - **Documentation**: Maintain structured documentation standards from `../rules/prompts/project-general.md`
 > - **Quality Standards**: Ensure type annotations, proper testing, and consistent patterns

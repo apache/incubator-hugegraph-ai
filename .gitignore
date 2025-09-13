@@ -135,7 +135,7 @@ celerybeat.pid
 # prompt config
 config_prompt.yaml*
 
-# AI-IDE prompt files (generated from basic-introduction.md)
+# AI-IDE prompt files (generated from AGENTS.md)
 
 # Claude Projects
 CLAUDE.md
