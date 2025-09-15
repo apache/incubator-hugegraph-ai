@@ -142,11 +142,9 @@ class Scheduler:
             try:
                 schema = json.loads(schema)
                 prepared_input.schema = schema
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as exc:
                 log.error("Invalid JSON format in schema. Please check it again.")
-                raise (
-                    "ERROR: Invalid JSON format in schema. Please check it carefully."
-                )
+                raise ValueError("Invalid JSON format in schema.") from exc
         else:
             log.info("Get schema '%s' from graphdb.", schema)
             prepared_input.graph_name = schema
@@ -169,11 +167,9 @@ class Scheduler:
             try:
                 schema = json.loads(schema)
                 schema_node = self._import_schema(from_user_defined=schema)
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as exc:
                 log.error("Invalid JSON format in schema. Please check it again.")
-                raise (
-                    "ERROR: Invalid JSON format in schema. Please check it carefully."
-                )
+                raise ValueError("Invalid JSON format in schema.") from exc
         else:
             log.info("Get schema '%s' from graphdb.", schema)
             schema_node = self._import_schema(from_hugegraph=schema)
@@ -194,19 +190,21 @@ class Scheduler:
 
     def graph_extract_post(self, pipeline):
         res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
-        if not res["vertices"] and not res["edges"]:
+        vertices = res.get("vertices", [])
+        edges = res.get("edges", [])
+        if not vertices and not edges:
             log.info("Please check the schema.(The schema may not match the Doc)")
             return json.dumps(
                 {
-                    "vertices": res["vertices"],
-                    "edges": res["edges"],
+                    "vertices": vertices,
+                    "edges": edges,
                     "warning": "The schema may not match the Doc",
                 },
                 ensure_ascii=False,
                 indent=2,
             )
         return json.dumps(
-            {"vertices": res["vertices"], "edges": res["edges"]},
+            {"vertices": vertices, "edges": edges},
             ensure_ascii=False,
             indent=2,
         )

@@ -63,11 +63,12 @@ class BuildVectorIndexNode(GNode):
         if sts.isErr():
             return sts
         self.context.lock()
-        if self.context.chunks is None:
+        try:
+            if self.context.chunks is None:
+                raise ValueError("chunks not found in context.")
+            chunks = self.context.chunks
+        finally:
             self.context.unlock()
-            raise ValueError("chunks not found in context.")
-        chunks = self.context.chunks
-        self.context.unlock()
         chunks_embedding = []
         log.debug("Building vector index for %s chunks...", len(chunks))
         # TODO: use async_get_texts_embedding instead of single sync method

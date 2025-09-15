@@ -204,16 +204,22 @@ class PropertyGraphExtractNode(GNode):
         if sts.isErr():
             return sts
         self.context.lock()
-        if self.context.schema is None or self.context.chunks is None:
+        try:
+            if self.context.schema is None or self.context.chunks is None:
+                raise ValueError(
+                    "parameter required by extract node not found in context."
+                )
+            schema = self.context.schema
+            chunks = self.context.chunks
+            if self.context.vertices is None:
+                self.context.vertices = []
+            if self.context.edges is None:
+                self.context.edges = []
+        finally:
             self.context.unlock()
-            raise ValueError("parameter required by extract node not found in context.")
-        schema = self.context.schema
-        chunks = self.context.chunks
-        if self.context.vertices is None:
-            self.context.vertices = []
-        if self.context.edges is None:
-            self.context.edges = []
+
         items = []
+        self.context.unlock()
         for chunk in chunks:
             proceeded_chunk = self.extract_property_graph_by_llm(schema, chunk)
             log.debug(
@@ -224,17 +230,15 @@ class PropertyGraphExtractNode(GNode):
             )
             items.extend(self._extract_and_filter_label(schema, proceeded_chunk))
         items = filter_item(schema, items)
+        self.context.lock()
         for item in items:
             if item["type"] == "vertex":
                 self.context.vertices.append(item)
             elif item["type"] == "edge":
                 self.context.edges.append(item)
 
-        if self.context.call_count:
-            self.context.call_count += len(chunks)
-        else:
-            self.context.call_count = len(chunks)
         self.context.unlock()
+        self.context.call_count = (self.context.call_count or 0) + len(chunks)
         return CStatus()
 
     def extract_property_graph_by_llm(self, schema, chunk):

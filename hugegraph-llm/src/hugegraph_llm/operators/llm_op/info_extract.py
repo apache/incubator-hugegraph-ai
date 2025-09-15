@@ -156,7 +156,7 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
                     }
                 )
                 break
-    graph["vertices"] = vertices_dict.values()
+    graph["vertices"] = list(vertices_dict.values())
 
 
 class InfoExtract:
@@ -285,7 +285,7 @@ class InfoExtractNode(GNode):
                         }
                     )
                     break
-        self.context.vertices = vertices_dict.values()
+        self.context.vertices = list(vertices_dict.values())
 
     def extract_triples_by_regex(self, text):
         text = text.replace("\\n", " ").replace("\\", " ").replace("\n", " ")
@@ -309,6 +309,8 @@ class InfoExtractNode(GNode):
         else:
             self.context.triples = []
 
+        self.context.unlock()
+
         for sentence in chunks:
             proceeded_chunk = self.extract_triples_by_llm(schema, sentence)
             log.debug(
@@ -327,7 +329,6 @@ class InfoExtractNode(GNode):
         else:
             self.context.call_count = len(chunks)
         self._filter_long_id()
-        self.context.unlock()
         return CStatus()
 
     def extract_triples_by_llm(self, schema, chunk) -> str:
