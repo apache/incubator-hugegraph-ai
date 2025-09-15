@@ -219,7 +219,6 @@ class PropertyGraphExtractNode(GNode):
             self.context.unlock()
 
         items = []
-        self.context.unlock()
         for chunk in chunks:
             proceeded_chunk = self.extract_property_graph_by_llm(schema, chunk)
             log.debug(
@@ -231,13 +230,14 @@ class PropertyGraphExtractNode(GNode):
             items.extend(self._extract_and_filter_label(schema, proceeded_chunk))
         items = filter_item(schema, items)
         self.context.lock()
-        for item in items:
-            if item["type"] == "vertex":
-                self.context.vertices.append(item)
-            elif item["type"] == "edge":
-                self.context.edges.append(item)
-
-        self.context.unlock()
+        try:
+            for item in items:
+                if item["type"] == "vertex":
+                    self.context.vertices.append(item)
+                elif item["type"] == "edge":
+                    self.context.edges.append(item)
+        finally:
+            self.context.unlock()
         self.context.call_count = (self.context.call_count or 0) + len(chunks)
         return CStatus()
 

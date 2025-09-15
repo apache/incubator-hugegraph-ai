@@ -22,7 +22,7 @@ import traceback
 from typing import Dict, Any, Union, Optional
 
 import gradio as gr
-from hugegraph_llm.operators.scheduler import SchedulerSingleton
+from hugegraph_llm.flows.scheduler import SchedulerSingleton
 
 from .embedding_utils import get_filename_prefix, get_index_folder_name
 from .hugegraph_utils import get_hg_client, clean_hg_data

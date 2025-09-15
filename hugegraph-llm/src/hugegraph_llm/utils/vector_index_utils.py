@@ -24,7 +24,7 @@ import gradio as gr
 from hugegraph_llm.config import resource_path, huge_settings, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.init_embedding import model_map
-from hugegraph_llm.operators.scheduler import SchedulerSingleton
+from hugegraph_llm.flows.scheduler import SchedulerSingleton
 from hugegraph_llm.utils.embedding_utils import (
     get_filename_prefix,
     get_index_folder_name,
