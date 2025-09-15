@@ -23,7 +23,7 @@ import gradio as gr
 
 from hugegraph_llm.config import resource_path, huge_settings, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
-from hugegraph_llm.models.embeddings.init_embedding import Embeddings
+from hugegraph_llm.models.embeddings.init_embedding import model_map
 from hugegraph_llm.operators.scheduler import SchedulerSingleton
 from hugegraph_llm.utils.embedding_utils import (
     get_filename_prefix,
@@ -66,8 +66,7 @@ def get_vector_index_info():
         huge_settings.graph_name, huge_settings.graph_space
     )
     filename_prefix = get_filename_prefix(
-        llm_settings.embedding_type,
-        getattr(Embeddings().get_embedding(), "model_name", None),
+        llm_settings.embedding_type, model_map.get(llm_settings.embedding_type)
     )
     chunk_vector_index = VectorIndex.from_index_file(
         str(os.path.join(resource_path, folder_name, "chunks")),
@@ -96,8 +95,7 @@ def clean_vector_index():
         huge_settings.graph_name, huge_settings.graph_space
     )
     filename_prefix = get_filename_prefix(
-        llm_settings.embedding_type,
-        getattr(Embeddings().get_embedding(), "model_name", None),
+        llm_settings.embedding_type, model_map.get(llm_settings.embedding_type)
     )
     VectorIndex.clean(
         str(os.path.join(resource_path, folder_name, "chunks")), filename_prefix

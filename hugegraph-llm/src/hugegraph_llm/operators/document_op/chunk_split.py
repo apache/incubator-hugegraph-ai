@@ -69,7 +69,7 @@ class ChunkSplitNode(GNode):
             return RecursiveCharacterTextSplitter(
                 chunk_size=50, chunk_overlap=0, separators=self.separators
             ).split_text
-        raise ValueError("Type must be paragraph, sentence, html or markdown")
+        raise ValueError("Type must be document, paragraph or sentence")
 
     def run(self):
         sts = self.node_init()

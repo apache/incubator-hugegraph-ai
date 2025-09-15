@@ -24,13 +24,13 @@ from hugegraph_llm.operators.index_op.build_vector_index import BuildVectorIndex
 from hugegraph_llm.state.ai_state import WkFlowState, WkFlowInput
 
 import json
-
-from ..utils.log import log
+import threading
 
 from hugegraph_llm.operators.llm_op.info_extract import InfoExtractNode
 from hugegraph_llm.operators.llm_op.property_graph_extract import (
     PropertyGraphExtractNode,
 )
+from hugegraph_llm.utils.log import log
 
 
 class Scheduler:
@@ -39,7 +39,7 @@ class Scheduler:
 
     def __init__(self, max_pipeline: int = 10):
         self.pipeline_pool = {}
-        # pipeline_pool中应使用字典而不是集合，且GPipelineManager实例应赋值给manager，flow函数赋值给flow_func
+        # pipeline_pool act as a manager of GPipelineManager which used for pipeline management
         self.pipeline_pool["build_vector_index"] = {
             "manager": GPipelineManager(),
             "flow_func": self.build_vector_index_flow,
@@ -60,31 +60,31 @@ class Scheduler:
 
     def schedule_flow(self, flow: str, *args, **kwargs):
         if flow not in self.pipeline_pool:
-            return "Unsupported workflow"
+            raise "Unsupported workflow"
         manager = self.pipeline_pool[flow]["manager"]
         flow_func = self.pipeline_pool[flow]["flow_func"]
         prepare_func = self.pipeline_pool[flow]["prepare_func"]
         post_func = self.pipeline_pool[flow]["post_func"]
         pipeline = manager.fetch()
         if pipeline is None:
-            # 如果没有可用的pipeline，则直接调用对应的flow_func新建并执行流程
+            # call coresponding flow_func to create new workflow
             pipeline = flow_func(*args, **kwargs)
             status = pipeline.init()
             if status.isErr():
-                return "Error in flow init"
+                raise "Error in flow init"
             status = pipeline.run()
             if status.isErr():
-                return "Error in flow execution"
+                raise "Error in flow execution"
             res = post_func(pipeline)
             manager.add(pipeline)
             return res
         else:
-            # 如果有可用的pipeline，可以在这里执行pipeline的run等操作
+            # fetch pipeline & prepare input for flow
             prepared_input = pipeline.getGParamWithNoEmpty("wkflow_input")
             prepare_func(prepared_input, *args, **kwargs)
             status = pipeline.run()
             if status.isErr():
-                return f"Error in flow execution {status.getInfo()}"
+                raise f"Error in flow execution {status.getInfo()}"
             res = post_func(pipeline)
             manager.release(pipeline)
             return res
@@ -110,7 +110,7 @@ class Scheduler:
         prepared_input.split_type = "paragraph"
         return
 
-    # Fixed flow
+    # Fixed flow: build vector index
     def build_vector_index_flow(self, texts):
         pipeline = GPipeline()
         # prepare for workflow input
@@ -147,7 +147,7 @@ class Scheduler:
                 prepared_input.schema = schema
             except json.JSONDecodeError:
                 log.error("Invalid JSON format in schema. Please check it again.")
-                return (
+                raise (
                     "ERROR: Invalid JSON format in schema. Please check it carefully."
                 )
         else:
@@ -155,7 +155,7 @@ class Scheduler:
             prepared_input.graph_name = schema
         return
 
-    # 固定流程：图谱抽取
+    # Fixed flow: graph extraction
     def graph_extract_flow(self, schema, texts, example_prompt, extract_type):
         pipeline = GPipeline()
         prepared_input = WkFlowInput()
@@ -187,7 +187,7 @@ class Scheduler:
             graph_extract_node = InfoExtractNode()
         elif extract_type == "property_graph":
             graph_extract_node = PropertyGraphExtractNode()
-        pipeline.registerGElement(schema_node, set(), "chunk_split")
+        pipeline.registerGElement(schema_node, set(), "schema_node")
         pipeline.registerGElement(chunk_split_node, set(), "chunk_split")
         pipeline.registerGElement(
             graph_extract_node, {schema_node, chunk_split_node}, "graph_extract"
@@ -217,9 +217,12 @@ class Scheduler:
 
 class SchedulerSingleton:
     _instance = None
+    _instance_lock = threading.Lock()
 
     @classmethod
     def get_instance(cls):
         if cls._instance is None:
-            cls._instance = Scheduler()
+            with cls._instance_lock:
+                if cls._instance is None:
+                    cls._instance = Scheduler()
         return cls._instance

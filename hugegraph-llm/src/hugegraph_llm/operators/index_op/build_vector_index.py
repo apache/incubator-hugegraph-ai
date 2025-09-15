@@ -30,7 +30,8 @@ from hugegraph_llm.utils.embedding_utils import (
 )
 from hugegraph_llm.utils.log import log
 
-from hugegraph_llm.operators.util import get_embedding, init_context
+from hugegraph_llm.operators.util import init_context
+from hugegraph_llm.models.embeddings.init_embedding import get_embedding
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 from PyCGraph import GNode, CStatus
 

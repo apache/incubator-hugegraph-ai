@@ -23,7 +23,8 @@ from hugegraph_llm.document.chunk_split import ChunkSplitter
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
 
-from hugegraph_llm.operators.util import get_chat_llm, init_context
+from hugegraph_llm.operators.util import init_context
+from hugegraph_llm.models.llms.init_llm import get_chat_llm
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 from PyCGraph import GNode, CStatus
 
