@@ -13,7 +13,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-
+import json
+import threading
 from typing import Dict, Any
 from PyCGraph import GPipeline, GPipelineManager
 
@@ -22,10 +23,6 @@ from hugegraph_llm.operators.document_op.chunk_split import ChunkSplitNode
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManagerNode
 from hugegraph_llm.operators.index_op.build_vector_index import BuildVectorIndexNode
 from hugegraph_llm.state.ai_state import WkFlowState, WkFlowInput
-
-import json
-import threading
-
 from hugegraph_llm.operators.llm_op.info_extract import InfoExtractNode
 from hugegraph_llm.operators.llm_op.property_graph_extract import (
     PropertyGraphExtractNode,
