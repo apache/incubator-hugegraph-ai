@@ -19,6 +19,7 @@ from PyCGraph import GPipelineManager
 from hugegraph_llm.flows.build_vector_index import BuildVectorIndexFlow
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.flows.graph_extract import GraphExtractFlow
+from hugegraph_llm.utils.log import log
 
 
 class Scheduler:
@@ -53,10 +54,14 @@ class Scheduler:
             pipeline = flow.build_flow(*args, **kwargs)
             status = pipeline.init()
             if status.isErr():
-                raise RuntimeError("Error in flow init")
+                error_msg = f"Error in flow init: {status.getInfo()}"
+                log.error(error_msg)
+                raise RuntimeError(error_msg)
             status = pipeline.run()
             if status.isErr():
-                raise RuntimeError("Error in flow execution")
+                error_msg = f"Error in flow execution: {status.getInfo()}"
+                log.error(error_msg)
+                raise RuntimeError(error_msg)
             res = flow.post_deal(pipeline)
             manager.add(pipeline)
             return res
