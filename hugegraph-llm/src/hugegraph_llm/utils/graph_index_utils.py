@@ -22,6 +22,7 @@ import traceback
 from typing import Dict, Any, Union, Optional
 
 import gradio as gr
+from hugegraph_llm.flows.scheduler import SchedulerSingleton
 
 from .embedding_utils import get_filename_prefix, get_index_folder_name
 from .hugegraph_utils import get_hg_client, clean_hg_data
@@ -35,11 +36,17 @@ from ..operators.kg_construction_task import KgBuilder
 
 
 def get_graph_index_info():
-    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
+    builder = KgBuilder(
+        LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
+    )
     graph_summary_info = builder.fetch_graph_data().run()
-    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
+    folder_name = get_index_folder_name(
+        huge_settings.graph_name, huge_settings.graph_space
+    )
     index_dir = str(os.path.join(resource_path, folder_name, "graph_vids"))
-    filename_prefix = get_filename_prefix(llm_settings.embedding_type, getattr(builder.embedding, "model_name", None))
+    filename_prefix = get_filename_prefix(
+        llm_settings.embedding_type, getattr(builder.embedding, "model_name", None)
+    )
     vector_index = VectorIndex.from_index_file(index_dir, filename_prefix)
     graph_summary_info["vid_index"] = {
         "embed_dim": vector_index.index.d,
@@ -50,15 +57,20 @@ def get_graph_index_info():
 
 
 def clean_all_graph_index():
-    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
-    filename_prefix = get_filename_prefix(llm_settings.embedding_type,
-                                    getattr(Embeddings().get_embedding(), "model_name", None))
+    folder_name = get_index_folder_name(
+        huge_settings.graph_name, huge_settings.graph_space
+    )
+    filename_prefix = get_filename_prefix(
+        llm_settings.embedding_type,
+        getattr(Embeddings().get_embedding(), "model_name", None),
+    )
     VectorIndex.clean(
-        str(os.path.join(resource_path, folder_name, "graph_vids")),
-        filename_prefix)
+        str(os.path.join(resource_path, folder_name, "graph_vids")), filename_prefix
+    )
     VectorIndex.clean(
         str(os.path.join(resource_path, folder_name, "gremlin_examples")),
-        filename_prefix)
+        filename_prefix,
+    )
     log.warning("Clear graph index and text2gql index successfully!")
     gr.Info("Clear graph index and text2gql index successfully!")
 
@@ -71,7 +83,7 @@ def clean_all_graph_data():
 
 def parse_schema(schema: str, builder: KgBuilder) -> Optional[str]:
     schema = schema.strip()
-    if schema.startswith('{'):
+    if schema.startswith("{"):
         try:
             schema = json.loads(schema)
             builder.import_schema(from_user_defined=schema)
@@ -84,16 +96,20 @@ def parse_schema(schema: str, builder: KgBuilder) -> Optional[str]:
     return None
 
 
-def extract_graph(input_file, input_text, schema, example_prompt) -> str:
+def extract_graph_origin(input_file, input_text, schema, example_prompt) -> str:
     texts = read_documents(input_file, input_text)
-    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
+    builder = KgBuilder(
+        LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
+    )
     if not schema:
         return "ERROR: please input with correct schema/format."
 
     error_message = parse_schema(schema, builder)
     if error_message:
         return error_message
-    builder.chunk_split(texts, "document", "zh").extract_info(example_prompt, "property_graph")
+    builder.chunk_split(texts, "document", "zh").extract_info(
+        example_prompt, "property_graph"
+    )
 
     try:
         context = builder.run()
@@ -103,19 +119,40 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
                 {
                     "vertices": context["vertices"],
                     "edges": context["edges"],
-                    "warning": "The schema may not match the Doc"
+                    "warning": "The schema may not match the Doc",
                 },
                 ensure_ascii=False,
-                indent=2
+                indent=2,
             )
-        return json.dumps({"vertices": context["vertices"], "edges": context["edges"]}, ensure_ascii=False, indent=2)
+        return json.dumps(
+            {"vertices": context["vertices"], "edges": context["edges"]},
+            ensure_ascii=False,
+            indent=2,
+        )
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        log.error(e)
+        raise gr.Error(str(e))
+
+
+def extract_graph(input_file, input_text, schema, example_prompt) -> str:
+    texts = read_documents(input_file, input_text)
+    scheduler = SchedulerSingleton.get_instance()
+    if not schema:
+        return "ERROR: please input with correct schema/format."
+
+    try:
+        return scheduler.schedule_flow(
+            "graph_extract", schema, texts, example_prompt, "property_graph"
+        )
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
         raise gr.Error(str(e))
 
 
 def update_vid_embedding():
-    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
+    builder = KgBuilder(
+        LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
+    )
     builder.fetch_graph_data().build_vertex_id_semantic_index()
     log.debug("Operators: %s", builder.operators)
     try:
@@ -132,7 +169,9 @@ def import_graph_data(data: str, schema: str) -> Union[str, Dict[str, Any]]:
     try:
         data_json = json.loads(data.strip())
         log.debug("Import graph data: %s", data)
-        builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
+        builder = KgBuilder(
+            LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
+        )
         if schema:
             error_message = parse_schema(schema, builder)
             if error_message:
@@ -154,7 +193,7 @@ def build_schema(input_text, query_example, few_shot):
     context = {
         "raw_texts": [input_text] if input_text else [],
         "query_examples": [],
-        "few_shot_schema": {}
+        "few_shot_schema": {},
     }
 
     if few_shot:
@@ -170,7 +209,7 @@ def build_schema(input_text, query_example, few_shot):
             context["query_examples"] = [
                 {
                     "description": ex.get("description", ""),
-                    "gremlin": ex.get("gremlin", "")
+                    "gremlin": ex.get("gremlin", ""),
                 }
                 for ex in parsed_examples
                 if isinstance(ex, dict) and "description" in ex and "gremlin" in ex
@@ -178,7 +217,9 @@ def build_schema(input_text, query_example, few_shot):
         except json.JSONDecodeError as e:
             raise gr.Error(f"Query Examples is not in a valid JSON format: {e}") from e
 
-    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
+    builder = KgBuilder(
+        LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
+    )
     try:
         schema = builder.build_schema().run(context)
     except Exception as e:
