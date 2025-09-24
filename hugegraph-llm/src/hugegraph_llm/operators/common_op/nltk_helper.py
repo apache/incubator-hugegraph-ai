@@ -26,6 +26,7 @@ from nltk.corpus import stopwords
 
 from hugegraph_llm.config import resource_path
 from hugegraph_llm.utils.log import log
+from nltk.corpus import stopwords
 
 
 class NLTKHelper:
@@ -36,7 +37,9 @@ class NLTKHelper:
 
     def stopwords(self, lang: str = "chinese") -> List[str]:
         """Get stopwords."""
-        nltk.data.path.append(os.path.join(resource_path, "nltk_data"))
+        _hugegraph_source_dir = os.path.join(resource_path, "nltk_data")
+        if _hugegraph_source_dir not in nltk.data.path:
+            nltk.data.path.append(_hugegraph_source_dir)
         if self._stopwords.get(lang) is None:
             cache_dir = self.get_cache_dir()
             nltk_data_dir = os.environ.get("NLTK_DATA", cache_dir)
@@ -49,8 +52,8 @@ class NLTKHelper:
                 nltk.data.find("corpora/stopwords")
             except LookupError:
                 try:
-                    log.info("Download nltk package stopwords")
-                    nltk.download("stopwords", download_dir=nltk_data_dir)
+                    log.info("Start download nltk package stopwords")
+                    nltk.download("stopwords", download_dir=nltk_data_dir, quiet=False)
                     log.debug("NLTK package stopwords is already downloaded")
                 except (URLError, HTTPError, PermissionError) as e:
                     log.warning("Can't download package stopwords as error: %s", e)
@@ -61,7 +64,6 @@ class NLTKHelper:
             self._stopwords[lang] = []
 
         # final check
-
         final_stopwords = self._stopwords[lang]
         if final_stopwords is None:
             return []
@@ -69,11 +71,12 @@ class NLTKHelper:
         return self._stopwords[lang]
 
     def check_nltk_data(self):
+        _hugegraph_source_dir = os.path.join(resource_path, "nltk_data")
+        if _hugegraph_source_dir not in nltk.data.path:
+            nltk.data.path.append(_hugegraph_source_dir)
 
         cache_dir = self.get_cache_dir()
         nltk_data_dir = os.environ.get("NLTK_DATA", cache_dir)
-        nltk.data.path.append(os.path.join(resource_path, "nltk_data"))
-
         if nltk_data_dir not in nltk.data.path:
             nltk.data.path.append(nltk_data_dir)
 
@@ -91,8 +94,8 @@ class NLTKHelper:
                 required_packages[package] = True
             except LookupError:
                 try:
-                    log.info("Download nltk package %s", package)
-                    nltk.download(package, download_dir=nltk_data_dir)
+                    log.info("Start download nltk package %s", package)
+                    nltk.download(package, download_dir=nltk_data_dir, quiet=False)
                 except (URLError, HTTPError, PermissionError) as e:
                     log.warning("Can't download package %s as error: %s", package, e)
 
