@@ -36,6 +36,15 @@ from ..operators.kg_construction_task import KgBuilder
 
 
 def get_graph_index_info():
+    try:
+        scheduler = SchedulerSingleton.get_instance()
+        return scheduler.schedule_flow("get_graph_index_info")
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        log.error(e)
+        raise gr.Error(str(e))
+
+
+def get_graph_index_info_old():
     builder = KgBuilder(
         LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
     )
@@ -150,6 +159,15 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
 
 
 def update_vid_embedding():
+    scheduler = SchedulerSingleton.get_instance()
+    try:
+        return scheduler.schedule_flow("update_vid_embeddings")
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        log.error(e)
+        raise gr.Error(str(e))
+
+
+def update_vid_embedding_old():
     builder = KgBuilder(
         LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client()
     )
@@ -166,6 +184,18 @@ def update_vid_embedding():
 
 
 def import_graph_data(data: str, schema: str) -> Union[str, Dict[str, Any]]:
+    try:
+        scheduler = SchedulerSingleton.get_instance()
+        return scheduler.schedule_flow("import_graph_data", data, schema)
+    except Exception as e:  # pylint: disable=W0718
+        log.error(e)
+        traceback.print_exc()
+        # Note: can't use gr.Error here
+        gr.Warning(str(e) + " Please check the graph data format/type carefully.")
+        return data
+
+
+def import_graph_data_old(data: str, schema: str) -> Union[str, Dict[str, Any]]:
     try:
         data_json = json.loads(data.strip())
         log.debug("Import graph data: %s", data)
@@ -190,6 +220,16 @@ def import_graph_data(data: str, schema: str) -> Union[str, Dict[str, Any]]:
 
 
 def build_schema(input_text, query_example, few_shot):
+    scheduler = SchedulerSingleton.get_instance()
+    try:
+        return scheduler.schedule_flow(
+            "build_schema", input_text, query_example, few_shot
+        )
+    except (TypeError, ValueError) as e:
+        raise gr.Error(f"Schema generation failed: {e}")
+
+
+def build_schema_old(input_text, query_example, few_shot):
     context = {
         "raw_texts": [input_text] if input_text else [],
         "query_examples": [],

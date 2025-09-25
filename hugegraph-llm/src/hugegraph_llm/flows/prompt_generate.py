@@ -14,42 +14,50 @@
 #  limitations under the License.
 
 from hugegraph_llm.flows.common import BaseFlow
-from hugegraph_llm.nodes.document_node.chunk_split import ChunkSplitNode
-from hugegraph_llm.nodes.index_node.build_vector_index import BuildVectorIndexNode
+from hugegraph_llm.nodes.llm_node.prompt_generate import PromptGenerateNode
 from hugegraph_llm.state.ai_state import WkFlowInput
 
-import json
 from PyCGraph import GPipeline
 
 from hugegraph_llm.state.ai_state import WkFlowState
 
 
-class BuildVectorIndexFlow(BaseFlow):
+class PromptGenerateFlow(BaseFlow):
     def __init__(self):
         pass
 
-    def prepare(self, prepared_input: WkFlowInput, texts):
-        prepared_input.texts = texts
-        prepared_input.language = "zh"
-        prepared_input.split_type = "paragraph"
+    def prepare(self, prepared_input: WkFlowInput, source_text, scenario, example_name):
+        """
+        Prepare input data for PromptGenerate workflow
+        """
+        prepared_input.source_text = source_text
+        prepared_input.scenario = scenario
+        prepared_input.example_name = example_name
         return
 
-    def build_flow(self, texts):
+    def build_flow(self, source_text, scenario, example_name):
+        """
+        Build the PromptGenerate workflow
+        """
         pipeline = GPipeline()
-        # prepare for workflow input
+        # Prepare workflow input
         prepared_input = WkFlowInput()
-        self.prepare(prepared_input, texts)
+        self.prepare(prepared_input, source_text, scenario, example_name)
 
         pipeline.createGParam(prepared_input, "wkflow_input")
         pipeline.createGParam(WkFlowState(), "wkflow_state")
 
-        chunk_split_node = ChunkSplitNode()
-        build_vector_node = BuildVectorIndexNode()
-        pipeline.registerGElement(chunk_split_node, set(), "chunk_split")
-        pipeline.registerGElement(build_vector_node, {chunk_split_node}, "build_vector")
+        # Create PromptGenerate node
+        prompt_generate_node = PromptGenerateNode()
+        pipeline.registerGElement(prompt_generate_node, set(), "prompt_generate")
 
         return pipeline
 
     def post_deal(self, pipeline=None):
+        """
+        Process the execution result of PromptGenerate workflow
+        """
         res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
-        return json.dumps(res, ensure_ascii=False, indent=2)
+        return res.get(
+            "generated_extract_prompt", "Generation failed. Please check the logs."
+        )

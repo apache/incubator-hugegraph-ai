@@ -19,8 +19,6 @@
 from typing import Literal, Dict, Any, Optional, Union, List
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from hugegraph_llm.operators.util import init_context
-from PyCGraph import GNode, CStatus
 
 # Constants
 LANGUAGE_ZH = "zh"
@@ -28,62 +26,6 @@ LANGUAGE_EN = "en"
 SPLIT_TYPE_DOCUMENT = "document"
 SPLIT_TYPE_PARAGRAPH = "paragraph"
 SPLIT_TYPE_SENTENCE = "sentence"
-
-
-class ChunkSplitNode(GNode):
-    def init(self):
-        return init_context(self)
-
-    def node_init(self):
-        if (
-            self.wk_input.texts is None
-            or self.wk_input.language is None
-            or self.wk_input.split_type is None
-        ):
-            return CStatus(-1, "Error occurs when prepare for workflow input")
-        texts = self.wk_input.texts
-        language = self.wk_input.language
-        split_type = self.wk_input.split_type
-        if isinstance(texts, str):
-            texts = [texts]
-        self.texts = texts
-        self.separators = self._get_separators(language)
-        self.text_splitter = self._get_text_splitter(split_type)
-        return CStatus()
-
-    def _get_separators(self, language: str) -> List[str]:
-        if language == LANGUAGE_ZH:
-            return ["\n\n", "\n", "。", "，", ""]
-        if language == LANGUAGE_EN:
-            return ["\n\n", "\n", ".", ",", " ", ""]
-        raise ValueError("language must be zh or en")
-
-    def _get_text_splitter(self, split_type: str):
-        if split_type == SPLIT_TYPE_DOCUMENT:
-            return lambda text: [text]
-        if split_type == SPLIT_TYPE_PARAGRAPH:
-            return RecursiveCharacterTextSplitter(
-                chunk_size=500, chunk_overlap=30, separators=self.separators
-            ).split_text
-        if split_type == SPLIT_TYPE_SENTENCE:
-            return RecursiveCharacterTextSplitter(
-                chunk_size=50, chunk_overlap=0, separators=self.separators
-            ).split_text
-        raise ValueError("Type must be document, paragraph or sentence")
-
-    def run(self):
-        sts = self.node_init()
-        if sts.isErr():
-            return sts
-        all_chunks = []
-        for text in self.texts:
-            chunks = self.text_splitter(text)
-            all_chunks.extend(chunks)
-
-        self.context.lock()
-        self.context.chunks = all_chunks
-        self.context.unlock()
-        return CStatus()
 
 
 class ChunkSplit:
