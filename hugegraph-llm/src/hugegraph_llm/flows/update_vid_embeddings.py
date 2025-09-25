@@ -13,43 +13,35 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from hugegraph_llm.flows.common import BaseFlow
-from hugegraph_llm.nodes.document_node.chunk_split import ChunkSplitNode
-from hugegraph_llm.nodes.index_node.build_vector_index import BuildVectorIndexNode
-from hugegraph_llm.state.ai_state import WkFlowInput
-
-import json
-from PyCGraph import GPipeline
-
+from PyCGraph import CStatus, GPipeline
+from hugegraph_llm.flows.common import BaseFlow, WkFlowInput
+from hugegraph_llm.nodes.hugegraph_node.fetch_graph_data import FetchGraphDataNode
+from hugegraph_llm.nodes.index_node.build_semantic_index import BuildSemanticIndexNode
 from hugegraph_llm.state.ai_state import WkFlowState
 
 
-class BuildVectorIndexFlow(BaseFlow):
-    def __init__(self):
-        pass
+class UpdateVidEmbeddingsFlows(BaseFlow):
+    def prepare(self, prepared_input: WkFlowInput):
+        return CStatus()
 
-    def prepare(self, prepared_input: WkFlowInput, texts):
-        prepared_input.texts = texts
-        prepared_input.language = "zh"
-        prepared_input.split_type = "paragraph"
-        return
-
-    def build_flow(self, texts):
+    def build_flow(self):
         pipeline = GPipeline()
-        # prepare for workflow input
         prepared_input = WkFlowInput()
-        self.prepare(prepared_input, texts)
+        # prepare input data
+        self.prepare(prepared_input)
 
         pipeline.createGParam(prepared_input, "wkflow_input")
         pipeline.createGParam(WkFlowState(), "wkflow_state")
 
-        chunk_split_node = ChunkSplitNode()
-        build_vector_node = BuildVectorIndexNode()
-        pipeline.registerGElement(chunk_split_node, set(), "chunk_split")
-        pipeline.registerGElement(build_vector_node, {chunk_split_node}, "build_vector")
+        fetch_node = FetchGraphDataNode()
+        build_node = BuildSemanticIndexNode()
+        pipeline.registerGElement(fetch_node, set(), "fetch_node")
+        pipeline.registerGElement(build_node, {fetch_node}, "build_node")
 
         return pipeline
 
-    def post_deal(self, pipeline=None):
+    def post_deal(self, pipeline):
         res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
-        return json.dumps(res, ensure_ascii=False, indent=2)
+        removed_num = res.get("removed_vid_vector_num", 0)
+        added_num = res.get("added_vid_vector_num", 0)
+        return f"Removed {removed_num} vectors, added {added_num} vectors."
