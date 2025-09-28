@@ -26,7 +26,6 @@ from nltk.corpus import stopwords
 
 from hugegraph_llm.config import resource_path
 from hugegraph_llm.utils.log import log
-from nltk.corpus import stopwords
 
 
 class NLTKHelper:
