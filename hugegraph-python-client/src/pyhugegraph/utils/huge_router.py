@@ -81,9 +81,7 @@ def register(method: str, path: str) -> Callable:
             route = RouterRegistry().routers.get(func.__qualname__)
 
             if route.request_func is None:
-                route.request_func = functools.partial(
-                    self.session.request, method=method
-                )
+                route.request_func = functools.partial(self.session.request, method=method)
 
             return func(self, *args, **kwargs)
 
@@ -134,9 +132,7 @@ def http(method: str, path: str) -> Callable:
                 formatted_path = path
 
             # Use functools.partial to create a partial function for making requests
-            make_request = functools.partial(
-                self.session.request, formatted_path, method
-            )
+            make_request = functools.partial(self.session.request, formatted_path, method)
             # Store the partial function on the instance
             setattr(self, f"_{func.__name__}_request", make_request)
 

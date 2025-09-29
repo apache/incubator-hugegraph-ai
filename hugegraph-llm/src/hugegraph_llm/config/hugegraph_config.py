@@ -21,6 +21,7 @@ from .models import BaseConfig
 
 class HugeGraphConfig(BaseConfig):
     """HugeGraph settings"""
+
     # graph server config
     graph_url: Optional[str] = "127.0.0.1:8080"
     graph_name: Optional[str] = "hugegraph"

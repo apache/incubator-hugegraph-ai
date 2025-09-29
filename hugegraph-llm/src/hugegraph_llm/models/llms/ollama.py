@@ -28,6 +28,7 @@ from hugegraph_llm.utils.log import log
 
 class OllamaClient(BaseLLM):
     """LLM wrapper should take in a prompt and return a string."""
+
     def __init__(self, model: str, host: str = "127.0.0.1", port: int = 11434, **kwargs):
         self.model = model
         self.client = ollama.Client(host=f"http://{host}:{port}", **kwargs)
@@ -49,9 +50,9 @@ class OllamaClient(BaseLLM):
                 messages=messages,
             )
             usage = {
-                "prompt_tokens": response['prompt_eval_count'],
-                "completion_tokens": response['eval_count'],
-                "total_tokens": response['prompt_eval_count'] + response['eval_count'],
+                "prompt_tokens": response["prompt_eval_count"],
+                "completion_tokens": response["eval_count"],
+                "total_tokens": response["prompt_eval_count"] + response["eval_count"],
             }
             log.info("Token usage: %s", json.dumps(usage))
             return response["message"]["content"]
@@ -61,9 +62,9 @@ class OllamaClient(BaseLLM):
 
     @retry(tries=3, delay=1)
     async def agenerate(
-            self,
-            messages: Optional[List[Dict[str, Any]]] = None,
-            prompt: Optional[str] = None,
+        self,
+        messages: Optional[List[Dict[str, Any]]] = None,
+        prompt: Optional[str] = None,
     ) -> str:
         """Comment"""
         if messages is None:
@@ -75,9 +76,9 @@ class OllamaClient(BaseLLM):
                 messages=messages,
             )
             usage = {
-                "prompt_tokens": response['prompt_eval_count'],
-                "completion_tokens": response['eval_count'],
-                "total_tokens": response['prompt_eval_count'] + response['eval_count'],
+                "prompt_tokens": response["prompt_eval_count"],
+                "completion_tokens": response["eval_count"],
+                "total_tokens": response["prompt_eval_count"] + response["eval_count"],
             }
             log.info("Token usage: %s", json.dumps(usage))
             return response["message"]["content"]
@@ -96,11 +97,7 @@ class OllamaClient(BaseLLM):
             assert prompt is not None, "Messages or prompt must be provided."
             messages = [{"role": "user", "content": prompt}]
 
-        for chunk in self.client.chat(
-            model=self.model,
-            messages=messages,
-            stream=True
-        ):
+        for chunk in self.client.chat(model=self.model, messages=messages, stream=True):
             if not chunk["message"]:
                 log.debug("Received empty chunk['message'] in streaming chunk: %s", chunk)
                 continue
@@ -122,9 +119,7 @@ class OllamaClient(BaseLLM):
 
         try:
             async_generator = await self.async_client.chat(
-                model=self.model,
-                messages=messages,
-                stream=True
+                model=self.model, messages=messages, stream=True
             )
             async for chunk in async_generator:
                 token = chunk.get("message", {}).get("content", "")
@@ -134,7 +129,6 @@ class OllamaClient(BaseLLM):
         except Exception as e:
             print(f"Retrying LLM call {e}")
             raise e
-
 
     def num_tokens_from_string(
         self,

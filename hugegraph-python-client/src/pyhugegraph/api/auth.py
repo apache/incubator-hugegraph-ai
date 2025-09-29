@@ -84,9 +84,7 @@ class AuthManager(HugeParamsBase):
         return self._invoke_request(data=json.dumps(data))
 
     @router.http("DELETE", "auth/groups/{group_id}")
-    def delete_group(
-        self, group_id  # pylint: disable=unused-argument
-    ) -> Optional[Dict]:
+    def delete_group(self, group_id) -> Optional[Dict]:  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("PUT", "auth/groups/{group_id}")
@@ -116,9 +114,7 @@ class AuthManager(HugeParamsBase):
         )
 
     @router.http("DELETE", "auth/accesses/{access_id}")
-    def revoke_accesses(
-        self, access_id  # pylint: disable=unused-argument
-    ) -> Optional[Dict]:
+    def revoke_accesses(self, access_id) -> Optional[Dict]:  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("PUT", "auth/accesses/{access_id}")
@@ -130,9 +126,7 @@ class AuthManager(HugeParamsBase):
         return self._invoke_request(data=json.dumps(data))
 
     @router.http("GET", "auth/accesses/{access_id}")
-    def get_accesses(
-        self, access_id  # pylint: disable=unused-argument
-    ) -> Optional[Dict]:
+    def get_accesses(self, access_id) -> Optional[Dict]:  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("GET", "auth/accesses")
@@ -205,9 +199,7 @@ class AuthManager(HugeParamsBase):
         return self._invoke_request(data=json.dumps(data))
 
     @router.http("GET", "auth/belongs/{belong_id}")
-    def get_belong(
-        self, belong_id  # pylint: disable=unused-argument
-    ) -> Optional[Dict]:
+    def get_belong(self, belong_id) -> Optional[Dict]:  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("GET", "auth/belongs")

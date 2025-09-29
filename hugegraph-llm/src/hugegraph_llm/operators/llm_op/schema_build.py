@@ -34,7 +34,9 @@ class SchemaBuilder:
     ):
         self.llm = llm or LLMs().get_chat_llm()
         # TODO: use a basic format for it
-        self.schema_prompt = schema_prompt or """
+        self.schema_prompt = (
+            schema_prompt
+            or """
             You are a Graph Schema Generator for Apache HugeGraph.
             Based on the following three parts of content, output a Schema JSON that complies with HugeGraph specifications:
 
@@ -53,6 +55,7 @@ class SchemaBuilder:
             - Ensure the schema follows HugeGraph specifications
             - Do not include comments or extra fields.
         """
+        )
 
     def _format_raw_texts(self, raw_texts: List[str]) -> str:
         return "\n".join([f"- {text}" for text in raw_texts])
@@ -86,18 +89,15 @@ class SchemaBuilder:
         self,
         raw_texts: List[str],
         query_examples: List[Dict[str, str]],
-        few_shot_schema: Dict[str, Any]
+        few_shot_schema: Dict[str, Any],
     ) -> str:
         return self.schema_prompt.format(
             raw_texts=self._format_raw_texts(raw_texts),
             query_examples=self._format_query_examples(query_examples),
-            few_shot_schema=self._format_few_shot_schema(few_shot_schema)
+            few_shot_schema=self._format_few_shot_schema(few_shot_schema),
         )
 
-    def run(
-        self,
-        context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """Generate schema from context containing raw_texts, query_examples and few_shot_schema.
 
         Args:

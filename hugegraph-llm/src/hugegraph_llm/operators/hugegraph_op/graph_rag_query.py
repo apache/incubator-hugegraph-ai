@@ -196,8 +196,8 @@ class GraphRAGQuery:
                 log.debug("Kneighbor gremlin query: %s", gremlin_query)
                 paths.extend(self._client.gremlin().exec(gremlin=gremlin_query)["data"])
 
-            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_graph_query_result(
-                query_paths=paths
+            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = (
+                self._format_graph_query_result(query_paths=paths)
             )
 
             # TODO: we may need to optimize the logic here with global deduplication (may lack some single vertex)
@@ -220,17 +220,21 @@ class GraphRAGQuery:
                 max_deep=self._max_deep,
                 max_items=self._max_items,
             )
-            log.warning("Unable to find vid, downgraded to property query, please confirm if it meets expectation.")
+            log.warning(
+                "Unable to find vid, downgraded to property query, please confirm if it meets expectation."
+            )
 
             paths: List[Any] = self._client.gremlin().exec(gremlin=gremlin_query)["data"]
-            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = self._format_graph_query_result(
-                query_paths=paths
+            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = (
+                self._format_graph_query_result(query_paths=paths)
             )
 
         context["graph_result"] = list(graph_chain_knowledge)
         if context["graph_result"]:
             context["graph_result_flag"] = 0
-            context["vertex_degree_list"] = [list(vertex_degree) for vertex_degree in vertex_degree_list]
+            context["vertex_degree_list"] = [
+                list(vertex_degree) for vertex_degree in vertex_degree_list
+            ]
             context["knowledge_with_degree"] = knowledge_with_degree
             context["graph_context_head"] = (
                 f"The following are graph knowledge in {self._max_deep} depth, e.g:\n"
@@ -272,7 +276,9 @@ class GraphRAGQuery:
             knowledge.add(node_str)
         return knowledge
 
-    def _format_graph_query_result(self, query_paths) -> Tuple[Set[str], List[Set[str]], Dict[str, List[str]]]:
+    def _format_graph_query_result(
+        self, query_paths
+    ) -> Tuple[Set[str], List[Set[str]], Dict[str, List[str]]]:
         use_id_to_match = self._prop_to_match is None
         subgraph = set()
         subgraph_with_degree = {}
@@ -282,7 +288,9 @@ class GraphRAGQuery:
 
         for path in query_paths:
             # 1. Process each path
-            path_str, vertex_with_degree = self._process_path(path, use_id_to_match, v_cache, e_cache)
+            path_str, vertex_with_degree = self._process_path(
+                path, use_id_to_match, v_cache, e_cache
+            )
             subgraph.add(path_str)
             subgraph_with_degree[path_str] = vertex_with_degree
             # 2. Update vertex degree list
@@ -291,7 +299,11 @@ class GraphRAGQuery:
         return subgraph, vertex_degree_list, subgraph_with_degree
 
     def _process_path(
-        self, path: Any, use_id_to_match: bool, v_cache: Set[str], e_cache: Set[Tuple[str, str, str]]
+        self,
+        path: Any,
+        use_id_to_match: bool,
+        v_cache: Set[str],
+        e_cache: Set[Tuple[str, str, str]],
     ) -> Tuple[str, List[str]]:
         flat_rel = ""
         raw_flat_rel = path["objects"]
@@ -306,7 +318,14 @@ class GraphRAGQuery:
             if i % 2 == 0:
                 # Process each vertex
                 flat_rel, prior_edge_str_len, depth = self._process_vertex(
-                    item, flat_rel, node_cache, prior_edge_str_len, depth, nodes_with_degree, use_id_to_match, v_cache
+                    item,
+                    flat_rel,
+                    node_cache,
+                    prior_edge_str_len,
+                    depth,
+                    nodes_with_degree,
+                    use_id_to_match,
+                    v_cache,
                 )
             else:
                 # Process each edge
@@ -333,7 +352,9 @@ class GraphRAGQuery:
             return flat_rel, prior_edge_str_len, depth
 
         node_cache.add(matched_str)
-        props_str = ", ".join(f"{k}: {self._limit_property_query(v, 'v')}" for k, v in item["props"].items() if v)
+        props_str = ", ".join(
+            f"{k}: {self._limit_property_query(v, 'v')}" for k, v in item["props"].items() if v
+        )
 
         # TODO: we may remove label id or replace with label name
         if matched_str in v_cache:
@@ -356,10 +377,14 @@ class GraphRAGQuery:
         use_id_to_match: bool,
         e_cache: Set[Tuple[str, str, str]],
     ) -> Tuple[str, int]:
-        props_str = ", ".join(f"{k}: {self._limit_property_query(v, 'e')}" for k, v in item["props"].items() if v)
+        props_str = ", ".join(
+            f"{k}: {self._limit_property_query(v, 'e')}" for k, v in item["props"].items() if v
+        )
         props_str = f"{{{props_str}}}" if props_str else ""
         prev_matched_str = (
-            raw_flat_rel[i - 1]["id"] if use_id_to_match else (raw_flat_rel)[i - 1]["props"][self._prop_to_match]
+            raw_flat_rel[i - 1]["id"]
+            if use_id_to_match
+            else (raw_flat_rel)[i - 1]["props"][self._prop_to_match]
         )
 
         edge_key = (item["inV"], item["label"], item["outV"])
@@ -369,12 +394,16 @@ class GraphRAGQuery:
         else:
             edge_label = item["label"]
 
-        edge_str = f"--[{edge_label}]-->" if item["outV"] == prev_matched_str else f"<--[{edge_label}]--"
+        edge_str = (
+            f"--[{edge_label}]-->" if item["outV"] == prev_matched_str else f"<--[{edge_label}]--"
+        )
         path_str += edge_str
         prior_edge_str_len = len(edge_str)
         return path_str, prior_edge_str_len
 
-    def _update_vertex_degree_list(self, vertex_degree_list: List[Set[str]], nodes_with_degree: List[str]) -> None:
+    def _update_vertex_degree_list(
+        self, vertex_degree_list: List[Set[str]], nodes_with_degree: List[str]
+    ) -> None:
         for depth, node_str in enumerate(nodes_with_degree):
             if depth >= len(vertex_degree_list):
                 vertex_degree_list.append(set())
@@ -384,8 +413,8 @@ class GraphRAGQuery:
         schema = self._get_graph_schema()
         vertex_props_str, edge_props_str = schema.split("\n")[:2]
         # TODO: rename to vertex (also need update in the schema)
-        vertex_props_str = vertex_props_str[len("Vertex properties: "):].strip("[").strip("]")
-        edge_props_str = edge_props_str[len("Edge properties: "):].strip("[").strip("]")
+        vertex_props_str = vertex_props_str[len("Vertex properties: ") :].strip("[").strip("]")
+        edge_props_str = edge_props_str[len("Edge properties: ") :].strip("[").strip("]")
         vertex_labels = self._extract_label_names(vertex_props_str)
         edge_labels = self._extract_label_names(edge_props_str)
         return vertex_labels, edge_labels

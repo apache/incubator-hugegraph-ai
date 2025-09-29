@@ -24,15 +24,16 @@ from hugegraph_llm.config import huge_settings
 
 class GraphIndex:
     def __init__(
-            self,
-            graph_url: Optional[str] = huge_settings.graph_url,
-            graph_name: Optional[str] = huge_settings.graph_name,
-            graph_user: Optional[str] = huge_settings.graph_user,
-            graph_pwd: Optional[str] = huge_settings.graph_pwd,
-            graph_space: Optional[str] = huge_settings.graph_space,
+        self,
+        graph_url: Optional[str] = huge_settings.graph_url,
+        graph_name: Optional[str] = huge_settings.graph_name,
+        graph_user: Optional[str] = huge_settings.graph_user,
+        graph_pwd: Optional[str] = huge_settings.graph_pwd,
+        graph_space: Optional[str] = huge_settings.graph_space,
     ):
-        self.client = PyHugeClient(url=graph_url, graph=graph_name, user=graph_user, pwd=graph_pwd,
-                                   graphspace=graph_space)
+        self.client = PyHugeClient(
+            url=graph_url, graph=graph_name, user=graph_user, pwd=graph_pwd, graphspace=graph_space
+        )
 
     def clear_graph(self):
         self.client.gremlin().exec("g.V().drop()")

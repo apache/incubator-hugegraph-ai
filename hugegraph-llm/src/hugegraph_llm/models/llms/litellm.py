@@ -51,7 +51,7 @@ class LiteLLMClient(BaseLLM):
     @retry(
         stop=stop_after_attempt(2),
         wait=wait_exponential(multiplier=1, min=2, max=5),
-        retry=retry_if_exception_type((RateLimitError, BudgetExceededError, APIError))
+        retry=retry_if_exception_type((RateLimitError, BudgetExceededError, APIError)),
     )
     def generate(
         self,
@@ -80,12 +80,12 @@ class LiteLLMClient(BaseLLM):
     @retry(
         stop=stop_after_attempt(2),
         wait=wait_exponential(multiplier=1, min=2, max=5),
-        retry=retry_if_exception_type((RateLimitError, BudgetExceededError, APIError))
+        retry=retry_if_exception_type((RateLimitError, BudgetExceededError, APIError)),
     )
     async def agenerate(
-            self,
-            messages: Optional[List[Dict[str, Any]]] = None,
-            prompt: Optional[str] = None,
+        self,
+        messages: Optional[List[Dict[str, Any]]] = None,
+        prompt: Optional[str] = None,
     ) -> str:
         """Generate a response to the query messages/prompt asynchronously."""
         if messages is None:

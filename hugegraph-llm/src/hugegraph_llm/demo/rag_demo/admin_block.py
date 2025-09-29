@@ -30,7 +30,7 @@ async def log_stream(log_path: str, lines: int = 125):
     Stream the content of a log file like `tail -f`.
     """
     try:
-        with open(log_path, 'r', encoding='utf-8') as file:
+        with open(log_path, "r", encoding="utf-8") as file:
             buffer = deque(file, maxlen=lines)
             for line in buffer:
                 yield line  # Yield the initial lines
@@ -50,8 +50,8 @@ async def log_stream(log_path: str, lines: int = 125):
 def read_llm_server_log(lines=250):
     log_path = "logs/llm-server.log"
     try:
-        with open(log_path, "r", encoding='utf-8', errors="replace") as f:
-            return ''.join(deque(f, maxlen=lines))
+        with open(log_path, "r", encoding="utf-8", errors="replace") as f:
+            return "".join(deque(f, maxlen=lines))
     except FileNotFoundError:
         log.critical("Log file not found: %s", log_path)
         return "LLM Server log file not found."
@@ -61,10 +61,10 @@ def read_llm_server_log(lines=250):
 def clear_llm_server_log():
     log_path = "logs/llm-server.log"
     try:
-        with open(log_path, "w", encoding='utf-8') as f:
+        with open(log_path, "w", encoding="utf-8") as f:
             f.truncate(0)  # Clear the contents of the file
         return "LLM Server log cleared."
-    except Exception as e: #pylint: disable=W0718
+    except Exception as e:  # pylint: disable=W0718
         log.error("An error occurred while clearing the log: %s", str(e))
         return "Failed to clear LLM Server log."
 
@@ -84,7 +84,7 @@ def check_password(password, request: Request = None):
             gr.update(visible=True),
             gr.update(visible=True),
             gr.update(visible=True),
-            gr.update(visible=False)
+            gr.update(visible=False),
         )
     # Log the failed attempt with IP address
     log.error("Incorrect password attempt from IP: %s", client_ip)
@@ -93,7 +93,7 @@ def check_password(password, request: Request = None):
         gr.update(visible=False),
         gr.update(visible=False),
         gr.update(visible=False),
-        gr.update(value="Incorrect password. Access denied.", visible=True)
+        gr.update(value="Incorrect password. Access denied.", visible=True),
     )
 
 
@@ -110,10 +110,7 @@ def create_admin_block():
 
         # Error message box, initially hidden
         error_message = gr.Textbox(
-            label="",
-            visible=False,
-            interactive=False,
-            elem_classes="error-message"
+            label="", visible=False, interactive=False, elem_classes="error-message"
         )
 
         # Button to submit password
@@ -136,26 +133,32 @@ def create_admin_block():
                         clear_llm_server_button = gr.Button("Clear LLM Server Log", visible=False)
                     with gr.Column():
                         # Button to refresh LLM Server log manually
-                        refresh_llm_server_button = gr.Button("Refresh LLM Server Log", visible=False,
-                                                              variant="primary")
+                        refresh_llm_server_button = gr.Button(
+                            "Refresh LLM Server Log", visible=False, variant="primary"
+                        )
 
         # Define what happens when the password is submitted
-        submit_button.click( #pylint: disable=E1101
+        submit_button.click(  # pylint: disable=E1101
             fn=check_password,
             inputs=[password_input],
-            outputs=[llm_server_log_output, hidden_row, clear_llm_server_button,
-                     refresh_llm_server_button, error_message],
+            outputs=[
+                llm_server_log_output,
+                hidden_row,
+                clear_llm_server_button,
+                refresh_llm_server_button,
+                error_message,
+            ],
         )
 
         # Define what happens when the Clear LLM Server Log button is clicked
-        clear_llm_server_button.click( #pylint: disable=E1101
+        clear_llm_server_button.click(  # pylint: disable=E1101
             fn=clear_llm_server_log,
             inputs=[],
             outputs=[llm_server_log_output],
         )
 
         # Define what happens when the Refresh LLM Server Log button is clicked
-        refresh_llm_server_button.click( #pylint: disable=E1101
+        refresh_llm_server_button.click(  # pylint: disable=E1101
             fn=read_llm_server_log,
             inputs=[],
             outputs=[llm_server_log_output],

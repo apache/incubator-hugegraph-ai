@@ -25,6 +25,7 @@ from hugegraph_llm.flows.get_graph_index_info import GetGraphIndexInfoFlow
 from hugegraph_llm.flows.build_schema import BuildSchemaFlow
 from hugegraph_llm.flows.prompt_generate import PromptGenerateFlow
 from hugegraph_llm.utils.log import log
+from hugegraph_llm.flows.text2gremlin import Text2GremlinFlow
 
 
 class Scheduler:
@@ -62,6 +63,10 @@ class Scheduler:
             "manager": GPipelineManager(),
             "flow": PromptGenerateFlow(),
         }
+        self.pipeline_pool["text2gremlin"] = {
+            "manager": GPipelineManager(),
+            "flow": Text2GremlinFlow(),
+        }
         self.max_pipeline = max_pipeline
 
     # TODO: Implement Agentic Workflow
@@ -96,7 +101,9 @@ class Scheduler:
             flow.prepare(prepared_input, *args, **kwargs)
             status = pipeline.run()
             if status.isErr():
-                raise RuntimeError(f"Error in flow execution {status.getInfo()}")
+                error_msg = f"Error in flow execution {status.getInfo()}"
+                log.error(error_msg)
+                raise RuntimeError(error_msg)
             res = flow.post_deal(pipeline)
             manager.release(pipeline)
             return res

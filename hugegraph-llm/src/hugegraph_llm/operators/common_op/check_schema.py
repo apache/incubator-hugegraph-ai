@@ -59,12 +59,8 @@ class CheckSchema:
         check_type(schema, dict, "Input data is not a dictionary.")
         if "vertexlabels" not in schema or "edgelabels" not in schema:
             log_and_raise("Input data does not contain 'vertexlabels' or 'edgelabels'.")
-        check_type(
-            schema["vertexlabels"], list, "'vertexlabels' in input data is not a list."
-        )
-        check_type(
-            schema["edgelabels"], list, "'edgelabels' in input data is not a list."
-        )
+        check_type(schema["vertexlabels"], list, "'vertexlabels' in input data is not a list.")
+        check_type(schema["edgelabels"], list, "'edgelabels' in input data is not a list.")
 
     def _process_property_labels(self, schema: Dict[str, Any]) -> (list, set):
         property_labels = schema.get("propertykeys", [])
@@ -82,19 +78,13 @@ class CheckSchema:
         for vertex_label in schema["vertexlabels"]:
             self._validate_vertex_label(vertex_label)
             properties = vertex_label["properties"]
-            primary_keys = self._process_keys(
-                vertex_label, "primary_keys", properties[:1]
-            )
+            primary_keys = self._process_keys(vertex_label, "primary_keys", properties[:1])
             if len(primary_keys) == 0:
                 log_and_raise(f"'primary_keys' of {vertex_label['name']} is empty.")
             vertex_label["primary_keys"] = primary_keys
-            nullable_keys = self._process_keys(
-                vertex_label, "nullable_keys", properties[1:]
-            )
+            nullable_keys = self._process_keys(vertex_label, "nullable_keys", properties[1:])
             vertex_label["nullable_keys"] = nullable_keys
-            self._add_missing_properties(
-                properties, property_labels, property_label_set
-            )
+            self._add_missing_properties(properties, property_labels, property_label_set)
 
     def _process_edge_labels(
         self, schema: Dict[str, Any], property_labels: list, property_label_set: set
@@ -102,17 +92,13 @@ class CheckSchema:
         for edge_label in schema["edgelabels"]:
             self._validate_edge_label(edge_label)
             properties = edge_label.get("properties", [])
-            self._add_missing_properties(
-                properties, property_labels, property_label_set
-            )
+            self._add_missing_properties(properties, property_labels, property_label_set)
 
     def _validate_vertex_label(self, vertex_label: Dict[str, Any]) -> None:
         check_type(vertex_label, dict, "VertexLabel in input data is not a dictionary.")
         if "name" not in vertex_label:
             log_and_raise("VertexLabel in input data does not contain 'name'.")
-        check_type(
-            vertex_label["name"], str, "'name' in vertex_label is not of correct type."
-        )
+        check_type(vertex_label["name"], str, "'name' in vertex_label is not of correct type.")
         if "properties" not in vertex_label:
             log_and_raise("VertexLabel in input data does not contain 'properties'.")
         check_type(
@@ -133,9 +119,7 @@ class CheckSchema:
             log_and_raise(
                 "EdgeLabel in input data does not contain 'name', 'source_label', 'target_label'."
             )
-        check_type(
-            edge_label["name"], str, "'name' in edge_label is not of correct type."
-        )
+        check_type(edge_label["name"], str, "'name' in edge_label is not of correct type.")
         check_type(
             edge_label["source_label"],
             str,
@@ -147,13 +131,9 @@ class CheckSchema:
             "'target_label' in edge_label is not of correct type.",
         )
 
-    def _process_keys(
-        self, label: Dict[str, Any], key_type: str, default_keys: list
-    ) -> list:
+    def _process_keys(self, label: Dict[str, Any], key_type: str, default_keys: list) -> list:
         keys = label.get(key_type, default_keys)
-        check_type(
-            keys, list, f"'{key_type}' in {label['name']} is not of correct type."
-        )
+        check_type(keys, list, f"'{key_type}' in {label['name']} is not of correct type.")
         new_keys = [key for key in keys if key in label["properties"]]
         return new_keys
 

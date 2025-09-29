@@ -53,7 +53,7 @@ class PyHugeClient:
         user: str,
         pwd: str,
         graphspace: Optional[str] = None,
-        timeout: Optional[tuple[float, float]] = None
+        timeout: Optional[tuple[float, float]] = None,
     ):
         self.cfg = HGraphConfig(url, user, pwd, graph, graphspace, timeout or (0.5, 15.0))
 

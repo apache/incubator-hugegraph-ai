@@ -27,9 +27,7 @@ class GraphExtractFlow(BaseFlow):
     def __init__(self):
         pass
 
-    def prepare(
-        self, prepared_input: WkFlowInput, schema, texts, example_prompt, extract_type
-    ):
+    def prepare(self, prepared_input: WkFlowInput, schema, texts, example_prompt, extract_type):
         # prepare input data
         prepared_input.texts = texts
         prepared_input.language = "zh"

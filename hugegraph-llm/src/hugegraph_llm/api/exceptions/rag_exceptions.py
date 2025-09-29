@@ -21,7 +21,9 @@ from hugegraph_llm.api.models.rag_response import RAGResponse
 
 class ExternalException(HTTPException):
     def __init__(self):
-        super().__init__(status_code=400, detail="Connect failed with error code -1, please check the input.")
+        super().__init__(
+            status_code=400, detail="Connect failed with error code -1, please check the input."
+        )
 
 
 class ConnectionFailedException(HTTPException):

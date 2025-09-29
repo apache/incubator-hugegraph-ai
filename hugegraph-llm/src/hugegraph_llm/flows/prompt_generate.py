@@ -58,6 +58,4 @@ class PromptGenerateFlow(BaseFlow):
         Process the execution result of PromptGenerate workflow
         """
         res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
-        return res.get(
-            "generated_extract_prompt", "Generation failed. Please check the logs."
-        )
+        return res.get("generated_extract_prompt", "Generation failed. Please check the logs.")

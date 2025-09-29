@@ -151,6 +151,7 @@ class KeywordExtract:
         response: str,
         lowercase: bool = True,
         start_token: str = "",
+<<<<<<< HEAD
     ) -> Dict[str, float]:
 
         results = {}
@@ -181,4 +182,27 @@ class KeywordExtract:
                 except (ValueError, AttributeError) as e:
                     log.warning("Failed to parse item '%s': %s", item, e)
                     continue
+=======
+    ) -> Set[str]:
+        keywords = []
+        # use re.escape(start_token) if start_token contains special chars like */&/^ etc.
+        matches = re.findall(rf"{start_token}[^\n]+\n?", response)
+
+        for match in matches:
+            match = match[len(start_token) :].strip()
+            keywords.extend(
+                k.lower() if lowercase else k
+                for k in re.split(r"[,，]+", match)
+                if len(k.strip()) > 1
+            )
+
+        # if the keyword consists of multiple words, split into sub-words (removing stopwords)
+        results = set(keywords)
+        for token in keywords:
+            sub_tokens = re.findall(r"\w+", token)
+            if len(sub_tokens) > 1:
+                results.update(
+                    w for w in sub_tokens if w not in NLTKHelper().stopwords(lang=self._language)
+                )
+>>>>>>> 78011d3 (Refactor: text2germlin with PCgraph framework (#50))
         return results
