@@ -198,12 +198,8 @@ class InfoExtract:
         return True
 
     def _filter_long_id(self, graph) -> Dict[str, List[Any]]:
-        graph["vertices"] = [
-            vertex for vertex in graph["vertices"] if self.valid(vertex["id"])
-        ]
+        graph["vertices"] = [vertex for vertex in graph["vertices"] if self.valid(vertex["id"])]
         graph["edges"] = [
-            edge
-            for edge in graph["edges"]
-            if self.valid(edge["start"]) and self.valid(edge["end"])
+            edge for edge in graph["edges"] if self.valid(edge["start"]) and self.valid(edge["end"])
         ]
         return graph

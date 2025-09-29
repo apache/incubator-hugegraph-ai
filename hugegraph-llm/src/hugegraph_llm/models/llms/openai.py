@@ -42,7 +42,7 @@ class OpenAIClient(BaseLLM):
         max_tokens: int = 8092,
         temperature: float = 0.01,
     ) -> None:
-        api_key = api_key or ''
+        api_key = api_key or ""
         self.client = OpenAI(api_key=api_key, base_url=api_base)
         self.aclient = AsyncOpenAI(api_key=api_key, base_url=api_base)
         self.model = model_name
@@ -186,7 +186,7 @@ class OpenAIClient(BaseLLM):
                 temperature=self.temperature,
                 max_tokens=self.max_tokens,
                 messages=messages,
-                stream=True
+                stream=True,
             )
             async for chunk in completions:
                 if not chunk.choices:

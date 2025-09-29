@@ -191,7 +191,7 @@ class RAGPipeline:
                 method=rerank_method,
                 near_neighbor_first=near_neighbor_first,
                 custom_related_information=custom_related_information,
-                topk_return_results=topk_return_results
+                topk_return_results=topk_return_results,
             )
         )
         return self
@@ -245,7 +245,7 @@ class RAGPipeline:
         """
         if len(self._operators) == 0:
             self.extract_keywords().query_graphdb(
-                max_graph_items=kwargs.get('max_graph_items')
+                max_graph_items=kwargs.get("max_graph_items")
             ).synthesize_answer()
 
         context = kwargs

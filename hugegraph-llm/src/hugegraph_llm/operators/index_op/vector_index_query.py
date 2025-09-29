@@ -30,9 +30,13 @@ class VectorIndexQuery:
     def __init__(self, embedding: BaseEmbedding, topk: int = 3):
         self.embedding = embedding
         self.topk = topk
-        self.folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
+        self.folder_name = get_index_folder_name(
+            huge_settings.graph_name, huge_settings.graph_space
+        )
         self.index_dir = str(os.path.join(resource_path, self.folder_name, "chunks"))
-        self.filename_prefix = get_filename_prefix(llm_settings.embedding_type, getattr(embedding, "model_name", None))
+        self.filename_prefix = get_filename_prefix(
+            llm_settings.embedding_type, getattr(embedding, "model_name", None)
+        )
         self.vector_index = VectorIndex.from_index_file(self.index_dir, self.filename_prefix)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:

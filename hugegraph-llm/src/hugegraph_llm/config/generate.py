@@ -22,7 +22,9 @@ from hugegraph_llm.config import huge_settings, admin_settings, llm_settings, Pr
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate hugegraph-llm config file")
-    parser.add_argument("-U", "--update", default=True, action="store_true", help="Update the config file")
+    parser.add_argument(
+        "-U", "--update", default=True, action="store_true", help="Update the config file"
+    )
     args = parser.parse_args()
     if args.update:
         huge_settings.generate_env()

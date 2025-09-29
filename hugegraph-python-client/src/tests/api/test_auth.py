@@ -98,9 +98,7 @@ class TestAuthManager(unittest.TestCase):
         self.assertEqual(group["group_name"], "test_group")
 
         # Modify the group
-        group = self.auth.modify_group(
-            group["id"], group_description="test_description"
-        )
+        group = self.auth.modify_group(group["id"], group_description="test_description")
         self.assertEqual(group["group_description"], "test_description")
 
         # Delete the group
@@ -135,9 +133,7 @@ class TestAuthManager(unittest.TestCase):
             [{"type": "VERTEX", "label": "person", "properties": {"city": "Shanghai"}}],
         )
         # Verify the target was modified
-        self.assertEqual(
-            target["target_resources"][0]["properties"]["city"], "Shanghai"
-        )
+        self.assertEqual(target["target_resources"][0]["properties"]["city"], "Shanghai")
 
         # Delete the target
         self.auth.delete_target(target["id"])

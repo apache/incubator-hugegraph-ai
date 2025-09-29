@@ -37,7 +37,12 @@ from pyhugegraph.client import PyHugeClient
 
 
 class KgBuilder:
-    def __init__(self, llm: BaseLLM, embedding: Optional[BaseEmbedding] = None, graph: Optional[PyHugeClient] = None):
+    def __init__(
+        self,
+        llm: BaseLLM,
+        embedding: Optional[BaseEmbedding] = None,
+        graph: Optional[PyHugeClient] = None,
+    ):
         self.operators = []
         self.llm = llm
         self.embedding = embedding
@@ -69,7 +74,9 @@ class KgBuilder:
         return self
 
     def extract_info(
-        self, example_prompt: Optional[str] = None, extract_type: Literal["triples", "property_graph"] = "triples"
+        self,
+        example_prompt: Optional[str] = None,
+        extract_type: Literal["triples", "property_graph"] = "triples",
     ):
         if extract_type == "triples":
             self.operators.append(InfoExtract(self.llm, example_prompt))

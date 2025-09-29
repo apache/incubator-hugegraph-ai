@@ -39,7 +39,7 @@ class HGraphConfig:
 
     def __post_init__(self):
         # Add URL prefix compatibility check
-        if self.url and not self.url.startswith('http'):
+        if self.url and not self.url.startswith("http"):
             self.url = f"http://{self.url}"
 
         if self.graphspace and self.graphspace.strip():
@@ -47,9 +47,7 @@ class HGraphConfig:
 
         else:
             try:
-                response = requests.get(
-                    f"{self.url}/versions", timeout=0.5
-                )
+                response = requests.get(f"{self.url}/versions", timeout=0.5)
                 core = response.json()["versions"]["core"]
                 log.info(  # pylint: disable=logging-fstring-interpolation
                     f"Retrieved API version information from the server: {core}."
@@ -71,4 +69,6 @@ class HGraphConfig:
                 except Exception:  # pylint: disable=broad-exception-caught
                     exc_type, exc_value, tb = sys.exc_info()
                     traceback.print_exception(exc_type, exc_value, tb)
-                    log.warning("Failed to retrieve API version information from the server, reverting to default v1.")
+                    log.warning(
+                        "Failed to retrieve API version information from the server, reverting to default v1."
+                    )

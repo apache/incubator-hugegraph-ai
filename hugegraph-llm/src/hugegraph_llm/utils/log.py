@@ -31,7 +31,7 @@ root_logger = init_logger(
     log_level=INFO,
     logger_name="root",
     propagate_logs=True,
-    stdout_logging=True
+    stdout_logging=True,
 )
 
 # Initialize custom logger

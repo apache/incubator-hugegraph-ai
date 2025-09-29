@@ -23,6 +23,7 @@ from hugegraph_llm.config.models.base_prompt_config import BasePromptConfig
 class PromptConfig(BasePromptConfig):
     def __init__(self, llm_config_object):
         self.llm_settings = llm_config_object
+
     # Data is detached from llm_op/answer_synthesize.py
     answer_prompt_EN: str = """You are an expert in the fields of knowledge graphs and natural language processing.
 

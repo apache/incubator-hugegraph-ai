@@ -31,7 +31,9 @@ from hugegraph_llm.demo.rag_demo.vector_graph_block import timely_update_vid_emb
 def create_other_block():
     gr.Markdown("""## Other Tools """)
     with gr.Row():
-        inp = gr.Textbox(value="g.V().limit(10)", label="Gremlin query", show_copy_button=True, lines=8)
+        inp = gr.Textbox(
+            value="g.V().limit(10)", label="Gremlin query", show_copy_button=True, lines=8
+        )
         out = gr.Code(label="Output", language="json", elem_classes="code-container-show")
     btn = gr.Button("Run Gremlin query")
     btn.click(fn=run_gremlin_query, inputs=[inp], outputs=out)  # pylint: disable=no-member
@@ -39,7 +41,9 @@ def create_other_block():
     gr.Markdown("---")
     with gr.Row():
         inp = []
-        out = gr.Textbox(label="Backup Graph Manually (Auto backup at 1:00 AM everyday)", show_copy_button=True)
+        out = gr.Textbox(
+            label="Backup Graph Manually (Auto backup at 1:00 AM everyday)", show_copy_button=True
+        )
     btn = gr.Button("Backup Graph Data")
     btn.click(fn=backup_data, inputs=inp, outputs=out)  # pylint: disable=no-member
     with gr.Accordion("Init HugeGraph test data (🚧)", open=False):
@@ -55,10 +59,7 @@ async def lifespan(app: FastAPI):  # pylint: disable=W0621
     log.info("Starting background scheduler...")
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
-        backup_data,
-        trigger=CronTrigger(hour=1, minute=0),
-        id="daily_backup",
-        replace_existing=True
+        backup_data, trigger=CronTrigger(hour=1, minute=0), id="daily_backup", replace_existing=True
     )
     scheduler.start()
 

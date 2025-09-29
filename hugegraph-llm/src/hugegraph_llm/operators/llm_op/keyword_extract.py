@@ -31,12 +31,12 @@ KEYWORDS_EXTRACT_TPL = prompt.keywords_extract_prompt
 
 class KeywordExtract:
     def __init__(
-            self,
-            text: Optional[str] = None,
-            llm: Optional[BaseLLM] = None,
-            max_keywords: int = 5,
-            extract_template: Optional[str] = None,
-            language: str = "english",
+        self,
+        text: Optional[str] = None,
+        llm: Optional[BaseLLM] = None,
+        max_keywords: int = 5,
+        extract_template: Optional[str] = None,
+        language: str = "english",
     ):
         self._llm = llm
         self._query = text
@@ -76,17 +76,17 @@ class KeywordExtract:
         return context
 
     def _extract_keywords_from_response(
-            self,
-            response: str,
-            lowercase: bool = True,
-            start_token: str = "",
+        self,
+        response: str,
+        lowercase: bool = True,
+        start_token: str = "",
     ) -> Set[str]:
         keywords = []
         # use re.escape(start_token) if start_token contains special chars like */&/^ etc.
-        matches = re.findall(rf'{start_token}[^\n]+\n?', response)
+        matches = re.findall(rf"{start_token}[^\n]+\n?", response)
 
         for match in matches:
-            match = match[len(start_token):].strip()
+            match = match[len(start_token) :].strip()
             keywords.extend(
                 k.lower() if lowercase else k
                 for k in re.split(r"[,，]+", match)
@@ -98,5 +98,7 @@ class KeywordExtract:
         for token in keywords:
             sub_tokens = re.findall(r"\w+", token)
             if len(sub_tokens) > 1:
-                results.update(w for w in sub_tokens if w not in NLTKHelper().stopwords(lang=self._language))
+                results.update(
+                    w for w in sub_tokens if w not in NLTKHelper().stopwords(lang=self._language)
+                )
         return results

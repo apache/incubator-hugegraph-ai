@@ -165,9 +165,7 @@ def create_app():
     # settings.check_env()
     prompt.update_yaml_file()
     auth_enabled = admin_settings.enable_login.lower() == "true"
-    log.info(
-        "(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled"
-    )
+    log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
     api_auth = APIRouter(dependencies=[Depends(authenticate)] if auth_enabled else [])
 
     hugegraph_llm = init_rag_ui()

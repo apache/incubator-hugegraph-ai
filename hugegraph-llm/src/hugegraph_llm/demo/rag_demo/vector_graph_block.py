@@ -63,16 +63,12 @@ def generate_prompt_for_ui(source_text, scenario, example_name):
     Handles the UI logic for generating a new prompt using the new workflow architecture.
     """
     if not all([source_text, scenario, example_name]):
-        gr.Warning(
-            "Please provide original text, expected scenario, and select an example!"
-        )
+        gr.Warning("Please provide original text, expected scenario, and select an example!")
         return gr.update()
     try:
         # using new architecture
         scheduler = SchedulerSingleton.get_instance()
-        result = scheduler.schedule_flow(
-            "prompt_generate", source_text, scenario, example_name
-        )
+        result = scheduler.schedule_flow("prompt_generate", source_text, scenario, example_name)
         gr.Info("Prompt generated successfully!")
         return result
     except Exception as e:
@@ -83,9 +79,7 @@ def generate_prompt_for_ui(source_text, scenario, example_name):
 def load_example_names():
     """Load all candidate examples"""
     try:
-        examples_path = os.path.join(
-            resource_path, "prompt_examples", "prompt_examples.json"
-        )
+        examples_path = os.path.join(resource_path, "prompt_examples", "prompt_examples.json")
         with open(examples_path, "r", encoding="utf-8") as f:
             examples = json.load(f)
         return [example.get("name", "Unnamed example") for example in examples]
@@ -99,27 +93,23 @@ def load_query_examples():
         language = getattr(
             prompt,
             "language",
-            getattr(prompt.llm_settings, "language", "EN")
-            if hasattr(prompt, "llm_settings")
-            else "EN",
+            (
+                getattr(prompt.llm_settings, "language", "EN")
+                if hasattr(prompt, "llm_settings")
+                else "EN"
+            ),
         )
         if language.upper() == "CN":
-            examples_path = os.path.join(
-                resource_path, "prompt_examples", "query_examples_CN.json"
-            )
+            examples_path = os.path.join(resource_path, "prompt_examples", "query_examples_CN.json")
         else:
-            examples_path = os.path.join(
-                resource_path, "prompt_examples", "query_examples.json"
-            )
+            examples_path = os.path.join(resource_path, "prompt_examples", "query_examples.json")
 
         with open(examples_path, "r", encoding="utf-8") as f:
             examples = json.load(f)
         return json.dumps(examples, indent=2, ensure_ascii=False)
     except (FileNotFoundError, json.JSONDecodeError):
         try:
-            examples_path = os.path.join(
-                resource_path, "prompt_examples", "query_examples.json"
-            )
+            examples_path = os.path.join(resource_path, "prompt_examples", "query_examples.json")
             with open(examples_path, "r", encoding="utf-8") as f:
                 examples = json.load(f)
             return json.dumps(examples, indent=2, ensure_ascii=False)
@@ -130,9 +120,7 @@ def load_query_examples():
 def load_schema_fewshot_examples():
     """Load few-shot examples from a JSON file"""
     try:
-        examples_path = os.path.join(
-            resource_path, "prompt_examples", "schema_examples.json"
-        )
+        examples_path = os.path.join(resource_path, "prompt_examples", "schema_examples.json")
         with open(examples_path, "r", encoding="utf-8") as f:
             examples = json.load(f)
         return json.dumps(examples, indent=2, ensure_ascii=False)
@@ -143,14 +131,10 @@ def load_schema_fewshot_examples():
 def update_example_preview(example_name):
     """Update the display content based on the selected example name."""
     try:
-        examples_path = os.path.join(
-            resource_path, "prompt_examples", "prompt_examples.json"
-        )
+        examples_path = os.path.join(resource_path, "prompt_examples", "prompt_examples.json")
         with open(examples_path, "r", encoding="utf-8") as f:
             all_examples = json.load(f)
-        selected_example = next(
-            (ex for ex in all_examples if ex.get("name") == example_name), None
-        )
+        selected_example = next((ex for ex in all_examples if ex.get("name") == example_name), None)
 
         if selected_example:
             return (
@@ -178,9 +162,11 @@ def _create_prompt_helper_block(demo, input_text, info_extract_template):
         few_shot_dropdown = gr.Dropdown(
             choices=example_names,
             label="Select a Few-shot example as a reference",
-            value=example_names[0]
-            if example_names and example_names[0] != "No available examples"
-            else None,
+            value=(
+                example_names[0]
+                if example_names and example_names[0] != "No available examples"
+                else None
+            ),
         )
         with gr.Accordion("View example details", open=False):
             example_desc_preview = gr.Markdown(label="Example description")
@@ -193,9 +179,7 @@ def _create_prompt_helper_block(demo, input_text, info_extract_template):
                 interactive=False,
             )
 
-        generate_prompt_btn = gr.Button(
-            "🚀 Auto-generate Graph Extract Prompt", variant="primary"
-        )
+        generate_prompt_btn = gr.Button("🚀 Auto-generate Graph Extract Prompt", variant="primary")
         # Bind the change event of the dropdown menu
         few_shot_dropdown.change(
             fn=update_example_preview,
@@ -287,9 +271,7 @@ def create_vector_graph_block():
                 lines=15,
                 max_lines=29,
             )
-            out = gr.Code(
-                label="Output Info", language="json", elem_classes="code-container-edit"
-            )
+            out = gr.Code(label="Output Info", language="json", elem_classes="code-container-edit")
 
         with gr.Row():
             with gr.Accordion("Get RAG Info", open=False):
@@ -298,12 +280,8 @@ def create_vector_graph_block():
                     graph_index_btn0 = gr.Button("Get Graph Index Info", size="sm")
             with gr.Accordion("Clear RAG Data", open=False):
                 with gr.Column():
-                    vector_index_btn1 = gr.Button(
-                        "Clear Chunks Vector Index", size="sm"
-                    )
-                    graph_index_btn1 = gr.Button(
-                        "Clear Graph Vid Vector Index", size="sm"
-                    )
+                    vector_index_btn1 = gr.Button("Clear Chunks Vector Index", size="sm")
+                    graph_index_btn1 = gr.Button("Clear Graph Vid Vector Index", size="sm")
                     graph_data_btn0 = gr.Button("Clear Graph Data", size="sm")
 
             vector_import_bt = gr.Button("Import into Vector", variant="primary")
@@ -376,9 +354,9 @@ def create_vector_graph_block():
             inputs=[input_text, input_schema, info_extract_template],
         )
 
-        graph_loading_bt.click(
-            import_graph_data, inputs=[out, input_schema], outputs=[out]
-        ).then(update_vid_embedding).then(
+        graph_loading_bt.click(import_graph_data, inputs=[out, input_schema], outputs=[out]).then(
+            update_vid_embedding
+        ).then(
             store_prompt,
             inputs=[input_text, input_schema, info_extract_template],
         )

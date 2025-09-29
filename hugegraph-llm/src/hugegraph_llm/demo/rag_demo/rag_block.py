@@ -30,6 +30,7 @@ from hugegraph_llm.utils.decorators import with_task_id
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
 from hugegraph_llm.utils.log import log
 
+
 def rag_answer(
     text: str,
     raw_answer: bool,
@@ -90,7 +91,9 @@ def rag_answer(
         near_neighbor_first=near_neighbor_first,
         topk_return_results=topk_return_results,
     )
-    rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
+    rag.synthesize_answer(
+        raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt
+    )
 
     try:
         context = rag.run(
@@ -145,6 +148,7 @@ def update_ui_configs(
     graph_search = graph_only_answer or graph_vector_answer
     return graph_search, gremlin_prompt, vector_search
 
+
 async def rag_answer_streaming(
     text: str,
     raw_answer: bool,
@@ -187,9 +191,9 @@ async def rag_answer_streaming(
     if vector_search:
         rag.query_vector_index()
     if graph_search:
-        rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid().import_schema(
-            huge_settings.graph_name
-        ).query_graphdb(
+        rag.extract_keywords(
+            extract_template=keywords_extract_prompt
+        ).keywords_to_vid().import_schema(huge_settings.graph_name).query_graphdb(
             num_gremlin_generate_example=gremlin_tmpl_num,
             gremlin_prompt=gremlin_prompt,
         )
@@ -201,7 +205,9 @@ async def rag_answer_streaming(
     # rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
 
     try:
-        context = rag.run(verbose=True, query=text, vector_search=vector_search, graph_search=graph_search)
+        context = rag.run(
+            verbose=True, query=text, vector_search=vector_search, graph_search=graph_search
+        )
         if context.get("switch_to_bleu"):
             gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
         answer_synthesize = AnswerSynthesize(
@@ -227,6 +233,7 @@ async def rag_answer_streaming(
         log.critical(e)
         raise gr.Error(f"An unexpected error occurred: {str(e)}")
 
+
 @with_task_id
 def create_rag_block():
     # pylint: disable=R0915 (too-many-statements),C0301
@@ -234,7 +241,9 @@ def create_rag_block():
     with gr.Row():
         with gr.Column(scale=2):
             # with gr.Blocks().queue(max_size=20, default_concurrency_limit=5):
-            inp = gr.Textbox(value=prompt.default_question, label="Question", show_copy_button=True, lines=3)
+            inp = gr.Textbox(
+                value=prompt.default_question, label="Question", show_copy_button=True, lines=3
+            )
 
             # TODO: Only support inline formula now. Should support block formula
             gr.Markdown("Basic LLM Answer", elem_classes="output-box-label")
@@ -275,10 +284,16 @@ def create_rag_block():
         with gr.Column(scale=1):
             with gr.Row():
                 raw_radio = gr.Radio(choices=[True, False], value=False, label="Basic LLM Answer")
-                vector_only_radio = gr.Radio(choices=[True, False], value=False, label="Vector-only Answer")
+                vector_only_radio = gr.Radio(
+                    choices=[True, False], value=False, label="Vector-only Answer"
+                )
             with gr.Row():
-                graph_only_radio = gr.Radio(choices=[True, False], value=True, label="Graph-only Answer")
-                graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
+                graph_only_radio = gr.Radio(
+                    choices=[True, False], value=True, label="Graph-only Answer"
+                )
+                graph_vector_radio = gr.Radio(
+                    choices=[True, False], value=False, label="Graph-Vector Answer"
+                )
 
             def toggle_slider(enable):
                 return gr.update(interactive=enable)
@@ -291,8 +306,12 @@ def create_rag_block():
                         value="reranker" if online_rerank else "bleu",
                         label="Rerank method",
                     )
-                    example_num = gr.Number(value=-1, label="Template Num (<0 means disable text2gql) ", precision=0)
-                    graph_ratio = gr.Slider(0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False)
+                    example_num = gr.Number(
+                        value=-1, label="Template Num (<0 means disable text2gql) ", precision=0
+                    )
+                    graph_ratio = gr.Slider(
+                        0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False
+                    )
 
                 graph_vector_radio.change(
                     toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio
@@ -325,8 +344,8 @@ def create_rag_block():
             example_num,
         ],
         outputs=[raw_out, vector_only_out, graph_only_out, graph_vector_out],
-        queue=True,                       # Enable queueing for this event
-        concurrency_limit=5,               # Maximum of 5 concurrent executions
+        queue=True,  # Enable queueing for this event
+        concurrency_limit=5,  # Maximum of 5 concurrent executions
     )
 
     gr.Markdown(
@@ -394,18 +413,20 @@ def create_rag_block():
         total_rows = len(df)
         for index, row in df.iterrows():
             question = row.iloc[0]
-            basic_llm_answer, vector_only_answer, graph_only_answer, graph_vector_answer = rag_answer(
-                question,
-                is_raw_answer,
-                is_vector_only_answer,
-                is_graph_only_answer,
-                is_graph_vector_answer,
-                graph_ratio_ui,
-                rerank_method_ui,
-                near_neighbor_first_ui,
-                custom_related_information_ui,
-                answer_prompt,
-                keywords_extract_prompt,
+            basic_llm_answer, vector_only_answer, graph_only_answer, graph_vector_answer = (
+                rag_answer(
+                    question,
+                    is_raw_answer,
+                    is_vector_only_answer,
+                    is_graph_only_answer,
+                    is_graph_vector_answer,
+                    graph_ratio_ui,
+                    rerank_method_ui,
+                    near_neighbor_first_ui,
+                    custom_related_information_ui,
+                    answer_prompt,
+                    keywords_extract_prompt,
+                )
             )
             df.at[index, "Basic LLM Answer"] = basic_llm_answer
             df.at[index, "Vector-only Answer"] = vector_only_answer
@@ -418,7 +439,9 @@ def create_rag_block():
 
     with gr.Row():
         with gr.Column():
-            questions_file = gr.File(file_types=[".xlsx", ".csv"], label="Questions File (.xlsx & csv)")
+            questions_file = gr.File(
+                file_types=[".xlsx", ".csv"], label="Questions File (.xlsx & csv)"
+            )
         with gr.Column():
             test_template_file = os.path.join(resource_path, "demo", "questions_template.xlsx")
             gr.File(value=test_template_file, label="Download Template File")

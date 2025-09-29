@@ -48,9 +48,7 @@ class GetGraphIndexInfoFlow(BaseFlow):
 
     def post_deal(self, pipeline=None):
         graph_summary_info = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
-        folder_name = get_index_folder_name(
-            huge_settings.graph_name, huge_settings.graph_space
-        )
+        folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
         index_dir = str(os.path.join(resource_path, folder_name, "graph_vids"))
         filename_prefix = get_filename_prefix(
             llm_settings.embedding_type,

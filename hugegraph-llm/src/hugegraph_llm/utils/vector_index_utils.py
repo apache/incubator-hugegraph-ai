@@ -50,9 +50,7 @@ def read_documents(input_file, input_text):
                 texts.append(text)
             elif full_path.endswith(".pdf"):
                 # TODO: support PDF file
-                raise gr.Error(
-                    "PDF will be supported later! Try to upload text/docx now"
-                )
+                raise gr.Error("PDF will be supported later! Try to upload text/docx now")
             else:
                 raise gr.Error("Please input txt or docx file.")
     else:
@@ -62,9 +60,7 @@ def read_documents(input_file, input_text):
 
 # pylint: disable=C0301
 def get_vector_index_info():
-    folder_name = get_index_folder_name(
-        huge_settings.graph_name, huge_settings.graph_space
-    )
+    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
     filename_prefix = get_filename_prefix(
         llm_settings.embedding_type, model_map.get(llm_settings.embedding_type)
     )
@@ -91,15 +87,11 @@ def get_vector_index_info():
 
 
 def clean_vector_index():
-    folder_name = get_index_folder_name(
-        huge_settings.graph_name, huge_settings.graph_space
-    )
+    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
     filename_prefix = get_filename_prefix(
         llm_settings.embedding_type, model_map.get(llm_settings.embedding_type)
     )
-    VectorIndex.clean(
-        str(os.path.join(resource_path, folder_name, "chunks")), filename_prefix
-    )
+    VectorIndex.clean(str(os.path.join(resource_path, folder_name, "chunks")), filename_prefix)
     gr.Info("Clean vector index successfully!")
 
 

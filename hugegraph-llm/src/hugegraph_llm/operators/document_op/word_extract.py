@@ -58,7 +58,8 @@ class WordExtract:
 
         context["keywords"] = keywords
         from hugegraph_llm.utils.log import log
-        log.info("KEYWORDS: %s", context['keywords'])
+
+        log.info("KEYWORDS: %s", context["keywords"])
         return context
 
     def _filter_keywords(
