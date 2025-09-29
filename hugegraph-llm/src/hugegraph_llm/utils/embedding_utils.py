@@ -24,7 +24,9 @@ from tqdm import tqdm
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 
 
-async def _get_batch_with_progress(embedding: BaseEmbedding, batch: list[str], pbar: tqdm) -> list[Any]:
+async def _get_batch_with_progress(
+    embedding: BaseEmbedding, batch: list[str], pbar: tqdm
+) -> list[Any]:
     result = await embedding.async_get_texts_embeddings(batch)
     pbar.update(1)
     return result
@@ -58,10 +60,7 @@ async def get_embeddings_parallel(embedding: BaseEmbedding, vids: list[str]) -> 
     embeddings = []
     with tqdm(total=len(vid_batches)) as pbar:
         # Create tasks for each batch with progress bar updates
-        tasks = [
-            _get_batch_with_progress(embedding, batch, pbar)
-            for batch in vid_batches
-        ]
+        tasks = [_get_batch_with_progress(embedding, batch, pbar) for batch in vid_batches]
 
         # Use asyncio.gather() to preserve order
         batch_results = await asyncio.gather(*tasks)

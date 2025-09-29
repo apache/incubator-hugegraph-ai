@@ -42,7 +42,7 @@ class TestVersion(unittest.TestCase):
     def test_version(self):
         version = self.version.version()
         self.assertIsInstance(version, dict)
-        self.assertIn("version", version['versions'])
-        self.assertIn("core", version['versions'])
-        self.assertIn("gremlin", version['versions'])
-        self.assertIn("api", version['versions'])
+        self.assertIn("version", version["versions"])
+        self.assertIn("core", version["versions"])
+        self.assertIn("gremlin", version["versions"])
+        self.assertIn("api", version["versions"])

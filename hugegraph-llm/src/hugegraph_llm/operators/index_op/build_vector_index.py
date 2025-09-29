@@ -41,9 +41,7 @@ class BuildVectorIndex:
         self.filename_prefix = get_filename_prefix(
             llm_settings.embedding_type, getattr(self.embedding, "model_name", None)
         )
-        self.vector_index = VectorIndex.from_index_file(
-            self.index_dir, self.filename_prefix
-        )
+        self.vector_index = VectorIndex.from_index_file(self.index_dir, self.filename_prefix)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if "chunks" not in context:

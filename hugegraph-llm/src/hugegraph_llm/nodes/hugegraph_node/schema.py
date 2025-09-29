@@ -62,7 +62,7 @@ class SchemaNode(BaseNode):
         return CStatus()
 
     def operator_schedule(self, data_json):
-        print(f"check data json {data_json}")
+        log.debug("SchemaNode input state: %s", data_json)
         if self.schema.startswith("{"):
             try:
                 return self.check_schema.run(data_json)

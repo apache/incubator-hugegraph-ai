@@ -44,7 +44,9 @@ def create_exception(response_content):
 
 def check_if_authorized(response):
     if response.status_code == 401:
-        raise NotAuthorizedError(f"Please check your username and password. {str(response.content)}")
+        raise NotAuthorizedError(
+            f"Please check your username and password. {str(response.content)}"
+        )
     return True
 
 
@@ -56,8 +58,12 @@ def check_if_success(response, error=None):
         req = response.request
         req_body = req.body if req.body else "Empty body"
         response_body = response.text if response.text else "Empty body"
-        log.error("Error-Client: Request URL: %s, Request Body: %s, Response Body: %s",
-                  req.url, req_body, response_body)
+        log.error(
+            "Error-Client: Request URL: %s, Request Body: %s, Response Body: %s",
+            req.url,
+            req_body,
+            response_body,
+        )
         raise error
     return True
 
@@ -103,9 +109,14 @@ class ResponseValidation:
                     details = "key 'exception' not found"
 
                 req_body = response.request.body if response.request.body else "Empty body"
-                req_body = req_body.encode('utf-8').decode('unicode_escape')
-                log.error("%s: %s\n[Body]: %s\n[Server Exception]: %s",
-                          method, str(e).encode('utf-8').decode('unicode_escape'), req_body, details)
+                req_body = req_body.encode("utf-8").decode("unicode_escape")
+                log.error(
+                    "%s: %s\n[Body]: %s\n[Server Exception]: %s",
+                    method,
+                    str(e).encode("utf-8").decode("unicode_escape"),
+                    req_body,
+                    details,
+                )
 
                 if response.status_code == 404:
                     raise NotFoundError(response.content) from e

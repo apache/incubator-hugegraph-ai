@@ -37,7 +37,9 @@ class VectorIndex:
         self.properties = []
 
     @staticmethod
-    def from_index_file(dir_path: str, filename_prefix: str = None, record_miss: bool = True) -> "VectorIndex":
+    def from_index_file(
+        dir_path: str, filename_prefix: str = None, record_miss: bool = True
+    ) -> "VectorIndex":
         """Load index from files, supporting model-specific filenames.
 
         This method loads a Faiss index and its corresponding properties from a directory.
@@ -47,13 +49,18 @@ class VectorIndex:
         matches the number of properties.
         """
         index_name = f"{filename_prefix}_{INDEX_FILE_NAME}" if filename_prefix else INDEX_FILE_NAME
-        property_name = f"{filename_prefix}_{PROPERTIES_FILE_NAME}" if filename_prefix else PROPERTIES_FILE_NAME
+        property_name = (
+            f"{filename_prefix}_{PROPERTIES_FILE_NAME}" if filename_prefix else PROPERTIES_FILE_NAME
+        )
         index_file = os.path.join(dir_path, index_name)
         properties_file = os.path.join(dir_path, property_name)
         miss_files = [f for f in [index_file, properties_file] if not os.path.exists(f)]
         if miss_files:
             if record_miss:
-                log.warning("Missing vector files: %s. \nNeed create a new one for it.", ", ".join(miss_files))
+                log.warning(
+                    "Missing vector files: %s. \nNeed create a new one for it.",
+                    ", ".join(miss_files),
+                )
             return VectorIndex()
 
         try:
@@ -61,7 +68,9 @@ class VectorIndex:
             with open(properties_file, "rb") as f:
                 properties = pkl.load(f)
         except (RuntimeError, pkl.UnpicklingError, OSError) as e:
-            log.error("Failed to load index files for model '%s': %s", filename_prefix or "default", e)
+            log.error(
+                "Failed to load index files for model '%s': %s", filename_prefix or "default", e
+            )
             raise RuntimeError(
                 f"Could not load index files for model '{filename_prefix or 'default'}'. "
                 f"Original error ({type(e).__name__}): {e}"
@@ -85,7 +94,9 @@ class VectorIndex:
             os.makedirs(dir_path)
 
         index_name = f"{filename_prefix}_{INDEX_FILE_NAME}" if filename_prefix else INDEX_FILE_NAME
-        property_name = f"{filename_prefix}_{PROPERTIES_FILE_NAME}" if filename_prefix else PROPERTIES_FILE_NAME
+        property_name = (
+            f"{filename_prefix}_{PROPERTIES_FILE_NAME}" if filename_prefix else PROPERTIES_FILE_NAME
+        )
         index_file = os.path.join(dir_path, index_name)
         properties_file = os.path.join(dir_path, property_name)
         faiss.write_index(self.index, index_file)
@@ -115,7 +126,9 @@ class VectorIndex:
         self.properties = [p for i, p in enumerate(self.properties) if i not in indices]
         return remove_num
 
-    def search(self, query_vector: List[float], top_k: int, dis_threshold: float = 0.9) -> List[Any]:
+    def search(
+        self, query_vector: List[float], top_k: int, dis_threshold: float = 0.9
+    ) -> List[Any]:
         if self.index.ntotal == 0:
             return []
 
@@ -129,7 +142,9 @@ class VectorIndex:
                 results.append(deepcopy(self.properties[i]))
                 log.debug("[✓] Add valid distance %s to results.", dist)
             else:
-                log.debug("[x] Distance %s >= threshold %s, ignore this result.", dist, dis_threshold)
+                log.debug(
+                    "[x] Distance %s >= threshold %s, ignore this result.", dist, dis_threshold
+                )
         return results
 
     @staticmethod
@@ -140,7 +155,9 @@ class VectorIndex:
         If model_name is None, it targets the default files.
         """
         index_name = f"{filename_prefix}_{INDEX_FILE_NAME}" if filename_prefix else INDEX_FILE_NAME
-        property_name = f"{filename_prefix}_{PROPERTIES_FILE_NAME}" if filename_prefix else PROPERTIES_FILE_NAME
+        property_name = (
+            f"{filename_prefix}_{PROPERTIES_FILE_NAME}" if filename_prefix else PROPERTIES_FILE_NAME
+        )
         index_file = os.path.join(dir_path, index_name)
         properties_file = os.path.join(dir_path, property_name)
 

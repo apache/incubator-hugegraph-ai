@@ -87,9 +87,7 @@ class ServicesManager(HugeParamsBase):
         return self._invoke_request()
 
     @router.http("GET", "/graphspaces/{graphspace}/services/{service}")
-    def get_service(
-        self, graphspace: str, service: str  # pylint: disable=unused-argument
-    ):
+    def get_service(self, graphspace: str, service: str):  # pylint: disable=unused-argument
         """
         Retrieve the details of a specific service.
 
@@ -112,9 +110,7 @@ class ServicesManager(HugeParamsBase):
         """
         return self._invoke_request()
 
-    def delete_service(
-        self, graphspace: str, service: str  # pylint: disable=unused-argument
-    ):
+    def delete_service(self, graphspace: str, service: str):  # pylint: disable=unused-argument
         """
         Delete a specific service within a graph space.
 

@@ -33,6 +33,11 @@ class WkFlowInput(GParam):
     source_text: str = None  # Original text
     scenario: str = None  # Scenario description
     example_name: str = None  # Example name
+    # Fields for Text2Gremlin
+    query: str = None
+    example_num: int = None
+    gremlin_prompt: str = None
+    requested_outputs: Optional[List[str]] = None
 
     def reset(self, _: CStatus) -> None:
         self.texts = None
@@ -49,6 +54,11 @@ class WkFlowInput(GParam):
         self.source_text = None
         self.scenario = None
         self.example_name = None
+        # Text2Gremlin related configuration
+        self.query = None
+        self.example_num = None
+        self.gremlin_prompt = None
+        self.requested_outputs = None
 
 
 class WkFlowState(GParam):
@@ -66,6 +76,12 @@ class WkFlowState(GParam):
     keywords_embeddings = None
 
     generated_extract_prompt: Optional[str] = None
+    # Fields for Text2Gremlin results
+    match_result: Optional[List[dict]] = None
+    result: Optional[str] = None
+    raw_result: Optional[str] = None
+    template_exec_res: Optional[Any] = None
+    raw_exec_res: Optional[Any] = None
 
     def setup(self):
         self.schema = None
@@ -74,7 +90,7 @@ class WkFlowState(GParam):
         self.edges = None
         self.vertices = None
         self.triples = None
-        self.call_count = None
+        self.call_count = 0
 
         self.keywords = None
         self.vector_result = None
@@ -82,6 +98,12 @@ class WkFlowState(GParam):
         self.keywords_embeddings = None
 
         self.generated_extract_prompt = None
+        # Text2Gremlin results reset
+        self.match_result = []
+        self.result = ""
+        self.raw_result = ""
+        self.template_exec_res = ""
+        self.raw_exec_res = ""
 
         return CStatus()
 
@@ -94,11 +116,7 @@ class WkFlowState(GParam):
             dict: A dictionary containing non-None instance members and their serialized values.
         """
         # Only export instance attributes (excluding methods and class attributes) whose values are not None
-        return {
-            k: v
-            for k, v in self.__dict__.items()
-            if not k.startswith("_") and v is not None
-        }
+        return {k: v for k, v in self.__dict__.items() if not k.startswith("_") and v is not None}
 
     # Implement a method that assigns keys from data_json as WkFlowState member variables
     def assign_from_json(self, data_json: dict):

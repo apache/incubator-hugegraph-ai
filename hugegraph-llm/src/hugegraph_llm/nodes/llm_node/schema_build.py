@@ -61,16 +61,12 @@ class SchemaBuildNode(BaseNode):
 
         # few_shot_schema: already parsed dict or raw JSON string
         few_shot_schema = {}
-        fss_src = (
-            self.wk_input.few_shot_schema if self.wk_input.few_shot_schema else None
-        )
+        fss_src = self.wk_input.few_shot_schema if self.wk_input.few_shot_schema else None
         if fss_src:
             try:
                 few_shot_schema = json.loads(fss_src)
             except json.JSONDecodeError as e:
-                return CStatus(
-                    -1, f"Few Shot Schema is not in a valid JSON format: {e}"
-                )
+                return CStatus(-1, f"Few Shot Schema is not in a valid JSON format: {e}")
 
         _context_payload = {
             "raw_texts": raw_texts,

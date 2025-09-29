@@ -26,7 +26,11 @@ from hugegraph_llm.config import resource_path, llm_settings, huge_settings
 from hugegraph_llm.indices.vector_index import VectorIndex, INDEX_FILE_NAME, PROPERTIES_FILE_NAME
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
-from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel, get_filename_prefix, get_index_folder_name
+from hugegraph_llm.utils.embedding_utils import (
+    get_embeddings_parallel,
+    get_filename_prefix,
+    get_index_folder_name,
+)
 from hugegraph_llm.utils.log import log
 
 
@@ -34,16 +38,25 @@ class GremlinExampleIndexQuery:
     def __init__(self, embedding: BaseEmbedding = None, num_examples: int = 1):
         self.embedding = embedding or Embeddings().get_embedding()
         self.num_examples = num_examples
-        self.folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
+        self.folder_name = get_index_folder_name(
+            huge_settings.graph_name, huge_settings.graph_space
+        )
         self.index_dir = str(os.path.join(resource_path, self.folder_name, "gremlin_examples"))
-        self.filename_prefix = get_filename_prefix(llm_settings.embedding_type,
-                                                   getattr(self.embedding, "model_name", None))
+        self.filename_prefix = get_filename_prefix(
+            llm_settings.embedding_type, getattr(self.embedding, "model_name", None)
+        )
         self._ensure_index_exists()
         self.vector_index = VectorIndex.from_index_file(self.index_dir, self.filename_prefix)
 
     def _ensure_index_exists(self):
-        index_name = f"{self.filename_prefix}_{INDEX_FILE_NAME}" if self.filename_prefix else INDEX_FILE_NAME
-        props_name = f"{self.filename_prefix}_{PROPERTIES_FILE_NAME}" if self.filename_prefix else PROPERTIES_FILE_NAME
+        index_name = (
+            f"{self.filename_prefix}_{INDEX_FILE_NAME}" if self.filename_prefix else INDEX_FILE_NAME
+        )
+        props_name = (
+            f"{self.filename_prefix}_{PROPERTIES_FILE_NAME}"
+            if self.filename_prefix
+            else PROPERTIES_FILE_NAME
+        )
         if not (
             os.path.exists(os.path.join(self.index_dir, index_name))
             and os.path.exists(os.path.join(self.index_dir, props_name))
@@ -61,7 +74,9 @@ class GremlinExampleIndexQuery:
         return self.vector_index.search(query_embedding, self.num_examples, dis_threshold=1.8)
 
     def _build_default_example_index(self):
-        properties = pd.read_csv(os.path.join(resource_path, "demo", "text2gremlin.csv")).to_dict(orient="records")
+        properties = pd.read_csv(os.path.join(resource_path, "demo", "text2gremlin.csv")).to_dict(
+            orient="records"
+        )
         # TODO: reuse the logic in build_semantic_index.py (consider extract the batch-embedding method)
         queries = [row["query"] for row in properties]
         embeddings = asyncio.run(get_embeddings_parallel(self.embedding, queries))

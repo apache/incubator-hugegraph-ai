@@ -31,8 +31,12 @@ def admin_http_api(router: APIRouter, log_stream):
     @router.post("/logs", status_code=status.HTTP_200_OK)
     async def log_stream_api(req: LogStreamRequest):
         if admin_settings.admin_token != req.admin_token:
-            raise generate_response(RAGResponse(status_code=status.HTTP_403_FORBIDDEN, #pylint: disable=E0702
-                                                message="Invalid admin_token"))
+            raise generate_response(
+                RAGResponse(
+                    status_code=status.HTTP_403_FORBIDDEN,  # pylint: disable=E0702
+                    message="Invalid admin_token",
+                )
+            )
         log_path = os.path.join("logs", req.log_file)
 
         # Create a StreamingResponse that reads from the log stream generator

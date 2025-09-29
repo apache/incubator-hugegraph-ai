@@ -35,9 +35,11 @@ class ImportGraphDataFlow(BaseFlow):
             raise ValueError(f"Invalid JSON for 'data': {e.msg}") from e
         log.debug(
             "Import graph data (truncated): %s",
-            (data[:512] + "...")
-            if isinstance(data, str) and len(data) > 512
-            else (data if isinstance(data, str) else "<obj>"),
+            (
+                (data[:512] + "...")
+                if isinstance(data, str) and len(data) > 512
+                else (data if isinstance(data, str) else "<obj>")
+            ),
         )
         prepared_input.data_json = data_json
         prepared_input.schema = schema

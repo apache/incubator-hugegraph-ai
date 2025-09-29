@@ -26,33 +26,23 @@ class TraverserManager(HugeParamsBase):
     def k_out(self, source_id, max_depth):  # pylint: disable=unused-argument
         return self._invoke_request()
 
-    @router.http(
-        "GET", 'traversers/kneighbor?source="{source_id}"&max_depth={max_depth}'
-    )
+    @router.http("GET", 'traversers/kneighbor?source="{source_id}"&max_depth={max_depth}')
     def k_neighbor(self, source_id, max_depth):  # pylint: disable=unused-argument
         return self._invoke_request()
 
-    @router.http(
-        "GET", 'traversers/sameneighbors?vertex="{vertex_id}"&other="{other_id}"'
-    )
+    @router.http("GET", 'traversers/sameneighbors?vertex="{vertex_id}"&other="{other_id}"')
     def same_neighbors(self, vertex_id, other_id):  # pylint: disable=unused-argument
         return self._invoke_request()
 
-    @router.http(
-        "GET", 'traversers/jaccardsimilarity?vertex="{vertex_id}"&other="{other_id}"'
-    )
-    def jaccard_similarity(
-        self, vertex_id, other_id  # pylint: disable=unused-argument
-    ):
+    @router.http("GET", 'traversers/jaccardsimilarity?vertex="{vertex_id}"&other="{other_id}"')
+    def jaccard_similarity(self, vertex_id, other_id):  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http(
         "GET",
         'traversers/shortestpath?source="{source_id}"&target="{target_id}"&max_depth={max_depth}',
     )
-    def shortest_path(
-        self, source_id, target_id, max_depth  # pylint: disable=unused-argument
-    ):
+    def shortest_path(self, source_id, target_id, max_depth):  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http(
@@ -78,9 +68,7 @@ class TraverserManager(HugeParamsBase):
         "GET",
         'traversers/singlesourceshortestpath?source="{source_id}"&max_depth={max_depth}',
     )
-    def single_source_shortest_path(
-        self, source_id, max_depth  # pylint: disable=unused-argument
-    ):
+    def single_source_shortest_path(self, source_id, max_depth):  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("POST", "traversers/multinodeshortestpath")
@@ -114,9 +102,17 @@ class TraverserManager(HugeParamsBase):
     def paths(self, source_id, target_id, max_depth):  # pylint: disable=unused-argument
         return self._invoke_request()
 
-    @router.http("POST", 'traversers/paths')
+    @router.http("POST", "traversers/paths")
     def advanced_paths(
-        self, sources, targets, step, max_depth, nearest=True, capacity=10000000, limit=10, with_vertex=False
+        self,
+        sources,
+        targets,
+        step,
+        max_depth,
+        nearest=True,
+        capacity=10000000,
+        limit=10,
+        with_vertex=False,
     ):
         return self._invoke_request(
             data=json.dumps(
@@ -132,7 +128,6 @@ class TraverserManager(HugeParamsBase):
                 }
             )
         )
-
 
     @router.http("POST", "traversers/customizedpaths")
     def customized_paths(
@@ -152,9 +147,7 @@ class TraverserManager(HugeParamsBase):
         )
 
     @router.http("POST", "traversers/templatepaths")
-    def template_paths(
-        self, sources, targets, steps, capacity=10000, limit=10, with_vertex=True
-    ):
+    def template_paths(self, sources, targets, steps, capacity=10000, limit=10, with_vertex=True):
         return self._invoke_request(
             data=json.dumps(
                 {
@@ -172,9 +165,7 @@ class TraverserManager(HugeParamsBase):
         "GET",
         'traversers/crosspoints?source="{source_id}"&target="{target_id}"&max_depth={max_depth}',
     )
-    def crosspoints(
-        self, source_id, target_id, max_depth  # pylint: disable=unused-argument
-    ):
+    def crosspoints(self, source_id, target_id, max_depth):  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("POST", "traversers/customizedcrosspoints")

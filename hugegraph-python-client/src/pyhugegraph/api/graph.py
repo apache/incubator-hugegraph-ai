@@ -141,9 +141,7 @@ class GraphManager(HugeParamsBase):
     def appendEdge(
         self, edge_id, properties  # pylint: disable=unused-argument
     ) -> Optional[EdgeData]:
-        if response := self._invoke_request(
-            data=json.dumps({"properties": properties})
-        ):
+        if response := self._invoke_request(data=json.dumps({"properties": properties})):
             return EdgeData(response)
         return None
 
@@ -151,16 +149,12 @@ class GraphManager(HugeParamsBase):
     def eliminateEdge(
         self, edge_id, properties  # pylint: disable=unused-argument
     ) -> Optional[EdgeData]:
-        if response := self._invoke_request(
-            data=json.dumps({"properties": properties})
-        ):
+        if response := self._invoke_request(data=json.dumps({"properties": properties})):
             return EdgeData(response)
         return None
 
     @router.http("GET", "graph/edges/{edge_id}")
-    def getEdgeById(
-        self, edge_id  # pylint: disable=unused-argument
-    ) -> Optional[EdgeData]:
+    def getEdgeById(self, edge_id) -> Optional[EdgeData]:  # pylint: disable=unused-argument
         if response := self._invoke_request():
             return EdgeData(response)
         return None

@@ -23,17 +23,25 @@ from typing import Dict, Any, List
 from hugegraph_llm.config import resource_path, llm_settings, huge_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel, get_filename_prefix, get_index_folder_name
+from hugegraph_llm.utils.embedding_utils import (
+    get_embeddings_parallel,
+    get_filename_prefix,
+    get_index_folder_name,
+)
 
 
 # FIXME: we need keep the logic same with build_semantic_index.py
 class BuildGremlinExampleIndex:
     def __init__(self, embedding: BaseEmbedding, examples: List[Dict[str, str]]):
-        self.folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
+        self.folder_name = get_index_folder_name(
+            huge_settings.graph_name, huge_settings.graph_space
+        )
         self.index_dir = str(os.path.join(resource_path, self.folder_name, "gremlin_examples"))
         self.examples = examples
         self.embedding = embedding
-        self.filename_prefix = get_filename_prefix(llm_settings.embedding_type, getattr(embedding, "model_name", None))
+        self.filename_prefix = get_filename_prefix(
+            llm_settings.embedding_type, getattr(embedding, "model_name", None)
+        )
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         # !: We have assumed that self.example is not empty
