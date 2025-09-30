@@ -15,7 +15,6 @@
 
 import json
 
-from PyCGraph import CStatus
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.common_op.check_schema import CheckSchema
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
@@ -59,7 +58,7 @@ class SchemaNode(BaseNode):
         else:
             log.info("Get schema '%s' from graphdb.", self.schema)
             self.schema_manager = self._import_schema(from_hugegraph=self.schema)
-        return CStatus()
+        return super().node_init()
 
     def operator_schedule(self, data_json):
         log.debug("SchemaNode input state: %s", data_json)

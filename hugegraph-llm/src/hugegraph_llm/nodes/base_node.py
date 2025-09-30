@@ -30,6 +30,9 @@ class BaseNode(GNode):
         Node initialization method, can be overridden by subclasses.
         Returns a CStatus object indicating whether initialization succeeded.
         """
+        if self.wk_input.data_json is not None:
+            self.context.assign_from_json(self.wk_input.data_json)
+            self.wk_input.data_json = None
         return CStatus()
 
     def run(self):

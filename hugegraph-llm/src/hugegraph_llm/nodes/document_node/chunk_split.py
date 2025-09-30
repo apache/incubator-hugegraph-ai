@@ -37,7 +37,7 @@ class ChunkSplitNode(BaseNode):
         if isinstance(texts, str):
             texts = [texts]
         self.chunk_split_op = ChunkSplit(texts, split_type, language)
-        return CStatus()
+        return super().node_init()
 
     def operator_schedule(self, data_json):
         return self.chunk_split_op.run(data_json)

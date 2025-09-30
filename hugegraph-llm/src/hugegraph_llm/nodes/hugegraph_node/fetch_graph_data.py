@@ -13,7 +13,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from PyCGraph import CStatus
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.hugegraph_op.fetch_graph_data import FetchGraphData
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
@@ -27,7 +26,7 @@ class FetchGraphDataNode(BaseNode):
 
     def node_init(self):
         self.fetch_graph_data_op = FetchGraphData(get_hg_client())
-        return CStatus()
+        return super().node_init()
 
     def operator_schedule(self, data_json):
         return self.fetch_graph_data_op.run(data_json)
