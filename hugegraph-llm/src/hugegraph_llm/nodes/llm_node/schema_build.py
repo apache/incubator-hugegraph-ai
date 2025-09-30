@@ -75,7 +75,7 @@ class SchemaBuildNode(BaseNode):
         }
         self.context.assign_from_json(_context_payload)
 
-        return CStatus()
+        return super().node_init()
 
     def operator_schedule(self, data_json):
         try:
