@@ -43,7 +43,7 @@ class ExtractNode(BaseNode):
             self.property_graph_extract = PropertyGraphExtract(llm, example_prompt)
         else:
             return CStatus(-1, f"Unsupported extract_type: {extract_type}")
-        return CStatus()
+        return super().node_init()
 
     def operator_schedule(self, data_json):
         if self.extract_type == "triples":

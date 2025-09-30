@@ -50,7 +50,7 @@ class PromptGenerateNode(BaseNode):
             "example_name": self.wk_input.example_name,
         }
         self.context.assign_from_json(context)
-        return CStatus()
+        return super().node_init()
 
     def operator_schedule(self, data_json):
         """

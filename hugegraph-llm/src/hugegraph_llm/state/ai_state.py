@@ -24,7 +24,6 @@ class WkFlowInput(GParam):
     split_type: str = None  # split type used by ChunkSplit Node
     example_prompt: str = None  # need by graph information extract
     schema: str = None  # Schema information requeired by SchemaNode
-    graph_name: str = None
     data_json = None
     extract_type = None
     query_examples = None
@@ -34,10 +33,44 @@ class WkFlowInput(GParam):
     scenario: str = None  # Scenario description
     example_name: str = None  # Example name
     # Fields for Text2Gremlin
-    query: str = None
     example_num: int = None
     gremlin_prompt: str = None
     requested_outputs: Optional[List[str]] = None
+
+    # RAG Flow related fields
+    query: str = None  # User query for RAG
+    vector_search: bool = None  # Enable vector search
+    graph_search: bool = None  # Enable graph search
+    raw_answer: bool = None  # Return raw answer
+    vector_only_answer: bool = None  # Vector only answer mode
+    graph_only_answer: bool = None  # Graph only answer mode
+    graph_vector_answer: bool = None  # Combined graph and vector answer
+    graph_ratio: float = None  # Graph ratio for merging
+    rerank_method: str = None  # Reranking method
+    near_neighbor_first: bool = None  # Near neighbor first flag
+    custom_related_information: str = None  # Custom related information
+    answer_prompt: str = None  # Answer generation prompt
+    keywords_extract_prompt: str = None  # Keywords extraction prompt
+    gremlin_tmpl_num: int = None  # Gremlin template number
+    gremlin_prompt: str = None  # Gremlin generation prompt
+    max_graph_items: int = None  # Maximum graph items
+    topk_return_results: int = None  # Top-k return results
+    vector_dis_threshold: float = None  # Vector distance threshold
+    topk_per_keyword: int = None  # Top-k per keyword
+    max_keywords: int = None
+    max_items: int = None
+
+    # Semantic query related fields
+    semantic_by: str = None  # Semantic query method
+    topk_per_query: int = None  # Top-k per query
+
+    # Graph query related fields
+    max_deep: int = None  # Maximum depth for graph traversal
+    max_v_prop_len: int = None  # Maximum vertex property length
+    max_e_prop_len: int = None  # Maximum edge property length
+    prop_to_match: str = None  # Property to match
+
+    stream: bool = None  # used for recognize stream mode
 
     def reset(self, _: CStatus) -> None:
         self.texts = None
@@ -55,10 +88,40 @@ class WkFlowInput(GParam):
         self.scenario = None
         self.example_name = None
         # Text2Gremlin related configuration
-        self.query = None
         self.example_num = None
         self.gremlin_prompt = None
         self.requested_outputs = None
+        # RAG Flow related fields
+        self.query = None
+        self.vector_search = None
+        self.graph_search = None
+        self.raw_answer = None
+        self.vector_only_answer = None
+        self.graph_only_answer = None
+        self.graph_vector_answer = None
+        self.graph_ratio = None
+        self.rerank_method = None
+        self.near_neighbor_first = None
+        self.custom_related_information = None
+        self.answer_prompt = None
+        self.keywords_extract_prompt = None
+        self.gremlin_tmpl_num = None
+        self.gremlin_prompt = None
+        self.max_graph_items = None
+        self.topk_return_results = None
+        self.vector_dis_threshold = None
+        self.topk_per_keyword = None
+        self.max_keywords = None
+        self.max_items = None
+        # Semantic query related fields
+        self.semantic_by = None
+        self.topk_per_query = None
+        # Graph query related fields
+        self.max_deep = None
+        self.max_v_prop_len = None
+        self.max_e_prop_len = None
+        self.prop_to_match = None
+        self.stream = None
 
 
 class WkFlowState(GParam):
@@ -83,6 +146,17 @@ class WkFlowState(GParam):
     template_exec_res: Optional[Any] = None
     raw_exec_res: Optional[Any] = None
 
+    match_vids = None
+    vector_result = None
+    graph_result = None
+
+    raw_answer: str = None
+    vector_only_answer: str = None
+    graph_only_answer: str = None
+    graph_vector_answer: str = None
+
+    merged_result = None
+
     def setup(self):
         self.schema = None
         self.simple_schema = None
@@ -90,7 +164,7 @@ class WkFlowState(GParam):
         self.edges = None
         self.vertices = None
         self.triples = None
-        self.call_count = 0
+        self.call_count = None
 
         self.keywords = None
         self.vector_result = None
@@ -99,12 +173,20 @@ class WkFlowState(GParam):
 
         self.generated_extract_prompt = None
         # Text2Gremlin results reset
-        self.match_result = []
-        self.result = ""
-        self.raw_result = ""
-        self.template_exec_res = ""
-        self.raw_exec_res = ""
+        self.match_result = None
+        self.result = None
+        self.raw_result = None
+        self.template_exec_res = None
+        self.raw_exec_res = None
 
+        self.raw_answer = None
+        self.vector_only_answer = None
+        self.graph_only_answer = None
+        self.graph_vector_answer = None
+
+        self.vector_result = None
+        self.graph_result = None
+        self.merged_result = None
         return CStatus()
 
     def to_json(self):
@@ -116,7 +198,11 @@ class WkFlowState(GParam):
             dict: A dictionary containing non-None instance members and their serialized values.
         """
         # Only export instance attributes (excluding methods and class attributes) whose values are not None
-        return {k: v for k, v in self.__dict__.items() if not k.startswith("_") and v is not None}
+        return {
+            k: v
+            for k, v in self.__dict__.items()
+            if not k.startswith("_") and v is not None
+        }
 
     # Implement a method that assigns keys from data_json as WkFlowState member variables
     def assign_from_json(self, data_json: dict):

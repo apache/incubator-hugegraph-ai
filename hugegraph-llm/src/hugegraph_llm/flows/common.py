@@ -14,8 +14,10 @@
 #  limitations under the License.
 
 from abc import ABC, abstractmethod
+from typing import Dict, Any, AsyncGenerator
 
 from hugegraph_llm.state.ai_state import WkFlowInput
+from hugegraph_llm.utils.log import log
 
 
 class BaseFlow(ABC):
@@ -43,3 +45,27 @@ class BaseFlow(ABC):
         Post-processing interface.
         """
         pass
+
+    async def post_deal_stream(
+        self, pipeline=None
+    ) -> AsyncGenerator[Dict[str, Any], None]:
+        """
+        Streaming post-processing interface.
+        Subclasses can override this method as needed.
+        """
+        flow_name = self.__class__.__name__
+        if pipeline is None:
+            yield {"error": "No pipeline provided"}
+            return
+        try:
+            state_json = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
+            log.info(f"{flow_name} post processing success")
+            stream_flow = state_json.get("stream_generator")
+            if stream_flow is None:
+                yield {"error": "No stream_generator found in workflow state"}
+                return
+            async for chunk in stream_flow:
+                yield chunk
+        except Exception as e:
+            log.error(f"{flow_name} post processing failed: {e}")
+            yield {"error": f"Post processing failed: {str(e)}"}

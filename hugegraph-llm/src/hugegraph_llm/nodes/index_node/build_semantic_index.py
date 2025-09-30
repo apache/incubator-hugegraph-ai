@@ -13,7 +13,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from PyCGraph import CStatus
 from hugegraph_llm.config import llm_settings
 from hugegraph_llm.models.embeddings.init_embedding import get_embedding
 from hugegraph_llm.nodes.base_node import BaseNode
@@ -28,7 +27,7 @@ class BuildSemanticIndexNode(BaseNode):
 
     def node_init(self):
         self.build_semantic_index_op = BuildSemanticIndex(get_embedding(llm_settings))
-        return CStatus()
+        return super().node_init()
 
     def operator_schedule(self, data_json):
         return self.build_semantic_index_op.run(data_json)
