@@ -1,0 +1,33 @@
+{
+    "db_id": "movie",
+    "genQuery": true,
+    "db_schema_path": {
+        "common": "",
+        "yago": "./db_data/schema/yago.json",
+        "movie": "../db_data/schema/movie_schema.json",
+        "the_three_body": "./db_data/schema/the_three_body.json",
+        "finbench": "./db_data/schema/finbench_schema.json",
+        "SNB": "./db_data/schema/SNB_schema.json",
+        "three_kingdoms": "./db_data/schema/three_kingdoms.json",
+        "wandering_earth": "/root/work_repo/db_data/schema/wandering_earth.json"
+    },
+    "input_query_template_path": "./input_examples/corpus_template.txt",
+    "output_query_dir_or_file": "./output/output_query.txt",
+    "input_query_path": "./output/output_query.txt",
+    "output_prompt_path": "./output/output_prompt.txt",
+    "schema_dict_path": [
+        "./base/template/schema_dict.txt"
+    ],
+    "generalizer": {
+        "work_mode": "400",
+        "input_dir_or_file": "./output/output_query.txt",
+        "output_dir": "./output",
+        "suffix": "_t",
+        "model_path":"Qwen/Qwen2.5-Coder-7B-Instruct"
+    },
+    "generate_dataset": {
+        "input_corpus_dir_or_file": "./output/output_query_t_general.txt",
+        "output_corpus_path": "./output/text2gql_train.json"
+    }
+}
+
