@@ -5,17 +5,14 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from typing import List, Dict
 
-
-
 load_dotenv()
-api_key = os.environ.get("DEEPSEEK_API_KEY")
+
+API_KEY = os.getenv("API_KEY")
+MODEL_NAME = os.getenv("MODEL_NAME")
+BASE_URL = os.getenv("BASE_URL")
 client = OpenAI(
-    api_key=os.getenv("ds_api_key"),
-    base_url="https://api.deepseek.com/v1",
-)
-client = OpenAI(
-    api_key=os.getenv("ds_api_key"),
-    base_url="https://api.deepseek.com/v1",
+    api_key=API_KEY,
+    base_url=BASE_URL,
 )
 
 def generate_gremlin_variations(seed_query: str, seed_questions: List[str]) -> List[str]:
@@ -99,7 +96,7 @@ def generate_texts_for_gremlin(gremlin_query: str) -> List[str]:
     # print(f"\n 问题生成的user prompt: \n{user_prompt}")
     try:
         response = client.chat.completions.create(
-            model="deepseek-chat",
+            model=MODEL_NAME,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}

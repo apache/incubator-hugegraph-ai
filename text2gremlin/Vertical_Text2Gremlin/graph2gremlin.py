@@ -11,7 +11,7 @@ load_dotenv()
 try:
     client = OpenAI(
         api_key=os.getenv("ds_api_key"),
-        base_url="https://api.deepseek.com/v1",
+        base_url=os.getenv("base_url"),
     )
 except Exception as e:
     print(f"初始化OpenAI客户端失败，请检查环境变量: {e}")
