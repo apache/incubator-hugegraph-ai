@@ -53,15 +53,9 @@ class GremlinGenerateSynthesize:
             return None
         example_strings = []
         for example in examples:
-            example_strings.append(f"- query: {example['query']}\n- gremlin:\n```gremlin\n{example['gremlin']}\n```")
-=======
-            example_strings.append(f"- query: {example['query']}\n- gremlin:\n```gremlin\n{example['gremlin']}\n```")
->>>>>>> 8e0bf08 (chore: mark vectordb optional)
-=======
             example_strings.append(
                 f"- query: {example['query']}\n- gremlin:\n```gremlin\n{example['gremlin']}\n```"
             )
->>>>>>> 3aeef7d (fix)
         return "\n\n".join(example_strings)
 
     def _format_vertices(self, vertices: Optional[List[str]]) -> Optional[str]:

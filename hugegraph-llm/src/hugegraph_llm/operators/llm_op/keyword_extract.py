@@ -92,12 +92,6 @@ class KeywordExtract:
                 for k in re.split(r"[,，]+", match)
                 if len(k.strip()) > 1
             )
-            keywords.extend(k.lower() if lowercase else k for k in re.split(r"[,，]+", match) if len(k.strip()) > 1)
-=======
-            keywords.extend(k.lower() if lowercase else k for k in re.split(r"[,，]+", match) if len(k.strip()) > 1)
->>>>>>> 8e0bf08 (chore: mark vectordb optional)
-=======
->>>>>>> 3aeef7d (fix)
 
         # if the keyword consists of multiple words, split into sub-words (removing stopwords)
         results = set(keywords)

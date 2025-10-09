@@ -138,11 +138,13 @@ class GraphManager(HugeParamsBase):
         return None
 
     @router.http("PUT", "graph/edges/{edge_id}?action=append")
+    def appendEdge(self, edge_id, properties):  # pylint: disable=unused-argument
         if response := self._invoke_request(data=json.dumps({"properties": properties})):
             return EdgeData(response)
         return None
 
     @router.http("PUT", "graph/edges/{edge_id}?action=eliminate")
+    def eliminateEdge(self, edge_id, properties):  # pylint: disable=unused-argument
         if response := self._invoke_request(data=json.dumps({"properties": properties})):
             return EdgeData(response)
         return None
