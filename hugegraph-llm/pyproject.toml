@@ -41,7 +41,6 @@ dependencies = [
     "pandas",
     "pydantic",
     "tqdm",
-    "tqdm",
 
     # LLM specific dependencies
     "openai",
@@ -69,15 +68,7 @@ vectordb = [
     "pymilvus==2.5.9",
     "qdrant-client==1.14.2",
 ]
-=======
 
-    # Vector database dependencies
-    "pymilvus==2.5.9",
-    "qdrant-client==1.14.2",
-
-    ]
-
->>>>>>> a255aed (fix cycle import & add docs)
 [project.urls]
 homepage = "https://hugegraph.apache.org/"
 repository = "https://github.com/apache/incubator-hugegraph-ai"
