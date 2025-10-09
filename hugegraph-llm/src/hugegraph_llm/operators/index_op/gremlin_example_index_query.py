@@ -42,11 +42,9 @@ class GremlinExampleIndexQuery:
         self.num_examples = num_examples
         if not vector_index.exist("gremlin_examples"):
             log.warning("No gremlin example index found, will generate one.")
-=======
             self.vector_index = vector_index.from_name(
                 self.embedding.get_embedding_dim(), "gremlin_examples"
             )
->>>>>>> 3aeef7d (fix)
             self._build_default_example_index()
         else:
             self.vector_index = vector_index.from_name(
