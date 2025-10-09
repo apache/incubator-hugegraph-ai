@@ -86,14 +86,7 @@ class SchemaBuilder:
             raise RuntimeError("Invalid JSON response from LLM") from e
 
     def build_prompt(
-<<<<<<< HEAD
-        self,
-        raw_texts: List[str],
-        query_examples: List[Dict[str, str]],
-        few_shot_schema: Dict[str, Any],
-=======
         self, raw_texts: List[str], query_examples: List[Dict[str, str]], few_shot_schema: Dict[str, Any]
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
     ) -> str:
         return self.schema_prompt.format(
             raw_texts=self._format_raw_texts(raw_texts),

@@ -25,17 +25,9 @@ if __name__ == "__main__":
     schema.propertyKey("name").asText().ifNotExist().create()
     schema.propertyKey("birthDate").asText().ifNotExist().create()
     schema.vertexLabel("Person").properties("name", "birthDate").usePrimaryKeyId().primaryKeys(
-<<<<<<< HEAD
-        "name"
-    ).ifNotExist().create()
-    schema.vertexLabel("Movie").properties("name").usePrimaryKeyId().primaryKeys(
-        "name"
-    ).ifNotExist().create()
-=======
         "name"
     ).ifNotExist().create()
     schema.vertexLabel("Movie").properties("name").usePrimaryKeyId().primaryKeys("name").ifNotExist().create()
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
     schema.edgeLabel("ActedIn").sourceLabel("Person").targetLabel("Movie").ifNotExist().create()
 
     print(schema.getVertexLabels())

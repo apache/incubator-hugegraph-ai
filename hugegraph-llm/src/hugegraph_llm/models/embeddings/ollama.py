@@ -23,10 +23,6 @@ from .base import BaseEmbedding
 
 
 class OllamaEmbedding(BaseEmbedding):
-<<<<<<< HEAD
-    def __init__(self, model_name: str, host: str = "127.0.0.1", port: int = 11434, **kwargs):
-        self.model_name = model_name
-=======
     def __init__(
         self,
         model: str = "quentinz/bge-large-zh-v1.5",
@@ -36,16 +32,10 @@ class OllamaEmbedding(BaseEmbedding):
         **kwargs,
     ):
         self.model = model
->>>>>>> 38dce0b (feat(llm): vector db finished)
         self.client = ollama.Client(host=f"http://{host}:{port}", **kwargs)
         self.async_client = ollama.AsyncClient(host=f"http://{host}:{port}", **kwargs)
         self.embedding_dimension = embedding_dimension
 
-<<<<<<< HEAD
-    def get_text_embedding(self, text: str) -> List[float]:
-        """Get embedding for a single text."""
-        return self.get_texts_embeddings([text])[0]
-=======
     def get_embedding_dim(
         self,
     ) -> int:
@@ -54,13 +44,10 @@ class OllamaEmbedding(BaseEmbedding):
     def get_text_embedding(self, text: str) -> List[float]:
         """Comment"""
         return list(self.client.embed(model=self.model, input=text)["embeddings"][0])
->>>>>>> 38dce0b (feat(llm): vector db finished)
 
     def get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Get embeddings for multiple texts in a single batch.
 
-<<<<<<< HEAD
-=======
         This method efficiently processes multiple texts at once by leveraging
         Ollama's batching capabilities, which is more efficient than processing
         texts individually.
@@ -70,7 +57,6 @@ class OllamaEmbedding(BaseEmbedding):
         texts : List[str]
             A list of text strings to be embedded.
 
->>>>>>> 38dce0b (feat(llm): vector db finished)
         Returns
         -------
         List[List[float]]
@@ -87,27 +73,7 @@ class OllamaEmbedding(BaseEmbedding):
         response = self.client.embed(model=self.model_name, input=texts)["embeddings"]
         return [list(inner_sequence) for inner_sequence in response]
 
-<<<<<<< HEAD
-    async def async_get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """Get embeddings for multiple texts in a single batch asynchronously.
-
-        Returns
-        -------
-        List[List[float]]
-            A list of embedding vectors, where each vector is a list of floats.
-            The order of embeddings matches the order of input texts.
-        """
-        if not hasattr(self.client, "embed"):
-            error_message = (
-                "The required 'embed' method was not found on the Ollama client. "
-                "Please ensure your ollama library is up-to-date and supports batch embedding. "
-            )
-            raise AttributeError(error_message)
-        response = await self.async_client.embed(model=self.model_name, input=texts)
-        return [list(inner_sequence) for inner_sequence in response["embeddings"]]
-=======
     async def async_get_text_embedding(self, text: str) -> List[float]:
         """Comment"""
         response = await self.async_client.embeddings(model=self.model, prompt=text)
         return list(response["embedding"])
->>>>>>> 38dce0b (feat(llm): vector db finished)

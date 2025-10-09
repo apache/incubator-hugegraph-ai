@@ -118,15 +118,7 @@ class OllamaClient(BaseLLM):
             messages = [{"role": "user", "content": prompt}]
 
         try:
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-            async_generator = await self.async_client.chat(
-                model=self.model, messages=messages, stream=True
-            )
-=======
             async_generator = await self.async_client.chat(model=self.model, messages=messages, stream=True)
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
 =======
             async_generator = await self.async_client.chat(model=self.model, messages=messages, stream=True)
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)

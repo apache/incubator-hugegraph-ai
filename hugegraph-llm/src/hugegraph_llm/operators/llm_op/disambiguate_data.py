@@ -51,16 +51,7 @@ class DisambiguateData:
             llm_output = self.llm.generate(prompt=prompt)
             data["triples"] = []
             extract_triples_by_regex(llm_output, data)
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-            print(
-                f"LLM {self.__class__.__name__} input:{prompt} \n"
-                f" output: {llm_output} \n data: {data}"
-            )
-=======
             print(f"LLM {self.__class__.__name__} input:{prompt} \n" f" output: {llm_output} \n data: {data}")
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
 =======
             print(f"LLM {self.__class__.__name__} input:{prompt} \n output: {llm_output} \n data: {data}")
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)

@@ -24,10 +24,7 @@ from openai import OpenAI, AsyncOpenAI
 class OpenAIEmbedding:
     def __init__(
         self,
-<<<<<<< HEAD
-=======
         embedding_dimension: int = 1536,
->>>>>>> 38dce0b (feat(llm): vector db finished)
         model_name: str = "text-embedding-3-small",
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
@@ -35,9 +32,6 @@ class OpenAIEmbedding:
         api_key = api_key or ""
         self.client = OpenAI(api_key=api_key, base_url=api_base)
         self.aclient = AsyncOpenAI(api_key=api_key, base_url=api_base)
-<<<<<<< HEAD
-        self.model_name = model_name
-=======
         self.embedding_model_name = model_name
         self.embedding_dimension = embedding_dimension
 
@@ -45,7 +39,6 @@ class OpenAIEmbedding:
         self,
     ) -> int:
         return self.embedding_dimension
->>>>>>> 38dce0b (feat(llm): vector db finished)
 
     def get_text_embedding(self, text: str) -> List[float]:
         """Comment"""

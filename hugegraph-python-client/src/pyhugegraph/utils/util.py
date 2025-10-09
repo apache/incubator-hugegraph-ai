@@ -58,14 +58,6 @@ def check_if_success(response, error=None):
         req_body = req.body if req.body else "Empty body"
         response_body = response.text if response.text else "Empty body"
         log.error(
-<<<<<<< HEAD
-            "Error-Client: Request URL: %s, Request Body: %s, Response Body: %s",
-            req.url,
-            req_body,
-            response_body,
-=======
-            "Error-Client: Request URL: %s, Request Body: %s, Response Body: %s", req.url, req_body, response_body
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
         )
         raise error
     return True

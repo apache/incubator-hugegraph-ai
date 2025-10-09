@@ -17,12 +17,7 @@
 
 from typing import List, Optional
 
-<<<<<<< HEAD
-from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.utils.log import log
-=======
 from litellm import APIConnectionError, APIError, RateLimitError, aembedding, embedding
->>>>>>> 38dce0b (feat(llm): vector db finished)
 from tenacity import (
     retry,
     retry_if_exception_type,
@@ -45,9 +40,6 @@ class LiteLLMEmbedding(BaseEmbedding):
     ) -> None:
         self.api_key = api_key
         self.api_base = api_base
-<<<<<<< HEAD
-        self.model_name = model_name
-=======
         self.model = model_name
         self.embedding_dimension = embedding_dimension
 
@@ -55,7 +47,6 @@ class LiteLLMEmbedding(BaseEmbedding):
         self,
     ) -> int:
         return self.embedding_dimension
->>>>>>> 38dce0b (feat(llm): vector db finished)
 
     @retry(
         stop=stop_after_attempt(3),

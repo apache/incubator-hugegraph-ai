@@ -140,19 +140,11 @@ def write_backup_file(client, backup_subdir, filename, query, all_pk_flag):
         elif filename == "vertices.json":
             data_full = client.gremlin().exec(query)["data"][0]["vertices"]
             data = (
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 3aeef7d (fix)
                 [
                     {key: value for key, value in vertex.items() if key != "id"}
                     for vertex in data_full
                 ]
-<<<<<<< HEAD
-=======
                 [{key: value for key, value in vertex.items() if key != "id"} for vertex in data_full]
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
 =======
                 [{key: value for key, value in vertex.items() if key != "id"} for vertex in data_full]
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)

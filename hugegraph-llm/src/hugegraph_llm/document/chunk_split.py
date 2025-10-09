@@ -22,13 +22,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 class ChunkSplitter:
     def __init__(
-<<<<<<< HEAD
-        self,
-        split_type: Literal["paragraph", "sentence"] = "paragraph",
-        language: Literal["zh", "en"] = "zh",
-=======
         self, split_type: Literal["paragraph", "sentence"] = "paragraph", language: Literal["zh", "en"] = "zh"
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
     ):
         if language == "zh":
             separators = ["\n\n", "\n", "。", "，", ""]
@@ -37,21 +31,9 @@ class ChunkSplitter:
         else:
             raise ValueError("Argument `language` must be zh or en!")
         if split_type == "paragraph":
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-            self.text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=500, chunk_overlap=30, separators=separators
-            )
-        elif split_type == "sentence":
-            self.text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=50, chunk_overlap=0, separators=separators
-            )
-=======
             self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=30, separators=separators)
         elif split_type == "sentence":
             self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=50, chunk_overlap=0, separators=separators)
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
 =======
             self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=30, separators=separators)
         elif split_type == "sentence":

@@ -125,13 +125,7 @@ class PropertyGraphExtract:
         json_match = re.search(r"({.*})", text, re.DOTALL)
         if not json_match:
             log.critical(
-<<<<<<< HEAD
-<<<<<<< HEAD
-                "Invalid property graph! No JSON object found, "
-                "please check the output format example in prompt."
-=======
                 "Invalid property graph! No JSON object found, " "please check the output format example in prompt."
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
 =======
                 "Invalid property graph! No JSON object found, please check the output format example in prompt."
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)

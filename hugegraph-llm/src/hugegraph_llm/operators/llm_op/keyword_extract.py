@@ -87,20 +87,12 @@ class KeywordExtract:
 
         for match in matches:
             match = match[len(start_token) :].strip()
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 3aeef7d (fix)
             keywords.extend(
                 k.lower() if lowercase else k
                 for k in re.split(r"[,，]+", match)
                 if len(k.strip()) > 1
             )
-<<<<<<< HEAD
-=======
             keywords.extend(k.lower() if lowercase else k for k in re.split(r"[,，]+", match) if len(k.strip()) > 1)
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
 =======
             keywords.extend(k.lower() if lowercase else k for k in re.split(r"[,，]+", match) if len(k.strip()) > 1)
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)

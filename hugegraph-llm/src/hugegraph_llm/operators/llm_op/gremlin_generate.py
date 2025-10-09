@@ -53,16 +53,7 @@ class GremlinGenerateSynthesize:
             return None
         example_strings = []
         for example in examples:
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-            example_strings.append(
-                f"- query: {example['query']}\n"
-                f"- gremlin:\n```gremlin\n{example['gremlin']}\n```"
-            )
-=======
             example_strings.append(f"- query: {example['query']}\n- gremlin:\n```gremlin\n{example['gremlin']}\n```")
->>>>>>> 38dce0b (feat(llm): vector db finished)
 =======
             example_strings.append(f"- query: {example['query']}\n- gremlin:\n```gremlin\n{example['gremlin']}\n```")
 >>>>>>> 8e0bf08 (chore: mark vectordb optional)

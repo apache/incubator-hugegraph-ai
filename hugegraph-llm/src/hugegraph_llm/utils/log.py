@@ -27,15 +27,7 @@ WARNING = logging.WARNING
 
 # Initialize the root logger first with Rich handler
 root_logger = init_logger(
-<<<<<<< HEAD
-    log_output=LOG_FILE,
-    log_level=INFO,
-    logger_name="root",
-    propagate_logs=True,
-    stdout_logging=True,
-=======
     log_output=LOG_FILE, log_level=INFO, logger_name="root", propagate_logs=True, stdout_logging=True
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
 )
 
 # Initialize custom logger
