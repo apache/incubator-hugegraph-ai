@@ -250,18 +250,9 @@ class RAGPipeline:
         :return: Final context after all operators have been executed.
         """
         if len(self._operators) == 0:
-            self.extract_keywords().query_graphdb(max_graph_items=kwargs.get('max_graph_items')).synthesize_answer()
-=======
-            self.extract_keywords().query_graphdb(max_graph_items=kwargs.get("max_graph_items")).synthesize_answer()
->>>>>>> 87ee5d3 (style: format code with black line-length 120)
-=======
-            self.extract_keywords().query_graphdb(max_graph_items=kwargs.get("max_graph_items")).synthesize_answer()
->>>>>>> 8e0bf08 (chore: mark vectordb optional)
-=======
             self.extract_keywords().query_graphdb(
                 max_graph_items=kwargs.get("max_graph_items")
             ).synthesize_answer()
->>>>>>> 3aeef7d (fix)
 
         context = kwargs
 

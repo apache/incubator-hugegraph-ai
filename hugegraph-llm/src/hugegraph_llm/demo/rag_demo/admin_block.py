@@ -109,14 +109,6 @@ def create_admin_block():
 
         # Error message box, initially hidden
         error_message = gr.Textbox(label="", visible=False, interactive=False, elem_classes="error-message")
-=======
-        error_message = gr.Textbox(label="", visible=False, interactive=False, elem_classes="error-message")
->>>>>>> 8e0bf08 (chore: mark vectordb optional)
-=======
-        error_message = gr.Textbox(
-            label="", visible=False, interactive=False, elem_classes="error-message"
-        )
->>>>>>> 3aeef7d (fix)
 
         # Button to submit password
         submit_button = gr.Button("Submit")

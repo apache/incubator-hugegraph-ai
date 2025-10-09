@@ -118,15 +118,9 @@ class OllamaClient(BaseLLM):
             messages = [{"role": "user", "content": prompt}]
 
         try:
-            async_generator = await self.async_client.chat(model=self.model, messages=messages, stream=True)
-=======
-            async_generator = await self.async_client.chat(model=self.model, messages=messages, stream=True)
->>>>>>> 8e0bf08 (chore: mark vectordb optional)
-=======
             async_generator = await self.async_client.chat(
                 model=self.model, messages=messages, stream=True
             )
->>>>>>> 3aeef7d (fix)
             async for chunk in async_generator:
                 token = chunk.get("message", {}).get("content", "")
                 if on_token_callback:
