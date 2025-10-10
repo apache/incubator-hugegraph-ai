@@ -18,14 +18,10 @@
 from typing import List, Optional
 
 from litellm import APIConnectionError, APIError, RateLimitError, aembedding, embedding
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
-from litellm import embedding, RateLimitError, APIError, APIConnectionError, aembedding
+from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from hugegraph_llm.utils.log import log
 
 
 class LiteLLMEmbedding(BaseEmbedding):
@@ -57,7 +53,7 @@ class LiteLLMEmbedding(BaseEmbedding):
         """Get embedding for a single text."""
         try:
             response = embedding(
-                model=self.model_name,
+                model=self.model,
                 input=text,
                 api_key=self.api_key,
                 api_base=self.api_base,
@@ -72,7 +68,7 @@ class LiteLLMEmbedding(BaseEmbedding):
         """Get embeddings for multiple texts."""
         try:
             response = embedding(
-                model=self.model_name,
+                model=self.model,
                 input=texts,
                 api_key=self.api_key,
                 api_base=self.api_base,
@@ -87,7 +83,7 @@ class LiteLLMEmbedding(BaseEmbedding):
         """Get embedding for a single text asynchronously."""
         try:
             response = await aembedding(
-                model=self.model_name,
+                model=self.model,
                 input=texts,
                 api_key=self.api_key,
                 api_base=self.api_base,

@@ -19,9 +19,10 @@
 from typing import Optional, List
 
 from openai import OpenAI, AsyncOpenAI
+from hugegraph_llm.models.embeddings.base import BaseEmbedding
 
 
-class OpenAIEmbedding:
+class OpenAIEmbedding(BaseEmbedding):
     def __init__(
         self,
         embedding_dimension: int = 1536,
@@ -32,7 +33,7 @@ class OpenAIEmbedding:
         api_key = api_key or ""
         self.client = OpenAI(api_key=api_key, base_url=api_base)
         self.aclient = AsyncOpenAI(api_key=api_key, base_url=api_base)
-        self.embedding_model_name = model_name
+        self.model = model_name
         self.embedding_dimension = embedding_dimension
 
     def get_embedding_dim(
@@ -42,7 +43,7 @@ class OpenAIEmbedding:
 
     def get_text_embedding(self, text: str) -> List[float]:
         """Comment"""
-        response = self.client.embeddings.create(input=text, model=self.model_name)
+        response = self.client.embeddings.create(input=text, model=self.model)
         return response.data[0].embedding
 
     def get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
@@ -63,7 +64,7 @@ class OpenAIEmbedding:
             A list of embedding vectors, where each vector is a list of floats.
             The order of embeddings matches the order of input texts.
         """
-        response = self.client.embeddings.create(input=texts, model=self.model_name)
+        response = self.client.embeddings.create(input=texts, model=self.model)
         return [data.embedding for data in response.data]
 
     async def async_get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
@@ -84,5 +85,9 @@ class OpenAIEmbedding:
             A list of embedding vectors, where each vector is a list of floats.
             The order of embeddings should match the order of input texts.
         """
-        response = await self.aclient.embeddings.create(input=texts, model=self.model_name)
+        response = await self.aclient.embeddings.create(input=texts, model=self.model)
         return [data.embedding for data in response.data]
+
+    async def async_get_text_embedding(self, text: str) -> List[float]:
+        response = await self.aclient.embeddings.create(input=[text], model=self.model)
+        return response.data[0].embedding

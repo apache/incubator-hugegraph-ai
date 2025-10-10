@@ -16,10 +16,12 @@
 # under the License.
 
 
+import asyncio
 from typing import Any, Dict, List
 
 from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
+from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel
 
 
 # FIXME: we need keep the logic same with build_semantic_index.py

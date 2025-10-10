@@ -70,10 +70,13 @@ class OllamaEmbedding(BaseEmbedding):
             )
             raise AttributeError(error_message)
 
-        response = self.client.embed(model=self.model_name, input=texts)["embeddings"]
+        response = self.client.embed(model=self.model, input=texts)["embeddings"]
         return [list(inner_sequence) for inner_sequence in response]
 
-    async def async_get_text_embedding(self, text: str) -> List[float]:
-        """Comment"""
-        response = await self.async_client.embeddings(model=self.model, prompt=text)
-        return list(response["embedding"])
+    async def async_get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
+        # Ollama python client may not provide batch async embeddings; fallback per item
+        results: List[List[float]] = []
+        for t in texts:
+            response = await self.async_client.embeddings(model=self.model, prompt=t)
+            results.append(list(response["embedding"]))
+        return results
