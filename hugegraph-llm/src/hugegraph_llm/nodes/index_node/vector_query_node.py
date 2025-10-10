@@ -17,7 +17,7 @@ from typing import Dict, Any
 from hugegraph_llm.config import llm_settings
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
-from hugegraph_llm.models.embeddings.init_embedding import get_embedding
+from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.utils.log import log
 
 
@@ -34,7 +34,7 @@ class VectorQueryNode(BaseNode):
         """
         try:
             # 从 wk_input 中读取用户配置参数
-            embedding = get_embedding(llm_settings)
+            embedding = Embeddings().get_embedding()
             max_items = (
                 self.wk_input.max_items if self.wk_input.max_items is not None else 3
             )

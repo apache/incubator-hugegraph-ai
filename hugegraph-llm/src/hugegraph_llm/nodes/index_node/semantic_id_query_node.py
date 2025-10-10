@@ -17,7 +17,7 @@ from PyCGraph import CStatus
 from typing import Dict, Any
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
-from hugegraph_llm.models.embeddings.init_embedding import get_embedding
+from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.config import huge_settings, llm_settings
 from hugegraph_llm.utils.log import log
 
@@ -38,7 +38,7 @@ class SemanticIdQueryNode(BaseNode):
             if not graph_name:
                 return CStatus(-1, "graph_name is required in wk_input")
 
-            embedding = get_embedding(llm_settings)
+            embedding = Embeddings().get_embedding()
             by = self.wk_input.semantic_by or "keywords"
             topk_per_keyword = (
                 self.wk_input.topk_per_keyword or huge_settings.topk_per_keyword
