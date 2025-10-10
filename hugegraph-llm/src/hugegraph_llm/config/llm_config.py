@@ -70,30 +70,8 @@ class LLMConfig(BaseConfig):
     _env_ollama_dim = os.getenv("OLLAMA_EMBEDDING_MODEL_DIM")
     ollama_embedding_model_dim: Optional[int] = int(_env_ollama_dim) if _env_ollama_dim else None
 
-    # 4. QianFan/WenXin settings
-    # TODO: update to one token key mode
-    qianfan_chat_api_key: Optional[str] = None
-    qianfan_chat_secret_key: Optional[str] = None
-    qianfan_chat_access_token: Optional[str] = None
-    qianfan_extract_api_key: Optional[str] = None
-    qianfan_extract_secret_key: Optional[str] = None
-    qianfan_extract_access_token: Optional[str] = None
-    qianfan_text2gql_api_key: Optional[str] = None
-    qianfan_text2gql_secret_key: Optional[str] = None
-    qianfan_text2gql_access_token: Optional[str] = None
-    qianfan_embedding_api_key: Optional[str] = None
-    qianfan_embedding_secret_key: Optional[str] = None
-    # 4.1 URL settings
-    qianfan_url_prefix: str = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
-    qianfan_chat_url: str = qianfan_url_prefix + "/chat/"
-    qianfan_chat_language_model: str = "ERNIE-Speed-128K"
-    qianfan_extract_language_model: str = "ERNIE-Speed-128K"
-    qianfan_text2gql_language_model: str = "ERNIE-Speed-128K"
-    qianfan_embed_url: str = qianfan_url_prefix + "/embeddings/"
-    qianfan_embedding_model_dim: int = 384
+    # 4. QianFan/WenXin settings (removed)
 
-    # refer https://cloud.baidu.com/doc/WENXINWORKSHOP/s/alj562vvu to get more details
-    qianfan_embedding_model: str = "embedding-v1"
     # 5. LiteLLM settings
     litellm_chat_api_key: Optional[str] = None
     litellm_chat_api_base: Optional[str] = None

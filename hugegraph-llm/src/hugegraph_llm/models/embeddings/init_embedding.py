@@ -20,7 +20,6 @@ from hugegraph_llm.config import llm_settings
 from hugegraph_llm.models.embeddings.litellm import LiteLLMEmbedding
 from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
 from hugegraph_llm.models.embeddings.openai import OpenAIEmbedding
-from hugegraph_llm.models.embeddings.qianfan import QianFanEmbedding
 
 
 class Embeddings:
@@ -44,13 +43,6 @@ class Embeddings:
                 host=llm_settings.ollama_embedding_host,
                 port=llm_settings.ollama_embedding_port,
             )
-        if self.embedding_type == "qianfan_wenxin":
-            return QianFanEmbedding(
-                embedding_dimension=llm_settings.litellm_embedding_model_dim,
-                model_name=llm_settings.qianfan_embedding_model,
-                api_key=llm_settings.qianfan_embedding_api_key,
-                secret_key=llm_settings.qianfan_embedding_secret_key,
-            )  # type: ignore
         if self.embedding_type == "litellm":
             return LiteLLMEmbedding(
                 embedding_dimension=llm_settings.litellm_embedding_model_dim,
