@@ -35,9 +35,7 @@ class VectorQueryNode(BaseNode):
         try:
             # 从 wk_input 中读取用户配置参数
             embedding = Embeddings().get_embedding()
-            max_items = (
-                self.wk_input.max_items if self.wk_input.max_items is not None else 3
-            )
+            max_items = self.wk_input.max_items if self.wk_input.max_items is not None else 3
 
             self.operator = VectorIndexQuery(embedding=embedding, topk=max_items)
             return super().node_init()

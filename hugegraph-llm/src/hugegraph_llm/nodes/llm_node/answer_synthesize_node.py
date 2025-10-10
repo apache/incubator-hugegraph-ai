@@ -75,9 +75,7 @@ class AnswerSynthesizeNode(BaseNode):
                 if result.get("graph_vector_answer"):
                     answer_types.append("graph_vector")
 
-                log.info(
-                    f"Answer synthesis completed for types: {', '.join(answer_types)}"
-                )
+                log.info(f"Answer synthesis completed for types: {', '.join(answer_types)}")
 
                 # Print enabled answer types according to self.wk_input configuration
                 wk_input_types = []

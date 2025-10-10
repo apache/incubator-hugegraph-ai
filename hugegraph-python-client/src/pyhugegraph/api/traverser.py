@@ -49,7 +49,9 @@ class TraverserManager(HugeParamsBase):
         "GET",
         'traversers/allshortestpaths?source="{source_id}"&target="{target_id}"&max_depth={max_depth}',
     )
-    def all_shortest_paths(self, source_id, target_id, max_depth):  # pylint: disable=unused-argument
+    def all_shortest_paths(
+        self, source_id, target_id, max_depth
+    ):  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http(
@@ -57,7 +59,9 @@ class TraverserManager(HugeParamsBase):
         'traversers/weightedshortestpath?source="{source_id}"&target="{target_id}"'
         "&weight={weight}&max_depth={max_depth}",
     )
-    def weighted_shortest_path(self, source_id, target_id, weight, max_depth):  # pylint: disable=unused-argument
+    def weighted_shortest_path(
+        self, source_id, target_id, weight, max_depth
+    ):  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http(
@@ -126,7 +130,9 @@ class TraverserManager(HugeParamsBase):
         )
 
     @router.http("POST", "traversers/customizedpaths")
-    def customized_paths(self, sources, steps, sort_by="INCR", with_vertex=True, capacity=-1, limit=-1):
+    def customized_paths(
+        self, sources, steps, sort_by="INCR", with_vertex=True, capacity=-1, limit=-1
+    ):
         return self._invoke_request(
             data=json.dumps(
                 {

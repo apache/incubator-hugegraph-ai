@@ -28,9 +28,7 @@ from hugegraph_llm.config import llm_settings, prompt as prompt_cfg
 
 def _stable_schema_string(state_json: Dict[str, Any]) -> str:
     if "simple_schema" in state_json and state_json["simple_schema"] is not None:
-        return json.dumps(
-            state_json["simple_schema"], ensure_ascii=False, sort_keys=True
-        )
+        return json.dumps(state_json["simple_schema"], ensure_ascii=False, sort_keys=True)
     if "schema" in state_json and state_json["schema"] is not None:
         return json.dumps(state_json["schema"], ensure_ascii=False, sort_keys=True)
     return ""

@@ -46,9 +46,7 @@ class BaseFlow(ABC):
         """
         pass
 
-    async def post_deal_stream(
-        self, pipeline=None
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+    async def post_deal_stream(self, pipeline=None) -> AsyncGenerator[Dict[str, Any], None]:
         """
         Streaming post-processing interface.
         Subclasses can override this method as needed.

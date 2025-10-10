@@ -58,7 +58,9 @@ def create_other_block():
 async def lifespan(app: FastAPI):  # pylint: disable=W0621
     log.info("Starting background scheduler...")
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(backup_data, trigger=CronTrigger(hour=1, minute=0), id="daily_backup", replace_existing=True)
+    scheduler.add_job(
+        backup_data, trigger=CronTrigger(hour=1, minute=0), id="daily_backup", replace_existing=True
+    )
     scheduler.start()
 
     log.info("Starting vid embedding update task...")

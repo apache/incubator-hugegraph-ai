@@ -69,12 +69,8 @@ class RAGGraphOnlyFlow(BaseFlow):
         prepared_input.graph_vector_answer = graph_vector_answer
         prepared_input.gremlin_tmpl_num = gremlin_tmpl_num
         prepared_input.gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
-        prepared_input.max_graph_items = (
-            max_graph_items or huge_settings.max_graph_items
-        )
-        prepared_input.topk_per_keyword = (
-            topk_per_keyword or huge_settings.topk_per_keyword
-        )
+        prepared_input.max_graph_items = max_graph_items or huge_settings.max_graph_items
+        prepared_input.topk_per_keyword = topk_per_keyword or huge_settings.topk_per_keyword
         prepared_input.topk_return_results = (
             topk_return_results or huge_settings.topk_return_results
         )
@@ -123,18 +119,14 @@ class RAGGraphOnlyFlow(BaseFlow):
             {only_schema_node, only_semantic_id_query_node},
             "only_graph",
         )
-        pipeline.registerGElement(
-            merge_rerank_node, {only_graph_query_node}, "merge_one"
-        )
+        pipeline.registerGElement(merge_rerank_node, {only_graph_query_node}, "merge_one")
         pipeline.registerGElement(answer_synthesize_node, {merge_rerank_node}, "graph")
         log.info("RAGGraphOnlyFlow pipeline built successfully")
         return pipeline
 
     def post_deal(self, pipeline=None):
         if pipeline is None:
-            return json.dumps(
-                {"error": "No pipeline provided"}, ensure_ascii=False, indent=2
-            )
+            return json.dumps({"error": "No pipeline provided"}, ensure_ascii=False, indent=2)
         try:
             res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
             log.info("RAGGraphOnlyFlow post processing success")

@@ -34,7 +34,8 @@ def create_exception(response_content):
         data = json.loads(response_content)
         if "ServiceUnavailableException" in data.get("exception", ""):
             raise ServiceUnavailableException(
-                f'ServiceUnavailableException, "message": "{data["message"]}",' f' "cause": "{data["cause"]}"'
+                f'ServiceUnavailableException, "message": "{data["message"]}",'
+                f' "cause": "{data["cause"]}"'
             )
     except (json.JSONDecodeError, KeyError) as e:
         raise Exception(f"Error parsing response content: {response_content}") from e
@@ -57,8 +58,7 @@ def check_if_success(response, error=None):
         req = response.request
         req_body = req.body if req.body else "Empty body"
         response_body = response.text if response.text else "Empty body"
-        log.error(
-        )
+        log.error()
         raise error
     return True
 

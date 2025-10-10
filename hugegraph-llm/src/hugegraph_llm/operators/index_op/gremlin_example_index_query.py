@@ -36,7 +36,10 @@ from hugegraph_llm.utils.log import log
 
 class GremlinExampleIndexQuery:
     def __init__(
-        self, vector_index: type[VectorStoreBase], embedding: Optional[BaseEmbedding] = None, num_examples: int = 1
+        self,
+        vector_index: type[VectorStoreBase],
+        embedding: Optional[BaseEmbedding] = None,
+        num_examples: int = 1,
     ):
         self.embedding = embedding or Embeddings().get_embedding()
         self.num_examples = num_examples
@@ -70,7 +73,9 @@ class GremlinExampleIndexQuery:
         with ThreadPoolExecutor() as executor:
             embeddings = list(
                 tqdm(
-                    executor.map(self.embedding.get_text_embedding, [row["query"] for row in properties]),
+                    executor.map(
+                        self.embedding.get_text_embedding, [row["query"] for row in properties]
+                    ),
                     total=len(properties),
                 )
             )

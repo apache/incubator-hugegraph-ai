@@ -38,9 +38,7 @@ class GremlinExampleIndexQueryNode(BaseNode):
             example_num = 2
         # Clamp to [0, 10]
         example_num = max(0, min(10, example_num))
-        self.operator = GremlinExampleIndexQuery(
-            embedding=embedding, num_examples=example_num
-        )
+        self.operator = GremlinExampleIndexQuery(embedding=embedding, num_examples=example_num)
         return CStatus()
 
     def operator_schedule(self, data_json: Dict[str, Any]):

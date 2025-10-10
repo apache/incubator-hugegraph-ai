@@ -34,15 +34,9 @@ class KeywordExtractNode(BaseNode):
         """
         try:
             max_keywords = (
-                self.wk_input.max_keywords
-                if self.wk_input.max_keywords is not None
-                else 5
+                self.wk_input.max_keywords if self.wk_input.max_keywords is not None else 5
             )
-            language = (
-                self.wk_input.language
-                if self.wk_input.language is not None
-                else "english"
-            )
+            language = self.wk_input.language if self.wk_input.language is not None else "english"
             extract_template = self.wk_input.keywords_extract_prompt
 
             self.operator = KeywordExtract(

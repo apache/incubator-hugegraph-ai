@@ -18,7 +18,13 @@
 
 import argparse
 
-from hugegraph_llm.config import PromptConfig, admin_settings, huge_settings, index_settings, llm_settings
+from hugegraph_llm.config import (
+    PromptConfig,
+    admin_settings,
+    huge_settings,
+    index_settings,
+    llm_settings,
+)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate hugegraph-llm config file")

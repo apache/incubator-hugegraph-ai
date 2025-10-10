@@ -38,16 +38,12 @@ class GraphQueryNode(BaseNode):
                 return CStatus(-1, "graph_name is required in wk_input")
 
             max_deep = self.wk_input.max_deep or 2
-            max_graph_items = (
-                self.wk_input.max_graph_items or huge_settings.max_graph_items
-            )
+            max_graph_items = self.wk_input.max_graph_items or huge_settings.max_graph_items
             max_v_prop_len = self.wk_input.max_v_prop_len or 2048
             max_e_prop_len = self.wk_input.max_e_prop_len or 256
             prop_to_match = self.wk_input.prop_to_match
             num_gremlin_generate_example = self.wk_input.gremlin_tmpl_num or -1
-            gremlin_prompt = (
-                self.wk_input.gremlin_prompt or prompt.gremlin_generate_prompt
-            )
+            gremlin_prompt = self.wk_input.gremlin_prompt or prompt.gremlin_generate_prompt
 
             # Initialize GraphRAGQuery operator
             self.graph_rag_query = GraphRAGQuery(

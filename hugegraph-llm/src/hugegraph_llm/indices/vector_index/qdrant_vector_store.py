@@ -185,7 +185,9 @@ class QdrantVectorIndex(VectorStoreBase):
     def clean(*name: str):
         name_str = "_".join(name)
         client = QdrantClient(
-            host=index_settings.qdrant_host, port=index_settings.qdrant_port, api_key=index_settings.qdrant_api_key
+            host=index_settings.qdrant_host,
+            port=index_settings.qdrant_port,
+            api_key=index_settings.qdrant_api_key,
         )
         collections = client.get_collections().collections
         collection_names = [collection.name for collection in collections]
@@ -209,7 +211,9 @@ class QdrantVectorIndex(VectorStoreBase):
     def exist(*name: str) -> bool:
         name_str = "_".join(name)
         client = QdrantClient(
-            host=index_settings.qdrant_host, port=index_settings.qdrant_port, api_key=index_settings.qdrant_api_key
+            host=index_settings.qdrant_host,
+            port=index_settings.qdrant_port,
+            api_key=index_settings.qdrant_api_key,
         )
         collections = client.get_collections().collections
         collection_names = [collection.name for collection in collections]

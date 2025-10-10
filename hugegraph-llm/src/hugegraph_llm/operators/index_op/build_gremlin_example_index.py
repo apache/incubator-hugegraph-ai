@@ -26,7 +26,12 @@ from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel
 
 # FIXME: we need keep the logic same with build_semantic_index.py
 class BuildGremlinExampleIndex:
-    def __init__(self, embedding: BaseEmbedding, examples: List[Dict[str, str]], vector_index: type[VectorStoreBase]):
+    def __init__(
+        self,
+        embedding: BaseEmbedding,
+        examples: List[Dict[str, str]],
+        vector_index: type[VectorStoreBase],
+    ):
         self.vector_index_name = "gremlin_examples"
         self.examples = examples
         self.embedding = embedding

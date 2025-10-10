@@ -104,6 +104,8 @@ def test_api_connection(
             except (json.decoder.JSONDecodeError, AttributeError) as e:
                 raise gr.Error(resp.text) from e
     return resp.status_code
+
+
 def apply_vector_engine(engine: str):
     # Persist the vector engine selection
     setattr(index_settings, "cur_vector_index", engine)
@@ -125,18 +127,22 @@ def apply_vector_engine_backend(
 ) -> int:
     """Test connection and persist per-engine connection settings"""
     status_code = -1
-    
+
     # Test connection first
     try:
         if engine == "Milvus":
             from pymilvus import connections, utility
-            connections.connect(host=host, port=int(port or 19530), user=user or "", password=password or "")
+
+            connections.connect(
+                host=host, port=int(port or 19530), user=user or "", password=password or ""
+            )
             # Test if we can list collections
             _ = utility.list_collections()
             connections.disconnect("default")
             status_code = 200
         elif engine == "Qdrant":
             from qdrant_client import QdrantClient
+
             client = QdrantClient(host=host, port=int(port or 6333), api_key=api_key)
             # Test if we can get collections
             _ = client.get_collections()
@@ -152,7 +158,7 @@ def apply_vector_engine_backend(
         if origin_call is None:
             raise gr.Error(msg) from e
         return -1
-    
+
     # Persist settings after successful test
     if engine == "Milvus":
         if host is not None:
@@ -748,7 +754,9 @@ def create_configs_block() -> list:
                         gr.Textbox(value=index_settings.milvus_host, label="host"),
                         gr.Textbox(value=str(index_settings.milvus_port), label="port"),
                         gr.Textbox(value=index_settings.milvus_user, label="user"),
-                        gr.Textbox(value=index_settings.milvus_password, label="password", type="password"),
+                        gr.Textbox(
+                            value=index_settings.milvus_password, label="password", type="password"
+                        ),
                     ]
                 apply_backend_button = gr.Button("Apply Configuration")
                 apply_backend_button.click(
@@ -759,7 +767,11 @@ def create_configs_block() -> list:
                     qdrant_inputs = [
                         gr.Textbox(value=index_settings.qdrant_host, label="host"),
                         gr.Textbox(value=str(index_settings.qdrant_port), label="port"),
-                        gr.Textbox(value=(index_settings.qdrant_api_key or ""), label="api_key", type="password"),
+                        gr.Textbox(
+                            value=(index_settings.qdrant_api_key or ""),
+                            label="api_key",
+                            type="password",
+                        ),
                     ]
                 apply_backend_button = gr.Button("Apply Configuration")
                 apply_backend_button.click(

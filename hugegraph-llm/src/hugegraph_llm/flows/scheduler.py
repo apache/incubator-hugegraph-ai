@@ -158,9 +158,7 @@ class Scheduler:
         else:
             try:
                 # fetch pipeline & prepare input for flow
-                prepared_input: WkFlowInput = pipeline.getGParamWithNoEmpty(
-                    "wkflow_input"
-                )
+                prepared_input: WkFlowInput = pipeline.getGParamWithNoEmpty("wkflow_input")
                 prepared_input.stream = True
                 flow.prepare(prepared_input, *args, **kwargs)
                 status = pipeline.run()

@@ -22,7 +22,9 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 class ChunkSplitter:
     def __init__(
-        self, split_type: Literal["paragraph", "sentence"] = "paragraph", language: Literal["zh", "en"] = "zh"
+        self,
+        split_type: Literal["paragraph", "sentence"] = "paragraph",
+        language: Literal["zh", "en"] = "zh",
     ):
         if language == "zh":
             separators = ["\n\n", "\n", "。", "，", ""]
