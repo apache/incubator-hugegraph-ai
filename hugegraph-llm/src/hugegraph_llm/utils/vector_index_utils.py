@@ -24,8 +24,6 @@ import gradio as gr
 from hugegraph_llm.config import huge_settings, index_settings
 from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
-from hugegraph_llm.indices.vector_index.milvus_vector_store import MilvusVectorIndex
-from hugegraph_llm.indices.vector_index.qdrant_vector_store import QdrantVectorIndex
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.kg_construction_task import KgBuilder
@@ -93,11 +91,33 @@ def build_vector_index(input_file, input_text):
 
 
 def get_vector_index_class(vector_index_str: str) -> Type[VectorStoreBase]:
-    mapping = {
-        "Faiss": FaissVectorIndex,
-        "Milvus": MilvusVectorIndex,
-        "Qdrant": QdrantVectorIndex,
-    }
-    ret = mapping.get(vector_index_str)
-    assert ret
-    return ret  # type: ignore
+    if vector_index_str == "Faiss":
+        return FaissVectorIndex  # type: ignore[return-value]
+    if vector_index_str == "Milvus":
+        try:
+            from hugegraph_llm.indices.vector_index.milvus_vector_store import (  # pylint: disable=import-outside-toplevel
+                MilvusVectorIndex,
+            )
+
+            return MilvusVectorIndex  # type: ignore[return-value]
+        except Exception as e:  # pylint: disable=broad-except
+            raise gr.Error(
+                f"Milvus engine selected but dependency not available: {e}.\n"
+                "Fix it by running: 'uv sync --extra vectordb' (recommended) or install 'pymilvus' manually.\n"
+                "Alternatively, switch vector engine to Faiss/Qdrant in the UI."
+            )
+    if vector_index_str == "Qdrant":
+        try:
+            from hugegraph_llm.indices.vector_index.qdrant_vector_store import (  # pylint: disable=import-outside-toplevel
+                QdrantVectorIndex,
+            )
+
+            return QdrantVectorIndex  # type: ignore[return-value]
+        except Exception as e:  # pylint: disable=broad-except
+            raise gr.Error(
+                f"Qdrant engine selected but dependency not available: {e}.\n"
+                "Fix it by running: 'uv sync --extra vectordb' (recommended) or install 'qdrant-client' manually.\n"
+                "Alternatively, switch vector engine to Faiss/Milvus in the UI."
+            )
+    # Fallback to Faiss
+    return FaissVectorIndex  # type: ignore[return-value]

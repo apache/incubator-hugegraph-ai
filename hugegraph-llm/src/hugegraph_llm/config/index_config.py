@@ -35,4 +35,4 @@ class IndexConfig(BaseConfig):
     milvus_user: str = os.environ.get("MILVUS_USER", "")
     milvus_password: str = os.environ.get("MILVUS_PASSWORD", "")
 
-    cur_vector_index: str = "Faiss"
+    cur_vector_index: str = os.environ.get("CUR_VECTOR_INDEX", "Faiss")
