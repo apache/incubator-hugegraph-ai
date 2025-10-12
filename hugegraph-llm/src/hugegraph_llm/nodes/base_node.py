@@ -16,6 +16,7 @@
 from PyCGraph import GNode, CStatus
 from hugegraph_llm.nodes.util import init_context
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
+from hugegraph_llm.utils.log import log
 
 
 class BaseNode(GNode):
@@ -43,6 +44,8 @@ class BaseNode(GNode):
         sts = self.node_init()
         if sts.isErr():
             return sts
+        if self.context is None:
+            return CStatus(-1, "Context not initialized")
         self.context.lock()
         try:
             data_json = self.context.to_json()
@@ -60,8 +63,10 @@ class BaseNode(GNode):
 
         self.context.lock()
         try:
-            if isinstance(res, dict):
+            if res is not None and isinstance(res, dict):
                 self.context.assign_from_json(res)
+            elif res is not None:
+                log.warning(f"operator_schedule returned non-dict type: {type(res)}")
         finally:
             self.context.unlock()
         return CStatus()
@@ -69,6 +74,6 @@ class BaseNode(GNode):
     def operator_schedule(self, data_json):
         """
         Interface for scheduling the operator, can be overridden by subclasses.
-        Returns a CStatus object indicating whether scheduling succeeded.
+        Subclasses should return a dict to update the workflow state, or None to skip state update.
         """
         pass

@@ -27,21 +27,30 @@ class GraphExtractFlow(BaseFlow):
     def __init__(self):
         pass
 
-    def prepare(self, prepared_input: WkFlowInput, schema, texts, example_prompt, extract_type):
+    def prepare(
+        self,
+        prepared_input: WkFlowInput,
+        schema,
+        texts,
+        example_prompt,
+        extract_type,
+        language="zh",
+    ):
         # prepare input data
         prepared_input.texts = texts
-        prepared_input.language = "zh"
+        prepared_input.language = language
         prepared_input.split_type = "document"
         prepared_input.example_prompt = example_prompt
         prepared_input.schema = schema
         prepared_input.extract_type = extract_type
-        return
 
-    def build_flow(self, schema, texts, example_prompt, extract_type):
+    def build_flow(self, schema, texts, example_prompt, extract_type, language="zh"):
         pipeline = GPipeline()
         prepared_input = WkFlowInput()
         # prepare input data
-        self.prepare(prepared_input, schema, texts, example_prompt, extract_type)
+        self.prepare(
+            prepared_input, schema, texts, example_prompt, extract_type, language
+        )
 
         pipeline.createGParam(prepared_input, "wkflow_input")
         pipeline.createGParam(WkFlowState(), "wkflow_state")

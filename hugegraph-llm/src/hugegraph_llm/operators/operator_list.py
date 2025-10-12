@@ -14,45 +14,131 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
-
-from typing import Dict, Any, Optional, List, Literal
+from typing import Optional, List, Literal, Union
 
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.models.llms.base import BaseLLM
-from hugegraph_llm.models.llms.init_llm import LLMs
-from hugegraph_llm.operators.common_op.merge_dedup_rerank import MergeDedupRerank
+from hugegraph_llm.operators.common_op.check_schema import CheckSchema
 from hugegraph_llm.operators.common_op.print_result import PrintResult
-from hugegraph_llm.operators.document_op.word_extract import WordExtract
-from hugegraph_llm.operators.hugegraph_op.graph_rag_query import GraphRAGQuery
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
+from hugegraph_llm.operators.index_op.build_gremlin_example_index import (
+    BuildGremlinExampleIndex,
+)
+from hugegraph_llm.operators.index_op.gremlin_example_index_query import (
+    GremlinExampleIndexQuery,
+)
+from hugegraph_llm.operators.llm_op.gremlin_generate import GremlinGenerateSynthesize
+from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_rpm
+from hugegraph_llm.operators.hugegraph_op.fetch_graph_data import FetchGraphData
+from hugegraph_llm.operators.document_op.chunk_split import ChunkSplit
+from hugegraph_llm.operators.llm_op.info_extract import InfoExtract
+from hugegraph_llm.operators.llm_op.property_graph_extract import PropertyGraphExtract
+from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
+from hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph import Commit2Graph
+from hugegraph_llm.operators.index_op.build_semantic_index import BuildSemanticIndex
+from hugegraph_llm.operators.index_op.build_vector_index import BuildVectorIndex
+from hugegraph_llm.operators.document_op.word_extract import WordExtract
+from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
 from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
+from hugegraph_llm.operators.common_op.merge_dedup_rerank import MergeDedupRerank
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
-from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
-from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_rpm
-from hugegraph_llm.config import prompt, huge_settings
+from hugegraph_llm.config import huge_settings
+from pyhugegraph.client import PyHugeClient
 
 
-class RAGPipeline:
-    """
-    RAGPipeline is a (core)class that encapsulates a series of operations for extracting information from text,
-    querying graph databases and vector indices, merging and re-ranking results, and generating answers.
-    """
+class OperatorList:
+    def __init__(
+        self,
+        llm: BaseLLM,
+        embedding: BaseEmbedding,
+        graph: Optional[PyHugeClient] = None,
+    ):
+        self.llm = llm
+        self.embedding = embedding
+        self.result = None
+        self.operators = []
+        self.graph = graph
 
-    def __init__(self, llm: Optional[BaseLLM] = None, embedding: Optional[BaseEmbedding] = None):
-        """
-        Initialize the RAGPipeline with optional LLM and embedding models.
+    def clear(self):
+        self.operators = []
+        return self
 
-        :param llm: Optional LLM model to use.
-        :param embedding: Optional embedding model to use.
-        """
-        self._chat_llm = llm or LLMs().get_chat_llm()
-        self._extract_llm = llm or LLMs().get_extract_llm()
-        self._text2gqlt_llm = llm or LLMs().get_text2gql_llm()
-        self._embedding = embedding or Embeddings().get_embedding()
-        self._operators: List[Any] = []
+    def example_index_build(self, examples):
+        self.operators.append(BuildGremlinExampleIndex(self.embedding, examples))
+        return self
+
+    def import_schema(
+        self, from_hugegraph=None, from_extraction=None, from_user_defined=None
+    ):
+        if from_hugegraph:
+            self.operators.append(SchemaManager(from_hugegraph))
+        elif from_user_defined:
+            self.operators.append(CheckSchema(from_user_defined))
+        elif from_extraction:
+            raise NotImplementedError("Not implemented yet")
+        else:
+            raise ValueError("No input data / invalid schema type")
+        return self
+
+    def example_index_query(self, num_examples):
+        self.operators.append(GremlinExampleIndexQuery(self.embedding, num_examples))
+        return self
+
+    def gremlin_generate_synthesize(
+        self,
+        schema,
+        gremlin_prompt: Optional[str] = None,
+        vertices: Optional[List[str]] = None,
+    ):
+        self.operators.append(
+            GremlinGenerateSynthesize(self.llm, schema, vertices, gremlin_prompt)
+        )
+        return self
+
+    def print_result(self):
+        self.operators.append(PrintResult())
+        return self
+
+    def fetch_graph_data(self):
+        self.operators.append(FetchGraphData(self.graph))
+        return self
+
+    def chunk_split(
+        self,
+        text: Union[str, List[str]],  # text to be split
+        split_type: Literal["document", "paragraph", "sentence"] = "document",
+        language: Literal["zh", "en"] = "zh",
+    ):
+        self.operators.append(ChunkSplit(text, split_type, language))
+        return self
+
+    def extract_info(
+        self,
+        example_prompt: Optional[str] = None,
+        extract_type: Literal["triples", "property_graph"] = "triples",
+    ):
+        if extract_type == "triples":
+            self.operators.append(InfoExtract(self.llm, example_prompt))
+        elif extract_type == "property_graph":
+            self.operators.append(PropertyGraphExtract(self.llm, example_prompt))
+        return self
+
+    def disambiguate_word_sense(self):
+        self.operators.append(DisambiguateData(self.llm))
+        return self
+
+    def commit_to_hugegraph(self):
+        self.operators.append(Commit2Graph())
+        return self
+
+    def build_vertex_id_semantic_index(self):
+        self.operators.append(BuildSemanticIndex(self.embedding))
+        return self
+
+    def build_vector_index(self):
+        self.operators.append(BuildVectorIndex(self.embedding))
+        return self
 
     def extract_word(self, text: Optional[str] = None, language: str = "english"):
         """
@@ -62,7 +148,7 @@ class RAGPipeline:
         :param language: Language of the text.
         :return: Self-instance for chaining.
         """
-        self._operators.append(WordExtract(text=text, language=language))
+        self.operators.append(WordExtract(text=text, language=language))
         return self
 
     def extract_keywords(
@@ -81,7 +167,7 @@ class RAGPipeline:
         :param extract_template: Template for keyword extraction.
         :return: Self-instance for chaining.
         """
-        self._operators.append(
+        self.operators.append(
             KeywordExtract(
                 text=text,
                 max_keywords=max_keywords,
@@ -89,10 +175,6 @@ class RAGPipeline:
                 extract_template=extract_template,
             )
         )
-        return self
-
-    def import_schema(self, graph_name: str):
-        self._operators.append(SchemaManager(graph_name))
         return self
 
     def keywords_to_vid(
@@ -110,48 +192,13 @@ class RAGPipeline:
         :param vector_dis_threshold: Vector distance threshold.
         :return: Self-instance for chaining.
         """
-        self._operators.append(
+        self.operators.append(
             SemanticIdQuery(
-                embedding=self._embedding,
+                embedding=self.embedding,
                 by=by,
                 topk_per_keyword=topk_per_keyword,
                 topk_per_query=topk_per_query,
                 vector_dis_threshold=vector_dis_threshold,
-            )
-        )
-        return self
-
-    def query_graphdb(
-        self,
-        max_deep: int = 2,
-        max_graph_items: int = huge_settings.max_graph_items,
-        max_v_prop_len: int = 2048,
-        max_e_prop_len: int = 256,
-        prop_to_match: Optional[str] = None,
-        num_gremlin_generate_example: Optional[int] = -1,
-        gremlin_prompt: Optional[str] = prompt.gremlin_generate_prompt,
-    ):
-        """
-        Add a graph RAG query operator to the pipeline.
-
-        :param max_deep: Maximum depth for the graph query.
-        :param max_graph_items: Maximum number of items to retrieve.
-        :param max_v_prop_len: Maximum length of vertex properties.
-        :param max_e_prop_len: Maximum length of edge properties.
-        :param prop_to_match: Property to match in the graph.
-        :param num_gremlin_generate_example: Number of examples to generate.
-        :param gremlin_prompt: Gremlin prompt for generating examples.
-        :return: Self-instance for chaining.
-        """
-        self._operators.append(
-            GraphRAGQuery(
-                max_deep=max_deep,
-                max_graph_items=max_graph_items,
-                max_v_prop_len=max_v_prop_len,
-                max_e_prop_len=max_e_prop_len,
-                prop_to_match=prop_to_match,
-                num_gremlin_generate_example=num_gremlin_generate_example,
-                gremlin_prompt=gremlin_prompt,
             )
         )
         return self
@@ -163,9 +210,9 @@ class RAGPipeline:
         :param max_items: Maximum number of items to retrieve.
         :return: Self-instance for chaining.
         """
-        self._operators.append(
+        self.operators.append(
             VectorIndexQuery(
-                embedding=self._embedding,
+                embedding=self.embedding,
                 topk=max_items,
             )
         )
@@ -184,9 +231,9 @@ class RAGPipeline:
 
         :return: Self-instance for chaining.
         """
-        self._operators.append(
+        self.operators.append(
             MergeDedupRerank(
-                embedding=self._embedding,
+                embedding=self.embedding,
                 graph_ratio=graph_ratio,
                 method=rerank_method,
                 near_neighbor_first=near_neighbor_first,
@@ -214,7 +261,7 @@ class RAGPipeline:
         :param answer_prompt: Template for the answer synthesis prompt.
         :return: Self-instance for chaining.
         """
-        self._operators.append(
+        self.operators.append(
             AnswerSynthesize(
                 raw_answer=raw_answer,
                 vector_only_answer=vector_only_answer,
@@ -225,32 +272,11 @@ class RAGPipeline:
         )
         return self
 
-    def print_result(self):
-        """
-        Add a print result operator to the pipeline.
-
-        :return: Self-instance for chaining.
-        """
-        self._operators.append(PrintResult())
-        return self
-
     @log_time("total time")
     @record_rpm
-    def run(self, **kwargs) -> Dict[str, Any]:
-        """
-        Execute all operators in the pipeline in sequence.
-
-        :param kwargs: Additional context to pass to operators.
-        :return: Final context after all operators have been executed.
-        """
-        if len(self._operators) == 0:
-            self.extract_keywords().query_graphdb(
-                max_graph_items=kwargs.get("max_graph_items")
-            ).synthesize_answer()
-
+    def run(self, **kwargs):
         context = kwargs
-
-        for operator in self._operators:
+        for operator in self.operators:
             context = self._run_operator(operator, context)
         return context
 

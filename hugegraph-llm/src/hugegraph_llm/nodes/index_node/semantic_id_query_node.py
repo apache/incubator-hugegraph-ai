@@ -39,13 +39,25 @@ class SemanticIdQueryNode(BaseNode):
                 return CStatus(-1, "graph_name is required in wk_input")
 
             embedding = get_embedding(llm_settings)
-            by = self.wk_input.semantic_by or "keywords"
-            topk_per_keyword = (
-                self.wk_input.topk_per_keyword or huge_settings.topk_per_keyword
+            by = (
+                self.wk_input.semantic_by
+                if self.wk_input.semantic_by is not None
+                else "keywords"
             )
-            topk_per_query = self.wk_input.topk_per_query or 10
+            topk_per_keyword = (
+                self.wk_input.topk_per_keyword
+                if self.wk_input.topk_per_keyword is not None
+                else huge_settings.topk_per_keyword
+            )
+            topk_per_query = (
+                self.wk_input.topk_per_query
+                if self.wk_input.topk_per_query is not None
+                else 10
+            )
             vector_dis_threshold = (
-                self.wk_input.vector_dis_threshold or huge_settings.vector_dis_threshold
+                self.wk_input.vector_dis_threshold
+                if self.wk_input.vector_dis_threshold is not None
+                else huge_settings.vector_dis_threshold
             )
 
             # Initialize the semantic ID query operator

@@ -31,8 +31,8 @@ from hugegraph_llm.api.models.rag_requests import (
 from hugegraph_llm.config import huge_settings
 from hugegraph_llm.api.models.rag_response import RAGResponse
 from hugegraph_llm.config import llm_settings, prompt
+from hugegraph_llm.utils.graph_index_utils import get_vertex_details
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.flows.scheduler import SchedulerSingleton
 
 
 # pylint: disable=too-many-statements
@@ -67,7 +67,8 @@ def rag_http_api(
             # Keep prompt params in the end
             custom_related_information=req.custom_priority_info,
             answer_prompt=req.answer_prompt or prompt.answer_prompt,
-            keywords_extract_prompt=req.keywords_extract_prompt or prompt.keywords_extract_prompt,
+            keywords_extract_prompt=req.keywords_extract_prompt
+            or prompt.keywords_extract_prompt,
             gremlin_prompt=req.gremlin_prompt or prompt.gremlin_generate_prompt,
         )
         # TODO: we need more info in the response for users to understand the query logic
@@ -76,7 +77,8 @@ def rag_http_api(
             **{
                 key: value
                 for key, value in zip(
-                    ["raw_answer", "vector_only", "graph_only", "graph_vector_answer"], result
+                    ["raw_answer", "vector_only", "graph_only", "graph_vector_answer"],
+                    result,
                 )
                 if getattr(req, key)
             },
@@ -110,12 +112,7 @@ def rag_http_api(
             )
 
             if req.get_vertex_only:
-                from hugegraph_llm.operators.hugegraph_op.graph_rag_query import GraphRAGQuery
-
-                graph_rag = GraphRAGQuery()
-                graph_rag.init_client(result)
-                vertex_details = graph_rag.get_vertex_details(result["match_vids"])
-
+                vertex_details = get_vertex_details(result["match_vids"], result)
                 if vertex_details:
                     result["match_vids"] = vertex_details
 
@@ -135,7 +132,9 @@ def rag_http_api(
 
         except TypeError as e:
             log.error("TypeError in graph_rag_recall_api: %s", e)
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+            ) from e
         except Exception as e:
             log.error("Unexpected error occurred: %s", e)
             raise HTTPException(
@@ -146,7 +145,9 @@ def rag_http_api(
     @router.post("/config/graph", status_code=status.HTTP_201_CREATED)
     def graph_config_api(req: GraphConfigRequest):
         # Accept status code
-        res = apply_graph_conf(req.url, req.name, req.user, req.pwd, req.gs, origin_call="http")
+        res = apply_graph_conf(
+            req.url, req.name, req.user, req.pwd, req.gs, origin_call="http"
+        )
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
 
     # TODO: restructure the implement of llm to three types, like "/config/chat_llm"
@@ -156,10 +157,16 @@ def rag_http_api(
 
         if req.llm_type == "openai":
             res = apply_llm_conf(
-                req.api_key, req.api_base, req.language_model, req.max_tokens, origin_call="http"
+                req.api_key,
+                req.api_base,
+                req.language_model,
+                req.max_tokens,
+                origin_call="http",
             )
         else:
-            res = apply_llm_conf(req.host, req.port, req.language_model, None, origin_call="http")
+            res = apply_llm_conf(
+                req.host, req.port, req.language_model, None, origin_call="http"
+            )
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
 
     @router.post("/config/embedding", status_code=status.HTTP_201_CREATED)
@@ -171,7 +178,9 @@ def rag_http_api(
                 req.api_key, req.api_base, req.language_model, origin_call="http"
             )
         else:
-            res = apply_embedding_conf(req.host, req.port, req.language_model, origin_call="http")
+            res = apply_embedding_conf(
+                req.host, req.port, req.language_model, origin_call="http"
+            )
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
 
     @router.post("/config/rerank", status_code=status.HTTP_201_CREATED)
@@ -183,7 +192,9 @@ def rag_http_api(
                 req.api_key, req.reranker_model, req.cohere_base_url, origin_call="http"
             )
         elif req.reranker_type == "siliconflow":
-            res = apply_reranker_conf(req.api_key, req.reranker_model, None, origin_call="http")
+            res = apply_reranker_conf(
+                req.api_key, req.reranker_model, None, origin_call="http"
+            )
         else:
             res = status.HTTP_501_NOT_IMPLEMENTED
         return generate_response(RAGResponse(status_code=res, message="Missing Value"))
@@ -196,20 +207,20 @@ def rag_http_api(
             # Basic parameter validation: empty query => 400
             if not req.query or not str(req.query).strip():
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail="Query must not be empty."
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Query must not be empty.",
                 )
 
             output_types_str_list = None
             if req.output_types:
                 output_types_str_list = [ot.value for ot in req.output_types]
 
-            response_dict = SchedulerSingleton.get_instance().schedule_flow(
-                "text2gremlin",
-                req.query,
-                req.example_num,
-                huge_settings.graph_name,
-                req.gremlin_prompt,
-                output_types_str_list,
+            response_dict = gremlin_generate_selective_func(
+                inp=req.query,
+                example_num=req.example_num,
+                schema_input=huge_settings.graph_name,
+                gremlin_prompt_input=req.gremlin_prompt,
+                requested_outputs=output_types_str_list,
             )
             return response_dict
         except HTTPException as e:

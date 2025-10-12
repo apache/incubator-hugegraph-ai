@@ -20,7 +20,7 @@ from hugegraph_llm.nodes.index_node.build_semantic_index import BuildSemanticInd
 from hugegraph_llm.state.ai_state import WkFlowState
 
 
-class UpdateVidEmbeddingsFlows(BaseFlow):
+class UpdateVidEmbeddingsFlow(BaseFlow):
     def prepare(self, prepared_input: WkFlowInput):
         return CStatus()
 

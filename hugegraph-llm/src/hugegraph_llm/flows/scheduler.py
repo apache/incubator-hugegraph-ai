@@ -18,9 +18,10 @@ from typing import Dict, Any
 from PyCGraph import GPipeline, GPipelineManager
 from hugegraph_llm.flows.build_vector_index import BuildVectorIndexFlow
 from hugegraph_llm.flows.common import BaseFlow
+from hugegraph_llm.flows.build_example_index import BuildExampleIndexFlow
 from hugegraph_llm.flows.graph_extract import GraphExtractFlow
 from hugegraph_llm.flows.import_graph_data import ImportGraphDataFlow
-from hugegraph_llm.flows.update_vid_embeddings import UpdateVidEmbeddingsFlows
+from hugegraph_llm.flows.update_vid_embeddings import UpdateVidEmbeddingsFlow
 from hugegraph_llm.flows.get_graph_index_info import GetGraphIndexInfoFlow
 from hugegraph_llm.flows.build_schema import BuildSchemaFlow
 from hugegraph_llm.flows.prompt_generate import PromptGenerateFlow
@@ -54,7 +55,7 @@ class Scheduler:
         }
         self.pipeline_pool["update_vid_embeddings"] = {
             "manager": GPipelineManager(),
-            "flow": UpdateVidEmbeddingsFlows(),
+            "flow": UpdateVidEmbeddingsFlow(),
         }
         self.pipeline_pool["get_graph_index_info"] = {
             "manager": GPipelineManager(),
@@ -89,17 +90,21 @@ class Scheduler:
             "manager": GPipelineManager(),
             "flow": RAGGraphVectorFlow(),
         }
+        self.pipeline_pool["build_examples_index"] = {
+            "manager": GPipelineManager(),
+            "flow": BuildExampleIndexFlow(),
+        }
         self.max_pipeline = max_pipeline
 
     # TODO: Implement Agentic Workflow
     def agentic_flow(self):
         pass
 
-    def schedule_flow(self, flow: str, *args, **kwargs):
-        if flow not in self.pipeline_pool:
-            raise ValueError(f"Unsupported workflow {flow}")
-        manager: GPipelineManager = self.pipeline_pool[flow]["manager"]
-        flow: BaseFlow = self.pipeline_pool[flow]["flow"]
+    def schedule_flow(self, flow_name: str, *args, **kwargs):
+        if flow_name not in self.pipeline_pool:
+            raise ValueError(f"Unsupported workflow {flow_name}")
+        manager: GPipelineManager = self.pipeline_pool[flow_name]["manager"]
+        flow: BaseFlow = self.pipeline_pool[flow_name]["flow"]
         pipeline: GPipeline = manager.fetch()
         if pipeline is None:
             # call coresponding flow_func to create new workflow
@@ -130,11 +135,11 @@ class Scheduler:
             manager.release(pipeline)
             return res
 
-    async def schedule_stream_flow(self, flow: str, *args, **kwargs):
-        if flow not in self.pipeline_pool:
-            raise ValueError(f"Unsupported workflow {flow}")
-        manager: GPipelineManager = self.pipeline_pool[flow]["manager"]
-        flow: BaseFlow = self.pipeline_pool[flow]["flow"]
+    async def schedule_stream_flow(self, flow_name: str, *args, **kwargs):
+        if flow_name not in self.pipeline_pool:
+            raise ValueError(f"Unsupported workflow {flow_name}")
+        manager: GPipelineManager = self.pipeline_pool[flow_name]["manager"]
+        flow: BaseFlow = self.pipeline_pool[flow_name]["flow"]
         pipeline: GPipeline = manager.fetch()
         if pipeline is None:
             # call coresponding flow_func to create new workflow

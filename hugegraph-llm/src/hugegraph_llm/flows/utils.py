@@ -19,7 +19,7 @@ from hugegraph_llm.state.ai_state import WkFlowInput
 from hugegraph_llm.utils.log import log
 
 
-def prepare_schema(prepared_input: WkFlowInput, schema):
+def prepare_schema(prepared_input: WkFlowInput, schema: str) -> None:
     schema = schema.strip()
     if schema.startswith("{"):
         try:

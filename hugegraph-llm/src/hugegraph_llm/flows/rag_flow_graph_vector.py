@@ -13,7 +13,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import json
 
 from typing import Optional, Literal
 
@@ -41,12 +40,12 @@ class RAGGraphVectorFlow(BaseFlow):
         self,
         prepared_input: WkFlowInput,
         query: str,
-        vector_search: bool = None,
-        graph_search: bool = None,
-        raw_answer: bool = None,
-        vector_only_answer: bool = None,
-        graph_only_answer: bool = None,
-        graph_vector_answer: bool = None,
+        vector_search: bool = True,
+        graph_search: bool = True,
+        raw_answer: bool = False,
+        vector_only_answer: bool = False,
+        graph_only_answer: bool = False,
+        graph_vector_answer: bool = True,
         graph_ratio: float = 0.5,
         rerank_method: Literal["bleu", "reranker"] = "bleu",
         near_neighbor_first: bool = False,
@@ -137,9 +136,7 @@ class RAGGraphVectorFlow(BaseFlow):
 
     def post_deal(self, pipeline=None):
         if pipeline is None:
-            return json.dumps(
-                {"error": "No pipeline provided"}, ensure_ascii=False, indent=2
-            )
+            return {"error": "No pipeline provided"}
         try:
             res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
             log.info("RAGGraphVectorFlow post processing success")
@@ -151,8 +148,4 @@ class RAGGraphVectorFlow(BaseFlow):
             }
         except Exception as e:
             log.error(f"RAGGraphVectorFlow post processing failed: {e}")
-            return json.dumps(
-                {"error": f"Post processing failed: {str(e)}"},
-                ensure_ascii=False,
-                indent=2,
-            )
+            return {"error": f"Post processing failed: {str(e)}"}

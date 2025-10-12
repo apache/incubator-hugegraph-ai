@@ -51,11 +51,7 @@ def rag_answer(
 ) -> Tuple:
     """
     Generate an answer using the RAG (Retrieval-Augmented Generation) pipeline.
-    1. Initialize the RAGPipeline.
-    2. Select vector search or graph search based on parameters.
-    3. Merge, deduplicate, and rerank the results.
-    4. Synthesize the final answer.
-    5. Run the pipeline and return the results.
+    Fetch the Scheduler to deal with the request
     """
     graph_search, gremlin_prompt, vector_search = update_ui_configs(
         answer_prompt,
@@ -172,11 +168,7 @@ async def rag_answer_streaming(
 ) -> AsyncGenerator[Tuple[str, str, str, str], None]:
     """
     Generate an answer using the RAG (Retrieval-Augmented Generation) pipeline.
-    1. Initialize the RAGPipeline.
-    2. Select vector search or graph search based on parameters.
-    3. Merge, deduplicate, and rerank the results.
-    4. Synthesize the final answer.
-    5. Run the pipeline and return the results.
+    Fetch the Scheduler to deal with the request
     """
     graph_search, gremlin_prompt, vector_search = update_ui_configs(
         answer_prompt,

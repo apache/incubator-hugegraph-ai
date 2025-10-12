@@ -75,42 +75,6 @@ python -m hugegraph_llm.demo.rag_demo.app
 > [!NOTE]
 > Examples assume you've activated the virtual environment with `source .venv/bin/activate`
 
-#### GraphRAG - Question Answering
-
-```python
-from hugegraph_llm.operators.graph_rag_task import RAGPipeline
-
-# Initialize RAG pipeline
-graph_rag = RAGPipeline()
-
-# Ask questions about your graph
-result = (graph_rag
-    .extract_keywords(text="Tell me about Al Pacino.")
-    .keywords_to_vid()
-    .query_graphdb(max_deep=2, max_graph_items=30)
-    .merge_dedup_rerank()
-    .synthesize_answer()
-    .run())
-```
-
-#### Knowledge Graph Construction
-
-```python
-from hugegraph_llm.models.llms.init_llm import LLMs
-from hugegraph_llm.operators.kg_construction_task import KgBuilder
-
-# Build KG from text
-TEXT = "Your text content here..."
-builder = KgBuilder(LLMs().get_chat_llm())
-
-(builder
-    .import_schema(from_hugegraph="hugegraph")
-    .chunk_split(TEXT)
-    .extract_info(extract_type="property_graph")
-    .commit_to_hugegraph()
-    .run())
-```
-
 #### Graph Machine Learning
 
 ```bash

@@ -48,7 +48,9 @@ class GetGraphIndexInfoFlow(BaseFlow):
 
     def post_deal(self, pipeline=None):
         graph_summary_info = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
-        folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
+        folder_name = get_index_folder_name(
+            huge_settings.graph_name, huge_settings.graph_space
+        )
         index_dir = str(os.path.join(resource_path, folder_name, "graph_vids"))
         filename_prefix = get_filename_prefix(
             llm_settings.embedding_type,
@@ -56,7 +58,7 @@ class GetGraphIndexInfoFlow(BaseFlow):
         )
         try:
             vector_index = VectorIndex.from_index_file(index_dir, filename_prefix)
-        except FileNotFoundError:
+        except (RuntimeError, OSError):
             return json.dumps(graph_summary_info, ensure_ascii=False, indent=2)
         graph_summary_info["vid_index"] = {
             "embed_dim": vector_index.index.d,

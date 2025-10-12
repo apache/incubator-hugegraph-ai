@@ -202,7 +202,7 @@ flowchart TD
   - `BuildVectorIndexFlow`: 向量索引构建工作流
   - `GraphExtractFlow`: 图抽取工作流
   - `ImportGraphDataFlow`: 图数据导入工作流
-  - `UpdateVidEmbeddingsFlows`: 向量更新工作流
+  - `UpdateVidEmbeddingsFlow`: 向量更新工作流
   - `GetGraphIndexInfoFlow`: 图索引信息获取工作流
   - `BuildSchemaFlow`: 模式构建工作流
   - `PromptGenerateFlow`: 提示词生成工作流
