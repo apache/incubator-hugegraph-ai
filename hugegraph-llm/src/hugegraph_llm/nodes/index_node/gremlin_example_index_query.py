@@ -19,7 +19,6 @@ from typing import Any, Dict
 
 from PyCGraph import CStatus
 
-from hugegraph_llm.config import llm_settings
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.gremlin_example_index_query import (
     GremlinExampleIndexQuery,

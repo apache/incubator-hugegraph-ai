@@ -57,7 +57,7 @@ class BaseFlow(ABC):
             return
         try:
             state_json = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
-            log.info(f"{flow_name} post processing success")
+            log.info("%s post processing success", flow_name)
             stream_flow = state_json.get("stream_generator")
             if stream_flow is None:
                 yield {"error": "No stream_generator found in workflow state"}
@@ -65,5 +65,5 @@ class BaseFlow(ABC):
             async for chunk in stream_flow:
                 yield chunk
         except Exception as e:
-            log.error(f"{flow_name} post processing failed: {e}")
+            log.error("%s post processing failed: %s", flow_name, e)
             yield {"error": f"Post processing failed: {str(e)}"}

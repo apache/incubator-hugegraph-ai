@@ -13,12 +13,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from PyCGraph import CStatus
 from typing import Dict, Any
+
+from PyCGraph import CStatus
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
-from hugegraph_llm.config import huge_settings, llm_settings
+from hugegraph_llm.config import huge_settings
 from hugegraph_llm.utils.log import log
 
 
@@ -57,7 +58,7 @@ class SemanticIdQueryNode(BaseNode):
 
             return super().node_init()
         except Exception as e:
-            log.error(f"Failed to initialize SemanticIdQueryNode: {e}")
+            log.error("Failed to initialize SemanticIdQueryNode: %s", e)
 
             return CStatus(-1, f"SemanticIdQueryNode initialization failed: {e}")
 
@@ -78,10 +79,10 @@ class SemanticIdQueryNode(BaseNode):
             semantic_result = self.semantic_id_query.run(data_json)
 
             match_vids = semantic_result.get("match_vids", [])
-            log.info(f"Semantic query completed, found {len(match_vids)} matching vertex IDs")
+            log.info("Semantic query completed, found %d matching vertex IDs", len(match_vids))
 
             return semantic_result
 
         except Exception as e:
-            log.error(f"Semantic query failed: {e}")
+            log.error("Semantic query failed: %s", e)
             return data_json

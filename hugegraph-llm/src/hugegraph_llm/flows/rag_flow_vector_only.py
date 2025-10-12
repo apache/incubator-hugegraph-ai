@@ -111,7 +111,7 @@ class RAGVectorOnlyFlow(BaseFlow):
                 "graph_vector_answer": res.get("graph_vector_answer", ""),
             }
         except Exception as e:
-            log.error(f"RAGVectorOnlyFlow post processing failed: {e}")
+            log.error("RAGVectorOnlyFlow post processing failed: %s", e)
             return json.dumps(
                 {"error": f"Post processing failed: {str(e)}"},
                 ensure_ascii=False,

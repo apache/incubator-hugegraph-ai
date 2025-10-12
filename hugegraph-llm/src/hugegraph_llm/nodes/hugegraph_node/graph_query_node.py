@@ -13,8 +13,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from PyCGraph import CStatus
 from typing import Dict, Any
+
+from PyCGraph import CStatus
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.hugegraph_op.graph_rag_query import GraphRAGQuery
 from hugegraph_llm.config import huge_settings, prompt
@@ -58,7 +59,7 @@ class GraphQueryNode(BaseNode):
 
             return super().node_init()
         except Exception as e:
-            log.error(f"Failed to initialize GraphQueryNode: {e}")
+            log.error("Failed to initialize GraphQueryNode: %s", e)
 
             return CStatus(-1, f"GraphQueryNode initialization failed: {e}")
 
@@ -79,11 +80,12 @@ class GraphQueryNode(BaseNode):
             data_json.update(graph_result)
 
             log.info(
-                f"Graph query completed, found {len(data_json.get('graph_result', []))} results"
+                "Graph query completed, found %d results",
+                len(data_json.get("graph_result", [])),
             )
 
             return data_json
 
         except Exception as e:
-            log.error(f"Graph query failed: {e}")
+            log.error("Graph query failed: %s", e)
             return data_json

@@ -14,7 +14,6 @@
 #  limitations under the License.
 
 from typing import Dict, Any
-from hugegraph_llm.config import llm_settings
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
@@ -40,7 +39,7 @@ class VectorQueryNode(BaseNode):
             self.operator = VectorIndexQuery(embedding=embedding, topk=max_items)
             return super().node_init()
         except Exception as e:
-            log.error(f"Failed to initialize VectorQueryNode: {e}")
+            log.error("Failed to initialize VectorQueryNode: %s", e)
             from PyCGraph import CStatus
 
             return CStatus(-1, f"VectorQueryNode initialization failed: {e}")
@@ -68,5 +67,5 @@ class VectorQueryNode(BaseNode):
             return data_json
 
         except Exception as e:
-            log.error(f"Vector query failed: {e}")
+            log.error("Vector query failed: %s", e)
             return data_json

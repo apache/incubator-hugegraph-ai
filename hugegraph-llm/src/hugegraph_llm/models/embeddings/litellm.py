@@ -79,8 +79,23 @@ class LiteLLMEmbedding(BaseEmbedding):
             log.error("Error in LiteLLM batch embedding call: %s", e)
             raise
 
-    async def async_get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
+    async def async_get_text_embedding(self, text: str) -> List[float]:
         """Get embedding for a single text asynchronously."""
+        try:
+            response = await aembedding(
+                model=self.model,
+                input=text,
+                api_key=self.api_key,
+                api_base=self.api_base,
+            )
+            log.info("Token usage: %s", response.usage)
+            return response.data[0]["embedding"]
+        except (RateLimitError, APIConnectionError, APIError) as e:
+            log.error("Error in async LiteLLM embedding call: %s", e)
+            raise
+
+    async def async_get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
+        """Get embeddings for multiple texts asynchronously."""
         try:
             response = await aembedding(
                 model=self.model,

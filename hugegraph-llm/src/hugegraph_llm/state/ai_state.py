@@ -13,9 +13,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from PyCGraph import GParam, CStatus
-
 from typing import Union, List, Optional, Any
+
+from PyCGraph import GParam, CStatus
 
 
 class WkFlowInput(GParam):
