@@ -19,12 +19,12 @@
 
 import os
 from typing import AsyncGenerator, Literal, Optional, Tuple
-
-import gradio as gr
-from hugegraph_llm.flows.scheduler import SchedulerSingleton
 import pandas as pd
+import gradio as gr
 from gradio.utils import NamedString
 
+from hugegraph_llm.flows import FlowName
+from hugegraph_llm.flows.scheduler import SchedulerSingleton
 from hugegraph_llm.config import resource_path, prompt, llm_settings
 from hugegraph_llm.utils.decorators import with_task_id
 from hugegraph_llm.utils.log import log
@@ -51,11 +51,7 @@ def rag_answer(
 ) -> Tuple:
     """
     Generate an answer using the RAG (Retrieval-Augmented Generation) pipeline.
-    1. Initialize the RAGPipeline.
-    2. Select vector search or graph search based on parameters.
-    3. Merge, deduplicate, and rerank the results.
-    4. Synthesize the final answer.
-    5. Run the pipeline and return the results.
+    Fetch the Scheduler to deal with the request
     """
     graph_search, gremlin_prompt, vector_search = update_ui_configs(
         answer_prompt,
@@ -75,13 +71,13 @@ def rag_answer(
     try:
         # Select workflow by mode to avoid fetching the wrong pipeline from the pool
         if graph_vector_answer or (graph_only_answer and vector_only_answer):
-            flow_key = "rag_graph_vector"
+            flow_key = FlowName.RAG_GRAPH_VECTOR
         elif vector_only_answer:
-            flow_key = "rag_vector_only"
+            flow_key = FlowName.RAG_VECTOR_ONLY
         elif graph_only_answer:
-            flow_key = "rag_graph_only"
+            flow_key = FlowName.RAG_GRAPH_ONLY
         elif raw_answer:
-            flow_key = "rag_raw"
+            flow_key = FlowName.RAG_RAW
         else:
             raise RuntimeError("Unsupported flow type")
 
@@ -172,11 +168,7 @@ async def rag_answer_streaming(
 ) -> AsyncGenerator[Tuple[str, str, str, str], None]:
     """
     Generate an answer using the RAG (Retrieval-Augmented Generation) pipeline.
-    1. Initialize the RAGPipeline.
-    2. Select vector search or graph search based on parameters.
-    3. Merge, deduplicate, and rerank the results.
-    4. Synthesize the final answer.
-    5. Run the pipeline and return the results.
+    Fetch the Scheduler to deal with the request
     """
     graph_search, gremlin_prompt, vector_search = update_ui_configs(
         answer_prompt,
@@ -197,13 +189,13 @@ async def rag_answer_streaming(
         # Select the specific streaming workflow
         scheduler = SchedulerSingleton.get_instance()
         if graph_vector_answer or (graph_only_answer and vector_only_answer):
-            flow_key = "rag_graph_vector"
+            flow_key = FlowName.RAG_GRAPH_VECTOR
         elif vector_only_answer:
-            flow_key = "rag_vector_only"
+            flow_key = FlowName.RAG_VECTOR_ONLY
         elif graph_only_answer:
-            flow_key = "rag_graph_only"
+            flow_key = FlowName.RAG_GRAPH_ONLY
         elif raw_answer:
-            flow_key = "rag_raw"
+            flow_key = FlowName.RAG_RAW
         else:
             raise RuntimeError("Unsupported flow type")
 
@@ -367,7 +359,7 @@ def create_rag_block():
     )
 
     gr.Markdown(
-        """## 2. (Batch) Back-testing )
+        """## 2. (Batch) Back-testing
     > 1. Download the template file & fill in the questions you want to test.
     > 2. Upload the file & click the button to generate answers. (Preview shows the first 40 lines)
     > 3. The answer options are the same as the above RAG/Q&A frame

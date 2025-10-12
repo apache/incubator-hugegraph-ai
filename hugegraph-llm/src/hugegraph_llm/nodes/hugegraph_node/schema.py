@@ -15,6 +15,7 @@
 
 import json
 
+from PyCGraph import CStatus
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.common_op.check_schema import CheckSchema
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
@@ -38,23 +39,23 @@ class SchemaNode(BaseNode):
     ):
         if from_hugegraph:
             return SchemaManager(from_hugegraph)
-        elif from_user_defined:
+        if from_user_defined:
             return CheckSchema(from_user_defined)
-        elif from_extraction:
+        if from_extraction:
             raise NotImplementedError("Not implemented yet")
-        else:
-            raise ValueError("No input data / invalid schema type")
+        raise ValueError("No input data / invalid schema type")
 
     def node_init(self):
-        self.schema = self.wk_input.schema
-        self.schema = self.schema.strip()
+        if self.wk_input.schema is None:
+            return CStatus(-1, "Schema message is required in SchemaNode")
+        self.schema = self.wk_input.schema.strip()
         if self.schema.startswith("{"):
             try:
                 schema = json.loads(self.schema)
                 self.check_schema = self._import_schema(from_user_defined=schema)
             except json.JSONDecodeError as exc:
                 log.error("Invalid JSON format in schema. Please check it again.")
-                raise ValueError("Invalid JSON format in schema.") from exc
+                return CStatus(-1, f"Invalid JSON format in schema. {exc}")
         else:
             log.info("Get schema '%s' from graphdb.", self.schema)
             self.schema_manager = self._import_schema(from_hugegraph=self.schema)
@@ -63,11 +64,6 @@ class SchemaNode(BaseNode):
     def operator_schedule(self, data_json):
         log.debug("SchemaNode input state: %s", data_json)
         if self.schema.startswith("{"):
-            try:
-                return self.check_schema.run(data_json)
-            except json.JSONDecodeError as exc:
-                log.error("Invalid JSON format in schema. Please check it again.")
-                raise ValueError("Invalid JSON format in schema.") from exc
-        else:
-            log.info("Get schema '%s' from graphdb.", self.schema)
-            return self.schema_manager.run(data_json)
+            return self.check_schema.run(data_json)
+        log.info("Get schema '%s' from graphdb.", self.schema)
+        return self.schema_manager.run(data_json)

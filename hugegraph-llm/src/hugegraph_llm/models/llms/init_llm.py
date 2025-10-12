@@ -22,74 +22,74 @@ from hugegraph_llm.models.llms.litellm import LiteLLMClient
 from hugegraph_llm.config import llm_settings
 
 
-def get_chat_llm(llm_settings: LLMConfig):
-    if llm_settings.chat_llm_type == "openai":
+def get_chat_llm(llm_configs: LLMConfig):
+    if llm_configs.chat_llm_type == "openai":
         return OpenAIClient(
-            api_key=llm_settings.openai_chat_api_key,
-            api_base=llm_settings.openai_chat_api_base,
-            model_name=llm_settings.openai_chat_language_model,
-            max_tokens=llm_settings.openai_chat_tokens,
+            api_key=llm_configs.openai_chat_api_key,
+            api_base=llm_configs.openai_chat_api_base,
+            model_name=llm_configs.openai_chat_language_model,
+            max_tokens=llm_configs.openai_chat_tokens,
         )
-    if llm_settings.chat_llm_type == "ollama/local":
+    if llm_configs.chat_llm_type == "ollama/local":
         return OllamaClient(
-            model=llm_settings.ollama_chat_language_model,
-            host=llm_settings.ollama_chat_host,
-            port=llm_settings.ollama_chat_port,
+            model=llm_configs.ollama_chat_language_model,
+            host=llm_configs.ollama_chat_host,
+            port=llm_configs.ollama_chat_port,
         )
-    if llm_settings.chat_llm_type == "litellm":
+    if llm_configs.chat_llm_type == "litellm":
         return LiteLLMClient(
-            api_key=llm_settings.litellm_chat_api_key,
-            api_base=llm_settings.litellm_chat_api_base,
-            model_name=llm_settings.litellm_chat_language_model,
-            max_tokens=llm_settings.litellm_chat_tokens,
+            api_key=llm_configs.litellm_chat_api_key,
+            api_base=llm_configs.litellm_chat_api_base,
+            model_name=llm_configs.litellm_chat_language_model,
+            max_tokens=llm_configs.litellm_chat_tokens,
         )
     raise Exception("chat llm type is not supported !")
 
 
-def get_extract_llm(llm_settings: LLMConfig):
-    if llm_settings.extract_llm_type == "openai":
+def get_extract_llm(llm_configs: LLMConfig):
+    if llm_configs.extract_llm_type == "openai":
         return OpenAIClient(
-            api_key=llm_settings.openai_extract_api_key,
-            api_base=llm_settings.openai_extract_api_base,
-            model_name=llm_settings.openai_extract_language_model,
-            max_tokens=llm_settings.openai_extract_tokens,
+            api_key=llm_configs.openai_extract_api_key,
+            api_base=llm_configs.openai_extract_api_base,
+            model_name=llm_configs.openai_extract_language_model,
+            max_tokens=llm_configs.openai_extract_tokens,
         )
-    if llm_settings.extract_llm_type == "ollama/local":
+    if llm_configs.extract_llm_type == "ollama/local":
         return OllamaClient(
-            model=llm_settings.ollama_extract_language_model,
-            host=llm_settings.ollama_extract_host,
-            port=llm_settings.ollama_extract_port,
+            model=llm_configs.ollama_extract_language_model,
+            host=llm_configs.ollama_extract_host,
+            port=llm_configs.ollama_extract_port,
         )
-    if llm_settings.extract_llm_type == "litellm":
+    if llm_configs.extract_llm_type == "litellm":
         return LiteLLMClient(
-            api_key=llm_settings.litellm_extract_api_key,
-            api_base=llm_settings.litellm_extract_api_base,
-            model_name=llm_settings.litellm_extract_language_model,
-            max_tokens=llm_settings.litellm_extract_tokens,
+            api_key=llm_configs.litellm_extract_api_key,
+            api_base=llm_configs.litellm_extract_api_base,
+            model_name=llm_configs.litellm_extract_language_model,
+            max_tokens=llm_configs.litellm_extract_tokens,
         )
     raise Exception("extract llm type is not supported !")
 
 
-def get_text2gql_llm(llm_settings: LLMConfig):
-    if llm_settings.text2gql_llm_type == "openai":
+def get_text2gql_llm(llm_configs: LLMConfig):
+    if llm_configs.text2gql_llm_type == "openai":
         return OpenAIClient(
-            api_key=llm_settings.openai_text2gql_api_key,
-            api_base=llm_settings.openai_text2gql_api_base,
-            model_name=llm_settings.openai_text2gql_language_model,
-            max_tokens=llm_settings.openai_text2gql_tokens,
+            api_key=llm_configs.openai_text2gql_api_key,
+            api_base=llm_configs.openai_text2gql_api_base,
+            model_name=llm_configs.openai_text2gql_language_model,
+            max_tokens=llm_configs.openai_text2gql_tokens,
         )
-    if llm_settings.text2gql_llm_type == "ollama/local":
+    if llm_configs.text2gql_llm_type == "ollama/local":
         return OllamaClient(
-            model=llm_settings.ollama_text2gql_language_model,
-            host=llm_settings.ollama_text2gql_host,
-            port=llm_settings.ollama_text2gql_port,
+            model=llm_configs.ollama_text2gql_language_model,
+            host=llm_configs.ollama_text2gql_host,
+            port=llm_configs.ollama_text2gql_port,
         )
-    if llm_settings.text2gql_llm_type == "litellm":
+    if llm_configs.text2gql_llm_type == "litellm":
         return LiteLLMClient(
-            api_key=llm_settings.litellm_text2gql_api_key,
-            api_base=llm_settings.litellm_text2gql_api_base,
-            model_name=llm_settings.litellm_text2gql_language_model,
-            max_tokens=llm_settings.litellm_text2gql_tokens,
+            api_key=llm_configs.litellm_text2gql_api_key,
+            api_base=llm_configs.litellm_text2gql_api_base,
+            model_name=llm_configs.litellm_text2gql_language_model,
+            max_tokens=llm_configs.litellm_text2gql_tokens,
         )
     raise Exception("text2gql llm type is not supported !")
 
@@ -173,4 +173,8 @@ class LLMs:
 if __name__ == "__main__":
     client = LLMs().get_chat_llm()
     print(client.generate(prompt="What is the capital of China?"))
-    print(client.generate(messages=[{"role": "user", "content": "What is the capital of China?"}]))
+    print(
+        client.generate(
+            messages=[{"role": "user", "content": "What is the capital of China?"}]
+        )
+    )

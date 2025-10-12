@@ -22,6 +22,7 @@ import docx
 import gradio as gr
 
 from hugegraph_llm.config import resource_path, huge_settings, llm_settings
+from hugegraph_llm.flows import FlowName
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.init_embedding import model_map
 from hugegraph_llm.flows.scheduler import SchedulerSingleton
@@ -50,7 +51,9 @@ def read_documents(input_file, input_text):
                 texts.append(text)
             elif full_path.endswith(".pdf"):
                 # TODO: support PDF file
-                raise gr.Error("PDF will be supported later! Try to upload text/docx now")
+                raise gr.Error(
+                    "PDF will be supported later! Try to upload text/docx now"
+                )
             else:
                 raise gr.Error("Please input txt or docx file.")
     else:
@@ -60,7 +63,9 @@ def read_documents(input_file, input_text):
 
 # pylint: disable=C0301
 def get_vector_index_info():
-    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
+    folder_name = get_index_folder_name(
+        huge_settings.graph_name, huge_settings.graph_space
+    )
     filename_prefix = get_filename_prefix(
         llm_settings.embedding_type, model_map.get(llm_settings.embedding_type)
     )
@@ -87,11 +92,15 @@ def get_vector_index_info():
 
 
 def clean_vector_index():
-    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
+    folder_name = get_index_folder_name(
+        huge_settings.graph_name, huge_settings.graph_space
+    )
     filename_prefix = get_filename_prefix(
         llm_settings.embedding_type, model_map.get(llm_settings.embedding_type)
     )
-    VectorIndex.clean(str(os.path.join(resource_path, folder_name, "chunks")), filename_prefix)
+    VectorIndex.clean(
+        str(os.path.join(resource_path, folder_name, "chunks")), filename_prefix
+    )
     gr.Info("Clean vector index successfully!")
 
 
@@ -100,4 +109,4 @@ def build_vector_index(input_file, input_text):
         raise gr.Error("Please only choose one between file and text.")
     texts = read_documents(input_file, input_text)
     scheduler = SchedulerSingleton.get_instance()
-    return scheduler.schedule_flow("build_vector_index", texts)
+    return scheduler.schedule_flow(FlowName.BUILD_VECTOR_INDEX, texts)

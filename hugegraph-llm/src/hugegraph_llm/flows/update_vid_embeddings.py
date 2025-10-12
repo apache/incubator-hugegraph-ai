@@ -13,18 +13,20 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from PyCGraph import CStatus, GPipeline
-from hugegraph_llm.flows.common import BaseFlow, WkFlowInput
+from PyCGraph import GPipeline
+
+from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.nodes.hugegraph_node.fetch_graph_data import FetchGraphDataNode
 from hugegraph_llm.nodes.index_node.build_semantic_index import BuildSemanticIndexNode
-from hugegraph_llm.state.ai_state import WkFlowState
+from hugegraph_llm.state.ai_state import WkFlowState, WkFlowInput
 
 
-class UpdateVidEmbeddingsFlows(BaseFlow):
-    def prepare(self, prepared_input: WkFlowInput):
-        return CStatus()
+# pylint: disable=arguments-differ,keyword-arg-before-vararg
+class UpdateVidEmbeddingsFlow(BaseFlow):
+    def prepare(self, prepared_input: WkFlowInput, **kwargs):
+        pass
 
-    def build_flow(self):
+    def build_flow(self, **kwargs):
         pipeline = GPipeline()
         prepared_input = WkFlowInput()
         # prepare input data
@@ -40,7 +42,7 @@ class UpdateVidEmbeddingsFlows(BaseFlow):
 
         return pipeline
 
-    def post_deal(self, pipeline):
+    def post_deal(self, pipeline, **kwargs):
         res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
         removed_num = res.get("removed_vid_vector_num", 0)
         added_num = res.get("added_vid_vector_num", 0)

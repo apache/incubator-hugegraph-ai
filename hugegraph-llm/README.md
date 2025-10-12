@@ -89,14 +89,14 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 3. Clone and setup project
 git clone https://github.com/apache/incubator-hugegraph-ai.git
-cd incubator-hugegraph-ai/hugegraph-llm
+cd incubator-hugegraph-ai
 
 # Configure environment (see config.md for detailed options), .env will auto create if not exists
 
 # 4. Install dependencies and activate environment
 # NOTE: If download is slow, uncomment mirror lines in ../pyproject.toml or use: uv config --global index.url https://pypi.tuna.tsinghua.edu.cn/simple
 # Or create local uv.toml with mirror settings to avoid git diff (see uv.toml example in root)
-uv sync  # Automatically creates .venv and installs dependencies
+uv sync --extra llm  # Automatically creates .venv and installs dependencies
 source .venv/bin/activate  # Activate once - all commands below assume this environment
 
 # 5. Launch RAG demo
@@ -146,84 +146,6 @@ Use the Gradio interface for visual knowledge graph building:
 
 ![Knowledge Graph Builder](https://hugegraph.apache.org/docs/images/gradio-kg.png)
 
-#### Programmatic Construction
-
-Build knowledge graphs with code using the `KgBuilder` class:
-
-```python
-from hugegraph_llm.models.llms.init_llm import LLMs
-from hugegraph_llm.operators.kg_construction_task import KgBuilder
-
-# Initialize and chain operations
-TEXT = "Your input text here..."
-builder = KgBuilder(LLMs().get_chat_llm())
-
-(
-    builder
-    .import_schema(from_hugegraph="talent_graph").print_result()
-    .chunk_split(TEXT).print_result()
-    .extract_info(extract_type="property_graph").print_result()
-    .commit_to_hugegraph()
-    .run()
-)
-```
-
-**Pipeline Workflow:**
-
-```mermaid
-graph LR
-    A[Import Schema] --> B[Chunk Split]
-    B --> C[Extract Info]
-    C --> D[Commit to HugeGraph]
-    D --> E[Execute Pipeline]
-
-    style A fill:#fff2cc
-    style B fill:#d5e8d4
-    style C fill:#dae8fc
-    style D fill:#f8cecc
-    style E fill:#e1d5e7
-```
-
-### Graph-Enhanced RAG
-
-Leverage HugeGraph for retrieval-augmented generation:
-
-```python
-from hugegraph_llm.operators.graph_rag_task import RAGPipeline
-
-# Initialize RAG pipeline
-graph_rag = RAGPipeline()
-
-# Execute RAG workflow
-(
-    graph_rag
-    .extract_keywords(text="Tell me about Al Pacino.")
-    .keywords_to_vid()
-    .query_graphdb(max_deep=2, max_graph_items=30)
-    .merge_dedup_rerank()
-    .synthesize_answer(vector_only_answer=False, graph_only_answer=True)
-    .run(verbose=True)
-)
-```
-
-**RAG Pipeline Flow:**
-
-```mermaid
-graph TD
-    A[User Query] --> B[Extract Keywords]
-    B --> C[Match Graph Nodes]
-    C --> D[Retrieve Graph Context]
-    D --> E[Rerank Results]
-    E --> F[Generate Answer]
-
-    style A fill:#e3f2fd
-    style B fill:#f3e5f5
-    style C fill:#e8f5e8
-    style D fill:#fff3e0
-    style E fill:#fce4ec
-    style F fill:#e0f2f1
-```
-
 ## 🔧 Configuration
 
 After running the demo, configuration files are automatically generated:
@@ -247,6 +169,79 @@ The system supports both English and Chinese prompts. To switch languages:
 > Configuration changes are automatically saved when using the web interface. For manual changes, simply refresh the page to load updates.
 
 **LLM Provider Support**: This project uses [LiteLLM](https://docs.litellm.ai/docs/providers) for multi-provider LLM support.
+
+### Programmatic Examples (new workflow engine)
+
+If you previously used high-level classes like `RAGPipeline` or `KgBuilder`, the project now exposes stable flows through the `Scheduler` API. Use `SchedulerSingleton.get_instance().schedule_flow(...)` to invoke workflows programmatically. Below are concise, working examples that match the new architecture.
+
+1) RAG (graph-only) query example
+
+```python
+from hugegraph_llm.flows.scheduler import SchedulerSingleton
+
+scheduler = SchedulerSingleton.get_instance()
+res = scheduler.schedule_flow(
+  "rag_graph_only",
+  query="Tell me about Al Pacino.",
+  graph_only_answer=True,
+  vector_only_answer=False,
+  raw_answer=False,
+  gremlin_tmpl_num=-1,
+  gremlin_prompt=None,
+)
+
+print(res.get("graph_only_answer"))
+```
+
+2) RAG (vector-only) query example
+
+```python
+from hugegraph_llm.flows.scheduler import SchedulerSingleton
+
+scheduler = SchedulerSingleton.get_instance()
+res = scheduler.schedule_flow(
+  "rag_vector_only",
+  query="Summarize the career of Ada Lovelace.",
+  vector_only_answer=True,
+  vector_search=True
+)
+
+print(res.get("vector_only_answer"))
+```
+
+3) Text -> Gremlin (text2gremlin) example
+
+```python
+from hugegraph_llm.flows.scheduler import SchedulerSingleton
+
+scheduler = SchedulerSingleton.get_instance()
+response = scheduler.schedule_flow(
+  "text2gremlin",
+  "find people who worked with Alan Turing",
+  2,  # example_num
+  "hugegraph",  # schema_input (graph name or schema)
+  None,  # gremlin_prompt_input (optional)
+  ["template_gremlin", "raw_gremlin"],
+)
+
+print(response.get("template_gremlin"))
+```
+
+4) Build example index (used by text2gremlin examples)
+
+```python
+from hugegraph_llm.flows.scheduler import SchedulerSingleton
+
+examples = [{"id": "natural language query", "gremlin": "g.V().hasLabel('person').valueMap()"}]
+res = SchedulerSingleton.get_instance().schedule_flow("build_examples_index", examples)
+print(res)
+```
+
+### Migration guide: RAGPipeline / KgBuilder → Scheduler flows
+
+Why the change: the internal execution engine was refactored to a pipeline-based scheduler (GPipeline + GPipelineManager). The scheduler provides a stable entrypoint while keeping flow implementations modular.
+
+If you need help migrating a specific snippet, open a PR or issue and include the old code — we can provide a targeted conversion.
 
 ## 🤖 Developer Guidelines
 

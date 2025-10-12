@@ -17,7 +17,7 @@
 
 [project]
 name = "hugegraph-ai"
-version = "1.5.0"
+version = "1.7.0"
 description = "A repository for AI-related projects for Apache HugeGraph."
 authors = [
     { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },

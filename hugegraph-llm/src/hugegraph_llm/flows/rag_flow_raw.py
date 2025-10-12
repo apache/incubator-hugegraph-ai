@@ -13,7 +13,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import json
 
 from typing import Optional
 
@@ -26,6 +25,7 @@ from hugegraph_llm.config import huge_settings, prompt
 from hugegraph_llm.utils.log import log
 
 
+# pylint: disable=arguments-differ,keyword-arg-before-vararg
 class RAGRawFlow(BaseFlow):
     """
     Workflow for basic LLM answering only (raw_answer)
@@ -35,16 +35,16 @@ class RAGRawFlow(BaseFlow):
         self,
         prepared_input: WkFlowInput,
         query: str,
-        vector_search: bool = None,
-        graph_search: bool = None,
-        raw_answer: bool = None,
-        vector_only_answer: bool = None,
-        graph_only_answer: bool = None,
-        graph_vector_answer: bool = None,
+        vector_search: bool = False,
+        graph_search: bool = False,
+        raw_answer: bool = True,
+        vector_only_answer: bool = False,
+        graph_only_answer: bool = False,
+        graph_vector_answer: bool = False,
         custom_related_information: str = "",
         answer_prompt: Optional[str] = None,
-        max_graph_items: int = None,
-        **_: dict,
+        max_graph_items: Optional[int] = None,
+        **kwargs,
     ):
         prepared_input.query = query
         prepared_input.raw_answer = raw_answer
@@ -61,7 +61,6 @@ class RAGRawFlow(BaseFlow):
             "graph_search": graph_search,
             "max_graph_items": max_graph_items or huge_settings.max_graph_items,
         }
-        return
 
     def build_flow(self, **kwargs):
         pipeline = GPipeline()
@@ -76,24 +75,14 @@ class RAGRawFlow(BaseFlow):
         log.info("RAGRawFlow pipeline built successfully")
         return pipeline
 
-    def post_deal(self, pipeline=None):
+    def post_deal(self, pipeline=None, **kwargs):
         if pipeline is None:
-            return json.dumps(
-                {"error": "No pipeline provided"}, ensure_ascii=False, indent=2
-            )
-        try:
-            res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
-            log.info("RAGRawFlow post processing success")
-            return {
-                "raw_answer": res.get("raw_answer", ""),
-                "vector_only_answer": res.get("vector_only_answer", ""),
-                "graph_only_answer": res.get("graph_only_answer", ""),
-                "graph_vector_answer": res.get("graph_vector_answer", ""),
-            }
-        except Exception as e:
-            log.error(f"RAGRawFlow post processing failed: {e}")
-            return json.dumps(
-                {"error": f"Post processing failed: {str(e)}"},
-                ensure_ascii=False,
-                indent=2,
-            )
+            return {"error": "No pipeline provided"}
+        res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
+        log.info("RAGRawFlow post processing success")
+        return {
+            "raw_answer": res.get("raw_answer", ""),
+            "vector_only_answer": res.get("vector_only_answer", ""),
+            "graph_only_answer": res.get("graph_only_answer", ""),
+            "graph_vector_answer": res.get("graph_vector_answer", ""),
+        }

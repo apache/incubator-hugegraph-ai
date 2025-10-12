@@ -202,7 +202,7 @@ flowchart TD
   - `BuildVectorIndexFlow`: 向量索引构建工作流
   - `GraphExtractFlow`: 图抽取工作流
   - `ImportGraphDataFlow`: 图数据导入工作流
-  - `UpdateVidEmbeddingsFlows`: 向量更新工作流
+  - `UpdateVidEmbeddingsFlow`: 向量更新工作流
   - `GetGraphIndexInfoFlow`: 图索引信息获取工作流
   - `BuildSchemaFlow`: 模式构建工作流
   - `PromptGenerateFlow`: 提示词生成工作流
@@ -407,7 +407,6 @@ class GraphExtractFlow(BaseFlow):
         prepared_input.split_type = "document"
         prepared_input.example_prompt = example_prompt
         prepared_input.schema = schema
-        prepare_schema(prepared_input, schema)
         return
 
     def build_flow(self, schema, texts, example_prompt, extract_type):

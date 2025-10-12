@@ -13,7 +13,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import json
 
 from typing import Optional, Literal
 
@@ -32,6 +31,7 @@ from hugegraph_llm.config import huge_settings, prompt
 from hugegraph_llm.utils.log import log
 
 
+# pylint: disable=arguments-differ,keyword-arg-before-vararg
 class RAGGraphVectorFlow(BaseFlow):
     """
     Workflow for graph + vector hybrid answering (graph_vector_answer)
@@ -41,12 +41,12 @@ class RAGGraphVectorFlow(BaseFlow):
         self,
         prepared_input: WkFlowInput,
         query: str,
-        vector_search: bool = None,
-        graph_search: bool = None,
-        raw_answer: bool = None,
-        vector_only_answer: bool = None,
-        graph_only_answer: bool = None,
-        graph_vector_answer: bool = None,
+        vector_search: bool = True,
+        graph_search: bool = True,
+        raw_answer: bool = False,
+        vector_only_answer: bool = False,
+        graph_only_answer: bool = False,
+        graph_vector_answer: bool = True,
         graph_ratio: float = 0.5,
         rerank_method: Literal["bleu", "reranker"] = "bleu",
         near_neighbor_first: bool = False,
@@ -55,11 +55,11 @@ class RAGGraphVectorFlow(BaseFlow):
         keywords_extract_prompt: Optional[str] = None,
         gremlin_tmpl_num: Optional[int] = -1,
         gremlin_prompt: Optional[str] = None,
-        max_graph_items: int = None,
-        topk_return_results: int = None,
-        vector_dis_threshold: float = None,
-        topk_per_keyword: int = None,
-        **_: dict,
+        max_graph_items: Optional[int] = None,
+        topk_return_results: Optional[int] = None,
+        vector_dis_threshold: Optional[float] = None,
+        topk_per_keyword: Optional[int] = None,
+        **kwargs,
     ):
         prepared_input.query = query
         prepared_input.vector_search = vector_search
@@ -98,7 +98,6 @@ class RAGGraphVectorFlow(BaseFlow):
             "graph_search": graph_search,
             "max_graph_items": max_graph_items or huge_settings.max_graph_items,
         }
-        return
 
     def build_flow(self, **kwargs):
         pipeline = GPipeline()
@@ -135,24 +134,14 @@ class RAGGraphVectorFlow(BaseFlow):
         log.info("RAGGraphVectorFlow pipeline built successfully")
         return pipeline
 
-    def post_deal(self, pipeline=None):
+    def post_deal(self, pipeline=None, **kwargs):
         if pipeline is None:
-            return json.dumps(
-                {"error": "No pipeline provided"}, ensure_ascii=False, indent=2
-            )
-        try:
-            res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
-            log.info("RAGGraphVectorFlow post processing success")
-            return {
-                "raw_answer": res.get("raw_answer", ""),
-                "vector_only_answer": res.get("vector_only_answer", ""),
-                "graph_only_answer": res.get("graph_only_answer", ""),
-                "graph_vector_answer": res.get("graph_vector_answer", ""),
-            }
-        except Exception as e:
-            log.error(f"RAGGraphVectorFlow post processing failed: {e}")
-            return json.dumps(
-                {"error": f"Post processing failed: {str(e)}"},
-                ensure_ascii=False,
-                indent=2,
-            )
+            return {"error": "No pipeline provided"}
+        res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
+        log.info("RAGGraphVectorFlow post processing success")
+        return {
+            "raw_answer": res.get("raw_answer", ""),
+            "vector_only_answer": res.get("vector_only_answer", ""),
+            "graph_only_answer": res.get("graph_only_answer", ""),
+            "graph_vector_answer": res.get("graph_vector_answer", ""),
+        }

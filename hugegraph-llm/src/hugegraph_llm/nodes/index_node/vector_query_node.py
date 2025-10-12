@@ -32,20 +32,14 @@ class VectorQueryNode(BaseNode):
         """
         Initialize the vector query operator
         """
-        try:
-            # 从 wk_input 中读取用户配置参数
-            embedding = get_embedding(llm_settings)
-            max_items = (
-                self.wk_input.max_items if self.wk_input.max_items is not None else 3
-            )
+        # 从 wk_input 中读取用户配置参数
+        embedding = get_embedding(llm_settings)
+        max_items = (
+            self.wk_input.max_items if self.wk_input.max_items is not None else 3
+        )
 
-            self.operator = VectorIndexQuery(embedding=embedding, topk=max_items)
-            return super().node_init()
-        except Exception as e:
-            log.error(f"Failed to initialize VectorQueryNode: {e}")
-            from PyCGraph import CStatus
-
-            return CStatus(-1, f"VectorQueryNode initialization failed: {e}")
+        self.operator = VectorIndexQuery(embedding=embedding, topk=max_items)
+        return super().node_init()
 
     def operator_schedule(self, data_json: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -64,11 +58,12 @@ class VectorQueryNode(BaseNode):
             # Update the state
             data_json.update(result)
             log.info(
-                f"Vector query completed, found {len(result.get('vector_result', []))} results"
+                "Vector query completed, found %d results",
+                len(result.get("vector_result", [])),
             )
 
             return data_json
 
-        except Exception as e:
-            log.error(f"Vector query failed: {e}")
+        except ValueError as e:
+            log.error("Vector query failed: %s", e)
             return data_json
