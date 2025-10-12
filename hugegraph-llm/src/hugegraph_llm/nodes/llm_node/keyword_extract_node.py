@@ -61,7 +61,7 @@ class KeywordExtractNode(BaseNode):
                 log.warning("Keyword extraction result missing 'keywords' field")
                 result["keywords"] = []
 
-            log.info("Extracted keywords: %s", result.get('keywords', []))
+            log.info("Extracted keywords: %s", result.get("keywords", []))
 
             return result
 
