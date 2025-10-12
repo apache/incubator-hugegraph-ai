@@ -13,28 +13,28 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import json
+
+from PyCGraph import GPipeline
+
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.nodes.document_node.chunk_split import ChunkSplitNode
 from hugegraph_llm.nodes.index_node.build_vector_index import BuildVectorIndexNode
 from hugegraph_llm.state.ai_state import WkFlowInput
-
-import json
-from PyCGraph import GPipeline
-
 from hugegraph_llm.state.ai_state import WkFlowState
 
 
+# pylint: disable=arguments-differ,keyword-arg-before-vararg
 class BuildVectorIndexFlow(BaseFlow):
     def __init__(self):
         pass
 
-    def prepare(self, prepared_input: WkFlowInput, texts):
+    def prepare(self, prepared_input: WkFlowInput, texts, **kwargs):
         prepared_input.texts = texts
         prepared_input.language = "zh"
         prepared_input.split_type = "paragraph"
-        return
 
-    def build_flow(self, texts):
+    def build_flow(self, texts, **kwargs):
         pipeline = GPipeline()
         # prepare for workflow input
         prepared_input = WkFlowInput()
@@ -50,6 +50,6 @@ class BuildVectorIndexFlow(BaseFlow):
 
         return pipeline
 
-    def post_deal(self, pipeline=None):
+    def post_deal(self, pipeline=None, **kwargs):
         res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
         return json.dumps(res, ensure_ascii=False, indent=2)

@@ -16,30 +16,32 @@
 import json
 import os
 
+from PyCGraph import GPipeline
+
 from hugegraph_llm.config import huge_settings, llm_settings, resource_path
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.init_embedding import model_map
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 from hugegraph_llm.nodes.hugegraph_node.fetch_graph_data import FetchGraphDataNode
-from PyCGraph import GPipeline
 from hugegraph_llm.utils.embedding_utils import (
     get_filename_prefix,
     get_index_folder_name,
 )
 
 
+# pylint: disable=arguments-differ,keyword-arg-before-vararg
 class GetGraphIndexInfoFlow(BaseFlow):
     def __init__(self):
         pass
 
-    def prepare(self, prepared_input: WkFlowInput, *args, **kwargs):
+    def prepare(self, prepared_input: WkFlowInput, **kwargs):
         return
 
-    def build_flow(self, *args, **kwargs):
+    def build_flow(self, **kwargs):
         pipeline = GPipeline()
         prepared_input = WkFlowInput()
-        self.prepare(prepared_input, *args, **kwargs)
+        self.prepare(prepared_input, **kwargs)
         pipeline.createGParam(prepared_input, "wkflow_input")
         pipeline.createGParam(WkFlowState(), "wkflow_state")
         fetch_node = FetchGraphDataNode()
@@ -48,7 +50,9 @@ class GetGraphIndexInfoFlow(BaseFlow):
 
     def post_deal(self, pipeline=None):
         graph_summary_info = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
-        folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
+        folder_name = get_index_folder_name(
+            huge_settings.graph_name, huge_settings.graph_space
+        )
         index_dir = str(os.path.join(resource_path, folder_name, "graph_vids"))
         filename_prefix = get_filename_prefix(
             llm_settings.embedding_type,
@@ -56,7 +60,7 @@ class GetGraphIndexInfoFlow(BaseFlow):
         )
         try:
             vector_index = VectorIndex.from_index_file(index_dir, filename_prefix)
-        except FileNotFoundError:
+        except (RuntimeError, OSError):
             return json.dumps(graph_summary_info, ensure_ascii=False, indent=2)
         graph_summary_info["vid_index"] = {
             "embed_dim": vector_index.index.d,

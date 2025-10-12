@@ -18,7 +18,7 @@
 
 set -e
 
-tag="1.5.0"
+tag="1.7.0"
 
 script_dir=$(realpath "$(dirname "$0")")
 

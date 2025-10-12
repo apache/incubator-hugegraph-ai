@@ -48,5 +48,6 @@ class ExtractNode(BaseNode):
     def operator_schedule(self, data_json):
         if self.extract_type == "triples":
             return self.info_extract.run(data_json)
-        elif self.extract_type == "property_graph":
+        if self.extract_type == "property_graph":
             return self.property_graph_extract.run(data_json)
+        raise ValueError("Unsupport extract type")

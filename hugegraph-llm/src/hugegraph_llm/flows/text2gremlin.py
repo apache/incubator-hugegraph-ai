@@ -13,18 +13,21 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+from typing import Any, Dict, List, Optional
+
 from PyCGraph import GPipeline
 
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 from hugegraph_llm.nodes.hugegraph_node.schema import SchemaNode
-from hugegraph_llm.nodes.index_node.gremlin_example_index_query import GremlinExampleIndexQueryNode
+from hugegraph_llm.nodes.index_node.gremlin_example_index_query import (
+    GremlinExampleIndexQueryNode,
+)
 from hugegraph_llm.nodes.llm_node.text2gremlin import Text2GremlinNode
 from hugegraph_llm.nodes.hugegraph_node.gremlin_execute import GremlinExecuteNode
 
-from typing import Any, Dict, List, Optional
 
-
+# pylint: disable=arguments-differ,keyword-arg-before-vararg
 class Text2GremlinFlow(BaseFlow):
     def __init__(self):
         pass
@@ -37,6 +40,7 @@ class Text2GremlinFlow(BaseFlow):
         schema_input: str,
         gremlin_prompt_input: Optional[str],
         requested_outputs: Optional[List[str]],
+        **kwargs,
     ):
         # sanitize example_num to [0,10], fallback to 2 if invalid
         if not isinstance(example_num, int):
@@ -63,7 +67,6 @@ class Text2GremlinFlow(BaseFlow):
         prepared_input.schema = schema_input
         prepared_input.gremlin_prompt = gremlin_prompt_input
         prepared_input.requested_outputs = req
-        return
 
     def build_flow(
         self,
@@ -72,6 +75,7 @@ class Text2GremlinFlow(BaseFlow):
         schema_input: str,
         gremlin_prompt_input: Optional[str] = None,
         requested_outputs: Optional[List[str]] = None,
+        **kwargs,
     ):
         pipeline = GPipeline()
 
@@ -100,7 +104,7 @@ class Text2GremlinFlow(BaseFlow):
 
         return pipeline
 
-    def post_deal(self, pipeline=None) -> Dict[str, Any]:
+    def post_deal(self, pipeline=None, **kwargs) -> Dict[str, Any]:
         state = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
         # 始终返回 5 个标准键，避免前端因过滤异常看不到字段
         return {

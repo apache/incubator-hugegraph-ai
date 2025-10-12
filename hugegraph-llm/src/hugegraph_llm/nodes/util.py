@@ -13,15 +13,26 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+from typing import Any
+
 from PyCGraph import CStatus
 
 
-def init_context(obj) -> CStatus:
-    try:
-        obj.context = obj.getGParamWithNoEmpty("wkflow_state")
-        obj.wk_input = obj.getGParamWithNoEmpty("wkflow_input")
-        if obj.context is None or obj.wk_input is None:
-            return CStatus(-1, "Required workflow parameters not found")
-        return CStatus()
-    except Exception as e:
-        return CStatus(-1, f"Failed to initialize context: {str(e)}")
+def init_context(obj: Any) -> CStatus:
+    """
+    Initialize workflow context for a node.
+
+    Retrieves wkflow_state and wkflow_input from obj's global parameters
+    and assigns them to obj.context and obj.wk_input respectively.
+
+    Args:
+        obj: Node object with getGParamWithNoEmpty method
+
+    Returns:
+        CStatus: Empty status on success, error status with code -1 on failure
+    """
+    obj.context = obj.getGParamWithNoEmpty("wkflow_state")
+    obj.wk_input = obj.getGParamWithNoEmpty("wkflow_input")
+    if obj.context is None or obj.wk_input is None:
+        return CStatus(-1, "Required workflow parameters not found")
+    return CStatus()

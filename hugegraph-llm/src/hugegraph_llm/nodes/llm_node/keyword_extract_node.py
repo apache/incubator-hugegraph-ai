@@ -14,7 +14,6 @@
 #  limitations under the License.
 
 from typing import Dict, Any
-from PyCGraph import CStatus
 
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
@@ -32,29 +31,17 @@ class KeywordExtractNode(BaseNode):
         """
         Initialize the keyword extraction operator.
         """
-        try:
-            max_keywords = (
-                self.wk_input.max_keywords
-                if self.wk_input.max_keywords is not None
-                else 5
-            )
-            language = (
-                self.wk_input.language
-                if self.wk_input.language is not None
-                else "english"
-            )
-            extract_template = self.wk_input.keywords_extract_prompt
+        max_keywords = (
+            self.wk_input.max_keywords if self.wk_input.max_keywords is not None else 5
+        )
+        extract_template = self.wk_input.keywords_extract_prompt
 
-            self.operator = KeywordExtract(
-                text=self.wk_input.query,
-                max_keywords=max_keywords,
-                language=language,
-                extract_template=extract_template,
-            )
-            return super().node_init()
-        except Exception as e:
-            log.error(f"Failed to initialize KeywordExtractNode: {e}")
-            return CStatus(-1, f"KeywordExtractNode initialization failed: {e}")
+        self.operator = KeywordExtract(
+            text=self.wk_input.query,
+            max_keywords=max_keywords,
+            extract_template=extract_template,
+        )
+        return super().node_init()
 
     def operator_schedule(self, data_json: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -67,12 +54,12 @@ class KeywordExtractNode(BaseNode):
                 log.warning("Keyword extraction result missing 'keywords' field")
                 result["keywords"] = []
 
-            log.info(f"Extracted keywords: {result.get('keywords', [])}")
+            log.info("Extracted keywords: %s", result.get("keywords", []))
 
             return result
 
-        except Exception as e:
-            log.error(f"Keyword extraction failed: {e}")
+        except ValueError as e:
+            log.error("Keyword extraction failed: %s", e)
             # Add error flag to indicate failure
             error_result = data_json.copy()
             error_result["error"] = str(e)

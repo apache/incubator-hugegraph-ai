@@ -29,27 +29,27 @@ model_map = {
 }
 
 
-def get_embedding(llm_settings: LLMConfig):
-    if llm_settings.embedding_type == "openai":
+def get_embedding(llm_configs: LLMConfig):
+    if llm_configs.embedding_type == "openai":
         return OpenAIEmbedding(
-            model_name=llm_settings.openai_embedding_model,
-            api_key=llm_settings.openai_embedding_api_key,
-            api_base=llm_settings.openai_embedding_api_base,
+            model_name=llm_configs.openai_embedding_model,
+            api_key=llm_configs.openai_embedding_api_key,
+            api_base=llm_configs.openai_embedding_api_base,
         )
-    if llm_settings.embedding_type == "ollama/local":
+    if llm_configs.embedding_type == "ollama/local":
         return OllamaEmbedding(
-            model_name=llm_settings.ollama_embedding_model,
-            host=llm_settings.ollama_embedding_host,
-            port=llm_settings.ollama_embedding_port,
+            model_name=llm_configs.ollama_embedding_model,
+            host=llm_configs.ollama_embedding_host,
+            port=llm_configs.ollama_embedding_port,
         )
-    if llm_settings.embedding_type == "litellm":
+    if llm_configs.embedding_type == "litellm":
         return LiteLLMEmbedding(
-            model_name=llm_settings.litellm_embedding_model,
-            api_key=llm_settings.litellm_embedding_api_key,
-            api_base=llm_settings.litellm_embedding_api_base,
+            model_name=llm_configs.litellm_embedding_model,
+            api_key=llm_configs.litellm_embedding_api_key,
+            api_base=llm_configs.litellm_embedding_api_base,
         )
 
-    raise Exception("embedding type is not supported !")
+    raise ValueError("embedding type is not supported !")
 
 
 class Embeddings:

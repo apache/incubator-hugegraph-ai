@@ -24,11 +24,12 @@ from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 from hugegraph_llm.utils.log import log
 
 
+# pylint: disable=arguments-differ,keyword-arg-before-vararg
 class ImportGraphDataFlow(BaseFlow):
     def __init__(self):
         pass
 
-    def prepare(self, prepared_input: WkFlowInput, data, schema):
+    def prepare(self, prepared_input: WkFlowInput, data, schema, **kwargs):
         try:
             data_json = json.loads(data.strip()) if isinstance(data, str) else data
         except json.JSONDecodeError as e:
@@ -43,9 +44,8 @@ class ImportGraphDataFlow(BaseFlow):
         )
         prepared_input.data_json = data_json
         prepared_input.schema = schema
-        return
 
-    def build_flow(self, data, schema):
+    def build_flow(self, data, schema, **kwargs):
         pipeline = GPipeline()
         prepared_input = WkFlowInput()
         # prepare input data
@@ -61,7 +61,7 @@ class ImportGraphDataFlow(BaseFlow):
 
         return pipeline
 
-    def post_deal(self, pipeline=None):
+    def post_deal(self, pipeline=None, **kwargs):
         res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
         gr.Info("Import graph data successfully!")
         return json.dumps(res, ensure_ascii=False, indent=2)

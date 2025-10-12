@@ -18,7 +18,6 @@
 import json
 from typing import Any, Dict, Optional
 
-from PyCGraph import CStatus
 
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.llm_op.gremlin_generate import GremlinGenerateSynthesize
@@ -27,13 +26,14 @@ from hugegraph_llm.config import llm_settings, prompt as prompt_cfg
 
 
 def _stable_schema_string(state_json: Dict[str, Any]) -> str:
-    if "simple_schema" in state_json and state_json["simple_schema"] is not None:
-        return json.dumps(
-            state_json["simple_schema"], ensure_ascii=False, sort_keys=True
-        )
-    if "schema" in state_json and state_json["schema"] is not None:
-        return json.dumps(state_json["schema"], ensure_ascii=False, sort_keys=True)
-    return ""
+    val = state_json.get("simple_schema")
+    if val is None:
+        val = state_json.get("schema")
+    if val is None:
+        return ""
+    if isinstance(val, str):
+        return val
+    return json.dumps(val, ensure_ascii=False, sort_keys=True)
 
 
 class Text2GremlinNode(BaseNode):
@@ -56,7 +56,7 @@ class Text2GremlinNode(BaseNode):
             vertices=None,
             gremlin_prompt=gremlin_prompt,
         )
-        return CStatus()
+        return super().node_init()
 
     def operator_schedule(self, data_json: Dict[str, Any]):
         # Ensure query exists in context; return empty if not provided

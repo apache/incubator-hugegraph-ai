@@ -13,29 +13,30 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+from PyCGraph import GPipeline
+
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.nodes.llm_node.prompt_generate import PromptGenerateNode
 from hugegraph_llm.state.ai_state import WkFlowInput
-
-from PyCGraph import GPipeline
-
 from hugegraph_llm.state.ai_state import WkFlowState
 
 
+# pylint: disable=arguments-differ,keyword-arg-before-vararg
 class PromptGenerateFlow(BaseFlow):
     def __init__(self):
         pass
 
-    def prepare(self, prepared_input: WkFlowInput, source_text, scenario, example_name):
+    def prepare(
+        self, prepared_input: WkFlowInput, source_text, scenario, example_name, **kwargs
+    ):
         """
         Prepare input data for PromptGenerate workflow
         """
         prepared_input.source_text = source_text
         prepared_input.scenario = scenario
         prepared_input.example_name = example_name
-        return
 
-    def build_flow(self, source_text, scenario, example_name):
+    def build_flow(self, source_text, scenario, example_name, **kwargs):
         """
         Build the PromptGenerate workflow
         """
@@ -53,9 +54,11 @@ class PromptGenerateFlow(BaseFlow):
 
         return pipeline
 
-    def post_deal(self, pipeline=None):
+    def post_deal(self, pipeline=None, **kwargs):
         """
         Process the execution result of PromptGenerate workflow
         """
         res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
-        return res.get("generated_extract_prompt", "Generation failed. Please check the logs.")
+        return res.get(
+            "generated_extract_prompt", "Generation failed. Please check the logs."
+        )

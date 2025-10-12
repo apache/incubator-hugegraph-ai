@@ -52,8 +52,8 @@ class MergeRerankNode(BaseNode):
                 topk_return_results=topk_return_results,
             )
             return super().node_init()
-        except Exception as e:
-            log.error(f"Failed to initialize MergeRerankNode: {e}")
+        except ValueError as e:
+            log.error("Failed to initialize MergeRerankNode: %s", e)
             from PyCGraph import CStatus
 
             return CStatus(-1, f"MergeRerankNode initialization failed: {e}")
@@ -72,12 +72,14 @@ class MergeRerankNode(BaseNode):
             merged_count = len(result.get("merged_result", []))
 
             log.info(
-                f"Merge and rerank completed: {vector_count} vector results, "
-                f"{graph_count} graph results, {merged_count} merged results"
+                "Merge and rerank completed: %d vector results, %d graph results, %d merged results",
+                vector_count,
+                graph_count,
+                merged_count,
             )
 
             return result
 
-        except Exception as e:
-            log.error(f"Merge and rerank failed: {e}")
+        except ValueError as e:
+            log.error("Merge and rerank failed: %s", e)
             return data_json
