@@ -35,7 +35,7 @@ from hugegraph_llm.flows.text2gremlin import Text2GremlinFlow
 
 
 class Scheduler:
-    pipeline_pool: Dict[str, Any] = None
+    pipeline_pool: Dict[str, Any]
     max_pipeline: int
 
     def __init__(self, max_pipeline: int = 10):
@@ -116,6 +116,7 @@ class Scheduler:
                 raise RuntimeError(error_msg)
             status = pipeline.run()
             if status.isErr():
+                manager.add(pipeline)
                 error_msg = f"Error in flow execution: {status.getInfo()}"
                 log.error(error_msg)
                 raise RuntimeError(error_msg)
@@ -123,16 +124,18 @@ class Scheduler:
             manager.add(pipeline)
             return res
         else:
-            # fetch pipeline & prepare input for flow
-            prepared_input = pipeline.getGParamWithNoEmpty("wkflow_input")
-            flow.prepare(prepared_input, *args, **kwargs)
-            status = pipeline.run()
-            if status.isErr():
-                error_msg = f"Error in flow execution {status.getInfo()}"
-                log.error(error_msg)
-                raise RuntimeError(error_msg)
-            res = flow.post_deal(pipeline)
-            manager.release(pipeline)
+            try:
+                # fetch pipeline & prepare input for flow
+                prepared_input = pipeline.getGParamWithNoEmpty("wkflow_input")
+                flow.prepare(prepared_input, *args, **kwargs)
+                status = pipeline.run()
+                if status.isErr():
+                    error_msg = f"Error in flow execution {status.getInfo()}"
+                    log.error(error_msg)
+                    raise RuntimeError(error_msg)
+                res = flow.post_deal(pipeline)
+            finally:
+                manager.release(pipeline)
             return res
 
     async def schedule_stream_flow(self, flow_name: str, *args, **kwargs):
@@ -144,22 +147,21 @@ class Scheduler:
         if pipeline is None:
             # call coresponding flow_func to create new workflow
             pipeline = flow.build_flow(*args, **kwargs)
-            try:
-                pipeline.getGParamWithNoEmpty("wkflow_input").stream = True
-                status = pipeline.init()
-                if status.isErr():
-                    error_msg = f"Error in flow init: {status.getInfo()}"
-                    log.error(error_msg)
-                    raise RuntimeError(error_msg)
-                status = pipeline.run()
-                if status.isErr():
-                    error_msg = f"Error in flow execution: {status.getInfo()}"
-                    log.error(error_msg)
-                    raise RuntimeError(error_msg)
-                async for res in flow.post_deal_stream(pipeline):
-                    yield res
-            finally:
+            pipeline.getGParamWithNoEmpty("wkflow_input").stream = True
+            status = pipeline.init()
+            if status.isErr():
+                error_msg = f"Error in flow init: {status.getInfo()}"
+                log.error(error_msg)
+                raise RuntimeError(error_msg)
+            status = pipeline.run()
+            if status.isErr():
                 manager.add(pipeline)
+                error_msg = f"Error in flow execution: {status.getInfo()}"
+                log.error(error_msg)
+                raise RuntimeError(error_msg)
+            async for res in flow.post_deal_stream(pipeline):
+                yield res
+            manager.add(pipeline)
         else:
             try:
                 # fetch pipeline & prepare input for flow

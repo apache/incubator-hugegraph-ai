@@ -30,10 +30,10 @@ class BuildGremlinExampleIndexNode(BaseNode):
     wk_input: WkFlowInput = None
 
     def node_init(self):
-        if self.wk_input.examples is not None:
-            examples = self.wk_input.examples
-        else:
+        if not self.wk_input.examples:
             return CStatus(-1, "examples is required in BuildGremlinExampleIndexNode")
+        examples = self.wk_input.examples
+
         self.build_gremlin_example_index_op = BuildGremlinExampleIndex(
             get_embedding(llm_settings), examples
         )

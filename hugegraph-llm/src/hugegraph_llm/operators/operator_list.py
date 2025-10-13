@@ -101,6 +101,8 @@ class OperatorList:
         return self
 
     def fetch_graph_data(self):
+        if self.graph is None:
+            raise ValueError("graph client is required for fetch_graph_data operation")
         self.operators.append(FetchGraphData(self.graph))
         return self
 

@@ -61,7 +61,9 @@ def clean_all_graph_index():
     gr.Info("Clear graph index and text2gql index successfully!")
 
 
-def get_vertex_details(vertex_ids: List[str], context: Dict) -> List[Dict[str, Any]]:
+def get_vertex_details(
+    vertex_ids: List[str], context: Dict[str, Any]
+) -> List[Dict[str, Any]]:
     if isinstance(context.get("graph_client"), PyHugeClient):
         client = context["graph_client"]
     else:
@@ -128,5 +130,6 @@ def build_schema(input_text, query_example, few_shot):
         return scheduler.schedule_flow(
             "build_schema", input_text, query_example, few_shot
         )
-    except (TypeError, ValueError) as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        log.error("Schema generation failed: %s", e)
         raise gr.Error(f"Schema generation failed: {e}")

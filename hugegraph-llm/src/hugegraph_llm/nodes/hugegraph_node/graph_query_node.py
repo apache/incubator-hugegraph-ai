@@ -161,7 +161,7 @@ class GraphQueryNode(BaseNode):
                 )
         except Exception as e:  # pylint: disable=broad-except
             log.error(e)
-            context["graph_result"] = ""
+            context["graph_result"] = []
         return context
 
     def _limit_property_query(
@@ -405,9 +405,11 @@ class GraphQueryNode(BaseNode):
                 log.debug("Kneighbor gremlin query: %s", gremlin_query)
                 paths.extend(self._client.gremlin().exec(gremlin=gremlin_query)["data"])
 
-            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = (
-                self._format_graph_query_result(query_paths=paths)
-            )
+            (
+                graph_chain_knowledge,
+                vertex_degree_list,
+                knowledge_with_degree,
+            ) = self._format_graph_query_result(query_paths=paths)
 
             # TODO: we may need to optimize the logic here with global deduplication (may lack some single vertex)
             if not graph_chain_knowledge:
@@ -436,9 +438,11 @@ class GraphQueryNode(BaseNode):
             paths: List[Any] = self._client.gremlin().exec(gremlin=gremlin_query)[
                 "data"
             ]
-            graph_chain_knowledge, vertex_degree_list, knowledge_with_degree = (
-                self._format_graph_query_result(query_paths=paths)
-            )
+            (
+                graph_chain_knowledge,
+                vertex_degree_list,
+                knowledge_with_degree,
+            ) = self._format_graph_query_result(query_paths=paths)
 
         context["graph_result"] = list(graph_chain_knowledge)
         if context["graph_result"]:
