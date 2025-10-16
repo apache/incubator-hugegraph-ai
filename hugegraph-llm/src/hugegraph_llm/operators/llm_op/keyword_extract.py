@@ -77,7 +77,7 @@ class KeywordExtract:
             # Hybrid method
             ranks = self._extract_with_hybrid()
         else:
-            log.warning(f"Invalid extract_method '{method}', fallback to '{self._extract_method}'")
+            log.warning("Invalid extract_method %s", method)
             raise ValueError(f"Invalid extract_method: {method}")
 
         keywords = [] if not ranks else sorted(ranks, key=ranks.get, reverse=True)

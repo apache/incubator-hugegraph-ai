@@ -98,10 +98,10 @@ class NLTKHelper:
                     # Verify after download
                     nltk.data.find(path)
                 except PermissionError as e:
-                    log.error(f"Permission denied when downloading {package}: {e}")
+                    log.error("Permission denied when downloading %s: %s", package, e)
                     return False
                 except (URLError, HTTPError) as e:
-                    log.warning(f"Network error downloading {package}: {e}, will retry with backup method")
+                    log.warning("Network error downloading %s: %s, will retry with backup method", package, e)
                     return False
                 except LookupError:
                     log.error("Package %s not found after download. Check package name and nltk_data paths.", package)
