@@ -80,33 +80,33 @@ class NLTKHelper:
             nltk.data.path.append(nltk_data_dir)
 
         required_packages = {
-            'punkt': False,
-            'punkt_tab': False,
-            'averaged_perceptron_tagger': False,
-            "averaged_perceptron_tagger_eng": False}
-        for package in required_packages:
+            'punkt': 'tokenizers/punkt',
+            'punkt_tab': 'tokenizers/punkt_tab',
+            'averaged_perceptron_tagger': 'taggers/averaged_perceptron_tagger',
+            "averaged_perceptron_tagger_eng": 'taggers/averaged_perceptron_tagger_eng'
+        }
+
+        for package, path in required_packages.items():
             try:
-                if package in ['punkt', 'punkt_tab']:
-                    nltk.data.find(f'tokenizers/{package}')
-                else:
-                    nltk.data.find(f'taggers/{package}')
-                required_packages[package] = True
+                nltk.data.find(path)
             except LookupError:
+                log.info("Start download nltk package %s", package)
                 try:
-                    log.info("Start download nltk package %s", package)
-                    nltk.download(package, download_dir=nltk_data_dir, quiet=False)
-                except (URLError, HTTPError, PermissionError) as e:
-                    log.warning("Can't download package %s as error: %s", package, e)
-
-        check_flag = all(required_packages.values())
-        if not check_flag:
-            for package in required_packages:
-                if nltk.data.find(f'tokenizers/{package}') or nltk.data.find(f'taggers/{package}'):
-                    required_packages[package] = True
-                    log.debug("Package %s is already downloaded", package)
-
-        check_flag = all(required_packages.values())
-        return check_flag
+                    if not nltk.download(package, download_dir=nltk_data_dir, quiet=False):
+                        log.warning("NLTK download command returned False for package %s.", package)
+                        return False
+                    # Verify after download
+                    nltk.data.find(path)
+                except PermissionError as e:
+                    log.error(f"Permission denied when downloading {package}: {e}")
+                    return False
+                except (URLError, HTTPError) as e:
+                    log.warning(f"Network error downloading {package}: {e}, will retry with backup method")
+                    return False
+                except LookupError:
+                    log.error("Package %s not found after download. Check package name and nltk_data paths.", package)
+                    return False
+        return True
 
     @staticmethod
     def get_cache_dir() -> str:

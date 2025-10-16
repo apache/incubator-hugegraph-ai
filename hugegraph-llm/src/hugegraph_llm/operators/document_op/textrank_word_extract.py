@@ -25,6 +25,7 @@ import nltk
 import regex
 
 from hugegraph_llm.operators.common_op.nltk_helper import NLTKHelper
+from hugegraph_llm.utils.log import log
 
 
 class MultiLingualTextRank:
@@ -77,7 +78,6 @@ class MultiLingualTextRank:
 
     def _multi_preprocess(self, text):
         words = []
-        ch_tokens = []
         en_stop_words = NLTKHelper().stopwords(lang='english')
         ch_stop_words = NLTKHelper().stopwords(lang='chinese')
 
@@ -85,28 +85,22 @@ class MultiLingualTextRank:
         masked_text, placeholder_map = self._word_mask(text)
         pos_tags = self._get_valid_tokens(masked_text)
 
-        # English word segmentation
+        # Word segmentation
         for word, flag in pos_tags:
             if word in placeholder_map:
                 words.append(placeholder_map[word])
-            else:
-                if len(word) >= 1 and flag in self.pos_filter['english'] and word.lower() not in en_stop_words:
+                continue
+
+            if len(word) >= 1 and flag in self.pos_filter['english'] and word.lower() not in en_stop_words:
+                words.append(word)
+                if re.compile('[\u4e00-\u9fff]').search(word):
+                    jieba_tokens = pseg.cut(word)
+                    for ch_word, ch_flag in jieba_tokens:
+                        if len(ch_word) >= 1 and ch_flag in self.pos_filter['chinese'] \
+                                and ch_word not in ch_stop_words:
+                            words.append(ch_word)
+                elif len(word) >= 1 and flag in self.pos_filter['english'] and word.lower() not in en_stop_words:
                     words.append(word)
-                    if re.compile('[\u4e00-\u9fff]').search(word):
-                        ch_tokens.append(word)
-
-        # Chinese word segmentation
-        if len(ch_tokens) > 0:
-            ch_tokens = list(set(ch_tokens))
-            for ch_token in ch_tokens:
-                idx = words.index(ch_token)
-                ch_words = []
-                jieba_tokens = pseg.cut(ch_token)
-                for word, flag in jieba_tokens:
-                    if len(word) >= 1 and flag in self.pos_filter['chinese'] and word not in ch_stop_words:
-                        ch_words.append(word)
-                words = words[:idx] + ch_words + words[idx+1:]
-
         return words
 
     def _build_graph(self, words):
@@ -139,6 +133,7 @@ class MultiLingualTextRank:
 
     def extract_keywords(self, text) -> Dict[str, float]:
         if not NLTKHelper().check_nltk_data():
+            log.error("NLTK data check failed, cannot proceed with keyword extraction")
             return {}
 
         words = self._multi_preprocess(text)

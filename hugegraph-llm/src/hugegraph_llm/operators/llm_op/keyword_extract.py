@@ -59,14 +59,14 @@ class KeywordExtract:
 
         # Use English by default
         self._language = "chinese" if self._language == "cn" else "english"
-        mk = context.get("max_keywords", self._max_keywords)
+        max_keyword_num = context.get("max_keywords", self._max_keywords)
         try:
-            mk = int(mk)
+            max_keyword_num = int(max_keyword_num)
         except (TypeError, ValueError):
-            mk = self._max_keywords
-        self._max_keywords = max(1, mk)
+            max_keyword_num = self._max_keywords
+        self._max_keywords = max(1, max_keyword_num)
 
-        method = (context.get("extract_method", self._extract_method) or "hybrid").strip().lower()
+        method = (context.get("extract_method", self._extract_method) or "LLM").strip().lower()
         if method == "llm":
             # LLM method
             ranks = self._extract_with_llm()
@@ -77,6 +77,7 @@ class KeywordExtract:
             # Hybrid method
             ranks = self._extract_with_hybrid()
         else:
+            log.warning(f"Invalid extract_method '{method}', fallback to '{self._extract_method}'")
             raise ValueError(f"Invalid extract_method: {method}")
 
         keywords = [] if not ranks else sorted(ranks, key=ranks.get, reverse=True)
