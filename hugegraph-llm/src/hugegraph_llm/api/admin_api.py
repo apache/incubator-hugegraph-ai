@@ -33,9 +33,8 @@ def admin_http_api(router: APIRouter, log_stream):
         if admin_settings.admin_token != req.admin_token:
             raise generate_response(
                 RAGResponse(
-                    status_code=status.HTTP_403_FORBIDDEN,  # pylint: disable=E0702
-                    message="Invalid admin_token",
-                )
+                    status_code=status.HTTP_403_FORBIDDEN, message="Invalid admin_token"
+                )  # pylint: disable=E0702
             )
         log_path = os.path.join("logs", req.log_file)
 

@@ -16,7 +16,7 @@
 # under the License.
 
 import re
-from typing import List, Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from hugegraph_llm.document.chunk_split import ChunkSplitter
 from hugegraph_llm.models.llms.base import BaseLLM
@@ -27,11 +27,11 @@ Extract Triples from the given text and graph schema
 
 ## Basic Rules
 1. The output format must be: (X,Y,Z) - LABEL
-In this format, Y must be a value from "properties" or "edge_label",
+In this format, Y must be a value from "properties" or "edge_label", 
 and LABEL must be X's vertex_label or Y's edge_label.
 2. Don't extract attribute/property fields that do not exist in the given schema
 3. Ensure the extract property is in the same type as the schema (like 'age' should be a number)
-4. Translate the given schema filed into Chinese if the given text is Chinese but the schema is in English (Optional)
+4. Translate the given schema filed into Chinese if the given text is Chinese but the schema is in English (Optional) 
 
 ## Example (Note: Update the example to correspond to the given text and schema)
 ### Input example:
@@ -76,8 +76,7 @@ The extracted text is: {text}"""
     if schema:
         return schema_real_prompt
     log.warning(
-        "Recommend to provide a graph schema to improve the extraction accuracy. "
-        "Now using the default schema."
+        "Recommend to provide a graph schema to improve the extraction accuracy. Now using the default schema."
     )
     return text_based_prompt
 
@@ -150,7 +149,7 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
                     }
                 )
                 break
-    graph["vertices"] = list(vertices_dict.values())
+    graph["vertices"] = vertices_dict.values()
 
 
 class InfoExtract:

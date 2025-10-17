@@ -23,25 +23,23 @@ import os
 
 import gradio as gr
 
-from hugegraph_llm.config import huge_settings
-from hugegraph_llm.config import prompt
-from hugegraph_llm.config import resource_path
-from hugegraph_llm.flows.scheduler import SchedulerSingleton
+from hugegraph_llm.config import huge_settings, prompt, resource_path
+from hugegraph_llm.models.llms.init_llm import LLMs
+from hugegraph_llm.operators.llm_op.prompt_generate import PromptGenerate
 from hugegraph_llm.utils.graph_index_utils import (
-    get_graph_index_info,
-    clean_all_graph_index,
-    clean_all_graph_data,
-    update_vid_embedding,
-    extract_graph,
-    import_graph_data,
     build_schema,
+    clean_all_graph_data,
+    clean_all_graph_index,
+    extract_graph,
+    get_graph_index_info,
+    import_graph_data,
+    update_vid_embedding,
 )
 from hugegraph_llm.utils.hugegraph_utils import check_graph_db_connection
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.vector_index_utils import (
-    clean_vector_index,
     build_vector_index,
-    get_vector_index_info,
+    clean_vector_index,
 )
 
 
@@ -60,17 +58,25 @@ def store_prompt(doc, schema, example_prompt):
 
 def generate_prompt_for_ui(source_text, scenario, example_name):
     """
-    Handles the UI logic for generating a new prompt using the new workflow architecture.
+    Handles the UI logic for generating a new prompt. It calls the PromptGenerate operator.
     """
     if not all([source_text, scenario, example_name]):
         gr.Warning("Please provide original text, expected scenario, and select an example!")
         return gr.update()
     try:
-        # using new architecture
-        scheduler = SchedulerSingleton.get_instance()
-        result = scheduler.schedule_flow("prompt_generate", source_text, scenario, example_name)
+        prompt_generator = PromptGenerate(llm=LLMs().get_chat_llm())
+        context = {
+            "source_text": source_text,
+            "scenario": scenario,
+            "example_name": example_name,
+        }
+        result_context = prompt_generator.run(context)
+        # Presents the result of generating prompt
+        generated_prompt = result_context.get(
+            "generated_extract_prompt", "Generation failed. Please check the logs."
+        )
         gr.Info("Prompt generated successfully!")
-        return result
+        return generated_prompt
     except Exception as e:
         log.error("Error generating Prompt: %s", e, exc_info=True)
         raise gr.Error(f"Error generating Prompt: {e}") from e
@@ -292,8 +298,7 @@ def create_vector_graph_block():
         gr.Markdown("---")
         with gr.Accordion("Graph Schema Generator", open=False):
             gr.Markdown(
-                "Provide **query examples** and **few-shot examples**, "
-                "then click **Generate Schema** to automatically create graph schema."
+                "Provide **query examples** and **few-shot examples**, then click **Generate Schema** to automatically create graph schema."
             )
             with gr.Row():
                 query_example = gr.Code(
@@ -311,9 +316,10 @@ def create_vector_graph_block():
                     max_lines=15,
                 )
                 build_schema_bt = gr.Button("Generate Schema", variant="primary")
+
         _create_prompt_helper_block(demo, input_text, info_extract_template)
 
-        vector_index_btn0.click(get_vector_index_info, outputs=out).then(
+        vector_index_btn0.click(get_graph_index_info, outputs=out).then(
             store_prompt,
             inputs=[input_text, input_schema, info_extract_template],
         )
@@ -344,7 +350,6 @@ def create_vector_graph_block():
             inputs=[input_text, input_schema, info_extract_template],
         )
 
-        # origin_out = gr.Textbox(visible=False)
         graph_extract_bt.click(
             extract_graph,
             inputs=[input_file, input_text, input_schema, info_extract_template],
@@ -361,18 +366,13 @@ def create_vector_graph_block():
             inputs=[input_text, input_schema, info_extract_template],
         )
 
-        # TODO: we should store the examples after the user changed them.
         build_schema_bt.click(
             _build_schema_and_provide_feedback,
             inputs=[input_text, query_example, few_shot],
             outputs=[input_schema],
         ).then(
             store_prompt,
-            inputs=[
-                input_text,
-                input_schema,
-                info_extract_template,
-            ],  # TODO: Store the updated examples
+            inputs=[input_text, input_schema, info_extract_template],
         )
 
         def on_tab_select(input_f, input_t, evt: gr.SelectData):

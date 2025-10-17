@@ -13,9 +13,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from PyCGraph import GParam, CStatus
+from typing import Union, List, Optional, Any
 
-from typing import Union, List, Optional, Any, Dict
+from PyCGraph import GParam, CStatus
 
 
 class WkFlowInput(GParam):
@@ -78,7 +78,7 @@ class WkFlowInput(GParam):
     is_vector_only: bool = False
 
     # used for build text2gremin index
-    examples: Optional[List[Dict[str, str]]] = None
+    examples: Optional[List[dict]] = None
 
     def reset(self, _: CStatus) -> None:
         self.texts = None
@@ -206,11 +206,7 @@ class WkFlowState(GParam):
             dict: A dictionary containing non-None instance members and their serialized values.
         """
         # Only export instance attributes (excluding methods and class attributes) whose values are not None
-        return {
-            k: v
-            for k, v in self.__dict__.items()
-            if not k.startswith("_") and v is not None
-        }
+        return {k: v for k, v in self.__dict__.items() if not k.startswith("_") and v is not None}
 
     # Implement a method that assigns keys from data_json as WkFlowState member variables
     def assign_from_json(self, data_json: dict):

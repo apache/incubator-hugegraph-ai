@@ -15,43 +15,33 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
 import asyncio
-import os
-from typing import Dict, Any
+from typing import Any, Dict
 
-from hugegraph_llm.config import huge_settings, resource_path, llm_settings
-from hugegraph_llm.indices.vector_index import VectorIndex
+from hugegraph_llm.config import huge_settings
+from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.utils.embedding_utils import (
-    get_embeddings_parallel,
-    get_filename_prefix,
-    get_index_folder_name,
-)
+from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel
 from hugegraph_llm.utils.log import log
 
 
 class BuildVectorIndex:
-    def __init__(self, embedding: BaseEmbedding):
+    def __init__(self, embedding: BaseEmbedding, vector_index: type[VectorStoreBase]):
         self.embedding = embedding
-        self.folder_name = get_index_folder_name(
-            huge_settings.graph_name, huge_settings.graph_space
+        self.vector_index = vector_index.from_name(
+            embedding.get_embedding_dim(),
+            huge_settings.graph_name,
+            "chunks",
         )
-        self.index_dir = str(os.path.join(resource_path, self.folder_name, "chunks"))
-        self.filename_prefix = get_filename_prefix(
-            llm_settings.embedding_type, getattr(self.embedding, "model_name", None)
-        )
-        self.vector_index = VectorIndex.from_index_file(self.index_dir, self.filename_prefix)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if "chunks" not in context:
             raise ValueError("chunks not found in context.")
         chunks = context["chunks"]
-        chunks_embedding = []
         log.debug("Building vector index for %s chunks...", len(context["chunks"]))
-        # TODO: use async_get_texts_embedding instead of single sync method
-        chunks_embedding = asyncio.run(get_embeddings_parallel(self.embedding, chunks))
+        # Use async parallel embedding to speed up
+        chunks_embedding = asyncio.run(get_embeddings_parallel(self.embedding, chunks))  # type: ignore
         if len(chunks_embedding) > 0:
             self.vector_index.add(chunks_embedding, chunks)
-            self.vector_index.to_index_file(self.index_dir, self.filename_prefix)
+            self.vector_index.save_index_by_name(huge_settings.graph_name, "chunks")
         return context

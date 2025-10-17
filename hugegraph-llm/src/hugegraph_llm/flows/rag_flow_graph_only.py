@@ -85,12 +85,8 @@ class RAGGraphOnlyFlow(BaseFlow):
         prepared_input.graph_vector_answer = graph_vector_answer
         prepared_input.gremlin_tmpl_num = gremlin_tmpl_num
         prepared_input.gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
-        prepared_input.max_graph_items = (
-            max_graph_items or huge_settings.max_graph_items
-        )
-        prepared_input.topk_per_keyword = (
-            topk_per_keyword or huge_settings.topk_per_keyword
-        )
+        prepared_input.max_graph_items = max_graph_items or huge_settings.max_graph_items
+        prepared_input.topk_per_keyword = topk_per_keyword or huge_settings.topk_per_keyword
         prepared_input.topk_return_results = (
             topk_return_results or huge_settings.topk_return_results
         )
@@ -175,5 +171,5 @@ class RAGGraphOnlyFlow(BaseFlow):
                 else res
             )
         except Exception as e:
-            log.error(f"RAGGraphOnlyFlow post processing failed: {e}")
+            log.error("RAGGraphOnlyFlow post processing failed: %s", e)
             return {"error": f"Post processing failed: {str(e)}"}

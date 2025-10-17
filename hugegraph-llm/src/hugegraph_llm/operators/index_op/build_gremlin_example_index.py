@@ -17,31 +17,25 @@
 
 
 import asyncio
-import os
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
-from hugegraph_llm.config import resource_path, llm_settings, huge_settings
-from hugegraph_llm.indices.vector_index import VectorIndex
+from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.utils.embedding_utils import (
-    get_embeddings_parallel,
-    get_filename_prefix,
-    get_index_folder_name,
-)
+from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel
 
 
 # FIXME: we need keep the logic same with build_semantic_index.py
 class BuildGremlinExampleIndex:
-    def __init__(self, embedding: BaseEmbedding, examples: List[Dict[str, str]]):
-        self.folder_name = get_index_folder_name(
-            huge_settings.graph_name, huge_settings.graph_space
-        )
-        self.index_dir = str(os.path.join(resource_path, self.folder_name, "gremlin_examples"))
+    def __init__(
+        self,
+        embedding: BaseEmbedding,
+        examples: List[Dict[str, str]],
+        vector_index: type[VectorStoreBase],
+    ):
+        self.vector_index_name = "gremlin_examples"
         self.examples = examples
         self.embedding = embedding
-        self.filename_prefix = get_filename_prefix(
-            llm_settings.embedding_type, getattr(embedding, "model_name", None)
-        )
+        self.vector_index = vector_index
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         # !: We have assumed that self.example is not empty
@@ -50,8 +44,8 @@ class BuildGremlinExampleIndex:
         examples_embedding = asyncio.run(get_embeddings_parallel(self.embedding, queries))
         embed_dim = len(examples_embedding[0])
         if len(self.examples) > 0:
-            vector_index = VectorIndex(embed_dim)
+            vector_index = self.vector_index.from_name(embed_dim, self.vector_index_name)
             vector_index.add(examples_embedding, self.examples)
-            vector_index.to_index_file(self.index_dir, self.filename_prefix)
+            vector_index.save_index_by_name(self.vector_index_name)
         context["embed_dim"] = embed_dim
         return context

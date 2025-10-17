@@ -16,6 +16,7 @@
 # under the License.
 from typing import Optional, List, Literal, Union
 
+from hugegraph_llm.config import huge_settings
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.common_op.check_schema import CheckSchema
@@ -43,7 +44,6 @@ from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
 from hugegraph_llm.operators.common_op.merge_dedup_rerank import MergeDedupRerank
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
-from hugegraph_llm.config import huge_settings
 from pyhugegraph.client import PyHugeClient
 
 

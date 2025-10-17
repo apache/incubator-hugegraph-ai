@@ -78,9 +78,7 @@ class RAGRawFlow(BaseFlow):
 
     def post_deal(self, pipeline=None):
         if pipeline is None:
-            return json.dumps(
-                {"error": "No pipeline provided"}, ensure_ascii=False, indent=2
-            )
+            return json.dumps({"error": "No pipeline provided"}, ensure_ascii=False, indent=2)
         try:
             res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
             log.info("RAGRawFlow post processing success")
@@ -91,7 +89,7 @@ class RAGRawFlow(BaseFlow):
                 "graph_vector_answer": res.get("graph_vector_answer", ""),
             }
         except Exception as e:
-            log.error(f"RAGRawFlow post processing failed: {e}")
+            log.error("RAGRawFlow post processing failed: %s", e)
             return json.dumps(
                 {"error": f"Post processing failed: {str(e)}"},
                 ensure_ascii=False,

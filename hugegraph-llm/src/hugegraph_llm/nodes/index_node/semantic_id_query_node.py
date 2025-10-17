@@ -13,12 +13,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from PyCGraph import CStatus
 from typing import Dict, Any
+
+from PyCGraph import CStatus
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
-from hugegraph_llm.models.embeddings.init_embedding import get_embedding
-from hugegraph_llm.config import huge_settings, llm_settings
+from hugegraph_llm.models.embeddings.init_embedding import Embeddings
+from hugegraph_llm.config import huge_settings
 from hugegraph_llm.utils.log import log
 
 
@@ -38,22 +39,10 @@ class SemanticIdQueryNode(BaseNode):
             if not graph_name:
                 return CStatus(-1, "graph_name is required in wk_input")
 
-            embedding = get_embedding(llm_settings)
-            by = (
-                self.wk_input.semantic_by
-                if self.wk_input.semantic_by is not None
-                else "keywords"
-            )
-            topk_per_keyword = (
-                self.wk_input.topk_per_keyword
-                if self.wk_input.topk_per_keyword is not None
-                else huge_settings.topk_per_keyword
-            )
-            topk_per_query = (
-                self.wk_input.topk_per_query
-                if self.wk_input.topk_per_query is not None
-                else 10
-            )
+            embedding = Embeddings().get_embedding()
+            by = self.wk_input.semantic_by or "keywords"
+            topk_per_keyword = self.wk_input.topk_per_keyword or huge_settings.topk_per_keyword
+            topk_per_query = self.wk_input.topk_per_query or 10
             vector_dis_threshold = (
                 self.wk_input.vector_dis_threshold
                 if self.wk_input.vector_dis_threshold is not None
@@ -71,7 +60,7 @@ class SemanticIdQueryNode(BaseNode):
 
             return super().node_init()
         except Exception as e:
-            log.error(f"Failed to initialize SemanticIdQueryNode: {e}")
+            log.error("Failed to initialize SemanticIdQueryNode: %s", e)
 
             return CStatus(-1, f"SemanticIdQueryNode initialization failed: {e}")
 
@@ -92,12 +81,10 @@ class SemanticIdQueryNode(BaseNode):
             semantic_result = self.semantic_id_query.run(data_json)
 
             match_vids = semantic_result.get("match_vids", [])
-            log.info(
-                f"Semantic query completed, found {len(match_vids)} matching vertex IDs"
-            )
+            log.info("Semantic query completed, found %d matching vertex IDs", len(match_vids))
 
             return semantic_result
 
         except Exception as e:
-            log.error(f"Semantic query failed: {e}")
+            log.error("Semantic query failed: %s", e)
             return data_json

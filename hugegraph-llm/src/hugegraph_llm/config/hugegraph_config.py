@@ -16,6 +16,7 @@
 # under the License.
 
 from typing import Optional
+
 from .models import BaseConfig
 
 
@@ -23,21 +24,21 @@ class HugeGraphConfig(BaseConfig):
     """HugeGraph settings"""
 
     # graph server config
-    graph_url: Optional[str] = "127.0.0.1:8080"
-    graph_name: Optional[str] = "hugegraph"
-    graph_user: Optional[str] = "admin"
-    graph_pwd: Optional[str] = "xxx"
+    graph_url: str = "127.0.0.1:8080"
+    graph_name: str = "hugegraph"
+    graph_user: str = "admin"
+    graph_pwd: str = "xxx"
     graph_space: Optional[str] = None
 
     # graph query config
-    limit_property: Optional[str] = "False"
-    max_graph_path: Optional[int] = 10
-    max_graph_items: Optional[int] = 30
-    edge_limit_pre_label: Optional[int] = 8
+    limit_property: str = "False"
+    max_graph_path: int = 10
+    max_graph_items: int = 30
+    edge_limit_pre_label: int = 8
 
     # vector config
-    vector_dis_threshold: Optional[float] = 0.9
-    topk_per_keyword: Optional[int] = 1
+    vector_dis_threshold: float = 0.9
+    topk_per_keyword: int = 1
 
     # rerank config
-    topk_return_results: Optional[int] = 20
+    topk_return_results: int = 20

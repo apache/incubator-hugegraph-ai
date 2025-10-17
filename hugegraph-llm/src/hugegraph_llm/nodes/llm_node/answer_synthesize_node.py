@@ -46,7 +46,7 @@ class AnswerSynthesizeNode(BaseNode):
             )
             return super().node_init()
         except Exception as e:
-            log.error(f"Failed to initialize AnswerSynthesizeNode: {e}")
+            log.error("Failed to initialize AnswerSynthesizeNode: %s", e)
             from PyCGraph import CStatus
 
             return CStatus(-1, f"AnswerSynthesizeNode initialization failed: {e}")
@@ -75,9 +75,7 @@ class AnswerSynthesizeNode(BaseNode):
                 if result.get("graph_vector_answer"):
                     answer_types.append("graph_vector")
 
-                log.info(
-                    f"Answer synthesis completed for types: {', '.join(answer_types)}"
-                )
+                log.info("Answer synthesis completed for types: %s", ", ".join(answer_types))
 
                 # Print enabled answer types according to self.wk_input configuration
                 wk_input_types = []
@@ -95,5 +93,5 @@ class AnswerSynthesizeNode(BaseNode):
                 return result
 
         except Exception as e:
-            log.error(f"Answer synthesis failed: {e}")
+            log.error("Answer synthesis failed: %s", e)
             return data_json

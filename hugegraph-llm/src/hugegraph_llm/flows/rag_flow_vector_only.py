@@ -93,18 +93,14 @@ class RAGVectorOnlyFlow(BaseFlow):
 
         # Register nodes and dependencies, keep naming consistent with original
         pipeline.registerGElement(only_vector_query_node, set(), "only_vector")
-        pipeline.registerGElement(
-            merge_rerank_node, {only_vector_query_node}, "merge_two"
-        )
+        pipeline.registerGElement(merge_rerank_node, {only_vector_query_node}, "merge_two")
         pipeline.registerGElement(answer_synthesize_node, {merge_rerank_node}, "vector")
         log.info("RAGVectorOnlyFlow pipeline built successfully")
         return pipeline
 
     def post_deal(self, pipeline=None):
         if pipeline is None:
-            return json.dumps(
-                {"error": "No pipeline provided"}, ensure_ascii=False, indent=2
-            )
+            return json.dumps({"error": "No pipeline provided"}, ensure_ascii=False, indent=2)
         try:
             res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
             log.info("RAGVectorOnlyFlow post processing success")
@@ -115,7 +111,7 @@ class RAGVectorOnlyFlow(BaseFlow):
                 "graph_vector_answer": res.get("graph_vector_answer", ""),
             }
         except Exception as e:
-            log.error(f"RAGVectorOnlyFlow post processing failed: {e}")
+            log.error("RAGVectorOnlyFlow post processing failed: %s", e)
             return json.dumps(
                 {"error": f"Post processing failed: {str(e)}"},
                 ensure_ascii=False,

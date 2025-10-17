@@ -119,8 +119,8 @@ class AuthManager(HugeParamsBase):
 
     @router.http("PUT", "auth/accesses/{access_id}")
     def modify_accesses(
-        self, access_id, access_description  # pylint: disable=unused-argument
-    ) -> Optional[Dict]:
+        self, access_id, access_description
+    ) -> Optional[Dict]:  # pylint: disable=unused-argument
         # The permission of access can\'t be updated
         data = {"access_description": access_description}
         return self._invoke_request(data=json.dumps(data))
@@ -174,8 +174,8 @@ class AuthManager(HugeParamsBase):
 
     @router.http("GET", "auth/targets/{target_id}")
     def get_target(
-        self, target_id, response=None  # pylint: disable=unused-argument
-    ) -> Optional[Dict]:
+        self, target_id, response=None
+    ) -> Optional[Dict]:  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("GET", "auth/targets")
@@ -193,8 +193,8 @@ class AuthManager(HugeParamsBase):
 
     @router.http("PUT", "auth/belongs/{belong_id}")
     def update_belong(
-        self, belong_id, description  # pylint: disable=unused-argument
-    ) -> Optional[Dict]:
+        self, belong_id, description
+    ) -> Optional[Dict]:  # pylint: disable=unused-argument
         data = {"belong_description": description}
         return self._invoke_request(data=json.dumps(data))
 

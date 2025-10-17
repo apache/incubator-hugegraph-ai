@@ -34,15 +34,9 @@ class KeywordExtractNode(BaseNode):
         """
         try:
             max_keywords = (
-                self.wk_input.max_keywords
-                if self.wk_input.max_keywords is not None
-                else 5
+                self.wk_input.max_keywords if self.wk_input.max_keywords is not None else 5
             )
-            language = (
-                self.wk_input.language
-                if self.wk_input.language is not None
-                else "english"
-            )
+            language = self.wk_input.language if self.wk_input.language is not None else "english"
             extract_template = self.wk_input.keywords_extract_prompt
 
             self.operator = KeywordExtract(
@@ -53,7 +47,7 @@ class KeywordExtractNode(BaseNode):
             )
             return super().node_init()
         except Exception as e:
-            log.error(f"Failed to initialize KeywordExtractNode: {e}")
+            log.error("Failed to initialize KeywordExtractNode: %s", e)
             return CStatus(-1, f"KeywordExtractNode initialization failed: {e}")
 
     def operator_schedule(self, data_json: Dict[str, Any]) -> Dict[str, Any]:
@@ -67,12 +61,12 @@ class KeywordExtractNode(BaseNode):
                 log.warning("Keyword extraction result missing 'keywords' field")
                 result["keywords"] = []
 
-            log.info(f"Extracted keywords: {result.get('keywords', [])}")
+            log.info("Extracted keywords: %s", result.get("keywords", []))
 
             return result
 
         except Exception as e:
-            log.error(f"Keyword extraction failed: {e}")
+            log.error("Keyword extraction failed: %s", e)
             # Add error flag to indicate failure
             error_result = data_json.copy()
             error_result["error"] = str(e)

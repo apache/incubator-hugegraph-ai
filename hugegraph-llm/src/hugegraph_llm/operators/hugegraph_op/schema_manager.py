@@ -33,7 +33,7 @@ class SchemaManager:
         self.schema = self.client.schema()
 
     def simple_schema(self, schema: Dict[str, Any]) -> Dict[str, Any]:
-        mini_schema = {}
+        mini_schema = {}  # type: ignore
 
         # Add necessary vertexlabels items (3)
         if "vertexlabels" in schema:

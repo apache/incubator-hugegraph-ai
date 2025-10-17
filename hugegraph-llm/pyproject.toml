@@ -22,11 +22,12 @@ description = "A tool for the implementation and research related to large langu
 authors = [
     { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
 ]
+maintainers = [
+    { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
+]
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10,<3.12"
-
-
 dependencies = [
     # Common dependencies
     "decorator",
@@ -39,6 +40,7 @@ dependencies = [
     "numpy",
     "pandas",
     "pydantic",
+    "tqdm",
 
     # LLM specific dependencies
     "openai",
@@ -60,6 +62,13 @@ dependencies = [
     "hugegraph-python-client",
     "pycgraph",
 ]
+
+[project.optional-dependencies]
+vectordb = [
+    "pymilvus==2.5.9",
+    "qdrant-client==1.14.2",
+]
+
 [project.urls]
 homepage = "https://hugegraph.apache.org/"
 repository = "https://github.com/apache/incubator-hugegraph-ai"
@@ -87,3 +96,22 @@ allow-direct-references = true
 [tool.uv.sources]
 hugegraph-python-client = { workspace = true }
 pycgraph = { git = "https://github.com/ChunelFeng/CGraph.git", subdirectory = "python", rev = "main", marker = "sys_platform == 'linux'"  }
+
+[tool.mypy]
+disable_error_code = ["import-untyped"]
+check_untyped_defs = true
+disallow_untyped_defs = false
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+extend-exclude = []
+
+# TODO: move this config in the root pyproject.toml & add more rules for it
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.ruff.format]
+quote-style = "preserve"
+indent-style = "space"
+line-ending = "auto"
