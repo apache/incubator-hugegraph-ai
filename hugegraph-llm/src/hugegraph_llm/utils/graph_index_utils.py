@@ -29,7 +29,7 @@ from .hugegraph_utils import clean_hg_data
 from .log import log
 from .vector_index_utils import read_documents
 from ..config import resource_path, huge_settings, llm_settings
-from ..indices.vector_index import VectorIndex
+from ..indices.vector_index.faiss_vector_store import FaissVectorIndex
 from ..models.embeddings.init_embedding import Embeddings
 
 
@@ -50,10 +50,10 @@ def clean_all_graph_index():
         llm_settings.embedding_type,
         getattr(Embeddings().get_embedding(), "model_name", None),
     )
-    VectorIndex.clean(
+    FaissVectorIndex.clean(
         str(os.path.join(resource_path, folder_name, "graph_vids")), filename_prefix
     )
-    VectorIndex.clean(
+    FaissVectorIndex.clean(
         str(os.path.join(resource_path, folder_name, "gremlin_examples")),
         filename_prefix,
     )
