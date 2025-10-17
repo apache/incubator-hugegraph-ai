@@ -134,8 +134,8 @@ class OperatorList:
         self.operators.append(Commit2Graph())
         return self
 
-    def build_vertex_id_semantic_index(self):
-        self.operators.append(BuildSemanticIndex(self.embedding))
+    def build_vertex_id_semantic_index(self, vector_index):
+        self.operators.append(BuildSemanticIndex(self.embedding, vector_index))
         return self
 
     def build_vector_index(self):
