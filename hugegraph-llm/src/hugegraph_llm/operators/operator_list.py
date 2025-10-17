@@ -81,8 +81,8 @@ class OperatorList:
             raise ValueError("No input data / invalid schema type")
         return self
 
-    def example_index_query(self, num_examples):
-        self.operators.append(GremlinExampleIndexQuery(self.embedding, num_examples))
+    def example_index_query(self, num_examples, vector_index):
+        self.operators.append(GremlinExampleIndexQuery(vector_index, self.embedding, num_examples))
         return self
 
     def gremlin_generate_synthesize(

@@ -19,6 +19,7 @@ from typing import Any, Dict
 
 from PyCGraph import CStatus
 
+from hugegraph_llm.config import index_settings
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.gremlin_example_index_query import (
     GremlinExampleIndexQuery,
@@ -30,14 +31,18 @@ class GremlinExampleIndexQueryNode(BaseNode):
     operator: GremlinExampleIndexQuery
 
     def node_init(self):
+        # Lazy import to avoid circular dependency
+        from hugegraph_llm.utils.vector_index_utils import get_vector_index_class  # pylint: disable=import-outside-toplevel
+        
         # Build operator (index lazy-loading handled in operator)
+        vector_index = get_vector_index_class(index_settings.cur_vector_index)
         embedding = Embeddings().get_embedding()
         example_num = getattr(self.wk_input, "example_num", None)
         if not isinstance(example_num, int):
             example_num = 2
         # Clamp to [0, 10]
         example_num = max(0, min(10, example_num))
-        self.operator = GremlinExampleIndexQuery(embedding=embedding, num_examples=example_num)
+        self.operator = GremlinExampleIndexQuery(vector_index=vector_index, embedding=embedding, num_examples=example_num)
         return CStatus()
 
     def operator_schedule(self, data_json: Dict[str, Any]):
