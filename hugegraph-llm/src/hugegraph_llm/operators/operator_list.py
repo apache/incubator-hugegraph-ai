@@ -138,8 +138,8 @@ class OperatorList:
         self.operators.append(BuildSemanticIndex(self.embedding, vector_index))
         return self
 
-    def build_vector_index(self):
-        self.operators.append(BuildVectorIndex(self.embedding))
+    def build_vector_index(self, vector_index):
+        self.operators.append(BuildVectorIndex(self.embedding, vector_index))
         return self
 
     def extract_word(self, text: Optional[str] = None, language: str = "english"):
