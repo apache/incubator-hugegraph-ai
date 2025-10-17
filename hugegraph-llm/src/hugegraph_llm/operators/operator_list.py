@@ -205,15 +205,17 @@ class OperatorList:
         )
         return self
 
-    def query_vector_index(self, max_items: int = 3):
+    def query_vector_index(self, vector_index, max_items: int = 3):
         """
         Add a vector index query operator to the pipeline.
 
+        :param vector_index: Vector index class to use.
         :param max_items: Maximum number of items to retrieve.
         :return: Self-instance for chaining.
         """
         self.operators.append(
             VectorIndexQuery(
+                vector_index=vector_index,
                 embedding=self.embedding,
                 topk=max_items,
             )
