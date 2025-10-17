@@ -18,20 +18,14 @@
 # pylint: disable=E1101
 
 import os
-from typing import Any, AsyncGenerator, Literal, Optional, Tuple
+from typing import AsyncGenerator, Tuple, Literal, Optional
 
 import gradio as gr
+from hugegraph_llm.flows.scheduler import SchedulerSingleton
 import pandas as pd
+from gradio.utils import NamedString
 
-from hugegraph_llm.config import (
-    huge_settings,
-    index_settings,
-    llm_settings,
-    prompt,
-    resource_path,
-)
-from hugegraph_llm.operators.graph_rag_task import RAGPipeline
-from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
+from hugegraph_llm.config import resource_path, prompt, llm_settings
 from hugegraph_llm.utils.decorators import with_task_id
 from hugegraph_llm.utils.log import log
 
@@ -73,49 +67,51 @@ def rag_answer(
         gr.Warning("Please select at least one generate mode.")
         return "", "", "", ""
 
-    rag = RAGPipeline()
-    if vector_search:
-        rag.query_vector_index(vector_index_str=index_settings.cur_vector_index)
-    if graph_search:
-        rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid(
-            vector_index_str=index_settings.cur_vector_index,
-            vector_dis_threshold=vector_dis_threshold,
-            topk_per_keyword=topk_per_keyword,
-        ).import_schema(huge_settings.graph_name).query_graphdb(
-            num_gremlin_generate_example=gremlin_tmpl_num,
-            gremlin_prompt=gremlin_prompt,
-            max_graph_items=max_graph_items,
-        )
-    # TODO: add more user-defined search strategies
-    rag.merge_dedup_rerank(
-        graph_ratio=graph_ratio,
-        rerank_method=rerank_method,
-        near_neighbor_first=near_neighbor_first,
-        topk_return_results=topk_return_results,
-    )
-    rag.synthesize_answer(
-        raw_answer,
-        vector_only_answer,
-        graph_only_answer,
-        graph_vector_answer,
-        answer_prompt,
-    )
-
+    scheduler = SchedulerSingleton.get_instance()
     try:
-        context = rag.run(
-            verbose=True,
+        # Select workflow by mode to avoid fetching the wrong pipeline from the pool
+        if graph_vector_answer or (graph_only_answer and vector_only_answer):
+            flow_key = "rag_graph_vector"
+        elif vector_only_answer:
+            flow_key = "rag_vector_only"
+        elif graph_only_answer:
+            flow_key = "rag_graph_only"
+        elif raw_answer:
+            flow_key = "rag_raw"
+        else:
+            raise RuntimeError("Unsupported flow type")
+
+        res = scheduler.schedule_flow(
+            flow_key,
             query=text,
             vector_search=vector_search,
             graph_search=graph_search,
+            raw_answer=raw_answer,
+            vector_only_answer=vector_only_answer,
+            graph_only_answer=graph_only_answer,
+            graph_vector_answer=graph_vector_answer,
+            graph_ratio=graph_ratio,
+            rerank_method=rerank_method,
+            near_neighbor_first=near_neighbor_first,
+            custom_related_information=custom_related_information,
+            answer_prompt=answer_prompt,
+            keywords_extract_prompt=keywords_extract_prompt,
+            gremlin_tmpl_num=gremlin_tmpl_num,
+            gremlin_prompt=gremlin_prompt,
             max_graph_items=max_graph_items,
+            topk_return_results=topk_return_results,
+            vector_dis_threshold=vector_dis_threshold,
+            topk_per_keyword=topk_per_keyword,
         )
-        if context.get("switch_to_bleu"):
-            gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
+        if res.get("switch_to_bleu"):
+            gr.Warning(
+                "Online reranker fails, automatically switches to local bleu rerank."
+            )
         return (
-            context.get("raw_answer", ""),
-            context.get("vector_only_answer", ""),
-            context.get("graph_only_answer", ""),
-            context.get("graph_vector_answer", ""),
+            res.get("raw_answer", ""),
+            res.get("vector_only_answer", ""),
+            res.get("graph_only_answer", ""),
+            res.get("graph_vector_answer", ""),
         )
     except ValueError as e:
         log.critical(e)
@@ -189,47 +185,47 @@ async def rag_answer_streaming(
         yield "", "", "", ""
         return
 
-    rag = RAGPipeline()
-    if vector_search:
-        rag.query_vector_index(vector_index_str=index_settings.cur_vector_index)
-    if graph_search:
-        rag.extract_keywords(extract_template=keywords_extract_prompt).keywords_to_vid(
-            vector_index_str=index_settings.cur_vector_index
-        ).import_schema(huge_settings.graph_name).query_graphdb(
-            num_gremlin_generate_example=gremlin_tmpl_num,
-            gremlin_prompt=gremlin_prompt,
-        )
-    rag.merge_dedup_rerank(
-        graph_ratio,
-        rerank_method,
-        near_neighbor_first,
-    )
-    # rag.synthesize_answer(raw_answer, vector_only_answer, graph_only_answer, graph_vector_answer, answer_prompt)
-
     try:
-        context = rag.run(
-            verbose=True,
+        # Select the specific streaming workflow
+        scheduler = SchedulerSingleton.get_instance()
+        if graph_vector_answer or (graph_only_answer and vector_only_answer):
+            flow_key = "rag_graph_vector"
+        elif vector_only_answer:
+            flow_key = "rag_vector_only"
+        elif graph_only_answer:
+            flow_key = "rag_graph_only"
+        elif raw_answer:
+            flow_key = "rag_raw"
+        else:
+            raise RuntimeError("Unsupported flow type")
+
+        async for res in scheduler.schedule_stream_flow(
+            flow_key,
             query=text,
             vector_search=vector_search,
             graph_search=graph_search,
-        )
-        if context.get("switch_to_bleu"):
-            gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
-        answer_synthesize = AnswerSynthesize(
             raw_answer=raw_answer,
             vector_only_answer=vector_only_answer,
             graph_only_answer=graph_only_answer,
             graph_vector_answer=graph_vector_answer,
-            prompt_template=answer_prompt,
-        )
-        async for context in answer_synthesize.run_streaming(context):
-            if context.get("switch_to_bleu"):
-                gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
+            graph_ratio=graph_ratio,
+            rerank_method=rerank_method,
+            near_neighbor_first=near_neighbor_first,
+            custom_related_information=custom_related_information,
+            answer_prompt=answer_prompt,
+            keywords_extract_prompt=keywords_extract_prompt,
+            gremlin_tmpl_num=gremlin_tmpl_num,
+            gremlin_prompt=gremlin_prompt,
+        ):
+            if res.get("switch_to_bleu"):
+                gr.Warning(
+                    "Online reranker fails, automatically switches to local bleu rerank."
+                )
             yield (
-                context.get("raw_answer", ""),
-                context.get("vector_only_answer", ""),
-                context.get("graph_only_answer", ""),
-                context.get("graph_vector_answer", ""),
+                res.get("raw_answer", ""),
+                res.get("vector_only_answer", ""),
+                res.get("graph_only_answer", ""),
+                res.get("graph_vector_answer", ""),
             )
     except ValueError as e:
         log.critical(e)
@@ -294,7 +290,9 @@ def create_rag_block():
 
         with gr.Column(scale=1):
             with gr.Row():
-                raw_radio = gr.Radio(choices=[True, False], value=False, label="Basic LLM Answer")
+                raw_radio = gr.Radio(
+                    choices=[True, False], value=False, label="Basic LLM Answer"
+                )
                 vector_only_radio = gr.Radio(
                     choices=[True, False], value=False, label="Vector-only Answer"
                 )
@@ -365,7 +363,7 @@ def create_rag_block():
         """## 2. (Batch) Back-testing )
     > 1. Download the template file & fill in the questions you want to test.
     > 2. Upload the file & click the button to generate answers. (Preview shows the first 40 lines)
-    > 3. The answer options are the same as the above RAG/Q&A frame 
+    > 3. The answer options are the same as the above RAG/Q&A frame
     """
     )
     tests_df_headers = [
@@ -379,9 +377,11 @@ def create_rag_block():
     # FIXME: "demo" might conflict with the graph name, it should be modified.
     answers_path = os.path.join(resource_path, "demo", "questions_answers.xlsx")
     questions_path = os.path.join(resource_path, "demo", "questions.xlsx")
-    questions_template_path = os.path.join(resource_path, "demo", "questions_template.xlsx")
+    questions_template_path = os.path.join(
+        resource_path, "demo", "questions_template.xlsx"
+    )
 
-    def read_file_to_excel(file: Any, line_count: Optional[int] = None):
+    def read_file_to_excel(file: NamedString, line_count: Optional[int] = None):
         df = None
         if not file:
             return pd.DataFrame(), 1
@@ -389,15 +389,15 @@ def create_rag_block():
             df = pd.read_excel(file.name, nrows=line_count) if file else pd.DataFrame()
         elif file.name.endswith(".csv"):
             df = pd.read_csv(file.name, nrows=line_count) if file else pd.DataFrame()
-        df.to_excel(questions_path, index=False)  # type:ignore
-        if df.empty:  # type:ignore
+        df.to_excel(questions_path, index=False)
+        if df.empty:
             df = pd.DataFrame([[""] * len(tests_df_headers)], columns=tests_df_headers)
         else:
-            df.columns = tests_df_headers  # type:ignore
+            df.columns = tests_df_headers
         # truncate the dataframe if it's too long
-        if len(df) > 40:  # type:ignore
-            return df.head(40), 40  # type:ignore
-        return df, len(df)  # type:ignore
+        if len(df) > 40:
+            return df.head(40), 40
+        return df, len(df)
 
     def change_showing_excel(line_count):
         if os.path.exists(answers_path):
@@ -459,12 +459,18 @@ def create_rag_block():
                 file_types=[".xlsx", ".csv"], label="Questions File (.xlsx & csv)"
             )
         with gr.Column():
-            test_template_file = os.path.join(resource_path, "demo", "questions_template.xlsx")
+            test_template_file = os.path.join(
+                resource_path, "demo", "questions_template.xlsx"
+            )
             gr.File(value=test_template_file, label="Download Template File")
-            answer_max_line_count = gr.Number(1, label="Max Lines To Show", minimum=1, maximum=40)
+            answer_max_line_count = gr.Number(
+                1, label="Max Lines To Show", minimum=1, maximum=40
+            )
             answers_btn = gr.Button("Generate Answer (Batch)", variant="primary")
     # TODO: Set individual progress bars for dataframe
-    qa_dataframe = gr.DataFrame(label="Questions & Answers (Preview)", headers=tests_df_headers)
+    qa_dataframe = gr.DataFrame(
+        label="Questions & Answers (Preview)", headers=tests_df_headers
+    )
     answers_btn.click(
         several_rag_answer,
         inputs=[
@@ -482,8 +488,12 @@ def create_rag_block():
         ],
         outputs=[qa_dataframe, gr.File(label="Download Answered File", min_width=40)],
     )
-    questions_file.change(read_file_to_excel, questions_file, [qa_dataframe, answer_max_line_count])
-    answer_max_line_count.change(change_showing_excel, answer_max_line_count, qa_dataframe)
+    questions_file.change(
+        read_file_to_excel, questions_file, [qa_dataframe, answer_max_line_count]
+    )
+    answer_max_line_count.change(
+        change_showing_excel, answer_max_line_count, qa_dataframe
+    )
     return (
         inp,
         answer_prompt_input,
