@@ -19,7 +19,7 @@ from PyCGraph import CStatus
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
-from hugegraph_llm.config import huge_settings
+from hugegraph_llm.config import huge_settings, index_settings
 from hugegraph_llm.utils.log import log
 
 
@@ -35,10 +35,14 @@ class SemanticIdQueryNode(BaseNode):
         Initialize the semantic ID query operator.
         """
         try:
+            # Lazy import to avoid circular dependency
+            from hugegraph_llm.utils.vector_index_utils import get_vector_index_class  # pylint: disable=import-outside-toplevel
+            
             graph_name = huge_settings.graph_name
             if not graph_name:
                 return CStatus(-1, "graph_name is required in wk_input")
 
+            vector_index = get_vector_index_class(index_settings.cur_vector_index)
             embedding = Embeddings().get_embedding()
             by = self.wk_input.semantic_by or "keywords"
             topk_per_keyword = self.wk_input.topk_per_keyword or huge_settings.topk_per_keyword
@@ -52,6 +56,7 @@ class SemanticIdQueryNode(BaseNode):
             # Initialize the semantic ID query operator
             self.semantic_id_query = SemanticIdQuery(
                 embedding=embedding,
+                vector_index=vector_index,
                 by=by,
                 topk_per_keyword=topk_per_keyword,
                 topk_per_query=topk_per_query,
