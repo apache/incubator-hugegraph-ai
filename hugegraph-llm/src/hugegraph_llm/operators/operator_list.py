@@ -64,8 +64,8 @@ class OperatorList:
         self.operators = []
         return self
 
-    def example_index_build(self, examples):
-        self.operators.append(BuildGremlinExampleIndex(self.embedding, examples))
+    def example_index_build(self, examples, vector_index):
+        self.operators.append(BuildGremlinExampleIndex(self.embedding, examples, vector_index))
         return self
 
     def import_schema(
