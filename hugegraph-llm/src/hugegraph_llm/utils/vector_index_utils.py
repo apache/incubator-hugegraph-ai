@@ -22,11 +22,10 @@ import docx
 import gradio as gr
 
 from hugegraph_llm.config import huge_settings, index_settings
+from hugegraph_llm.flows.scheduler import SchedulerSingleton
 from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
-from hugegraph_llm.models.llms.init_llm import LLMs
-from hugegraph_llm.utils.hugegraph_utils import get_hg_client
 
 
 def read_documents(input_file, input_text):
@@ -80,13 +79,11 @@ def clean_vector_index():
 
 
 def build_vector_index(input_file, input_text):
-    vector_index = get_vector_index_class(index_settings.cur_vector_index)
     if input_file and input_text:
         raise gr.Error("Please only choose one between file and text.")
     texts = read_documents(input_file, input_text)
-    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
-    context = builder.chunk_split(texts, "paragraph", "zh").build_vector_index(vector_index).run()
-    return json.dumps(context, ensure_ascii=False, indent=2)
+    scheduler = SchedulerSingleton.get_instance()
+    return scheduler.schedule_flow("build_vector_index", texts)
 
 
 def get_vector_index_class(vector_index_str: str) -> Type[VectorStoreBase]:

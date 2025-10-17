@@ -18,7 +18,6 @@ from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.build_semantic_index import BuildSemanticIndex
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
-from hugegraph_llm.utils.vector_index_utils import get_vector_index_class
 
 
 class BuildSemanticIndexNode(BaseNode):
@@ -27,6 +26,9 @@ class BuildSemanticIndexNode(BaseNode):
     wk_input: WkFlowInput = None
 
     def node_init(self):
+        # Lazy import to avoid circular dependency
+        from hugegraph_llm.utils.vector_index_utils import get_vector_index_class  # pylint: disable=import-outside-toplevel
+        
         vector_index = get_vector_index_class(index_settings.cur_vector_index)
         self.build_semantic_index_op = BuildSemanticIndex(Embeddings().get_embedding(), vector_index)
         return super().node_init()
