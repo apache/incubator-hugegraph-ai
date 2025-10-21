@@ -16,6 +16,7 @@
 # under the License.
 
 import argparse
+
 import gradio as gr
 import uvicorn
 from fastapi import FastAPI, Depends, APIRouter
@@ -101,7 +102,7 @@ def init_rag_ui() -> gr.Interface:
                 textbox_inp,
                 textbox_answer_prompt_input,
                 textbox_keywords_extract_prompt_input,
-                textbox_custom_related_information,
+                textbox_custom_related_information
             ) = create_rag_block()
         with gr.Tab(label="3. Text2gremlin ⚙️"):
             textbox_gremlin_inp, textbox_gremlin_schema, textbox_gremlin_prompt = (

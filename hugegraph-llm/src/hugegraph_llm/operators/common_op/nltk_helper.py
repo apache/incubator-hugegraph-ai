@@ -15,16 +15,17 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
 import os
 import sys
 from pathlib import Path
 from typing import List, Optional, Dict
+from urllib.error import URLError, HTTPError
 
 import nltk
 from nltk.corpus import stopwords
 
 from hugegraph_llm.config import resource_path
+from hugegraph_llm.utils.log import log
 
 
 class NLTKHelper:
@@ -35,7 +36,9 @@ class NLTKHelper:
 
     def stopwords(self, lang: str = "chinese") -> List[str]:
         """Get stopwords."""
-        nltk.data.path.append(os.path.join(resource_path, "nltk_data"))
+        _hugegraph_source_dir = os.path.join(resource_path, "nltk_data")
+        if _hugegraph_source_dir not in nltk.data.path:
+            nltk.data.path.append(_hugegraph_source_dir)
         if self._stopwords.get(lang) is None:
             cache_dir = self.get_cache_dir()
             nltk_data_dir = os.environ.get("NLTK_DATA", cache_dir)
@@ -47,10 +50,63 @@ class NLTKHelper:
             try:
                 nltk.data.find("corpora/stopwords")
             except LookupError:
-                nltk.download("stopwords", download_dir=nltk_data_dir)
+                try:
+                    log.info("Start download nltk package stopwords")
+                    nltk.download("stopwords", download_dir=nltk_data_dir, quiet=False)
+                    log.debug("NLTK package stopwords is already downloaded")
+                except (URLError, HTTPError, PermissionError) as e:
+                    log.warning("Can't download package stopwords as error: %s", e)
+        try:
             self._stopwords[lang] = stopwords.words(lang)
+        except LookupError as e:
+            log.error("NLTK stopwords for lang=%s not found: %s; using empty list", lang, e)
+            self._stopwords[lang] = []
+
+        # final check
+        final_stopwords = self._stopwords[lang]
+        if final_stopwords is None:
+            return []
 
         return self._stopwords[lang]
+
+    def check_nltk_data(self):
+        _hugegraph_source_dir = os.path.join(resource_path, "nltk_data")
+        if _hugegraph_source_dir not in nltk.data.path:
+            nltk.data.path.append(_hugegraph_source_dir)
+
+        cache_dir = self.get_cache_dir()
+        nltk_data_dir = os.environ.get("NLTK_DATA", cache_dir)
+        if nltk_data_dir not in nltk.data.path:
+            nltk.data.path.append(nltk_data_dir)
+
+        required_packages = {
+            'punkt': 'tokenizers/punkt',
+            'punkt_tab': 'tokenizers/punkt_tab',
+            'averaged_perceptron_tagger': 'taggers/averaged_perceptron_tagger',
+            "averaged_perceptron_tagger_eng": 'taggers/averaged_perceptron_tagger_eng'
+        }
+
+        for package, path in required_packages.items():
+            try:
+                nltk.data.find(path)
+            except LookupError:
+                log.info("Start download nltk package %s", package)
+                try:
+                    if not nltk.download(package, download_dir=nltk_data_dir, quiet=False):
+                        log.warning("NLTK download command returned False for package %s.", package)
+                        return False
+                    # Verify after download
+                    nltk.data.find(path)
+                except PermissionError as e:
+                    log.error("Permission denied when downloading %s: %s", package, e)
+                    return False
+                except (URLError, HTTPError) as e:
+                    log.warning("Network error downloading %s: %s, will retry with backup method", package, e)
+                    return False
+                except LookupError:
+                    log.error("Package %s not found after download. Check package name and nltk_data paths.", package)
+                    return False
+        return True
 
     @staticmethod
     def get_cache_dir() -> str:
