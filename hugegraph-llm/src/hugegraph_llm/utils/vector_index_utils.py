@@ -23,11 +23,12 @@ import gradio as gr
 
 from hugegraph_llm.config import resource_path, huge_settings, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
-from hugegraph_llm.models.embeddings.init_embedding import Embeddings
-from hugegraph_llm.models.llms.init_llm import LLMs
-from hugegraph_llm.operators.kg_construction_task import KgBuilder
-from hugegraph_llm.utils.embedding_utils import get_filename_prefix, get_index_folder_name
-from hugegraph_llm.utils.hugegraph_utils import get_hg_client
+from hugegraph_llm.models.embeddings.init_embedding import model_map
+from hugegraph_llm.flows.scheduler import SchedulerSingleton
+from hugegraph_llm.utils.embedding_utils import (
+    get_filename_prefix,
+    get_index_folder_name,
+)
 
 
 def read_documents(input_file, input_text):
@@ -49,7 +50,9 @@ def read_documents(input_file, input_text):
                 texts.append(text)
             elif full_path.endswith(".pdf"):
                 # TODO: support PDF file
-                raise gr.Error("PDF will be supported later! Try to upload text/docx now")
+                raise gr.Error(
+                    "PDF will be supported later! Try to upload text/docx now"
+                )
             else:
                 raise gr.Error("Please input txt or docx file.")
     else:
@@ -59,33 +62,44 @@ def read_documents(input_file, input_text):
 
 # pylint: disable=C0301
 def get_vector_index_info():
-    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
-    filename_prefix = get_filename_prefix(llm_settings.embedding_type,
-                                    getattr(Embeddings().get_embedding(), "model_name", None))
+    folder_name = get_index_folder_name(
+        huge_settings.graph_name, huge_settings.graph_space
+    )
+    filename_prefix = get_filename_prefix(
+        llm_settings.embedding_type, model_map.get(llm_settings.embedding_type)
+    )
     chunk_vector_index = VectorIndex.from_index_file(
         str(os.path.join(resource_path, folder_name, "chunks")),
         filename_prefix,
-        record_miss=False
+        record_miss=False,
     )
     graph_vid_vector_index = VectorIndex.from_index_file(
-        str(os.path.join(resource_path, folder_name, "graph_vids")),
-        filename_prefix
+        str(os.path.join(resource_path, folder_name, "graph_vids")), filename_prefix
     )
-    return json.dumps({
-        "embed_dim": chunk_vector_index.index.d,
-        "vector_info": {
-            "chunk_vector_num": chunk_vector_index.index.ntotal,
-            "graph_vid_vector_num": graph_vid_vector_index.index.ntotal,
-            "graph_properties_vector_num": len(chunk_vector_index.properties)
-        }
-    }, ensure_ascii=False, indent=2)
+    return json.dumps(
+        {
+            "embed_dim": chunk_vector_index.index.d,
+            "vector_info": {
+                "chunk_vector_num": chunk_vector_index.index.ntotal,
+                "graph_vid_vector_num": graph_vid_vector_index.index.ntotal,
+                "graph_properties_vector_num": len(chunk_vector_index.properties),
+            },
+        },
+        ensure_ascii=False,
+        indent=2,
+    )
 
 
 def clean_vector_index():
-    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
-    filename_prefix = get_filename_prefix(llm_settings.embedding_type,
-                                  getattr(Embeddings().get_embedding(), "model_name", None))
-    VectorIndex.clean(str(os.path.join(resource_path, folder_name, "chunks")), filename_prefix)
+    folder_name = get_index_folder_name(
+        huge_settings.graph_name, huge_settings.graph_space
+    )
+    filename_prefix = get_filename_prefix(
+        llm_settings.embedding_type, model_map.get(llm_settings.embedding_type)
+    )
+    VectorIndex.clean(
+        str(os.path.join(resource_path, folder_name, "chunks")), filename_prefix
+    )
     gr.Info("Clean vector index successfully!")
 
 
@@ -93,6 +107,5 @@ def build_vector_index(input_file, input_text):
     if input_file and input_text:
         raise gr.Error("Please only choose one between file and text.")
     texts = read_documents(input_file, input_text)
-    builder = KgBuilder(LLMs().get_chat_llm(), Embeddings().get_embedding(), get_hg_client())
-    context = builder.chunk_split(texts, "paragraph", "zh").build_vector_index().run()
-    return json.dumps(context, ensure_ascii=False, indent=2)
+    scheduler = SchedulerSingleton.get_instance()
+    return scheduler.schedule_flow("build_vector_index", texts)

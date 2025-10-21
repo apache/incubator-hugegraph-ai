@@ -61,6 +61,7 @@ dependencies = [
     "apscheduler",
     "litellm",
     "hugegraph-python-client",
+    "pycgraph",
 ]
 [project.urls]
 homepage = "https://hugegraph.apache.org/"
@@ -88,3 +89,4 @@ allow-direct-references = true
 
 [tool.uv.sources]
 hugegraph-python-client = { workspace = true }
+pycgraph = { git = "https://github.com/ChunelFeng/CGraph.git", subdirectory = "python", rev = "main", marker = "sys_platform == 'linux'"  }
