@@ -164,15 +164,21 @@ class KeywordExtract:
                 item = k.strip()
                 if not item:
                     continue
-                parts = re.split(r"[:：]", item, maxsplit=1)
-                if len(parts) != 2:
-                    continue
-                word_raw, score_raw = parts[0].strip(), parts[1].strip()
-                if len(word_raw) > 0:
-                    try:
-                        score_val = float(score_raw)
-                    except ValueError:
+                try:
+                    parts = re.split(r"[:：]", item, maxsplit=1)
+                    if len(parts) != 2:
+                        log.warning("Skipping malformed item: %s", item)
                         continue
+                    word_raw, score_raw = parts[0].strip(), parts[1].strip()
+                    if not word_raw:
+                        continue
+                    score_val = float(score_raw)
+                    if not 0.0 <= score_val <= 1.0:
+                        log.warning("Score out of range for %s: %s", word_raw, score_val)
+                        score_val = min(1.0, max(0.0, score_val))
                     word_out = word_raw.lower() if lowercase else word_raw
                     results[word_out] = score_val
+                except (ValueError, AttributeError) as e:
+                    log.warning("Failed to parse item '%s': %s", item, e)
+                    continue
         return results

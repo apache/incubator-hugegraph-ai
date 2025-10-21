@@ -59,7 +59,7 @@ class NLTKHelper:
         try:
             self._stopwords[lang] = stopwords.words(lang)
         except LookupError as e:
-            log.warning("NLTK stopwords for lang=%s not found: %s; using empty list", lang, e)
+            log.error("NLTK stopwords for lang=%s not found: %s; using empty list", lang, e)
             self._stopwords[lang] = []
 
         # final check
