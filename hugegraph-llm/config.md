@@ -26,14 +26,17 @@
 
 ### 基础配置
 
-| 配置项                 | 类型                                                     | 默认值    | 说明                                    |
-|---------------------|--------------------------------------------------------|--------|---------------------------------------|
-| `LANGUAGE`          | Literal["EN", "CN"]                                    | EN     | prompt语言，支持 EN（英文）和 CN（中文）            |
-| `CHAT_LLM_TYPE`     | Literal["openai", "litellm", "ollama/local"]           | openai | 聊天 LLM 类型：openai/litellm/ollama/local |
-| `EXTRACT_LLM_TYPE`  | Literal["openai", "litellm", "ollama/local"]           | openai | 信息提取 LLM 类型                           |
-| `TEXT2GQL_LLM_TYPE` | Literal["openai", "litellm", "ollama/local"]           | openai | 文本转 GQL LLM 类型                        |
-| `EMBEDDING_TYPE`    | Optional[Literal["openai", "litellm", "ollama/local"]] | openai | 嵌入模型类型                                |
-| `RERANKER_TYPE`     | Optional[Literal["cohere", "siliconflow"]]             | None   | 重排序模型类型：cohere/siliconflow            |
+| 配置项                    | 类型                                                     | 默认值    | 说明                                    |
+|------------------------|--------------------------------------------------------|--------|---------------------------------------|
+| `LANGUAGE`             | Literal["EN", "CN"]                                    | EN     | prompt语言，支持 EN（英文）和 CN（中文）            |
+| `CHAT_LLM_TYPE`        | Literal["openai", "litellm", "ollama/local"]           | openai | 聊天 LLM 类型：openai/litellm/ollama/local |
+| `EXTRACT_LLM_TYPE`     | Literal["openai", "litellm", "ollama/local"]           | openai | 信息提取 LLM 类型                           |
+| `TEXT2GQL_LLM_TYPE`    | Literal["openai", "litellm", "ollama/local"]           | openai | 文本转 GQL LLM 类型                        |
+| `EMBEDDING_TYPE`       | Optional[Literal["openai", "litellm", "ollama/local"]] | openai | 嵌入模型类型                                |
+| `RERANKER_TYPE`        | Optional[Literal["cohere", "siliconflow"]]             | None   | 重排序模型类型：cohere/siliconflow            |
+| `KEYWORD_EXTRACT_TYPE` | Literal["llm", "textrank", "hybrid"]                   | llm    | 关键词提取模型类型：llm/textrank/hybrid         |
+| `WINDOW_SIZE`          | Optional[Integer] | 3 | TextRank 滑窗大小 (范围: 1-10),较大的窗口可以捕获更长距离的词语关系,但会增加计算复杂度 |
+| `HYBRID_LLM_WEIGHTS`   | Optional[Float] | 0.5 | 混合模式中 LLM 结果的权重 (范围: 0.0-1.0),TextRank 权重 = 1 - 该值。推荐 0.5 以平衡两种方法 |
 
 ### OpenAI 配置
 
