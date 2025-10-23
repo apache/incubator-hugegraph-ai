@@ -83,6 +83,9 @@ jobs:
           exit 1
         fi
         
+        # Download NLTK data
+        python -m nltk.downloader stopwords punkt -d /home/runner/nltk_data
+        
     - name: Install packages
       run: |
         source .venv/bin/activate

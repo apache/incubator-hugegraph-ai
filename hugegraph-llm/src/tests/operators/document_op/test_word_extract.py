@@ -34,15 +34,17 @@ class TestWordExtract(unittest.TestCase):
         # pylint: disable=protected-access
         self.assertIsNone(word_extract._llm)
         self.assertIsNone(word_extract._query)
-        self.assertEqual(word_extract._language, "english")
+        # Language is set from llm_settings and will be "en" or "cn" initially
+        self.assertIsNotNone(word_extract._language)
 
     def test_init_with_parameters(self):
         """Test initialization with provided parameters."""
-        word_extract = WordExtract(text=self.test_query_en, llm=self.mock_llm, language="chinese")
+        word_extract = WordExtract(text=self.test_query_en, llm=self.mock_llm)
         # pylint: disable=protected-access
         self.assertEqual(word_extract._llm, self.mock_llm)
         self.assertEqual(word_extract._query, self.test_query_en)
-        self.assertEqual(word_extract._language, "chinese")
+        # Language is now set from llm_settings
+        self.assertIsNotNone(word_extract._language)
 
     @patch("hugegraph_llm.models.llms.init_llm.LLMs")
     def test_run_with_query_in_context(self, mock_llms_class):
@@ -87,9 +89,9 @@ class TestWordExtract(unittest.TestCase):
         self.assertGreater(len(result["keywords"]), 0)
 
     def test_run_with_language_in_context(self):
-        """Test running with language in context."""
-        # Create context with language
-        context = {"query": self.test_query_en, "language": "spanish"}
+        """Test running with language set from llm_settings."""
+        # Create context
+        context = {"query": self.test_query_en}
 
         # Create WordExtract instance
         word_extract = WordExtract(llm=self.mock_llm)
@@ -97,10 +99,9 @@ class TestWordExtract(unittest.TestCase):
         # Run the extraction
         result = word_extract.run(context)
 
-        # Verify that the language was taken from context
+        # Verify that the language was converted after run()
         # pylint: disable=protected-access
-        self.assertEqual(word_extract._language, "spanish")
-        self.assertEqual(result["language"], "spanish")
+        self.assertIn(word_extract._language, ["english", "chinese"])
 
     def test_filter_keywords_lowercase(self):
         """Test filtering keywords with lowercase option."""
@@ -142,8 +143,8 @@ class TestWordExtract(unittest.TestCase):
         # Create context
         context = {}
 
-        # Create WordExtract instance with Chinese text
-        word_extract = WordExtract(text=self.test_query_zh, llm=self.mock_llm, language="chinese")
+        # Create WordExtract instance with Chinese text (language set from llm_settings)
+        word_extract = WordExtract(text=self.test_query_zh, llm=self.mock_llm)
 
         # Run the extraction
         result = word_extract.run(context)

@@ -37,9 +37,9 @@ class TestKeywordExtract(unittest.TestCase):
             "What are the latest advancements in artificial intelligence and machine learning?"
         )
 
-        # Create KeywordExtract instance
+        # Create KeywordExtract instance (language is now set from llm_settings)
         self.extractor = KeywordExtract(
-            text=self.query, llm=self.mock_llm, max_keywords=5, language="english"
+            text=self.query, llm=self.mock_llm, max_keywords=5
         )
 
     def test_init_with_parameters(self):
@@ -47,7 +47,7 @@ class TestKeywordExtract(unittest.TestCase):
         self.assertEqual(self.extractor._query, self.query)
         self.assertEqual(self.extractor._llm, self.mock_llm)
         self.assertEqual(self.extractor._max_keywords, 5)
-        self.assertEqual(self.extractor._language, "english")
+        # Language is now set from llm_settings, will be converted in run()
         self.assertIsNotNone(self.extractor._extract_template)
 
     def test_init_with_defaults(self):
@@ -56,7 +56,7 @@ class TestKeywordExtract(unittest.TestCase):
         self.assertIsNone(extractor._query)
         self.assertIsNone(extractor._llm)
         self.assertEqual(extractor._max_keywords, 5)
-        self.assertEqual(extractor._language, "english")
+        # Language is now set from llm_settings
         self.assertIsNotNone(extractor._extract_template)
 
     def test_init_with_custom_template(self):
