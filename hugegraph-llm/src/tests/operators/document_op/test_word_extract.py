@@ -102,7 +102,7 @@ class TestWordExtract(unittest.TestCase):
         # Verify that the language was converted after run()
         # pylint: disable=protected-access
         self.assertIn(word_extract._language, ["english", "chinese"])
-        
+
         # Verify the result contains expected keys
         self.assertIn("keywords", result)
         self.assertIsInstance(result["keywords"], list)
