@@ -27,11 +27,11 @@ Extract Triples from the given text and graph schema
 
 ## Basic Rules
 1. The output format must be: (X,Y,Z) - LABEL
-In this format, Y must be a value from "properties" or "edge_label", 
+In this format, Y must be a value from "properties" or "edge_label",
 and LABEL must be X's vertex_label or Y's edge_label.
 2. Don't extract attribute/property fields that do not exist in the given schema
 3. Ensure the extract property is in the same type as the schema (like 'age' should be a number)
-4. Translate the given schema filed into Chinese if the given text is Chinese but the schema is in English (Optional) 
+4. Translate the given schema filed into Chinese if the given text is Chinese but the schema is in English (Optional)
 
 ## Example (Note: Update the example to correspond to the given text and schema)
 ### Input example:
@@ -75,8 +75,10 @@ The extracted text is: {text}"""
 
     if schema:
         return schema_real_prompt
-    log.warning("Recommend to provide a graph schema to improve the extraction accuracy. "
-                "Now using the default schema.")
+    log.warning(
+        "Recommend to provide a graph schema to improve the extraction accuracy. "
+        "Now using the default schema."
+    )
     return text_based_prompt
 
 
@@ -105,11 +107,17 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
         # TODO: use a more efficient way to compare the extract & input property
         p_lower = p.lower()
         for vertex in schema["vertices"]:
-            if vertex["vertex_label"] == label and any(pp.lower() == p_lower
-                                                       for pp in vertex["properties"]):
+            if vertex["vertex_label"] == label and any(
+                pp.lower() == p_lower for pp in vertex["properties"]
+            ):
                 id = f"{label}-{s}"
                 if id not in vertices_dict:
-                    vertices_dict[id] = {"id": id, "name": s, "label": label, "properties": {p: o}}
+                    vertices_dict[id] = {
+                        "id": id,
+                        "name": s,
+                        "label": label,
+                        "properties": {p: o},
+                    }
                 else:
                     vertices_dict[id]["properties"].update({p: o})
                 break
@@ -118,25 +126,35 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
                 source_label = edge["source_vertex_label"]
                 source_id = f"{source_label}-{s}"
                 if source_id not in vertices_dict:
-                    vertices_dict[source_id] = {"id": source_id, "name": s, "label": source_label,
-                                                "properties": {}}
+                    vertices_dict[source_id] = {
+                        "id": source_id,
+                        "name": s,
+                        "label": source_label,
+                        "properties": {},
+                    }
                 target_label = edge["target_vertex_label"]
                 target_id = f"{target_label}-{o}"
                 if target_id not in vertices_dict:
-                    vertices_dict[target_id] = {"id": target_id, "name": o, "label": target_label,
-                                                "properties": {}}
-                graph["edges"].append({"start": source_id, "end": target_id, "type": label,
-                                       "properties": {}})
+                    vertices_dict[target_id] = {
+                        "id": target_id,
+                        "name": o,
+                        "label": target_label,
+                        "properties": {},
+                    }
+                graph["edges"].append(
+                    {
+                        "start": source_id,
+                        "end": target_id,
+                        "type": label,
+                        "properties": {},
+                    }
+                )
                 break
-    graph["vertices"] = vertices_dict.values()
+    graph["vertices"] = list(vertices_dict.values())
 
 
 class InfoExtract:
-    def __init__(
-            self,
-            llm: BaseLLM,
-            example_prompt: Optional[str] = None
-    ) -> None:
+    def __init__(self, llm: BaseLLM, example_prompt: Optional[str] = None) -> None:
         self.llm = llm
         self.example_prompt = example_prompt
 
@@ -152,7 +170,12 @@ class InfoExtract:
 
         for sentence in chunks:
             proceeded_chunk = self.extract_triples_by_llm(schema, sentence)
-            log.debug("[Legacy] %s input: %s \n output:%s", self.__class__.__name__, sentence, proceeded_chunk)
+            log.debug(
+                "[Legacy] %s input: %s \n output:%s",
+                self.__class__.__name__,
+                sentence,
+                proceeded_chunk,
+            )
             if schema:
                 extract_triples_by_regex_with_schema(schema, proceeded_chunk, context)
             else:
@@ -176,6 +199,7 @@ class InfoExtract:
 
     def _filter_long_id(self, graph) -> Dict[str, List[Any]]:
         graph["vertices"] = [vertex for vertex in graph["vertices"] if self.valid(vertex["id"])]
-        graph["edges"] = [edge for edge in graph["edges"]
-                          if self.valid(edge["start"]) and self.valid(edge["end"])]
+        graph["edges"] = [
+            edge for edge in graph["edges"] if self.valid(edge["start"]) and self.valid(edge["end"])
+        ]
         return graph

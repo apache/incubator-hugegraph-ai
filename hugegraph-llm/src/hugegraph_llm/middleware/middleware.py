@@ -26,6 +26,7 @@ from hugegraph_llm.utils.log import log
 # TODO: we could use middleware(AOP) in the future (dig out the lifecycle of gradio & fastapi)
 class UseTimeMiddleware(BaseHTTPMiddleware):
     """Middleware to add process time to response headers"""
+
     def __init__(self, app):
         super().__init__(app)
 
@@ -33,7 +34,7 @@ class UseTimeMiddleware(BaseHTTPMiddleware):
         # TODO: handle time record for async task pool in gradio
         start_time = time.perf_counter()
         response = await call_next(request)
-        process_time = (time.perf_counter() - start_time) * 1000 # ms
+        process_time = (time.perf_counter() - start_time) * 1000  # ms
         unit = "ms"
         if process_time > 1000:
             process_time /= 1000
@@ -46,6 +47,6 @@ class UseTimeMiddleware(BaseHTTPMiddleware):
             request.method,
             request.query_params,
             request.client.host,
-            request.url
+            request.url,
         )
         return response

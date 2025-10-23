@@ -39,15 +39,20 @@ class SchemaManager:
         if "vertexlabels" in schema:
             mini_schema["vertexlabels"] = []
             for vertex in schema["vertexlabels"]:
-                new_vertex = {key: vertex[key] for key in ["id", "name", "properties"] if key in vertex}
+                new_vertex = {
+                    key: vertex[key] for key in ["id", "name", "properties"] if key in vertex
+                }
                 mini_schema["vertexlabels"].append(new_vertex)
 
         # Add necessary edgelabels items (4)
         if "edgelabels" in schema:
             mini_schema["edgelabels"] = []
             for edge in schema["edgelabels"]:
-                new_edge = {key: edge[key] for key in
-                            ["name", "source_label", "target_label", "properties"] if key in edge}
+                new_edge = {
+                    key: edge[key]
+                    for key in ["name", "source_label", "target_label", "properties"]
+                    if key in edge
+                }
                 mini_schema["edgelabels"].append(new_edge)
 
         return mini_schema

@@ -64,9 +64,7 @@ class SchemaManager(HugeParamsBase):
         return index_label
 
     @router.http("GET", "schema?format={_format}")
-    def getSchema(
-        self, _format: str = "json"  # pylint: disable=unused-argument
-    ) -> Optional[Dict]:
+    def getSchema(self, _format: str = "json") -> Optional[Dict]:  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("GET", "schema/propertykeys/{property_name}")
@@ -84,9 +82,7 @@ class SchemaManager(HugeParamsBase):
         return None
 
     @router.http("GET", "schema/vertexlabels/{name}")
-    def getVertexLabel(
-        self, name  # pylint: disable=unused-argument
-    ) -> Optional[VertexLabelData]:
+    def getVertexLabel(self, name) -> Optional[VertexLabelData]:  # pylint: disable=unused-argument
         if response := self._invoke_request():
             return VertexLabelData(response)
         log.error("VertexLabel not found: %s", str(response))
@@ -128,9 +124,7 @@ class SchemaManager(HugeParamsBase):
         return None
 
     @router.http("GET", "schema/indexlabels/{name}")
-    def getIndexLabel(
-        self, name  # pylint: disable=unused-argument
-    ) -> Optional[IndexLabelData]:
+    def getIndexLabel(self, name) -> Optional[IndexLabelData]:  # pylint: disable=unused-argument
         if response := self._invoke_request():
             return IndexLabelData(response)
         log.error("IndexLabel not found: %s", str(response))

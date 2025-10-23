@@ -64,11 +64,17 @@ class CheckSchema:
 
     def _process_property_labels(self, schema: Dict[str, Any]) -> (list, set):
         property_labels = schema.get("propertykeys", [])
-        check_type(property_labels, list, "'propertykeys' in input data is not of correct type.")
+        check_type(
+            property_labels,
+            list,
+            "'propertykeys' in input data is not of correct type.",
+        )
         property_label_set = {label["name"] for label in property_labels}
         return property_labels, property_label_set
 
-    def _process_vertex_labels(self, schema: Dict[str, Any], property_labels: list, property_label_set: set) -> None:
+    def _process_vertex_labels(
+        self, schema: Dict[str, Any], property_labels: list, property_label_set: set
+    ) -> None:
         for vertex_label in schema["vertexlabels"]:
             self._validate_vertex_label(vertex_label)
             properties = vertex_label["properties"]
@@ -80,7 +86,9 @@ class CheckSchema:
             vertex_label["nullable_keys"] = nullable_keys
             self._add_missing_properties(properties, property_labels, property_label_set)
 
-    def _process_edge_labels(self, schema: Dict[str, Any], property_labels: list, property_label_set: set) -> None:
+    def _process_edge_labels(
+        self, schema: Dict[str, Any], property_labels: list, property_label_set: set
+    ) -> None:
         for edge_label in schema["edgelabels"]:
             self._validate_edge_label(edge_label)
             properties = edge_label.get("properties", [])
@@ -93,17 +101,35 @@ class CheckSchema:
         check_type(vertex_label["name"], str, "'name' in vertex_label is not of correct type.")
         if "properties" not in vertex_label:
             log_and_raise("VertexLabel in input data does not contain 'properties'.")
-        check_type(vertex_label["properties"], list, "'properties' in vertex_label is not of correct type.")
+        check_type(
+            vertex_label["properties"],
+            list,
+            "'properties' in vertex_label is not of correct type.",
+        )
         if len(vertex_label["properties"]) == 0:
             log_and_raise("'properties' in vertex_label is empty.")
 
     def _validate_edge_label(self, edge_label: Dict[str, Any]) -> None:
         check_type(edge_label, dict, "EdgeLabel in input data is not a dictionary.")
-        if "name" not in edge_label or "source_label" not in edge_label or "target_label" not in edge_label:
-            log_and_raise("EdgeLabel in input data does not contain 'name', 'source_label', 'target_label'.")
+        if (
+            "name" not in edge_label
+            or "source_label" not in edge_label
+            or "target_label" not in edge_label
+        ):
+            log_and_raise(
+                "EdgeLabel in input data does not contain 'name', 'source_label', 'target_label'."
+            )
         check_type(edge_label["name"], str, "'name' in edge_label is not of correct type.")
-        check_type(edge_label["source_label"], str, "'source_label' in edge_label is not of correct type.")
-        check_type(edge_label["target_label"], str, "'target_label' in edge_label is not of correct type.")
+        check_type(
+            edge_label["source_label"],
+            str,
+            "'source_label' in edge_label is not of correct type.",
+        )
+        check_type(
+            edge_label["target_label"],
+            str,
+            "'target_label' in edge_label is not of correct type.",
+        )
 
     def _process_keys(self, label: Dict[str, Any], key_type: str, default_keys: list) -> list:
         keys = label.get(key_type, default_keys)
@@ -111,12 +137,16 @@ class CheckSchema:
         new_keys = [key for key in keys if key in label["properties"]]
         return new_keys
 
-    def _add_missing_properties(self, properties: list, property_labels: list, property_label_set: set) -> None:
+    def _add_missing_properties(
+        self, properties: list, property_labels: list, property_label_set: set
+    ) -> None:
         for prop in properties:
             if prop not in property_label_set:
-                property_labels.append({
-                    "name": prop,
-                    "data_type": PropertyDataType.DEFAULT.value,
-                    "cardinality": PropertyCardinality.DEFAULT.value,
-                })
+                property_labels.append(
+                    {
+                        "name": prop,
+                        "data_type": PropertyDataType.DEFAULT.value,
+                        "cardinality": PropertyCardinality.DEFAULT.value,
+                    }
+                )
                 property_label_set.add(prop)

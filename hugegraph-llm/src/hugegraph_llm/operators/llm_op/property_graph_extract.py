@@ -26,11 +26,9 @@ from hugegraph_llm.document.chunk_split import ChunkSplitter
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
 
-"""
-TODO: It is not clear whether there is any other dependence on the SCHEMA_EXAMPLE_PROMPT variable. 
-Because the SCHEMA_EXAMPLE_PROMPT variable will no longer change based on 
-prompt.extract_graph_prompt changes after the system loads, this does not seem to meet expectations.
-"""
+# TODO: It is not clear whether there is any other dependence on the SCHEMA_EXAMPLE_PROMPT variable.
+# Because the SCHEMA_EXAMPLE_PROMPT variable will no longer change based on
+# prompt.extract_graph_prompt changes after the system loads, this does not seem to meet expectations.
 SCHEMA_EXAMPLE_PROMPT = prompt.extract_graph_prompt
 
 
@@ -60,20 +58,18 @@ def filter_item(schema, items) -> List[Dict[str, Any]]:
         properties_map["vertex"][vertex["name"]] = {
             "primary_keys": vertex["primary_keys"],
             "nullable_keys": vertex["nullable_keys"],
-            "properties": vertex["properties"]
+            "properties": vertex["properties"],
         }
     for edge in schema["edgelabels"]:
-        properties_map["edge"][edge["name"]] = {
-            "properties": edge["properties"]
-        }
+        properties_map["edge"][edge["name"]] = {"properties": edge["properties"]}
     log.info("properties_map: %s", properties_map)
     for item in items:
         item_type = item["type"]
         if item_type == "vertex":
             label = item["label"]
-            non_nullable_keys = (
-                set(properties_map[item_type][label]["properties"])
-                .difference(set(properties_map[item_type][label]["nullable_keys"])))
+            non_nullable_keys = set(properties_map[item_type][label]["properties"]).difference(
+                set(properties_map[item_type][label]["nullable_keys"])
+            )
             for key in non_nullable_keys:
                 if key not in item["properties"]:
                     item["properties"][key] = "NULL"
@@ -86,11 +82,7 @@ def filter_item(schema, items) -> List[Dict[str, Any]]:
 
 
 class PropertyGraphExtract:
-    def __init__(
-        self,
-        llm: BaseLLM,
-        example_prompt: str = prompt.extract_graph_prompt
-    ) -> None:
+    def __init__(self, llm: BaseLLM, example_prompt: str = prompt.extract_graph_prompt) -> None:
         self.llm = llm
         self.example_prompt = example_prompt
         self.NECESSARY_ITEM_KEYS = {"label", "type", "properties"}  # pylint: disable=invalid-name
@@ -105,7 +97,12 @@ class PropertyGraphExtract:
         items = []
         for chunk in chunks:
             proceeded_chunk = self.extract_property_graph_by_llm(schema, chunk)
-            log.debug("[LLM] %s input: %s \n output:%s", self.__class__.__name__, chunk, proceeded_chunk)
+            log.debug(
+                "[LLM] %s input: %s \n output:%s",
+                self.__class__.__name__,
+                chunk,
+                proceeded_chunk,
+            )
             items.extend(self._extract_and_filter_label(schema, proceeded_chunk))
         items = filter_item(schema, items)
         for item in items:
@@ -125,10 +122,12 @@ class PropertyGraphExtract:
 
     def _extract_and_filter_label(self, schema, text) -> List[Dict[str, Any]]:
         # Use regex to extract a JSON object with curly braces
-        json_match = re.search(r'({.*})', text, re.DOTALL)
+        json_match = re.search(r"({.*})", text, re.DOTALL)
         if not json_match:
-            log.critical("Invalid property graph! No JSON object found, "
-                         "please check the output format example in prompt.")
+            log.critical(
+                "Invalid property graph! No JSON object found, "
+                "please check the output format example in prompt."
+            )
             return []
         json_str = json_match.group(1).strip()
 
@@ -136,7 +135,11 @@ class PropertyGraphExtract:
         try:
             property_graph = json.loads(json_str)
             # Expect property_graph to be a dict with keys "vertices" and "edges"
-            if not (isinstance(property_graph, dict) and "vertices" in property_graph and "edges" in property_graph):
+            if not (
+                isinstance(property_graph, dict)
+                and "vertices" in property_graph
+                and "edges" in property_graph
+            ):
                 log.critical("Invalid property graph format; expecting 'vertices' and 'edges'.")
                 return items
 
@@ -153,12 +156,18 @@ class PropertyGraphExtract:
                         log.warning("Invalid item keys '%s'.", item.keys())
                         continue
                     if item["label"] not in valid_labels:
-                        log.warning("Invalid %s label '%s' has been ignored.", item_type, item["label"])
+                        log.warning(
+                            "Invalid %s label '%s' has been ignored.",
+                            item_type,
+                            item["label"],
+                        )
                         continue
                     items.append(item)
 
             process_items(property_graph["vertices"], vertex_label_set, "vertex")
             process_items(property_graph["edges"], edge_label_set, "edge")
         except json.JSONDecodeError:
-            log.critical("Invalid property graph JSON! Please check the extracted JSON data carefully")
+            log.critical(
+                "Invalid property graph JSON! Please check the extracted JSON data carefully"
+            )
         return items

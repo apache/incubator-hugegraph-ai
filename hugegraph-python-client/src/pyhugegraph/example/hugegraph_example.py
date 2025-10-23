@@ -26,15 +26,13 @@ if __name__ == "__main__":
     schema = client.schema()
     schema.propertyKey("name").asText().ifNotExist().create()
     schema.propertyKey("birthDate").asText().ifNotExist().create()
-    schema.vertexLabel("Person").properties(
-        "name", "birthDate"
-    ).usePrimaryKeyId().primaryKeys("name").ifNotExist().create()
+    schema.vertexLabel("Person").properties("name", "birthDate").usePrimaryKeyId().primaryKeys(
+        "name"
+    ).ifNotExist().create()
     schema.vertexLabel("Movie").properties("name").usePrimaryKeyId().primaryKeys(
         "name"
     ).ifNotExist().create()
-    schema.edgeLabel("ActedIn").sourceLabel("Person").targetLabel(
-        "Movie"
-    ).ifNotExist().create()
+    schema.edgeLabel("ActedIn").sourceLabel("Person").targetLabel("Movie").ifNotExist().create()
 
     print(schema.getVertexLabels())
     print(schema.getEdgeLabels())
@@ -47,9 +45,7 @@ if __name__ == "__main__":
     p2 = g.addVertex("Person", {"name": "Robert De Niro", "birthDate": "1943-08-17"})
     m1 = g.addVertex("Movie", {"name": "The Godfather"})
     m2 = g.addVertex("Movie", {"name": "The Godfather Part II"})
-    m3 = g.addVertex(
-        "Movie", {"name": "The Godfather Coda The Death of Michael Corleone"}
-    )
+    m3 = g.addVertex("Movie", {"name": "The Godfather Coda The Death of Michael Corleone"})
 
     # add Edge
     g.addEdge("ActedIn", p1.id, m1.id, {})

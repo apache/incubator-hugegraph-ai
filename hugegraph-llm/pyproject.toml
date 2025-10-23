@@ -17,7 +17,7 @@
 
 [project]
 name = "hugegraph-llm"
-version = "1.5.0"
+version = "1.7.0"
 description = "A tool for the implementation and research related to large language models."
 authors = [
     { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
@@ -61,6 +61,7 @@ dependencies = [
     "apscheduler",
     "litellm",
     "hugegraph-python-client",
+    "pycgraph",
 ]
 [project.urls]
 homepage = "https://hugegraph.apache.org/"
@@ -88,3 +89,6 @@ allow-direct-references = true
 
 [tool.uv.sources]
 hugegraph-python-client = { workspace = true }
+# We encountered a bug in PyCGraph's latest release version, so we're using a specific commit from the main branch (without the bug) as the project dependency.
+# TODO: Replace this command in the future when a new PyCGraph release version (after 3.1.2) is available.
+pycgraph = { git = "https://github.com/ChunelFeng/CGraph.git", subdirectory = "python", rev = "248bfcfeddfa2bc23a1d585a3925c71189dba6cc"}

@@ -22,7 +22,9 @@ from typing import Any, Dict, Optional
 from hugegraph_llm.config import prompt, llm_settings
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
-from hugegraph_llm.operators.document_op.textrank_word_extract import MultiLingualTextRank
+from hugegraph_llm.operators.document_op.textrank_word_extract import (
+    MultiLingualTextRank,
+)
 from hugegraph_llm.utils.log import log
 
 KEYWORDS_EXTRACT_TPL = prompt.keywords_extract_prompt
@@ -43,8 +45,8 @@ class KeywordExtract:
         self._extract_template = extract_template or KEYWORDS_EXTRACT_TPL
         self._extract_method = llm_settings.keyword_extract_type.lower()
         self._textrank_model = MultiLingualTextRank(
-            keyword_num=max_keywords,
-            window_size=llm_settings.window_size)
+            keyword_num=max_keywords, window_size=llm_settings.window_size
+        )
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._query is None:
@@ -66,7 +68,11 @@ class KeywordExtract:
             max_keyword_num = self._max_keywords
         self._max_keywords = max(1, max_keyword_num)
 
-        method = (context.get("extract_method", self._extract_method) or "LLM").strip().lower()
+        method = (
+            (context.get("extract_method", self._extract_method) or "LLM")
+            .strip()
+            .lower()
+        )
         if method == "llm":
             # LLM method
             ranks = self._extract_with_llm()
@@ -82,7 +88,7 @@ class KeywordExtract:
 
         keywords = [] if not ranks else sorted(ranks, key=ranks.get, reverse=True)
         keywords = [k.replace("'", "") for k in keywords]
-        context["keywords"] = keywords[:self._max_keywords]
+        context["keywords"] = keywords[: self._max_keywords]
         log.info("User Query: %s\nKeywords: %s", self._query, context["keywords"])
 
         # extracting keywords & expanding synonyms increase the call count by 1
@@ -101,7 +107,7 @@ class KeywordExtract:
         return keywords
 
     def _extract_with_textrank(self) -> Dict[str, float]:
-        """ TextRank mode extraction """
+        """TextRank mode extraction"""
         start_time = time.perf_counter()
         ranks = {}
         try:
@@ -111,12 +117,13 @@ class KeywordExtract:
         except MemoryError as e:
             log.critical("TextRank memory error (text too large?): %s", e)
         end_time = time.perf_counter()
-        log.debug("TextRank Keyword extraction time: %.2f seconds",
-                  end_time - start_time)
+        log.debug(
+            "TextRank Keyword extraction time: %.2f seconds", end_time - start_time
+        )
         return ranks
 
     def _extract_with_hybrid(self) -> Dict[str, float]:
-        """ Hybrid mode extraction """
+        """Hybrid mode extraction"""
         ranks = {}
 
         if isinstance(llm_settings.hybrid_llm_weights, float):
@@ -140,7 +147,7 @@ class KeywordExtract:
             if word in llm_scores:
                 ranks[word] += llm_scores[word] * llm_weights
             if word in tr_scores:
-                ranks[word] += tr_scores[word] * (1-llm_weights)
+                ranks[word] += tr_scores[word] * (1 - llm_weights)
 
         end_time = time.perf_counter()
         log.debug("Hybrid Keyword extraction time: %.2f seconds", end_time - start_time)
@@ -152,11 +159,10 @@ class KeywordExtract:
         lowercase: bool = True,
         start_token: str = "",
     ) -> Dict[str, float]:
-
         results = {}
 
         # use re.escape(start_token) if start_token contains special chars like */&/^ etc.
-        matches = re.findall(rf'{start_token}([^\n]+\n?)', response)
+        matches = re.findall(rf"{start_token}([^\n]+\n?)", response)
 
         for match in matches:
             match = match.strip()
@@ -174,7 +180,9 @@ class KeywordExtract:
                         continue
                     score_val = float(score_raw)
                     if not 0.0 <= score_val <= 1.0:
-                        log.warning("Score out of range for %s: %s", word_raw, score_val)
+                        log.warning(
+                            "Score out of range for %s: %s", word_raw, score_val
+                        )
                         score_val = min(1.0, max(0.0, score_val))
                     word_out = word_raw.lower() if lowercase else word_raw
                     results[word_out] = score_val

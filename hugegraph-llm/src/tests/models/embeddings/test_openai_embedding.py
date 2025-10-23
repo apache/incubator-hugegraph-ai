@@ -22,6 +22,7 @@ import unittest
 class TestOpenAIEmbedding(unittest.TestCase):
     def test_embedding_dimension(self):
         from hugegraph_llm.models.embeddings.openai import OpenAIEmbedding
+
         embedding = OpenAIEmbedding(api_key="")
         result = embedding.get_text_embedding("hello world!")
         print(result)

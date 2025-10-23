@@ -23,18 +23,23 @@ from typing import Dict, Any
 from hugegraph_llm.config import huge_settings, resource_path, llm_settings
 from hugegraph_llm.indices.vector_index import VectorIndex
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
-from hugegraph_llm.utils.embedding_utils import get_embeddings_parallel, get_filename_prefix, get_index_folder_name
+from hugegraph_llm.utils.embedding_utils import (
+    get_embeddings_parallel,
+    get_filename_prefix,
+    get_index_folder_name,
+)
 from hugegraph_llm.utils.log import log
 
 
 class BuildVectorIndex:
     def __init__(self, embedding: BaseEmbedding):
         self.embedding = embedding
-        self.folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
+        self.folder_name = get_index_folder_name(
+            huge_settings.graph_name, huge_settings.graph_space
+        )
         self.index_dir = str(os.path.join(resource_path, self.folder_name, "chunks"))
         self.filename_prefix = get_filename_prefix(
-            llm_settings.embedding_type,
-            getattr(self.embedding, "model_name", None)
+            llm_settings.embedding_type, getattr(self.embedding, "model_name", None)
         )
         self.vector_index = VectorIndex.from_index_file(self.index_dir, self.filename_prefix)
 

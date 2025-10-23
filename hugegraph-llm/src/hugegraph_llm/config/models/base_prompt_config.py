@@ -32,10 +32,13 @@ yaml_file_path = os.path.join(os.getcwd(), "src/hugegraph_llm/resources/demo", F
 class LiteralStr(str):
     pass
 
+
 def literal_str_representer(dumper, data):
-    return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+    return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
+
 
 yaml.add_representer(LiteralStr, literal_str_representer)
+
 
 class BasePromptConfig:
     graph_schema: str = ""
@@ -54,9 +57,7 @@ class BasePromptConfig:
         current_dir = Path.cwd().resolve()
         project_root = get_project_root()
         if current_dir == project_root:
-            log.info(
-                "Current working directory is the project root, proceeding to run the app."
-            )
+            log.info("Current working directory is the project root, proceeding to run the app.")
         else:
             error_msg = (
                 f"Current working directory is not the project root. "
@@ -74,16 +75,20 @@ class BasePromptConfig:
                     setattr(self, key, value)
 
             # Check if the language in the .env file matches the language in the YAML file
-            env_lang = (self.llm_settings.language.lower()
-                       if hasattr(self, 'llm_settings') and self.llm_settings.language
-                       else 'en')
-            yaml_lang = data.get('_language_generated', 'en').lower()
+            env_lang = (
+                self.llm_settings.language.lower()
+                if hasattr(self, "llm_settings") and self.llm_settings.language
+                else "en"
+            )
+            yaml_lang = data.get("_language_generated", "en").lower()
             if env_lang.strip() != yaml_lang.strip():
                 log.warning(
                     "Prompt was changed '.env' language is '%s', "
                     "but '%s' was generated for '%s'. "
                     "Regenerating the prompt file...",
-                    env_lang, F_NAME, yaml_lang
+                    env_lang,
+                    F_NAME,
+                    yaml_lang,
                 )
                 if self.llm_settings.language.lower() == "cn":
                     self.answer_prompt = self.answer_prompt_CN
@@ -105,6 +110,7 @@ class BasePromptConfig:
 
         def to_literal(val):
             return LiteralStr(val) if isinstance(val, str) else val
+
         data = {
             "graph_schema": to_literal(self.graph_schema),
             "text2gql_graph_schema": to_literal(self.text2gql_graph_schema),

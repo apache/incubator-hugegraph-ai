@@ -126,15 +126,20 @@ class MergeDedupRerank:
             reranker = Rerankers().get_reranker()
             try:
                 vertex_rerank_res = [
-                    reranker.get_rerank_lists(query, vertex_degree) + [""] for vertex_degree in vertex_degree_list
+                    reranker.get_rerank_lists(query, vertex_degree) + [""]
+                    for vertex_degree in vertex_degree_list
                 ]
             except requests.exceptions.RequestException as e:
-                log.warning("Online reranker fails, automatically switches to local bleu method: %s", e)
+                log.warning(
+                    "Online reranker fails, automatically switches to local bleu method: %s", e
+                )
                 self.method = "bleu"
                 self.switch_to_bleu = True
 
         if self.method == "bleu":
-            vertex_rerank_res = [_bleu_rerank(query, vertex_degree) + [""] for vertex_degree in vertex_degree_list]
+            vertex_rerank_res = [
+                _bleu_rerank(query, vertex_degree) + [""] for vertex_degree in vertex_degree_list
+            ]
 
         depth = len(vertex_degree_list)
         for result in results:
@@ -144,7 +149,9 @@ class MergeDedupRerank:
                 knowledge_with_degree[result] += [""] * (depth - len(knowledge_with_degree[result]))
 
         def sort_key(res: str) -> Tuple[int, ...]:
-            return tuple(vertex_rerank_res[i].index(knowledge_with_degree[res][i]) for i in range(depth))
+            return tuple(
+                vertex_rerank_res[i].index(knowledge_with_degree[res][i]) for i in range(depth)
+            )
 
         sorted_results = sorted(results, key=sort_key)
         return sorted_results[:topn]

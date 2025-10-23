@@ -138,7 +138,9 @@ def init_logger(
 def _cached_log_file(filename):
     """Cache the opened file object"""
     # Use 1K buffer if writing to cloud storage
-    with open(filename, "a", buffering=_determine_buffer_size(filename), encoding="utf-8") as file_io:
+    with open(
+        filename, "a", buffering=_determine_buffer_size(filename), encoding="utf-8"
+    ) as file_io:
         atexit.register(file_io.close)
         return file_io
 

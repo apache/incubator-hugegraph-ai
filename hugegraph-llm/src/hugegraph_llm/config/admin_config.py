@@ -18,8 +18,10 @@
 from typing import Optional
 from .models import BaseConfig
 
+
 class AdminConfig(BaseConfig):
     """Admin settings"""
+
     enable_login: Optional[str] = "False"
     user_token: Optional[str] = "4321"
     admin_token: Optional[str] = "xxxx"

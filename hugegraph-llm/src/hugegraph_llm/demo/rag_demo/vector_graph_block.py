@@ -26,8 +26,8 @@ import gradio as gr
 from hugegraph_llm.config import huge_settings
 from hugegraph_llm.config import prompt
 from hugegraph_llm.config import resource_path
-from hugegraph_llm.models.llms.init_llm import LLMs
-from hugegraph_llm.operators.llm_op.prompt_generate import PromptGenerate
+from hugegraph_llm.flows import FlowName
+from hugegraph_llm.flows.scheduler import SchedulerSingleton
 from hugegraph_llm.utils.graph_index_utils import (
     get_graph_index_info,
     clean_all_graph_index,
@@ -61,7 +61,7 @@ def store_prompt(doc, schema, example_prompt):
 
 def generate_prompt_for_ui(source_text, scenario, example_name):
     """
-    Handles the UI logic for generating a new prompt. It calls the PromptGenerate operator.
+    Handles the UI logic for generating a new prompt using the new workflow architecture.
     """
     if not all([source_text, scenario, example_name]):
         gr.Warning(
@@ -69,19 +69,13 @@ def generate_prompt_for_ui(source_text, scenario, example_name):
         )
         return gr.update()
     try:
-        prompt_generator = PromptGenerate(llm=LLMs().get_chat_llm())
-        context = {
-            "source_text": source_text,
-            "scenario": scenario,
-            "example_name": example_name,
-        }
-        result_context = prompt_generator.run(context)
-        # Presents the result of generating prompt
-        generated_prompt = result_context.get(
-            "generated_extract_prompt", "Generation failed. Please check the logs."
+        # using new architecture
+        scheduler = SchedulerSingleton.get_instance()
+        result = scheduler.schedule_flow(
+            FlowName.PROMPT_GENERATE, source_text, scenario, example_name
         )
         gr.Info("Prompt generated successfully!")
-        return generated_prompt
+        return result
     except Exception as e:
         log.error("Error generating Prompt: %s", e, exc_info=True)
         raise gr.Error(f"Error generating Prompt: {e}") from e
@@ -106,9 +100,11 @@ def load_query_examples():
         language = getattr(
             prompt,
             "language",
-            getattr(prompt.llm_settings, "language", "EN")
-            if hasattr(prompt, "llm_settings")
-            else "EN",
+            (
+                getattr(prompt.llm_settings, "language", "EN")
+                if hasattr(prompt, "llm_settings")
+                else "EN"
+            ),
         )
         if language.upper() == "CN":
             examples_path = os.path.join(
@@ -185,9 +181,11 @@ def _create_prompt_helper_block(demo, input_text, info_extract_template):
         few_shot_dropdown = gr.Dropdown(
             choices=example_names,
             label="Select a Few-shot example as a reference",
-            value=example_names[0]
-            if example_names and example_names[0] != "No available examples"
-            else None,
+            value=(
+                example_names[0]
+                if example_names and example_names[0] != "No available examples"
+                else None
+            ),
         )
         with gr.Accordion("View example details", open=False):
             example_desc_preview = gr.Markdown(label="Example description")

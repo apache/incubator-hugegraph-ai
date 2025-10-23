@@ -62,5 +62,7 @@ class PropertyKeyData:
         return self.__user_data
 
     def __repr__(self):
-        res = f"name: {self.__name}, cardinality: {self.__cardinality}, data_type: {self.__data_type}"
+        res = (
+            f"name: {self.__name}, cardinality: {self.__cardinality}, data_type: {self.__data_type}"
+        )
         return res

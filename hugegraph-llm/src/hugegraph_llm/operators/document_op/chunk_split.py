@@ -27,6 +27,7 @@ SPLIT_TYPE_DOCUMENT = "document"
 SPLIT_TYPE_PARAGRAPH = "paragraph"
 SPLIT_TYPE_SENTENCE = "sentence"
 
+
 class ChunkSplit:
     def __init__(
         self,
