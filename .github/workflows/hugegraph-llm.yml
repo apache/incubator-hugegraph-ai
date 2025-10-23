@@ -84,7 +84,7 @@ jobs:
         fi
         
         # Download NLTK data
-        python -m nltk.downloader stopwords punkt -d /home/runner/nltk_data
+        python -c "import nltk; nltk.download('stopwords'); nltk.download('punkt')"
         
     - name: Install packages
       run: |
