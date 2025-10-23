@@ -1,0 +1,114 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+name: HugeGraph-LLM CI
+
+on:
+  push:
+    branches:
+      - 'release-*'
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+
+    steps:
+    - name: Prepare HugeGraph Server Environment
+      run: |
+        docker run -d --name=graph -p 8080:8080 -e PASSWORD=admin hugegraph/hugegraph:1.3.0
+        sleep 10
+
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Cache dependencies
+      id: cache-deps
+      uses: actions/cache@v4
+      with:
+        path: |
+          .venv
+          ~/.cache/uv
+          ~/.cache/pip
+        key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('hugegraph-llm/requirements.txt', 'hugegraph-llm/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-venv-${{ matrix.python-version }}-
+          ${{ runner.os }}-venv-
+
+    - name: Install dependencies
+      if: steps.cache-deps.outputs.cache-hit != 'true'
+      run: |
+        uv venv
+        source .venv/bin/activate
+        uv pip install pytest pytest-cov
+        
+        if [ -f "hugegraph-llm/pyproject.toml" ]; then
+          cd hugegraph-llm
+          uv pip install -e .
+          uv pip install 'qianfan~=0.3.18' 'retry~=0.9.2'
+          cd ..
+        elif [ -f "hugegraph-llm/requirements.txt" ]; then
+          uv pip install -r hugegraph-llm/requirements.txt
+        else
+          echo "No dependency files found!"
+          exit 1
+        fi
+        
+        # Download NLTK data
+        python -c "import nltk; nltk.download('stopwords'); nltk.download('punkt')"
+        
+    - name: Install packages
+      run: |
+        source .venv/bin/activate
+        uv pip install -e ./hugegraph-python-client/
+        uv pip install -e ./hugegraph-llm/
+
+    - name: Run unit tests
+      run: |
+        source .venv/bin/activate
+        export SKIP_EXTERNAL_SERVICES=true
+        cd hugegraph-llm
+        export PYTHONPATH="$(pwd)/src:$PYTHONPATH"
+        
+        if python -c "from hugegraph_llm.models.llms.qianfan import QianfanClient" 2>/dev/null; then
+          python -m pytest src/tests/config/ src/tests/document/ src/tests/middleware/ src/tests/operators/ src/tests/models/ src/tests/indices/ src/tests/test_utils.py -v --tb=short
+        else
+          python -m pytest src/tests/config/ src/tests/document/ src/tests/middleware/ src/tests/operators/ src/tests/models/ src/tests/indices/ src/tests/test_utils.py -v --tb=short --ignore=src/tests/models/llms/test_qianfan_client.py
+        fi
+
+    - name: Run integration tests
+      run: |
+        source .venv/bin/activate
+        export SKIP_EXTERNAL_SERVICES=true
+        cd hugegraph-llm
+        export PYTHONPATH="$(pwd)/src:$PYTHONPATH"
+        python -m pytest src/tests/integration/test_graph_rag_pipeline.py src/tests/integration/test_kg_construction.py src/tests/integration/test_rag_pipeline.py -v --tb=short

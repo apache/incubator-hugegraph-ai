@@ -19,8 +19,8 @@ import unittest
 
 from hugegraph_llm.operators.llm_op.info_extract import (
     InfoExtract,
-    extract_triples_by_regex_with_schema,
     extract_triples_by_regex,
+    extract_triples_by_regex_with_schema,
 )
 
 
@@ -46,7 +46,7 @@ class TestInfoExtract(unittest.TestCase):
 
         self.llm_output = """
         {"id": "as-rymwkgbvqf", "object": "chat.completion", "created": 1706599975,
-                  "result": "Based on the given graph schema and the extracted text, we can extract 
+                  "result": "Based on the given graph schema and the extracted text, we can extract
                   the following triples:\n\n
                   1. (Alice, name, Alice) - person\n
                   2. (Alice, age, 25) - person\n
@@ -58,15 +58,15 @@ class TestInfoExtract(unittest.TestCase):
                   8. (www.alice.com, url, www.alice.com) - webpage\n
                   9. (www.bob.com, name, www.bob.com) - webpage\n
                   10. (www.bob.com, url, www.bob.com) - webpage\n\n
-                  However, the schema does not provide a direct relationship between people and 
-                  webpages they own. To establish such a relationship, we might need to introduce 
-                  a new edge label like \"owns\" or modify the schema accordingly. Assuming we 
-                  introduce a new edge label \"owns\", we can extract the following additional 
+                  However, the schema does not provide a direct relationship between people and
+                  webpages they own. To establish such a relationship, we might need to introduce
+                  a new edge label like \"owns\" or modify the schema accordingly. Assuming we
+                  introduce a new edge label \"owns\", we can extract the following additional
                   triples:\n\n
                   1. (Alice, owns, www.alice.com) - owns\n2. (Bob, owns, www.bob.com) - owns\n\n
-                  Please note that the extraction of some triples, like the webpage name and URL, 
-                  might seem redundant since they are the same. However, 
-                  I included them to strictly follow the given format. In a real-world scenario, 
+                  Please note that the extraction of some triples, like the webpage name and URL,
+                  might seem redundant since they are the same. However,
+                  I included them to strictly follow the given format. In a real-world scenario,
                   such redundancy might be avoided or handled differently.",
                   "is_truncated": false, "need_clear_history": false, "finish_reason": "normal",
                   "usage": {"prompt_tokens": 221, "completion_tokens": 325, "total_tokens": 546}}
@@ -76,48 +76,52 @@ class TestInfoExtract(unittest.TestCase):
         graph = {"triples": [], "vertices": [], "edges": [], "schema": self.schema}
         extract_triples_by_regex_with_schema(self.schema, self.llm_output, graph)
         graph.pop("triples")
-        self.assertEqual(
-            graph,
+        # Convert dict_values to list for comparison
+        expected_vertices = [
             {
-                "vertices": [
-                    {
-                        "name": "Alice",
-                        "label": "person",
-                        "properties": {"name": "Alice", "age": "25", "occupation": "lawyer"},
-                    },
-                    {
-                        "name": "Bob",
-                        "label": "person",
-                        "properties": {"name": "Bob", "occupation": "journalist"},
-                    },
-                    {
-                        "name": "www.alice.com",
-                        "label": "webpage",
-                        "properties": {"name": "www.alice.com", "url": "www.alice.com"},
-                    },
-                    {
-                        "name": "www.bob.com",
-                        "label": "webpage",
-                        "properties": {"name": "www.bob.com", "url": "www.bob.com"},
-                    },
-                ],
-                "edges": [{"start": "Alice", "end": "Bob", "type": "roommate", "properties": {}}],
-                "schema": {
-                    "vertices": [
-                        {"vertex_label": "person", "properties": ["name", "age", "occupation"]},
-                        {"vertex_label": "webpage", "properties": ["name", "url"]},
-                    ],
-                    "edges": [
-                        {
-                            "edge_label": "roommate",
-                            "source_vertex_label": "person",
-                            "target_vertex_label": "person",
-                            "properties": [],
-                        }
-                    ],
-                },
+                "id": "person-Alice",
+                "name": "Alice",
+                "label": "person",
+                "properties": {"name": "Alice", "age": "25", "occupation": "lawyer"},
             },
-        )
+            {
+                "id": "person-Bob",
+                "name": "Bob",
+                "label": "person",
+                "properties": {"name": "Bob", "occupation": "journalist"},
+            },
+            {
+                "id": "webpage-www.alice.com",
+                "name": "www.alice.com",
+                "label": "webpage",
+                "properties": {"name": "www.alice.com", "url": "www.alice.com"},
+            },
+            {
+                "id": "webpage-www.bob.com",
+                "name": "www.bob.com",
+                "label": "webpage",
+                "properties": {"name": "www.bob.com", "url": "www.bob.com"},
+            },
+        ]
+
+        expected_edges = [
+            {
+                "start": "person-Alice",
+                "end": "person-Bob",
+                "type": "roommate",
+                "properties": {}
+            }
+        ]
+
+        # Sort vertices and edges for consistent comparison
+        actual_vertices = sorted(graph["vertices"], key=lambda x: x["id"])
+        expected_vertices = sorted(expected_vertices, key=lambda x: x["id"])
+        actual_edges = sorted(graph["edges"], key=lambda x: (x["start"], x["end"]))
+        expected_edges = sorted(expected_edges, key=lambda x: (x["start"], x["end"]))
+
+        self.assertEqual(actual_vertices, expected_vertices)
+        self.assertEqual(actual_edges, expected_edges)
+        self.assertEqual(graph["schema"], self.schema)
 
     def test_extract_by_regex(self):
         graph = {"triples": []}

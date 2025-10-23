@@ -16,6 +16,7 @@
 # under the License.
 
 
+import os
 import unittest
 
 from hugegraph_llm.models.embeddings.base import SimilarityMode
@@ -23,11 +24,18 @@ from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
 
 
 class TestOllamaEmbedding(unittest.TestCase):
+    def setUp(self):
+        self.skip_external = os.getenv("SKIP_EXTERNAL_SERVICES", "false").lower() == "true"
+
+    @unittest.skipIf(os.getenv("SKIP_EXTERNAL_SERVICES", "false").lower() == "true",
+                     "Skipping external service tests")
     def test_get_text_embedding(self):
         ollama_embedding = OllamaEmbedding(model_name="quentinz/bge-large-zh-v1.5")
         embedding = ollama_embedding.get_text_embedding("hello world")
         print(embedding)
 
+    @unittest.skipIf(os.getenv("SKIP_EXTERNAL_SERVICES", "false").lower() == "true",
+                     "Skipping external service tests")
     def test_get_cosine_similarity(self):
         ollama_embedding = OllamaEmbedding(model_name="quentinz/bge-large-zh-v1.5")
         embedding1 = ollama_embedding.get_text_embedding("hello world")
