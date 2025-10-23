@@ -95,7 +95,7 @@ class TestKeywordExtract(unittest.TestCase):
         # Setup mock
         mock_llm = MagicMock(spec=BaseLLM)
         mock_llm.generate.return_value = (
-            "KEYWORDS: artificial intelligence, machine learning, neural networks"
+            "KEYWORDS: artificial intelligence:0.9, machine learning:0.8, neural networks:0.7"
         )
         mock_llms_instance = MagicMock()
         mock_llms_instance.get_extract_llm.return_value = mock_llm
@@ -119,9 +119,11 @@ class TestKeywordExtract(unittest.TestCase):
 
         # Verify the result
         self.assertIn("keywords", result)
-        self.assertTrue(any("artificial intelligence" in kw for kw in result["keywords"]))
-        self.assertTrue(any("machine learning" in kw for kw in result["keywords"]))
-        self.assertTrue(any("neural networks" in kw for kw in result["keywords"]))
+        # Keywords are now returned as a dict with scores
+        keywords = result["keywords"]
+        self.assertIn("artificial intelligence", keywords)
+        self.assertIn("machine learning", keywords)
+        self.assertIn("neural networks", keywords)
 
     def test_run_with_no_query_in_init_but_in_context(self):
         """Test run method with no query in init but provided in context."""
