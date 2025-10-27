@@ -241,7 +241,7 @@ class MilvusVectorIndex(VectorStoreBase):
     @staticmethod
     def from_name(embed_dim: int, *name: str) -> "MilvusVectorIndex":
         name_str = "_".join(name)
-        assert index_settings.milvus_host, "Qdrant host is not configured"
+        assert index_settings.milvus_host, "Milvus host is not configured"
         return MilvusVectorIndex(
             name_str,
             host=index_settings.milvus_host,
