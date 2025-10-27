@@ -69,7 +69,7 @@ def clear_llm_server_log():
 
 
 # Function to validate password and control access to logs
-def check_password(password, request=None):
+def check_password(password, request: gr.Request | None = None):
     client_ip = request.client.host if request else "Unknown IP"
     admin_token = admin_settings.admin_token
 
