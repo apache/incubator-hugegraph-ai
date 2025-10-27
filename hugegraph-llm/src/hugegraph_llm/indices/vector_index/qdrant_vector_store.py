@@ -16,6 +16,7 @@
 # under the License.
 
 from typing import Any, Dict, List, Set, Union
+import uuid
 
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
@@ -71,10 +72,12 @@ class QdrantVectorIndex(VectorStoreBase):
 
         points = []
 
-        for i, (vector, prop) in enumerate(zip(vectors, props)):
+        for vector, prop in zip(vectors, props):
+            # Use UUID to ensure unique point IDs across multiple add operations
+            # This prevents data loss from ID collisions
             points.append(
                 models.PointStruct(
-                    id=i,
+                    id=str(uuid.uuid4()),
                     vector=vector,
                     payload={"property": prop},
                 )
