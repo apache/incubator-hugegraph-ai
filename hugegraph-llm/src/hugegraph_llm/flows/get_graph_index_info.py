@@ -47,7 +47,7 @@ class GetGraphIndexInfoFlow(BaseFlow):
         from hugegraph_llm.utils.vector_index_utils import get_vector_index_class  # pylint: disable=import-outside-toplevel
 
         graph_summary_info = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
-        
+
         try:
             vector_index_class = get_vector_index_class(index_settings.cur_vector_index)
             embedding = Embeddings().get_embedding()
@@ -58,5 +58,5 @@ class GetGraphIndexInfoFlow(BaseFlow):
         except Exception:  # pylint: disable=broad-except
             # If vector index doesn't exist or fails to load, just return graph summary
             pass
-        
+
         return json.dumps(graph_summary_info, ensure_ascii=False, indent=2)

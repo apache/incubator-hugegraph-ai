@@ -83,8 +83,11 @@ class OllamaEmbedding(BaseEmbedding):
         response = await self.async_client.embeddings(model=self.model, prompt=text)
         return list(response["embedding"])
 
-    async def async_get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
+    async def async_get_texts_embeddings(
+        self, texts: List[str], batch_size: int = 32
+    ) -> List[List[float]]:
         # Ollama python client may not provide batch async embeddings; fallback per item
+        # batch_size parameter included for consistency with base class signature
         results: List[List[float]] = []
         for t in texts:
             response = await self.async_client.embeddings(model=self.model, prompt=t)

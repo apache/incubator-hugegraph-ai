@@ -101,7 +101,7 @@ class Embeddings:
                 actual_dim = len(test_vec)
             except Exception:  # pylint: disable=broad-except
                 actual_dim = 1536  # Fallback
-            
+
             # Create final instance with correct dimension
             embedding = LiteLLMEmbedding(
                 embedding_dimension=actual_dim,

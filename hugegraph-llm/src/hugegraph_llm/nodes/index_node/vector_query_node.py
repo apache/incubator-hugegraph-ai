@@ -34,8 +34,9 @@ class VectorQueryNode(BaseNode):
         """
         try:
             # Lazy import to avoid circular dependency
-            from hugegraph_llm.utils.vector_index_utils import get_vector_index_class  # pylint: disable=import-outside-toplevel
-            
+            # pylint: disable=import-outside-toplevel
+            from hugegraph_llm.utils.vector_index_utils import get_vector_index_class
+
             # 从 wk_input 中读取用户配置参数
             vector_index = get_vector_index_class(index_settings.cur_vector_index)
             embedding = Embeddings().get_embedding()

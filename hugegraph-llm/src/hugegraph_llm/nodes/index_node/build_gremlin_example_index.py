@@ -31,8 +31,9 @@ class BuildGremlinExampleIndexNode(BaseNode):
 
     def node_init(self):
         # Lazy import to avoid circular dependency
-        from hugegraph_llm.utils.vector_index_utils import get_vector_index_class  # pylint: disable=import-outside-toplevel
-        
+        # pylint: disable=import-outside-toplevel
+        from hugegraph_llm.utils.vector_index_utils import get_vector_index_class
+
         if not self.wk_input.examples:
             return CStatus(-1, "examples is required in BuildGremlinExampleIndexNode")
         examples = self.wk_input.examples

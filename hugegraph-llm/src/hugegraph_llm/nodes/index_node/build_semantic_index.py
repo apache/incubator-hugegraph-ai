@@ -27,8 +27,9 @@ class BuildSemanticIndexNode(BaseNode):
 
     def node_init(self):
         # Lazy import to avoid circular dependency
-        from hugegraph_llm.utils.vector_index_utils import get_vector_index_class  # pylint: disable=import-outside-toplevel
-        
+        # pylint: disable=import-outside-toplevel
+        from hugegraph_llm.utils.vector_index_utils import get_vector_index_class
+
         vector_index = get_vector_index_class(index_settings.cur_vector_index)
         embedding = Embeddings().get_embedding()
         self.build_semantic_index_op = BuildSemanticIndex(embedding, vector_index)

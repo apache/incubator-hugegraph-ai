@@ -36,8 +36,9 @@ class SemanticIdQueryNode(BaseNode):
         """
         try:
             # Lazy import to avoid circular dependency
-            from hugegraph_llm.utils.vector_index_utils import get_vector_index_class  # pylint: disable=import-outside-toplevel
-            
+            # pylint: disable=import-outside-toplevel
+            from hugegraph_llm.utils.vector_index_utils import get_vector_index_class
+
             graph_name = huge_settings.graph_name
             if not graph_name:
                 return CStatus(-1, "graph_name is required in wk_input")

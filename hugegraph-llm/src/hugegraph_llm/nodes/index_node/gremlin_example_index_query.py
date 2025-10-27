@@ -32,8 +32,9 @@ class GremlinExampleIndexQueryNode(BaseNode):
 
     def node_init(self):
         # Lazy import to avoid circular dependency
-        from hugegraph_llm.utils.vector_index_utils import get_vector_index_class  # pylint: disable=import-outside-toplevel
-        
+        # pylint: disable=import-outside-toplevel
+        from hugegraph_llm.utils.vector_index_utils import get_vector_index_class
+
         # Build operator (index lazy-loading handled in operator)
         vector_index = get_vector_index_class(index_settings.cur_vector_index)
         embedding = Embeddings().get_embedding()
@@ -42,7 +43,9 @@ class GremlinExampleIndexQueryNode(BaseNode):
             example_num = 2
         # Clamp to [0, 10]
         example_num = max(0, min(10, example_num))
-        self.operator = GremlinExampleIndexQuery(vector_index=vector_index, embedding=embedding, num_examples=example_num)
+        self.operator = GremlinExampleIndexQuery(
+            vector_index=vector_index, embedding=embedding, num_examples=example_num
+        )
         return super().node_init()
 
     def operator_schedule(self, data_json: Dict[str, Any]):

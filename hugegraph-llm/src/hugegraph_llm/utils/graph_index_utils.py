@@ -16,7 +16,6 @@
 # under the License.
 
 
-import os
 import traceback
 from typing import Dict, Any, Union, List
 
@@ -44,7 +43,7 @@ def clean_all_graph_index():
     # Lazy import to avoid circular dependency
     from .vector_index_utils import get_vector_index_class  # pylint: disable=import-outside-toplevel
     from ..config import index_settings  # pylint: disable=import-outside-toplevel
-    
+
     vector_index = get_vector_index_class(index_settings.cur_vector_index)
     vector_index.clean(huge_settings.graph_name, "graph_vids")
     vector_index.clean("gremlin_examples")
