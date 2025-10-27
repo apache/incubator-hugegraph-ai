@@ -46,17 +46,18 @@ class OpenAIEmbedding(BaseEmbedding):
         response = self.client.embeddings.create(input=text, model=self.model)
         return response.data[0].embedding
 
-    def get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """Get embeddings for multiple texts in a single batch.
+    def get_texts_embeddings(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
+        """Get embeddings for multiple texts with automatic batch splitting.
 
-        This method efficiently processes multiple texts at once by leveraging
-        OpenAI's batching capabilities, which is more efficient than processing
-        texts individually.
+        This method efficiently processes multiple texts by splitting them into
+        smaller batches to respect API rate limits and batch size constraints.
 
         Parameters
         ----------
         texts : List[str]
             A list of text strings to be embedded.
+        batch_size : int, optional
+            Maximum number of texts to process in a single API call (default: 32).
 
         Returns
         -------
@@ -64,11 +65,15 @@ class OpenAIEmbedding(BaseEmbedding):
             A list of embedding vectors, where each vector is a list of floats.
             The order of embeddings matches the order of input texts.
         """
-        response = self.client.embeddings.create(input=texts, model=self.model)
-        return [data.embedding for data in response.data]
+        all_embeddings = []
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+            response = self.client.embeddings.create(input=batch, model=self.model)
+            all_embeddings.extend([data.embedding for data in response.data])
+        return all_embeddings
 
-    async def async_get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """Get embeddings for multiple texts in a single batch asynchronously.
+    async def async_get_texts_embeddings(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
+        """Get embeddings for multiple texts with automatic batch splitting (async).
 
         This method should efficiently process multiple texts at once by leveraging
         the embedding model's batching capabilities, which is typically more efficient
@@ -78,6 +83,8 @@ class OpenAIEmbedding(BaseEmbedding):
         ----------
         texts : List[str]
             A list of text strings to be embedded.
+        batch_size : int, optional
+            Maximum number of texts to process in a single API call (default: 32).
 
         Returns
         -------
@@ -85,8 +92,12 @@ class OpenAIEmbedding(BaseEmbedding):
             A list of embedding vectors, where each vector is a list of floats.
             The order of embeddings should match the order of input texts.
         """
-        response = await self.aclient.embeddings.create(input=texts, model=self.model)
-        return [data.embedding for data in response.data]
+        all_embeddings = []
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+            response = await self.aclient.embeddings.create(input=batch, model=self.model)
+            all_embeddings.extend([data.embedding for data in response.data])
+        return all_embeddings
 
     async def async_get_text_embedding(self, text: str) -> List[float]:
         response = await self.aclient.embeddings.create(input=[text], model=self.model)

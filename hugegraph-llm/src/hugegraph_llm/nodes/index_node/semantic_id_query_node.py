@@ -18,8 +18,8 @@ from typing import Dict, Any
 from PyCGraph import CStatus
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
-from hugegraph_llm.models.embeddings.init_embedding import get_embedding
-from hugegraph_llm.config import huge_settings, index_settings, llm_settings
+from hugegraph_llm.models.embeddings.init_embedding import Embeddings
+from hugegraph_llm.config import huge_settings, index_settings
 from hugegraph_llm.utils.log import log
 
 
@@ -43,7 +43,7 @@ class SemanticIdQueryNode(BaseNode):
                 return CStatus(-1, "graph_name is required in wk_input")
 
             vector_index = get_vector_index_class(index_settings.cur_vector_index)
-            embedding = get_embedding(llm_settings)
+            embedding = Embeddings().get_embedding()
             by = (
                 self.wk_input.semantic_by
                 if self.wk_input.semantic_by is not None

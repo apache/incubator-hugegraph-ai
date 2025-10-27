@@ -14,7 +14,7 @@
 #  limitations under the License.
 
 from hugegraph_llm.config import index_settings
-from hugegraph_llm.models.embeddings.init_embedding import get_embedding, llm_settings
+from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.build_vector_index import BuildVectorIndex
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
@@ -30,7 +30,7 @@ class BuildVectorIndexNode(BaseNode):
         from hugegraph_llm.utils.vector_index_utils import get_vector_index_class  # pylint: disable=import-outside-toplevel
         
         vector_index = get_vector_index_class(index_settings.cur_vector_index)
-        embedding = get_embedding(llm_settings)
+        embedding = Embeddings().get_embedding()
         self.build_vector_index_op = BuildVectorIndex(embedding, vector_index)
         return super().node_init()
 

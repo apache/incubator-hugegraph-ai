@@ -45,17 +45,18 @@ class OllamaEmbedding(BaseEmbedding):
         """Comment"""
         return list(self.client.embed(model=self.model, input=text)["embeddings"][0])
 
-    def get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """Get embeddings for multiple texts in a single batch.
+    def get_texts_embeddings(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
+        """Get embeddings for multiple texts with automatic batch splitting.
 
-        This method efficiently processes multiple texts at once by leveraging
-        Ollama's batching capabilities, which is more efficient than processing
-        texts individually.
+        This method efficiently processes multiple texts by splitting them into
+        smaller batches to respect API rate limits and batch size constraints.
 
         Parameters
         ----------
         texts : List[str]
             A list of text strings to be embedded.
+        batch_size : int, optional
+            Maximum number of texts to process in a single API call (default: 32).
 
         Returns
         -------
@@ -70,8 +71,12 @@ class OllamaEmbedding(BaseEmbedding):
             )
             raise AttributeError(error_message)
 
-        response = self.client.embed(model=self.model, input=texts)["embeddings"]
-        return [list(inner_sequence) for inner_sequence in response]
+        all_embeddings = []
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+            response = self.client.embed(model=self.model, input=batch)["embeddings"]
+            all_embeddings.extend([list(inner_sequence) for inner_sequence in response])
+        return all_embeddings
 
     async def async_get_text_embedding(self, text: str) -> List[float]:
         """Get embedding for a single text asynchronously."""
