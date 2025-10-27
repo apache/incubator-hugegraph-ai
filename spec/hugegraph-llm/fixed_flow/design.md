@@ -407,7 +407,6 @@ class GraphExtractFlow(BaseFlow):
         prepared_input.split_type = "document"
         prepared_input.example_prompt = example_prompt
         prepared_input.schema = schema
-        prepare_schema(prepared_input, schema)
         return
 
     def build_flow(self, schema, texts, example_prompt, extract_type):

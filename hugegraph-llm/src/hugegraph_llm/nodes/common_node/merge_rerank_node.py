@@ -16,8 +16,8 @@
 from typing import Dict, Any
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.common_op.merge_dedup_rerank import MergeDedupRerank
-from hugegraph_llm.models.embeddings.init_embedding import Embeddings
-from hugegraph_llm.config import huge_settings
+from hugegraph_llm.models.embeddings.init_embedding import get_embedding
+from hugegraph_llm.config import huge_settings, llm_settings
 from hugegraph_llm.utils.log import log
 
 
@@ -34,7 +34,7 @@ class MergeRerankNode(BaseNode):
         """
         try:
             # Read user configuration parameters from wk_input
-            embedding = Embeddings().get_embedding()
+            embedding = get_embedding(llm_settings)
             graph_ratio = self.wk_input.graph_ratio or 0.5
             rerank_method = self.wk_input.rerank_method or "bleu"
             near_neighbor_first = self.wk_input.near_neighbor_first or False
@@ -52,7 +52,7 @@ class MergeRerankNode(BaseNode):
                 topk_return_results=topk_return_results,
             )
             return super().node_init()
-        except Exception as e:
+        except ValueError as e:
             log.error("Failed to initialize MergeRerankNode: %s", e)
             from PyCGraph import CStatus
 
@@ -80,6 +80,6 @@ class MergeRerankNode(BaseNode):
 
             return result
 
-        except Exception as e:
+        except ValueError as e:
             log.error("Merge and rerank failed: %s", e)
             return data_json

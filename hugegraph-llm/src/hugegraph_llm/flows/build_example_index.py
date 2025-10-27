@@ -13,7 +13,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import json
 from typing import List, Dict, Optional
+
+from PyCGraph import GPipeline
 
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
@@ -22,21 +25,21 @@ from hugegraph_llm.nodes.index_node.build_gremlin_example_index import (
 )
 from hugegraph_llm.utils.log import log
 
-import json
-from PyCGraph import GPipeline
 
-
+# pylint: disable=arguments-differ,keyword-arg-before-vararg
 class BuildExampleIndexFlow(BaseFlow):
     def __init__(self):
         pass
 
     def prepare(
-        self, prepared_input: WkFlowInput, examples: Optional[List[Dict[str, str]]]
+        self,
+        prepared_input: WkFlowInput,
+        examples: Optional[List[Dict[str, str]]],
+        **kwargs,
     ):
         prepared_input.examples = examples
-        return
 
-    def build_flow(self, examples=None):
+    def build_flow(self, examples=None, **kwargs):
         pipeline = GPipeline()
         prepared_input = WkFlowInput()
         self.prepare(prepared_input, examples=examples)
@@ -49,7 +52,7 @@ class BuildExampleIndexFlow(BaseFlow):
 
         return pipeline
 
-    def post_deal(self, pipeline=None):
+    def post_deal(self, pipeline=None, **kwargs):
         state_json = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
         try:
             formatted_schema = json.dumps(state_json, ensure_ascii=False, indent=2)

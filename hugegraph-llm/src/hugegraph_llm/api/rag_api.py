@@ -28,8 +28,8 @@ from hugegraph_llm.api.models.rag_requests import (
     GraphRAGRequest,
     GremlinGenerateRequest,
 )
-from hugegraph_llm.config import huge_settings
 from hugegraph_llm.api.models.rag_response import RAGResponse
+from hugegraph_llm.config import huge_settings
 from hugegraph_llm.config import llm_settings, prompt
 from hugegraph_llm.utils.graph_index_utils import get_vertex_details
 from hugegraph_llm.utils.log import log
@@ -49,6 +49,13 @@ def rag_http_api(
     @router.post("/rag", status_code=status.HTTP_200_OK)
     def rag_answer_api(req: RAGRequest):
         set_graph_config(req)
+
+        # Basic parameter validation: empty query => 400
+        if not req.query or not str(req.query).strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Query must not be empty.",
+            )
 
         result = rag_answer_func(
             text=req.query,
@@ -96,6 +103,13 @@ def rag_http_api(
     def graph_rag_recall_api(req: GraphRAGRequest):
         try:
             set_graph_config(req)
+
+            # Basic parameter validation: empty query => 400
+            if not req.query or not str(req.query).strip():
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Query must not be empty.",
+                )
 
             result = graph_rag_recall_func(
                 query=req.query,

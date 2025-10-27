@@ -18,7 +18,7 @@
 import asyncio
 import json
 import re
-from typing import Any, Dict, List, Optional, Union
+from typing import Optional, List, Dict, Any, Union
 
 from hugegraph_llm.config import prompt
 from hugegraph_llm.models.llms.base import BaseLLM
@@ -29,7 +29,7 @@ from hugegraph_llm.utils.log import log
 class GremlinGenerateSynthesize:
     def __init__(
         self,
-        llm: BaseLLM | None = None,
+        llm: BaseLLM = None,
         schema: Optional[Union[dict, str]] = None,
         vertices: Optional[List[str]] = None,
         gremlin_prompt: Optional[str] = None,
@@ -54,7 +54,8 @@ class GremlinGenerateSynthesize:
         example_strings = []
         for example in examples:
             example_strings.append(
-                f"- query: {example['query']}\n- gremlin:\n```gremlin\n{example['gremlin']}\n```"
+                f"- query: {example['query']}\n"
+                f"- gremlin:\n```gremlin\n{example['gremlin']}\n```"
             )
         return "\n\n".join(example_strings)
 

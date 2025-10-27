@@ -31,6 +31,7 @@ from hugegraph_llm.config import huge_settings, prompt
 from hugegraph_llm.utils.log import log
 
 
+# pylint: disable=arguments-differ,keyword-arg-before-vararg
 class RAGGraphVectorFlow(BaseFlow):
     """
     Workflow for graph + vector hybrid answering (graph_vector_answer)
@@ -54,11 +55,11 @@ class RAGGraphVectorFlow(BaseFlow):
         keywords_extract_prompt: Optional[str] = None,
         gremlin_tmpl_num: Optional[int] = -1,
         gremlin_prompt: Optional[str] = None,
-        max_graph_items: int = None,
-        topk_return_results: int = None,
-        vector_dis_threshold: float = None,
-        topk_per_keyword: int = None,
-        **_: dict,
+        max_graph_items: Optional[int] = None,
+        topk_return_results: Optional[int] = None,
+        vector_dis_threshold: Optional[float] = None,
+        topk_per_keyword: Optional[int] = None,
+        **kwargs,
     ):
         prepared_input.query = query
         prepared_input.vector_search = vector_search
@@ -70,11 +71,15 @@ class RAGGraphVectorFlow(BaseFlow):
         prepared_input.graph_ratio = graph_ratio
         prepared_input.gremlin_tmpl_num = gremlin_tmpl_num
         prepared_input.gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
-        prepared_input.max_graph_items = max_graph_items or huge_settings.max_graph_items
+        prepared_input.max_graph_items = (
+            max_graph_items or huge_settings.max_graph_items
+        )
         prepared_input.topk_return_results = (
             topk_return_results or huge_settings.topk_return_results
         )
-        prepared_input.topk_per_keyword = topk_per_keyword or huge_settings.topk_per_keyword
+        prepared_input.topk_per_keyword = (
+            topk_per_keyword or huge_settings.topk_per_keyword
+        )
         prepared_input.vector_dis_threshold = (
             vector_dis_threshold or huge_settings.vector_dis_threshold
         )
@@ -93,7 +98,6 @@ class RAGGraphVectorFlow(BaseFlow):
             "graph_search": graph_search,
             "max_graph_items": max_graph_items or huge_settings.max_graph_items,
         }
-        return
 
     def build_flow(self, **kwargs):
         pipeline = GPipeline()
@@ -114,26 +118,30 @@ class RAGGraphVectorFlow(BaseFlow):
         # Register nodes and their dependencies
         pipeline.registerGElement(vector_query_node, set(), "vector")
         pipeline.registerGElement(keyword_extract_node, set(), "keyword")
-        pipeline.registerGElement(semantic_id_query_node, {keyword_extract_node}, "semantic")
+        pipeline.registerGElement(
+            semantic_id_query_node, {keyword_extract_node}, "semantic"
+        )
         pipeline.registerGElement(schema_node, set(), "schema")
-        pipeline.registerGElement(graph_query_node, {schema_node, semantic_id_query_node}, "graph")
-        pipeline.registerGElement(merge_rerank_node, {graph_query_node, vector_query_node}, "merge")
-        pipeline.registerGElement(answer_synthesize_node, {merge_rerank_node}, "graph_vector")
+        pipeline.registerGElement(
+            graph_query_node, {schema_node, semantic_id_query_node}, "graph"
+        )
+        pipeline.registerGElement(
+            merge_rerank_node, {graph_query_node, vector_query_node}, "merge"
+        )
+        pipeline.registerGElement(
+            answer_synthesize_node, {merge_rerank_node}, "graph_vector"
+        )
         log.info("RAGGraphVectorFlow pipeline built successfully")
         return pipeline
 
-    def post_deal(self, pipeline=None):
+    def post_deal(self, pipeline=None, **kwargs):
         if pipeline is None:
             return {"error": "No pipeline provided"}
-        try:
-            res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
-            log.info("RAGGraphVectorFlow post processing success")
-            return {
-                "raw_answer": res.get("raw_answer", ""),
-                "vector_only_answer": res.get("vector_only_answer", ""),
-                "graph_only_answer": res.get("graph_only_answer", ""),
-                "graph_vector_answer": res.get("graph_vector_answer", ""),
-            }
-        except Exception as e:
-            log.error("RAGGraphVectorFlow post processing failed: %s", e)
-            return {"error": f"Post processing failed: {str(e)}"}
+        res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
+        log.info("RAGGraphVectorFlow post processing success")
+        return {
+            "raw_answer": res.get("raw_answer", ""),
+            "vector_only_answer": res.get("vector_only_answer", ""),
+            "graph_only_answer": res.get("graph_only_answer", ""),
+            "graph_vector_answer": res.get("graph_vector_answer", ""),
+        }

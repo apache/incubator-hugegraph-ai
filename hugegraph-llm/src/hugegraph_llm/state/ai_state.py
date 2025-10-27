@@ -13,9 +13,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from typing import Union, List, Optional, Any
-
+from typing import AsyncGenerator, Union, List, Optional, Any, Dict
 from PyCGraph import GParam, CStatus
+
+from hugegraph_llm.utils.log import log
 
 
 class WkFlowInput(GParam):
@@ -24,8 +25,7 @@ class WkFlowInput(GParam):
     split_type: Optional[str] = None  # split type used by ChunkSplit Node
     example_prompt: Optional[str] = None  # need by graph information extract
     schema: Optional[str] = None  # Schema information requeired by SchemaNode
-    graph_name: Optional[str] = None  # used by SchemaManager
-    data_json: Optional[dict] = None
+    data_json: Optional[Dict[str, Any]] = None
     extract_type: Optional[str] = None
     query_examples: Optional[Any] = None
     few_shot_schema: Optional[Any] = None
@@ -35,7 +35,6 @@ class WkFlowInput(GParam):
     example_name: Optional[str] = None  # Example name
     # Fields for Text2Gremlin
     example_num: Optional[int] = None
-    gremlin_prompt: Optional[str] = None
     requested_outputs: Optional[List[str]] = None
 
     # RAG Flow related fields
@@ -78,7 +77,7 @@ class WkFlowInput(GParam):
     is_vector_only: bool = False
 
     # used for build text2gremin index
-    examples: Optional[List[dict]] = None
+    examples: Optional[List[Dict[str, str]]] = None
 
     def reset(self, _: CStatus) -> None:
         self.texts = None
@@ -86,7 +85,6 @@ class WkFlowInput(GParam):
         self.split_type = None
         self.example_prompt = None
         self.schema = None
-        self.graph_name = None
         self.data_json = None
         self.extract_type = None
         self.query_examples = None
@@ -114,7 +112,6 @@ class WkFlowInput(GParam):
         self.answer_prompt = None
         self.keywords_extract_prompt = None
         self.gremlin_tmpl_num = None
-        self.gremlin_prompt = None
         self.max_graph_items = None
         self.topk_return_results = None
         self.vector_dis_threshold = None
@@ -132,6 +129,8 @@ class WkFlowInput(GParam):
         self.stream = None
 
         self.examples = None
+        self.is_graph_rag_recall = False
+        self.is_vector_only = False
 
 
 class WkFlowState(GParam):
@@ -165,7 +164,34 @@ class WkFlowState(GParam):
 
     merged_result: Optional[Any] = None
 
-    def setup(self):
+    vertex_num: Optional[int] = None
+    edge_num: Optional[int] = None
+    note: Optional[str] = None
+    removed_vid_vector_num: Optional[int] = None
+    added_vid_vector_num: Optional[int] = None
+    raw_texts: Optional[List] = None
+    query_examples: Optional[List] = None
+    few_shot_schema: Optional[Dict] = None
+    source_text: Optional[str] = None
+    scenario: Optional[str] = None
+    example_name: Optional[str] = None
+
+    graph_ratio: Optional[float] = None
+    query: Optional[str] = None
+    vector_search: Optional[bool] = None
+    graph_search: Optional[bool] = None
+    max_graph_items: Optional[int] = None
+    stream_generator: Optional[AsyncGenerator] = None
+
+    graph_result_flag: Optional[int] = None
+    vertex_degree_list: Optional[List] = None
+    knowledge_with_degree: Optional[Dict] = None
+    graph_context_head: Optional[str] = None
+
+    embed_dim: Optional[int] = None
+    is_graph_rag_recall: Optional[bool] = None
+
+    def setup(self) -> CStatus:
         self.schema = None
         self.simple_schema = None
         self.chunks = None
@@ -195,6 +221,33 @@ class WkFlowState(GParam):
         self.merged_result = None
 
         self.match_vids = None
+        self.vertex_num = None
+        self.edge_num = None
+        self.note = None
+        self.removed_vid_vector_num = None
+        self.added_vid_vector_num = None
+
+        self.raw_texts = None
+        self.query_examples = None
+        self.few_shot_schema = None
+        self.source_text = None
+        self.scenario = None
+        self.example_name = None
+
+        self.graph_ratio = None
+        self.query = None
+        self.vector_search = None
+        self.graph_search = None
+        self.max_graph_items = None
+
+        self.stream_generator = None
+        self.graph_result_flag = None
+        self.vertex_degree_list = None
+        self.knowledge_with_degree = None
+        self.graph_context_head = None
+
+        self.embed_dim = None
+        self.is_graph_rag_recall = None
         return CStatus()
 
     def to_json(self):
@@ -206,7 +259,11 @@ class WkFlowState(GParam):
             dict: A dictionary containing non-None instance members and their serialized values.
         """
         # Only export instance attributes (excluding methods and class attributes) whose values are not None
-        return {k: v for k, v in self.__dict__.items() if not k.startswith("_") and v is not None}
+        return {
+            k: v
+            for k, v in self.__dict__.items()
+            if not k.startswith("_") and v is not None
+        }
 
     # Implement a method that assigns keys from data_json as WkFlowState member variables
     def assign_from_json(self, data_json: dict):
@@ -214,4 +271,9 @@ class WkFlowState(GParam):
         Assigns each key in the input json object as a member variable of WkFlowState.
         """
         for k, v in data_json.items():
-            setattr(self, k, v)
+            if hasattr(self, k):
+                setattr(self, k, v)
+            else:
+                log.warning(
+                    "key %s should be a member of WkFlowState & type %s", k, type(v)
+                )

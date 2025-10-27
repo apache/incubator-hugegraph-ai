@@ -31,11 +31,8 @@ def init_context(obj: Any) -> CStatus:
     Returns:
         CStatus: Empty status on success, error status with code -1 on failure
     """
-    try:
-        obj.context = obj.getGParamWithNoEmpty("wkflow_state")
-        obj.wk_input = obj.getGParamWithNoEmpty("wkflow_input")
-        if obj.context is None or obj.wk_input is None:
-            return CStatus(-1, "Required workflow parameters not found")
-        return CStatus()
-    except Exception as e:
-        return CStatus(-1, f"Failed to initialize context: {str(e)}")
+    obj.context = obj.getGParamWithNoEmpty("wkflow_state")
+    obj.wk_input = obj.getGParamWithNoEmpty("wkflow_input")
+    if obj.context is None or obj.wk_input is None:
+        return CStatus(-1, "Required workflow parameters not found")
+    return CStatus()

@@ -32,20 +32,21 @@ from hugegraph_llm.utils.log import log
 
 class GraphRecallCondition(GCondition):
     def choose(self):
-        prepare_input: WkFlowInput = cast(
+        prepared_input: WkFlowInput = cast(
             WkFlowInput, self.getGParamWithNoEmpty("wkflow_input")
         )
-        return 0 if prepare_input.is_graph_rag_recall else 1
+        return 0 if prepared_input.is_graph_rag_recall else 1
 
 
 class VectorOnlyCondition(GCondition):
     def choose(self):
-        prepare_input: WkFlowInput = cast(
+        prepared_input: WkFlowInput = cast(
             WkFlowInput, self.getGParamWithNoEmpty("wkflow_input")
         )
-        return 0 if prepare_input.is_vector_only else 1
+        return 0 if prepared_input.is_vector_only else 1
 
 
+# pylint: disable=arguments-differ,keyword-arg-before-vararg
 class RAGGraphOnlyFlow(BaseFlow):
     """
     Workflow for graph-only answering (graph_only_answer)
@@ -74,7 +75,7 @@ class RAGGraphOnlyFlow(BaseFlow):
         topk_per_keyword: Optional[int] = None,
         is_graph_rag_recall: bool = False,
         is_vector_only: bool = False,
-        **_: dict,
+        **kwargs,
     ):
         prepared_input.query = query
         prepared_input.vector_search = vector_search
@@ -85,8 +86,12 @@ class RAGGraphOnlyFlow(BaseFlow):
         prepared_input.graph_vector_answer = graph_vector_answer
         prepared_input.gremlin_tmpl_num = gremlin_tmpl_num
         prepared_input.gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
-        prepared_input.max_graph_items = max_graph_items or huge_settings.max_graph_items
-        prepared_input.topk_per_keyword = topk_per_keyword or huge_settings.topk_per_keyword
+        prepared_input.max_graph_items = (
+            max_graph_items or huge_settings.max_graph_items
+        )
+        prepared_input.topk_per_keyword = (
+            topk_per_keyword or huge_settings.topk_per_keyword
+        )
         prepared_input.topk_return_results = (
             topk_return_results or huge_settings.topk_return_results
         )
@@ -109,8 +114,8 @@ class RAGGraphOnlyFlow(BaseFlow):
             "vector_search": vector_search,
             "graph_search": graph_search,
             "max_graph_items": max_graph_items or huge_settings.max_graph_items,
+            "is_graph_rag_recall": is_graph_rag_recall,
         }
-        return
 
     def build_flow(self, **kwargs):
         pipeline = GPipeline()
@@ -151,25 +156,18 @@ class RAGGraphOnlyFlow(BaseFlow):
         log.info("RAGGraphOnlyFlow pipeline built successfully")
         return pipeline
 
-    def post_deal(self, pipeline=None):
+    def post_deal(self, pipeline=None, **kwargs):
         if pipeline is None:
             return {"error": "No pipeline provided"}
-        try:
-            prepare_input = cast(
-                WkFlowInput, pipeline.getGParamWithNoEmpty("wkflow_input")
-            )
-            res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
-            log.info("RAGGraphOnlyFlow post processing success")
-            return (
-                {
-                    "raw_answer": res.get("raw_answer", ""),
-                    "vector_only_answer": res.get("vector_only_answer", ""),
-                    "graph_only_answer": res.get("graph_only_answer", ""),
-                    "graph_vector_answer": res.get("graph_vector_answer", ""),
-                }
-                if not prepare_input.is_graph_rag_recall
-                else res
-            )
-        except Exception as e:
-            log.error("RAGGraphOnlyFlow post processing failed: %s", e)
-            return {"error": f"Post processing failed: {str(e)}"}
+        res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
+        log.info("RAGGraphOnlyFlow post processing success")
+        return (
+            {
+                "raw_answer": res.get("raw_answer", ""),
+                "vector_only_answer": res.get("vector_only_answer", ""),
+                "graph_only_answer": res.get("graph_only_answer", ""),
+                "graph_vector_answer": res.get("graph_vector_answer", ""),
+            }
+            if not res.get("is_graph_rag_recall", False)
+            else res
+        )

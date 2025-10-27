@@ -13,10 +13,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from PyCGraph import CStatus
 from typing import Optional
 
-from hugegraph_llm.utils.log import log
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.hugegraph_op.fetch_graph_data import FetchGraphData
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
@@ -29,11 +27,7 @@ class FetchGraphDataNode(BaseNode):
     wk_input: Optional[WkFlowInput] = None
 
     def node_init(self):
-        try:
-            client = get_hg_client()
-        except Exception as e:
-            log.error("Failed to initialize HugeGraph client: %s", e)
-            return CStatus(-1, f"Failed to initialize HugeGraph client: {e}")
+        client = get_hg_client()
         self.fetch_graph_data_op = FetchGraphData(client)
         return super().node_init()
 

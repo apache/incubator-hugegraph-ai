@@ -17,7 +17,7 @@ from typing import Dict, Any
 from hugegraph_llm.config import index_settings
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
-from hugegraph_llm.models.embeddings.init_embedding import Embeddings
+from hugegraph_llm.models.embeddings.init_embedding import get_embedding, llm_settings
 from hugegraph_llm.utils.log import log
 
 
@@ -38,7 +38,7 @@ class VectorQueryNode(BaseNode):
             
             # 从 wk_input 中读取用户配置参数
             vector_index = get_vector_index_class(index_settings.cur_vector_index)
-            embedding = Embeddings().get_embedding()
+            embedding = get_embedding(llm_settings)
             max_items = self.wk_input.max_items if self.wk_input.max_items is not None else 3
 
             self.operator = VectorIndexQuery(vector_index=vector_index, embedding=embedding, topk=max_items)
@@ -66,7 +66,8 @@ class VectorQueryNode(BaseNode):
             # Update the state
             data_json.update(result)
             log.info(
-                f"Vector query completed, found {len(result.get('vector_result', []))} results"
+                "Vector query completed, found %d results",
+                len(result.get("vector_result", [])),
             )
 
             return data_json

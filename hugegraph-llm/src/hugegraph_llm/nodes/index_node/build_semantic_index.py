@@ -14,7 +14,7 @@
 #  limitations under the License.
 
 from hugegraph_llm.config import index_settings
-from hugegraph_llm.models.embeddings.init_embedding import Embeddings
+from hugegraph_llm.models.embeddings.init_embedding import get_embedding, llm_settings
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.build_semantic_index import BuildSemanticIndex
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
@@ -30,7 +30,8 @@ class BuildSemanticIndexNode(BaseNode):
         from hugegraph_llm.utils.vector_index_utils import get_vector_index_class  # pylint: disable=import-outside-toplevel
         
         vector_index = get_vector_index_class(index_settings.cur_vector_index)
-        self.build_semantic_index_op = BuildSemanticIndex(Embeddings().get_embedding(), vector_index)
+        embedding = get_embedding(llm_settings)
+        self.build_semantic_index_op = BuildSemanticIndex(embedding, vector_index)
         return super().node_init()
 
     def operator_schedule(self, data_json):

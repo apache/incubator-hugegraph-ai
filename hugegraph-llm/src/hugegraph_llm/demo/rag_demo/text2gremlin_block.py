@@ -25,6 +25,7 @@ import gradio as gr
 import pandas as pd
 
 from hugegraph_llm.config import prompt, resource_path, huge_settings
+from hugegraph_llm.flows import FlowName
 from hugegraph_llm.utils.embedding_utils import get_index_folder_name
 from hugegraph_llm.utils.hugegraph_utils import run_gremlin_query
 from hugegraph_llm.utils.log import log
@@ -117,7 +118,7 @@ def build_example_vector_index(temp_file) -> dict:
         return {"error": "Unsupported file format. Please input a JSON or CSV file."}
 
     return SchedulerSingleton.get_instance().schedule_flow(
-        "build_examples_index", examples
+        FlowName.BUILD_EXAMPLES_INDEX, examples
     )
 
 
@@ -213,7 +214,7 @@ def gremlin_generate_for_ui(inp, example_num, schema, gremlin_prompt):
     # Execute via scheduler
     try:
         res = SchedulerSingleton.get_instance().schedule_flow(
-            "text2gremlin",
+            FlowName.TEXT2GREMLIN,
             inp,
             int(example_num) if isinstance(example_num, (int, float, str)) else 2,
             schema,
@@ -337,7 +338,7 @@ def graph_rag_recall(
 ) -> dict:
     store_schema(prompt.text2gql_graph_schema, query, gremlin_prompt)
     context = SchedulerSingleton.get_instance().schedule_flow(
-        "rag_graph_only",
+        FlowName.RAG_GRAPH_ONLY,
         query=query,
         gremlin_tmpl_num=gremlin_tmpl_num,
         rerank_method=rerank_method,
@@ -362,7 +363,7 @@ def gremlin_generate_selective(
     requested_outputs: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     response_dict = SchedulerSingleton.get_instance().schedule_flow(
-        "text2gremlin",
+        FlowName.TEXT2GREMLIN,
         inp,
         example_num,
         schema_input,

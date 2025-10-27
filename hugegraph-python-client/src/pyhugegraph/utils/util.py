@@ -60,7 +60,7 @@ def check_if_success(response, error=None):
         response_body = response.text if response.text else "Empty body"
         log.error(
             "Error-Client: Request URL: %s, Request Body: %s, Response Body: %s",
-            getattr(req, "url", "Unknown URL"),
+            req.url,
             req_body,
             response_body,
         )

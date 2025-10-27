@@ -26,27 +26,26 @@ class BaseFlow(ABC):
     """
 
     @abstractmethod
-    def prepare(self, prepared_input: WkFlowInput, *args, **kwargs):
+    def prepare(self, prepared_input: WkFlowInput, **kwargs):
         """
         Pre-processing interface.
         """
-        pass
 
     @abstractmethod
-    def build_flow(self, *args, **kwargs):
+    def build_flow(self, **kwargs):
         """
         Interface for building the flow.
         """
-        pass
 
     @abstractmethod
-    def post_deal(self, *args, **kwargs):
+    def post_deal(self, **kwargs):
         """
         Post-processing interface.
         """
-        pass
 
-    async def post_deal_stream(self, pipeline=None) -> AsyncGenerator[Dict[str, Any], None]:
+    async def post_deal_stream(
+        self, pipeline=None
+    ) -> AsyncGenerator[Dict[str, Any], None]:
         """
         Streaming post-processing interface.
         Subclasses can override this method as needed.
@@ -55,15 +54,11 @@ class BaseFlow(ABC):
         if pipeline is None:
             yield {"error": "No pipeline provided"}
             return
-        try:
-            state_json = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
-            log.info("%s post processing success", flow_name)
-            stream_flow = state_json.get("stream_generator")
-            if stream_flow is None:
-                yield {"error": "No stream_generator found in workflow state"}
-                return
-            async for chunk in stream_flow:
-                yield chunk
-        except Exception as e:
-            log.error("%s post processing failed: %s", flow_name, e)
-            yield {"error": f"Post processing failed: {str(e)}"}
+        state_json = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
+        log.info("%s post processing success", flow_name)
+        stream_flow = state_json.get("stream_generator")
+        if stream_flow is None:
+            yield {"error": "No stream_generator found in workflow state"}
+            return
+        async for chunk in stream_flow:
+            yield chunk

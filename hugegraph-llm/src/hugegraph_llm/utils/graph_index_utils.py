@@ -21,6 +21,7 @@ import traceback
 from typing import Dict, Any, Union, List
 
 import gradio as gr
+from hugegraph_llm.flows import FlowName
 from hugegraph_llm.flows.scheduler import SchedulerSingleton
 from pyhugegraph.client import PyHugeClient
 
@@ -29,14 +30,14 @@ from .hugegraph_utils import clean_hg_data
 from .log import log
 from .vector_index_utils import read_documents
 from ..config import resource_path, huge_settings, llm_settings
-from ..indices.vector_index.faiss_vector_store import FaissVectorIndex
+from ..indices.vector_index import VectorIndex
 from ..models.embeddings.init_embedding import Embeddings
 
 
 def get_graph_index_info():
     try:
         scheduler = SchedulerSingleton.get_instance()
-        return scheduler.schedule_flow("get_graph_index_info")
+        return scheduler.schedule_flow(FlowName.GET_GRAPH_INDEX_INFO)
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
         raise gr.Error(str(e))
@@ -50,10 +51,10 @@ def clean_all_graph_index():
         llm_settings.embedding_type,
         getattr(Embeddings().get_embedding(), "model_name", None),
     )
-    FaissVectorIndex.clean(
+    VectorIndex.clean(
         str(os.path.join(resource_path, folder_name, "graph_vids")), filename_prefix
     )
-    FaissVectorIndex.clean(
+    VectorIndex.clean(
         str(os.path.join(resource_path, folder_name, "gremlin_examples")),
         filename_prefix,
     )
@@ -96,7 +97,7 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
 
     try:
         return scheduler.schedule_flow(
-            "graph_extract", schema, texts, example_prompt, "property_graph"
+            FlowName.GRAPH_EXTRACT, schema, texts, example_prompt, "property_graph"
         )
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
@@ -106,7 +107,7 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
 def update_vid_embedding():
     scheduler = SchedulerSingleton.get_instance()
     try:
-        return scheduler.schedule_flow("update_vid_embeddings")
+        return scheduler.schedule_flow(FlowName.UPDATE_VID_EMBEDDINGS)
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
         raise gr.Error(str(e))
@@ -115,7 +116,7 @@ def update_vid_embedding():
 def import_graph_data(data: str, schema: str) -> Union[str, Dict[str, Any]]:
     try:
         scheduler = SchedulerSingleton.get_instance()
-        return scheduler.schedule_flow("import_graph_data", data, schema)
+        return scheduler.schedule_flow(FlowName.IMPORT_GRAPH_DATA, data, schema)
     except Exception as e:  # pylint: disable=W0718
         log.error(e)
         traceback.print_exc()
@@ -128,7 +129,7 @@ def build_schema(input_text, query_example, few_shot):
     scheduler = SchedulerSingleton.get_instance()
     try:
         return scheduler.schedule_flow(
-            "build_schema", input_text, query_example, few_shot
+            FlowName.BUILD_SCHEMA, input_text, query_example, few_shot
         )
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error("Schema generation failed: %s", e)

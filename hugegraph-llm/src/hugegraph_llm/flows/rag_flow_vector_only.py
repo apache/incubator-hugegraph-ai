@@ -13,7 +13,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import json
 
 from typing import Optional, Literal
 
@@ -28,6 +27,7 @@ from hugegraph_llm.config import huge_settings, prompt
 from hugegraph_llm.utils.log import log
 
 
+# pylint: disable=arguments-differ,keyword-arg-before-vararg
 class RAGVectorOnlyFlow(BaseFlow):
     """
     Workflow for vector-only answering (vector_only_answer)
@@ -37,20 +37,20 @@ class RAGVectorOnlyFlow(BaseFlow):
         self,
         prepared_input: WkFlowInput,
         query: str,
-        vector_search: bool = None,
-        graph_search: bool = None,
-        raw_answer: bool = None,
-        vector_only_answer: bool = None,
-        graph_only_answer: bool = None,
-        graph_vector_answer: bool = None,
+        vector_search: bool = True,
+        graph_search: bool = False,
+        raw_answer: bool = False,
+        vector_only_answer: bool = True,
+        graph_only_answer: bool = False,
+        graph_vector_answer: bool = False,
         rerank_method: Literal["bleu", "reranker"] = "bleu",
         near_neighbor_first: bool = False,
         custom_related_information: str = "",
         answer_prompt: Optional[str] = None,
-        max_graph_items: int = None,
-        topk_return_results: int = None,
-        vector_dis_threshold: float = None,
-        **_: dict,
+        max_graph_items: Optional[int] = None,
+        topk_return_results: Optional[int] = None,
+        vector_dis_threshold: Optional[float] = None,
+        **kwargs,
     ):
         prepared_input.query = query
         prepared_input.vector_search = vector_search
@@ -77,7 +77,6 @@ class RAGVectorOnlyFlow(BaseFlow):
             "graph_search": graph_search,
             "max_graph_items": max_graph_items or huge_settings.max_graph_items,
         }
-        return
 
     def build_flow(self, **kwargs):
         pipeline = GPipeline()
@@ -93,27 +92,21 @@ class RAGVectorOnlyFlow(BaseFlow):
 
         # Register nodes and dependencies, keep naming consistent with original
         pipeline.registerGElement(only_vector_query_node, set(), "only_vector")
-        pipeline.registerGElement(merge_rerank_node, {only_vector_query_node}, "merge_two")
+        pipeline.registerGElement(
+            merge_rerank_node, {only_vector_query_node}, "merge_two"
+        )
         pipeline.registerGElement(answer_synthesize_node, {merge_rerank_node}, "vector")
         log.info("RAGVectorOnlyFlow pipeline built successfully")
         return pipeline
 
-    def post_deal(self, pipeline=None):
+    def post_deal(self, pipeline=None, **kwargs):
         if pipeline is None:
-            return json.dumps({"error": "No pipeline provided"}, ensure_ascii=False, indent=2)
-        try:
-            res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
-            log.info("RAGVectorOnlyFlow post processing success")
-            return {
-                "raw_answer": res.get("raw_answer", ""),
-                "vector_only_answer": res.get("vector_only_answer", ""),
-                "graph_only_answer": res.get("graph_only_answer", ""),
-                "graph_vector_answer": res.get("graph_vector_answer", ""),
-            }
-        except Exception as e:
-            log.error("RAGVectorOnlyFlow post processing failed: %s", e)
-            return json.dumps(
-                {"error": f"Post processing failed: {str(e)}"},
-                ensure_ascii=False,
-                indent=2,
-            )
+            return {"error": "No pipeline provided"}
+        res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
+        log.info("RAGVectorOnlyFlow post processing success")
+        return {
+            "raw_answer": res.get("raw_answer", ""),
+            "vector_only_answer": res.get("vector_only_answer", ""),
+            "graph_only_answer": res.get("graph_only_answer", ""),
+            "graph_vector_answer": res.get("graph_vector_answer", ""),
+        }

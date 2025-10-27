@@ -159,9 +159,12 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
     # Extracted from llm_op/keyword_extract.py
     keywords_extract_prompt_EN: str = """Instructions:
     Please perform the following tasks on the text below:
-    1. Extract keywords from the text:
+    1. Extract, evaluate, and rank keywords from the text:
        - Minimum 0, maximum MAX_KEYWORDS keywords.
-       - Keywords should be complete semantic words or phrases, ensuring information completeness.
+       - Keywords should be complete semantic words or phrases, ensuring information completeness, without any changes to the English capitalization.
+       - Assign an importance score to each keyword, as a float between 0.0 and 1.0. A higher score indicates a greater contribution to the core idea of the text.
+       - Keywords may contain spaces, but must not contain commas or colons.
+       - The final list of keywords must be sorted in descending order based on their importance score.
     2. Identify keywords that need rewriting:
        - From the extracted keywords, identify those that are ambiguous or lack information in the original context.
     3. Generate synonyms:
@@ -180,9 +183,9 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
     - Adjust keyword length: If keywords are relatively broad, you can appropriately increase individual keyword length based on context (e.g., "illegal behavior" can be extracted as a single keyword, or as "illegal", but should not be split into "illegal" and "behavior").
 
     Output Format:
-    - Output only one line, prefixed with KEYWORDS:, followed by all keywords or corresponding synonyms, separated by commas. No spaces or empty characters are allowed in the extracted keywords.
+    - Output only one line, prefixed with KEYWORDS:, followed by a comma-separated list of items. Each item should be in the format keyword:importance_score(round to two decimal places). If a keyword has been replaced by a synonym, use the synonym as the keyword in the output. 
     - Format example:
-    KEYWORDS:keyword1,keyword2,...,keywordN
+    KEYWORDS:keyword1:score1,keyword2:score2,...,keywordN:scoreN
 
     MAX_KEYWORDS: {max_keywords}
     Text:
@@ -367,9 +370,12 @@ g.V().limit(10)
 
     keywords_extract_prompt_CN: str = """指令：
 请对以下文本执行以下任务：
-1. 从文本中提取关键词：
+1. 从文本中提取、评估与排序关键词：
   - 最少 0 个，最多 MAX_KEYWORDS 个。
-  - 关键词应为具有完整语义的词语或短语，确保信息完整。
+  - 关键词应为具有完整语义的词语或短语，确保信息完整，英文大小写不做改动。
+  - 为每个关键词进行重要性评分，分值在 0.0 到 1.0 之间，浮点数表示，分数越高代表其对文本核心思想的贡献越大。
+  - 关键词内不得包含逗号或冒号（用于分隔）。
+  - 最终输出的关键词列表必须按照重要性评分 **从高到低** 进行排序。
 2. 识别需改写的关键词：
   - 从提取的关键词中，识别那些在原语境中具有歧义或存在信息缺失的关键词。
 3. 生成同义词：
@@ -385,9 +391,9 @@ g.V().limit(10)
 - 仅考虑语境相关的同义词：只需考虑给定语境下的关键词的语义近义词和具有类似含义的其他词语。
 - 调整关键词长度：如果关键词相对宽泛，可以根据语境适当增加单个关键词的长度（例如：“违法行为”可以作为一个单独的关键词被抽取，或抽取为“违法”，但不应拆分为“违法”和“行为”）。
 输出格式：
-- 仅输出一行内容，以 KEYWORDS: 为前缀，后跟所有关键词或对应的同义词，之间用逗号分隔。抽取的关键词中不允许出现空格或空字符
+- 仅输出一行内容，以 KEYWORDS: 为前缀，后跟列表项，关键词提取列表项为 关键词：重要性评分，评分建议保留两位小数，同义词提取列表项为对应的同义词，列表项之间用逗号分隔。
 - 格式示例：
-KEYWORDS:关键词 1，关键词 2,...,关键词 n
+KEYWORDS:关键词_1：分数_1，关键词_2：分数_2，...,关键词_n：分数_n
 
 MAX_KEYWORDS: {max_keywords}
 文本：

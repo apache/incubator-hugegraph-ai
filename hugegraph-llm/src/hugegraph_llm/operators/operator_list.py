@@ -64,8 +64,8 @@ class OperatorList:
         self.operators = []
         return self
 
-    def example_index_build(self, examples, vector_index):
-        self.operators.append(BuildGremlinExampleIndex(self.embedding, examples, vector_index))
+    def example_index_build(self, examples):
+        self.operators.append(BuildGremlinExampleIndex(self.embedding, examples))
         return self
 
     def import_schema(
@@ -81,8 +81,8 @@ class OperatorList:
             raise ValueError("No input data / invalid schema type")
         return self
 
-    def example_index_query(self, num_examples, vector_index):
-        self.operators.append(GremlinExampleIndexQuery(vector_index, self.embedding, num_examples))
+    def example_index_query(self, num_examples):
+        self.operators.append(GremlinExampleIndexQuery(self.embedding, num_examples))
         return self
 
     def gremlin_generate_synthesize(
@@ -124,6 +124,10 @@ class OperatorList:
             self.operators.append(InfoExtract(self.llm, example_prompt))
         elif extract_type == "property_graph":
             self.operators.append(PropertyGraphExtract(self.llm, example_prompt))
+        else:
+            raise ValueError(
+                f"invalid extract_type: {extract_type!r}, expected 'triples' or 'property_graph'"
+            )
         return self
 
     def disambiguate_word_sense(self):
@@ -134,54 +138,43 @@ class OperatorList:
         self.operators.append(Commit2Graph())
         return self
 
-    def build_vertex_id_semantic_index(self, vector_index):
-        self.operators.append(BuildSemanticIndex(self.embedding, vector_index))
+    def build_vertex_id_semantic_index(self):
+        self.operators.append(BuildSemanticIndex(self.embedding))
         return self
 
-    def build_vector_index(self, vector_index):
-        self.operators.append(BuildVectorIndex(self.embedding, vector_index))
+    def build_vector_index(self):
+        self.operators.append(BuildVectorIndex(self.embedding))
         return self
 
-    def extract_word(self, text: Optional[str] = None, language: str = "english"):
+    def extract_word(self, text: Optional[str] = None):
         """
         Add a word extraction operator to the pipeline.
 
         :param text: Text to extract words from.
-        :param language: Language of the text.
         :return: Self-instance for chaining.
         """
-        self.operators.append(WordExtract(text=text, language=language))
+        self.operators.append(WordExtract(text=text))
         return self
 
     def extract_keywords(
         self,
         text: Optional[str] = None,
-        max_keywords: int = 5,
-        language: str = "english",
         extract_template: Optional[str] = None,
     ):
         """
         Add a keyword extraction operator to the pipeline.
 
         :param text: Text to extract keywords from.
-        :param max_keywords: Maximum number of keywords to extract.
-        :param language: Language of the text.
         :param extract_template: Template for keyword extraction.
         :return: Self-instance for chaining.
         """
         self.operators.append(
-            KeywordExtract(
-                text=text,
-                max_keywords=max_keywords,
-                language=language,
-                extract_template=extract_template,
-            )
+            KeywordExtract(text=text, extract_template=extract_template)
         )
         return self
 
     def keywords_to_vid(
         self,
-        vector_index,
         by: Literal["query", "keywords"] = "keywords",
         topk_per_keyword: int = huge_settings.topk_per_keyword,
         topk_per_query: int = 10,
@@ -189,7 +182,6 @@ class OperatorList:
     ):
         """
         Add a semantic ID query operator to the pipeline.
-        :param vector_index: Vector index class to use.
         :param by: Match by query or keywords.
         :param topk_per_keyword: Top K results per keyword.
         :param topk_per_query: Top K results per query.
@@ -199,7 +191,6 @@ class OperatorList:
         self.operators.append(
             SemanticIdQuery(
                 embedding=self.embedding,
-                vector_index=vector_index,
                 by=by,
                 topk_per_keyword=topk_per_keyword,
                 topk_per_query=topk_per_query,
@@ -208,17 +199,15 @@ class OperatorList:
         )
         return self
 
-    def query_vector_index(self, vector_index, max_items: int = 3):
+    def query_vector_index(self, max_items: int = 3):
         """
         Add a vector index query operator to the pipeline.
 
-        :param vector_index: Vector index class to use.
         :param max_items: Maximum number of items to retrieve.
         :return: Self-instance for chaining.
         """
         self.operators.append(
             VectorIndexQuery(
-                vector_index=vector_index,
                 embedding=self.embedding,
                 topk=max_items,
             )

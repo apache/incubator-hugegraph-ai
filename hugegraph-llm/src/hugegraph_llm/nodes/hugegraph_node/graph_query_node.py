@@ -14,9 +14,8 @@
 #  limitations under the License.
 
 import json
-
-from PyCGraph import CStatus
 from typing import Dict, Any, Tuple, List, Set, Optional
+
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.config import huge_settings, prompt
 from hugegraph_llm.operators.operator_list import OperatorList
@@ -77,38 +76,47 @@ class GraphQueryNode(BaseNode):
     Graph query node, responsible for retrieving relevant information from the graph database.
     """
 
+    _client: Optional[PyHugeClient] = None
+    _max_deep: Optional[int] = None
+    _max_items: Optional[int] = None
+    _prop_to_match: Optional[str] = None
+    _num_gremlin_generate_example: int = -1
+    gremlin_prompt: str = ""
+    _limit_property: bool = False
+    _max_v_prop_len: int = 2048
+    _max_e_prop_len: int = 256
+    _schema: str = ""
+    operator_list: Optional[OperatorList] = None
+
     def node_init(self):
         """
         Initialize the graph query operator.
         """
-        try:
-            self._client: PyHugeClient = PyHugeClient(
-                url=huge_settings.graph_url,
-                graph=huge_settings.graph_name,
-                user=huge_settings.graph_user,
-                pwd=huge_settings.graph_pwd,
-                graphspace=huge_settings.graph_space,
-            )
-            self._max_deep = self.wk_input.max_deep or 2
-            self._max_items = (
-                self.wk_input.max_graph_items or huge_settings.max_graph_items
-            )
-            self._prop_to_match = self.wk_input.prop_to_match
-            self._num_gremlin_generate_example = self.wk_input.gremlin_tmpl_num or -1
-            self.gremlin_prompt = (
-                self.wk_input.gremlin_prompt or prompt.gremlin_generate_prompt
-            )
-            self._limit_property = huge_settings.limit_property.lower() == "true"
-            self._max_v_prop_len = self.wk_input.max_v_prop_len or 2048
-            self._max_e_prop_len = self.wk_input.max_e_prop_len or 256
-            self._schema = ""
-            self.operator_list = OperatorList(None, None)
+        self._client: PyHugeClient = PyHugeClient(
+            url=huge_settings.graph_url,
+            graph=huge_settings.graph_name,
+            user=huge_settings.graph_user,
+            pwd=huge_settings.graph_pwd,
+            graphspace=huge_settings.graph_space,
+        )
+        self._max_deep = self.wk_input.max_deep or 2
+        self._max_items = self.wk_input.max_graph_items or huge_settings.max_graph_items
+        self._prop_to_match = self.wk_input.prop_to_match
+        self._num_gremlin_generate_example = (
+            self.wk_input.gremlin_tmpl_num
+            if self.wk_input.gremlin_tmpl_num is not None
+            else -1
+        )
+        self.gremlin_prompt = (
+            self.wk_input.gremlin_prompt or prompt.gremlin_generate_prompt
+        )
+        self._limit_property = huge_settings.limit_property.lower() == "true"
+        self._max_v_prop_len = self.wk_input.max_v_prop_len or 2048
+        self._max_e_prop_len = self.wk_input.max_e_prop_len or 256
+        self._schema = ""
+        self.operator_list = OperatorList(None, None)
 
-            return super().node_init()
-        except Exception as e:
-            log.error(f"Failed to initialize GraphQueryNode: {e}")
-
-            return CStatus(-1, f"GraphQueryNode initialization failed: {e}")
+        return super().node_init()
 
     # TODO: move this method to a util file for reuse (remove self param)
     def init_client(self, context):
@@ -159,7 +167,7 @@ class GraphQueryNode(BaseNode):
                     f"The following are graph query result "
                     f"from gremlin query `{gremlin}`.\n"
                 )
-        except Exception as e:  # pylint: disable=broad-except
+        except Exception as e:  # pylint: disable=broad-except,broad-exception-caught
             log.error(e)
             context["graph_result"] = []
         return context
@@ -490,11 +498,12 @@ class GraphQueryNode(BaseNode):
                 log.debug("No Knowledge Extracted from Graph")
 
             log.info(
-                f"Graph query completed, found {len(data_json.get('graph_result', []))} results"
+                "Graph query completed, found %d results",
+                len(data_json.get("graph_result", [])),
             )
 
             return data_json
 
-        except Exception as e:
-            log.error(f"Graph query failed: {e}")
+        except Exception as e:  # pylint: disable=broad-except,broad-exception-caught
+            log.error("Graph query failed: %s", e)
             return data_json

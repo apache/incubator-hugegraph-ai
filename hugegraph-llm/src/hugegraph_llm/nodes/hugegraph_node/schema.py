@@ -39,12 +39,11 @@ class SchemaNode(BaseNode):
     ):
         if from_hugegraph:
             return SchemaManager(from_hugegraph)
-        elif from_user_defined:
+        if from_user_defined:
             return CheckSchema(from_user_defined)
-        elif from_extraction:
+        if from_extraction:
             raise NotImplementedError("Not implemented yet")
-        else:
-            raise ValueError("No input data / invalid schema type")
+        raise ValueError("No input data / invalid schema type")
 
     def node_init(self):
         if self.wk_input.schema is None:
@@ -66,6 +65,5 @@ class SchemaNode(BaseNode):
         log.debug("SchemaNode input state: %s", data_json)
         if self.schema.startswith("{"):
             return self.check_schema.run(data_json)
-        else:
-            log.info("Get schema '%s' from graphdb.", self.schema)
-            return self.schema_manager.run(data_json)
+        log.info("Get schema '%s' from graphdb.", self.schema)
+        return self.schema_manager.run(data_json)

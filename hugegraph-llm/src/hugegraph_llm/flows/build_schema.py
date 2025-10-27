@@ -13,15 +13,17 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import json
+
+from PyCGraph import GPipeline
+
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 from hugegraph_llm.nodes.llm_node.schema_build import SchemaBuildNode
 from hugegraph_llm.utils.log import log
 
-import json
-from PyCGraph import GPipeline
 
-
+# pylint: disable=arguments-differ,keyword-arg-before-vararg
 class BuildSchemaFlow(BaseFlow):
     def __init__(self):
         pass
@@ -32,15 +34,17 @@ class BuildSchemaFlow(BaseFlow):
         texts=None,
         query_examples=None,
         few_shot_schema=None,
+        **kwargs,
     ):
         prepared_input.texts = texts
         # Optional fields packed into wk_input for SchemaBuildNode
         # Keep raw values; node will parse if strings
         prepared_input.query_examples = query_examples
         prepared_input.few_shot_schema = few_shot_schema
-        return
 
-    def build_flow(self, texts=None, query_examples=None, few_shot_schema=None):
+    def build_flow(
+        self, texts=None, query_examples=None, few_shot_schema=None, **kwargs
+    ):
         pipeline = GPipeline()
         prepared_input = WkFlowInput()
         self.prepare(
@@ -58,7 +62,7 @@ class BuildSchemaFlow(BaseFlow):
 
         return pipeline
 
-    def post_deal(self, pipeline=None):
+    def post_deal(self, pipeline=None, **kwargs):
         state_json = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
         if "schema" not in state_json:
             return ""

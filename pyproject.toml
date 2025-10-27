@@ -104,6 +104,8 @@ constraint-dependencies = [
     "numpy~=1.24.4",
     "pandas~=2.2.3", # TODO: replace by polars(rust) in the future
     "pydantic~=2.10.6",
+    "scipy~=1.15.3", # word segment need
+    "python-igraph~=0.11.9", # textrank need
 
     # LLM dependencies
     "openai~=1.61.0",
@@ -122,6 +124,7 @@ constraint-dependencies = [
     "pydantic-settings~=2.6.1",
     "apscheduler~=3.10.4",
     "litellm~=1.61.13",
+
 
     # ML dependencies
     "dgl~=2.1.0",
