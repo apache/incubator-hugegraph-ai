@@ -116,7 +116,7 @@ def apply_vector_engine(engine: str):
     gr.Info("Configured!")
 
 
-def apply_vector_engine_backend(
+def apply_vector_engine_backend(  # pylint: disable=too-many-branches
     engine: str,
     host: Optional[str] = None,
     port: Optional[str] = None,
@@ -152,7 +152,7 @@ def apply_vector_engine_backend(
         if origin_call is None:
             raise gr.Error(msg) from e
         return -1
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         msg = f"Connection failed: {e}"
         log.error(msg)
         if origin_call is None:

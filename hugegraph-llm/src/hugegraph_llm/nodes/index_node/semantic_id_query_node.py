@@ -77,7 +77,7 @@ class SemanticIdQueryNode(BaseNode):
             )
 
             return super().node_init()
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             log.error("Failed to initialize SemanticIdQueryNode: %s", e)
 
             return CStatus(-1, f"SemanticIdQueryNode initialization failed: {e}")

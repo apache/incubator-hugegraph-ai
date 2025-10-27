@@ -18,7 +18,7 @@
 import json
 from typing import Any, List, Set, Union
 
-from pymilvus import (
+from pymilvus import (  # pylint: disable=import-error
     Collection,
     CollectionSchema,
     DataType,

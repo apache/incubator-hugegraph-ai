@@ -18,8 +18,8 @@
 from typing import Any, Dict, List, Set, Union
 import uuid
 
-from qdrant_client import QdrantClient
-from qdrant_client.http import models
+from qdrant_client import QdrantClient  # pylint: disable=import-error
+from qdrant_client.http import models  # pylint: disable=import-error
 
 from hugegraph_llm.config import index_settings
 from hugegraph_llm.indices.vector_index.base import VectorStoreBase

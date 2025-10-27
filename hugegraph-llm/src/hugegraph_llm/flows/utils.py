@@ -31,4 +31,3 @@ def prepare_schema(prepared_input: WkFlowInput, schema: str) -> None:
     else:
         log.info("Get schema '%s' from graphdb.", schema)
         prepared_input.graph_name = schema
-    return

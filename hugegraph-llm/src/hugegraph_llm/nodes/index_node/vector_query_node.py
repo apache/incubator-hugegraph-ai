@@ -44,7 +44,7 @@ class VectorQueryNode(BaseNode):
 
             self.operator = VectorIndexQuery(vector_index=vector_index, embedding=embedding, topk=max_items)
             return super().node_init()
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             log.error("Failed to initialize VectorQueryNode: %s", e)
             from PyCGraph import CStatus
 
@@ -73,6 +73,6 @@ class VectorQueryNode(BaseNode):
 
             return data_json
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             log.error("Vector query failed: %s", e)
             return data_json
