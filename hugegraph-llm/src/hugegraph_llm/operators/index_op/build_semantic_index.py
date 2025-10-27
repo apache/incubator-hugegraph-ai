@@ -66,7 +66,7 @@ class BuildSemanticIndex:
             data.get("id_strategy") == "PRIMARY_KEY" for data in vertexlabels
         )
 
-        past_vids = self.vid_index.get_all_properties()  # only support Faiss
+        past_vids = self.vid_index.get_all_properties()
         # TODO: We should build vid vector index separately, especially when the vertices may be very large
         present_vids = context["vertices"]  # Warning: data truncated by fetch_graph_data.py
         removed_vids = set(past_vids) - set(present_vids)
