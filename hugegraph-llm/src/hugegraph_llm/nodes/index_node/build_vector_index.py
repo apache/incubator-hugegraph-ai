@@ -13,8 +13,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from hugegraph_llm.config import llm_settings
-from hugegraph_llm.models.embeddings.init_embedding import get_embedding
+from hugegraph_llm.config import index_settings
+from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.build_vector_index import BuildVectorIndex
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
@@ -26,7 +26,13 @@ class BuildVectorIndexNode(BaseNode):
     wk_input: WkFlowInput = None
 
     def node_init(self):
-        self.build_vector_index_op = BuildVectorIndex(get_embedding(llm_settings))
+        # Lazy import to avoid circular dependency
+        # pylint: disable=import-outside-toplevel
+        from hugegraph_llm.utils.vector_index_utils import get_vector_index_class
+
+        vector_index = get_vector_index_class(index_settings.cur_vector_index)
+        embedding = Embeddings().get_embedding()
+        self.build_vector_index_op = BuildVectorIndex(embedding, vector_index)
         return super().node_init()
 
     def operator_schedule(self, data_json):

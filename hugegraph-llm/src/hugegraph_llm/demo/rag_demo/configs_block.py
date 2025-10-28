@@ -25,7 +25,7 @@ import requests
 from dotenv import dotenv_values
 from requests.auth import HTTPBasicAuth
 
-from hugegraph_llm.config import huge_settings, llm_settings
+from hugegraph_llm.config import huge_settings, index_settings, llm_settings
 from hugegraph_llm.models.embeddings.litellm import LiteLLMEmbedding
 from hugegraph_llm.models.llms.litellm import LiteLLMClient
 from hugegraph_llm.utils.log import log
@@ -104,6 +104,83 @@ def test_api_connection(
             except (json.decoder.JSONDecodeError, AttributeError) as e:
                 raise gr.Error(resp.text) from e
     return resp.status_code
+
+
+def apply_vector_engine(engine: str):
+    # Persist the vector engine selection
+    setattr(index_settings, "cur_vector_index", engine)
+    try:
+        index_settings.update_env()
+    except Exception:  # pylint: disable=W0718
+        pass
+    gr.Info("Configured!")
+
+
+def apply_vector_engine_backend(  # pylint: disable=too-many-branches
+    engine: str,
+    host: Optional[str] = None,
+    port: Optional[str] = None,
+    user: Optional[str] = None,
+    password: Optional[str] = None,
+    api_key: Optional[str] = None,
+    origin_call=None,
+) -> int:
+    """Test connection and persist per-engine connection settings"""
+    status_code = -1
+
+    # Test connection first
+    try:
+        if engine == "Milvus":
+            from pymilvus import connections, utility
+
+            connections.connect(
+                host=host, port=int(port or 19530), user=user or "", password=password or ""
+            )
+            # Test if we can list collections
+            _ = utility.list_collections()
+            connections.disconnect("default")
+            status_code = 200
+        elif engine == "Qdrant":
+            from qdrant_client import QdrantClient
+
+            client = QdrantClient(host=host, port=int(port or 6333), api_key=api_key)
+            # Test if we can get collections
+            _ = client.get_collections()
+            status_code = 200
+    except ImportError as e:
+        msg = f"Missing dependency: {e}. Please install with: uv sync --extra vectordb"
+        if origin_call is None:
+            raise gr.Error(msg) from e
+        return -1
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        msg = f"Connection failed: {e}"
+        log.error(msg)
+        if origin_call is None:
+            raise gr.Error(msg) from e
+        return -1
+
+    # Persist settings after successful test
+    if engine == "Milvus":
+        if host is not None:
+            index_settings.milvus_host = host
+        if port is not None and str(port).strip():
+            index_settings.milvus_port = int(port)  # type: ignore[arg-type]
+        index_settings.milvus_user = user or ""
+        index_settings.milvus_password = password or ""
+    elif engine == "Qdrant":
+        if host is not None:
+            index_settings.qdrant_host = host
+        if port is not None and str(port).strip():
+            index_settings.qdrant_port = int(port)  # type: ignore[arg-type]
+        # Empty string treated as None for api key
+        index_settings.qdrant_api_key = api_key or None
+
+    try:
+        index_settings.update_env()
+    except Exception:  # pylint: disable=W0718
+        pass
+    gr.Info("Configured!")
+    return status_code
 
 
 def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
@@ -652,6 +729,54 @@ def create_configs_block() -> list:
                 fn=apply_reranker_config,
                 inputs=reranker_config_input,  # pylint: disable=no-member
             )
+
+    with gr.Accordion("5. Set up the vector engine.", open=False):
+        engine_selector = gr.Dropdown(
+            choices=["Faiss", "Milvus", "Qdrant"],
+            value=index_settings.cur_vector_index,
+            label="Select vector engine.",
+        )
+        engine_selector.select(
+            fn=lambda engine: setattr(index_settings, "cur_vector_index", engine),
+            inputs=[engine_selector],
+        )
+
+        @gr.render(inputs=[engine_selector])
+        def vector_engine_settings(engine):
+            if engine == "Milvus":
+                with gr.Row():
+                    milvus_inputs = [
+                        gr.Textbox(value=index_settings.milvus_host, label="host"),
+                        gr.Textbox(value=str(index_settings.milvus_port), label="port"),
+                        gr.Textbox(value=index_settings.milvus_user, label="user"),
+                        gr.Textbox(
+                            value=index_settings.milvus_password, label="password", type="password"
+                        ),
+                    ]
+                apply_backend_button = gr.Button("Apply Configuration")
+                apply_backend_button.click(
+                    partial(apply_vector_engine_backend, "Milvus"), inputs=milvus_inputs
+                )
+            elif engine == "Qdrant":
+                with gr.Row():
+                    qdrant_inputs = [
+                        gr.Textbox(value=index_settings.qdrant_host, label="host"),
+                        gr.Textbox(value=str(index_settings.qdrant_port), label="port"),
+                        gr.Textbox(
+                            value=(index_settings.qdrant_api_key or ""),
+                            label="api_key",
+                            type="password",
+                        ),
+                    ]
+                apply_backend_button = gr.Button("Apply Configuration")
+                apply_backend_button.click(
+                    lambda h, p, k: apply_vector_engine_backend("Qdrant", h, p, None, None, k),
+                    inputs=qdrant_inputs,
+                )
+            else:
+                gr.Markdown("✅ Faiss 本地索引无需额外配置。")
+                apply_faiss_button = gr.Button("Apply Configuration")
+                apply_faiss_button.click(lambda: apply_vector_engine(engine))
 
     # The reason for returning this partial value is the functional need to refresh the ui
     return graph_config_input

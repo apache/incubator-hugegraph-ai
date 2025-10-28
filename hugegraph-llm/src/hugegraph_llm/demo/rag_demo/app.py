@@ -116,7 +116,7 @@ def init_rag_ui() -> gr.Interface:
         def refresh_ui_config_prompt() -> tuple:
             # we can use its __init__() for in-place reload
             # settings.from_env()
-            huge_settings.__init__()  # pylint: disable=C2801
+            huge_settings.__init__()  # type: ignore[misc] # pylint: disable=C2801
             prompt.ensure_yaml_file_exists()
             return (
                 huge_settings.graph_url,

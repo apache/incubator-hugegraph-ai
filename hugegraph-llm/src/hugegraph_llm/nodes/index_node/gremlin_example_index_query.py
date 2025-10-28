@@ -19,36 +19,37 @@ from typing import Any, Dict
 
 from PyCGraph import CStatus
 
-from hugegraph_llm.config import llm_settings
+from hugegraph_llm.config import index_settings
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.gremlin_example_index_query import (
     GremlinExampleIndexQuery,
 )
-from hugegraph_llm.models.embeddings.init_embedding import get_embedding
+from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 
 
 class GremlinExampleIndexQueryNode(BaseNode):
     operator: GremlinExampleIndexQuery
 
     def node_init(self):
+        # Lazy import to avoid circular dependency
+        # pylint: disable=import-outside-toplevel
+        from hugegraph_llm.utils.vector_index_utils import get_vector_index_class
+
         # Build operator (index lazy-loading handled in operator)
-        embedding = get_embedding(llm_settings)
+        vector_index = get_vector_index_class(index_settings.cur_vector_index)
+        embedding = Embeddings().get_embedding()
         example_num = getattr(self.wk_input, "example_num", None)
         if not isinstance(example_num, int):
             example_num = 2
         # Clamp to [0, 10]
         example_num = max(0, min(10, example_num))
         self.operator = GremlinExampleIndexQuery(
-            embedding=embedding, num_examples=example_num
+            vector_index=vector_index, embedding=embedding, num_examples=example_num
         )
-        return CStatus()
+        return super().node_init()
 
     def operator_schedule(self, data_json: Dict[str, Any]):
-        # Ensure query is present in context; degrade gracefully if empty
-        query = getattr(self.wk_input, "query", "") or ""
-        data_json["query"] = query
-        if not query:
-            data_json["match_result"] = []
-            return data_json
-        # Operator.run writes match_result into context
-        return self.operator.run(data_json)
+        try:
+            return self.operator.run(data_json)
+        except ValueError as err:
+            return {"status": CStatus(-1, str(err))}

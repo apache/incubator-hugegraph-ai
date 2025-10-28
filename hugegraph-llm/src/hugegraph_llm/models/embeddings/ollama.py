@@ -23,37 +23,40 @@ from .base import BaseEmbedding
 
 
 class OllamaEmbedding(BaseEmbedding):
-    def __init__(self, model_name: str, host: str = "127.0.0.1", port: int = 11434, **kwargs):
-        self.model_name = model_name
+    def __init__(
+        self,
+        model: str = "quentinz/bge-large-zh-v1.5",
+        embedding_dimension: int = 1024,
+        host: str = "127.0.0.1",
+        port: int = 11434,
+        **kwargs,
+    ):
+        self.model = model
         self.client = ollama.Client(host=f"http://{host}:{port}", **kwargs)
         self.async_client = ollama.AsyncClient(host=f"http://{host}:{port}", **kwargs)
-        self.embedding_dimension = None
+        self.embedding_dimension = embedding_dimension
+
+    def get_embedding_dim(
+        self,
+    ) -> int:
+        return self.embedding_dimension
 
     def get_text_embedding(self, text: str) -> List[float]:
-        """Get embedding for a single text."""
-        return self.get_texts_embeddings([text])[0]
+        """Comment"""
+        return list(self.client.embed(model=self.model, input=text)["embeddings"][0])
 
-    def get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """Get embeddings for multiple texts in a single batch.
+    def get_texts_embeddings(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
+        """Get embeddings for multiple texts with automatic batch splitting.
 
-        Returns
-        -------
-        List[List[float]]
-            A list of embedding vectors, where each vector is a list of floats.
-            The order of embeddings matches the order of input texts.
-        """
-        if not hasattr(self.client, "embed"):
-            error_message = (
-                "The required 'embed' method was not found on the Ollama client. "
-                "Please ensure your ollama library is up-to-date and supports batch embedding. "
-            )
-            raise AttributeError(error_message)
+        This method efficiently processes multiple texts by splitting them into
+        smaller batches to respect API rate limits and batch size constraints.
 
-        response = self.client.embed(model=self.model_name, input=texts)["embeddings"]
-        return [list(inner_sequence) for inner_sequence in response]
-
-    async def async_get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """Get embeddings for multiple texts in a single batch asynchronously.
+        Parameters
+        ----------
+        texts : List[str]
+            A list of text strings to be embedded.
+        batch_size : int, optional
+            Maximum number of texts to process in a single API call (default: 32).
 
         Returns
         -------
@@ -67,5 +70,26 @@ class OllamaEmbedding(BaseEmbedding):
                 "Please ensure your ollama library is up-to-date and supports batch embedding. "
             )
             raise AttributeError(error_message)
-        response = await self.async_client.embed(model=self.model_name, input=texts)
-        return [list(inner_sequence) for inner_sequence in response["embeddings"]]
+
+        all_embeddings = []
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+            response = self.client.embed(model=self.model, input=batch)["embeddings"]
+            all_embeddings.extend([list(inner_sequence) for inner_sequence in response])
+        return all_embeddings
+
+    async def async_get_text_embedding(self, text: str) -> List[float]:
+        """Get embedding for a single text asynchronously."""
+        response = await self.async_client.embeddings(model=self.model, prompt=text)
+        return list(response["embedding"])
+
+    async def async_get_texts_embeddings(
+        self, texts: List[str], batch_size: int = 32
+    ) -> List[List[float]]:
+        # Ollama python client may not provide batch async embeddings; fallback per item
+        # batch_size parameter included for consistency with base class signature
+        results: List[List[float]] = []
+        for t in texts:
+            response = await self.async_client.embeddings(model=self.model, prompt=t)
+            results.append(list(response["embedding"]))
+        return results

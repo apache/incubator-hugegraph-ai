@@ -15,36 +15,22 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
 import asyncio
-import os
 from typing import Any, Dict
 
-from hugegraph_llm.config import resource_path, huge_settings, llm_settings
-from hugegraph_llm.indices.vector_index import VectorIndex
+from tqdm import tqdm
+
+from hugegraph_llm.config import huge_settings
+from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
-from hugegraph_llm.utils.embedding_utils import (
-    get_embeddings_parallel,
-    get_filename_prefix,
-    get_index_folder_name,
-)
 from hugegraph_llm.utils.log import log
 
 
 class BuildSemanticIndex:
-    def __init__(self, embedding: BaseEmbedding):
-        self.folder_name = get_index_folder_name(
-            huge_settings.graph_name, huge_settings.graph_space
-        )
-        self.index_dir = str(
-            os.path.join(resource_path, self.folder_name, "graph_vids")
-        )
-        self.filename_prefix = get_filename_prefix(
-            llm_settings.embedding_type, getattr(embedding, "model_name", None)
-        )
-        self.vid_index = VectorIndex.from_index_file(
-            self.index_dir, self.filename_prefix
+    def __init__(self, embedding: BaseEmbedding, vector_index: type[VectorStoreBase]):
+        self.vid_index = vector_index.from_name(
+            embedding.get_embedding_dim(), huge_settings.graph_name, "graph_vids"
         )
         self.embedding = embedding
         self.sm = SchemaManager(huge_settings.graph_name)
@@ -52,32 +38,47 @@ class BuildSemanticIndex:
     def _extract_names(self, vertices: list[str]) -> list[str]:
         return [v.split(":")[1] for v in vertices]
 
+    async def _get_embeddings_parallel(self, vids: list[str]) -> list[Any]:
+        sem = asyncio.Semaphore(10)
+        batch_size = 1000
+
+        async def get_embeddings_with_semaphore(vid_list: list[str]) -> Any:
+            async with sem:
+                loop = asyncio.get_running_loop()
+                return await loop.run_in_executor(
+                    None, self.embedding.get_texts_embeddings, vid_list
+                )
+
+        vid_batches = [vids[i : i + batch_size] for i in range(0, len(vids), batch_size)]
+        tasks = [get_embeddings_with_semaphore(batch) for batch in vid_batches]
+
+        embeddings = []
+        with tqdm(total=len(tasks)) as pbar:
+            for future in asyncio.as_completed(tasks):
+                batch_embeddings = await future
+                embeddings.extend(batch_embeddings)
+                pbar.update(1)
+        return embeddings
+
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         vertexlabels = self.sm.schema.getSchema()["vertexlabels"]
         all_pk_flag = bool(vertexlabels) and all(
             data.get("id_strategy") == "PRIMARY_KEY" for data in vertexlabels
         )
 
-        past_vids = self.vid_index.properties
+        past_vids = self.vid_index.get_all_properties()
         # TODO: We should build vid vector index separately, especially when the vertices may be very large
-
-        present_vids = context[
-            "vertices"
-        ]  # Warning: data truncated by fetch_graph_data.py
+        present_vids = context["vertices"]  # Warning: data truncated by fetch_graph_data.py
         removed_vids = set(past_vids) - set(present_vids)
         removed_num = self.vid_index.remove(removed_vids)
         added_vids = list(set(present_vids) - set(past_vids))
 
         if added_vids:
-            vids_to_process = (
-                self._extract_names(added_vids) if all_pk_flag else added_vids
-            )
-            added_embeddings = asyncio.run(
-                get_embeddings_parallel(self.embedding, vids_to_process)
-            )
+            vids_to_process = self._extract_names(added_vids) if all_pk_flag else added_vids
+            added_embeddings = asyncio.run(self._get_embeddings_parallel(vids_to_process))
             log.info("Building vector index for %s vertices...", len(added_vids))
             self.vid_index.add(added_embeddings, added_vids)
-            self.vid_index.to_index_file(self.index_dir, self.filename_prefix)
+            self.vid_index.save_index_by_name(huge_settings.graph_name, "graph_vids")
         else:
             log.debug("No update vertices to build vector index.")
         context.update(

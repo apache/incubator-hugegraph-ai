@@ -61,8 +61,14 @@ class BaseEmbedding(ABC):
         """Comment"""
 
     @abstractmethod
-    def get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """Get embeddings for multiple texts in a single batch.
+    def get_embedding_dim(
+        self,
+    ) -> int:
+        """Get the dimension of the embedding."""
+
+    @abstractmethod
+    def get_texts_embeddings(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
+        """Get embeddings for multiple texts with automatic batch splitting.
 
         This method should efficiently process multiple texts at once by leveraging
         the embedding model's batching capabilities, which is typically more efficient
@@ -81,8 +87,8 @@ class BaseEmbedding(ABC):
         """
 
     @abstractmethod
-    async def async_get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """Get embeddings for multiple texts in a single batch asynchronously.
+    async def async_get_texts_embeddings(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
+        """Get embeddings for multiple texts asynchronously with automatic batch splitting.
 
         This method should efficiently process multiple texts at once by leveraging
         the embedding model's batching capabilities, which is typically more efficient

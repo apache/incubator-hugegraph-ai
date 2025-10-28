@@ -69,8 +69,8 @@ class SchemaManager(HugeParamsBase):
 
     @router.http("GET", "schema/propertykeys/{property_name}")
     def getPropertyKey(
-        self, property_name  # pylint: disable=unused-argument
-    ) -> Optional[PropertyKeyData]:
+        self, property_name
+    ) -> Optional[PropertyKeyData]:  # pylint: disable=unused-argument
         if response := self._invoke_request():
             return PropertyKeyData(response)
         return None
@@ -96,8 +96,8 @@ class SchemaManager(HugeParamsBase):
 
     @router.http("GET", "schema/edgelabels/{label_name}")
     def getEdgeLabel(
-        self, label_name: str  # pylint: disable=unused-argument
-    ) -> Optional[EdgeLabelData]:
+        self, label_name: str
+    ) -> Optional[EdgeLabelData]:  # pylint: disable=unused-argument
         if response := self._invoke_request():
             return EdgeLabelData(response)
         log.error("EdgeLabel not found: %s", str(response))
