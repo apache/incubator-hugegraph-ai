@@ -113,6 +113,9 @@ python -m hugegraph_llm.demo.rag_demo.app --host 127.0.0.1 --port 18001
 > The following commands assume you're in the activated virtual environment from step 4 above
 
 ```bash
+# To use vector database backends (e.g., Milvus, Qdrant), sync the optional dependencies:
+uv sync --extra vectordb
+
 # Download NLTK stopwords for better text processing
 python ./src/hugegraph_llm/operators/common_op/nltk_helper.py
 

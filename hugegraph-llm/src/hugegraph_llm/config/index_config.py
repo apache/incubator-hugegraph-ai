@@ -15,22 +15,24 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import os
+from typing import Optional
 
-import unittest
-from pprint import pprint
-
-from hugegraph_llm.indices.vector_index import VectorIndex
-from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
+from .models import BaseConfig
 
 
-class TestVectorIndex(unittest.TestCase):
-    def test_vector_index(self):
-        embedder = OllamaEmbedding("quentinz/bge-large-zh-v1.5")
-        data = ["腾讯的合伙人有字节跳动", "谷歌和微软是竞争关系", "美团的合伙人有字节跳动"]
-        data_embedding = [embedder.get_text_embedding(d) for d in data]
-        index = VectorIndex(1024)
-        index.add(data_embedding, data)
-        query = "腾讯的合伙人有哪些？"
-        query_vector = embedder.get_text_embedding(query)
-        results = index.search(query_vector, 2)
-        pprint(results)
+class IndexConfig(BaseConfig):
+    """LLM settings"""
+
+    qdrant_host: Optional[str] = os.environ.get("QDRANT_HOST", None)
+    qdrant_port: int = int(os.environ.get("QDRANT_PORT", "6333"))
+    qdrant_api_key: Optional[str] = (
+        os.environ.get("QDRANT_API_KEY") if os.environ.get("QDRANT_API_KEY") else None
+    )
+
+    milvus_host: Optional[str] = os.environ.get("MILVUS_HOST", None)
+    milvus_port: int = int(os.environ.get("MILVUS_PORT", "19530"))
+    milvus_user: str = os.environ.get("MILVUS_USER", "")
+    milvus_password: str = os.environ.get("MILVUS_PASSWORD", "")
+
+    cur_vector_index: str = os.environ.get("CUR_VECTOR_INDEX", "Faiss")

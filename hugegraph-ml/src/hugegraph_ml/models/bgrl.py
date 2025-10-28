@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# pylint: disable=C0103,R1705.R1734
+# pylint: disable=C0103,R1705.R1734,E1102
 
 """
 Bootstrapped Graph Latents (BGRL)

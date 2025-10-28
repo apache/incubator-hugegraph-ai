@@ -17,16 +17,11 @@
 
 from typing import List, Optional
 
+from litellm import APIConnectionError, APIError, RateLimitError, aembedding, embedding
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.utils.log import log
-from tenacity import (
-    retry,
-    stop_after_attempt,
-    wait_exponential,
-    retry_if_exception_type,
-)
-
-from litellm import embedding, RateLimitError, APIError, APIConnectionError, aembedding
 
 
 class LiteLLMEmbedding(BaseEmbedding):
@@ -34,13 +29,20 @@ class LiteLLMEmbedding(BaseEmbedding):
 
     def __init__(
         self,
+        embedding_dimension,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
         model_name: str = "openai/text-embedding-3-small",  # Can be any embedding model supported by LiteLLM
     ) -> None:
         self.api_key = api_key
         self.api_base = api_base
-        self.model_name = model_name
+        self.model = model_name
+        self.embedding_dimension = embedding_dimension
+
+    def get_embedding_dim(
+        self,
+    ) -> int:
+        return self.embedding_dimension
 
     @retry(
         stop=stop_after_attempt(3),
@@ -51,7 +53,7 @@ class LiteLLMEmbedding(BaseEmbedding):
         """Get embedding for a single text."""
         try:
             response = embedding(
-                model=self.model_name,
+                model=self.model,
                 input=text,
                 api_key=self.api_key,
                 api_base=self.api_base,
@@ -62,32 +64,81 @@ class LiteLLMEmbedding(BaseEmbedding):
             log.error("Error in LiteLLM embedding call: %s", e)
             raise
 
-    def get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """Get embeddings for multiple texts."""
+    def get_texts_embeddings(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
+        """Get embeddings for multiple texts with automatic batch splitting.
+        
+        Parameters
+        ----------
+        texts : List[str]
+            A list of text strings to be embedded.
+        batch_size : int, optional
+            Maximum number of texts to process in a single API call (default: 32).
+        
+        Returns
+        -------
+        List[List[float]]
+            A list of embedding vectors.
+        """
+        all_embeddings = []
         try:
-            response = embedding(
-                model=self.model_name,
-                input=texts,
-                api_key=self.api_key,
-                api_base=self.api_base,
-            )
-            log.info("Token usage: %s", response.usage)
-            return [data["embedding"] for data in response.data]
+            for i in range(0, len(texts), batch_size):
+                batch = texts[i:i + batch_size]
+                response = embedding(
+                    model=self.model,
+                    input=batch,
+                    api_key=self.api_key,
+                    api_base=self.api_base,
+                )
+                log.info("Token usage: %s", response.usage)
+                all_embeddings.extend([data["embedding"] for data in response.data])
+            return all_embeddings
         except (RateLimitError, APIConnectionError, APIError) as e:
             log.error("Error in LiteLLM batch embedding call: %s", e)
             raise
 
-    async def async_get_texts_embeddings(self, texts: List[str]) -> List[List[float]]:
+    async def async_get_text_embedding(self, text: str) -> List[float]:
         """Get embedding for a single text asynchronously."""
         try:
             response = await aembedding(
-                model=self.model_name,
-                input=texts,
+                model=self.model,
+                input=text,
                 api_key=self.api_key,
                 api_base=self.api_base,
             )
             log.info("Token usage: %s", response.usage)
-            return [data["embedding"] for data in response.data]
+            return response.data[0]["embedding"]
+        except (RateLimitError, APIConnectionError, APIError) as e:
+            log.error("Error in async LiteLLM embedding call: %s", e)
+            raise
+
+    async def async_get_texts_embeddings(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
+        """Get embeddings for multiple texts asynchronously with automatic batch splitting.
+        
+        Parameters
+        ----------
+        texts : List[str]
+            A list of text strings to be embedded.
+        batch_size : int, optional
+            Maximum number of texts to process in a single API call (default: 32).
+        
+        Returns
+        -------
+        List[List[float]]
+            A list of embedding vectors.
+        """
+        all_embeddings = []
+        try:
+            for i in range(0, len(texts), batch_size):
+                batch = texts[i:i + batch_size]
+                response = await aembedding(
+                    model=self.model,
+                    input=batch,
+                    api_key=self.api_key,
+                    api_base=self.api_base,
+                )
+                log.info("Token usage: %s", response.usage)
+                all_embeddings.extend([data["embedding"] for data in response.data])
+            return all_embeddings
         except (RateLimitError, APIConnectionError, APIError) as e:
             log.error("Error in async LiteLLM embedding call: %s", e)
             raise

@@ -43,9 +43,7 @@ class GremlinManager(HugeParamsBase):
         try:
             if response := self._invoke_request(data=gremlin_data.to_json()):
                 return ResponseData(response).result
-            log.error(  # pylint: disable=logging-fstring-interpolation
-                f"Gremlin can't get results: {str(response)}"
-            )
+            log.error("Gremlin can't get results: %s", str(response))
             return None
         except Exception as e:
             raise NotFoundError(f"Gremlin can't get results: {e}") from e

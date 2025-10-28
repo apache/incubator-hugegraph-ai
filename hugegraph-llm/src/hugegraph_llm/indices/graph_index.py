@@ -17,6 +17,7 @@
 
 
 from typing import Optional
+
 from pyhugegraph.client import PyHugeClient
 
 from hugegraph_llm.config import huge_settings

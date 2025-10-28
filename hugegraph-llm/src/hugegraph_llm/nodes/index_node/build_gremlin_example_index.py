@@ -15,8 +15,8 @@
 
 from PyCGraph import CStatus
 
-from hugegraph_llm.config import llm_settings
-from hugegraph_llm.models.embeddings.init_embedding import get_embedding
+from hugegraph_llm.config import index_settings
+from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.build_gremlin_example_index import (
     BuildGremlinExampleIndex,
@@ -30,12 +30,18 @@ class BuildGremlinExampleIndexNode(BaseNode):
     wk_input: WkFlowInput = None
 
     def node_init(self):
+        # Lazy import to avoid circular dependency
+        # pylint: disable=import-outside-toplevel
+        from hugegraph_llm.utils.vector_index_utils import get_vector_index_class
+
         if not self.wk_input.examples:
             return CStatus(-1, "examples is required in BuildGremlinExampleIndexNode")
         examples = self.wk_input.examples
+        vector_index = get_vector_index_class(index_settings.cur_vector_index)
+        embedding = Embeddings().get_embedding()
 
         self.build_gremlin_example_index_op = BuildGremlinExampleIndex(
-            get_embedding(llm_settings), examples
+            embedding, examples, vector_index
         )
         return super().node_init()
 

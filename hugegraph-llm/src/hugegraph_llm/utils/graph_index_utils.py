@@ -16,7 +16,6 @@
 # under the License.
 
 
-import os
 import traceback
 from typing import Dict, Any, Union, List
 
@@ -25,13 +24,10 @@ from hugegraph_llm.flows import FlowName
 from hugegraph_llm.flows.scheduler import SchedulerSingleton
 from pyhugegraph.client import PyHugeClient
 
-from .embedding_utils import get_filename_prefix, get_index_folder_name
 from .hugegraph_utils import clean_hg_data
 from .log import log
 from .vector_index_utils import read_documents
-from ..config import resource_path, huge_settings, llm_settings
-from ..indices.vector_index import VectorIndex
-from ..models.embeddings.init_embedding import Embeddings
+from ..config import huge_settings
 
 
 def get_graph_index_info():
@@ -44,20 +40,13 @@ def get_graph_index_info():
 
 
 def clean_all_graph_index():
-    folder_name = get_index_folder_name(
-        huge_settings.graph_name, huge_settings.graph_space
-    )
-    filename_prefix = get_filename_prefix(
-        llm_settings.embedding_type,
-        getattr(Embeddings().get_embedding(), "model_name", None),
-    )
-    VectorIndex.clean(
-        str(os.path.join(resource_path, folder_name, "graph_vids")), filename_prefix
-    )
-    VectorIndex.clean(
-        str(os.path.join(resource_path, folder_name, "gremlin_examples")),
-        filename_prefix,
-    )
+    # Lazy import to avoid circular dependency
+    from .vector_index_utils import get_vector_index_class  # pylint: disable=import-outside-toplevel
+    from ..config import index_settings  # pylint: disable=import-outside-toplevel
+
+    vector_index = get_vector_index_class(index_settings.cur_vector_index)
+    vector_index.clean(huge_settings.graph_name, "graph_vids")
+    vector_index.clean("gremlin_examples")
     log.warning("Clear graph index and text2gql index successfully!")
     gr.Info("Clear graph index and text2gql index successfully!")
 

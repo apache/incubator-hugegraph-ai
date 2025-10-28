@@ -16,6 +16,7 @@
   - [LiteLLM 配置](#litellm-配置)
   - [重排序配置](#重排序配置)
   - [HugeGraph 数据库配置](#hugegraph-数据库配置)
+  - [向量数据库配置](#向量数据库配置)
   - [管理员配置](#管理员配置)
 - [配置使用示例](#配置使用示例)
 - [配置文件位置](#配置文件位置)
@@ -129,6 +130,18 @@
 | `VECTOR_DIS_THRESHOLD` | Optional[Float]   | 0.9            | 向量距离阈值             |
 | `TOPK_PER_KEYWORD`     | Optional[Integer] | 1              | 每个关键词返回的 TopK 数量   |
 | `TOPK_RETURN_RESULTS`  | Optional[Integer] | 20             | 返回结果数量             |
+
+### 向量数据库配置
+
+| 配置项              | 类型               | 默认值  | 说明                     |
+|------------------|------------------|-------|------------------------|
+| `QDRANT_HOST`    | Optional[String] | None  | Qdrant 服务器主机地址         |
+| `QDRANT_PORT`    | Integer          | 6333  | Qdrant 服务器端口           |
+| `QDRANT_API_KEY` | Optional[String] | None  | Qdrant API 密钥（如果设置了的话） |
+| `MILVUS_HOST`    | Optional[String] | None  | Milvus 服务器主机地址         |
+| `MILVUS_PORT`    | Integer          | 19530 | Milvus 服务器端口           |
+| `MILVUS_USER`    | String           | ""    | Milvus 用户名              |
+| `MILVUS_PASSWORD`| String           | ""    | Milvus 密码               |
 
 ### 管理员配置
 

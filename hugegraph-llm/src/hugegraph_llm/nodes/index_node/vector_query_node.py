@@ -14,10 +14,10 @@
 #  limitations under the License.
 
 from typing import Dict, Any
-from hugegraph_llm.config import llm_settings
+from hugegraph_llm.config import index_settings
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
-from hugegraph_llm.models.embeddings.init_embedding import get_embedding
+from hugegraph_llm.models.embeddings.init_embedding import Embeddings
 from hugegraph_llm.utils.log import log
 
 
@@ -32,14 +32,23 @@ class VectorQueryNode(BaseNode):
         """
         Initialize the vector query operator
         """
-        # 从 wk_input 中读取用户配置参数
-        embedding = get_embedding(llm_settings)
-        max_items = (
-            self.wk_input.max_items if self.wk_input.max_items is not None else 3
-        )
+        try:
+            # Lazy import to avoid circular dependency
+            # pylint: disable=import-outside-toplevel
+            from hugegraph_llm.utils.vector_index_utils import get_vector_index_class
 
-        self.operator = VectorIndexQuery(embedding=embedding, topk=max_items)
-        return super().node_init()
+            # 从 wk_input 中读取用户配置参数
+            vector_index = get_vector_index_class(index_settings.cur_vector_index)
+            embedding = Embeddings().get_embedding()
+            max_items = self.wk_input.max_items if self.wk_input.max_items is not None else 3
+
+            self.operator = VectorIndexQuery(vector_index=vector_index, embedding=embedding, topk=max_items)
+            return super().node_init()
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            log.error("Failed to initialize VectorQueryNode: %s", e)
+            from PyCGraph import CStatus
+
+            return CStatus(-1, f"VectorQueryNode initialization failed: {e}")
 
     def operator_schedule(self, data_json: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -64,6 +73,6 @@ class VectorQueryNode(BaseNode):
 
             return data_json
 
-        except ValueError as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             log.error("Vector query failed: %s", e)
             return data_json
