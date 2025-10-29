@@ -1,4 +1,3 @@
-
 """
 Gremlin查询AST访问器模块。
 
@@ -11,12 +10,12 @@ from antlr4.InputStream import InputStream
 from antlr4.CommonTokenStream import CommonTokenStream
 from antlr4.tree.Tree import TerminalNode
 
-from gremlin.GremlinLexer import GremlinLexer
-from gremlin.GremlinParser import GremlinParser
-from gremlin.GremlinVisitor import GremlinVisitor
+from .gremlin.GremlinLexer import GremlinLexer
+from .gremlin.GremlinParser import GremlinParser
+from .gremlin.GremlinVisitor import GremlinVisitor
 
-from GremlinParse import Traversal, Step
-from GremlinExpr import Predicate, TextPredicate, AnonymousTraversal, Connector, Terminal
+from .GremlinParse import Traversal, Step
+from .GremlinExpr import Predicate, TextPredicate, AnonymousTraversal, Connector, Terminal
 
 class GremlinTransVisitor(GremlinVisitor):
     def __init__(self):
@@ -40,10 +39,9 @@ class GremlinTransVisitor(GremlinVisitor):
             lexer = GremlinLexer(input_stream)
             stream = CommonTokenStream(lexer)
             parser = GremlinParser(stream)
-            # 【修正】使用queryList作为入口规则，它包含一个或多个query
             tree = parser.queryList()
             
-            # Visit the parse tree - 访问第一个query
+            # 访问第一个query
             result = self.visit(tree.query(0))
             
             return result if result else self.traversal
@@ -63,12 +61,21 @@ class GremlinTransVisitor(GremlinVisitor):
         # 访问根遍历部分
         if ctx.rootTraversal():
             self.visit(ctx.rootTraversal())
+        
+        # 如果有终端方法，访问它
+        if ctx.traversalTerminalMethod():
+            self.visit(ctx.traversalTerminalMethod())
+        
         # 如果有嵌套查询，递归访问
         if ctx.query():
             self.visit(ctx.query())
         return self.traversal
 
     def visitRootTraversal(self, ctx: GremlinParser.RootTraversalContext):
+        # 首先访问traversalSource
+        if ctx.traversalSource():
+            self.visit(ctx.traversalSource())
+        
         # 访问起始步骤，例如 g.V() 或 g.addV()
         if ctx.traversalSourceSpawnMethod():
             self.visit(ctx.traversalSourceSpawnMethod())
@@ -76,6 +83,16 @@ class GremlinTransVisitor(GremlinVisitor):
         # 如果后面跟着链式调用，访问它们
         if ctx.chainedTraversal():
             self.visit(ctx.chainedTraversal())
+    
+    def visitTraversalSource(self, ctx: GremlinParser.TraversalSourceContext):
+        """访问traversalSource，处理配置方法如with"""
+        # 递归访问嵌套的traversalSource
+        if ctx.traversalSource():
+            self.visit(ctx.traversalSource())
+        
+        # 访问selfMethod（如with）
+        if ctx.traversalSourceSelfMethod():
+            self.visit(ctx.traversalSourceSelfMethod())
 
     def visitChainedTraversal(self, ctx: GremlinParser.ChainedTraversalContext):
         # 对于 a.b.c 这样的链，递归访问 a，然后访问 b
@@ -155,16 +172,73 @@ class GremlinTransVisitor(GremlinVisitor):
         self.traversal.add_step(Step('has', [t_value, traversal]))
         
     def visitTraversalMethod_property_Object_Object_Object(self, ctx):
+        """处理property(key, value, ...)方法"""
         params = []
         if ctx.genericArgument(0): params.append(self.visit(ctx.genericArgument(0)))
         if ctx.genericArgument(1): params.append(self.visit(ctx.genericArgument(1)))
+        # 处理可选的额外参数
+        if hasattr(ctx, 'genericArgumentVarargs') and ctx.genericArgumentVarargs():
+            varargs = self.visit(ctx.genericArgumentVarargs())
+            if varargs:
+                params.extend(varargs)
         self.traversal.add_step(Step('property', params))
+    
+    def visitTraversalMethod_property_Object(self, ctx):
+        """处理property(map)方法"""
+        params = []
+        if hasattr(ctx, 'genericMapNullableArgument') and ctx.genericMapNullableArgument():
+            params.append(self.visit(ctx.genericMapNullableArgument()))
+        self.traversal.add_step(Step('property', params))
+    
+    def visitTraversalMethod_property_Cardinality_Object_Object_Object(self, ctx):
+        """处理property(cardinality, key, value, ...)方法"""
+        params = []
+        if hasattr(ctx, 'traversalCardinality') and ctx.traversalCardinality():
+            params.append(self.visit(ctx.traversalCardinality()))
+        if ctx.genericArgument(0): params.append(self.visit(ctx.genericArgument(0)))
+        if ctx.genericArgument(1): params.append(self.visit(ctx.genericArgument(1)))
+        # 处理可选的额外参数
+        if hasattr(ctx, 'genericArgumentVarargs') and ctx.genericArgumentVarargs():
+            varargs = self.visit(ctx.genericArgumentVarargs())
+            if varargs:
+                params.extend(varargs)
+        self.traversal.add_step(Step('property', params))
+    
+    def visitTraversalMethod_property_Cardinality_Object(self, ctx):
+        """处理property(cardinality, map)方法"""
+        params = []
+        if hasattr(ctx, 'traversalCardinality') and ctx.traversalCardinality():
+            params.append(self.visit(ctx.traversalCardinality()))
+        if hasattr(ctx, 'genericMapNullableArgument') and ctx.genericMapNullableArgument():
+            params.append(self.visit(ctx.genericMapNullableArgument()))
+        self.traversal.add_step(Step('property', params))
+    
+    def visitTraversalCardinality(self, ctx):
+        """处理traversalCardinality"""
+        # traversalCardinality包含类型和值，例如: Cardinality.list('multi')
+        text = ctx.getText()
+        # 提取cardinality类型
+        if 'list' in text.lower():
+            card_type = 'list'
+        elif 'set' in text.lower():
+            card_type = 'set'
+        elif 'single' in text.lower():
+            card_type = 'single'
+        else:
+            card_type = text
+        
+        # 提取值（如果有genericLiteral）
+        if hasattr(ctx, 'genericLiteral') and ctx.genericLiteral():
+            value = self.visit(ctx.genericLiteral())
+            return {'type': card_type, 'value': value}
+        else:
+            return card_type
 
     def visitTraversalMethod_values(self, ctx: GremlinParser.TraversalMethod_valuesContext):
         params = self.visit(ctx.stringNullableLiteralVarargs()) if ctx.stringNullableLiteralVarargs() else []
         self.traversal.add_step(Step('values', params))
         
-    # 值提取访问器 (返回Python值)
+    # 值提取访问器
     def visitStringLiteral(self, ctx: GremlinParser.StringLiteralContext) -> str:
         return ctx.getText().strip("'\"")
 
@@ -275,6 +349,26 @@ class GremlinTransVisitor(GremlinVisitor):
     def visitTraversalPredicate_notContaining(self, ctx):
         value = self.visit(ctx.stringArgument())
         return TextPredicate('notContaining', value)
+    
+    def visitTraversalPredicate_not(self, ctx):
+        """处理 not() 谓词 - 否定另一个谓词"""
+        # not() 接受另一个谓词作为参数
+        if hasattr(ctx, 'traversalPredicate') and ctx.traversalPredicate():
+            inner_predicate = self.visit(ctx.traversalPredicate())
+            # 返回一个否定的谓词
+            # 注意：这里需要特殊处理，因为 not() 包装了另一个谓词
+            return Predicate('not', inner_predicate)
+        return None
+    
+    def visitTraversalPredicate_regex(self, ctx):
+        """处理 regex() 谓词 - 正则表达式匹配"""
+        value = self.visit(ctx.stringArgument())
+        return TextPredicate('regex', value)
+    
+    def visitTraversalPredicate_notRegex(self, ctx):
+        """处理 notRegex() 谓词 - 不匹配正则表达式"""
+        value = self.visit(ctx.stringArgument())
+        return TextPredicate('notRegex', value)
 
     # 匿名遍历和嵌套遍历访问器
     def visitNestedTraversal(self, ctx: GremlinParser.NestedTraversalContext):
@@ -314,42 +408,854 @@ class GremlinTransVisitor(GremlinVisitor):
     # 连接器访问器 (and, or)
     def visitTraversalMethod_and(self, ctx):
         params = []
-        if hasattr(ctx, 'nestedTraversalVarargs') and ctx.nestedTraversalVarargs():
-            traversals = self.visit(ctx.nestedTraversalVarargs())
-            connector = Connector('and', traversals)
-            params.append(connector)
+        if hasattr(ctx, 'nestedTraversalList') and ctx.nestedTraversalList():
+            traversals = self.visit(ctx.nestedTraversalList())
+            if traversals:
+                # and接受多个遍历作为参数
+                params.extend(traversals)
         self.traversal.add_step(Step('and', params))
 
     def visitTraversalMethod_or(self, ctx):
         params = []
-        if hasattr(ctx, 'nestedTraversalVarargs') and ctx.nestedTraversalVarargs():
-            traversals = self.visit(ctx.nestedTraversalVarargs())
-            connector = Connector('or', traversals)
-            params.append(connector)
+        if hasattr(ctx, 'nestedTraversalList') and ctx.nestedTraversalList():
+            traversals = self.visit(ctx.nestedTraversalList())
+            if traversals:
+                # or接受多个遍历作为参数
+                params.extend(traversals)
         self.traversal.add_step(Step('or', params))
+    
+    # 分支和条件方法
+    def visitTraversalMethod_choose_Traversal(self, ctx):
+        """处理choose(traversal)方法"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('choose', params))
+        
+    def visitTraversalMethod_coalesce(self, ctx):
+        """处理coalesce()方法"""
+        params = []
+        if hasattr(ctx, 'nestedTraversalList') and ctx.nestedTraversalList():
+            params = self.visit(ctx.nestedTraversalList())
+        elif hasattr(ctx, 'nestedTraversalVarargs') and ctx.nestedTraversalVarargs():
+            params = self.visit(ctx.nestedTraversalVarargs())
+        self.traversal.add_step(Step('coalesce', params))
+        
+    def visitTraversalMethod_optional(self, ctx):
+        """处理optional()方法"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('optional', params))
+        
+    def visitTraversalMethod_union(self, ctx):
+        """处理union()方法"""
+        params = []
+        if hasattr(ctx, 'nestedTraversalList') and ctx.nestedTraversalList():
+            params = self.visit(ctx.nestedTraversalList())
+        elif hasattr(ctx, 'nestedTraversalVarargs') and ctx.nestedTraversalVarargs():
+            params = self.visit(ctx.nestedTraversalVarargs())
+        self.traversal.add_step(Step('union', params))
+                        
+    # 循环和重复方法
+    def visitTraversalMethod_repeat_Traversal(self, ctx):
+        """处理repeat(traversal)方法"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('repeat', params))
+    
+    def visitTraversalMethod_repeat_String_Traversal(self, ctx):
+        """处理repeat(string, traversal)方法"""
+        params = []
+        if hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('repeat', params))
+        
+    def visitTraversalMethod_times(self, ctx):
+        """处理times()方法"""
+        params = []
+        if hasattr(ctx, 'integerLiteral') and ctx.integerLiteral():
+            params.append(self.visit(ctx.integerLiteral()))
+        self.traversal.add_step(Step('times', params))
+        
+    def visitTraversalMethod_until_Traversal(self, ctx):
+        """处理until(traversal)方法"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('until', params))
+    
+    def visitTraversalMethod_until_Predicate(self, ctx):
+        """处理until(predicate)方法"""
+        params = []
+        if hasattr(ctx, 'traversalPredicate') and ctx.traversalPredicate():
+            params.append(self.visit(ctx.traversalPredicate()))
+        self.traversal.add_step(Step('until', params))
+        
+    def visitTraversalMethod_emit_Empty(self, ctx):
+        """处理无参数的emit()方法"""
+        self.traversal.add_step(Step('emit', []))
+    
+    def visitTraversalMethod_emit_Predicate(self, ctx):
+        """处理emit(predicate)方法"""
+        params = []
+        if hasattr(ctx, 'traversalPredicate') and ctx.traversalPredicate():
+            params.append(self.visit(ctx.traversalPredicate()))
+        self.traversal.add_step(Step('emit', params))
+    
+    def visitTraversalMethod_emit_Traversal(self, ctx):
+        """处理emit(traversal)方法"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('emit', params))
 
     # 终端方法访问器
-    def visitTraversalMethod_next(self, ctx):
-        terminal = Terminal('next')
-        self.traversal.add_step(Step('next', [terminal]))
-
-    def visitTraversalMethod_hasNext(self, ctx):
+    def visitTraversalTerminalMethod(self, ctx):
+        """处理终端方法的通用分发器"""
+        # 直接访问具体的终端方法子节点
+        if ctx.traversalTerminalMethod_next():
+            self.visit(ctx.traversalTerminalMethod_next())
+        elif ctx.traversalTerminalMethod_hasNext():
+            self.visit(ctx.traversalTerminalMethod_hasNext())
+        elif ctx.traversalTerminalMethod_toList():
+            self.visit(ctx.traversalTerminalMethod_toList())
+        elif ctx.traversalTerminalMethod_toSet():
+            self.visit(ctx.traversalTerminalMethod_toSet())
+        elif ctx.traversalTerminalMethod_iterate():
+            self.visit(ctx.traversalTerminalMethod_iterate())
+        else:
+            # 尝试默认的visitChildren
+            return self.visitChildren(ctx)
+        
+    def visitTraversalTerminalMethod_next(self, ctx):
+        """处理next()终端方法，支持 next() 和 next(n)"""
+        params = []
+        # 检查是否有整数参数
+        if hasattr(ctx, 'integerLiteral') and ctx.integerLiteral():
+            params.append(self.visit(ctx.integerLiteral()))
+        else:
+            # 无参数版本，使用 Terminal 对象
+            terminal = Terminal('next')
+            params.append(terminal)
+        self.traversal.add_step(Step('next', params))
+        
+    def visitTraversalTerminalMethod_hasNext(self, ctx):
+        """处理hasNext()终端方法"""
         terminal = Terminal('hasNext')
         self.traversal.add_step(Step('hasNext', [terminal]))
-
-    def visitTraversalMethod_toList(self, ctx):
+        
+    def visitTraversalTerminalMethod_toList(self, ctx):
+        """处理toList()终端方法"""
         terminal = Terminal('toList')
         self.traversal.add_step(Step('toList', [terminal]))
-
-    def visitTraversalMethod_toSet(self, ctx):
+        
+    def visitTraversalTerminalMethod_toSet(self, ctx):
+        """处理toSet()终端方法"""
         terminal = Terminal('toSet')
         self.traversal.add_step(Step('toSet', [terminal]))
-
-    def visitTraversalMethod_iterate(self, ctx):
+        
+    def visitTraversalTerminalMethod_iterate(self, ctx):
+        """处理iterate()终端方法"""
         terminal = Terminal('iterate')
         self.traversal.add_step(Step('iterate', [terminal]))
+    
+    def visitTraversalTerminalMethod_tryNext(self, ctx):
+        """处理tryNext()终端方法"""
+        terminal = Terminal('tryNext')
+        self.traversal.add_step(Step('tryNext', [terminal]))
+    
+    def visitTraversalTerminalMethod_explain(self, ctx):
+        """处理explain()终端方法 - 显示执行计划"""
+        terminal = Terminal('explain')
+        self.traversal.add_step(Step('explain', [terminal]))
+    
+    # 去重和其他方法
+    
+    # Context方法 - 终端方法的Context版本
+    def visitTraversalTerminalMethodContext(self, ctx):
+        """处理终端方法Context - 委托给visitTraversalTerminalMethod"""
+        return self.visitTraversalTerminalMethod(ctx)
+    
+    def visitTraversalTerminalMethod_nextContext(self, ctx):
+        """处理next()终端方法Context"""
+        return self.visitTraversalTerminalMethod_next(ctx)
+    
+    def visitTraversalTerminalMethod_hasNextContext(self, ctx):
+        """处理hasNext()终端方法Context"""
+        return self.visitTraversalTerminalMethod_hasNext(ctx)
+    
+    def visitTraversalTerminalMethod_toListContext(self, ctx):
+        """处理toList()终端方法Context"""
+        return self.visitTraversalTerminalMethod_toList(ctx)
+    
+    def visitTraversalTerminalMethod_toSetContext(self, ctx):
+        """处理toSet()终端方法Context"""
+        return self.visitTraversalTerminalMethod_toSet(ctx)
+    
+    def visitTraversalTerminalMethod_iterateContext(self, ctx):
+        """处理iterate()终端方法Context"""
+        return self.visitTraversalTerminalMethod_iterate(ctx)
+    
+    def visitTraversalTerminalMethod_tryNextContext(self, ctx):
+        """处理tryNext()终端方法Context"""
+        return self.visitTraversalTerminalMethod_tryNext(ctx)
+    
+    def visitTraversalMethod_valueMap_String(self, ctx):
+        """处理valueMap(string)方法"""
+        params = []
+        if hasattr(ctx, 'stringNullableLiteralVarargs') and ctx.stringNullableLiteralVarargs():
+            params = self.visit(ctx.stringNullableLiteralVarargs())
+        self.traversal.add_step(Step('valueMap', params))
+    
+    def visitTraversalMethod_valueMap_boolean_String(self, ctx):
+        """处理valueMap(boolean, string)方法"""
+        params = []
+        if hasattr(ctx, 'booleanLiteral') and ctx.booleanLiteral():
+            params.append(self.visit(ctx.booleanLiteral()))
+        if hasattr(ctx, 'stringNullableLiteralVarargs') and ctx.stringNullableLiteralVarargs():
+            string_params = self.visit(ctx.stringNullableLiteralVarargs())
+            if string_params:
+                params.extend(string_params)
+        self.traversal.add_step(Step('valueMap', params))
+    
+    def visitTraversalMethod_valueMap_StringContext(self, ctx):
+        """处理valueMap(string)方法Context"""
+        return self.visitChildren(ctx)
 
-    # 缺失的 Spawn Method 访问器
+    def visitTraversalMethod_dedup_String(self, ctx):
+        """处理dedup()方法"""
+        params = []
+        if hasattr(ctx, 'stringNullableLiteralVarargs') and ctx.stringNullableLiteralVarargs():
+            params = self.visit(ctx.stringNullableLiteralVarargs())
+        self.traversal.add_step(Step('dedup', params))
+        
+    def visitTraversalMethod_path(self, ctx):
+        """处理path()方法"""
+        self.traversal.add_step(Step('path', []))
+        
+    def visitTraversalMethod_as(self, ctx):
+        """处理as()方法"""
+        params = []
+        if hasattr(ctx, 'stringArgument') and ctx.stringArgument():
+            params.append(self.visit(ctx.stringArgument()))
+        elif hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        self.traversal.add_step(Step('as', params))
+        
+    def visitTraversalMethod_select_String(self, ctx):
+        """处理select(string)方法"""
+        params = []
+        if hasattr(ctx, 'stringArgument') and ctx.stringArgument():
+            params.append(self.visit(ctx.stringArgument()))
+        elif hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        self.traversal.add_step(Step('select', params))
+
+    # 基础Context方法 - 这些是ANTLR visitor模式必需的
+    def visitQueryContext(self, ctx):
+        """处理查询的根Context"""
+        return self.visitChildren(ctx)
+    
+    def visitRootTraversalContext(self, ctx):
+        """处理根遍历Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalSourceContext(self, ctx):
+        """处理遍历源Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalSourceSpawnMethodContext(self, ctx):
+        """处理遍历源生成方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethodContext(self, ctx):
+        """处理遍历方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitChainedTraversalContext(self, ctx):
+        """处理链式遍历Context"""
+        return self.visitChildren(ctx)
+    
+    # 参数和字面量Context方法
+    def visitGenericArgumentVarargsContext(self, ctx):
+        """处理通用参数变长列表"""
+        return self.visitChildren(ctx)
+    
+    def visitStringLiteralContext(self, ctx):
+        """处理字符串字面量"""
+        return ctx.getText().strip("'\"")
+    
+    def visitIntegerLiteralContext(self, ctx):
+        """处理整数字面量"""
+        text = ctx.getText().lower().rstrip('l')
+        return int(text)
+    
+    def visitFloatLiteralContext(self, ctx):
+        """处理浮点数字面量"""
+        return float(ctx.getText())
+    
+    def visitGenericLiteralContext(self, ctx):
+        """处理通用字面量"""
+        return self.visitChildren(ctx)
+    
+    def visitNumericLiteralContext(self, ctx):
+        """处理数值字面量"""
+        return self.visitChildren(ctx)
+    
+    def visitStringArgumentContext(self, ctx):
+        """处理字符串参数"""
+        return self.visitChildren(ctx)
+    
+    def visitIntegerArgumentContext(self, ctx):
+        """处理整数参数"""
+        return self.visitChildren(ctx)
+    
+    def visitFloatArgumentContext(self, ctx):
+        """处理浮点数参数"""
+        return self.visitChildren(ctx)
+    
+    def visitGenericArgumentContext(self, ctx):
+        """处理通用参数"""
+        return self.visitChildren(ctx)
+    
+    def visitStringNullableLiteralContext(self, ctx):
+        """处理可空字符串字面量"""
+        if ctx.getText() == 'null':
+            return None
+        return ctx.getText().strip("'\"")
+    
+    def visitStringNullableLiteralVarargsContext(self, ctx):
+        """处理可空字符串字面量变长列表"""
+        return self.visitChildren(ctx)
+    
+    def visitStringNullableArgumentContext(self, ctx):
+        """处理可空字符串参数"""
+        return self.visitChildren(ctx)
+    
+    def visitStringNullableArgumentVarargsContext(self, ctx):
+        """处理可空字符串参数变长列表"""
+        return self.visitChildren(ctx)
+
+    # 其他重要方法
+    def visitTraversalMethod_identity(self, ctx):
+        """处理identity()方法"""
+        self.traversal.add_step(Step('identity', []))
+        
+    def visitTraversalMethod_barrier_Empty(self, ctx):
+        """处理无参数的barrier()方法"""
+        self.traversal.add_step(Step('barrier', []))
+        
+    def visitTraversalMethod_constant(self, ctx):
+        """处理constant()方法"""
+        params = []
+        if hasattr(ctx, 'genericArgument') and ctx.genericArgument():
+            params.append(self.visit(ctx.genericArgument()))
+        self.traversal.add_step(Step('constant', params))
+        
+    def visitTraversalMethod_math(self, ctx):
+        """处理math()方法"""
+        params = []
+        if hasattr(ctx, 'stringArgument') and ctx.stringArgument():
+            params.append(self.visit(ctx.stringArgument()))
+        elif hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        self.traversal.add_step(Step('math', params))
+        
+    def visitTraversalMethod_timeLimit(self, ctx):
+        """处理timeLimit()方法"""
+        params = []
+        if hasattr(ctx, 'integerArgument') and ctx.integerArgument():
+            params.append(self.visit(ctx.integerArgument()))
+        self.traversal.add_step(Step('timeLimit', params))
+        
+    def visitTraversalMethod_subgraph(self, ctx):
+        """处理subgraph()方法"""
+        params = []
+        if hasattr(ctx, 'stringArgument') and ctx.stringArgument():
+            params.append(self.visit(ctx.stringArgument()))
+        elif hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        self.traversal.add_step(Step('subgraph', params))
+        
+    def visitTraversalMethod_cyclicPath(self, ctx):
+        """处理cyclicPath()方法"""
+        self.traversal.add_step(Step('cyclicPath', []))
+        
+    def visitTraversalMethod_simplePath(self, ctx):
+        """处理simplePath()方法"""
+        self.traversal.add_step(Step('simplePath', []))
+        
+    def visitTraversalMethod_match(self, ctx):
+        """处理match()方法"""
+        params = []
+        if hasattr(ctx, 'nestedTraversalList') and ctx.nestedTraversalList():
+            params = self.visit(ctx.nestedTraversalList())
+        self.traversal.add_step(Step('match', params))
+    
+    # 高级转换和映射方法
+    def visitTraversalMethod_map(self, ctx):
+        """处理map()方法 - 将对象转换为另一个对象"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('map', params))
+    
+    def visitTraversalMethod_local(self, ctx):
+        """处理local()方法 - 将遍历应用于遍历器内部的对象"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('local', params))
+    
+    # 副作用和聚合方法
+    def visitTraversalMethod_aggregate_String(self, ctx):
+        """处理aggregate(string)方法 - 收集结果到副作用集合"""
+        params = []
+        if hasattr(ctx, 'stringArgument') and ctx.stringArgument():
+            params.append(self.visit(ctx.stringArgument()))
+        elif hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        self.traversal.add_step(Step('aggregate', params))
+    
+    def visitTraversalMethod_aggregate_Scope_String(self, ctx):
+        """处理aggregate(scope, string)方法"""
+        params = []
+        if hasattr(ctx, 'traversalScope') and ctx.traversalScope():
+            params.append(self.visit(ctx.traversalScope()))
+        if hasattr(ctx, 'stringArgument') and ctx.stringArgument():
+            params.append(self.visit(ctx.stringArgument()))
+        elif hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        self.traversal.add_step(Step('aggregate', params))
+    
+    def visitTraversalMethod_store(self, ctx):
+        """处理store()方法 - 惰性地收集遍历器到副作用集合"""
+        params = []
+        if hasattr(ctx, 'stringArgument') and ctx.stringArgument():
+            params.append(self.visit(ctx.stringArgument()))
+        elif hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        self.traversal.add_step(Step('store', params))
+    
+    def visitTraversalMethod_sideEffect(self, ctx):
+        """处理sideEffect()方法 - 执行副作用操作"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('sideEffect', params))
+    
+    def visitTraversalMethod_cap(self, ctx):
+        """处理cap()方法 - 从副作用中发射内容"""
+        params = []
+        if hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        if hasattr(ctx, 'stringNullableLiteralVarargs') and ctx.stringNullableLiteralVarargs():
+            varargs = self.visit(ctx.stringNullableLiteralVarargs())
+            if varargs:
+                params.extend(varargs)
+        self.traversal.add_step(Step('cap', params))
+    
+    # Sack方法 - 管理遍历器私有值
+    def visitTraversalMethod_sack_Empty(self, ctx):
+        """处理无参数的sack()方法"""
+        self.traversal.add_step(Step('sack', []))
+    
+    def visitTraversalMethod_sack_BiFunction(self, ctx):
+        """处理sack(biFunction)方法"""
+        params = []
+        if hasattr(ctx, 'traversalBiFunction') and ctx.traversalBiFunction():
+            params.append(self.visit(ctx.traversalBiFunction()))
+        self.traversal.add_step(Step('sack', params))
+    
+    # 图算法方法
+    def visitTraversalMethod_pageRank_Empty(self, ctx):
+        """处理无参数的pageRank()方法"""
+        self.traversal.add_step(Step('pageRank', []))
+    
+    def visitTraversalMethod_pageRank_double(self, ctx):
+        """处理pageRank(double)方法"""
+        params = []
+        if hasattr(ctx, 'floatArgument') and ctx.floatArgument():
+            params.append(self.visit(ctx.floatArgument()))
+        self.traversal.add_step(Step('pageRank', params))
+    
+    def visitTraversalMethod_peerPressure(self, ctx):
+        """处理peerPressure()方法 - 标签传播算法"""
+        self.traversal.add_step(Step('peerPressure', []))
+    
+    def visitTraversalMethod_connectedComponent(self, ctx):
+        """处理connectedComponent()方法 - 查找连通分量"""
+        self.traversal.add_step(Step('connectedComponent', []))
+    
+    def visitTraversalMethod_shortestPath(self, ctx):
+        """处理shortestPath()方法 - 计算最短路径"""
+        self.traversal.add_step(Step('shortestPath', []))
+    
+    # 树和层级结构方法
+    def visitTraversalMethod_tree_Empty(self, ctx):
+        """处理无参数的tree()方法"""
+        self.traversal.add_step(Step('tree', []))
+    
+    def visitTraversalMethod_tree_String(self, ctx):
+        """处理tree(string)方法"""
+        params = []
+        if hasattr(ctx, 'stringArgument') and ctx.stringArgument():
+            params.append(self.visit(ctx.stringArgument()))
+        elif hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        self.traversal.add_step(Step('tree', params))
+    
+    # 调试和分析方法
+    def visitTraversalMethod_profile_Empty(self, ctx):
+        """处理无参数的profile()方法"""
+        self.traversal.add_step(Step('profile', []))
+    
+    def visitTraversalMethod_profile_String(self, ctx):
+        """处理profile(string)方法"""
+        params = []
+        if hasattr(ctx, 'stringArgument') and ctx.stringArgument():
+            params.append(self.visit(ctx.stringArgument()))
+        elif hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        self.traversal.add_step(Step('profile', params))
+    
+    # 循环控制方法
+    def visitTraversalMethod_loops_Empty(self, ctx):
+        """处理无参数的loops()方法"""
+        self.traversal.add_step(Step('loops', []))
+    
+    def visitTraversalMethod_loops_String(self, ctx):
+        """处理loops(string)方法"""
+        params = []
+        if hasattr(ctx, 'stringArgument') and ctx.stringArgument():
+            params.append(self.visit(ctx.stringArgument()))
+        elif hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        self.traversal.add_step(Step('loops', params))
+    
+    # 嵌套遍历Context方法 - 委托给原有的visitNestedTraversal实现
+    def visitNestedTraversalContext(self, ctx):
+        """处理嵌套遍历Context - 委托给visitNestedTraversal"""
+        # 直接调用原有的visitNestedTraversal方法
+        return self.visitNestedTraversal(ctx)
+    
+    def visitNestedTraversalExpr(self, ctx):
+        """处理嵌套遍历表达式 - 返回多个嵌套遍历的列表"""
+        result = []
+        # nestedTraversalExpr包含多个nestedTraversal，用逗号分隔
+        if hasattr(ctx, 'nestedTraversal'):
+            nested_traversals = ctx.nestedTraversal()
+            if isinstance(nested_traversals, list):
+                for nt in nested_traversals:
+                    result.append(self.visit(nt))
+            else:
+                result.append(self.visit(nested_traversals))
+        return result
+    
+    def visitNestedTraversalExprContext(self, ctx):
+        """处理嵌套遍历表达式Context"""
+        return self.visitNestedTraversalExpr(ctx)
+    
+    def visitNestedTraversalList(self, ctx):
+        """处理嵌套遍历列表 - 可能包含0个或多个嵌套遍历"""
+        # nestedTraversalList包含一个可选的nestedTraversalExpr
+        if hasattr(ctx, 'nestedTraversalExpr') and ctx.nestedTraversalExpr():
+            return self.visit(ctx.nestedTraversalExpr())
+        return []
+    
+    def visitNestedTraversalListContext(self, ctx):
+        """处理嵌套遍历列表Context"""
+        return self.visitNestedTraversalList(ctx)
+    
+    # 谓词和比较器Context方法
+    def visitTraversalPredicateContext(self, ctx):
+        """处理遍历谓词Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalPredicate_gtContext(self, ctx):
+        """处理gt谓词Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalComparatorContext(self, ctx):
+        """处理遍历比较器Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalOrderContext(self, ctx):
+        """处理遍历排序Context"""
+        return self.visitChildren(ctx)
+    
+    # 更多具体方法的Context版本
+    def visitTraversalMethod_count_EmptyContext(self, ctx):
+        """处理count()空参数Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_sum_EmptyContext(self, ctx):
+        """处理sum()空参数Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_mean_EmptyContext(self, ctx):
+        """处理mean()空参数Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_max_EmptyContext(self, ctx):
+        """处理max()空参数Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_min_EmptyContext(self, ctx):
+        """处理min()空参数Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_fold_EmptyContext(self, ctx):
+        """处理fold()空参数Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_order_EmptyContext(self, ctx):
+        """处理order()空参数Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_group_EmptyContext(self, ctx):
+        """处理group()空参数Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_group_StringContext(self, ctx):
+        """处理group(string)带标签参数Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_groupCount_EmptyContext(self, ctx):
+        """处理groupCount()空参数Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_groupCount_StringContext(self, ctx):
+        """处理groupCount(string)带标签参数Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_by_StringContext(self, ctx):
+        """处理by(string)Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_by_String_ComparatorContext(self, ctx):
+        """处理by(string, comparator)Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_by_TraversalContext(self, ctx):
+        """处理by(traversal)Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_dedup_StringContext(self, ctx):
+        """处理dedup()Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_pathContext(self, ctx):
+        """处理path()Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_asContext(self, ctx):
+        """处理as()Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_select_StringContext(self, ctx):
+        """处理select(string)Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_select_String_String_StringContext(self, ctx):
+        """处理select(string, string, string)Context"""
+        return self.visitChildren(ctx)
+    
+    # 剩余的缺失方法
+    def visitTraversalMethod_barrier_EmptyContext(self, ctx):
+        """处理barrier()空参数Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_choose_TraversalContext(self, ctx):
+        """处理choose(traversal)Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_coalesceContext(self, ctx):
+        """处理coalesce()Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_constantContext(self, ctx):
+        """处理constant()Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_cyclicPathContext(self, ctx):
+        """处理cyclicPath()Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_emit_EmptyContext(self, ctx):
+        """处理emit()空参数Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_hasLabel_String_StringContext(self, ctx):
+        """处理hasLabel(string, string)Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_has_String_ObjectContext(self, ctx):
+        """处理has(string, object)Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_has_String_PContext(self, ctx):
+        """处理has(string, predicate)Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_identityContext(self, ctx):
+        """处理identity()Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_matchContext(self, ctx):
+        """处理match()Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_mathContext(self, ctx):
+        """处理math()Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_optionalContext(self, ctx):
+        """处理optional()Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_range_long_longContext(self, ctx):
+        """处理range(long, long)Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_repeat_TraversalContext(self, ctx):
+        """处理repeat(traversal)Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_sample_intContext(self, ctx):
+        """处理sample(int)Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_simplePathContext(self, ctx):
+        """处理simplePath()Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_skip_longContext(self, ctx):
+        """处理skip(long)Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_subgraphContext(self, ctx):
+        """处理subgraph()Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_tail_longContext(self, ctx):
+        """处理tail(long)Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_timeLimitContext(self, ctx):
+        """处理timeLimit()Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_timesContext(self, ctx):
+        """处理times()Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_unionContext(self, ctx):
+        """处理union()Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_until_TraversalContext(self, ctx):
+        """处理until(traversal)Context"""
+        return self.visitChildren(ctx)
+        
+    # 更多具体的Context方法
+    def visitTraversalSourceSpawnMethod_VContext(self, ctx):
+        """处理V()生成方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalSourceSpawnMethod_EContext(self, ctx):
+        """处理E()生成方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalSourceSpawnMethod_addVContext(self, ctx):
+        """处理addV()生成方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_outContext(self, ctx):
+        """处理out()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_inEContext(self, ctx):
+        """处理inE()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_outEContext(self, ctx):
+        """处理outE()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_bothEContext(self, ctx):
+        """处理bothE()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_inVContext(self, ctx):
+        """处理inV()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_outVContext(self, ctx):
+        """处理outV()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_bothVContext(self, ctx):
+        """处理bothV()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_idContext(self, ctx):
+        """处理id()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_labelContext(self, ctx):
+        """处理label()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_keyContext(self, ctx):
+        """处理key()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_valueContext(self, ctx):
+        """处理value()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_valuesContext(self, ctx):
+        """处理values()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_propertiesContext(self, ctx):
+        """处理properties()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_elementMapContext(self, ctx):
+        """处理elementMap()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_dropContext(self, ctx):
+        """处理drop()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_addE_StringContext(self, ctx):
+        """处理addE(string)方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_property_Object_Object_ObjectContext(self, ctx):
+        """处理property()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_limit_longContext(self, ctx):
+        """处理limit()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_coinContext(self, ctx):
+        """处理coin()方法Context"""
+        return self.visitChildren(ctx)
+    
+    def visitTraversalMethod_unfoldContext(self, ctx):
+        """处理unfold()方法Context"""
+        return self.visitChildren(ctx)
+
+    
     def visitTraversalSourceSpawnMethod_E(self, ctx: GremlinParser.TraversalSourceSpawnMethod_EContext):
         params = self.visit(ctx.genericArgumentVarargs()) if ctx.genericArgumentVarargs() else []
         self.traversal.add_step(Step('E', params))
@@ -566,17 +1472,44 @@ class GremlinTransVisitor(GremlinVisitor):
     def visitTraversalMethod_outV(self, ctx: GremlinParser.TraversalMethod_outVContext):
         self.traversal.add_step(Step('outV', []))
 
+    def visitTraversalMethod_otherV(self, ctx: GremlinParser.TraversalMethod_otherVContext):
+        self.traversal.add_step(Step('otherV', []))
+
     # 更多过滤方法访问器
-    def visitTraversalMethod_where(self, ctx):
-        # where() 方法可能有多种变体，需要检查参数类型
+    # where的特定变体（删除了冗余的通用方法）
+    def visitTraversalMethod_where_P(self, ctx):
+        """where(Predicate)变体"""
         params = []
         if hasattr(ctx, 'traversalPredicate') and ctx.traversalPredicate():
             params.append(self.visit(ctx.traversalPredicate()))
-        elif hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+        self.traversal.add_step(Step('where', params))
+    
+    def visitTraversalMethod_where_String_P(self, ctx):
+        """where(String, Predicate)变体"""
+        params = []
+        if hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        if hasattr(ctx, 'traversalPredicate') and ctx.traversalPredicate():
+            params.append(self.visit(ctx.traversalPredicate()))
+        self.traversal.add_step(Step('where', params))
+    
+    def visitTraversalMethod_where_Traversal(self, ctx):
+        """where(Traversal)变体 - 接受嵌套遍历"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
             params.append(self.visit(ctx.nestedTraversal()))
         self.traversal.add_step(Step('where', params))
 
-    def visitTraversalMethod_filter(self, ctx):
+    # filter的特定变体（删除了冗余的通用方法）
+    def visitTraversalMethod_filter_Predicate(self, ctx):
+        """filter(Predicate)变体"""
+        params = []
+        if hasattr(ctx, 'traversalPredicate') and ctx.traversalPredicate():
+            params.append(self.visit(ctx.traversalPredicate()))
+        self.traversal.add_step(Step('filter', params))
+    
+    def visitTraversalMethod_filter_Traversal(self, ctx):
+        """filter(Traversal)变体 - 接受嵌套遍历"""
         params = []
         if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
             params.append(self.visit(ctx.nestedTraversal()))
@@ -595,6 +1528,239 @@ class GremlinTransVisitor(GremlinVisitor):
         if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
             params.append(self.visit(ctx.nestedTraversal()))
         self.traversal.add_step(Step('not', params))
+    
+    # ========== 高优先级缺失方法 - 2024修复 ==========
+    
+    # select的特定变体
+    def visitTraversalMethod_select_Traversal(self, ctx):
+        """select(Traversal)变体"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('select', params))
+    
+    def visitTraversalMethod_select_Pop_String(self, ctx):
+        """select(Pop, String)变体"""
+        params = []
+        if hasattr(ctx, 'traversalPop') and ctx.traversalPop():
+            params.append(self.visit(ctx.traversalPop()))
+        if hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        self.traversal.add_step(Step('select', params))
+    
+    def visitTraversalMethod_select_Pop_Traversal(self, ctx):
+        """select(Pop, Traversal)变体"""
+        params = []
+        if hasattr(ctx, 'traversalPop') and ctx.traversalPop():
+            params.append(self.visit(ctx.traversalPop()))
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('select', params))
+    
+    # from的特定变体
+    def visitTraversalMethod_from_String(self, ctx):
+        """from(String)变体"""
+        params = []
+        if hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        self.traversal.add_step(Step('from', params))
+    
+    def visitTraversalMethod_from_Vertex(self, ctx):
+        """from(Vertex)变体"""
+        params = []
+        if hasattr(ctx, 'structureVertex') and ctx.structureVertex():
+            params.append(self.visit(ctx.structureVertex()))
+        self.traversal.add_step(Step('from', params))
+    
+    def visitTraversalMethod_from_Traversal(self, ctx):
+        """from(Traversal)变体"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('from', params))
+    
+    # to的特定变体
+    def visitTraversalMethod_to_String(self, ctx):
+        """to(String)变体"""
+        params = []
+        if hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        self.traversal.add_step(Step('to', params))
+    
+    def visitTraversalMethod_to_Vertex(self, ctx):
+        """to(Vertex)变体"""
+        params = []
+        if hasattr(ctx, 'structureVertex') and ctx.structureVertex():
+            params.append(self.visit(ctx.structureVertex()))
+        self.traversal.add_step(Step('to', params))
+    
+    def visitTraversalMethod_to_Traversal(self, ctx):
+        """to(Traversal)变体"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('to', params))
+    
+    # emit的特定变体
+    def visitTraversalMethod_emit_Predicate(self, ctx):
+        """emit(Predicate)变体"""
+        params = []
+        if hasattr(ctx, 'traversalPredicate') and ctx.traversalPredicate():
+            params.append(self.visit(ctx.traversalPredicate()))
+        self.traversal.add_step(Step('emit', params))
+    
+    def visitTraversalMethod_emit_Traversal(self, ctx):
+        """emit(Traversal)变体"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('emit', params))
+    
+    # by的特定变体
+    def visitTraversalMethod_by_Empty(self, ctx):
+        """by()变体 - 无参数"""
+        self.traversal.add_step(Step('by', []))
+    
+    def visitTraversalMethod_by_Function(self, ctx):
+        """by(Function)变体"""
+        params = []
+        if hasattr(ctx, 'traversalFunction') and ctx.traversalFunction():
+            params.append(self.visit(ctx.traversalFunction()))
+        self.traversal.add_step(Step('by', params))
+    
+    def visitTraversalMethod_by_Order(self, ctx):
+        """by(Order)变体"""
+        params = []
+        if hasattr(ctx, 'traversalOrder') and ctx.traversalOrder():
+            params.append(self.visit(ctx.traversalOrder()))
+        self.traversal.add_step(Step('by', params))
+    
+    def visitTraversalMethod_by_T(self, ctx):
+        """by(T)变体"""
+        params = []
+        if hasattr(ctx, 'traversalT') and ctx.traversalT():
+            params.append(self.visit(ctx.traversalT()))
+        self.traversal.add_step(Step('by', params))
+    
+    # tail的特定变体
+    def visitTraversalMethod_tail_Scope(self, ctx):
+        """tail(Scope)变体"""
+        params = []
+        if hasattr(ctx, 'traversalScope') and ctx.traversalScope():
+            params.append(self.visit(ctx.traversalScope()))
+        self.traversal.add_step(Step('tail', params))
+    
+    # barrier的特定变体
+    def visitTraversalMethod_barrier_int(self, ctx):
+        """barrier(int)变体"""
+        params = []
+        if hasattr(ctx, 'integerLiteral') and ctx.integerLiteral():
+            params.append(self.visit(ctx.integerLiteral()))
+        self.traversal.add_step(Step('barrier', params))
+    
+    # V和E的实现
+    def visitTraversalMethod_V(self, ctx):
+        """V()方法 - 获取顶点"""
+        params = []
+        if hasattr(ctx, 'genericArgumentVarargs') and ctx.genericArgumentVarargs():
+            args = self.visit(ctx.genericArgumentVarargs())
+            if args:
+                params.extend(args if isinstance(args, list) else [args])
+        self.traversal.add_step(Step('V', params))
+    
+    def visitTraversalMethod_E(self, ctx):
+        """E()方法 - 获取边"""
+        params = []
+        if hasattr(ctx, 'genericArgumentVarargs') and ctx.genericArgumentVarargs():
+            args = self.visit(ctx.genericArgumentVarargs())
+            if args:
+                params.extend(args if isinstance(args, list) else [args])
+        self.traversal.add_step(Step('E', params))
+    
+    # choose的所有变体
+    def visitTraversalMethod_choose_Function(self, ctx):
+        """choose(Function)变体"""
+        params = []
+        if hasattr(ctx, 'traversalFunction') and ctx.traversalFunction():
+            params.append(self.visit(ctx.traversalFunction()))
+        self.traversal.add_step(Step('choose', params))
+    
+    def visitTraversalMethod_choose_Traversal_Traversal(self, ctx):
+        """choose(Traversal, Traversal)变体"""
+        params = []
+        # 获取所有nestedTraversal
+        if hasattr(ctx, 'nestedTraversal'):
+            traversals = ctx.nestedTraversal()
+            if traversals:
+                if isinstance(traversals, list):
+                    for t in traversals:
+                        params.append(self.visit(t))
+                else:
+                    params.append(self.visit(traversals))
+        self.traversal.add_step(Step('choose', params))
+    
+    def visitTraversalMethod_choose_Predicate_Traversal(self, ctx):
+        """choose(Predicate, Traversal)变体"""
+        params = []
+        if hasattr(ctx, 'traversalPredicate') and ctx.traversalPredicate():
+            params.append(self.visit(ctx.traversalPredicate()))
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('choose', params))
+    
+    def visitTraversalMethod_choose_Predicate_Traversal_Traversal(self, ctx):
+        """choose(Predicate, Traversal, Traversal)变体 - 三参数版本"""
+        params = []
+        if hasattr(ctx, 'traversalPredicate') and ctx.traversalPredicate():
+            params.append(self.visit(ctx.traversalPredicate()))
+        # 获取两个nestedTraversal参数
+        if hasattr(ctx, 'nestedTraversal'):
+            traversals = ctx.nestedTraversal()
+            if traversals:
+                if isinstance(traversals, list):
+                    for t in traversals:
+                        params.append(self.visit(t))
+                else:
+                    params.append(self.visit(traversals))
+        self.traversal.add_step(Step('choose', params))
+    
+    def visitTraversalMethod_choose_Traversal_Traversal_Traversal(self, ctx):
+        """choose(Traversal, Traversal, Traversal)变体 - 三遍历版本"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal'):
+            traversals = ctx.nestedTraversal()
+            if traversals:
+                if isinstance(traversals, list):
+                    for t in traversals:
+                        params.append(self.visit(t))
+                else:
+                    params.append(self.visit(traversals))
+        self.traversal.add_step(Step('choose', params))
+    
+    # flatMap方法
+    def visitTraversalMethod_flatMap(self, ctx):
+        """flatMap(Traversal)方法"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('flatMap', params))
+    
+    # is的特定变体
+    def visitTraversalMethod_is_Object(self, ctx):
+        """is(Object)变体"""
+        params = []
+        if hasattr(ctx, 'genericArgument') and ctx.genericArgument():
+            params.append(self.visit(ctx.genericArgument()))
+        self.traversal.add_step(Step('is', params))
+    
+    def visitTraversalMethod_is_P(self, ctx):
+        """is(Predicate)变体"""
+        params = []
+        if hasattr(ctx, 'traversalPredicate') and ctx.traversalPredicate():
+            params.append(self.visit(ctx.traversalPredicate()))
+        self.traversal.add_step(Step('is', params))
+    
+    # ========== 高优先级缺失方法结束 ==========
 
     def visitTraversalMethod_hasLabel(self, ctx):
         params = self.visit(ctx.stringNullableArgumentVarargs()) if hasattr(ctx, 'stringNullableArgumentVarargs') and ctx.stringNullableArgumentVarargs() else []
@@ -791,20 +1957,166 @@ class GremlinTransVisitor(GremlinVisitor):
     def visitTraversalSourceSelfMethod_with(self, ctx: GremlinParser.TraversalSourceSelfMethod_withContext):
         """处理 g.with() 方法"""
         params = []
-        if ctx.stringArgument():
-            params.append(self.visit(ctx.stringArgument()))
-        if ctx.genericArgument():
+        if hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        if hasattr(ctx, 'genericArgument') and ctx.genericArgument():
             params.append(self.visit(ctx.genericArgument()))
         self.traversal.add_step(Step('with', params))
 
     def visitTraversalSourceSelfMethod_withSideEffect(self, ctx: GremlinParser.TraversalSourceSelfMethod_withSideEffectContext):
         """处理 g.withSideEffect() 方法"""
         params = []
-        if ctx.stringArgument():
-            params.append(self.visit(ctx.stringArgument()))
-        if ctx.genericArgument():
+        if hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        if hasattr(ctx, 'genericArgument') and ctx.genericArgument():
             params.append(self.visit(ctx.genericArgument()))
         self.traversal.add_step(Step('withSideEffect', params))
+    
+    def visitTraversalSourceSelfMethod_withBulk(self, ctx: GremlinParser.TraversalSourceSelfMethod_withBulkContext):
+        """处理 g.withBulk() 方法"""
+        params = []
+        if hasattr(ctx, 'booleanArgument') and ctx.booleanArgument():
+            params.append(self.visit(ctx.booleanArgument()))
+        self.traversal.add_step(Step('withBulk', params))
+    
+    def visitTraversalSourceSelfMethod_withPath(self, ctx: GremlinParser.TraversalSourceSelfMethod_withPathContext):
+        """处理 g.withPath() 方法"""
+        self.traversal.add_step(Step('withPath', []))
+    
+    def visitTraversalSourceSelfMethod_withSack(self, ctx: GremlinParser.TraversalSourceSelfMethod_withSackContext):
+        """处理 g.withSack() 方法"""
+        params = []
+        if hasattr(ctx, 'genericArgument') and ctx.genericArgument():
+            params.append(self.visit(ctx.genericArgument()))
+        if hasattr(ctx, 'traversalBiFunction') and ctx.traversalBiFunction():
+            params.append(self.visit(ctx.traversalBiFunction()))
+        self.traversal.add_step(Step('withSack', params))
+    
+    def visitTraversalSourceSelfMethod_withStrategies(self, ctx: GremlinParser.TraversalSourceSelfMethod_withStrategiesContext):
+        """处理 g.withStrategies() 方法"""
+        params = []
+        if hasattr(ctx, 'traversalStrategy') and ctx.traversalStrategy():
+            params.append(self.visit(ctx.traversalStrategy()))
+        self.traversal.add_step(Step('withStrategies', params))
+    
+    def visitTraversalSourceSelfMethod_withoutStrategies(self, ctx: GremlinParser.TraversalSourceSelfMethod_withoutStrategiesContext):
+        """处理 g.withoutStrategies() 方法"""
+        params = []
+        if hasattr(ctx, 'classType') and ctx.classType():
+            params.append(self.visit(ctx.classType()))
+        self.traversal.add_step(Step('withoutStrategies', params))
+    
+    # SpawnMethod缺失方法
+    def visitTraversalSourceSpawnMethod_mergeE_Map(self, ctx):
+        """处理 g.mergeE(map) 方法
+        
+        TODO: 完整实现 Map 参数解析
+        当前实现：忽略 Map 参数内容，只记录步骤名称
+        完整实现需要：
+        1. 解析 genericMapNullableArgument (如 [:] 或 [(T.id): 1])
+        2. 提取 Map 中的键值对
+        3. 将 Map 对象作为参数传递给 Step
+        4. 在 TraversalGenerator 中支持 Map 参数的泛化
+        
+        参考：base_v2/MAP_PARAMETER_FIX_PLAN.md
+        """
+        params = []
+        # Map参数暂时简化处理 - 见上方 TODO
+        self.traversal.add_step(Step('mergeE', params))
+    
+    def visitTraversalSourceSpawnMethod_mergeE_Traversal(self, ctx):
+        """处理 g.mergeE(traversal) 方法"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('mergeE', params))
+    
+    def visitTraversalSourceSpawnMethod_mergeV_Map(self, ctx):
+        """处理 g.mergeV(map) 方法
+        
+        TODO: 完整实现 Map 参数解析
+        当前实现：忽略 Map 参数内容，只记录步骤名称
+        完整实现需要：
+        1. 解析 genericMapNullableArgument (如 [:] 或 [(T.id): 1])
+        2. 提取 Map 中的键值对
+        3. 将 Map 对象作为参数传递给 Step
+        4. 在 TraversalGenerator 中支持 Map 参数的泛化
+        
+        参考：base_v2/MAP_PARAMETER_FIX_PLAN.md
+        """
+        params = []
+        # Map参数暂时简化处理 - 见上方 TODO
+        self.traversal.add_step(Step('mergeV', params))
+    
+    def visitTraversalSourceSpawnMethod_mergeV_Traversal(self, ctx):
+        """处理 g.mergeV(traversal) 方法"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('mergeV', params))
+    
+    def visitTraversalMethod_mergeE_empty(self, ctx):
+        """处理 .mergeE() 无参数方法"""
+        self.traversal.add_step(Step('mergeE', []))
+    
+    def visitTraversalMethod_mergeE_Map(self, ctx):
+        """处理 .mergeE(map) 方法
+        
+        TODO: 完整实现 Map 参数解析
+        当前实现：忽略 Map 参数内容，只记录步骤名称
+        完整实现需要：
+        1. 解析 genericMapNullableArgument (如 [:] 或 [(T.id): 1])
+        2. 提取 Map 中的键值对
+        3. 将 Map 对象作为参数传递给 Step
+        4. 在 TraversalGenerator 中支持 Map 参数的泛化
+        
+        参考：base_v2/MAP_PARAMETER_FIX_PLAN.md
+        """
+        params = []
+        # Map参数暂时简化处理 - 见上方 TODO
+        self.traversal.add_step(Step('mergeE', params))
+    
+    def visitTraversalMethod_mergeE_Traversal(self, ctx):
+        """处理 .mergeE(traversal) 方法"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('mergeE', params))
+    
+    def visitTraversalMethod_mergeV_empty(self, ctx):
+        """处理 .mergeV() 无参数方法"""
+        self.traversal.add_step(Step('mergeV', []))
+    
+    def visitTraversalMethod_mergeV_Map(self, ctx):
+        """处理 .mergeV(map) 方法
+        
+        TODO: 完整实现 Map 参数解析
+        当前实现：忽略 Map 参数内容，只记录步骤名称
+        完整实现需要：
+        1. 解析 genericMapNullableArgument (如 [:] 或 [(T.id): 1])
+        2. 提取 Map 中的键值对
+        3. 将 Map 对象作为参数传递给 Step
+        4. 在 TraversalGenerator 中支持 Map 参数的泛化
+        
+        参考：base_v2/MAP_PARAMETER_FIX_PLAN.md
+        """
+        params = []
+        # Map参数暂时简化处理 - 见上方 TODO
+        self.traversal.add_step(Step('mergeV', params))
+    
+    def visitTraversalMethod_mergeV_Traversal(self, ctx):
+        """处理 .mergeV(traversal) 方法"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('mergeV', params))
+    
+    def visitTraversalSourceSpawnMethod_union(self, ctx: GremlinParser.TraversalSourceSpawnMethod_unionContext):
+        """处理 g.union() 方法"""
+        params = []
+        if hasattr(ctx, 'nestedTraversalVarargs') and ctx.nestedTraversalVarargs():
+            params = self.visit(ctx.nestedTraversalVarargs())
+        self.traversal.add_step(Step('union', params))
 
     # 转换方法访问器
     def visitTraversalMethod_properties(self, ctx):
@@ -822,20 +2134,32 @@ class GremlinTransVisitor(GremlinVisitor):
     def visitTraversalMethod_select_String_String_String(self, ctx: GremlinParser.TraversalMethod_select_String_String_StringContext):
         """处理 .select('key1', 'key2', 'key3') 多字符串参数调用"""
         params = []
-        # 查找所有StringLiteralContext子节点
-        for child in ctx.children:
-            if hasattr(child, 'getRuleIndex') and 'StringLiteral' in type(child).__name__:
-                string_val = child.getText()
-                # 移除引号
-                if string_val.startswith('"') and string_val.endswith('"'):
-                    string_val = string_val[1:-1]
-                elif string_val.startswith("'") and string_val.endswith("'"):
-                    string_val = string_val[1:-1]
-                params.append(string_val)
+        # 获取前两个 stringLiteral
+        if hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            literals = ctx.stringLiteral()
+            if isinstance(literals, list):
+                for lit in literals:
+                    params.append(self.visit(lit))
+            else:
+                params.append(self.visit(literals))
+        # 获取额外的参数（第三个及以后）
+        if hasattr(ctx, 'stringNullableLiteralVarargs') and ctx.stringNullableLiteralVarargs():
+            extra_params = self.visit(ctx.stringNullableLiteralVarargs())
+            if extra_params:
+                params.extend(extra_params if isinstance(extra_params, list) else [extra_params])
         self.traversal.add_step(Step('select', params))
 
     def visitTraversalMethod_project(self, ctx):
-        params = self.visit(ctx.stringNullableArgumentVarargs()) if hasattr(ctx, 'stringNullableArgumentVarargs') and ctx.stringNullableArgumentVarargs() else []
+        """处理project()方法"""
+        params = []
+        # 第一个参数是必需的stringLiteral
+        if hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        # 后面可选的stringNullableLiteralVarargs
+        if hasattr(ctx, 'stringNullableLiteralVarargs') and ctx.stringNullableLiteralVarargs():
+            varargs = self.visit(ctx.stringNullableLiteralVarargs())
+            if varargs:
+                params.extend(varargs)
         self.traversal.add_step(Step('project', params))
 
     def visitTraversalMethod_valueMap(self, ctx):
@@ -863,59 +2187,157 @@ class GremlinTransVisitor(GremlinVisitor):
         self.traversal.add_step(Step('value', []))
 
     # 聚合方法访问器
-    def visitTraversalMethod_count(self, ctx):
+    # 聚合方法的正确实现 - 使用正确的Context类型
+    def visitTraversalMethod_count_Empty(self, ctx):
+        """处理无参数的count()方法"""
         self.traversal.add_step(Step('count', []))
-
-    def visitTraversalMethod_sum(self, ctx):
+        
+    def visitTraversalMethod_count_Scope(self, ctx):
+        """处理有参数的count()方法"""
+        # 处理scope参数
+        params = []
+        if hasattr(ctx, 'traversalScope') and ctx.traversalScope():
+            params.append(self.visit(ctx.traversalScope()))
+        self.traversal.add_step(Step('count', params))
+        
+    def visitTraversalMethod_sum_Empty(self, ctx):
+        """处理无参数的sum()方法"""
         self.traversal.add_step(Step('sum', []))
-
-    def visitTraversalMethod_mean(self, ctx):
+        
+    def visitTraversalMethod_sum_Scope(self, ctx):
+        """处理有参数的sum()方法"""
+        params = []
+        if hasattr(ctx, 'traversalScope') and ctx.traversalScope():
+            params.append(self.visit(ctx.traversalScope()))
+        self.traversal.add_step(Step('sum', params))
+        
+    def visitTraversalMethod_mean_Empty(self, ctx):
+        """处理无参数的mean()方法"""
         self.traversal.add_step(Step('mean', []))
-
-    def visitTraversalMethod_max(self, ctx):
+        
+    def visitTraversalMethod_mean_Scope(self, ctx):
+        """处理有参数的mean()方法"""
+        params = []
+        if hasattr(ctx, 'traversalScope') and ctx.traversalScope():
+            params.append(self.visit(ctx.traversalScope()))
+        self.traversal.add_step(Step('mean', params))
+        
+    def visitTraversalMethod_max_Empty(self, ctx):
+        """处理无参数的max()方法"""
         self.traversal.add_step(Step('max', []))
-
-    def visitTraversalMethod_min(self, ctx):
+        
+    def visitTraversalMethod_max_Scope(self, ctx):
+        """处理有参数的max()方法"""
+        params = []
+        if hasattr(ctx, 'traversalScope') and ctx.traversalScope():
+            params.append(self.visit(ctx.traversalScope()))
+        self.traversal.add_step(Step('max', params))
+        
+    def visitTraversalMethod_min_Empty(self, ctx):
+        """处理无参数的min()方法"""
         self.traversal.add_step(Step('min', []))
-
-    def visitTraversalMethod_fold(self, ctx):
+        
+    def visitTraversalMethod_min_Scope(self, ctx):
+        """处理有参数的min()方法"""
+        params = []
+        if hasattr(ctx, 'traversalScope') and ctx.traversalScope():
+            params.append(self.visit(ctx.traversalScope()))
+        self.traversal.add_step(Step('min', params))
+        
+    def visitTraversalMethod_fold_Empty(self, ctx):
+        """处理无参数的fold()方法"""
         self.traversal.add_step(Step('fold', []))
 
     def visitTraversalMethod_unfold(self, ctx):
         self.traversal.add_step(Step('unfold', []))
 
-    def visitTraversalMethod_group(self, ctx):
+    # 分组方法
+    def visitTraversalMethod_group_Empty(self, ctx):
+        """处理无参数的group()方法"""
         self.traversal.add_step(Step('group', []))
-
-    def visitTraversalMethod_groupCount(self, ctx):
+    
+    def visitTraversalMethod_group_String(self, ctx):
+        """处理带标签参数的group(string)方法"""
+        params = []
+        if hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        self.traversal.add_step(Step('group', params))
+        
+    def visitTraversalMethod_groupCount_Empty(self, ctx):
+        """处理无参数的groupCount()方法"""
         self.traversal.add_step(Step('groupCount', []))
+    
+    def visitTraversalMethod_groupCount_String(self, ctx):
+        """处理带标签参数的groupCount(string)方法"""
+        params = []
+        if hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        self.traversal.add_step(Step('groupCount', params))
 
     # 排序和限制方法访问器
-    def visitTraversalMethod_order(self, ctx):
+    # 排序和限制方法的正确实现
+    def visitTraversalMethod_order_Empty(self, ctx):
+        """处理无参数的order()方法"""
         self.traversal.add_step(Step('order', []))
-
-    def visitTraversalMethod_range(self, ctx):
+        
+    def visitTraversalMethod_order_Scope(self, ctx):
+        """处理有参数的order()方法"""
+        params = []
+        if hasattr(ctx, 'traversalScope') and ctx.traversalScope():
+            params.append(self.visit(ctx.traversalScope()))
+        self.traversal.add_step(Step('order', params))
+        
+    def visitTraversalMethod_by_String(self, ctx):
+        """处理by(string)方法"""
+        params = []
+        if hasattr(ctx, 'stringArgument') and ctx.stringArgument():
+            params.append(self.visit(ctx.stringArgument()))
+        elif hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        self.traversal.add_step(Step('by', params))
+        
+    def visitTraversalMethod_by_String_Comparator(self, ctx):
+        """处理by(string, comparator)方法"""
+        params = []
+        if hasattr(ctx, 'stringArgument') and ctx.stringArgument():
+            params.append(self.visit(ctx.stringArgument()))
+        elif hasattr(ctx, 'stringLiteral') and ctx.stringLiteral():
+            params.append(self.visit(ctx.stringLiteral()))
+        if hasattr(ctx, 'traversalComparator') and ctx.traversalComparator():
+            params.append(self.visit(ctx.traversalComparator()))
+        self.traversal.add_step(Step('by', params))
+        
+    def visitTraversalMethod_by_Traversal(self, ctx):
+        """处理by(traversal)方法"""
+        params = []
+        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
+            params.append(self.visit(ctx.nestedTraversal()))
+        self.traversal.add_step(Step('by', params))
+        
+    def visitTraversalMethod_range_long_long(self, ctx):
+        """处理range(long, long)方法"""
         params = []
         if hasattr(ctx, 'integerArgument'):
-            if ctx.integerArgument(0):
-                params.append(self.visit(ctx.integerArgument(0)))
-            if ctx.integerArgument(1):
-                params.append(self.visit(ctx.integerArgument(1)))
+            for arg in ctx.integerArgument():
+                params.append(self.visit(arg))
         self.traversal.add_step(Step('range', params))
-
-    def visitTraversalMethod_skip(self, ctx):
+        
+    def visitTraversalMethod_skip_long(self, ctx):
+        """处理skip(long)方法"""
         params = []
         if hasattr(ctx, 'integerArgument') and ctx.integerArgument():
             params.append(self.visit(ctx.integerArgument()))
         self.traversal.add_step(Step('skip', params))
-
-    def visitTraversalMethod_tail(self, ctx):
+        
+    def visitTraversalMethod_tail_long(self, ctx):
+        """处理tail(long)方法"""
         params = []
         if hasattr(ctx, 'integerArgument') and ctx.integerArgument():
             params.append(self.visit(ctx.integerArgument()))
         self.traversal.add_step(Step('tail', params))
-
-    def visitTraversalMethod_sample(self, ctx):
+        
+    def visitTraversalMethod_sample_int(self, ctx):
+        """处理sample(int)方法"""
         params = []
         if hasattr(ctx, 'integerArgument') and ctx.integerArgument():
             params.append(self.visit(ctx.integerArgument()))
@@ -928,32 +2350,6 @@ class GremlinTransVisitor(GremlinVisitor):
         self.traversal.add_step(Step('coin', params))
 
     # 分支和条件方法访问器
-    def visitTraversalMethod_choose(self, ctx):
-        params = []
-        if hasattr(ctx, 'traversalPredicate') and ctx.traversalPredicate():
-            params.append(self.visit(ctx.traversalPredicate()))
-        elif hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
-            params.append(self.visit(ctx.nestedTraversal()))
-        self.traversal.add_step(Step('choose', params))
-
-    def visitTraversalMethod_coalesce(self, ctx):
-        params = []
-        if hasattr(ctx, 'nestedTraversalVarargs') and ctx.nestedTraversalVarargs():
-            params = self.visit(ctx.nestedTraversalVarargs())
-        self.traversal.add_step(Step('coalesce', params))
-
-    def visitTraversalMethod_optional(self, ctx):
-        params = []
-        if hasattr(ctx, 'nestedTraversal') and ctx.nestedTraversal():
-            params.append(self.visit(ctx.nestedTraversal()))
-        self.traversal.add_step(Step('optional', params))
-
-    def visitTraversalMethod_union(self, ctx):
-        params = []
-        if hasattr(ctx, 'nestedTraversalVarargs') and ctx.nestedTraversalVarargs():
-            params = self.visit(ctx.nestedTraversalVarargs())
-        self.traversal.add_step(Step('union', params))
-
 # 测试入口函数
 def parse_gremlin_query(query_string: str) -> Traversal:
     """
@@ -967,424 +2363,3 @@ def parse_gremlin_query(query_string: str) -> Traversal:
     """
     visitor = GremlinTransVisitor()
     return visitor.parse_and_visit(query_string)
-
-if __name__ == '__main__':
-    print("  启动 GremlinTransVisitor 全面测试")
-    print("=" * 80)
-    
-    visitor = GremlinTransVisitor()
-    
-    # 测试类别
-    test_categories = {
-        ' Spawn Methods (Traversal Source)': [
-            # Basic spawn methods
-            ('g.V()', 'Basic vertex spawn'),
-            ('g.V(1)', 'Vertex spawn with single ID'),
-            ('g.V(1, 2, 3)', 'Vertex spawn with multiple IDs'),
-            ('g.V("uuid-1", "uuid-2")', 'Vertex spawn with string IDs'),
-            ('g.E()', 'Basic edge spawn'),
-            ('g.E("edge1")', 'Edge spawn with single ID'),
-            ('g.E("edge1", "edge2")', 'Edge spawn with multiple IDs'),
-            ('g.addV()', 'Add vertex without label'),
-            ('g.addV("person")', 'Add vertex with string label'),
-            ('g.addE("knows")', 'Add edge with string label'),
-            ('g.inject(1)', 'Inject single value'),
-            ('g.inject(1, 2, 3)', 'Inject multiple values'),
-            ('g.inject("a", "b", "c")', 'Inject string values'),
-            ('g.io("data.json")', 'IO operation with file'),
-        ],
-        
-        ' Navigation Methods': [
-            # Basic navigation
-            ('g.V().out()', 'Outbound navigation without labels'),
-            ('g.V().out("knows")', 'Outbound navigation with single label'),
-            ('g.V().out("knows", "created")', 'Outbound navigation with multiple labels'),
-            ('g.V().in()', 'Inbound navigation without labels'),
-            ('g.V().in("created")', 'Inbound navigation with single label'),
-            ('g.V().in("knows", "created")', 'Inbound navigation with multiple labels'),
-            ('g.V().both()', 'Bidirectional navigation without labels'),
-            ('g.V().both("knows")', 'Bidirectional navigation with single label'),
-            ('g.V().both("knows", "created")', 'Bidirectional navigation with multiple labels'),
-            
-            # Edge navigation
-            ('g.V().outE()', 'Outbound edge navigation without labels'),
-            ('g.V().outE("knows")', 'Outbound edge navigation with single label'),
-            ('g.V().outE("knows", "created")', 'Outbound edge navigation with multiple labels'),
-            ('g.V().inE()', 'Inbound edge navigation without labels'),
-            ('g.V().inE("created")', 'Inbound edge navigation with single label'),
-            ('g.V().inE("knows", "created")', 'Inbound edge navigation with multiple labels'),
-            ('g.V().bothE()', 'Bidirectional edge navigation without labels'),
-            ('g.V().bothE("knows")', 'Bidirectional edge navigation with single label'),
-            ('g.V().bothE("knows", "created")', 'Bidirectional edge navigation with multiple labels'),
-            
-            # Vertex navigation from edges
-            ('g.E().outV()', 'Edge to outbound vertex'),
-            ('g.E().inV()', 'Edge to inbound vertex'),
-            ('g.E().bothV()', 'Edge to both vertices'),
-        ],
-        
-        ' Filtering Methods': [
-            # Basic has methods
-            ('g.V().has("name")', 'Has property key only'),
-            ('g.V().has("name", "john")', 'Has property key-value'),
-            ('g.V().has("name", 42)', 'Has property key-number'),
-            ('g.V().has("name", true)', 'Has property key-boolean'),
-            ('g.V().has("person", "name", "john")', 'Has label-key-value'),
-            ('g.V().has("person", "age", 30)', 'Has label-key-number'),
-            
-            # Advanced filtering
-            ('g.V().hasLabel("person")', 'Has single label'),
-            ('g.V().hasLabel("person", "software")', 'Has multiple labels'),
-            ('g.V().hasId(1)', 'Has single ID'),
-            ('g.V().hasId(1, 2, 3)', 'Has multiple IDs'),
-            ('g.V().hasKey("name")', 'Has single key'),
-            ('g.V().hasKey("name", "age")', 'Has multiple keys'),
-            ('g.V().hasValue("john")', 'Has single value'),
-            ('g.V().hasValue("john", "mary")', 'Has multiple values'),
-            
-            # Conditional filtering
-            ('g.V().where(__.out("knows"))', 'Where with anonymous traversal'),
-            ('g.V().filter(__.out("knows"))', 'Filter with anonymous traversal'),
-            ('g.V().is("john")', 'Is with value'),
-            ('g.V().is(P.gt(30))', 'Is with predicate'),
-            ('g.V().not(__.out("knows"))', 'Not with anonymous traversal'),
-        ],
-        
-        ' Transformation Methods': [
-            # Property access
-            ('g.V().properties()', 'Get all properties'),
-            ('g.V().properties("name")', 'Get single property'),
-            ('g.V().properties("name", "age")', 'Get multiple properties'),
-            ('g.V().values()', 'Get all values'),
-            ('g.V().values("name")', 'Get single value'),
-            ('g.V().values("name", "age")', 'Get multiple values'),
-            
-            # Selection and projection
-            ('g.V().select("a")', 'Select single label'),
-            ('g.V().select("a", "b")', 'Select multiple labels'),
-            ('g.V().project("name")', 'Project single property'),
-            ('g.V().project("name", "age")', 'Project multiple properties'),
-            ('g.V().valueMap()', 'Get value map'),
-            ('g.V().valueMap(true)', 'Get value map with metadata'),
-            ('g.V().valueMap("name", "age")', 'Get value map for specific properties'),
-            ('g.V().elementMap()', 'Get element map'),
-            ('g.V().elementMap("name", "age")', 'Get element map for specific properties'),
-            
-            # Element metadata
-            ('g.V().label()', 'Get vertex label'),
-            ('g.E().label()', 'Get edge label'),
-            ('g.V().id()', 'Get vertex ID'),
-            ('g.E().id()', 'Get edge ID'),
-            ('g.V().properties().key()', 'Get property key'),
-            ('g.V().properties().value()', 'Get property value'),
-        ],
-        
-        ' Aggregation Methods': [
-            # Basic aggregation
-            ('g.V().count()', 'Count vertices'),
-            ('g.E().count()', 'Count edges'),
-            ('g.V().values("age").sum()', 'Sum numeric values'),
-            ('g.V().values("age").mean()', 'Mean of numeric values'),
-            ('g.V().values("age").max()', 'Maximum numeric value'),
-            ('g.V().values("age").min()', 'Minimum numeric value'),
-            
-            # Collection operations
-            ('g.V().fold()', 'Fold vertices into collection'),
-            ('g.V().values("name").fold()', 'Fold values into collection'),
-            ('g.inject([1, 2, 3]).unfold()', 'Unfold collection'),
-            
-            # Grouping
-            ('g.V().group()', 'Group vertices'),
-            ('g.V().groupCount()', 'Group and count vertices'),
-            ('g.V().values("name").groupCount()', 'Group and count by property'),
-        ],
-        
-        ' Predicate Methods': [
-            # Comparison predicates
-            ('g.V().has("age", P.gt(30))', 'Greater than predicate'),
-            ('g.V().has("age", P.gte(30))', 'Greater than or equal predicate'),
-            ('g.V().has("age", P.lt(50))', 'Less than predicate'),
-            ('g.V().has("age", P.lte(50))', 'Less than or equal predicate'),
-            ('g.V().has("name", P.eq("john"))', 'Equal predicate'),
-            ('g.V().has("name", P.neq("john"))', 'Not equal predicate'),
-            
-            # Range predicates
-            ('g.V().has("age", P.between(20, 40))', 'Between predicate'),
-            ('g.V().has("age", P.inside(20, 40))', 'Inside predicate'),
-            ('g.V().has("age", P.outside(20, 40))', 'Outside predicate'),
-            
-            # Collection predicates
-            ('g.V().has("name", P.within("john", "mary"))', 'Within predicate'),
-            ('g.V().has("name", P.within("john", "mary", "bob"))', 'Within multiple values'),
-            ('g.V().has("name", P.without("john", "mary"))', 'Without predicate'),
-        ],
-        
-        ' TextPredicate Methods': [
-            ('g.V().has("name", TextP.startingWith("J"))', 'Starting with text predicate'),
-            ('g.V().has("name", TextP.endingWith("n"))', 'Ending with text predicate'),
-            ('g.V().has("name", TextP.containing("oh"))', 'Containing text predicate'),
-            ('g.V().has("name", TextP.notStartingWith("J"))', 'Not starting with text predicate'),
-            ('g.V().has("name", TextP.notEndingWith("n"))', 'Not ending with text predicate'),
-            ('g.V().has("name", TextP.notContaining("oh"))', 'Not containing text predicate'),
-        ],
-        
-        ' Logical Operations': [
-            ('g.V().and(__.out("knows"))', 'And with single traversal'),
-            ('g.V().and(__.out("knows"), __.has("age", P.gt(30)))', 'And with multiple traversals'),
-            ('g.V().or(__.out("knows"))', 'Or with single traversal'),
-            ('g.V().or(__.out("knows"), __.has("age", P.gt(30)))', 'Or with multiple traversals'),
-        ],
-        
-        ' Branching Methods': [
-            ('g.V().choose(__.has("age", P.gt(30)))', 'Choose with predicate only'),
-            ('g.V().choose(__.has("age", P.gt(30)), __.out("knows"))', 'Choose with true branch'),
-            ('g.V().choose(__.has("age", P.gt(30)), __.out("knows"), __.in("knows"))', 'Choose with both branches'),
-            ('g.V().coalesce(__.out("knows"))', 'Coalesce with single traversal'),
-            ('g.V().coalesce(__.out("knows"), __.out("likes"))', 'Coalesce with multiple traversals'),
-            ('g.V().optional(__.out("knows"))', 'Optional traversal'),
-            ('g.V().union(__.out("knows"))', 'Union with single traversal'),
-            ('g.V().union(__.out("knows"), __.out("likes"))', 'Union with multiple traversals'),
-        ],
-        
-        ' Ordering and Limiting': [
-            ('g.V().order()', 'Order without criteria'),
-            ('g.V().limit(10)', 'Limit results'),
-            ('g.V().range(0, 5)', 'Range with start and end'),
-            ('g.V().skip(10)', 'Skip results'),
-            ('g.V().tail(5)', 'Tail results'),
-            ('g.V().sample(3)', 'Sample results'),
-            ('g.V().coin(0.5)', 'Coin flip filter'),
-        ],
-        
-        ' Modification Methods': [
-            # Property operations
-            ('g.addV("person").property("name", "john")', 'Add vertex with property'),
-            ('g.V().property("age", 30)', 'Set property on vertex'),
-            ('g.V().property("active", true)', 'Set boolean property'),
-            
-            # Edge operations
-            ('g.V().addE("knows")', 'Add edge from vertex'),
-            ('g.V().has("name", "john").addE("knows")', 'Add edge after filter'),
-            ('g.addV("person").as("a").addV("person").addE("knows").from("a")', 'Add edge with from'),
-            ('g.addV("person").as("a").addV("person").addE("knows").to("a")', 'Add edge with to'),
-        ],
-        
-        ' Deletion Methods': [
-            ('g.V().drop()', 'Drop all vertices'),
-            ('g.V().has("name", "temp").drop()', 'Drop vertices by filter'),
-            ('g.E().drop()', 'Drop all edges'),
-            ('g.E().hasLabel("temp").drop()', 'Drop edges by label'),
-        ],
-        
-        ' Terminal Methods': [
-            ('g.V().toList()', 'Convert to list'),
-            ('g.V().toSet()', 'Convert to set'),
-            ('g.V().next()', 'Get next result'),
-            ('g.V().hasNext()', 'Check if has next'),
-            ('g.V().iterate()', 'Iterate without results'),
-        ],
-        
-        ' Complex Queries': [
-            # Multi-step traversals
-            ('g.V().has("name", "marko").out("knows").values("name")', 'Find friends names'),
-            ('g.V().outE("knows").inV().has("age", P.gt(30))', 'Navigate through edges with filter'),
-            ('g.V().has("person", "name", "marko").out("created").values("name")', 'Find created projects'),
-            ('g.V().has("name", "marko").out("knows").out("created").dedup()', 'Friends of friends creations'),
-            
-            # Complex filtering
-            ('g.V().has("person", "age", P.between(20, 40)).has("name", TextP.startingWith("m"))', 'Multiple filters'),
-            ('g.V().where(__.out("knows").has("name", "josh")).values("name")', 'Where with nested condition'),
-            ('g.V().filter(__.out("created").count().is(P.gt(1)))', 'Filter by creation count'),
-            
-            # Aggregation chains
-            ('g.V().hasLabel("person").values("age").mean()', 'Average age of persons'),
-            ('g.V().out("created").groupCount().by("name")', 'Group created items by name'),
-            ('g.V().hasLabel("person").group().by("age").by(__.values("name").fold())', 'Group persons by age'),
-            
-            # Complex branching
-            ('g.V().choose(__.hasLabel("person"), __.out("created"), __.in("created"))', 'Choose by label'),
-            ('g.V().coalesce(__.out("knows"), __.out("created"), __.identity())', 'Multiple coalesce options'),
-            ('g.V().union(__.out("knows"), __.out("created")).dedup()', 'Union with deduplication'),
-            
-            # Property manipulation
-            ('g.addV("person").property("name", "alice").property("age", 25)', 'Multiple properties'),
-            ('g.V().has("name", "marko").property("lastSeen", "2023-01-01")', 'Update property'),
-            
-            # Edge creation with properties
-            ('g.V().has("name", "marko").addE("knows").to(__.V().has("name", "josh")).property("since", 2010)', 'Edge with property'),
-            
-            # Advanced patterns
-            ('g.V().repeat(__.out("knows")).times(2).dedup()', 'Repeat traversal'),
-            ('g.V().hasLabel("person").as("p").out("created").as("s").select("p", "s").by("name")', 'Path selection'),
-            ('g.V().match(__.as("a").out("knows").as("b"), __.as("b").out("created").as("c"))', 'Pattern matching'),
-        ]
-    }
-    
-    # 全面测试
-    total_tests = 0
-    passed_tests = 0
-    failed_tests = []
-    category_results = {}
-    
-    for category, tests in test_categories.items():
-        category_passed = 0
-        category_total = len(tests)
-        category_failed = []
-        
-        print(f'\n{category}')
-        print('=' * 80)
-        
-        for i, (query, description) in enumerate(tests, 1):
-            total_tests += 1
-            print(f'[{i:2d}/{category_total:2d}] {description}')
-            print(f'      Query: {query}')
-            
-            try:
-                # Create fresh visitor for each test to avoid state issues
-                test_visitor = GremlinTransVisitor()
-                result = test_visitor.parse_and_visit(query)
-                
-                if result and hasattr(result, 'steps') and len(result.steps) > 0:
-                    print(f'      ✅ SUCCESS')
-                    passed_tests += 1
-                    category_passed += 1
-                    
-                    # Show step details in compact format
-                    step_names = [step.name for step in result.steps]
-                    print(f'      Steps: {" → ".join(step_names)}')
-                    
-                    # Check for complex objects
-                    complex_objects = []
-                    for step in result.steps:
-                        for param in step.params:
-                            if isinstance(param, Predicate):
-                                complex_objects.append(f"P.{param.operator}")
-                            elif isinstance(param, TextPredicate):
-                                complex_objects.append(f"TextP.{param.operator}")
-                            elif isinstance(param, AnonymousTraversal):
-                                complex_objects.append("AnonymousTraversal")
-                            elif isinstance(param, Connector):
-                                complex_objects.append(f"Connector({param.operator})")
-                            elif isinstance(param, Terminal):
-                                complex_objects.append(f"Terminal({param.name})")
-                    
-                    if complex_objects:
-                        print(f'      Objects: {", ".join(set(complex_objects))}')
-                        
-                else:
-                    print(f'      ❌ FAILED: Empty result')
-                    failed_tests.append((category, query, description, 'Empty result'))
-                    category_failed.append((query, description, 'Empty result'))
-                    
-            except Exception as e:
-                error_msg = str(e)[:100] + "..." if len(str(e)) > 100 else str(e)
-                print(f'      ❌ FAILED: {error_msg}')
-                failed_tests.append((category, query, description, str(e)))
-                category_failed.append((query, description, str(e)))
-        
-        category_results[category] = {
-            'passed': category_passed,
-            'total': category_total,
-            'failed': category_failed
-        }
-        
-        success_rate = (category_passed / category_total) * 100
-        status = '✅' if success_rate >= 90 else '⚠️' if success_rate >= 70 else '❌'
-        print(f'\n{status} {category}: {category_passed}/{category_total} ({success_rate:.1f}% success)')
-    
-    # Overall summary
-    print(f'\n\n{" COMPREHENSIVE TEST RESULTS":=^80}')
-    print(f'Total Tests: {total_tests}')
-    print(f' Passed: {passed_tests}')
-    print(f' Failed: {len(failed_tests)}')
-    print(f' Success Rate: {(passed_tests/total_tests)*100:.1f}%')
-    
-    # Category summary
-    print(f'\n{" CATEGORY BREAKDOWN":=^80}')
-    for category, results in category_results.items():
-        success_rate = (results['passed'] / results['total']) * 100
-        status = '✅' if success_rate >= 90 else '⚠️' if success_rate >= 70 else '❌'
-        category_name = category.split(' ', 1)[1] if ' ' in category else category  # Remove emoji
-        print(f'{status} {category_name:<35} {results["passed"]:3d}/{results["total"]:3d} ({success_rate:5.1f}%)')
-    
-    # Failed tests summary
-    if failed_tests:
-        print(f'\n{"❌ FAILED TESTS ANALYSIS":=^80}')
-        failure_by_category = {}
-        for category, query, desc, error in failed_tests:
-            if category not in failure_by_category:
-                failure_by_category[category] = []
-            failure_by_category[category].append((query, desc, error))
-        
-        for category, failures in failure_by_category.items():
-            category_name = category.split(' ', 1)[1] if ' ' in category else category
-            print(f'\n{category_name} ({len(failures)} failures):')
-            for query, desc, error in failures[:5]:  # Show first 5 failures per category
-                print(f'  • {desc}')
-                print(f'    Query: {query}')
-                error_short = error[:60] + "..." if len(error) > 60 else error
-                print(f'    Error: {error_short}')
-    
-    # Visitor method coverage analysis
-    print(f'\n{"🔍 VISITOR METHOD COVERAGE":=^80}')
-    
-    # Count implemented visitor methods by analyzing the test results
-    visitor_methods_tested = set()
-    for category, results in category_results.items():
-        if results['passed'] > 0:
-            visitor_methods_tested.add(category)
-    
-    coverage_stats = {
-        'Spawn Methods': ['visitTraversalSourceSpawnMethod_V', 'visitTraversalSourceSpawnMethod_E', 
-                         'visitTraversalSourceSpawnMethod_addV', 'visitTraversalSourceSpawnMethod_addE',
-                         'visitTraversalSourceSpawnMethod_inject', 'visitTraversalSourceSpawnMethod_io'],
-        'Navigation Methods': ['visitTraversalMethod_out', 'visitTraversalMethod_in', 'visitTraversalMethod_both',
-                              'visitTraversalMethod_outE', 'visitTraversalMethod_inE', 'visitTraversalMethod_bothE',
-                              'visitTraversalMethod_outV', 'visitTraversalMethod_inV', 'visitTraversalMethod_bothV'],
-        'Filtering Methods': ['visitTraversalMethod_has_String_Object', 'visitTraversalMethod_has_String_P',
-                             'visitTraversalMethod_has_String_String_Object', 'visitTraversalMethod_hasLabel',
-                             'visitTraversalMethod_hasId', 'visitTraversalMethod_hasKey', 'visitTraversalMethod_hasValue',
-                             'visitTraversalMethod_where', 'visitTraversalMethod_filter', 'visitTraversalMethod_is',
-                             'visitTraversalMethod_not'],
-        'Predicate Methods': ['visitTraversalPredicate_gt', 'visitTraversalPredicate_gte', 'visitTraversalPredicate_lt',
-                             'visitTraversalPredicate_lte', 'visitTraversalPredicate_eq', 'visitTraversalPredicate_neq',
-                             'visitTraversalPredicate_between', 'visitTraversalPredicate_inside', 'visitTraversalPredicate_outside',
-                             'visitTraversalPredicate_within', 'visitTraversalPredicate_without'],
-        'TextPredicate Methods': ['visitTraversalPredicate_startingWith', 'visitTraversalPredicate_endingWith',
-                                 'visitTraversalPredicate_containing', 'visitTraversalPredicate_notStartingWith',
-                                 'visitTraversalPredicate_notEndingWith', 'visitTraversalPredicate_notContaining'],
-        'Terminal Methods': ['visitTraversalMethod_toList', 'visitTraversalMethod_toSet', 'visitTraversalMethod_next',
-                            'visitTraversalMethod_hasNext', 'visitTraversalMethod_iterate']
-    }
-    
-    print("✅ 完全实现的类别:")
-    for category, results in category_results.items():
-        if results['passed'] == results['total'] and results['total'] > 0:
-            category_name = category.split(' ', 1)[1] if ' ' in category else category
-            print(f"  • {category_name}")
-    
-    print(f'\n🔍 复杂对象支持:')
-    print('  • Predicate 对象: P.gt, P.lt, P.eq, P.between, P.within, 等.')
-    print('  • TextPredicate 对象: TextP.startingWith, TextP.containing, 等.')  
-    print('  • AnonymousTraversal 对象: __.out(), __.has(), 等.')
-    print('  • Connector 对象: and(), or() 逻辑操作')
-    print('  • Terminal 对象: next(), toList(), iterate(), 等.')
-    
-    print(f'\n{" 实现完整性 ":=^80}')
-    print(f'此 GremlinTransVisitor 实现为以下功能提供全面支持:')
-    print(f'  ✅ 所有主要 Gremlin 遍历模式')
-    print(f'  ✅ 复杂谓词和文本谓词操作')
-    print(f'  ✅ 匿名遍历和嵌套操作')
-    print(f'  ✅ 逻辑连接器和分支操作')
-    print(f'  ✅ 属性操作和图修改')
-    print(f'  ✅ 聚合和转换操作')
-    print(f'  ✅ 终端操作和结果处理')
-    print(f'  ✅ 高级查询模式和多步骤遍历')
-    
-    if passed_tests == total_tests:
-        print(f'\n🎉 所有测试通过! 实现完全可用.')
-    else:
-        improvement_needed = total_tests - passed_tests
-        print(f'\n⚠️  {improvement_needed} 个测试需要关注以实现完整覆盖.')
-    
-    print(f'\n{"="*80}')

@@ -1,5 +1,3 @@
-
-
 """
 Gremlin查询结构化表示模块。
 
@@ -8,7 +6,7 @@ Gremlin查询结构化表示模块。
 
 from typing import List, Any
 # 导入将在 Step 参数中存储的结构化表达式类。
-from GremlinExpr import Predicate, AnonymousTraversal, TextPredicate, Connector
+from .GremlinExpr import Predicate, AnonymousTraversal, TextPredicate, Connector
 
 class Step:
     """
