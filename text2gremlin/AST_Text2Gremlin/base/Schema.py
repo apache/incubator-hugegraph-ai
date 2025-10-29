@@ -68,6 +68,18 @@ class Schema:
             header_line = lines[header_line_index - 1]
             column_defs = header_line.strip().split(',')
             column_names = [d.split(':')[0] for d in column_defs]
+            
+            # 处理重复的列名（为重复的列添加后缀）
+            seen = {}
+            unique_names = []
+            for name in column_names:
+                if name in seen:
+                    seen[name] += 1
+                    unique_names.append(f"{name}_{seen[name]}")
+                else:
+                    seen[name] = 0
+                    unique_names.append(name)
+            column_names = unique_names
 
             # 从指定header行之后开始读取数据
             data_lines = lines[header_line_index:]

@@ -1,6 +1,5 @@
-
 """
-Gremlin语料库生成器主入口脚本。
+控制层-Gremlin语料库生成器主入口。
 
 从Gremlin查询模板生成大量多样化的查询-描述对，用于Text-to-Gremlin任务的训练数据。
 """
@@ -11,16 +10,16 @@ from antlr4 import InputStream, CommonTokenStream
 from antlr4.error.ErrorListener import ErrorListener
 
 # Import all our custom modules from the gremlin_base package
-from Config import Config
-from Schema import Schema
-from GremlinBase import GremlinBase
-from GremlinParse import Traversal
-from TraversalGenerator import TraversalGenerator
-from GremlinTransVisitor import GremlinTransVisitor
+from .Config import Config
+from .Schema import Schema
+from .GremlinBase import GremlinBase
+from .GremlinParse import Traversal
+from .TraversalGenerator import TraversalGenerator
+from .GremlinTransVisitor import GremlinTransVisitor
 
 # Import the ANTLR-generated components
-from gremlin.GremlinLexer import GremlinLexer
-from gremlin.GremlinParser import GremlinParser
+from .gremlin.GremlinLexer import GremlinLexer
+from .gremlin.GremlinParser import GremlinParser
 import random
 
 class SyntaxErrorListener(ErrorListener):
@@ -176,36 +175,56 @@ def generate_corpus_from_template(
         return 0, stats
 
 
-def generate_corpus_from_templates(templates: list[str], 
-                                  config_path: str = None, 
-                                  schema_path: str = None, 
-                                  data_path: str = None,
-                                  output_file: str = "generated_corpus.json") -> dict:
+def generate_gremlin_corpus(templates: list[str], 
+                           config_path: str, 
+                           schema_path: str, 
+                           data_path: str,
+                           output_file: str = None,
+                           num_queries: int = 100) -> dict:
     """
     从Gremlin模板列表生成完整的语料库。
     
     Args:
-        templates: Gremlin查询模板列表
-        config_path: 配置文件路径
-        schema_path: Schema文件路径  
-        data_path: 数据文件路径
-        output_file: 输出文件名
+        templates: Gremlin查询模板列表或CSV文件路径
+        config_path: 配置文件路径（必需）
+        schema_path: Schema文件路径（必需）
+        data_path: 数据文件路径（必需）
+        output_file: 输出文件名（可选）
+        num_queries: 每个模板生成的查询数量（默认100）
         
     Returns:
         包含生成统计信息的字典
-    """
-    # --- Setup: Define paths and load dependencies ---
-    if not config_path or not schema_path or not data_path:
-        # 自动检测项目根目录
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        project_root = os.path.dirname(current_dir)  # 从base目录向上一级
         
-        schema_path = schema_path or os.path.join(project_root, 'db_data', 'schema', 'movie_schema.json')
-        data_path = data_path or os.path.join(project_root, 'db_data')
-        config_path = config_path or os.path.join(project_root, 'config.json')
-
-    if not all(os.path.exists(p) for p in [config_path, schema_path, data_path]):
-        raise FileNotFoundError("Could not find necessary config, schema, or data files.")
+    Raises:
+        FileNotFoundError: 当必需的文件不存在时
+        ValueError: 当参数无效时
+    """
+    # 验证必需参数
+    if not config_path or not os.path.exists(config_path):
+        raise FileNotFoundError(f"配置文件不存在: {config_path}")
+    if not schema_path or not os.path.exists(schema_path):
+        raise FileNotFoundError(f"模式文件不存在: {schema_path}")
+    if not data_path or not os.path.exists(data_path):
+        raise FileNotFoundError(f"数据目录不存在: {data_path}")
+    
+    # 处理模板输入
+    if isinstance(templates, str) and templates.endswith('.csv'):
+        if not os.path.exists(templates):
+            raise FileNotFoundError(f"模板文件不存在: {templates}")
+        # 从CSV文件读取模板
+        import csv
+        template_list = []
+        with open(templates, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if 'gremlin_query' in row:
+                    template_list.append(row['gremlin_query'])
+                elif 'template' in row:
+                    template_list.append(row['template'])
+        templates = template_list
+    
+    if not templates:
+        raise ValueError("没有找到有效的模板")
         
     # Load all necessary components once
     config = Config(file_path=config_path)
@@ -280,48 +299,57 @@ def generate_corpus_from_templates(templates: list[str],
     # 转换为列表格式以便后续处理
     full_corpus = [(query, desc) for query, desc in global_corpus_dict.items()]
     
-    # --- Save the full corpus to a local file ---
-    # 确保只保存成功生成的查询-描述对
+    # --- Save the full corpus to a local file (if output_file is provided) ---
     from datetime import datetime
     
-    corpus_data = {
-        "metadata": {
-            "total_templates": len(templates),
-            "successful_templates": processing_stats['successful_templates'],
-            "failed_templates": processing_stats['failed_templates'],
-            "total_unique_queries": len(full_corpus),
-            "generation_timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        },
-        "corpus": [
-            {
-                "query": query,
-                "description": desc
-            }
-            for query, desc in full_corpus
-        ]
-    }
-    
-    with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(corpus_data, f, ensure_ascii=False, indent=2)
+    if output_file:
+        # 确保只保存成功生成的查询-描述对
+        corpus_data = {
+            "metadata": {
+                "total_templates": len(templates),
+                "successful_templates": processing_stats['successful_templates'],
+                "failed_templates": processing_stats['failed_templates'],
+                "total_unique_queries": len(full_corpus),
+                "generation_timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            },
+            "corpus": [
+                {
+                    "query": query,
+                    "description": desc
+                }
+                for query, desc in full_corpus
+            ]
+        }
+        
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(corpus_data, f, ensure_ascii=False, indent=2)
 
     # --- Generate statistics and display results ---
     stats = _generate_statistics(templates, full_corpus, output_file)
     stats.update({
         "total_templates": len(templates),
         "successful_templates": processing_stats['successful_templates'],
-        "failed_templates": processing_stats['failed_templates'],
-        "output_file": output_file
+        "failed_templates": processing_stats['failed_templates']
     })
+    
+    if output_file:
+        stats["output_file"] = output_file
+    
     _display_final_results(full_corpus, stats)
     
-    return {
+    result = {
         "total_templates": len(templates),
         "successful_templates": processing_stats['successful_templates'],
         "failed_templates": processing_stats['failed_templates'],
         "total_unique_queries": len(full_corpus),
-        "output_file": output_file,
-        "statistics": stats
+        "statistics": stats,
+        "queries": full_corpus
     }
+    
+    if output_file:
+        result["output_file"] = output_file
+    
+    return result
 
 def _generate_statistics(templates: list, full_corpus: list, output_file: str) -> dict:
     """生成统计信息"""
@@ -365,7 +393,11 @@ def _display_final_results(full_corpus: list, stats: dict):
     print(f"成功处理: {stats.get('successful_templates', 0)}")
     print(f"处理失败: {stats.get('failed_templates', 0)}")
     print(f"生成的独特查询数量: {len(full_corpus)}")
-    print(f"语料库已保存到: {stats.get('output_file', 'generated_corpus.json')}")
+    
+    if 'output_file' in stats:
+        print(f"语料库已保存到: {stats['output_file']}")
+    else:
+        print(f"语料库未保存到文件（仅返回结果）")
         
     # 按查询长度分类统计
     print(f"\n{'='*50}")
@@ -388,153 +420,3 @@ def _display_final_results(full_corpus: list, stats: dict):
     print(f"✅ 生成完成！共生成 {len(full_corpus)} 个独特查询")
     print(f"{'='*50}")
 
-
-
-if __name__ == '__main__':
-    # templates = [
-    #     # === 查询操作 (Query) - 40% ===
-        
-    #     # 基础查询
-    #     "g.V().has('name', 'John')",
-    #     "g.V().has('title', 'The Matrix')",
-    #     "g.V().has('born', 1961)",
-    #     "g.V().hasLabel('person')",
-    #     "g.V().hasLabel('movie')",
-        
-    #     # 导航查询
-    #     "g.V().has('name', 'Laurence Fishburne').out('acted_in')",
-    #     "g.V().has('title', 'The Matrix').in('acted_in')",
-    #     "g.V().hasLabel('person').out('directed')",
-    #     "g.V().hasLabel('movie').in('rate')",
-        
-    #     # 复杂查询
-    #     "g.V().has('name', 'Laurence Fishburne').out('acted_in').has('title', 'The Matrix')",
-    #     "g.V().hasLabel('person').out('acted_in').in('rate')",
-    #     "g.V().has('title', 'Matrix').in('acted_in').out('directed')",
-        
-    #     # === 创建操作 (Create) - 25% ===
-        
-    #     # 基础创建
-    #     "g.addV('person')",
-    #     "g.addV('movie')",
-    #     "g.addV('user')",
-        
-    #     # 带属性创建
-    #     "g.addV('person').property('name', 'New Actor')",
-    #     "g.addV('movie').property('title', 'New Movie')",
-    #     "g.addV('person').property('name', 'Jane').property('born', 1990)",
-    #     "g.addV('movie').property('title', 'Test Movie').property('duration', 120)",
-    #     "g.addV('user').property('login', 'newuser').property('name', 'New User')",
-        
-    #     # === 更新操作 (Update) - 25% ===
-        
-    #     # 单属性更新
-    #     "g.V().has('name', 'John').property('born', 1990)",
-    #     "g.V().has('title', 'Test').property('duration', 120)",
-    #     "g.V().hasLabel('person').has('name', 'Jane').property('born', 1985)",
-    #     "g.V().hasLabel('movie').has('title', 'Old Movie').property('rated', 'PG-13')",
-        
-    #     # 多属性更新
-    #     "g.V().has('name', 'John').property('born', 1990).property('poster_image', 'new_url')",
-    #     "g.V().has('title', 'Test').property('duration', 150).property('rated', 'R')",
-    #     "g.V().hasLabel('user').has('login', 'testuser').property('name', 'Updated Name').property('born', 1995)",
-        
-    #     # === 删除操作 (Delete) - 10% ===
-        
-    #     # 基础删除
-    #     "g.V().has('name', 'temp_person').drop()",
-    #     "g.V().has('title', 'temp_movie').drop()",
-    #     "g.V().hasLabel('user').has('login', 'temp_user').drop()",
-        
-    #     # 条件删除
-    #     "g.V().hasLabel('person').has('born', 0).drop()",
-    #     "g.V().hasLabel('movie').has('duration', 0).drop()",
-    # ]
-    
-    def load_templates_from_csv(csv_file_path: str) -> tuple[list[str], dict]:
-        """
-        从CSV文件中加载Gremlin查询作为模板
-        
-        Args:
-            csv_file_path: CSV文件路径
-            
-        Returns:
-            tuple: (成功加载的查询列表, 统计信息字典)
-        """
-        import csv
-        
-        templates = []
-        stats = {
-            'total_rows': 0,
-            'successful_loads': 0,
-            'failed_loads': 0,
-            'failed_queries': []
-        }
-        
-        try:
-            with open(csv_file_path, 'r', encoding='utf-8') as file:
-                reader = csv.DictReader(file)
-                
-                for row_num, row in enumerate(reader, 1):
-                    stats['total_rows'] += 1
-                    
-                    try:
-                        # 获取gremlin_query列
-                        gremlin_query = row.get('gremlin_query', '').strip()
-                        
-                        if not gremlin_query:
-                            stats['failed_loads'] += 1
-                            stats['failed_queries'].append(f"第{row_num}行: 空查询")
-                            continue
-                        
-                        # 移除可能的引号包围
-                        if gremlin_query.startswith('"') and gremlin_query.endswith('"'):
-                            gremlin_query = gremlin_query[1:-1]
-                        
-                        # 基本语法检查
-                        if not gremlin_query.startswith('g.'):
-                            stats['failed_loads'] += 1
-                            stats['failed_queries'].append(f"第{row_num}行: 格式错误")
-                            continue
-                        
-                        templates.append(gremlin_query)
-                        stats['successful_loads'] += 1
-                            
-                    except Exception as e:
-                        stats['failed_loads'] += 1
-                        stats['failed_queries'].append(f"第{row_num}行: {str(e)}")
-                        continue
-                        
-        except FileNotFoundError:
-            print(f"❌ 错误: 找不到CSV文件: {csv_file_path}")
-            return [], stats
-        except Exception as e:
-            print(f"❌ 读取CSV文件时发生错误: {str(e)}")
-            return [], stats
-        
-        return templates, stats
-    
-    # 从CSV文件加载模板
-    csv_file_path = "cypher2gremlin_dataset.csv"
-    
-    print(f"🔄 从 {csv_file_path} 加载Gremlin查询模板...")
-    templates, load_stats = load_templates_from_csv(csv_file_path)
-    
-    print(f"📊 CSV加载统计: {load_stats['successful_loads']}/{load_stats['total_rows']} 成功")
-    
-    if load_stats['failed_loads'] > 0:
-        print(f"⚠️  {load_stats['failed_loads']} 个模板加载失败")
-    
-    if not templates:
-        print("❌ 没有成功加载任何模板，程序退出")
-        exit(1)
-    
-    print(f"✅ 成功加载 {len(templates)} 个模板，开始生成语料库...")
-    
-    # 生成语料库
-    try:
-        result = generate_corpus_from_templates(templates)
-    except Exception as e:
-        print(f"❌ 生成过程中发生错误: {str(e)}")
-        import traceback
-        traceback.print_exc()
