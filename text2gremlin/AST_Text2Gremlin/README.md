@@ -32,18 +32,25 @@ python show_syntax_stats.py
 ## 项目结构
 
 ```
-├── generate_corpus.py              # 主程序
-├── gremlin_templates.csv           # 模板文件
-├── config.json                     # 配置
+├── generate_corpus.py                   # 主程序
+├── gremlin_templates.csv                # 模板文件
+├── config.json                          # 配置
 ├── base/
-│   ├── generator.py                # 生成器
-│   ├── Schema.py                   # Schema 管理
-│   ├── GremlinBase.py              # 翻译引擎
-│   ├── TraversalGenerator.py       # 遍历生成器
+│   ├── generator.py                     # 解析泛化控制器
+│   ├── Config.py                        # 配置管理模块
+│   ├── Schema.py                        # Schema和数据管理
+│   ├── GremlinParse.py                  # 数据结构定义
+│   ├── GremlinExpr.py                   # 复杂表达式定义(谓词、匿名遍历等)
+│   ├── GremlinTransVisitor.py           # AST解析
+│   ├── TraversalGenerator.py            # 遍历生成器
 │   ├── combination_control_config.json  # 组合控制配置
-│   └── gremlin/                    # ANTLR 解析器
-├── db_data/                        # 数据和 Schema
-└── output/                         # 输出目录
+│   ├── GremlinBase.py                   # 翻译引擎
+│   ├── gremlin/                         # ANTLR生成的解析器
+│   └── template/                        # 翻译字典
+│       ├── schema_dict.txt              # Schema术语翻译
+│       └── syn_dict.txt                 # 同义词字典
+├── db_data/                             # 数据和 Schema
+└── output/                              # 输出目录
 ```
 
 ---
@@ -144,38 +151,6 @@ python visualize_syntax_distribution.py
 
 ---
 
-## 工具脚本
-
-| 脚本 | 功能 |
-|------|------|
-| `generate_corpus.py` | 生成语料库 |
-| `add_template.py` | 添加新模板 |
-| `list_templates.py` | 列出所有模板 |
-| `analyze_syntax_distribution.py` | 分析语法分布 |
-| `show_syntax_stats.py` | 查看统计摘要 |
-| `visualize_syntax_distribution.py` | 可视化统计 |
-| `verify_all.py` | 验证所有查询 |
-
----
-
-## 文档导航
-
-### 快速入门
-- `QUICK_START.md` - 5分钟快速上手
-- `QUICK_REFERENCE.md` - 常用命令速查
-
-### 详细文档
-- `TEMPLATES_GUIDE.md` - 模板编写指南
-- `COMBINATION_CONTROL_GUIDE.md` - 组合控制配置说明
-- `DEDUPLICATION_MECHANISM.md` - 去重机制说明
-
-### 分析报告
-- `SYNTAX_ANALYSIS_COMPLETE.md` - 语法分析完整报告
-- `output/SYNTAX_ANALYSIS_SUMMARY.md` - 语法分析摘要
-- `SYNTAX_QUICK_REFERENCE.md` - 语法统计速查
-
----
-
 ## 核心特性
 
 ### 1. 模板泛化
@@ -208,87 +183,5 @@ g.V().hasLabel('person').out('acted_in').has('title', 'Inception')
 从图中开始查找所有顶点，过滤出'人'类型的顶点，沿'参演'边out方向遍历，其'标题'为'Inception'
 ```
 
----
-
-## 支持的 Gremlin 语法
-
-### 起始步骤
-`V()`, `E()`, `addV()`, `addE()`
-
-### 导航步骤
-`out()`, `in()`, `both()`, `outE()`, `inE()`, `bothE()`, `outV()`, `inV()`, `otherV()`
-
-### 过滤步骤
-`has()`, `hasLabel()`, `hasId()`, `hasKey()`, `hasValue()`, `where()`, `is()`, `not()`, `filter()`, `dedup()`, `simplePath()`, `cyclicPath()`
-
-### 属性访问
-`values()`, `properties()`, `valueMap()`, `elementMap()`, `label()`, `id()`
-
-### 转换步骤
-`order()`, `by()`, `limit()`, `range()`, `skip()`, `tail()`, `sample()`, `coin()`
-
-### 聚合步骤
-`count()`, `sum()`, `mean()`, `min()`, `max()`, `fold()`, `unfold()`, `group()`, `groupCount()`
-
-### 分支步骤
-`union()`, `coalesce()`, `choose()`, `optional()`
-
-### 循环步骤
-`repeat()`, `times()`, `until()`, `emit()`
-
-### 路径步骤
-`path()`, `tree()`, `as()`, `select()`
-
-### 副作用步骤
-`aggregate()`, `store()`, `sideEffect()`, `cap()`
-
-### 谓词
-`P.eq()`, `P.neq()`, `P.gt()`, `P.gte()`, `P.lt()`, `P.lte()`, `P.between()`, `P.inside()`, `P.outside()`, `P.within()`, `P.without()`
-
-`TextP.startingWith()`, `TextP.endingWith()`, `TextP.containing()`, `TextP.notStartingWith()`, `TextP.notEndingWith()`, `TextP.notContaining()`, `TextP.regex()`, `TextP.notRegex()`
-
-### 终端步骤
-`next()`, `hasNext()`, `toList()`, `toSet()`, `iterate()`, `tryNext()`, `explain()`, `profile()`
-
----
-
-## 统计数据（基于当前语料库）
-
-- **总查询数**: 1,493
-- **总步骤数**: 7,353
-- **不同步骤类型**: 76 种
-- **平均步骤/查询**: 4.92
-
-### Top 10 步骤
-1. `hasLabel` - 1,485 次 (20.20%)
-2. `V` - 1,482 次 (20.16%)
-3. `out` - 1,202 次 (16.35%)
-4. `in` - 475 次 (6.46%)
-5. `dedup` - 302 次 (4.11%)
-6. `by` - 259 次 (3.52%)
-7. `as` - 254 次 (3.45%)
-8. `has` - 209 次 (2.84%)
-9. `groupCount` - 182 次 (2.48%)
-10. `where` - 147 次 (2.00%)
-
-详见 `SYNTAX_QUICK_REFERENCE.md`
-
----
-
-## 常见问题
-
-### 生成的查询太多？
-调整 `base/combination_control_config.json` 中的 `max_total_combinations`
-
-### 生成的查询太少？
-增加 `property_generalization` 中的 `additional_random_max`
-
-### 某些模板失败？
-运行 `python debug_failed_templates.py` 查看详细错误
-
-### 如何验证生成的查询？
-运行 `python verify_all.py` 验证所有查询的语法正确性
-
----
 
 
