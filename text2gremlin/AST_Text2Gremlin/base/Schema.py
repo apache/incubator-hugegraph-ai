@@ -1,3 +1,20 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 
 """
 图数据库Schema管理模块。
@@ -6,9 +23,6 @@
 """
 
 import os
-import json
-import pandas as pd
-from typing import List, Dict
 import json
 import random
 import pandas as pd
@@ -135,8 +149,14 @@ class Schema:
 
     def get_step_result_label(self, start_label: str, step: Dict) -> Tuple[str, str]:
         step_name, step_param = step.get('step'), step.get('param')
-        if step_name == 'out': return self.edges[step_param]['destination'], 'vertex'
-        if step_name == 'in': return self.edges[step_param]['source'], 'vertex'
+        if step_name == 'out':
+            if step_param not in self.edges:
+                raise KeyError(f"边标签 '{step_param}' 不存在于 schema 中")
+            return self.edges[step_param]['destination'], 'vertex'
+        if step_name == 'in':
+            if step_param not in self.edges:
+                raise KeyError(f"边标签 '{step_param}' 不存在于 schema 中")
+            return self.edges[step_param]['source'], 'vertex'
         if step_name in ['properties', 'has', 'values']: return start_label, 'vertex'
         return None, None
 
@@ -171,7 +191,6 @@ class Schema:
         Returns:
             实例列表
         """
-        import random
         
         is_edge = label in self.edges
         data_cache = self.edge_data if is_edge else self.vertex_data
@@ -194,30 +213,3 @@ class Schema:
         # 随机采样
         sampled_df = df.sample(actual_count)
         return sampled_df.to_dict('records')
-
-# --- 单模块测试入口 ---
-if __name__ == "__main__":
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(base_dir)
-    schema_path = os.path.join(project_root, 'db_data', 'schema', 'movie_schema.json')
-    # 【修正】将 data_path 指向包含 movie/raw_data 的上级目录
-    data_path = os.path.join(project_root, 'db_data')
-
-    if not os.path.exists(schema_path) or not os.path.exists(data_path):
-        print("错误: 找不到 Schema 或数据文件，请检查路径。")
-    else:
-        schema = Schema(schema_path, data_path)
-        print("\n--- Schema 初始化成功 (已修复CSV读取逻辑) ---")
-
-        print("\n--- 测试数据实例获取 ---")
-        random_person = schema.get_instance('person')
-        print(f"随机获取一个 'person' 实例: {random_person}")
-        
-        random_user = schema.get_instance('user')
-        print(f"随机获取一个 'user' 实例: {random_user}")
-        
-        # 验证 name 属性是否能被正确读取
-        if random_person and 'name' in random_person:
-            print(f"成功读取到 'person' 的 name: {random_person['name']}")
-        else:
-            print("错误: 未能从 'person' 实例中读取到 name 属性。")

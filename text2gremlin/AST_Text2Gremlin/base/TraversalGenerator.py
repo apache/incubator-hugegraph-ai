@@ -1,8 +1,20 @@
-"""
-Gremlin查询生成器核心引擎。
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
 
-基于递归回溯算法与数据控制策略,从结构化配方生成大量多样化的Gremlin查询及其中文描述。
-"""
 
 import os
 import random
@@ -20,37 +32,21 @@ from .CombinationController import CombinationController
 
 class TraversalGenerator:
     """Gremlin查询生成器 - 分层泛化架构"""
-    
-    # ==================== 步骤分类配置 ====================
-    #
-    # 如何添加新步骤：
-    # 1. 确定步骤类别（A-J）
-    # 2. 在对应的字典中添加步骤定义
-    # 3. 如果需要特殊逻辑，在对应的处理器方法中添加实现
-    # 4. 运行测试验证
-    #
-    # 示例：添加新的简单步骤 'explain'
-    #   1. 在 SIMPLE_STEPS 中添加: 'explain': ('解释查询', 'string')
-    #   2. 无需修改 _handle_simple_step 方法（自动处理）
-    #   3. 测试: g.V().explain()
-    # ===========================================================
-    
     # A. 简单步骤（无参数，直接生成）
-    # 翻译由GremlinBase提供
     SIMPLE_STEPS = {
         'count': {'output_type': 'number'},
         'id': {'output_type': 'value'},
         'label': {'output_type': 'string'},
         'fold': {'output_type': 'list'},
-        'unfold': {'output_type': None},  # None表示保持当前类型
+        'unfold': {'output_type': None},  
         'drop': {'output_type': 'none'},
         'iterate': {'output_type': 'none'},
-        'explain': {'output_type': 'string'},  # 返回执行计划
-        'profile': {'output_type': 'map'},  # 返回性能分析
-        'loops': {'output_type': 'number'},  # 返回循环次数
-        'value': {'output_type': 'value'},  # 获取属性值（用于属性流）
-        'identity': {'output_type': None},  # 恒等映射，保持当前类型
-        'barrier': {'output_type': None}  # 屏障，等待所有遍历者
+        'explain': {'output_type': 'string'}, 
+        'profile': {'output_type': 'map'}, 
+        'loops': {'output_type': 'number'},  
+        'value': {'output_type': 'value'}, 
+        'identity': {'output_type': None},  
+        'barrier': {'output_type': None}  
     }
     
     # B. 属性访问步骤（需要Schema + 泛化）
@@ -62,7 +58,7 @@ class TraversalGenerator:
         'key': {'output_type': 'string', 'supports_params': False}
     }
     
-    # C. 数值参数步骤（需要生成合理的数值）
+    # C. 数值参数步骤
     NUMERIC_PARAM_STEPS = {
         'limit': {'range': (1, 100)},
         'skip': {'range': (0, 50)},
@@ -142,13 +138,13 @@ class TraversalGenerator:
     }
     
     
-    # M. 边修改步骤
+    # I. 边修改步骤
     EDGE_MODIFICATION_STEPS = {
         'from': {'output_type': None, 'needs_label_or_traversal': True},
         'to': {'output_type': None, 'needs_label_or_traversal': True}
     }
     
-    # I. 谓词（用于has等步骤）
+    # J. 谓词（用于has等步骤）
     # 谓词由 Visitor 解析为 Predicate/TextPredicate 对象，在 E 层过滤步骤中处理
     PREDICATES = {
         # 数值谓词
@@ -177,7 +173,29 @@ class TraversalGenerator:
         'not': {'types': ['any']}
     }
     
-    # J. 特殊步骤（需要单独实现）
+
+    # K. 图算法步骤
+    GRAPH_ALGORITHM_STEPS = {
+        'pageRank': {'output_type': None},
+        'peerPressure': {'output_type': None},
+        'connectedComponent': {'output_type': None},
+        'shortestPath': {'output_type': None}
+    }
+    
+    # L. 工具步骤
+    UTILITY_STEPS = {
+        'math': {'output_type': 'number', 'needs_expression': True},
+        'subgraph': {'output_type': None, 'needs_key': True},
+        'timeLimit': {'output_type': None, 'needs_number': True},
+        'inject': {'output_type': None, 'multi_param': True},  # 支持多参数
+        'call': {'output_type': None, 'needs_string': True},
+        'io': {'output_type': None, 'needs_string': True},
+        'mergeE': {'output_type': None},  # 合并边
+        'mergeV': {'output_type': None},  # 合并顶点
+        'with': {'output_type': None, 'multi_param': True}  # 配置选项
+    }
+    
+    # M. 特殊步骤（需要单独实现）
     SPECIAL_STEPS = {
         # 起始步骤
         'V': {'category': 'start'},
@@ -209,26 +227,6 @@ class TraversalGenerator:
         'map': {'category': 'higher_order'},
         'local': {'category': 'higher_order'}  # 本地作用域遍历
     }
-    # K. 图算法步骤
-    GRAPH_ALGORITHM_STEPS = {
-        'pageRank': {'output_type': None},
-        'peerPressure': {'output_type': None},
-        'connectedComponent': {'output_type': None},
-        'shortestPath': {'output_type': None}
-    }
-    
-    # L. 工具步骤
-    UTILITY_STEPS = {
-        'math': {'output_type': 'number', 'needs_expression': True},
-        'subgraph': {'output_type': None, 'needs_key': True},
-        'timeLimit': {'output_type': None, 'needs_number': True},
-        'inject': {'output_type': None, 'multi_param': True},  # 支持多参数
-        'call': {'output_type': None, 'needs_string': True},
-        'io': {'output_type': None, 'needs_string': True},
-        'mergeE': {'output_type': None},  # 合并边
-        'mergeV': {'output_type': None},  # 合并顶点
-        'with': {'output_type': None, 'multi_param': True}  # 配置选项
-    }
     
     def __init__(self, schema: Schema, recipe: Traversal, gremlin_base: GremlinBase, 
                  controller: Optional[CombinationController] = None):
@@ -248,12 +246,10 @@ class TraversalGenerator:
         
         # 集成组合控制器
         if controller is None:
-            # 尝试加载默认配置
             try:
-                # 尝试多个可能的路径
                 possible_paths = [
-                    'combination_control_config.json',  # 当前目录
-                    os.path.join(os.path.dirname(__file__), 'combination_control_config.json'),  # TraversalGenerator.py所在目录
+                    'combination_control_config.json',  
+                    os.path.join(os.path.dirname(__file__), 'combination_control_config.json'),  
                 ]
                 
                 config_loaded = False
@@ -281,7 +277,6 @@ class TraversalGenerator:
         # 配方路径完成标记
         self.recipe_path_completed = False
     
-    # ==================== 主生成流程 ====================
     
     def generate(self) -> List[Tuple[str, str]]:
         """
@@ -415,7 +410,7 @@ class TraversalGenerator:
                     option['new_label'], option['new_type']
                 )
     
-    # ==================== 步骤选项生成（分发器）====================
+    #步骤选项生成（分发器）
     
     def _get_valid_options_for_step(self, step_recipe: Step, current_label: str, 
                                     current_type: str, remaining_steps: List[Step] = None) -> List[Dict]:
@@ -489,7 +484,7 @@ class TraversalGenerator:
         print(f"⚠️  未知步骤: {step_name}")
         return []
     
-    # ==================== A. 简单步骤处理器 ====================
+    #   A. 简单步骤处理器  
     
     def _handle_simple_step(self, step_name: str, current_label: str, 
                            current_type: str) -> List[Dict]:
@@ -521,7 +516,7 @@ class TraversalGenerator:
             'new_type': new_type
         }]
     
-    # ==================== F. 转换步骤处理器 ====================
+    #   F. 转换步骤处理器  
     
     def _handle_transform_step(self, step_recipe: Step, current_label: str,
                                current_type: str) -> List[Dict]:
@@ -652,7 +647,7 @@ class TraversalGenerator:
         
         return options
     
-    # ==================== G. 聚合步骤处理器 ====================
+    #   G. 聚合步骤处理器  
     
     def _handle_aggregate_step(self, step_recipe: Step, current_label: str,
                                current_type: str) -> List[Dict]:
@@ -696,7 +691,7 @@ class TraversalGenerator:
                 'new_type': new_type
             }]
     
-    # ==================== G2. 副作用步骤处理器 ====================
+    #   G2. 副作用步骤处理器  
     
     def _handle_side_effect_step(self, step_recipe: Step, current_label: str,
                                  current_type: str) -> List[Dict]:
@@ -783,7 +778,7 @@ class TraversalGenerator:
                 'new_type': new_type
             }]
     
-    # ==================== H. 终端步骤处理器 ====================
+    #   H. 终端步骤处理器  
     
     def _handle_terminal_step(self, step_recipe: Step, current_label: str,
                              current_type: str) -> List[Dict]:
@@ -830,7 +825,7 @@ class TraversalGenerator:
             'new_type': new_type
         }]
     
-    # ==================== C. 数值参数步骤处理器 ====================
+    #   C. 数值参数步骤处理器  
     
     def _handle_numeric_param_step(self, step_name: str, params: List, 
                                    current_label: str, current_type: str) -> List[Dict]:
@@ -870,7 +865,7 @@ class TraversalGenerator:
             'new_type': current_type
         }]
     
-    # ==================== K. 图算法步骤处理器 ====================
+    #   K. 图算法步骤处理器  
     
     def _handle_graph_algorithm_step(self, step_name: str, current_label: str,
                                      current_type: str) -> List[Dict]:
@@ -897,7 +892,7 @@ class TraversalGenerator:
             'new_type': current_type
         }]
     
-    # ==================== L. 工具步骤处理器 ====================
+    #   L. 工具步骤处理器  
     
     def _handle_utility_step(self, step_recipe: Step, current_label: str,
                             current_type: str) -> List[Dict]:
@@ -995,7 +990,7 @@ class TraversalGenerator:
             'new_type': new_type
         }]
     
-    # ==================== M. 边修改步骤处理器 ====================
+    #   M. 边修改步骤处理器  
     
     def _handle_edge_modification_step(self, step_recipe: Step, current_label: str,
                                       current_type: str) -> List[Dict]:
@@ -1058,7 +1053,7 @@ class TraversalGenerator:
             'new_type': current_type
         }]
     
-    # ==================== B. 属性访问步骤处理器 ====================
+    #   B. 属性访问步骤处理器  
     
     def _handle_property_access_step(self, step_recipe: Step, current_label: str,
                                     current_type: str) -> List[Dict]:
@@ -1244,7 +1239,7 @@ class TraversalGenerator:
         
         return options
     
-    # ==================== 嵌套遍历泛化辅助方法 ====================
+    #   嵌套遍历泛化辅助方法  
     
     def _generate_nested_traversal_variants(self, anonymous_trav, current_depth=0):
         """
@@ -1450,7 +1445,7 @@ class TraversalGenerator:
         else:
             return "..."
     
-    # ==================== E. 过滤步骤处理器 ====================
+    #   E. 过滤步骤处理器  
     
     def _handle_filter_step(self, step_recipe: Step, current_label: str,
                            current_type: str, remaining_steps: List[Step]) -> List[Dict]:
@@ -1619,18 +1614,27 @@ class TraversalGenerator:
                             # has('name', 'Tom', 'Jerry') - 多个值
                             if self.controller:
                                 fill_times = self.controller.get_multi_param_value_fill_count(
-                                    param_count=value_count,
                                     is_terminal=is_terminal_step
                                 )
                             else:
                                 fill_times = 1
                             
-                            # 生成多次填充
-                            for _ in range(fill_times):
-                                if len(all_values) >= value_count:
-                                    selected_combo = random.sample(all_values, value_count)
-                                    values_str = ", ".join(repr(v) for v in selected_combo)
-                                    prop_desc = self.gremlin_base.get_schema_desc(prop_name)
+                            # 调整填充次数：不能超过实际可生成的不同组合数
+                            if len(all_values) >= value_count:
+                                # 使用集合去重，避免生成重复组合
+                                generated_combos = set()
+                                attempts = 0
+                                max_attempts = fill_times * 10  # 避免无限循环
+                                
+                                while len(generated_combos) < fill_times and attempts < max_attempts:
+                                    selected_combo = tuple(sorted(random.sample(all_values, value_count)))
+                                    generated_combos.add(selected_combo)
+                                    attempts += 1
+                                
+                                # 生成查询选项
+                                prop_desc = self.gremlin_base.get_schema_desc(prop_name)
+                                for combo in generated_combos:
+                                    values_str = ", ".join(repr(v) for v in combo)
                                     options.append({
                                         'query_part': f".has('{prop_name}', {values_str})",
                                         'desc_part': f"，其'{prop_desc}'为{values_str}之一",
@@ -1693,17 +1697,27 @@ class TraversalGenerator:
                             # has('name', 'Tom', 'Jerry') - 多个值
                             if self.controller:
                                 fill_times = self.controller.get_multi_param_value_fill_count(
-                                    param_count=value_count,
                                     is_terminal=is_terminal_step
                                 )
                             else:
                                 fill_times = 1
                             
-                            for _ in range(fill_times):
-                                if len(all_values) >= value_count:
-                                    selected_combo = random.sample(all_values, value_count)
-                                    values_str = ", ".join(repr(v) for v in selected_combo)
-                                    prop_desc = self.gremlin_base.get_schema_desc(recipe_prop)
+                            # 调整填充次数：不能超过实际可生成的不同组合数
+                            if len(all_values) >= value_count:
+                                # 使用集合去重，避免生成重复组合
+                                generated_combos = set()
+                                attempts = 0
+                                max_attempts = fill_times * 10  # 避免无限循环
+                                
+                                while len(generated_combos) < fill_times and attempts < max_attempts:
+                                    selected_combo = tuple(sorted(random.sample(all_values, value_count)))
+                                    generated_combos.add(selected_combo)
+                                    attempts += 1
+                                
+                                # 生成查询选项
+                                prop_desc = self.gremlin_base.get_schema_desc(recipe_prop)
+                                for combo in generated_combos:
+                                    values_str = ", ".join(repr(v) for v in combo)
                                     options.append({
                                         'query_part': f".has('{recipe_prop}', {values_str})",
                                         'desc_part': f"，其'{prop_desc}'为{values_str}之一",
@@ -2148,7 +2162,7 @@ class TraversalGenerator:
         
         return options
     
-    # ==================== D. 导航步骤处理器 ====================
+    #   D. 导航步骤处理器  
     
     def _handle_navigation_step(self, step_recipe: Step, current_label: str,
                                current_type: str) -> List[Dict]:
@@ -2333,7 +2347,7 @@ class TraversalGenerator:
         
         return options
     
-    # ==================== J. 特殊步骤处理器 ====================
+    #   J. 特殊步骤处理器  
     
     def _handle_special_step(self, step_recipe: Step, current_label: str,
                             current_type: str, remaining_steps: List[Step]) -> List[Dict]:
@@ -3165,7 +3179,7 @@ class TraversalGenerator:
         
         return results
     
-    # ==================== 辅助方法 ====================
+    #   辅助方法  
     
     def _get_random_value(self, label: str, prop_info: Dict, for_update: bool = False) -> Any:
         """根据属性类型生成随机值"""
