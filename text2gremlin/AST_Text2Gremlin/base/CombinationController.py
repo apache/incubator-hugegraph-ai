@@ -1,3 +1,21 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+
 """
 组合爆炸控制器
 
@@ -20,20 +38,40 @@ class CombinationController:
         """
         self.config = config
         
-        # 链长度分类阈值
-        self.chain_thresholds = config['chain_thresholds']
+        # 验证必要配置项并加载
+        try:
+            # 链长度分类阈值
+            self.chain_thresholds = config['chain_thresholds']
+            
+            # 随机增强控制
+            self.random_enhancement = config['random_enhancement']
+            
+            # 数据填充策略
+            self.value_fill = config['value_fill_strategy']
+            
+            # 属性泛化策略
+            self.property_gen = config['property_generalization']
+        except KeyError as e:
+            raise ValueError(f"缺少必要配置项: {e}") from None
         
-        # 随机增强控制
-        self.random_enhancement = config['random_enhancement']
-        
-        # 数据填充策略
-        self.value_fill = config['value_fill_strategy']
-        
-        # 属性泛化策略
-        self.property_gen = config['property_generalization']
-        
-        # 总数限制
+        # 总数限制（可选）
         self.max_total = config.get('max_total_combinations', {})
+        
+        # 验证关键类别的存在性
+        # chain_thresholds 只需要 short, medium, long（ultra 通过 else 分支隐式定义）
+        for category in ('short', 'medium', 'long'):
+            if category not in self.chain_thresholds:
+                raise ValueError(f"chain_thresholds 缺少 '{category}' 配置")
+        
+        # property_generalization 需要所有4个类别（包括 ultra）
+        for category in ('short', 'medium', 'long', 'ultra'):
+            if category not in self.property_gen:
+                raise ValueError(f"property_generalization 缺少 '{category}' 配置")
+            # 验证每个类别的必要字段
+            required_fields = ['full_coverage_threshold', 'additional_random_min', 'additional_random_max']
+            for field in required_fields:
+                if field not in self.property_gen[category]:
+                    raise ValueError(f"property_generalization.{category} 缺少 '{field}' 字段")
         
     def get_chain_category(self, step_count: int) -> str:
         """
@@ -132,7 +170,7 @@ class CombinationController:
         # 2. 判断是否全部遍历
         if len(all_options) <= strategy['full_coverage_threshold']:
             # 同级选项少，全部遍历
-            return all_options
+            return list(all_options)
         
         # 3. 同级选项多，随机选择额外的
         additional_count = random.randint(
@@ -178,9 +216,11 @@ class CombinationController:
         max_combinations = schema_config.get(chain_category, {}).get('max_combinations', 1)
         
         combinations = []
+        seen = set()  # 用于去重的集合
         
         # 1. 保留原配方组合
         combinations.append(recipe_params.copy())
+        seen.add(tuple(sorted(recipe_params)))
         
         if max_combinations <= 1:
             return combinations
@@ -210,24 +250,25 @@ class CombinationController:
             # 随机选择同数量的参数
             combo = random.sample(other_options, param_count)
             
-            # 避免重复组合
-            if combo not in combinations:
+            # 使用排序后的元组作为key进行去重（因为参数顺序不影响语义）
+            key = tuple(sorted(combo))
+            if key not in seen:
+                seen.add(key)
                 combinations.append(combo)
             
             attempts += 1
         
         return combinations
     
-    def get_multi_param_value_fill_count(self, param_count: int, is_terminal: bool) -> int:
+    def get_multi_param_value_fill_count(self, is_terminal: bool) -> int:
         """
         多参数数据值填充次数控制
         
         Args:
-            param_count: 参数个数
             is_terminal: 是否是终端步骤
             
         Returns:
-            填充次数（每次填充param_count个值）
+            填充次数（每次填充的值个数由调用方根据参数个数决定）
         """
         multi_config = self.config.get('multi_param_strategy', {})
         value_config = multi_config.get('value_fill', {})

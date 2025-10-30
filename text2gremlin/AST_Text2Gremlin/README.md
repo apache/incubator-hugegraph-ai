@@ -5,7 +5,7 @@
 ## 快速开始
 环境配置：python：3.12.10
 ```bash
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 ```bash
@@ -31,7 +31,7 @@ python show_syntax_stats.py
 
 ## 项目结构
 
-```
+```text
 ├── generate_corpus.py                   # 主程序
 ├── gremlin_templates.csv                # 模板文件
 ├── config.json                          # 配置
@@ -80,11 +80,7 @@ print(f"生成了 {result['total_unique_queries']} 个查询")
 
 ### 3. 添加模板
 
-```bash
-python add_template.py
-```
-
-或直接编辑 `gremlin_templates.csv`
+直接编辑 `gremlin_templates.csv`即可
 
 ---
 
@@ -155,7 +151,7 @@ python visualize_syntax_distribution.py
 
 ### 1. 模板泛化
 从一个模板生成多个变体：
-```
+```text
 模板: g.V().hasLabel('person').out('acted_in')
 
 泛化:
@@ -177,7 +173,7 @@ python visualize_syntax_distribution.py
 
 ### 4. 中文翻译
 自动生成流畅的中文描述：
-```
+```text
 g.V().hasLabel('person').out('acted_in').has('title', 'Inception')
 ↓
 从图中开始查找所有顶点，过滤出'人'类型的顶点，沿'参演'边out方向遍历，其'标题'为'Inception'

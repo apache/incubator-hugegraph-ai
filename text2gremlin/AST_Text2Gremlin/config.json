@@ -7,9 +7,9 @@
     "data_path": "./db_data/",
     "templates_file": "gremlin_templates.csv",
     "output_dir": "output",
-    "num_queries_per_template": 100,
     "schema_dict_path": [
         "./base/template/schema_dict.txt"
-    ]
+    ],
+    "_note": "查询数量由 combination_control_config.json 中的 max_total_combinations 控制"
 }
 

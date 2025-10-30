@@ -1,15 +1,33 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+
 """
-控制层-Gremlin语料库生成器主入口。
+Gremlin语料库生成器主入口脚本。
 
 从Gremlin查询模板生成大量多样化的查询-描述对，用于Text-to-Gremlin任务的训练数据。
 """
 
 import os
 import json
+from datetime import datetime
 from antlr4 import InputStream, CommonTokenStream
 from antlr4.error.ErrorListener import ErrorListener
 
-# Import all our custom modules from the gremlin_base package
 from .Config import Config
 from .Schema import Schema
 from .GremlinBase import GremlinBase
@@ -17,7 +35,6 @@ from .GremlinParse import Traversal
 from .TraversalGenerator import TraversalGenerator
 from .GremlinTransVisitor import GremlinTransVisitor
 
-# Import the ANTLR-generated components
 from .gremlin.GremlinLexer import GremlinLexer
 from .gremlin.GremlinParser import GremlinParser
 import random
@@ -54,10 +71,12 @@ def check_gremlin_syntax(query_string: str) -> tuple[bool, str]:
         parser = GremlinParser(token_stream)
         
         # 移除默认的控制台错误监听器
+        lexer.removeErrorListeners()
         parser.removeErrorListeners()
         
         # 添加自定义的监听器
         error_listener = SyntaxErrorListener()
+        lexer.addErrorListener(error_listener)
         parser.addErrorListener(error_listener)
         
         # 尝试解析查询
@@ -135,20 +154,21 @@ def generate_corpus_from_template(
         
         for query, description in corpus:
             try:
-                # 首先进行语法检查
+                # 先判重，避免对重复项做语法检查
+                if query in global_corpus_dict:
+                    duplicate_count += 1
+                    continue
+                
+                # 再进行语法检查
                 is_valid, error_msg = check_gremlin_syntax(query)
                 
                 if not is_valid:
                     syntax_error_count += 1
                     continue
-                    
-                if query not in global_corpus_dict:
-                    # 新的查询且语法正确，添加到全局字典
-                    global_corpus_dict[query] = description
-                    new_pairs_count += 1
-                else:
-                    # 重复的查询，跳过
-                    duplicate_count += 1
+                
+                # 新的查询且语法正确，添加到全局字典
+                global_corpus_dict[query] = description
+                new_pairs_count += 1
                     
             except Exception as e:
                 syntax_error_count += 1
@@ -179,10 +199,11 @@ def generate_gremlin_corpus(templates: list[str],
                            config_path: str, 
                            schema_path: str, 
                            data_path: str,
-                           output_file: str = None,
-                           num_queries: int = 100) -> dict:
+                           output_file: str = None) -> dict:
     """
     从Gremlin模板列表生成完整的语料库。
+    
+    查询数量由 combination_control_config.json 中的 max_total_combinations 控制。
     
     Args:
         templates: Gremlin查询模板列表或CSV文件路径
@@ -190,7 +211,6 @@ def generate_gremlin_corpus(templates: list[str],
         schema_path: Schema文件路径（必需）
         data_path: 数据文件路径（必需）
         output_file: 输出文件名（可选）
-        num_queries: 每个模板生成的查询数量（默认100）
         
     Returns:
         包含生成统计信息的字典
@@ -300,9 +320,12 @@ def generate_gremlin_corpus(templates: list[str],
     full_corpus = [(query, desc) for query, desc in global_corpus_dict.items()]
     
     # --- Save the full corpus to a local file (if output_file is provided) ---
-    from datetime import datetime
-    
     if output_file:
+        # 确保输出目录存在
+        out_dir = os.path.dirname(os.path.abspath(output_file))
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
+        
         # 确保只保存成功生成的查询-描述对
         corpus_data = {
             "metadata": {
