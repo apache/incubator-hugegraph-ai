@@ -38,7 +38,7 @@ def get_embedding(llm_configs: LLMConfig):
         )
     if llm_configs.embedding_type == "ollama/local":
         return OllamaEmbedding(
-            model_name=llm_configs.ollama_embedding_model,
+            model=llm_configs.ollama_embedding_model,
             host=llm_configs.ollama_embedding_host,
             port=llm_configs.ollama_embedding_port,
         )

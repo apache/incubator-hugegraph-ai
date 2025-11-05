@@ -43,7 +43,7 @@ class OllamaEmbedding(BaseEmbedding):
 
     def get_text_embedding(self, text: str) -> List[float]:
         """Comment"""
-        return list(self.client.embed(model=self.model, input=text)["embeddings"][0])
+        return list(self.client.embed(model=self.model, input=[text])["embeddings"][0])
 
     def get_texts_embeddings(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
         """Get embeddings for multiple texts with automatic batch splitting.
