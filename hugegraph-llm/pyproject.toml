@@ -97,9 +97,7 @@ allow-direct-references = true
 
 [tool.uv.sources]
 hugegraph-python-client = { workspace = true }
-# We encountered a bug in PyCGraph's latest release version, so we're using a specific commit from the main branch (without the bug) as the project dependency.
-# TODO: Replace this command in the future when a new PyCGraph release version (after 3.1.2) is available.
-pycgraph = { git = "https://github.com/ChunelFeng/CGraph.git", subdirectory = "python", rev = "248bfcfeddfa2bc23a1d585a3925c71189dba6cc"}
+pycgraph = { git = "https://github.com/ChunelFeng/CGraph.git", subdirectory = "python", tag = "v3.2.0", marker = "sys_platform == 'linux'" }
 
 [tool.mypy]
 disable_error_code = ["import-untyped"]
