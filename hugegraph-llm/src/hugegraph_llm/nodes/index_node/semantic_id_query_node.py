@@ -15,7 +15,7 @@
 
 from typing import Dict, Any
 
-from PyCGraph import CStatus
+from pycgraph import CStatus
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings

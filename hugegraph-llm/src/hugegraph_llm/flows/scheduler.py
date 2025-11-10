@@ -15,7 +15,7 @@
 
 import threading
 from typing import Dict, Any
-from PyCGraph import GPipeline, GPipelineManager
+from pycgraph import GPipeline, GPipelineManager
 from hugegraph_llm.flows import FlowName
 from hugegraph_llm.flows.build_vector_index import BuildVectorIndexFlow
 from hugegraph_llm.flows.common import BaseFlow

@@ -16,7 +16,7 @@
 import json
 
 import gradio as gr
-from PyCGraph import GPipeline
+from pycgraph import GPipeline
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.nodes.hugegraph_node.commit_to_hugegraph import Commit2GraphNode
 from hugegraph_llm.nodes.hugegraph_node.schema import SchemaNode

@@ -15,7 +15,7 @@
 
 import json
 
-from PyCGraph import CStatus
+from pycgraph import CStatus
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.common_op.check_schema import CheckSchema
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager

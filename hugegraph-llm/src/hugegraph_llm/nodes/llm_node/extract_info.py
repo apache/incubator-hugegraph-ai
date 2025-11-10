@@ -13,7 +13,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from PyCGraph import CStatus
+from pycgraph import CStatus
 from hugegraph_llm.config import llm_settings
 from hugegraph_llm.models.llms.init_llm import get_chat_llm
 from hugegraph_llm.nodes.base_node import BaseNode

@@ -16,7 +16,7 @@
 
 from typing import Optional, Literal
 
-from PyCGraph import GPipeline
+from pycgraph import GPipeline
 
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.nodes.index_node.vector_query_node import VectorQueryNode

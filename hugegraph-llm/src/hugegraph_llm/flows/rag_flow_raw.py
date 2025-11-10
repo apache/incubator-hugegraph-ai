@@ -16,7 +16,7 @@
 
 from typing import Optional
 
-from PyCGraph import GPipeline
+from pycgraph import GPipeline
 
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.nodes.llm_node.answer_synthesize_node import AnswerSynthesizeNode
