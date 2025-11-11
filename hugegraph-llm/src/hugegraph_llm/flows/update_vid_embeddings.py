@@ -13,7 +13,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from PyCGraph import GPipeline
+from pycgraph import GPipeline
 
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.nodes.hugegraph_node.fetch_graph_data import FetchGraphDataNode

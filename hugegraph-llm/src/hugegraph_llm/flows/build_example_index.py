@@ -16,7 +16,7 @@
 import json
 from typing import List, Dict, Optional
 
-from PyCGraph import GPipeline
+from pycgraph import GPipeline
 
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState

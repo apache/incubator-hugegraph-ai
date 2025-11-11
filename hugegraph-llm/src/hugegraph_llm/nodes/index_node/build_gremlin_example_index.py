@@ -13,7 +13,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from PyCGraph import CStatus
+from pycgraph import CStatus
 
 from hugegraph_llm.config import index_settings
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings

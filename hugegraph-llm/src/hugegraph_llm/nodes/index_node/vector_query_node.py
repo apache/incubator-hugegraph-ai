@@ -46,7 +46,7 @@ class VectorQueryNode(BaseNode):
             return super().node_init()
         except Exception as e:  # pylint: disable=broad-exception-caught
             log.error("Failed to initialize VectorQueryNode: %s", e)
-            from PyCGraph import CStatus
+            from pycgraph import CStatus
 
             return CStatus(-1, f"VectorQueryNode initialization failed: {e}")
 

@@ -54,7 +54,7 @@ class MergeRerankNode(BaseNode):
             return super().node_init()
         except ValueError as e:
             log.error("Failed to initialize MergeRerankNode: %s", e)
-            from PyCGraph import CStatus
+            from pycgraph import CStatus
 
             return CStatus(-1, f"MergeRerankNode initialization failed: {e}")
 
