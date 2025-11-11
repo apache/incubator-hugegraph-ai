@@ -15,7 +15,7 @@
 
 import json
 
-from PyCGraph import CStatus
+from pycgraph import CStatus
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 from hugegraph_llm.models.llms.init_llm import get_chat_llm

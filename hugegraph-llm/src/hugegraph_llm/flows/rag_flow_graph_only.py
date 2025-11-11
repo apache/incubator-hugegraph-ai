@@ -16,7 +16,7 @@
 
 from typing import Optional, Literal, cast
 
-from PyCGraph import GPipeline, GRegion, GCondition
+from pycgraph import GPipeline, GRegion, GCondition
 
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.nodes.llm_node.keyword_extract_node import KeywordExtractNode

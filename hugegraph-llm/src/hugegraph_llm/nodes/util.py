@@ -15,7 +15,7 @@
 
 from typing import Any
 
-from PyCGraph import CStatus
+from pycgraph import CStatus
 
 
 def init_context(obj: Any) -> CStatus:

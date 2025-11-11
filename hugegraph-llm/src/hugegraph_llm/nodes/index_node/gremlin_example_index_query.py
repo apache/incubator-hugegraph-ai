@@ -17,7 +17,7 @@
 
 from typing import Any, Dict
 
-from PyCGraph import CStatus
+from pycgraph import CStatus
 
 from hugegraph_llm.config import index_settings
 from hugegraph_llm.nodes.base_node import BaseNode
