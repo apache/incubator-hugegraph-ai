@@ -97,6 +97,7 @@ allow-direct-references = true
 
 [tool.uv.sources]
 hugegraph-python-client = { workspace = true }
+pycgraph = { git = "https://github.com/ChunelFeng/CGraph.git", subdirectory = "python", tag = "v3.2.2", marker = "platform_machine == 'aarch64'" }
 
 [tool.mypy]
 disable_error_code = ["import-untyped"]
