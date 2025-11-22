@@ -20,50 +20,16 @@
 import shutil
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, Mock
 
 import pandas as pd
-from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.operators.index_op.gremlin_example_index_query import GremlinExampleIndexQuery
-
-
-class MockEmbedding(BaseEmbedding):
-    """Mock embedding class for testing"""
-
-    def __init__(self):
-        self.model = "mock_model"
-
-    def get_text_embedding(self, text):
-        # Return a simple mock embedding based on the text
-        if text == "find all persons":
-            return [1.0, 0.0, 0.0, 0.0]
-        if text == "count movies":
-            return [0.0, 1.0, 0.0, 0.0]
-        return [0.5, 0.5, 0.0, 0.0]
-
-    def get_texts_embeddings(self, texts):
-        # Return embeddings for multiple texts
-        return [self.get_text_embedding(text) for text in texts]
-
-    async def async_get_text_embedding(self, text):
-        # Async version returns the same as the sync version
-        return self.get_text_embedding(text)
-
-    async def async_get_texts_embeddings(self, texts):
-        # Async version of get_texts_embeddings
-        return [await self.async_get_text_embedding(text) for text in texts]
-
-    def get_llm_type(self):
-        return "mock"
 
 
 class TestGremlinExampleIndexQuery(unittest.TestCase):
     def setUp(self):
         # Create a temporary directory for testing
         self.test_dir = tempfile.mkdtemp()
-
-        # Create a mock embedding model
-        self.embedding = MockEmbedding()
 
         # Create sample vectors and properties for the index
         self.embed_dim = 4
@@ -73,180 +39,330 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
             {"query": "count movies", "gremlin": "g.V().hasLabel('movie').count()"},
         ]
 
-        # Create a mock vector index
-        self.mock_index = MagicMock()
-        self.mock_index.search.return_value = [self.properties[0]]  # Default return value
-
     def tearDown(self):
         # Clean up the temporary directory
         shutil.rmtree(self.test_dir)
 
-    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.VectorIndex")
-    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.resource_path")
-    def test_init(self, mock_resource_path, mock_vector_index_class):
-        # Configure mocks
-        mock_resource_path = "/mock/path"
-        mock_vector_index_class.from_index_file.return_value = self.mock_index
+    def test_init_with_existing_index(self):
+        """Test initialization when index already exists"""
+        # Create mock embedding
+        mock_embedding = Mock()
+        mock_embedding.get_embedding_dim.return_value = self.embed_dim
+        mock_embedding.get_texts_embeddings.return_value = [self.vectors[0]]
+        mock_embedding.get_text_embedding.return_value = self.vectors[0]
+
+        # Create mock vector index class and instance
+        mock_vector_index_class = MagicMock()
+        mock_index_instance = MagicMock()
+
+        # Configure the mock vector index class
+        mock_vector_index_class.exist.return_value = True
+        mock_vector_index_class.from_name.return_value = mock_index_instance
 
         # Create a GremlinExampleIndexQuery instance
-        with patch("os.path.join", return_value=self.test_dir):
-            query = GremlinExampleIndexQuery(self.embedding, num_examples=2)
+        query = GremlinExampleIndexQuery(
+            vector_index=mock_vector_index_class,
+            embedding=mock_embedding,
+            num_examples=2
+        )
 
-            # Verify the instance was initialized correctly
-            self.assertEqual(query.embedding, self.embedding)
-            self.assertEqual(query.num_examples, 2)
-            self.assertEqual(query.vector_index, self.mock_index)
-            mock_vector_index_class.from_index_file.assert_called_once()
+        # Verify the instance was initialized correctly
+        self.assertEqual(query.embedding, mock_embedding)
+        self.assertEqual(query.num_examples, 2)
+        self.assertEqual(query.vector_index, mock_index_instance)
 
-    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.VectorIndex")
-    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.resource_path")
-    def test_run(self, mock_resource_path, mock_vector_index_class):
+        # Verify that exist() and from_name() were called
+        mock_vector_index_class.exist.assert_called_once_with("gremlin_examples")
+        mock_vector_index_class.from_name.assert_called_once_with(
+            self.embed_dim, "gremlin_examples"
+        )
+
+    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.resource_path", "/mock/path")
+    @patch("pandas.read_csv")
+    @patch("concurrent.futures.ThreadPoolExecutor")
+    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.tqdm")
+    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.log")
+    @patch("os.path.join")
+    def test_init_without_existing_index(self, mock_join, mock_log, mock_tqdm, mock_thread_pool, mock_read_csv):
+        """Test initialization when index doesn't exist and needs to be built"""
+        # Create mock embedding
+        mock_embedding = Mock()
+        mock_embedding.get_embedding_dim.return_value = self.embed_dim
+        mock_embedding.get_text_embedding.side_effect = lambda x: self.vectors[0] if "persons" in x else self.vectors[1]
+
+        # Create mock vector index class and instance
+        mock_vector_index_class = MagicMock()
+        mock_index_instance = MagicMock()
+
         # Configure mocks
-        mock_resource_path = "/mock/path"
-        mock_vector_index_class.from_index_file.return_value = self.mock_index
-        self.mock_index.search.return_value = [self.properties[0]]
+        mock_vector_index_class.exist.return_value = False
+        mock_vector_index_class.from_name.return_value = mock_index_instance
+        mock_join.return_value = "/mock/path/demo/text2gremlin.csv"
+
+        # Mock CSV data
+        mock_df = pd.DataFrame(self.properties)
+        mock_read_csv.return_value = mock_df
+
+        # Mock thread pool execution
+        mock_executor = MagicMock()
+        mock_thread_pool.return_value.__enter__.return_value = mock_executor
+        mock_executor.map.return_value = self.vectors
+        mock_tqdm.return_value = self.vectors
+
+        # Create a GremlinExampleIndexQuery instance
+        query = GremlinExampleIndexQuery(
+            vector_index=mock_vector_index_class,
+            embedding=mock_embedding,
+            num_examples=1
+        )
+
+        # Verify that the index was built
+        mock_vector_index_class.exist.assert_called_once_with("gremlin_examples")
+        mock_vector_index_class.from_name.assert_called_once_with(
+            self.embed_dim, "gremlin_examples"
+        )
+        mock_index_instance.add.assert_called_once_with(self.vectors, self.properties)
+        mock_index_instance.save_index_by_name.assert_called_once_with("gremlin_examples")
+        mock_log.warning.assert_called_once_with("No gremlin example index found, will generate one.")
+
+    def test_run_with_query(self):
+        """Test run method with a valid query"""
+        # Create mock embedding
+        mock_embedding = Mock()
+        mock_embedding.get_embedding_dim.return_value = self.embed_dim
+        mock_embedding.get_texts_embeddings.return_value = [self.vectors[0]]
+
+        # Create mock vector index class and instance
+        mock_vector_index_class = MagicMock()
+        mock_index_instance = MagicMock()
+
+        # Configure mocks
+        mock_vector_index_class.exist.return_value = True
+        mock_vector_index_class.from_name.return_value = mock_index_instance
+        mock_index_instance.search.return_value = [self.properties[0]]
 
         # Create a context with a query
         context = {"query": "find all persons"}
 
         # Create a GremlinExampleIndexQuery instance
-        with patch("os.path.join", return_value=self.test_dir):
-            query = GremlinExampleIndexQuery(self.embedding, num_examples=1)
+        query = GremlinExampleIndexQuery(
+            vector_index=mock_vector_index_class,
+            embedding=mock_embedding,
+            num_examples=1
+        )
 
-            # Run the query
-            result_context = query.run(context)
+        # Run the query
+        result_context = query.run(context)
 
-            # Verify the results
-            self.assertIn("match_result", result_context)
-            self.assertEqual(result_context["match_result"], [self.properties[0]])
+        # Verify the results
+        self.assertIn("match_result", result_context)
+        self.assertEqual(result_context["match_result"], [self.properties[0]])
 
-            # Verify the mock was called correctly
-            self.mock_index.search.assert_called_once()
-            # First argument should be the embedding for "find all persons"
-            args, _ = self.mock_index.search.call_args
-            self.assertEqual(args[0], [1.0, 0.0, 0.0, 0.0])
-            # Second argument should be num_examples (1)
-            self.assertEqual(args[1], 1)
+        # Verify the mock was called correctly
+        mock_index_instance.search.assert_called_once()
+        args, kwargs = mock_index_instance.search.call_args
+        self.assertEqual(args[0], self.vectors[0])  # embedding
+        self.assertEqual(args[1], 1)  # num_examples
+        self.assertEqual(kwargs.get("dis_threshold"), 1.8)
 
-    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.VectorIndex")
-    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.resource_path")
-    def test_run_with_different_query(self, mock_resource_path, mock_vector_index_class):
+    def test_run_with_query_embedding(self):
+        """Test run method with pre-computed query embedding"""
+        # Create mock embedding
+        mock_embedding = Mock()
+        mock_embedding.get_embedding_dim.return_value = self.embed_dim
+
+        # Create mock vector index class and instance
+        mock_vector_index_class = MagicMock()
+        mock_index_instance = MagicMock()
+
         # Configure mocks
-        mock_resource_path = "/mock/path"
-        mock_vector_index_class.from_index_file.return_value = self.mock_index
-        self.mock_index.search.return_value = [self.properties[1]]
+        mock_vector_index_class.exist.return_value = True
+        mock_vector_index_class.from_name.return_value = mock_index_instance
+        mock_index_instance.search.return_value = [self.properties[0]]
 
-        # Create a context with a different query
-        context = {"query": "count movies"}
+        # Create a context with a pre-computed query embedding
+        context = {
+            "query": "find all persons",
+            "query_embedding": [1.0, 0.0, 0.0, 0.0]
+        }
 
         # Create a GremlinExampleIndexQuery instance
-        with patch("os.path.join", return_value=self.test_dir):
-            query = GremlinExampleIndexQuery(self.embedding, num_examples=1)
+        query = GremlinExampleIndexQuery(
+            vector_index=mock_vector_index_class,
+            embedding=mock_embedding,
+            num_examples=1
+        )
 
-            # Run the query
-            result_context = query.run(context)
+        # Run the query
+        result_context = query.run(context)
 
-            # Verify the results
-            self.assertIn("match_result", result_context)
-            self.assertEqual(result_context["match_result"], [self.properties[1]])
+        # Verify the results
+        self.assertIn("match_result", result_context)
+        self.assertEqual(result_context["match_result"], [self.properties[0]])
 
-            # Verify the mock was called correctly
-            self.mock_index.search.assert_called_once()
-            # First argument should be the embedding for "count movies"
-            args, _ = self.mock_index.search.call_args
-            self.assertEqual(args[0], [0.0, 1.0, 0.0, 0.0])
+        # Verify the mock was called with the pre-computed embedding
+        # Should NOT call embedding.get_texts_embeddings since query_embedding is provided
+        mock_index_instance.search.assert_called_once()
+        args, _ = mock_index_instance.search.call_args
+        self.assertEqual(args[0], [1.0, 0.0, 0.0, 0.0])
 
-    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.VectorIndex")
-    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.resource_path")
-    def test_run_with_zero_examples(self, mock_resource_path, mock_vector_index_class):
+        # Verify that get_texts_embeddings was NOT called
+        mock_embedding.get_texts_embeddings.assert_not_called()
+
+    def test_run_with_zero_examples(self):
+        """Test run method with num_examples=0"""
+        # Create mock embedding
+        mock_embedding = Mock()
+        mock_embedding.get_embedding_dim.return_value = self.embed_dim
+
+        # Create mock vector index class and instance
+        mock_vector_index_class = MagicMock()
+        mock_index_instance = MagicMock()
+
         # Configure mocks
-        mock_resource_path = "/mock/path"
-        mock_vector_index_class.from_index_file.return_value = self.mock_index
+        mock_vector_index_class.exist.return_value = True
+        mock_vector_index_class.from_name.return_value = mock_index_instance
 
         # Create a context with a query
         context = {"query": "find all persons"}
 
         # Create a GremlinExampleIndexQuery instance with num_examples=0
-        with patch("os.path.join", return_value=self.test_dir):
-            query = GremlinExampleIndexQuery(self.embedding, num_examples=0)
+        query = GremlinExampleIndexQuery(
+            vector_index=mock_vector_index_class,
+            embedding=mock_embedding,
+            num_examples=0
+        )
 
-            # Run the query
-            result_context = query.run(context)
+        # Run the query
+        result_context = query.run(context)
 
-            # Verify the results
-            self.assertIn("match_result", result_context)
-            self.assertEqual(result_context["match_result"], [])
+        # Verify the results
+        self.assertIn("match_result", result_context)
+        self.assertEqual(result_context["match_result"], [])
 
-            # Verify the mock was not called
-            self.mock_index.search.assert_not_called()
+        # Verify the mock was not called
+        mock_index_instance.search.assert_not_called()
 
-    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.VectorIndex")
-    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.resource_path")
-    def test_run_with_query_embedding(self, mock_resource_path, mock_vector_index_class):
+    def test_run_without_query(self):
+        """Test run method without query raises ValueError"""
+        # Create mock embedding
+        mock_embedding = Mock()
+        mock_embedding.get_embedding_dim.return_value = self.embed_dim
+
+        # Create mock vector index class and instance
+        mock_vector_index_class = MagicMock()
+        mock_index_instance = MagicMock()
+
         # Configure mocks
-        mock_resource_path = "/mock/path"
-        mock_vector_index_class.from_index_file.return_value = self.mock_index
-        self.mock_index.search.return_value = [self.properties[0]]
-
-        # Create a context with a pre-computed query embedding
-        context = {"query": "find all persons", "query_embedding": [1.0, 0.0, 0.0, 0.0]}
-
-        # Create a GremlinExampleIndexQuery instance
-        with patch("os.path.join", return_value=self.test_dir):
-            query = GremlinExampleIndexQuery(self.embedding, num_examples=1)
-
-            # Run the query
-            result_context = query.run(context)
-
-            # Verify the results
-            self.assertIn("match_result", result_context)
-            self.assertEqual(result_context["match_result"], [self.properties[0]])
-
-            # Verify the mock was called correctly with the pre-computed embedding
-            self.mock_index.search.assert_called_once()
-            args, _ = self.mock_index.search.call_args
-            self.assertEqual(args[0], [1.0, 0.0, 0.0, 0.0])
-
-    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.VectorIndex")
-    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.resource_path")
-    def test_run_without_query(self, mock_resource_path, mock_vector_index_class):
-        # Configure mocks
-        mock_resource_path = "/mock/path"
-        mock_vector_index_class.from_index_file.return_value = self.mock_index
+        mock_vector_index_class.exist.return_value = True
+        mock_vector_index_class.from_name.return_value = mock_index_instance
 
         # Create a context without a query
         context = {}
 
         # Create a GremlinExampleIndexQuery instance
-        with patch("os.path.join", return_value=self.test_dir):
-            query = GremlinExampleIndexQuery(self.embedding, num_examples=1)
+        query = GremlinExampleIndexQuery(
+            vector_index=mock_vector_index_class,
+            embedding=mock_embedding,
+            num_examples=1
+        )
 
-            # Run the query and expect a ValueError
-            with self.assertRaises(ValueError):
-                query.run(context)
+        # Run the query and expect a ValueError
+        with self.assertRaises(ValueError) as cm:
+            query.run(context)
 
-    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.VectorIndex")
-    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.resource_path")
-    @patch("os.path.exists")
-    @patch("pandas.read_csv")
-    def test_build_default_example_index(
-        self, mock_read_csv, mock_exists, mock_resource_path, mock_vector_index_class
-    ):
+        self.assertEqual(str(cm.exception), "query is required")
+
+    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.Embeddings")
+    def test_init_with_default_embedding(self, mock_embeddings_class):
+        """Test initialization with default embedding"""
+        # Create mock vector index class and instance
+        mock_vector_index_class = MagicMock()
+        mock_index_instance = MagicMock()
+
         # Configure mocks
-        mock_resource_path = "/mock/path"
-        mock_vector_index_class.return_value = self.mock_index
-        mock_exists.return_value = False
+        mock_vector_index_class.exist.return_value = True
+        mock_vector_index_class.from_name.return_value = mock_index_instance
 
-        # Mock the CSV data
-        mock_df = pd.DataFrame(self.properties)
-        mock_read_csv.return_value = mock_df
+        mock_embedding_instance = Mock()
+        mock_embedding_instance.get_embedding_dim.return_value = self.embed_dim
+        mock_embeddings_class.return_value.get_embedding.return_value = mock_embedding_instance
+
+        # Create instance without embedding parameter
+        query = GremlinExampleIndexQuery(
+            vector_index=mock_vector_index_class,
+            num_examples=1
+        )
+
+        # Verify default embedding was used
+        self.assertEqual(query.embedding, mock_embedding_instance)
+        mock_embeddings_class.assert_called_once()
+        mock_embeddings_class.return_value.get_embedding.assert_called_once()
+
+    def test_run_with_negative_examples(self):
+        """Test run method with negative num_examples"""
+        # Create mock embedding
+        mock_embedding = Mock()
+        mock_embedding.get_embedding_dim.return_value = self.embed_dim
+
+        # Create mock vector index class and instance
+        mock_vector_index_class = MagicMock()
+        mock_index_instance = MagicMock()
+
+        # Configure mocks
+        mock_vector_index_class.exist.return_value = True
+        mock_vector_index_class.from_name.return_value = mock_index_instance
+
+        # Create a context with a query
+        context = {"query": "find all persons"}
+
+        # Create a GremlinExampleIndexQuery instance with negative num_examples
+        query = GremlinExampleIndexQuery(
+            vector_index=mock_vector_index_class,
+            embedding=mock_embedding,
+            num_examples=-1
+        )
+
+        # Run the query
+        result_context = query.run(context)
+
+        # Verify the results - should return empty list for negative examples
+        self.assertIn("match_result", result_context)
+        self.assertEqual(result_context["match_result"], [])
+
+        # Verify the mock was not called
+        mock_index_instance.search.assert_not_called()
+
+    def test_get_match_result_with_non_list_embedding(self):
+        """Test _get_match_result when query_embedding is not a list"""
+        # Create mock embedding
+        mock_embedding = Mock()
+        mock_embedding.get_embedding_dim.return_value = self.embed_dim
+        mock_embedding.get_texts_embeddings.return_value = [self.vectors[0]]
+
+        # Create mock vector index class and instance
+        mock_vector_index_class = MagicMock()
+        mock_index_instance = MagicMock()
+
+        # Configure mocks
+        mock_vector_index_class.exist.return_value = True
+        mock_vector_index_class.from_name.return_value = mock_index_instance
+        mock_index_instance.search.return_value = [self.properties[0]]
 
         # Create a GremlinExampleIndexQuery instance
-        with patch("os.path.join", return_value=self.test_dir):
-            # This should trigger _build_default_example_index
-            GremlinExampleIndexQuery(self.embedding, num_examples=1)
+        query = GremlinExampleIndexQuery(
+            vector_index=mock_vector_index_class,
+            embedding=mock_embedding,
+            num_examples=1
+        )
 
-            # Verify that the index was built
-            mock_vector_index_class.assert_called_once()
-            self.mock_index.add.assert_called_once()
-            self.mock_index.to_index_file.assert_called_once()
+        # Test with non-list query_embedding (should use embedding service)
+        context = {"query": "find all persons", "query_embedding": "not_a_list"}
+        result_context = query.run(context)
+
+        # Verify the results
+        self.assertIn("match_result", result_context)
+        self.assertEqual(result_context["match_result"], [self.properties[0]])
+
+        # Verify that get_texts_embeddings was called since query_embedding wasn't a list
+        mock_embedding.get_texts_embeddings.assert_called_once_with(["find all persons"])

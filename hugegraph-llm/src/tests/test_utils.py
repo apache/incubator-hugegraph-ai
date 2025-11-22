@@ -19,7 +19,7 @@ import os
 from unittest.mock import MagicMock, patch
 
 from hugegraph_llm.document import Document
-
+from .utils.mock import VectorIndex
 
 # Check if external service tests should be skipped
 def should_skip_external():
@@ -112,7 +112,5 @@ def create_test_document(content="This is a test document"):
 
 # Helper function to create test vector index
 def create_test_vector_index(dimension=1536):
-    from hugegraph_llm.indices.vector_index import VectorIndex
-
     index = VectorIndex(dimension)
     return index

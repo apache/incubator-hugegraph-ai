@@ -27,6 +27,7 @@ from src.tests.test_utils import (
     with_mock_openai_embedding,
 )
 
+from ..utils.mock import VectorIndex
 
 # 创建模拟类，替代缺失的模块
 class Document:
@@ -88,26 +89,6 @@ class OpenAILLM:
     def generate(self, prompt):
         # 返回一个模拟的回答
         return f"这是对'{prompt}'的模拟回答"
-
-
-class VectorIndex:
-    """模拟的VectorIndex类"""
-
-    def __init__(self, dimension=1536):
-        self.dimension = dimension
-        self.documents = []
-        self.vectors = []
-
-    def add_document(self, document, embedding_model):
-        self.documents.append(document)
-        self.vectors.append(embedding_model.get_text_embedding(document.content))
-
-    def __len__(self):
-        return len(self.documents)
-
-    def search(self, query_vector, top_k=5):
-        # 简单地返回前top_k个文档
-        return self.documents[: min(top_k, len(self.documents))]
 
 
 class VectorIndexRetriever:

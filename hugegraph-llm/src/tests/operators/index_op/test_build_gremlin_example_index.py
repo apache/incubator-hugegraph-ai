@@ -15,131 +15,151 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import os
-import shutil
-import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
-
-from hugegraph_llm.indices.vector_index import VectorIndex
+from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
+
 from hugegraph_llm.operators.index_op.build_gremlin_example_index import BuildGremlinExampleIndex
 
 
 class TestBuildGremlinExampleIndex(unittest.TestCase):
-    def setUp(self):
-        # Create a mock embedding model
-        self.mock_embedding = MagicMock(spec=BaseEmbedding)
-        self.mock_embedding.get_text_embedding.return_value = [0.1, 0.2, 0.3]
 
-        # Create example data
+    def setUp(self):
+        # Mock embedding model
+        self.mock_embedding = MagicMock(spec=BaseEmbedding)
+
+        # Prepare test examples
         self.examples = [
             {"query": "g.V().hasLabel('person')", "description": "Find all persons"},
             {"query": "g.V().hasLabel('movie')", "description": "Find all movies"},
         ]
 
-        # Create a temporary directory for testing
-        self.temp_dir = tempfile.mkdtemp()
+        # Mock vector store instance
+        self.mock_vector_store_instance = MagicMock(spec=VectorStoreBase)
 
-        # Patch the resource_path
-        self.patcher1 = patch(
-            "hugegraph_llm.operators.index_op.build_gremlin_example_index.resource_path", self.temp_dir
+        # Mock vector store class - 正确设置 from_name 方法
+        self.mock_vector_store_class = MagicMock()
+        self.mock_vector_store_class.from_name = MagicMock(return_value=self.mock_vector_store_instance)
+
+        # Create instance
+        self.index_builder = BuildGremlinExampleIndex(
+            embedding=self.mock_embedding,
+            examples=self.examples,
+            vector_index=self.mock_vector_store_class
         )
-        self.patcher1.start()
-
-        # Mock the new utility functions
-        self.patcher2 = patch("hugegraph_llm.operators.index_op.build_gremlin_example_index.get_index_folder_name")
-        self.mock_get_index_folder_name = self.patcher2.start()
-        self.mock_get_index_folder_name.return_value = "hugegraph"
-
-        self.patcher3 = patch("hugegraph_llm.operators.index_op.build_gremlin_example_index.get_filename_prefix")
-        self.mock_get_filename_prefix = self.patcher3.start()
-        self.mock_get_filename_prefix.return_value = "test_prefix"
-
-        self.patcher4 = patch("hugegraph_llm.operators.index_op.build_gremlin_example_index.get_embeddings_parallel")
-        self.mock_get_embeddings_parallel = self.patcher4.start()
-        self.mock_get_embeddings_parallel.return_value = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]
-
-        # Mock VectorIndex
-        self.mock_vector_index = MagicMock(spec=VectorIndex)
-        self.patcher5 = patch("hugegraph_llm.operators.index_op.build_gremlin_example_index.VectorIndex")
-        self.mock_vector_index_class = self.patcher5.start()
-        self.mock_vector_index_class.return_value = self.mock_vector_index
-
-    def tearDown(self):
-        # Remove the temporary directory
-        shutil.rmtree(self.temp_dir)
-
-        # Stop the patchers
-        self.patcher1.stop()
-        self.patcher2.stop()
-        self.patcher3.stop()
-        self.patcher4.stop()
-        self.patcher5.stop()
 
     def test_init(self):
-        # Test initialization
-        builder = BuildGremlinExampleIndex(self.mock_embedding, self.examples)
+        """Test initialization of BuildGremlinExampleIndex"""
+        self.assertEqual(self.index_builder.embedding, self.mock_embedding)
+        self.assertEqual(self.index_builder.examples, self.examples)
+        self.assertEqual(self.index_builder.vector_index, self.mock_vector_store_class)
+        self.assertEqual(self.index_builder.vector_index_name, "gremlin_examples")
 
-        # Check if the embedding is set correctly
-        self.assertEqual(builder.embedding, self.mock_embedding)
+    @patch('asyncio.run')
+    @patch('hugegraph_llm.utils.embedding_utils.get_embeddings_parallel')
+    def test_run_with_examples(self, mock_get_embeddings_parallel, mock_asyncio_run):
+        """Test run method with examples"""
+        # Setup mocks
+        test_embeddings = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]
+        mock_asyncio_run.return_value = test_embeddings
 
-        # Check if the examples are set correctly
-        self.assertEqual(builder.examples, self.examples)
+        # Run the method
+        context = {}
+        result = self.index_builder.run(context)
 
-        # Check if the index_dir is set correctly (now includes folder structure)
-        expected_index_dir = os.path.join(self.temp_dir, "hugegraph", "gremlin_examples")
-        self.assertEqual(builder.index_dir, expected_index_dir)
+        # Verify asyncio.run was called
+        mock_asyncio_run.assert_called_once()
 
-    def test_run_with_examples(self):
-        # Create a builder
-        builder = BuildGremlinExampleIndex(self.mock_embedding, self.examples)
+        # Verify vector store operations
+        self.mock_vector_store_class.from_name.assert_called_once_with(3, "gremlin_examples")
+        self.mock_vector_store_instance.add.assert_called_once_with(test_embeddings, self.examples)
+        self.mock_vector_store_instance.save_index_by_name.assert_called_once_with("gremlin_examples")
 
-        # Create a context
+        # Verify context update
+        self.assertEqual(result["embed_dim"], 3)
+        self.assertEqual(context["embed_dim"], 3)
+
+    @patch('asyncio.run')
+    @patch('hugegraph_llm.utils.embedding_utils.get_embeddings_parallel')
+    def test_run_with_empty_examples(self, mock_get_embeddings_parallel, mock_asyncio_run):
+        """Test run method with empty examples"""
+        # Create new mocks for this test
+        mock_vector_store_instance = MagicMock(spec=VectorStoreBase)
+        mock_vector_store_class = MagicMock()
+        mock_vector_store_class.from_name = MagicMock(return_value=mock_vector_store_instance)
+
+        # Create instance with empty examples
+        empty_index_builder = BuildGremlinExampleIndex(
+            embedding=self.mock_embedding,
+            examples=[],
+            vector_index=mock_vector_store_class
+        )
+
+        # Setup mocks - empty embeddings
+        test_embeddings = []
+        mock_asyncio_run.return_value = test_embeddings
+
+        # Run the method
         context = {}
 
-        # Run the builder
-        result = builder.run(context)
+        # This should raise an IndexError when trying to access examples_embedding[0]
+        with self.assertRaises(IndexError):
+            empty_index_builder.run(context)
 
-        # Check if get_embeddings_parallel was called
-        self.mock_get_embeddings_parallel.assert_called_once()
+    @patch('asyncio.run')
+    @patch('hugegraph_llm.utils.embedding_utils.get_embeddings_parallel')
+    def test_run_single_example(self, mock_get_embeddings_parallel, mock_asyncio_run):
+        """Test run method with single example"""
+        # Create new mocks for this test
+        mock_vector_store_instance = MagicMock(spec=VectorStoreBase)
+        mock_vector_store_class = MagicMock()
+        mock_vector_store_class.from_name = MagicMock(return_value=mock_vector_store_instance)
 
-        # Check if VectorIndex was initialized with the correct dimension
-        self.mock_vector_index_class.assert_called_once_with(3)  # dimension of [0.1, 0.2, 0.3]
+        # Create instance with single example
+        single_example = [{"query": "g.V().count()", "description": "Count all vertices"}]
+        single_index_builder = BuildGremlinExampleIndex(
+            embedding=self.mock_embedding,
+            examples=single_example,
+            vector_index=mock_vector_store_class
+        )
 
-        # Check if add was called with the correct arguments
-        expected_embeddings = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]  # from mock return value
-        self.mock_vector_index.add.assert_called_once_with(expected_embeddings, self.examples)
+        # Setup mocks
+        test_embeddings = [[0.7, 0.8, 0.9, 0.1]]  # 4-dimensional embedding
+        mock_asyncio_run.return_value = test_embeddings
 
-        # Check if to_index_file was called with the correct path and prefix
-        expected_index_dir = os.path.join(self.temp_dir, "hugegraph", "gremlin_examples")
-        self.mock_vector_index.to_index_file.assert_called_once_with(expected_index_dir, "test_prefix")
+        # Run the method
+        context = {}
+        result = single_index_builder.run(context)
 
-        # Check if the context is updated correctly
-        expected_context = {"embed_dim": 3}
-        self.assertEqual(result, expected_context)
+        # Verify operations
+        mock_vector_store_class.from_name.assert_called_once_with(4, "gremlin_examples")
+        mock_vector_store_instance.add.assert_called_once_with(test_embeddings, single_example)
+        mock_vector_store_instance.save_index_by_name.assert_called_once_with("gremlin_examples")
 
-    def test_run_with_empty_examples(self):
-        # Create a builder with empty examples
-        builder = BuildGremlinExampleIndex(self.mock_embedding, [])
+        # Verify context
+        self.assertEqual(result["embed_dim"], 4)
 
-        # Create a context
-        context = {"test": "value"}
+    @patch('asyncio.run')
+    @patch('hugegraph_llm.utils.embedding_utils.get_embeddings_parallel')
+    def test_run_preserves_existing_context(self, mock_get_embeddings_parallel, mock_asyncio_run):
+        """Test that run method preserves existing context data"""
+        # Setup mocks
+        test_embeddings = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]
+        mock_asyncio_run.return_value = test_embeddings
 
-        # The run method should handle empty examples gracefully
-        result = builder.run(context)
+        # Run with existing context
+        context = {"existing_key": "existing_value", "another_key": 123}
+        result = self.index_builder.run(context)
 
-        # Should return embed_dim as 0 for empty examples
-        self.assertEqual(result["embed_dim"], 0)
-        self.assertEqual(result["test"], "value")  # Original context should be preserved
+        # Verify existing context is preserved
+        self.assertEqual(result["existing_key"], "existing_value")
+        self.assertEqual(result["another_key"], 123)
+        self.assertEqual(result["embed_dim"], 3)
 
-        # Check if VectorIndex was not initialized
-        self.mock_vector_index_class.assert_not_called()
-
-        # Check if add and to_index_file were not called
-        self.mock_vector_index.add.assert_not_called()
-        self.mock_vector_index.to_index_file.assert_not_called()
+        # Verify original context is modified
+        self.assertEqual(context["embed_dim"], 3)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

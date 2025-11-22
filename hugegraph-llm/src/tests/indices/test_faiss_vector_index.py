@@ -24,6 +24,7 @@ from pprint import pprint
 
 from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
 from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
+from ..utils.mock import VectorIndex
 
 
 class TestVectorIndex(unittest.TestCase):
@@ -41,14 +42,14 @@ class TestVectorIndex(unittest.TestCase):
 
     def test_init(self):
         """Test initialization of VectorIndex"""
-        index = VectorIndex(self.embed_dim)
+        index = FaissVectorIndex(self.embed_dim)
         self.assertEqual(index.index.d, self.embed_dim)
         self.assertEqual(index.index.ntotal, 0)
         self.assertEqual(len(index.properties), 0)
 
     def test_add(self):
         """Test adding vectors to the index"""
-        index = VectorIndex(self.embed_dim)
+        index = FaissVectorIndex(self.embed_dim)
         index.add(self.vectors, self.properties)
 
         self.assertEqual(index.index.ntotal, 4)
@@ -57,7 +58,7 @@ class TestVectorIndex(unittest.TestCase):
 
     def test_add_empty(self):
         """Test adding empty vectors list"""
-        index = VectorIndex(self.embed_dim)
+        index = FaissVectorIndex(self.embed_dim)
         index.add([], [])
 
         self.assertEqual(index.index.ntotal, 0)
@@ -65,7 +66,7 @@ class TestVectorIndex(unittest.TestCase):
 
     def test_search(self):
         """Test searching vectors in the index"""
-        index = VectorIndex(self.embed_dim)
+        index = FaissVectorIndex(self.embed_dim)
         index.add(self.vectors, self.properties)
 
         # Search for a vector similar to the first one
@@ -79,7 +80,7 @@ class TestVectorIndex(unittest.TestCase):
 
     def test_search_empty_index(self):
         """Test searching in an empty index"""
-        index = VectorIndex(self.embed_dim)
+        index = FaissVectorIndex(self.embed_dim)
         query_vector = [1.0, 0.0, 0.0, 0.0]
         results = index.search(query_vector, top_k=2)
 
@@ -87,7 +88,7 @@ class TestVectorIndex(unittest.TestCase):
 
     def test_search_dimension_mismatch(self):
         """Test searching with mismatched dimensions"""
-        index = VectorIndex(self.embed_dim)
+        index = FaissVectorIndex(self.embed_dim)
         index.add(self.vectors, self.properties)
 
         # Query vector with wrong dimension
@@ -98,7 +99,7 @@ class TestVectorIndex(unittest.TestCase):
 
     def test_remove(self):
         """Test removing vectors from the index"""
-        index = VectorIndex(self.embed_dim)
+        index = FaissVectorIndex(self.embed_dim)
         index.add(self.vectors, self.properties)
 
         # Remove two properties
@@ -111,7 +112,7 @@ class TestVectorIndex(unittest.TestCase):
 
     def test_remove_nonexistent(self):
         """Test removing nonexistent properties"""
-        index = VectorIndex(self.embed_dim)
+        index = FaissVectorIndex(self.embed_dim)
         index.add(self.vectors, self.properties)
 
         # Remove nonexistent property
@@ -124,14 +125,14 @@ class TestVectorIndex(unittest.TestCase):
     def test_save_load(self):
         """Test saving and loading the index"""
         # Create and populate an index
-        index = VectorIndex(self.embed_dim)
+        index = FaissVectorIndex(self.embed_dim)
         index.add(self.vectors, self.properties)
 
         # Save the index
-        index.to_index_file(self.test_dir)
+        index.save_index_by_name(self.test_dir)
 
         # Load the index
-        loaded_index = VectorIndex.from_index_file(self.test_dir)
+        loaded_index = FaissVectorIndex.from_name(self.embed_dim, self.test_dir)
 
         # Verify the loaded index
         self.assertEqual(loaded_index.index.d, self.embed_dim)
@@ -147,7 +148,7 @@ class TestVectorIndex(unittest.TestCase):
     def test_load_nonexistent(self):
         """Test loading from a nonexistent directory"""
         nonexistent_dir = os.path.join(self.test_dir, "nonexistent")
-        loaded_index = VectorIndex.from_index_file(nonexistent_dir)
+        loaded_index = FaissVectorIndex.from_name(1024, nonexistent_dir)
 
         # Should create a new index
         self.assertEqual(loaded_index.index.d, 1024)  # Default dimension
@@ -157,16 +158,16 @@ class TestVectorIndex(unittest.TestCase):
     def test_clean(self):
         """Test cleaning index files"""
         # Create and save an index
-        index = VectorIndex(self.embed_dim)
+        index = FaissVectorIndex(self.embed_dim)
         index.add(self.vectors, self.properties)
-        index.to_index_file(self.test_dir)
+        index.save_index_by_name(self.test_dir)
 
         # Verify files exist
         self.assertTrue(os.path.exists(os.path.join(self.test_dir, "index.faiss")))
         self.assertTrue(os.path.exists(os.path.join(self.test_dir, "properties.pkl")))
 
         # Clean the index
-        VectorIndex.clean(self.test_dir)
+        FaissVectorIndex.clean(self.test_dir)
 
         # Verify files are removed
         self.assertFalse(os.path.exists(os.path.join(self.test_dir, "index.faiss")))

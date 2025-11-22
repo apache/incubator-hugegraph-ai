@@ -20,18 +20,7 @@ import shutil
 import tempfile
 import unittest
 from unittest.mock import MagicMock
-
-
-# 模拟基类
-class BaseEmbedding:
-    def get_text_embedding(self, text):
-        pass
-
-    async def async_get_text_embedding(self, text):
-        pass
-
-    def get_llm_type(self):
-        pass
+from ..utils.mock import MockEmbedding
 
 
 class BaseLLM:
@@ -137,28 +126,6 @@ class RAGPipeline:
             )
 
         return context
-
-
-class MockEmbedding(BaseEmbedding):
-    """Mock embedding class for testing"""
-
-    def __init__(self):
-        self.model = "mock_model"
-
-    def get_text_embedding(self, text):
-        # Return a simple mock embedding based on the text
-        if "person" in text.lower():
-            return [1.0, 0.0, 0.0, 0.0]
-        if "movie" in text.lower():
-            return [0.0, 1.0, 0.0, 0.0]
-        return [0.5, 0.5, 0.0, 0.0]
-
-    async def async_get_text_embedding(self, text):
-        # Async version returns the same as the sync version
-        return self.get_text_embedding(text)
-
-    def get_llm_type(self):
-        return "mock"
 
 
 class MockLLM(BaseLLM):
