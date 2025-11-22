@@ -29,11 +29,12 @@ from tests.utils.mock import MockEmbedding
 class MockVectorStore:
     """Mock VectorStore for testing"""
 
+    def __init__(self):
+        self.search = MagicMock()
+
     @classmethod
     def from_name(cls, dim, graph_name, index_name):
-        instance = cls()
-        instance.search = MagicMock()
-        return instance
+        return cls()
 
 
 class MockPyHugeClient:
