@@ -18,7 +18,7 @@
 import unittest
 
 from pyhugegraph.utils.exceptions import NotFoundError
-from tests.client_utils import ClientUtils
+from ..client_utils import ClientUtils
 
 
 class TestGraphManager(unittest.TestCase):

@@ -192,7 +192,7 @@ class TestVectorIndexQuery(unittest.TestCase):
         context = {"query": "another query"}
 
         # Run the query
-        result_context = query.run(context)
+        _ = query.run(context)
 
         # Verify vector search was called with correct embedding
         self.mock_vector_index.search.assert_called_once_with(

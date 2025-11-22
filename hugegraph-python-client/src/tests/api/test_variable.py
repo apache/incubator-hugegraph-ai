@@ -20,7 +20,7 @@ import unittest
 import pytest
 
 from pyhugegraph.utils.exceptions import NotFoundError
-from tests.client_utils import ClientUtils
+from ..client_utils import ClientUtils
 
 
 class TestVariable(unittest.TestCase):

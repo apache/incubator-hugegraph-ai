@@ -17,7 +17,7 @@
 
 import unittest
 
-from tests.client_utils import ClientUtils
+from ..client_utils import ClientUtils
 
 
 class TestSchemaManager(unittest.TestCase):
