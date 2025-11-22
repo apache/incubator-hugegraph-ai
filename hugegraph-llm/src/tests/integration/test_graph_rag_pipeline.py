@@ -20,7 +20,7 @@ import shutil
 import tempfile
 import unittest
 from unittest.mock import MagicMock
-from ..utils.mock import MockEmbedding
+from tests.utils.mock import MockEmbedding
 
 
 class BaseLLM:
