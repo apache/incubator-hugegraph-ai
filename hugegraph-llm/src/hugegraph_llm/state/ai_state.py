@@ -259,11 +259,7 @@ class WkFlowState(GParam):
             dict: A dictionary containing non-None instance members and their serialized values.
         """
         # Only export instance attributes (excluding methods and class attributes) whose values are not None
-        return {
-            k: v
-            for k, v in self.__dict__.items()
-            if not k.startswith("_") and v is not None
-        }
+        return {k: v for k, v in self.__dict__.items() if not k.startswith("_") and v is not None}
 
     # Implement a method that assigns keys from data_json as WkFlowState member variables
     def assign_from_json(self, data_json: dict):
@@ -274,6 +270,4 @@ class WkFlowState(GParam):
             if hasattr(self, k):
                 setattr(self, k, v)
             else:
-                log.warning(
-                    "key %s should be a member of WkFlowState & type %s", k, type(v)
-                )
+                log.warning("key %s should be a member of WkFlowState & type %s", k, type(v))

@@ -66,14 +66,14 @@ class LiteLLMEmbedding(BaseEmbedding):
 
     def get_texts_embeddings(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
         """Get embeddings for multiple texts with automatic batch splitting.
-        
+
         Parameters
         ----------
         texts : List[str]
             A list of text strings to be embedded.
         batch_size : int, optional
             Maximum number of texts to process in a single API call (default: 32).
-        
+
         Returns
         -------
         List[List[float]]
@@ -82,7 +82,7 @@ class LiteLLMEmbedding(BaseEmbedding):
         all_embeddings = []
         try:
             for i in range(0, len(texts), batch_size):
-                batch = texts[i:i + batch_size]
+                batch = texts[i : i + batch_size]
                 response = embedding(
                     model=self.model,
                     input=batch,
@@ -113,14 +113,14 @@ class LiteLLMEmbedding(BaseEmbedding):
 
     async def async_get_texts_embeddings(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
         """Get embeddings for multiple texts asynchronously with automatic batch splitting.
-        
+
         Parameters
         ----------
         texts : List[str]
             A list of text strings to be embedded.
         batch_size : int, optional
             Maximum number of texts to process in a single API call (default: 32).
-        
+
         Returns
         -------
         List[List[float]]
@@ -129,7 +129,7 @@ class LiteLLMEmbedding(BaseEmbedding):
         all_embeddings = []
         try:
             for i in range(0, len(texts), batch_size):
-                batch = texts[i:i + batch_size]
+                batch = texts[i : i + batch_size]
                 response = await aembedding(
                     model=self.model,
                     input=batch,

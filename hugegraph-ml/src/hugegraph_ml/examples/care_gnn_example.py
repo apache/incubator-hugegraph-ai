@@ -20,6 +20,7 @@ from hugegraph_ml.models.care_gnn import CAREGNN
 from hugegraph_ml.tasks.fraud_detector_caregnn import DetectorCaregnn
 import torch
 
+
 def care_gnn_example(n_epochs=200):
     hg2d = HugeGraph2DGL()
     graph = hg2d.convert_hetero_graph(

@@ -83,7 +83,7 @@ class NLTKHelper:
             'punkt': 'tokenizers/punkt',
             'punkt_tab': 'tokenizers/punkt_tab',
             'averaged_perceptron_tagger': 'taggers/averaged_perceptron_tagger',
-            "averaged_perceptron_tagger_eng": 'taggers/averaged_perceptron_tagger_eng'
+            "averaged_perceptron_tagger_eng": 'taggers/averaged_perceptron_tagger_eng',
         }
 
         for package, path in required_packages.items():

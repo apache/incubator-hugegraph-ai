@@ -26,15 +26,15 @@ class Worker:
 
     def __init__(self, dic):
         """init"""
-        self.__id = dic.get('id', 0)
-        self.__name = dic.get('name', '')
-        self.__grpc_addr = dic.get('grpc_addr', '')
-        self.__ip_addr = dic.get('ip_addr', '')
-        self.__state = dic.get('state', '')
-        self.__version = dic.get('version', '')
-        self.__group = dic.get('group', '')
-        self.__init_time = parse_vermeer_time(dic.get('init_time', ''))
-        self.__launch_time = parse_vermeer_time(dic.get('launch_time', ''))
+        self.__id = dic.get("id", 0)
+        self.__name = dic.get("name", "")
+        self.__grpc_addr = dic.get("grpc_addr", "")
+        self.__ip_addr = dic.get("ip_addr", "")
+        self.__state = dic.get("state", "")
+        self.__version = dic.get("version", "")
+        self.__group = dic.get("group", "")
+        self.__init_time = parse_vermeer_time(dic.get("init_time", ""))
+        self.__launch_time = parse_vermeer_time(dic.get("launch_time", ""))
 
     @property
     def id(self) -> int:
@@ -102,7 +102,7 @@ class WorkersResponse(BaseResponse):
     def __init__(self, dic):
         """init"""
         super().__init__(dic)
-        self.__workers = [Worker(worker) for worker in dic['workers']]
+        self.__workers = [Worker(worker) for worker in dic["workers"]]
 
     @property
     def workers(self) -> list[Worker]:

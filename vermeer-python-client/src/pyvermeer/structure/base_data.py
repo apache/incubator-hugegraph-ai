@@ -30,8 +30,8 @@ class BaseResponse(object):
         init
         :param dic:
         """
-        self.__errcode = dic.get('errcode', RESPONSE_NONE)
-        self.__message = dic.get('message', "")
+        self.__errcode = dic.get("errcode", RESPONSE_NONE)
+        self.__message = dic.get("message", "")
 
     @property
     def errcode(self) -> int:

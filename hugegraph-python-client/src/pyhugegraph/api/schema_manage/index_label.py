@@ -26,7 +26,6 @@ from pyhugegraph.utils.util import ResponseValidation
 
 
 class IndexLabel(HugeParamsBase):
-
     @decorator_params
     def onV(self, vertex_label) -> "IndexLabel":
         self._parameter_holder.set("base_value", vertex_label)
@@ -75,7 +74,7 @@ class IndexLabel(HugeParamsBase):
 
     @decorator_params
     def ifNotExist(self) -> "IndexLabel":
-        path = f'schema/indexlabels/{self._parameter_holder.get_value("name")}'
+        path = f"schema/indexlabels/{self._parameter_holder.get_value('name')}"
         if _ := self._sess.request(path, validator=ResponseValidation(strict=False)):
             self._parameter_holder.set("not_exist", False)
         return self

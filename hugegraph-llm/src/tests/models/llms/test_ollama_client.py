@@ -32,6 +32,4 @@ class TestOllamaClient(unittest.TestCase):
         def on_token_callback(chunk):
             print(chunk, end="", flush=True)
 
-        ollama_client.generate_streaming(
-            prompt="What is the capital of France?", on_token_callback=on_token_callback
-        )
+        ollama_client.generate_streaming(prompt="What is the capital of France?", on_token_callback=on_token_callback)

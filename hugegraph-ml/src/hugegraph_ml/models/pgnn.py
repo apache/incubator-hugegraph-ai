@@ -42,6 +42,7 @@ from sklearn.metrics import roc_auc_score
 
 import dgl.function as fn
 
+
 class PGNN_layer(nn.Module):
     def __init__(self, input_dim, output_dim):
         super(PGNN_layer, self).__init__()
@@ -59,17 +60,15 @@ class PGNN_layer(nn.Module):
             graph.srcdata.update({"u_feat": u_feat})
             graph.dstdata.update({"v_feat": v_feat})
 
-            graph.apply_edges(fn.u_mul_e("u_feat", "sp_dist", "u_message")) # pylint: disable=E1101
-            graph.apply_edges(fn.v_add_e("v_feat", "u_message", "message")) # pylint: disable=E1101
+            graph.apply_edges(fn.u_mul_e("u_feat", "sp_dist", "u_message"))  # pylint: disable=E1101
+            graph.apply_edges(fn.v_add_e("v_feat", "u_message", "message"))  # pylint: disable=E1101
 
             messages = torch.index_select(
                 graph.edata["message"],
                 0,
                 torch.LongTensor(anchor_eid).to(feature.device),
             )
-            messages = messages.reshape(
-                dists_max.shape[0], dists_max.shape[1], messages.shape[-1]
-            )
+            messages = messages.reshape(dists_max.shape[0], dists_max.shape[1], messages.shape[-1])
 
             messages = self.act(messages)  # n*m*d
 
@@ -256,9 +255,7 @@ def precompute_dist_data(edge_index, num_nodes, approximate=0):
 
     n = num_nodes
     dists_array = np.zeros((n, n))
-    dists_dict = all_pairs_shortest_path(
-        graph, cutoff=approximate if approximate > 0 else None
-    )
+    dists_dict = all_pairs_shortest_path(graph, cutoff=approximate if approximate > 0 else None)
     node_list = graph.nodes()
     for node_i in node_list:
         shortest_dist = dists_dict[node_i]
@@ -281,9 +278,7 @@ def get_dataset(graph):
         approximate=-1,
     )
     data["dists"] = torch.from_numpy(dists_removed).float()
-    data["edge_index"] = torch.from_numpy(
-        to_bidirected(data["positive_edges_train"])
-    ).long()
+    data["edge_index"] = torch.from_numpy(to_bidirected(data["positive_edges_train"])).long()
 
     return data
 
@@ -400,12 +395,8 @@ def get_loss(p, data, out, loss_func, device, get_auc=True):
         axis=-1,
     )
 
-    nodes_first = torch.index_select(
-        out, 0, torch.from_numpy(edge_mask[0, :]).long().to(out.device)
-    )
-    nodes_second = torch.index_select(
-        out, 0, torch.from_numpy(edge_mask[1, :]).long().to(out.device)
-    )
+    nodes_first = torch.index_select(out, 0, torch.from_numpy(edge_mask[0, :]).long().to(out.device))
+    nodes_second = torch.index_select(out, 0, torch.from_numpy(edge_mask[1, :]).long().to(out.device))
 
     pred = torch.sum(nodes_first * nodes_second, dim=-1)
 

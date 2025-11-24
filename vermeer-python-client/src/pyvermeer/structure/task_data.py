@@ -26,8 +26,8 @@ class TaskWorker:
 
     def __init__(self, dic):
         """init"""
-        self.__name = dic.get('name', None)
-        self.__status = dic.get('status', None)
+        self.__name = dic.get("name", None)
+        self.__status = dic.get("status", None)
 
     @property
     def name(self) -> str:
@@ -41,7 +41,7 @@ class TaskWorker:
 
     def to_dict(self):
         """to dict"""
-        return {'name': self.name, 'status': self.status}
+        return {"name": self.name, "status": self.status}
 
 
 class TaskInfo:
@@ -49,19 +49,19 @@ class TaskInfo:
 
     def __init__(self, dic):
         """init"""
-        self.__id = dic.get('id', 0)
-        self.__status = dic.get('status', '')
-        self.__state = dic.get('state', '')
-        self.__create_user = dic.get('create_user', '')
-        self.__create_type = dic.get('create_type', '')
-        self.__create_time = parse_vermeer_time(dic.get('create_time', ''))
-        self.__start_time = parse_vermeer_time(dic.get('start_time', ''))
-        self.__update_time = parse_vermeer_time(dic.get('update_time', ''))
-        self.__graph_name = dic.get('graph_name', '')
-        self.__space_name = dic.get('space_name', '')
-        self.__type = dic.get('type', '')
-        self.__params = dic.get('params', {})
-        self.__workers = [TaskWorker(w) for w in dic.get('workers', [])]
+        self.__id = dic.get("id", 0)
+        self.__status = dic.get("status", "")
+        self.__state = dic.get("state", "")
+        self.__create_user = dic.get("create_user", "")
+        self.__create_type = dic.get("create_type", "")
+        self.__create_time = parse_vermeer_time(dic.get("create_time", ""))
+        self.__start_time = parse_vermeer_time(dic.get("start_time", ""))
+        self.__update_time = parse_vermeer_time(dic.get("update_time", ""))
+        self.__graph_name = dic.get("graph_name", "")
+        self.__space_name = dic.get("space_name", "")
+        self.__type = dic.get("type", "")
+        self.__params = dic.get("params", {})
+        self.__workers = [TaskWorker(w) for w in dic.get("workers", [])]
 
     @property
     def id(self) -> int:
@@ -126,19 +126,19 @@ class TaskInfo:
     def to_dict(self) -> dict:
         """to dict"""
         return {
-            'id': self.__id,
-            'status': self.__status,
-            'state': self.__state,
-            'create_user': self.__create_user,
-            'create_type': self.__create_type,
-            'create_time': self.__create_time.strftime("%Y-%m-%d %H:%M:%S") if self.__start_time else '',
-            'start_time': self.__start_time.strftime("%Y-%m-%d %H:%M:%S") if self.__start_time else '',
-            'update_time': self.__update_time.strftime("%Y-%m-%d %H:%M:%S") if self.__update_time else '',
-            'graph_name': self.__graph_name,
-            'space_name': self.__space_name,
-            'type': self.__type,
-            'params': self.__params,
-            'workers': [w.to_dict() for w in self.__workers],
+            "id": self.__id,
+            "status": self.__status,
+            "state": self.__state,
+            "create_user": self.__create_user,
+            "create_type": self.__create_type,
+            "create_time": self.__create_time.strftime("%Y-%m-%d %H:%M:%S") if self.__start_time else "",
+            "start_time": self.__start_time.strftime("%Y-%m-%d %H:%M:%S") if self.__start_time else "",
+            "update_time": self.__update_time.strftime("%Y-%m-%d %H:%M:%S") if self.__update_time else "",
+            "graph_name": self.__graph_name,
+            "space_name": self.__space_name,
+            "type": self.__type,
+            "params": self.__params,
+            "workers": [w.to_dict() for w in self.__workers],
         }
 
 
@@ -153,11 +153,7 @@ class TaskCreateRequest:
 
     def to_dict(self) -> dict:
         """to dict"""
-        return {
-            'task_type': self.task_type,
-            'graph': self.graph_name,
-            'params': self.params
-        }
+        return {"task_type": self.task_type, "graph": self.graph_name, "params": self.params}
 
 
 class TaskCreateResponse(BaseResponse):
@@ -166,7 +162,7 @@ class TaskCreateResponse(BaseResponse):
     def __init__(self, dic):
         """init"""
         super().__init__(dic)
-        self.__task = TaskInfo(dic.get('task', {}))
+        self.__task = TaskInfo(dic.get("task", {}))
 
     @property
     def task(self) -> TaskInfo:
@@ -188,7 +184,7 @@ class TasksResponse(BaseResponse):
     def __init__(self, dic):
         """init"""
         super().__init__(dic)
-        self.__tasks = [TaskInfo(t) for t in dic.get('tasks', [])]
+        self.__tasks = [TaskInfo(t) for t in dic.get("tasks", [])]
 
     @property
     def tasks(self) -> list[TaskInfo]:
@@ -197,11 +193,7 @@ class TasksResponse(BaseResponse):
 
     def to_dict(self) -> dict:
         """to dict"""
-        return {
-            "errcode": self.errcode,
-            "message": self.message,
-            "tasks": [t.to_dict() for t in self.tasks]
-        }
+        return {"errcode": self.errcode, "message": self.message, "tasks": [t.to_dict() for t in self.tasks]}
 
 
 class TaskResponse(BaseResponse):
@@ -210,7 +202,7 @@ class TaskResponse(BaseResponse):
     def __init__(self, dic):
         """init"""
         super().__init__(dic)
-        self.__task = TaskInfo(dic.get('task', {}))
+        self.__task = TaskInfo(dic.get("task", {}))
 
     @property
     def task(self) -> TaskInfo:

@@ -168,9 +168,7 @@ class BGNNPredictor:
         if epoch == 0 and self.task == "classification":
             self.base_gbdt = epoch_gbdt_model
         else:
-            self.gbdt_model = self.append_gbdt_model(
-                epoch_gbdt_model, weights=[1, gbdt_alpha]
-            )
+            self.gbdt_model = self.append_gbdt_model(epoch_gbdt_model, weights=[1, gbdt_alpha])
 
     def update_node_features(self, node_features, X, original_X):
         # get predictions from gbdt model
@@ -191,30 +189,19 @@ class BGNNPredictor:
                     axis=1,
                 )  # replace old predictions with new predictions
             else:
-                predictions = np.append(
-                    X, predictions, axis=1
-                )  # append original features with new predictions
+                predictions = np.append(X, predictions, axis=1)  # append original features with new predictions
 
         predictions = torch.from_numpy(predictions).to(self.device)
 
         node_features.data = predictions.float().data
 
     def update_gbdt_targets(self, node_features, node_features_before, train_mask):
-        return (
-            (node_features - node_features_before)
-            .detach()
-            .cpu()
-            .numpy()[train_mask, -self.out_dim :]
-        )
+        return (node_features - node_features_before).detach().cpu().numpy()[train_mask, -self.out_dim :]
 
     def init_node_features(self, X):
-        node_features = torch.empty(
-            X.shape[0], self.in_dim, requires_grad=True, device=self.device
-        )
+        node_features = torch.empty(X.shape[0], self.in_dim, requires_grad=True, device=self.device)
         if self.append_gbdt_pred:
-            node_features.data[:, : -self.out_dim] = torch.from_numpy(
-                X.to_numpy(copy=True)
-            )
+            node_features.data[:, : -self.out_dim] = torch.from_numpy(X.to_numpy(copy=True))
         return node_features
 
     def init_optimizer(self, node_features, optimize_node_features, learning_rate):
@@ -239,9 +226,7 @@ class BGNNPredictor:
             elif self.task == "classification":
                 loss = F.cross_entropy(pred, y.long())
             else:
-                raise NotImplementedError(
-                    "Unknown task. Supported tasks: classification, regression."
-                )
+                raise NotImplementedError("Unknown task. Supported tasks: classification, regression.")
 
         optimizer.zero_grad()
         loss.backward()
@@ -255,18 +240,12 @@ class BGNNPredictor:
             pred = logits[mask]
             if self.task == "regression":
                 metrics["loss"] = torch.sqrt(F.mse_loss(pred, y).squeeze() + 1e-8)
-                metrics["rmsle"] = torch.sqrt(
-                    F.mse_loss(torch.log(pred + 1), torch.log(y + 1)).squeeze() + 1e-8
-                )
+                metrics["rmsle"] = torch.sqrt(F.mse_loss(torch.log(pred + 1), torch.log(y + 1)).squeeze() + 1e-8)
                 metrics["mae"] = F.l1_loss(pred, y)
-                metrics["r2"] = torch.Tensor(
-                    [r2_score(y.cpu().numpy(), pred.cpu().numpy())]
-                )
+                metrics["r2"] = torch.Tensor([r2_score(y.cpu().numpy(), pred.cpu().numpy())])
             elif self.task == "classification":
                 metrics["loss"] = F.cross_entropy(pred, y.long())
-                metrics["accuracy"] = torch.Tensor(
-                    [(y == pred.max(1)[1]).sum().item() / y.shape[0]]
-                )
+                metrics["accuracy"] = torch.Tensor([(y == pred.max(1)[1]).sum().item() / y.shape[0]])
 
             return metrics
 
@@ -312,9 +291,7 @@ class BGNNPredictor:
         lower_better=False,
     ):
         train_metric, val_metric, test_metric = metrics[metric_name][-1]
-        if (lower_better and val_metric < best_metric[1]) or (
-            not lower_better and val_metric > best_metric[1]
-        ):
+        if (lower_better and val_metric < best_metric[1]) or (not lower_better and val_metric > best_metric[1]):
             best_metric = metrics[metric_name][-1]
             best_val_epoch = epoch
             epochs_since_last_best_metric = 0
@@ -408,9 +385,7 @@ class BGNNPredictor:
             self.out_dim = y.shape[1]
         elif self.task == "classification":
             self.out_dim = len(set(y.iloc[test_mask, 0]))
-        self.in_dim = (
-            self.out_dim + X.shape[1] if self.append_gbdt_pred else self.out_dim
-        )
+        self.in_dim = self.out_dim + X.shape[1] if self.append_gbdt_pred else self.out_dim
 
         if original_X is None:
             original_X = X.copy()
@@ -422,9 +397,7 @@ class BGNNPredictor:
         self.gbdt_model = None
 
         node_features = self.init_node_features(X)
-        optimizer = self.init_optimizer(
-            node_features, optimize_node_features=True, learning_rate=self.lr
-        )
+        optimizer = self.init_optimizer(node_features, optimize_node_features=True, learning_rate=self.lr)
 
         y = torch.from_numpy(y.to_numpy(copy=True)).float().squeeze().to(self.device)
         graph = graph.to(self.device)
@@ -456,9 +429,7 @@ class BGNNPredictor:
                 metrics,
                 self.backprop_per_epoch,
             )
-            gbdt_y_train = self.update_gbdt_targets(
-                node_features, node_features_before, train_mask
-            )
+            gbdt_y_train = self.update_gbdt_targets(node_features, node_features_before, train_mask)
 
             self.log_epoch(
                 pbar,
@@ -491,11 +462,7 @@ class BGNNPredictor:
                 print("Node embeddings do not change anymore. Stopping...")
                 break
 
-        print(
-            "Best {} at iteration {}: {:.3f}/{:.3f}/{:.3f}".format(
-                metric_name, best_val_epoch, *best_metric
-            )
-        )
+        print("Best {} at iteration {}: {:.3f}/{:.3f}/{:.3f}".format(metric_name, best_val_epoch, *best_metric))
         return metrics
 
     def predict(self, graph, X, test_mask):
@@ -599,14 +566,10 @@ class GNNModelDGL(torch.nn.Module):
             self.l2 = ChebConvDGL(hidden_dim, out_dim, k=3)
             self.drop = Dropout(p=dropout)
         elif name == "agnn":
-            self.lin1 = Sequential(
-                Dropout(p=dropout), Linear(in_dim, hidden_dim), ELU()
-            )
+            self.lin1 = Sequential(Dropout(p=dropout), Linear(in_dim, hidden_dim), ELU())
             self.l1 = AGNNConvDGL(learn_beta=False)
             self.l2 = AGNNConvDGL(learn_beta=True)
-            self.lin2 = Sequential(
-                Dropout(p=dropout), Linear(hidden_dim, out_dim), ELU()
-            )
+            self.lin2 = Sequential(Dropout(p=dropout), Linear(hidden_dim, out_dim), ELU())
         elif name == "appnp":
             self.lin1 = Sequential(
                 Dropout(p=dropout),
@@ -648,6 +611,7 @@ class GNNModelDGL(torch.nn.Module):
 
         return logits
 
+
 def normalize_features(X, train_mask, val_mask, test_mask):
     min_max_scaler = preprocessing.MinMaxScaler()
     A = X.to_numpy(copy=True)
@@ -666,12 +630,8 @@ def encode_cat_features(X, y, cat_features, train_mask, val_mask, test_mask):
     enc = CatBoostEncoder()
     A = X.to_numpy(copy=True)
     b = y.to_numpy(copy=True)
-    A[np.ix_(train_mask, cat_features)] = enc.fit_transform(
-        A[np.ix_(train_mask, cat_features)], b[train_mask]
-    )
-    A[np.ix_(val_mask + test_mask, cat_features)] = enc.transform(
-        A[np.ix_(val_mask + test_mask, cat_features)]
-    )
+    A[np.ix_(train_mask, cat_features)] = enc.fit_transform(A[np.ix_(train_mask, cat_features)], b[train_mask])
+    A[np.ix_(val_mask + test_mask, cat_features)] = enc.transform(A[np.ix_(val_mask + test_mask, cat_features)])
     A = A.astype(float)
     return pd.DataFrame(A, columns=X.columns)
 

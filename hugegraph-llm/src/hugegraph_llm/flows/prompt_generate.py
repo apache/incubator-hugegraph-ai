@@ -26,9 +26,7 @@ class PromptGenerateFlow(BaseFlow):
     def __init__(self):
         pass
 
-    def prepare(
-        self, prepared_input: WkFlowInput, source_text, scenario, example_name, **kwargs
-    ):
+    def prepare(self, prepared_input: WkFlowInput, source_text, scenario, example_name, **kwargs):
         """
         Prepare input data for PromptGenerate workflow
         """
@@ -59,6 +57,4 @@ class PromptGenerateFlow(BaseFlow):
         Process the execution result of PromptGenerate workflow
         """
         res = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
-        return res.get(
-            "generated_extract_prompt", "Generation failed. Please check the logs."
-        )
+        return res.get("generated_extract_prompt", "Generation failed. Please check the logs.")

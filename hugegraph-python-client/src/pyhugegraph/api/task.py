@@ -20,7 +20,6 @@ from pyhugegraph.utils import huge_router as router
 
 
 class TaskManager(HugeParamsBase):
-
     @router.http("GET", "tasks")
     def list_tasks(self, status=None, limit=None):
         params = {}

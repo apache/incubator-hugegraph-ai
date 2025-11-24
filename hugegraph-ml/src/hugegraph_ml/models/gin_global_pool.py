@@ -36,9 +36,7 @@ class GIN(nn.Module):
                 mlp = _MLP(n_in_feats, n_hidden, n_hidden)
             else:
                 mlp = _MLP(n_hidden, n_hidden, n_hidden)
-            self.gin_layers.append(
-                GINConv(mlp, learn_eps=False)
-            )  # set to True if learning epsilon
+            self.gin_layers.append(GINConv(mlp, learn_eps=False))  # set to True if learning epsilon
             self.batch_norms.append(nn.BatchNorm1d(n_hidden))
         # linear functions for graph sum pooling of output of each layer
         self.linear_prediction = nn.ModuleList()

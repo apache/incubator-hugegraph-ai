@@ -126,7 +126,7 @@ class PropertyKey(HugeParamsBase):
         return self
 
     def ifNotExist(self) -> "PropertyKey":
-        path = f'schema/propertykeys/{self._parameter_holder.get_value("name")}'
+        path = f"schema/propertykeys/{self._parameter_holder.get_value('name')}"
         if _ := self._sess.request(path, validator=ResponseValidation(strict=False)):
             self._parameter_holder.set("not_exist", False)
         return self
@@ -179,7 +179,7 @@ class PropertyKey(HugeParamsBase):
     @decorator_params
     def remove(self):
         dic = self._parameter_holder.get_dic()
-        path = f'schema/propertykeys/{dic["name"]}'
+        path = f"schema/propertykeys/{dic['name']}"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "DELETE"):
             return f"delete PropertyKey success, Detail: {str(response)}"

@@ -41,9 +41,7 @@ class HeteroSampleEmbedGATNE:
         n_epochs: int = 200,
         gpu: int = -1,
     ):
-        self._device = (
-            f"cuda:{gpu}" if gpu != -1 and torch.cuda.is_available() else "cpu"
-        )
+        self._device = f"cuda:{gpu}" if gpu != -1 and torch.cuda.is_available() else "cpu"
         self._model = self._model.to(self._device)
         self.graph = self.graph.to(self._device)
         type_nodes = construct_typenodes_from_graph(self.graph)

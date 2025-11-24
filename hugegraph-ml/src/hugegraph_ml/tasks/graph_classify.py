@@ -56,17 +56,16 @@ class GraphClassify:
             loss = total_loss / total
         return {"accuracy": accuracy, "loss": loss}
 
-
     def train(
         self,
         batch_size: int = 20,
         lr: float = 1e-3,
         weight_decay: float = 0,
         n_epochs: int = 200,
-        patience: int = float('inf'),
+        patience: int = float("inf"),
         early_stopping_monitor: Literal["loss", "accuracy"] = "loss",
         clip: float = 2.0,
-        gpu: int = -1
+        gpu: int = -1,
     ):
         self._device = f"cuda:{gpu}" if gpu != -1 and torch.cuda.is_available() else "cpu"
         self._early_stopping = EarlyStopping(patience=patience, monitor=early_stopping_monitor)

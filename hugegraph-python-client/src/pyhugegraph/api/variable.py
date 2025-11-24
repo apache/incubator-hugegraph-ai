@@ -22,7 +22,6 @@ from pyhugegraph.utils import huge_router as router
 
 
 class VariableManager(HugeParamsBase):
-
     @router.http("PUT", "variables/{key}")
     def set(self, key, value):  # pylint: disable=unused-argument
         return self._invoke_request(data=json.dumps({"data": value}))

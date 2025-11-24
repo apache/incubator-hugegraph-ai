@@ -35,6 +35,7 @@ from hugegraph_ml.examples.deepergcn_example import deepergcn_example
 from hugegraph_ml.examples.pgnn_example import pgnn_example
 from hugegraph_ml.examples.seal_example import seal_example
 
+
 class TestHugegraph2DGL(unittest.TestCase):
     def setUp(self):
         self.test_n_epochs = 3

@@ -45,21 +45,13 @@ class SemanticIdQueryNode(BaseNode):
 
             vector_index = get_vector_index_class(index_settings.cur_vector_index)
             embedding = Embeddings().get_embedding()
-            by = (
-                self.wk_input.semantic_by
-                if self.wk_input.semantic_by is not None
-                else "keywords"
-            )
+            by = self.wk_input.semantic_by if self.wk_input.semantic_by is not None else "keywords"
             topk_per_keyword = (
                 self.wk_input.topk_per_keyword
                 if self.wk_input.topk_per_keyword is not None
                 else huge_settings.topk_per_keyword
             )
-            topk_per_query = (
-                self.wk_input.topk_per_query
-                if self.wk_input.topk_per_query is not None
-                else 10
-            )
+            topk_per_query = self.wk_input.topk_per_query if self.wk_input.topk_per_query is not None else 10
             vector_dis_threshold = (
                 self.wk_input.vector_dis_threshold
                 if self.wk_input.vector_dis_threshold is not None
@@ -98,8 +90,6 @@ class SemanticIdQueryNode(BaseNode):
         semantic_result = self.semantic_id_query.run(data_json)
 
         match_vids = semantic_result.get("match_vids", [])
-        log.info(
-            "Semantic query completed, found %d matching vertex IDs", len(match_vids)
-        )
+        log.info("Semantic query completed, found %d matching vertex IDs", len(match_vids))
 
         return semantic_result

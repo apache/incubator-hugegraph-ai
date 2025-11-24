@@ -26,7 +26,6 @@ from pyhugegraph.utils.exceptions import NotFoundError
 
 
 class GraphManager(HugeParamsBase):
-
     @router.http("POST", "graph/vertices")
     def addVertex(self, label, properties, id=None):
         data = {}
@@ -139,7 +138,9 @@ class GraphManager(HugeParamsBase):
 
     @router.http("PUT", "graph/edges/{edge_id}?action=append")
     def appendEdge(
-        self, edge_id, properties  # pylint: disable=unused-argument
+        self,
+        edge_id,
+        properties,  # pylint: disable=unused-argument
     ) -> Optional[EdgeData]:
         if response := self._invoke_request(data=json.dumps({"properties": properties})):
             return EdgeData(response)
@@ -147,7 +148,9 @@ class GraphManager(HugeParamsBase):
 
     @router.http("PUT", "graph/edges/{edge_id}?action=eliminate")
     def eliminateEdge(
-        self, edge_id, properties  # pylint: disable=unused-argument
+        self,
+        edge_id,
+        properties,  # pylint: disable=unused-argument
     ) -> Optional[EdgeData]:
         if response := self._invoke_request(data=json.dumps({"properties": properties})):
             return EdgeData(response)

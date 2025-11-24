@@ -31,9 +31,7 @@ class KeywordExtractNode(BaseNode):
         """
         Initialize the keyword extraction operator.
         """
-        max_keywords = (
-            self.wk_input.max_keywords if self.wk_input.max_keywords is not None else 5
-        )
+        max_keywords = self.wk_input.max_keywords if self.wk_input.max_keywords is not None else 5
         extract_template = self.wk_input.keywords_extract_prompt
 
         self.operator = KeywordExtract(

@@ -73,9 +73,7 @@ class DiffPool(nn.Module):
             self.gc_before_pool.append(
                 SAGEConv(n_hidden, n_hidden, aggregator_type, feat_drop=dropout, activation=F.relu)
             )
-        self.gc_before_pool.append(
-            SAGEConv(n_hidden, n_embedding, aggregator_type, feat_drop=dropout, activation=None)
-        )
+        self.gc_before_pool.append(SAGEConv(n_hidden, n_embedding, aggregator_type, feat_drop=dropout, activation=None))
 
         assign_dims = [self.assign_dim]
         if self.concat:
@@ -103,9 +101,7 @@ class DiffPool(nn.Module):
         self.assign_dim = int(self.assign_dim * pool_ratio)
         # each pooling module
         for _ in range(n_pooling - 1):
-            self.diffpool_layers.append(
-                _BatchedDiffPool(pool_embedding_dim, self.assign_dim, n_hidden, self.link_pred)
-            )
+            self.diffpool_layers.append(_BatchedDiffPool(pool_embedding_dim, self.assign_dim, n_hidden, self.link_pred))
             gc_after_per_pool = nn.ModuleList()
             for _ in range(n_layers - 1):
                 gc_after_per_pool.append(_BatchedGraphSAGE(n_hidden, n_hidden))

@@ -30,12 +30,12 @@ class PyVermeerClient:
     """Vermeer API Client"""
 
     def __init__(
-            self,
-            ip: str,
-            port: int,
-            token: str,
-            timeout: Optional[tuple[float, float]] = None,
-            log_level: str = "INFO",
+        self,
+        ip: str,
+        port: int,
+        token: str,
+        timeout: Optional[tuple[float, float]] = None,
+        log_level: str = "INFO",
     ):
         """Initialize the client, including configuration and session management
         :param ip:
@@ -46,10 +46,7 @@ class PyVermeerClient:
         """
         self.cfg = VermeerConfig(ip, port, token, timeout)
         self.session = VermeerSession(self.cfg)
-        self._modules: Dict[str, BaseModule] = {
-            "graph": GraphModule(self),
-            "tasks": TaskModule(self)
-        }
+        self._modules: Dict[str, BaseModule] = {"graph": GraphModule(self), "tasks": TaskModule(self)}
         log.setLevel(log_level)
 
     def __getattr__(self, name):

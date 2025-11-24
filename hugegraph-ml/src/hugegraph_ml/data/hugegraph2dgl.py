@@ -29,6 +29,7 @@ from pyhugegraph.client import PyHugeClient
 from hugegraph_ml.data.hugegraph_dataset import HugeGraphDataset
 import networkx as nx
 
+
 class HugeGraph2DGL:
     def __init__(
         self,
@@ -38,9 +39,7 @@ class HugeGraph2DGL:
         pwd: str = "",
         graphspace: Optional[str] = None,
     ):
-        self._client: PyHugeClient = PyHugeClient(
-            url=url, graph=graph, user=user, pwd=pwd, graphspace=graphspace
-        )
+        self._client: PyHugeClient = PyHugeClient(url=url, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
         self._graph_germlin: GremlinManager = self._client.gremlin()
 
     def convert_graph(
@@ -113,7 +112,6 @@ class HugeGraph2DGL:
 
         return hetero_graph
 
-
     def convert_graph_dataset(
         self,
         graph_vertex_label: str,
@@ -132,10 +130,8 @@ class HugeGraph2DGL:
             label = graph_vertex["properties"][label_key]
             graph_labels.append(label)
             # get this graph's vertices and edges
-            vertices = self._graph_germlin.exec(
-                f"g.V().hasLabel('{vertex_label}').has('graph_id', {graph_id})")["data"]
-            edges = self._graph_germlin.exec(
-                f"g.E().hasLabel('{edge_label}').has('graph_id', {graph_id})")["data"]
+            vertices = self._graph_germlin.exec(f"g.V().hasLabel('{vertex_label}').has('graph_id', {graph_id})")["data"]
+            edges = self._graph_germlin.exec(f"g.E().hasLabel('{edge_label}').has('graph_id', {graph_id})")["data"]
             graph_dgl = self._convert_graph_from_v_e(vertices, edges, feat_key)
             graphs.append(graph_dgl)
             # record max num of node
@@ -182,12 +178,8 @@ class HugeGraph2DGL:
     def convert_graph_ogb(self, vertex_label: str, edge_label: str, split_label: str):
         vertices = self._graph_germlin.exec(f"g.V().hasLabel('{vertex_label}')")["data"]
         edges = self._graph_germlin.exec(f"g.E().hasLabel('{edge_label}')")["data"]
-        graph_dgl, vertex_id_to_idx = self._convert_graph_from_ogb(
-            vertices, edges, "feat", "year", "weight"
-        )
-        edges_split = self._graph_germlin.exec(f"g.E().hasLabel('{split_label}')")[
-            "data"
-        ]
+        graph_dgl, vertex_id_to_idx = self._convert_graph_from_ogb(vertices, edges, "feat", "year", "weight")
+        edges_split = self._graph_germlin.exec(f"g.E().hasLabel('{split_label}')")["data"]
         split_edge = self._convert_split_edge_from_ogb(edges_split, vertex_id_to_idx)
         return graph_dgl, split_edge
 
@@ -206,13 +198,9 @@ class HugeGraph2DGL:
         vertex_label_data = {}
         # for each vertex label
         for vertex_label in vertex_labels:
-            vertices = self._graph_germlin.exec(f"g.V().hasLabel('{vertex_label}')")[
-                "data"
-            ]
+            vertices = self._graph_germlin.exec(f"g.V().hasLabel('{vertex_label}')")["data"]
             if len(vertices) == 0:
-                warnings.warn(
-                    f"Graph has no vertices of vertex_label: {vertex_label}", Warning
-                )
+                warnings.warn(f"Graph has no vertices of vertex_label: {vertex_label}", Warning)
             else:
                 vertex_ids = [v["id"] for v in vertices]
                 id2idx = {vertex_id: idx for idx, vertex_id in enumerate(vertex_ids)}
@@ -250,18 +238,12 @@ class HugeGraph2DGL:
         for edge_label in edge_labels:
             edges = self._graph_germlin.exec(f"g.E().hasLabel('{edge_label}')")["data"]
             if len(edges) == 0:
-                warnings.warn(
-                    f"Graph has no edges of edge_label: {edge_label}", Warning
-                )
+                warnings.warn(f"Graph has no edges of edge_label: {edge_label}", Warning)
             else:
                 src_vertex_label = edges[0]["outVLabel"]
-                src_idx = [
-                    vertex_label_id2idx[src_vertex_label][e["outV"]] for e in edges
-                ]
+                src_idx = [vertex_label_id2idx[src_vertex_label][e["outV"]] for e in edges]
                 dst_vertex_label = edges[0]["inVLabel"]
-                dst_idx = [
-                    vertex_label_id2idx[dst_vertex_label][e["inV"]] for e in edges
-                ]
+                dst_idx = [vertex_label_id2idx[dst_vertex_label][e["inV"]] for e in edges]
                 edge_data_dict[(src_vertex_label, edge_label, dst_vertex_label)] = (
                     src_idx,
                     dst_idx,
@@ -270,9 +252,7 @@ class HugeGraph2DGL:
         hetero_graph = dgl.heterograph(edge_data_dict)
         for vertex_label in vertex_labels:
             for prop in vertex_label_data[vertex_label]:
-                hetero_graph.nodes[vertex_label].data[prop] = vertex_label_data[
-                    vertex_label
-                ][prop]
+                hetero_graph.nodes[vertex_label].data[prop] = vertex_label_data[vertex_label][prop]
 
         return hetero_graph
 
@@ -310,9 +290,7 @@ class HugeGraph2DGL:
         vertex_id_to_idx = {vertex_id: idx for idx, vertex_id in enumerate(vertex_ids)}
         new_vertex_ids = [vertex_id_to_idx[id] for id in vertex_ids]
         edge_list = [(edge["outV"], edge["inV"]) for edge in edges]
-        new_edge_list = [
-            (vertex_id_to_idx[src], vertex_id_to_idx[dst]) for src, dst in edge_list
-        ]
+        new_edge_list = [(vertex_id_to_idx[src], vertex_id_to_idx[dst]) for src, dst in edge_list]
         graph_nx = nx.Graph()
         graph_nx.add_nodes_from(new_vertex_ids)
         graph_nx.add_edges_from(new_edge_list)
@@ -364,10 +342,7 @@ class HugeGraph2DGL:
         dst_idx = [vertex_id_to_idx[e["inV"]] for e in edges]
         graph_dgl = dgl.graph((src_idx, dst_idx))
         if feat_key and feat_key in vertices[0]["properties"]:
-            node_feats = [
-                v["properties"][feat_key]
-                for v in vertices[0 : graph_dgl.number_of_nodes()]
-            ]
+            node_feats = [v["properties"][feat_key] for v in vertices[0 : graph_dgl.number_of_nodes()]]
             graph_dgl.ndata["feat"] = torch.tensor(node_feats, dtype=torch.float32)
         if year_key and year_key in edges[0]["properties"]:
             year = [e["properties"][year_key] for e in edges]
@@ -394,39 +369,29 @@ class HugeGraph2DGL:
 
         for edge in edges:
             if edge["properties"]["train_edge_mask"] == 1:
-                train_edge_list.append(
-                    [vertex_id_to_idx[edge["outV"]], vertex_id_to_idx[edge["inV"]]]
-                )
+                train_edge_list.append([vertex_id_to_idx[edge["outV"]], vertex_id_to_idx[edge["inV"]]])
             if edge["properties"]["train_year_mask"] != -1:
                 train_year_list.append(edge["properties"]["train_year_mask"])
             if edge["properties"]["train_weight_mask"] != -1:
                 train_weight_list.append(edge["properties"]["train_weight_mask"])
 
             if edge["properties"]["valid_edge_mask"] == 1:
-                valid_edge_list.append(
-                    [vertex_id_to_idx[edge["outV"]], vertex_id_to_idx[edge["inV"]]]
-                )
+                valid_edge_list.append([vertex_id_to_idx[edge["outV"]], vertex_id_to_idx[edge["inV"]]])
             if edge["properties"]["valid_year_mask"] != -1:
                 valid_year_list.append(edge["properties"]["valid_year_mask"])
             if edge["properties"]["valid_weight_mask"] != -1:
                 valid_weight_list.append(edge["properties"]["valid_weight_mask"])
             if edge["properties"]["valid_edge_neg_mask"] == 1:
-                valid_edge_neg_list.append(
-                    [vertex_id_to_idx[edge["outV"]], vertex_id_to_idx[edge["inV"]]]
-                )
+                valid_edge_neg_list.append([vertex_id_to_idx[edge["outV"]], vertex_id_to_idx[edge["inV"]]])
 
             if edge["properties"]["test_edge_mask"] == 1:
-                test_edge_list.append(
-                    [vertex_id_to_idx[edge["outV"]], vertex_id_to_idx[edge["inV"]]]
-                )
+                test_edge_list.append([vertex_id_to_idx[edge["outV"]], vertex_id_to_idx[edge["inV"]]])
             if edge["properties"]["test_year_mask"] != -1:
                 test_year_list.append(edge["properties"]["test_year_mask"])
             if edge["properties"]["test_weight_mask"] != -1:
                 test_weight_list.append(edge["properties"]["test_weight_mask"])
             if edge["properties"]["test_edge_neg_mask"] == 1:
-                test_edge_neg_list.append(
-                    [vertex_id_to_idx[edge["outV"]], vertex_id_to_idx[edge["inV"]]]
-                )
+                test_edge_neg_list.append([vertex_id_to_idx[edge["outV"]], vertex_id_to_idx[edge["inV"]]])
 
         split_edge = {
             "train": {
@@ -450,6 +415,7 @@ class HugeGraph2DGL:
 
         return split_edge
 
+
 if __name__ == "__main__":
     hg2d = HugeGraph2DGL()
     hg2d.convert_graph(vertex_label="CORA_vertex", edge_label="CORA_edge")
@@ -460,20 +426,16 @@ if __name__ == "__main__":
     )
     hg2d.convert_hetero_graph(
         vertex_labels=["ACM_paper_v", "ACM_author_v", "ACM_field_v"],
-        edge_labels=["ACM_ap_e", "ACM_fp_e", "ACM_pa_e", "ACM_pf_e"]
+        edge_labels=["ACM_ap_e", "ACM_fp_e", "ACM_pa_e", "ACM_pf_e"],
     )
     hg2d.convert_graph_nx(vertex_label="CAVEMAN_vertex", edge_label="CAVEMAN_edge")
-    hg2d.convert_graph_with_edge_feat(
-        vertex_label="CORA_edge_feat_vertex", edge_label="CORA_edge_feat_edge"
-    )
+    hg2d.convert_graph_with_edge_feat(vertex_label="CORA_edge_feat_vertex", edge_label="CORA_edge_feat_edge")
     hg2d.convert_graph_ogb(
         vertex_label="ogbl-collab_vertex",
         edge_label="ogbl-collab_edge",
         split_label="ogbl-collab_split_edge",
     )
-    hg2d.convert_hetero_graph_bgnn(
-        vertex_labels=["AVAZU__N_v"], edge_labels=["AVAZU__E_e"]
-    )
+    hg2d.convert_hetero_graph_bgnn(vertex_labels=["AVAZU__N_v"], edge_labels=["AVAZU__E_e"])
     hg2d.convert_hetero_graph(
         vertex_labels=["AMAZONGATNE__N_v"],
         edge_labels=[

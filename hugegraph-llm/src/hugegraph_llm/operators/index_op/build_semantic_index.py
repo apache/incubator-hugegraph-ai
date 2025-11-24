@@ -29,9 +29,7 @@ from hugegraph_llm.utils.log import log
 
 class BuildSemanticIndex:
     def __init__(self, embedding: BaseEmbedding, vector_index: type[VectorStoreBase]):
-        self.vid_index = vector_index.from_name(
-            embedding.get_embedding_dim(), huge_settings.graph_name, "graph_vids"
-        )
+        self.vid_index = vector_index.from_name(embedding.get_embedding_dim(), huge_settings.graph_name, "graph_vids")
         self.embedding = embedding
         self.sm = SchemaManager(huge_settings.graph_name)
 
@@ -45,9 +43,7 @@ class BuildSemanticIndex:
         async def get_embeddings_with_semaphore(vid_list: list[str]) -> Any:
             async with sem:
                 loop = asyncio.get_running_loop()
-                return await loop.run_in_executor(
-                    None, self.embedding.get_texts_embeddings, vid_list
-                )
+                return await loop.run_in_executor(None, self.embedding.get_texts_embeddings, vid_list)
 
         vid_batches = [vids[i : i + batch_size] for i in range(0, len(vids), batch_size)]
         tasks = [get_embeddings_with_semaphore(batch) for batch in vid_batches]
@@ -62,9 +58,7 @@ class BuildSemanticIndex:
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         vertexlabels = self.sm.schema.getSchema()["vertexlabels"]
-        all_pk_flag = bool(vertexlabels) and all(
-            data.get("id_strategy") == "PRIMARY_KEY" for data in vertexlabels
-        )
+        all_pk_flag = bool(vertexlabels) and all(data.get("id_strategy") == "PRIMARY_KEY" for data in vertexlabels)
 
         past_vids = self.vid_index.get_all_properties()
         # TODO: We should build vid vector index separately, especially when the vertices may be very large

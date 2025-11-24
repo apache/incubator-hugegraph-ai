@@ -24,7 +24,6 @@ from pyhugegraph.utils.util import ResponseValidation
 
 
 class VertexLabel(HugeParamsBase):
-
     @decorator_params
     def useAutomaticId(self) -> "VertexLabel":
         self._parameter_holder.set("id_strategy", "AUTOMATIC")
@@ -77,7 +76,7 @@ class VertexLabel(HugeParamsBase):
         return self
 
     def ifNotExist(self) -> "VertexLabel":
-        path = f'schema/vertexlabels/{self._parameter_holder.get_value("name")}'
+        path = f"schema/vertexlabels/{self._parameter_holder.get_value('name')}"
         if _ := self._sess.request(path, validator=ResponseValidation(strict=False)):
             self._parameter_holder.set("not_exist", False)
         return self
@@ -112,7 +111,7 @@ class VertexLabel(HugeParamsBase):
         properties = dic["properties"] if "properties" in dic else []
         nullable_keys = dic["nullable_keys"] if "nullable_keys" in dic else []
         user_data = dic["user_data"] if "user_data" in dic else {}
-        path = f'schema/vertexlabels/{dic["name"]}?action=append'
+        path = f"schema/vertexlabels/{dic['name']}?action=append"
         data = {
             "name": dic["name"],
             "properties": properties,

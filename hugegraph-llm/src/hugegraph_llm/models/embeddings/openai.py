@@ -67,7 +67,7 @@ class OpenAIEmbedding(BaseEmbedding):
         """
         all_embeddings = []
         for i in range(0, len(texts), batch_size):
-            batch = texts[i:i + batch_size]
+            batch = texts[i : i + batch_size]
             response = self.client.embeddings.create(input=batch, model=self.model)
             all_embeddings.extend([data.embedding for data in response.data])
         return all_embeddings
@@ -94,7 +94,7 @@ class OpenAIEmbedding(BaseEmbedding):
         """
         all_embeddings = []
         for i in range(0, len(texts), batch_size):
-            batch = texts[i:i + batch_size]
+            batch = texts[i : i + batch_size]
             response = await self.aclient.embeddings.create(input=batch, model=self.model)
             all_embeddings.extend([data.embedding for data in response.data])
         return all_embeddings

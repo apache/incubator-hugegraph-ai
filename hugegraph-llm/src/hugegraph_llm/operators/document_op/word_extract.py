@@ -75,8 +75,6 @@ class WordExtract:
             results.add(token)
             sub_tokens = re.findall(r"\w+", token)
             if len(sub_tokens) > 1:
-                results.update(
-                    {w for w in sub_tokens if w not in NLTKHelper().stopwords(lang=self._language)}
-                )
+                results.update({w for w in sub_tokens if w not in NLTKHelper().stopwords(lang=self._language)})
 
         return list(results)

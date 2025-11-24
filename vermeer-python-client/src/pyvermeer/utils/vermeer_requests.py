@@ -32,12 +32,12 @@ class VermeerSession:
     """vermeer session"""
 
     def __init__(
-            self,
-            cfg: VermeerConfig,
-            retries: int = 3,
-            backoff_factor: int = 0.1,
-            status_forcelist=(500, 502, 504),
-            session: Optional[requests.Session] = None,
+        self,
+        cfg: VermeerConfig,
+        retries: int = 3,
+        backoff_factor: int = 0.1,
+        status_forcelist=(500, 502, 504),
+        session: Optional[requests.Session] = None,
     ):
         """
         Initialize the Session.
@@ -89,20 +89,13 @@ class VermeerSession:
         """
         self._session.close()
 
-    def request(
-            self,
-            method: str,
-            path: str,
-            params: dict = None
-    ) -> dict:
+    def request(self, method: str, path: str, params: dict = None) -> dict:
         """request"""
         try:
             log.debug(f"Request made to {path} with params {json.dumps(params)}")
-            response = self._session.request(method,
-                                             self.resolve(path),
-                                             headers=self._headers,
-                                             data=json.dumps(params),
-                                             timeout=self._timeout)
+            response = self._session.request(
+                method, self.resolve(path), headers=self._headers, data=json.dumps(params), timeout=self._timeout
+            )
             log.debug(f"Response code:{response.status_code}, received: {response.text}")
             return response.json()
         except requests.ConnectionError as e:

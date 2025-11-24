@@ -42,9 +42,7 @@ class BuildSchemaFlow(BaseFlow):
         prepared_input.query_examples = query_examples
         prepared_input.few_shot_schema = few_shot_schema
 
-    def build_flow(
-        self, texts=None, query_examples=None, few_shot_schema=None, **kwargs
-    ):
+    def build_flow(self, texts=None, query_examples=None, few_shot_schema=None, **kwargs):
         pipeline = GPipeline()
         prepared_input = WkFlowInput()
         self.prepare(

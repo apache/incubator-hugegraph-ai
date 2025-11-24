@@ -16,7 +16,6 @@
 # under the License.
 
 
-
 """
 DeeperGCN
 
@@ -35,6 +34,7 @@ import dgl.function as fn
 from dgl.nn.functional import edge_softmax
 
 # pylint: disable=E1101,E0401
+
 
 class DeeperGCN(nn.Module):
     r"""
@@ -192,9 +192,7 @@ class GENConv(nn.Module):
         self.msg_norm = MessageNorm(learn_msg_scale) if msg_norm else None
 
         self.beta = (
-            nn.Parameter(torch.Tensor([beta]), requires_grad=True)
-            if learn_beta and self.aggr == "softmax"
-            else beta
+            nn.Parameter(torch.Tensor([beta]), requires_grad=True) if learn_beta and self.aggr == "softmax" else beta
         )
         self.p = nn.Parameter(torch.Tensor([p]), requires_grad=True) if learn_p else p
 

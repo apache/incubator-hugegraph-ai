@@ -20,7 +20,6 @@ from pyhugegraph.utils import huge_router as router
 
 
 class MetricsManager(HugeParamsBase):
-
     @router.http("GET", "/metrics/?type=json")
     def get_all_basic_metrics(self) -> dict:
         return self._invoke_request()

@@ -138,11 +138,7 @@ class LabelPropagation(nn.Module):
 
             last = (1 - self.alpha) * y
             degs = g.in_degrees().float().clamp(min=1)
-            norm = (
-                torch.pow(degs, -0.5 if self.adj == "DAD" else -1)
-                .to(labels.device)
-                .unsqueeze(1)
-            )
+            norm = torch.pow(degs, -0.5 if self.adj == "DAD" else -1).to(labels.device).unsqueeze(1)
 
             for _ in range(self.num_layers):
                 # Assume the graphs to be undirected
@@ -207,12 +203,8 @@ class CorrectAndSmooth(nn.Module):
         self.autoscale = autoscale
         self.scale = scale
 
-        self.prop1 = LabelPropagation(
-            num_correction_layers, correction_alpha, correction_adj
-        )
-        self.prop2 = LabelPropagation(
-            num_smoothing_layers, smoothing_alpha, smoothing_adj
-        )
+        self.prop1 = LabelPropagation(num_correction_layers, correction_alpha, correction_adj)
+        self.prop2 = LabelPropagation(num_smoothing_layers, smoothing_alpha, smoothing_adj)
 
     def correct(self, g, y_soft, y_true, mask):
         with g.local_scope():
@@ -227,9 +219,7 @@ class CorrectAndSmooth(nn.Module):
             error[mask] = y_true - y_soft[mask]
 
             if self.autoscale:
-                smoothed_error = self.prop1(
-                    g, error, post_step=lambda x: x.clamp_(-1.0, 1.0)
-                )
+                smoothed_error = self.prop1(g, error, post_step=lambda x: x.clamp_(-1.0, 1.0))
                 sigma = error[mask].abs().sum() / numel
                 scale = sigma / smoothed_error.abs().sum(dim=1, keepdim=True)
                 scale[scale.isinf() | (scale > 1000)] = 1.0

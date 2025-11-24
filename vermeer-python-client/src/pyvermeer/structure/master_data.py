@@ -26,11 +26,11 @@ class MasterInfo:
 
     def __init__(self, dic: dict):
         """Initialization function"""
-        self.__grpc_peer = dic.get('grpc_peer', '')
-        self.__ip_addr = dic.get('ip_addr', '')
-        self.__debug_mod = dic.get('debug_mod', False)
-        self.__version = dic.get('version', '')
-        self.__launch_time = parse_vermeer_time(dic.get('launch_time', ''))
+        self.__grpc_peer = dic.get("grpc_peer", "")
+        self.__ip_addr = dic.get("ip_addr", "")
+        self.__debug_mod = dic.get("debug_mod", False)
+        self.__version = dic.get("version", "")
+        self.__launch_time = parse_vermeer_time(dic.get("launch_time", ""))
 
     @property
     def grpc_peer(self) -> str:
@@ -64,7 +64,7 @@ class MasterInfo:
             "ip_addr": self.__ip_addr,
             "debug_mod": self.__debug_mod,
             "version": self.__version,
-            "launch_time": self.__launch_time.strftime("%Y-%m-%d %H:%M:%S") if self.__launch_time else ''
+            "launch_time": self.__launch_time.strftime("%Y-%m-%d %H:%M:%S") if self.__launch_time else "",
         }
 
 
@@ -74,7 +74,7 @@ class MasterResponse(BaseResponse):
     def __init__(self, dic: dict):
         """Initialization function"""
         super().__init__(dic)
-        self.__master_info = MasterInfo(dic['master_info'])
+        self.__master_info = MasterInfo(dic["master_info"])
 
     @property
     def master_info(self) -> MasterInfo:

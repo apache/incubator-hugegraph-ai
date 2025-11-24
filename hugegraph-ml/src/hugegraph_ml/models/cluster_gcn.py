@@ -31,6 +31,7 @@ import torch.nn.functional as F
 
 import dgl.nn as dglnn
 
+
 class SAGE(nn.Module):
     # pylint: disable=E1101
     def __init__(self, in_feats, n_hidden, n_classes):

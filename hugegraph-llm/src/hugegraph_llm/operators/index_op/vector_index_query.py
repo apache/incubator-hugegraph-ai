@@ -25,14 +25,10 @@ from hugegraph_llm.utils.log import log
 
 
 class VectorIndexQuery:
-    def __init__(
-        self, vector_index: type[VectorStoreBase], embedding: BaseEmbedding, topk: int = 3
-    ):
+    def __init__(self, vector_index: type[VectorStoreBase], embedding: BaseEmbedding, topk: int = 3):
         self.embedding = embedding
         self.topk = topk
-        self.vector_index = vector_index.from_name(
-            embedding.get_embedding_dim(), huge_settings.graph_name, "chunks"
-        )
+        self.vector_index = vector_index.from_name(embedding.get_embedding_dim(), huge_settings.graph_name, "chunks")
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         query = context.get("query")

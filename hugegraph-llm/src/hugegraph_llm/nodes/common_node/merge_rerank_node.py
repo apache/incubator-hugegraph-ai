@@ -39,9 +39,7 @@ class MergeRerankNode(BaseNode):
             rerank_method = self.wk_input.rerank_method or "bleu"
             near_neighbor_first = self.wk_input.near_neighbor_first or False
             custom_related_information = self.wk_input.custom_related_information or ""
-            topk_return_results = (
-                self.wk_input.topk_return_results or huge_settings.topk_return_results
-            )
+            topk_return_results = self.wk_input.topk_return_results or huge_settings.topk_return_results
 
             self.operator = MergeDedupRerank(
                 embedding=embedding,

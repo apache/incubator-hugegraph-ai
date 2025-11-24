@@ -69,6 +69,4 @@ class HGraphConfig:
                 except Exception:  # pylint: disable=broad-exception-caught
                     exc_type, exc_value, tb = sys.exc_info()
                     traceback.print_exception(exc_type, exc_value, tb)
-                    log.warning(
-                        "Failed to retrieve API version information from the server, reverting to default v1."
-                    )
+                    log.warning("Failed to retrieve API version information from the server, reverting to default v1.")

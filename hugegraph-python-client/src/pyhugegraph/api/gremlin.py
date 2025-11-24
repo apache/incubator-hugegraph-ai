@@ -25,7 +25,6 @@ from pyhugegraph.utils.log import log
 
 
 class GremlinManager(HugeParamsBase):
-
     @router.http("POST", "/gremlin")
     def exec(self, gremlin):
         gremlin_data = GremlinData(gremlin)

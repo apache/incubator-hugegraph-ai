@@ -29,14 +29,10 @@ from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 
 def bgnn_example():
     hg2d = HugeGraph2DGL()
-    g = hg2d.convert_hetero_graph_bgnn(
-        vertex_labels=["AVAZU__N_v"], edge_labels=["AVAZU__E_e"]
-    )
+    g = hg2d.convert_hetero_graph_bgnn(vertex_labels=["AVAZU__N_v"], edge_labels=["AVAZU__E_e"])
     X, y, cat_features, train_mask, val_mask, test_mask = convert_data(g)
     encoded_X = X.copy()
-    encoded_X = encode_cat_features(
-        encoded_X, y, cat_features, train_mask, val_mask, test_mask
-    )
+    encoded_X = encode_cat_features(encoded_X, y, cat_features, train_mask, val_mask, test_mask)
     encoded_X = replace_na(encoded_X, train_mask)
     gnn_model = GNNModelDGL(in_dim=y.shape[1], hidden_dim=128, out_dim=y.shape[1])
     bgnn = BGNNPredictor(

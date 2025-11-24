@@ -114,21 +114,13 @@ class GCN(nn.Module):
 
         self.layers = nn.ModuleList()
         if gcn_type == "gcn":
-            self.layers.append(
-                GraphConv(initial_dim, hidden_units, allow_zero_in_degree=True)
-            )
+            self.layers.append(GraphConv(initial_dim, hidden_units, allow_zero_in_degree=True))
             for _ in range(num_layers - 1):
-                self.layers.append(
-                    GraphConv(hidden_units, hidden_units, allow_zero_in_degree=True)
-                )
+                self.layers.append(GraphConv(hidden_units, hidden_units, allow_zero_in_degree=True))
         elif gcn_type == "sage":
-            self.layers.append(
-                SAGEConv(initial_dim, hidden_units, aggregator_type="gcn")
-            )
+            self.layers.append(SAGEConv(initial_dim, hidden_units, aggregator_type="gcn"))
             for _ in range(num_layers - 1):
-                self.layers.append(
-                    SAGEConv(hidden_units, hidden_units, aggregator_type="gcn")
-                )
+                self.layers.append(SAGEConv(hidden_units, hidden_units, aggregator_type="gcn"))
         else:
             raise ValueError("Gcn type error.")
 
@@ -248,22 +240,14 @@ class DGCNN(nn.Module):
 
         self.layers = nn.ModuleList()
         if gcn_type == "gcn":
-            self.layers.append(
-                GraphConv(initial_dim, hidden_units, allow_zero_in_degree=True)
-            )
+            self.layers.append(GraphConv(initial_dim, hidden_units, allow_zero_in_degree=True))
             for _ in range(num_layers - 1):
-                self.layers.append(
-                    GraphConv(hidden_units, hidden_units, allow_zero_in_degree=True)
-                )
+                self.layers.append(GraphConv(hidden_units, hidden_units, allow_zero_in_degree=True))
             self.layers.append(GraphConv(hidden_units, 1, allow_zero_in_degree=True))
         elif gcn_type == "sage":
-            self.layers.append(
-                SAGEConv(initial_dim, hidden_units, aggregator_type="gcn")
-            )
+            self.layers.append(SAGEConv(initial_dim, hidden_units, aggregator_type="gcn"))
             for _ in range(num_layers - 1):
-                self.layers.append(
-                    SAGEConv(hidden_units, hidden_units, aggregator_type="gcn")
-                )
+                self.layers.append(SAGEConv(hidden_units, hidden_units, aggregator_type="gcn"))
             self.layers.append(SAGEConv(hidden_units, 1, aggregator_type="gcn"))
         else:
             raise ValueError("Gcn type error.")
@@ -274,9 +258,7 @@ class DGCNN(nn.Module):
         conv1d_kws = [total_latent_dim, 5]
         self.conv_1 = nn.Conv1d(1, conv1d_channels[0], conv1d_kws[0], conv1d_kws[0])
         self.maxpool1d = nn.MaxPool1d(2, 2)
-        self.conv_2 = nn.Conv1d(
-            conv1d_channels[0], conv1d_channels[1], conv1d_kws[1], 1
-        )
+        self.conv_2 = nn.Conv1d(conv1d_channels[0], conv1d_channels[1], conv1d_kws[1], 1)
         dense_dim = int((k - 2) / 2 + 1)
         dense_dim = (dense_dim - conv1d_kws[1] + 1) * conv1d_channels[1]
         self.linear_1 = nn.Linear(dense_dim, 128)
@@ -405,9 +387,7 @@ def drnl_node_labeling(subgraph, src, dst):
     dist2src = np.insert(dist2src, dst, 0, axis=0)
     dist2src = torch.from_numpy(dist2src)
 
-    dist2dst = shortest_path(
-        adj_wo_src, directed=False, unweighted=True, indices=dst - 1
-    )
+    dist2dst = shortest_path(adj_wo_src, directed=False, unweighted=True, indices=dst - 1)
     dist2dst = np.insert(dist2dst, src, 0, axis=0)
     dist2dst = torch.from_numpy(dist2dst)
 
@@ -587,12 +567,8 @@ class SEALSampler(object):
         subgraph = dgl.node_subgraph(self.graph, sample_nodes)
 
         # Each node should have unique node id in the new subgraph
-        u_id = int(
-            torch.nonzero(subgraph.ndata[NID] == int(target_nodes[0]), as_tuple=False)
-        )
-        v_id = int(
-            torch.nonzero(subgraph.ndata[NID] == int(target_nodes[1]), as_tuple=False)
-        )
+        u_id = int(torch.nonzero(subgraph.ndata[NID] == int(target_nodes[0]), as_tuple=False))
+        v_id = int(torch.nonzero(subgraph.ndata[NID] == int(target_nodes[1]), as_tuple=False))
 
         # remove link between target nodes in positive subgraphs.
         if subgraph.has_edges_between(u_id, v_id):
@@ -682,9 +658,7 @@ class SEALData(object):
         if use_coalesce:
             for k, v in g.edata.items():
                 g.edata[k] = v.float()  # dgl.to_simple() requires data is float
-            self.g = dgl.to_simple(
-                g, copy_ndata=True, copy_edata=True, aggregator="sum"
-            )
+            self.g = dgl.to_simple(g, copy_ndata=True, copy_edata=True, aggregator="sum")
 
         self.ndata = {k: v for k, v in self.g.ndata.items()}
         self.edata = {k: v for k, v in self.g.edata.items()}
@@ -693,9 +667,7 @@ class SEALData(object):
         self.print_fn("Save ndata and edata in class.")
         self.print_fn("Clear ndata and edata in graph.")
 
-        self.sampler = SEALSampler(
-            graph=self.g, hop=hop, num_workers=num_workers, print_fn=print_fn
-        )
+        self.sampler = SEALSampler(graph=self.g, hop=hop, num_workers=num_workers, print_fn=print_fn)
 
     def __call__(self, split_type):
         if split_type == "train":
@@ -752,19 +724,10 @@ class LightLogging(object):
                 os.mkdir(log_path)
 
             if log_name.endswith("-") or log_name.endswith("_"):
-                log_name = (
-                    log_path
-                    + log_name
-                    + time.strftime("%Y-%m-%d-%H:%M", time.localtime(time.time()))
-                    + ".log"
-                )
+                log_name = log_path + log_name + time.strftime("%Y-%m-%d-%H:%M", time.localtime(time.time())) + ".log"
             else:
                 log_name = (
-                    log_path
-                    + log_name
-                    + "_"
-                    + time.strftime("%Y-%m-%d-%H-%M", time.localtime(time.time()))
-                    + ".log"
+                    log_path + log_name + "_" + time.strftime("%Y-%m-%d-%H-%M", time.localtime(time.time())) + ".log"
                 )
 
             logging.basicConfig(

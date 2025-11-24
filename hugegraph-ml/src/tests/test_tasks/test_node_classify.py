@@ -34,7 +34,7 @@ class TestNodeClassify(unittest.TestCase):
                 graph=self.graph,
                 model=JKNet(
                     n_in_feats=self.graph.ndata["feat"].shape[1],
-                    n_out_feats=self.graph.ndata["label"].unique().shape[0]
+                    n_out_feats=self.graph.ndata["label"].unique().shape[0],
                 ),
             )
         except ValueError as e:
@@ -44,8 +44,7 @@ class TestNodeClassify(unittest.TestCase):
         node_classify_task = NodeClassify(
             graph=self.graph,
             model=JKNet(
-                n_in_feats=self.graph.ndata["feat"].shape[1],
-                n_out_feats=self.graph.ndata["label"].unique().shape[0]
+                n_in_feats=self.graph.ndata["feat"].shape[1], n_out_feats=self.graph.ndata["label"].unique().shape[0]
             ),
         )
         node_classify_task.train(n_epochs=10, patience=3)

@@ -26,9 +26,7 @@ class IndexConfig(BaseConfig):
 
     qdrant_host: Optional[str] = os.environ.get("QDRANT_HOST", None)
     qdrant_port: int = int(os.environ.get("QDRANT_PORT", "6333"))
-    qdrant_api_key: Optional[str] = (
-        os.environ.get("QDRANT_API_KEY") if os.environ.get("QDRANT_API_KEY") else None
-    )
+    qdrant_api_key: Optional[str] = os.environ.get("QDRANT_API_KEY") if os.environ.get("QDRANT_API_KEY") else None
 
     milvus_host: Optional[str] = os.environ.get("MILVUS_HOST", None)
     milvus_port: int = int(os.environ.get("MILVUS_PORT", "19530"))

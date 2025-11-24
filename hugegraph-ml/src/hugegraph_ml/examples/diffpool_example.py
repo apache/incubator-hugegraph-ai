@@ -29,7 +29,7 @@ def diffpool_example(n_epochs=1000):
         n_in_feats=dataset.info["n_feat_dim"],
         n_out_feats=dataset.info["n_classes"],
         max_n_nodes=dataset.info["max_n_nodes"],
-        pool_ratio=0.2
+        pool_ratio=0.2,
     )
     graph_clf_task = GraphClassify(dataset, model)
     graph_clf_task.train(lr=1e-3, n_epochs=n_epochs, patience=300, early_stopping_monitor="accuracy")

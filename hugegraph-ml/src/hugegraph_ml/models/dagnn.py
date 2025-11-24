@@ -33,7 +33,6 @@ from torch import nn
 from torch.nn import functional as F, Parameter
 
 
-
 class DAGNNConv(nn.Module):
     def __init__(self, in_dim, k):
         super(DAGNNConv, self).__init__()
@@ -58,7 +57,7 @@ class DAGNNConv(nn.Module):
             for _ in range(self.k):
                 feats = feats * norm
                 graph.ndata["h"] = feats
-                graph.update_all(fn.copy_u("h", "m"), fn.sum("m", "h")) # pylint: disable=E1101
+                graph.update_all(fn.copy_u("h", "m"), fn.sum("m", "h"))  # pylint: disable=E1101
                 feats = graph.ndata["h"]
                 feats = feats * norm
                 results.append(feats)

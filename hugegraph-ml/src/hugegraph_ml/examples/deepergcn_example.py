@@ -22,9 +22,7 @@ from hugegraph_ml.tasks.node_classify_with_edge import NodeClassifyWithEdge
 
 def deepergcn_example(n_epochs=1000):
     hg2d = HugeGraph2DGL()
-    graph = hg2d.convert_graph_with_edge_feat(
-        vertex_label="CORA_vertex", edge_label="CORA_edge"
-    )
+    graph = hg2d.convert_graph_with_edge_feat(vertex_label="CORA_vertex", edge_label="CORA_edge")
     model = DeeperGCN(
         node_feat_dim=graph.ndata["feat"].shape[1],
         edge_feat_dim=graph.edata["feat"].shape[1],

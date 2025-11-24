@@ -125,7 +125,6 @@ class ServicesManager(HugeParamsBase):
             None
         """
         return self._sess.request(
-            f"/graphspaces/{graphspace}/services/{service}"
-            f"?confirm_message=I'm sure to delete the service",
+            f"/graphspaces/{graphspace}/services/{service}?confirm_message=I'm sure to delete the service",
             "DELETE",
         )

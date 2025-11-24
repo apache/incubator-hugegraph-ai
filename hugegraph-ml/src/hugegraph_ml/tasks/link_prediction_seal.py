@@ -26,6 +26,7 @@ from tqdm import tqdm
 import numpy as np
 from hugegraph_ml.models.seal import SEALData, evaluate_hits
 
+
 class LinkPredictionSeal:
     def __init__(self, graph: DGLGraph, split_edge, model):
         self.graph = graph
@@ -88,17 +89,13 @@ class LinkPredictionSeal:
         gpu: int = -1,
     ):
         torch.manual_seed(2021)
-        self._device = (
-            f"cuda:{gpu}" if gpu != -1 and torch.cuda.is_available() else "cpu"
-        )
+        self._device = f"cuda:{gpu}" if gpu != -1 and torch.cuda.is_available() else "cpu"
         self._model.to(self._device)
         self.graph = self.graph.to(self._device)
         parameters = self._model.parameters()
         optimizer = torch.optim.Adam(parameters, lr=lr)
         loss_fn = BCEWithLogitsLoss()
-        print(
-            f"Total parameters: {sum([p.numel() for p in self._model.parameters()])}"
-        )
+        print(f"Total parameters: {sum([p.numel() for p in self._model.parameters()])}")
 
         # train and evaluate loop
         summary_val = []
@@ -115,16 +112,10 @@ class LinkPredictionSeal:
             train_time = time.time()
             if epoch % 5 == 0:
                 val_pos_pred, val_neg_pred = self.evaluate(dataloader=self.val_loader)
-                test_pos_pred, test_neg_pred = self.evaluate(
-                    dataloader=self.test_loader
-                )
+                test_pos_pred, test_neg_pred = self.evaluate(dataloader=self.test_loader)
 
-                val_metric = evaluate_hits(
-                    "ogbl-collab", val_pos_pred, val_neg_pred, 50
-                )
-                test_metric = evaluate_hits(
-                    "ogbl-collab", test_pos_pred, test_neg_pred, 50
-                )
+                val_metric = evaluate_hits("ogbl-collab", val_pos_pred, val_neg_pred, 50)
+                test_metric = evaluate_hits("ogbl-collab", test_pos_pred, test_neg_pred, 50)
                 evaluate_time = time.time()
                 print(
                     f"Epoch-{epoch}, train loss: {loss:.4f}, hits@{50}: val-{val_metric:.4f}, \\"
@@ -136,9 +127,7 @@ class LinkPredictionSeal:
         summary_test = np.array(summary_test)
 
         print("Experiment Results:")
-        print(
-            f"Best hits@{50}: {np.max(summary_test):.4f}, epoch: {np.argmax(summary_test)}"
-        )
+        print(f"Best hits@{50}: {np.max(summary_test):.4f}, epoch: {np.argmax(summary_test)}")
 
     @torch.no_grad()
     def evaluate(self, dataloader):

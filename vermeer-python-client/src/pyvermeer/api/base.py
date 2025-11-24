@@ -33,8 +33,4 @@ class BaseModule:
     def _send_request(self, method: str, endpoint: str, params: dict = None):
         """Unified request entry point"""
         self.log.debug(f"Sending {method} to {endpoint}")
-        return self._client.send_request(
-            method=method,
-            endpoint=endpoint,
-            params=params
-        )
+        return self._client.send_request(method=method, endpoint=endpoint, params=params)

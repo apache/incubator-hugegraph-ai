@@ -87,9 +87,7 @@ class CAREConv(nn.Module):
             num_neigh = th.ceil(g.in_degrees(node) * p).int().item()
             neigh_dist = dist[edges]
             if neigh_dist.shape[0] > num_neigh:
-                neigh_index = np.argpartition(neigh_dist.cpu().detach(), num_neigh)[
-                    :num_neigh
-                ]
+                neigh_index = np.argpartition(neigh_dist.cpu().detach(), num_neigh)[:num_neigh]
             else:
                 neigh_index = np.arange(num_neigh)
             neigh_list.append(edges[neigh_index])

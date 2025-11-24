@@ -59,12 +59,8 @@ class RAGVectorOnlyFlow(BaseFlow):
         prepared_input.vector_only_answer = vector_only_answer
         prepared_input.graph_only_answer = graph_only_answer
         prepared_input.graph_vector_answer = graph_vector_answer
-        prepared_input.vector_dis_threshold = (
-            vector_dis_threshold or huge_settings.vector_dis_threshold
-        )
-        prepared_input.topk_return_results = (
-            topk_return_results or huge_settings.topk_return_results
-        )
+        prepared_input.vector_dis_threshold = vector_dis_threshold or huge_settings.vector_dis_threshold
+        prepared_input.topk_return_results = topk_return_results or huge_settings.topk_return_results
         prepared_input.rerank_method = rerank_method
         prepared_input.near_neighbor_first = near_neighbor_first
         prepared_input.custom_related_information = custom_related_information
@@ -92,9 +88,7 @@ class RAGVectorOnlyFlow(BaseFlow):
 
         # Register nodes and dependencies, keep naming consistent with original
         pipeline.registerGElement(only_vector_query_node, set(), "only_vector")
-        pipeline.registerGElement(
-            merge_rerank_node, {only_vector_query_node}, "merge_two"
-        )
+        pipeline.registerGElement(merge_rerank_node, {only_vector_query_node}, "merge_two")
         pipeline.registerGElement(answer_synthesize_node, {merge_rerank_node}, "vector")
         log.info("RAGVectorOnlyFlow pipeline built successfully")
         return pipeline

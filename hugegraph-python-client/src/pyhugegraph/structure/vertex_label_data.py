@@ -65,8 +65,5 @@ class VertexLabelData:
         return self.__enable_label_index
 
     def __repr__(self):
-        res = (
-            f"name: {self.__name}, primary_keys: {self.__primary_keys}, "
-            f"properties: {self.__properties}"
-        )
+        res = f"name: {self.__name}, primary_keys: {self.__primary_keys}, properties: {self.__properties}"
         return res

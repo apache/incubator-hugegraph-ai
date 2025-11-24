@@ -68,9 +68,7 @@ class OperatorList:
         self.operators.append(BuildGremlinExampleIndex(self.embedding, examples))
         return self
 
-    def import_schema(
-        self, from_hugegraph=None, from_extraction=None, from_user_defined=None
-    ):
+    def import_schema(self, from_hugegraph=None, from_extraction=None, from_user_defined=None):
         if from_hugegraph:
             self.operators.append(SchemaManager(from_hugegraph))
         elif from_user_defined:
@@ -91,9 +89,7 @@ class OperatorList:
         gremlin_prompt: Optional[str] = None,
         vertices: Optional[List[str]] = None,
     ):
-        self.operators.append(
-            GremlinGenerateSynthesize(self.llm, schema, vertices, gremlin_prompt)
-        )
+        self.operators.append(GremlinGenerateSynthesize(self.llm, schema, vertices, gremlin_prompt))
         return self
 
     def print_result(self):
@@ -125,9 +121,7 @@ class OperatorList:
         elif extract_type == "property_graph":
             self.operators.append(PropertyGraphExtract(self.llm, example_prompt))
         else:
-            raise ValueError(
-                f"invalid extract_type: {extract_type!r}, expected 'triples' or 'property_graph'"
-            )
+            raise ValueError(f"invalid extract_type: {extract_type!r}, expected 'triples' or 'property_graph'")
         return self
 
     def disambiguate_word_sense(self):
@@ -168,9 +162,7 @@ class OperatorList:
         :param extract_template: Template for keyword extraction.
         :return: Self-instance for chaining.
         """
-        self.operators.append(
-            KeywordExtract(text=text, extract_template=extract_template)
-        )
+        self.operators.append(KeywordExtract(text=text, extract_template=extract_template))
         return self
 
     def keywords_to_vid(

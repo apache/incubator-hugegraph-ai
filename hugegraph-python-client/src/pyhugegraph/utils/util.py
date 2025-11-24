@@ -34,8 +34,7 @@ def create_exception(response_content):
         data = json.loads(response_content)
         if "ServiceUnavailableException" in data.get("exception", ""):
             raise ServiceUnavailableException(
-                f'ServiceUnavailableException, "message": "{data["message"]}",'
-                f' "cause": "{data["cause"]}"'
+                f'ServiceUnavailableException, "message": "{data["message"]}", "cause": "{data["cause"]}"'
             )
     except (json.JSONDecodeError, KeyError) as e:
         raise Exception(f"Error parsing response content: {response_content}") from e
@@ -44,9 +43,7 @@ def create_exception(response_content):
 
 def check_if_authorized(response):
     if response.status_code == 401:
-        raise NotAuthorizedError(
-            f"Please check your username and password. {str(response.content)}"
-        )
+        raise NotAuthorizedError(f"Please check your username and password. {str(response.content)}")
     return True
 
 
