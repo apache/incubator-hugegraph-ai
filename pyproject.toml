@@ -39,7 +39,6 @@ llm = ["hugegraph-llm"]
 ml = ["hugegraph-ml"]
 python-client = ["hugegraph-python-client"]
 vermeer = ["vermeer-python-client"]
-[dependency-groups]
 dev = [
     "pytest~=8.0.0",
     "pytest-cov~=5.0.0",
