@@ -33,6 +33,7 @@ def diffpool_example(n_epochs=1000):
     )
     graph_clf_task = GraphClassify(dataset, model)
     graph_clf_task.train(lr=1e-3, n_epochs=n_epochs, patience=300, early_stopping_monitor="accuracy")
+    print(graph_clf_task.evaluate())
 
 
 if __name__ == "__main__":

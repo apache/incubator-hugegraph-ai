@@ -43,6 +43,7 @@ def care_gnn_example(n_epochs=200):
     )
     detector_task = DetectorCaregnn(graph, model)
     detector_task.train(lr=0.005, weight_decay=0.0005, n_epochs=n_epochs)
+    print(detector_task.evaluate())
 
 
 if __name__ == "__main__":

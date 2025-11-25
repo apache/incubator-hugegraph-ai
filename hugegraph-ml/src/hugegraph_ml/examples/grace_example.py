@@ -38,6 +38,7 @@ def grace_example(n_epochs_embed=300, n_epochs_clf=400):
     )
     node_clf_task = NodeClassify(graph=embedded_graph, model=model)
     node_clf_task.train(lr=1e-3, n_epochs=n_epochs_clf, patience=30)
+    print(node_clf_task.evaluate())
 
 
 if __name__ == "__main__":

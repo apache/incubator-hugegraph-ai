@@ -46,7 +46,7 @@ def bgnn_example():
         gbdt_depth=6,
         gbdt_lr=0.1,
     )
-    _ = bgnn.fit(
+    metrics = bgnn.fit(
         g,
         encoded_X,
         y,
@@ -59,6 +59,7 @@ def bgnn_example():
         patience=10,
         metric_name="loss",
     )
+    print(metrics)
 
 
 if __name__ == "__main__":

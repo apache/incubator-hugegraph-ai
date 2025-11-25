@@ -33,6 +33,7 @@ def deepergcn_example(n_epochs=1000):
     )
     node_clf_task = NodeClassifyWithEdge(graph, model)
     node_clf_task.train(lr=0.005, weight_decay=0.0005, n_epochs=n_epochs, patience=200)
+    print(node_clf_task.evaluate())
 
 
 if __name__ == "__main__":
