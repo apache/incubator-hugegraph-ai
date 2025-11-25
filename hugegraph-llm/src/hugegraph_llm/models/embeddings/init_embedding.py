@@ -16,8 +16,7 @@
 # under the License.
 
 
-from hugegraph_llm.config import llm_settings
-from hugegraph_llm.config import LLMConfig
+from hugegraph_llm.config import LLMConfig, llm_settings
 from hugegraph_llm.models.embeddings.litellm import LiteLLMEmbedding
 from hugegraph_llm.models.embeddings.ollama import OllamaEmbedding
 from hugegraph_llm.models.embeddings.openai import OpenAIEmbedding

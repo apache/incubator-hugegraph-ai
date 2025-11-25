@@ -45,7 +45,7 @@ class CAREConv(nn.Module):
         activation=None,
         step_size=0.02,
     ):
-        super(CAREConv, self).__init__()
+        super().__init__()
 
         self.activation = activation
         self.step_size = step_size
@@ -135,7 +135,7 @@ class CAREGNN(nn.Module):
         activation=None,
         step_size=0.02,
     ):
-        super(CAREGNN, self).__init__()
+        super().__init__()
         self.in_dim = in_dim
         self.hid_dim = hid_dim
         self.num_classes = num_classes

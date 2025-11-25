@@ -15,14 +15,15 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Dict, Any
+from typing import Any, Dict
+
+from pyhugegraph.client import PyHugeClient
+from pyhugegraph.utils.exceptions import CreateError, NotFoundError
 
 from hugegraph_llm.config import huge_settings
 from hugegraph_llm.enums.property_cardinality import PropertyCardinality
 from hugegraph_llm.enums.property_data_type import PropertyDataType, default_value_map
 from hugegraph_llm.utils.log import log
-from pyhugegraph.client import PyHugeClient
-from pyhugegraph.utils.exceptions import NotFoundError, CreateError
 
 
 class Commit2Graph:

@@ -17,19 +17,19 @@
 
 import json
 import os
-from datetime import datetime
 from dataclasses import dataclass
-from typing import Any, Tuple, Dict, Literal, Optional, List
+from datetime import datetime
+from typing import Any, Dict, List, Literal, Optional, Tuple
 
 import gradio as gr
 import pandas as pd
 
-from hugegraph_llm.config import prompt, resource_path, huge_settings
+from hugegraph_llm.config import huge_settings, prompt, resource_path
 from hugegraph_llm.flows import FlowName
+from hugegraph_llm.flows.scheduler import SchedulerSingleton
 from hugegraph_llm.utils.embedding_utils import get_index_folder_name
 from hugegraph_llm.utils.hugegraph_utils import run_gremlin_query
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.flows.scheduler import SchedulerSingleton
 
 
 @dataclass

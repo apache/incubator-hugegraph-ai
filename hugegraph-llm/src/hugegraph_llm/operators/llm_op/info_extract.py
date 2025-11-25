@@ -16,7 +16,7 @@
 # under the License.
 
 import re
-from typing import List, Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from hugegraph_llm.document.chunk_split import ChunkSplitter
 from hugegraph_llm.models.llms.base import BaseLLM

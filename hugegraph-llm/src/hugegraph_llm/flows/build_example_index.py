@@ -14,15 +14,15 @@
 #  limitations under the License.
 
 import json
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 from pycgraph import GPipeline
 
 from hugegraph_llm.flows.common import BaseFlow
-from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 from hugegraph_llm.nodes.index_node.build_gremlin_example_index import (
     BuildGremlinExampleIndexNode,
 )
+from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 from hugegraph_llm.utils.log import log
 
 

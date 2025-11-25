@@ -15,16 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Callable, List, Optional, Dict, Any, Generator, AsyncGenerator
+from typing import Any, AsyncGenerator, Callable, Dict, Generator, List, Optional
 
 import openai
 import tiktoken
-from openai import OpenAI, AsyncOpenAI, RateLimitError, APITimeoutError, APIConnectionError
+from openai import APIConnectionError, APITimeoutError, AsyncOpenAI, OpenAI, RateLimitError
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
 from hugegraph_llm.models.llms.base import BaseLLM

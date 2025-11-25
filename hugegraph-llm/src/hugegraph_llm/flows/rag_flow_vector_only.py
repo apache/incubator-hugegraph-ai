@@ -14,16 +14,16 @@
 #  limitations under the License.
 
 
-from typing import Optional, Literal
+from typing import Literal, Optional
 
 from pycgraph import GPipeline
 
+from hugegraph_llm.config import huge_settings, prompt
 from hugegraph_llm.flows.common import BaseFlow
-from hugegraph_llm.nodes.index_node.vector_query_node import VectorQueryNode
 from hugegraph_llm.nodes.common_node.merge_rerank_node import MergeRerankNode
+from hugegraph_llm.nodes.index_node.vector_query_node import VectorQueryNode
 from hugegraph_llm.nodes.llm_node.answer_synthesize_node import AnswerSynthesizeNode
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
-from hugegraph_llm.config import huge_settings, prompt
 from hugegraph_llm.utils.log import log
 
 

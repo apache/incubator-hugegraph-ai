@@ -24,7 +24,7 @@ import requests
 from pyhugegraph.utils.exceptions import (
     NotAuthorizedError,
     NotFoundError,
-    ServiceUnavailableException,
+    ServiceUnavailableError,
 )
 from pyhugegraph.utils.log import log
 
@@ -33,7 +33,7 @@ def create_exception(response_content):
     try:
         data = json.loads(response_content)
         if "ServiceUnavailableException" in data.get("exception", ""):
-            raise ServiceUnavailableException(
+            raise ServiceUnavailableError(
                 f'ServiceUnavailableException, "message": "{data["message"]}", "cause": "{data["cause"]}"'
             )
     except (json.JSONDecodeError, KeyError) as e:

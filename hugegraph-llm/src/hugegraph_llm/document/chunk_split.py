@@ -16,7 +16,8 @@
 # under the License.
 
 
-from typing import Literal, Union, List
+from typing import List, Literal, Union
+
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 

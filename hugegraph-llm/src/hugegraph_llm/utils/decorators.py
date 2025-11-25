@@ -18,7 +18,7 @@
 import asyncio
 import time
 from functools import wraps
-from typing import Optional, Any, Callable
+from typing import Any, Callable, Optional
 
 from hugegraph_llm.utils.log import log
 

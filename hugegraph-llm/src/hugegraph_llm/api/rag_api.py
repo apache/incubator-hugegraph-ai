@@ -17,20 +17,19 @@
 
 import json
 
-from fastapi import status, APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 
 from hugegraph_llm.api.exceptions.rag_exceptions import generate_response
 from hugegraph_llm.api.models.rag_requests import (
-    RAGRequest,
     GraphConfigRequest,
-    LLMConfigRequest,
-    RerankerConfigRequest,
     GraphRAGRequest,
     GremlinGenerateRequest,
+    LLMConfigRequest,
+    RAGRequest,
+    RerankerConfigRequest,
 )
 from hugegraph_llm.api.models.rag_response import RAGResponse
-from hugegraph_llm.config import huge_settings
-from hugegraph_llm.config import llm_settings, prompt
+from hugegraph_llm.config import huge_settings, llm_settings, prompt
 from hugegraph_llm.utils.graph_index_utils import get_vertex_details
 from hugegraph_llm.utils.log import log
 

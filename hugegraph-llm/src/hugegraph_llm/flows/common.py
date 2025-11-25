@@ -14,7 +14,7 @@
 #  limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, AsyncGenerator
+from typing import Any, AsyncGenerator, Dict
 
 from hugegraph_llm.state.ai_state import WkFlowInput
 from hugegraph_llm.utils.log import log

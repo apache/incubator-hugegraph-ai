@@ -19,12 +19,13 @@ import json
 import os
 import shutil
 from datetime import datetime
+
 import requests
+from pyhugegraph.client import PyHugeClient
 from requests.auth import HTTPBasicAuth
 
 from hugegraph_llm.config import huge_settings, resource_path
 from hugegraph_llm.utils.log import log
-from pyhugegraph.client import PyHugeClient
 
 MAX_BACKUP_DIRS = 7
 MAX_VERTICES = 100000

@@ -19,23 +19,22 @@ import argparse
 
 import gradio as gr
 import uvicorn
-from fastapi import FastAPI, Depends, APIRouter
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import APIRouter, Depends, FastAPI
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from hugegraph_llm.api.admin_api import admin_http_api
 from hugegraph_llm.api.rag_api import rag_http_api
 from hugegraph_llm.config import admin_settings, huge_settings, prompt
 from hugegraph_llm.demo.rag_demo.admin_block import create_admin_block, log_stream
 from hugegraph_llm.demo.rag_demo.configs_block import (
-    create_configs_block,
-    apply_llm_config,
     apply_embedding_config,
-    apply_reranker_config,
     apply_graph_config,
+    apply_llm_config,
+    apply_reranker_config,
+    create_configs_block,
+    get_header_with_language_indicator,
 )
-from hugegraph_llm.demo.rag_demo.configs_block import get_header_with_language_indicator
-from hugegraph_llm.demo.rag_demo.other_block import create_other_block
-from hugegraph_llm.demo.rag_demo.other_block import lifespan
+from hugegraph_llm.demo.rag_demo.other_block import create_other_block, lifespan
 from hugegraph_llm.demo.rag_demo.rag_block import create_rag_block, rag_answer
 from hugegraph_llm.demo.rag_demo.text2gremlin_block import (
     create_text2gremlin_block,

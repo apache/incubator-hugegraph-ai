@@ -14,13 +14,14 @@
 #  limitations under the License.
 
 import json
-from typing import Dict, Any, Tuple, List, Set, Optional
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-from hugegraph_llm.nodes.base_node import BaseNode
+from pyhugegraph.client import PyHugeClient
+
 from hugegraph_llm.config import huge_settings, prompt
+from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.operator_list import OperatorList
 from hugegraph_llm.utils.log import log
-from pyhugegraph.client import PyHugeClient
 
 # TODO: remove 'as('subj)' step
 VERTEX_QUERY_TPL = "g.V({keywords}).limit(8).as('subj').toList()"

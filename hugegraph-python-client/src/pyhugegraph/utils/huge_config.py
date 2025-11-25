@@ -19,7 +19,6 @@ import re
 import sys
 import traceback
 from dataclasses import dataclass, field
-from typing import List, Optional
 
 import requests
 
@@ -32,10 +31,10 @@ class HGraphConfig:
     username: str
     password: str
     graph_name: str
-    graphspace: Optional[str] = None
+    graphspace: str | None = None
     timeout: tuple[float, float] = (0.5, 15.0)
     gs_supported: bool = field(default=False, init=False)
-    version: List[int] = field(default_factory=list)
+    version: list[int] = field(default_factory=list)
 
     def __post_init__(self):
         # Add URL prefix compatibility check

@@ -13,8 +13,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from typing import AsyncGenerator, Union, List, Optional, Any, Dict
-from pycgraph import GParam, CStatus
+from typing import Any, AsyncGenerator, Dict, List, Optional, Union
+
+from pycgraph import CStatus, GParam
 
 from hugegraph_llm.utils.log import log
 

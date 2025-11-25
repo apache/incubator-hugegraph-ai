@@ -13,11 +13,12 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from typing import Dict, Any
+from typing import Any, Dict
+
+from hugegraph_llm.config import huge_settings, llm_settings
+from hugegraph_llm.models.embeddings.init_embedding import get_embedding
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.common_op.merge_dedup_rerank import MergeDedupRerank
-from hugegraph_llm.models.embeddings.init_embedding import get_embedding
-from hugegraph_llm.config import huge_settings, llm_settings
 from hugegraph_llm.utils.log import log
 
 

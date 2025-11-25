@@ -15,7 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from pyvermeer.structure.graph_data import GraphsResponse, GraphResponse
+from pyvermeer.structure.graph_data import GraphResponse, GraphsResponse
+
 from .base import BaseModule
 
 

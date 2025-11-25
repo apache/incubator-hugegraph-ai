@@ -15,10 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import torch
+
 from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 from hugegraph_ml.models.care_gnn import CAREGNN
 from hugegraph_ml.tasks.fraud_detector_caregnn import DetectorCaregnn
-import torch
 
 
 def care_gnn_example(n_epochs=200):
@@ -42,7 +43,6 @@ def care_gnn_example(n_epochs=200):
     )
     detector_task = DetectorCaregnn(graph, model)
     detector_task.train(lr=0.005, weight_decay=0.0005, n_epochs=n_epochs)
-    print(detector_task.evaluate())
 
 
 if __name__ == "__main__":

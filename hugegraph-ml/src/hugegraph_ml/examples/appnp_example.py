@@ -15,10 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import torch.nn.functional as F
+
 from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 from hugegraph_ml.models.appnp import APPNP
 from hugegraph_ml.tasks.node_classify import NodeClassify
-import torch.nn.functional as F
 
 
 def appnp_example(n_epochs=200):
@@ -36,7 +37,6 @@ def appnp_example(n_epochs=200):
     )
     node_clf_task = NodeClassify(graph, model)
     node_clf_task.train(lr=0.005, weight_decay=0.0005, n_epochs=n_epochs, patience=200)
-    print(node_clf_task.evaluate())
 
 
 if __name__ == "__main__":

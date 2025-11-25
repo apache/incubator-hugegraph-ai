@@ -28,28 +28,26 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/GATNE-T
 """
 
 import math
-import time
 import multiprocessing
+import time
 from functools import partial, reduce
-
-import numpy as np
-
-import torch
-from torch import nn
-import torch.nn.functional as F
-from torch.nn.parameter import Parameter
 
 import dgl
 import dgl.function as fn
+import numpy as np
+import torch
+import torch.nn.functional as F
+from torch import nn
+from torch.nn.parameter import Parameter
 
 
-class NeighborSampler(object):
+class NeighborSampler:
     def __init__(self, g, num_fanouts):
         self.g = g
         self.num_fanouts = num_fanouts
 
     def sample(self, pairs):
-        heads, tails, types = zip(*pairs)
+        heads, tails, types = zip(*pairs, strict=False)
         seeds, head_invmap = torch.unique(torch.LongTensor(heads), return_inverse=True)
         blocks = []
         for fanout in reversed(self.num_fanouts):
@@ -75,7 +73,7 @@ class DGLGATNE(nn.Module):
         edge_type_count,
         dim_a,
     ):
-        super(DGLGATNE, self).__init__()
+        super().__init__()
         self.num_nodes = num_nodes
         self.embedding_size = embedding_size
         self.embedding_u_size = embedding_u_size
@@ -157,7 +155,7 @@ class DGLGATNE(nn.Module):
 
 class NSLoss(nn.Module):
     def __init__(self, num_nodes, num_sampled, embedding_size):
-        super(NSLoss, self).__init__()
+        super().__init__()
         self.num_nodes = num_nodes
         self.num_sampled = num_sampled
         self.embedding_size = embedding_size
@@ -200,8 +198,7 @@ def generate_pairs_parallel(walks, skip_window=None, layer_id=None):
 def generate_pairs(all_walks, window_size, num_workers):
     # for each node, choose the first neighbor and second neighbor of it to form pairs
     # Get all worker processes
-    start_time = time.time()
-    print(f"We are generating pairs with {num_workers} cores.")
+    time.time()
 
     # Start all worker processes
     pool = multiprocessing.Pool(processes=num_workers)
@@ -224,8 +221,7 @@ def generate_pairs(all_walks, window_size, num_workers):
         pairs += reduce(lambda x, y: x + y, tmp_result)
 
     pool.close()
-    end_time = time.time()
-    print(f"Generate pairs end, use {end_time - start_time}s.")
+    time.time()
     return np.array([list(pair) for pair in set(pairs)])
 
 

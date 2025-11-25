@@ -19,15 +19,14 @@
 # pylint: disable=C0304
 
 import warnings
-from typing import Optional, List
 
 import dgl
+import networkx as nx
 import torch
 from pyhugegraph.api.gremlin import GremlinManager
 from pyhugegraph.client import PyHugeClient
 
 from hugegraph_ml.data.hugegraph_dataset import HugeGraphDataset
-import networkx as nx
 
 
 class HugeGraph2DGL:
@@ -37,7 +36,7 @@ class HugeGraph2DGL:
         graph: str = "hugegraph",
         user: str = "",
         pwd: str = "",
-        graphspace: Optional[str] = None,
+        graphspace: str | None = None,
     ):
         self._client: PyHugeClient = PyHugeClient(url=url, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
         self._graph_germlin: GremlinManager = self._client.gremlin()
@@ -48,7 +47,7 @@ class HugeGraph2DGL:
         edge_label: str,
         feat_key: str = "feat",
         label_key: str = "label",
-        mask_keys: Optional[List[str]] = None,
+        mask_keys: list[str] | None = None,
     ):
         if mask_keys is None:
             mask_keys = ["train_mask", "val_mask", "test_mask"]
@@ -60,11 +59,11 @@ class HugeGraph2DGL:
 
     def convert_hetero_graph(
         self,
-        vertex_labels: List[str],
-        edge_labels: List[str],
+        vertex_labels: list[str],
+        edge_labels: list[str],
         feat_key: str = "feat",
         label_key: str = "label",
-        mask_keys: Optional[List[str]] = None,
+        mask_keys: list[str] | None = None,
     ):
         if mask_keys is None:
             mask_keys = ["train_mask", "val_mask", "test_mask"]
@@ -74,7 +73,7 @@ class HugeGraph2DGL:
         for vertex_label in vertex_labels:
             vertices = self._graph_germlin.exec(f"g.V().hasLabel('{vertex_label}')")["data"]
             if len(vertices) == 0:
-                warnings.warn(f"Graph has no vertices of vertex_label: {vertex_label}", Warning)
+                warnings.warn(f"Graph has no vertices of vertex_label: {vertex_label}", Warning, stacklevel=2)
             else:
                 vertex_ids = [v["id"] for v in vertices]
                 id2idx = {vertex_id: idx for idx, vertex_id in enumerate(vertex_ids)}
@@ -97,7 +96,7 @@ class HugeGraph2DGL:
         for edge_label in edge_labels:
             edges = self._graph_germlin.exec(f"g.E().hasLabel('{edge_label}')")["data"]
             if len(edges) == 0:
-                warnings.warn(f"Graph has no edges of edge_label: {edge_label}", Warning)
+                warnings.warn(f"Graph has no edges of edge_label: {edge_label}", Warning, stacklevel=2)
             else:
                 src_vertex_label = edges[0]["outVLabel"]
                 src_idx = [vertex_label_id2idx[src_vertex_label][e["outV"]] for e in edges]
@@ -163,7 +162,7 @@ class HugeGraph2DGL:
         node_feat_key: str = "feat",
         edge_feat_key: str = "edge_feat",
         label_key: str = "label",
-        mask_keys: Optional[List[str]] = None,
+        mask_keys: list[str] | None = None,
     ):
         if mask_keys is None:
             mask_keys = ["train_mask", "val_mask", "test_mask"]
@@ -185,12 +184,12 @@ class HugeGraph2DGL:
 
     def convert_hetero_graph_bgnn(
         self,
-        vertex_labels: List[str],
-        edge_labels: List[str],
+        vertex_labels: list[str],
+        edge_labels: list[str],
         feat_key: str = "feat",
         label_key: str = "class",
         cat_key: str = "cat_features",
-        mask_keys: Optional[List[str]] = None,
+        mask_keys: list[str] | None = None,
     ):
         if mask_keys is None:
             mask_keys = ["train_mask", "val_mask", "test_mask"]
@@ -200,7 +199,7 @@ class HugeGraph2DGL:
         for vertex_label in vertex_labels:
             vertices = self._graph_germlin.exec(f"g.V().hasLabel('{vertex_label}')")["data"]
             if len(vertices) == 0:
-                warnings.warn(f"Graph has no vertices of vertex_label: {vertex_label}", Warning)
+                warnings.warn(f"Graph has no vertices of vertex_label: {vertex_label}", Warning, stacklevel=2)
             else:
                 vertex_ids = [v["id"] for v in vertices]
                 id2idx = {vertex_id: idx for idx, vertex_id in enumerate(vertex_ids)}
@@ -238,7 +237,7 @@ class HugeGraph2DGL:
         for edge_label in edge_labels:
             edges = self._graph_germlin.exec(f"g.E().hasLabel('{edge_label}')")["data"]
             if len(edges) == 0:
-                warnings.warn(f"Graph has no edges of edge_label: {edge_label}", Warning)
+                warnings.warn(f"Graph has no edges of edge_label: {edge_label}", Warning, stacklevel=2)
             else:
                 src_vertex_label = edges[0]["outVLabel"]
                 src_idx = [vertex_label_id2idx[src_vertex_label][e["outV"]] for e in edges]
@@ -259,7 +258,7 @@ class HugeGraph2DGL:
     @staticmethod
     def _convert_graph_from_v_e(vertices, edges, feat_key=None, label_key=None, mask_keys=None):
         if len(vertices) == 0:
-            warnings.warn("This graph has no vertices", Warning)
+            warnings.warn("This graph has no vertices", Warning, stacklevel=2)
             return dgl.graph(())
         vertex_ids = [v["id"] for v in vertices]
         vertex_id_to_idx = {vertex_id: idx for idx, vertex_id in enumerate(vertex_ids)}
@@ -284,7 +283,7 @@ class HugeGraph2DGL:
     @staticmethod
     def _convert_graph_from_v_e_nx(vertices, edges):
         if len(vertices) == 0:
-            warnings.warn("This graph has no vertices", Warning)
+            warnings.warn("This graph has no vertices", Warning, stacklevel=2)
             return nx.Graph(())
         vertex_ids = [v["id"] for v in vertices]
         vertex_id_to_idx = {vertex_id: idx for idx, vertex_id in enumerate(vertex_ids)}
@@ -306,7 +305,7 @@ class HugeGraph2DGL:
         mask_keys=None,
     ):
         if len(vertices) == 0:
-            warnings.warn("This graph has no vertices", Warning)
+            warnings.warn("This graph has no vertices", Warning, stacklevel=2)
             return dgl.graph(())
         vertex_ids = [v["id"] for v in vertices]
         vertex_id_to_idx = {vertex_id: idx for idx, vertex_id in enumerate(vertex_ids)}
@@ -334,7 +333,7 @@ class HugeGraph2DGL:
     @staticmethod
     def _convert_graph_from_ogb(vertices, edges, feat_key, year_key, weight_key):
         if len(vertices) == 0:
-            warnings.warn("This graph has no vertices", Warning)
+            warnings.warn("This graph has no vertices", Warning, stacklevel=2)
             return dgl.graph(())
         vertex_ids = [v["id"] for v in vertices]
         vertex_id_to_idx = {vertex_id: idx for idx, vertex_id in enumerate(vertex_ids)}

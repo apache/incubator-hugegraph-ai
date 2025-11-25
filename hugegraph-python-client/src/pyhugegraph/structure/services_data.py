@@ -16,8 +16,6 @@
 # under the License.
 
 import json
-
-from typing import List, Optional
 from dataclasses import asdict, dataclass, field
 
 
@@ -53,10 +51,10 @@ class ServiceCreateParameters:
     cpu_limit: int = 1
     memory_limit: int = 4
     storage_limit: int = 100
-    route_type: Optional[str] = None
-    port: Optional[int] = None
-    urls: List[str] = field(default_factory=list)
-    deployment_type: Optional[str] = None
+    route_type: str | None = None
+    port: int | None = None
+    urls: list[str] = field(default_factory=list)
+    deployment_type: str | None = None
 
     def dumps(self):
         return json.dumps(asdict(self))

@@ -18,7 +18,7 @@
 import asyncio
 import json
 import re
-from typing import Optional, List, Dict, Any, Union
+from typing import Any, Dict, List, Optional, Union
 
 from hugegraph_llm.config import prompt
 from hugegraph_llm.models.llms.base import BaseLLM

@@ -28,7 +28,6 @@ def gin_example(n_epochs=1000):
     model = GIN(n_in_feats=dataset.info["n_feat_dim"], n_out_feats=dataset.info["n_classes"], pooling="max")
     graph_clf_task = GraphClassify(dataset, model)
     graph_clf_task.train(lr=1e-4, n_epochs=n_epochs)
-    print(graph_clf_task.evaluate())
 
 
 if __name__ == "__main__":

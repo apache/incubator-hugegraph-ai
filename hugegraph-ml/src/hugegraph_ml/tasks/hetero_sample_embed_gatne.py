@@ -17,15 +17,17 @@
 
 
 import random
+
 import dgl
 import torch
 from torch import nn
 from tqdm.auto import tqdm
+
 from hugegraph_ml.models.gatne import (
+    NeighborSampler,
+    NSLoss,
     construct_typenodes_from_graph,
     generate_pairs,
-    NSLoss,
-    NeighborSampler,
 )
 
 

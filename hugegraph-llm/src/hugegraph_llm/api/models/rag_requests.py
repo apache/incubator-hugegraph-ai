@@ -15,8 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Optional, Literal, List
 from enum import Enum
+from typing import List, Literal, Optional
+
 from fastapi import Query
 from pydantic import BaseModel, field_validator
 

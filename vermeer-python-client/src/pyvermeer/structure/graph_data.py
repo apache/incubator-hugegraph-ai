@@ -26,7 +26,7 @@ class BackendOpt:
 
     def __init__(self, dic: dict):
         """init"""
-        self.__vertex_data_backend = dic.get("vertex_data_backend", None)
+        self.__vertex_data_backend = dic.get("vertex_data_backend")
 
     @property
     def vertex_data_backend(self):

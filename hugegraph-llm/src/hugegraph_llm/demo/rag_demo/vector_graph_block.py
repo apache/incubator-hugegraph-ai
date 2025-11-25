@@ -23,25 +23,23 @@ import os
 
 import gradio as gr
 
-from hugegraph_llm.config import huge_settings
-from hugegraph_llm.config import prompt
-from hugegraph_llm.config import resource_path
+from hugegraph_llm.config import huge_settings, prompt, resource_path
 from hugegraph_llm.flows import FlowName
 from hugegraph_llm.flows.scheduler import SchedulerSingleton
 from hugegraph_llm.utils.graph_index_utils import (
-    get_graph_index_info,
-    clean_all_graph_index,
-    clean_all_graph_data,
-    update_vid_embedding,
-    extract_graph,
-    import_graph_data,
     build_schema,
+    clean_all_graph_data,
+    clean_all_graph_index,
+    extract_graph,
+    get_graph_index_info,
+    import_graph_data,
+    update_vid_embedding,
 )
 from hugegraph_llm.utils.hugegraph_utils import check_graph_db_connection
 from hugegraph_llm.utils.log import log
 from hugegraph_llm.utils.vector_index_utils import (
-    clean_vector_index,
     build_vector_index,
+    clean_vector_index,
     get_vector_index_info,
 )
 

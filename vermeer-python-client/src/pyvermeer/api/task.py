@@ -16,8 +16,7 @@
 # under the License.
 
 from pyvermeer.api.base import BaseModule
-
-from pyvermeer.structure.task_data import TasksResponse, TaskCreateRequest, TaskCreateResponse, TaskResponse
+from pyvermeer.structure.task_data import TaskCreateRequest, TaskCreateResponse, TaskResponse, TasksResponse
 
 
 class TaskModule(BaseModule):

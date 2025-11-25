@@ -25,9 +25,9 @@ Author's code:
 DGL code: https://github.com/dmlc/dgl/blob/master/python/dgl/nn/pytorch/conv/agnnconv.py
 """
 
+import torch.nn.functional as F
 from dgl.nn.pytorch.conv import AGNNConv
 from torch import nn
-import torch.nn.functional as F
 
 
 class AGNN(nn.Module):

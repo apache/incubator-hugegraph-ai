@@ -27,7 +27,6 @@ def grand_example(n_epochs=2000):
     model = GRAND(n_in_feats=graph.ndata["feat"].shape[1], n_out_feats=graph.ndata["label"].unique().shape[0])
     node_clf_task = NodeClassify(graph, model)
     node_clf_task.train(lr=1e-2, weight_decay=5e-4, n_epochs=n_epochs, patience=100)
-    print(node_clf_task.evaluate())
 
 
 if __name__ == "__main__":

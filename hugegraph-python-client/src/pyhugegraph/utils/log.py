@@ -19,7 +19,7 @@ import os
 import sys
 import time
 from collections import Counter
-from functools import lru_cache
+from functools import cache, lru_cache
 from logging.handlers import RotatingFileHandler
 
 from rich.logging import RichHandler
@@ -42,14 +42,14 @@ Best Practices:
 
 Example Usage:
     from pyhugegraph.utils.log import init_logger
-    
+
     # Initialize logger with both console and file output
     log = init_logger(
         log_output="logs/myapp.log",
         log_level=logging.INFO,
         logger_name="myapp"
     )
-    
+
     # Use the log/logger
     log.info("Application started")
     log.debug("Processing data...")
@@ -67,7 +67,7 @@ LOG_BUFFER_SIZE_ENV: str = "LOG_BUFFER_SIZE"
 DEFAULT_BUFFER_SIZE: int = 1024 * 1024  # 1MB
 
 
-@lru_cache()  # avoid creating multiple handlers when calling init_logger()
+@lru_cache  # avoid creating multiple handlers when calling init_logger()
 def init_logger(
     log_output=None,
     log_level=logging.INFO,
@@ -134,7 +134,7 @@ def init_logger(
 
 # Cache the opened file object, so that different calls to `initialize_logger`
 # with the same file name can safely write to the same file.
-@lru_cache(maxsize=None)
+@cache
 def _cached_log_file(filename):
     """Cache the opened file object"""
     # Use 1K buffer if writing to cloud storage
@@ -217,7 +217,7 @@ def log_every_n_times(level, message, n=1, *, logger_name=None):
 
 def log_every_n_secs(level, message, n=1, *, logger_name=None):
     caller_module, key = _identify_caller()
-    last_logged = LOG_TIMERS.get(key, None)
+    last_logged = LOG_TIMERS.get(key)
     current_time = time.time()
     if last_logged is None or current_time - last_logged >= n:
         logging.getLogger(logger_name or caller_module).log(level, message)

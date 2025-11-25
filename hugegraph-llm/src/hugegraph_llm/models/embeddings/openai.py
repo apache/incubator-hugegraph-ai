@@ -16,9 +16,10 @@
 # under the License.
 
 
-from typing import Optional, List
+from typing import List, Optional
 
-from openai import OpenAI, AsyncOpenAI
+from openai import AsyncOpenAI, OpenAI
+
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 
 

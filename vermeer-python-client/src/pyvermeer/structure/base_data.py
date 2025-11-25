@@ -20,7 +20,7 @@ RESPONSE_OK = 0
 RESPONSE_NONE = -1
 
 
-class BaseResponse(object):
+class BaseResponse:
     """
     Base response class
     """

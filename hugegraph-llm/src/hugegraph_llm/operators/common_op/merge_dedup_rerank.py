@@ -16,7 +16,7 @@
 # under the License.
 
 
-from typing import Literal, Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Literal, Optional, Tuple
 
 import jieba
 import requests

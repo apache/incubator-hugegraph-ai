@@ -28,7 +28,6 @@ from hugegraph_ml.utils.dgl2hugegraph_utils import (
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_and_teardown():
-    print("Setup: Importing DGL dataset to HugeGraph")
     clear_all_data()
     import_graph_from_dgl("CORA")
     import_graphs_from_dgl("MUTAG")
@@ -36,5 +35,4 @@ def setup_and_teardown():
 
     yield
 
-    print("Teardown: Clearing HugeGraph data")
     clear_all_data()

@@ -117,7 +117,7 @@ class ClientUtils:
 
     def _get_vertex(self, label, properties):
         lst = self.graph.getVertexByCondition(label=label, limit=1, properties=properties)
-        assert 1 == len(lst), "Can't find vertex."
+        assert len(lst) == 1, "Can't find vertex."
         return lst[0]
 
     def clear_graph_all_data(self):

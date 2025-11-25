@@ -16,12 +16,12 @@
 # under the License.
 
 
-from pyhugegraph.utils import huge_router as router
-from pyhugegraph.structure.rank_data import (
-    PersonalRankParameters,
-    NeighborRankParameters,
-)
 from pyhugegraph.api.common import HugeParamsBase
+from pyhugegraph.structure.rank_data import (
+    NeighborRankParameters,
+    PersonalRankParameters,
+)
+from pyhugegraph.utils import huge_router as router
 
 
 class RankManager(HugeParamsBase):

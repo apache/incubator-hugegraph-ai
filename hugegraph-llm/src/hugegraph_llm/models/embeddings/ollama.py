@@ -19,6 +19,7 @@
 from typing import List
 
 import ollama
+
 from .base import BaseEmbedding
 
 

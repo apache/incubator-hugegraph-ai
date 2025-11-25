@@ -15,10 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import torch
+
 from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 from hugegraph_ml.models.seal import DGCNN, data_prepare
 from hugegraph_ml.tasks.link_prediction_seal import LinkPredictionSeal
-import torch
 
 
 def seal_example(n_epochs=200):

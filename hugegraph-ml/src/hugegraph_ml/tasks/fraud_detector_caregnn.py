@@ -18,10 +18,10 @@
 # pylint: disable=E0401,C0301
 
 import torch
-from torch import nn
-from torch.nn.functional import softmax
 from dgl import DGLGraph
 from sklearn.metrics import recall_score, roc_auc_score
+from torch import nn
+from torch.nn.functional import softmax
 
 
 class DetectorCaregnn:
@@ -57,26 +57,23 @@ class DetectorCaregnn:
                 logits_sim[train_idx], labels[train_idx]
             )
 
-            tr_recall = recall_score(
+            recall_score(
                 labels[train_idx].cpu(),
                 logits_gnn.data[train_idx].argmax(dim=1).cpu(),
             )
-            tr_auc = roc_auc_score(
+            roc_auc_score(
                 labels[train_idx].cpu(),
                 softmax(logits_gnn, dim=1).data[train_idx][:, 1].cpu(),
             )
-            val_loss = loss_fn(logits_gnn[val_idx], labels[val_idx]) + 2 * loss_fn(logits_sim[val_idx], labels[val_idx])
-            val_recall = recall_score(labels[val_idx].cpu(), logits_gnn.data[val_idx].argmax(dim=1).cpu())
-            val_auc = roc_auc_score(
+            loss_fn(logits_gnn[val_idx], labels[val_idx]) + 2 * loss_fn(logits_sim[val_idx], labels[val_idx])
+            recall_score(labels[val_idx].cpu(), logits_gnn.data[val_idx].argmax(dim=1).cpu())
+            roc_auc_score(
                 labels[val_idx].cpu(),
                 softmax(logits_gnn, dim=1).data[val_idx][:, 1].cpu(),
             )
             optimizer.zero_grad()
             tr_loss.backward()
             optimizer.step()
-            print(
-                f"Epoch {epoch}, Train: Recall: {tr_recall:.4f} AUC: {tr_auc:.4f} Loss: {tr_loss.item():.4f} | Val: Recall: {val_recall:.4f} AUC: {val_auc:.4f} Loss: {val_loss.item():.4f}"
-            )
         self._model.RLModule(self.graph, epoch, rl_idx)
 
     def evaluate(self):

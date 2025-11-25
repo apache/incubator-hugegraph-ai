@@ -18,7 +18,6 @@
 
 import json
 
-from typing import Optional, Dict
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.utils import huge_router as router
 
@@ -30,7 +29,7 @@ class AuthManager(HugeParamsBase):
         return self._invoke_request(params=params)
 
     @router.http("POST", "auth/users")
-    def create_user(self, user_name, user_password, user_phone=None, user_email=None) -> Optional[Dict]:
+    def create_user(self, user_name, user_password, user_phone=None, user_email=None) -> dict | None:
         return self._invoke_request(
             data=json.dumps(
                 {
@@ -43,7 +42,7 @@ class AuthManager(HugeParamsBase):
         )
 
     @router.http("DELETE", "auth/users/{user_id}")
-    def delete_user(self, user_id) -> Optional[Dict]:  # pylint: disable=unused-argument
+    def delete_user(self, user_id) -> dict | None:  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("PUT", "auth/users/{user_id}")
@@ -54,7 +53,7 @@ class AuthManager(HugeParamsBase):
         user_password=None,
         user_phone=None,
         user_email=None,
-    ) -> Optional[Dict]:
+    ) -> dict | None:
         return self._invoke_request(
             data=json.dumps(
                 {
@@ -67,21 +66,21 @@ class AuthManager(HugeParamsBase):
         )
 
     @router.http("GET", "auth/users/{user_id}")
-    def get_user(self, user_id) -> Optional[Dict]:  # pylint: disable=unused-argument
+    def get_user(self, user_id) -> dict | None:  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("GET", "auth/groups")
-    def list_groups(self, limit=None) -> Optional[Dict]:
+    def list_groups(self, limit=None) -> dict | None:
         params = {"limit": limit} if limit is not None else {}
         return self._invoke_request(params=params)
 
     @router.http("POST", "auth/groups")
-    def create_group(self, group_name, group_description=None) -> Optional[Dict]:
+    def create_group(self, group_name, group_description=None) -> dict | None:
         data = {"group_name": group_name, "group_description": group_description}
         return self._invoke_request(data=json.dumps(data))
 
     @router.http("DELETE", "auth/groups/{group_id}")
-    def delete_group(self, group_id) -> Optional[Dict]:  # pylint: disable=unused-argument
+    def delete_group(self, group_id) -> dict | None:  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("PUT", "auth/groups/{group_id}")
@@ -90,16 +89,16 @@ class AuthManager(HugeParamsBase):
         group_id,  # pylint: disable=unused-argument
         group_name=None,
         group_description=None,
-    ) -> Optional[Dict]:
+    ) -> dict | None:
         data = {"group_name": group_name, "group_description": group_description}
         return self._invoke_request(data=json.dumps(data))
 
     @router.http("GET", "auth/groups/{group_id}")
-    def get_group(self, group_id) -> Optional[Dict]:  # pylint: disable=unused-argument
+    def get_group(self, group_id) -> dict | None:  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("POST", "auth/accesses")
-    def grant_accesses(self, group_id, target_id, access_permission) -> Optional[Dict]:
+    def grant_accesses(self, group_id, target_id, access_permission) -> dict | None:
         return self._invoke_request(
             data=json.dumps(
                 {
@@ -111,25 +110,25 @@ class AuthManager(HugeParamsBase):
         )
 
     @router.http("DELETE", "auth/accesses/{access_id}")
-    def revoke_accesses(self, access_id) -> Optional[Dict]:  # pylint: disable=unused-argument
+    def revoke_accesses(self, access_id) -> dict | None:  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("PUT", "auth/accesses/{access_id}")
-    def modify_accesses(self, access_id, access_description) -> Optional[Dict]:  # pylint: disable=unused-argument
+    def modify_accesses(self, access_id, access_description) -> dict | None:  # pylint: disable=unused-argument
         # The permission of access can\'t be updated
         data = {"access_description": access_description}
         return self._invoke_request(data=json.dumps(data))
 
     @router.http("GET", "auth/accesses/{access_id}")
-    def get_accesses(self, access_id) -> Optional[Dict]:  # pylint: disable=unused-argument
+    def get_accesses(self, access_id) -> dict | None:  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("GET", "auth/accesses")
-    def list_accesses(self) -> Optional[Dict]:
+    def list_accesses(self) -> dict | None:
         return self._invoke_request()
 
     @router.http("POST", "auth/targets")
-    def create_target(self, target_name, target_graph, target_url, target_resources) -> Optional[Dict]:
+    def create_target(self, target_name, target_graph, target_url, target_resources) -> dict | None:
         return self._invoke_request(
             data=json.dumps(
                 {
@@ -153,7 +152,7 @@ class AuthManager(HugeParamsBase):
         target_graph,
         target_url,
         target_resources,
-    ) -> Optional[Dict]:
+    ) -> dict | None:
         return self._invoke_request(
             data=json.dumps(
                 {
@@ -166,15 +165,15 @@ class AuthManager(HugeParamsBase):
         )
 
     @router.http("GET", "auth/targets/{target_id}")
-    def get_target(self, target_id, response=None) -> Optional[Dict]:  # pylint: disable=unused-argument
+    def get_target(self, target_id, response=None) -> dict | None:  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("GET", "auth/targets")
-    def list_targets(self) -> Optional[Dict]:
+    def list_targets(self) -> dict | None:
         return self._invoke_request()
 
     @router.http("POST", "auth/belongs")
-    def create_belong(self, user_id, group_id) -> Optional[Dict]:
+    def create_belong(self, user_id, group_id) -> dict | None:
         data = {"user": user_id, "group": group_id}
         return self._invoke_request(data=json.dumps(data))
 
@@ -183,14 +182,14 @@ class AuthManager(HugeParamsBase):
         return self._invoke_request()
 
     @router.http("PUT", "auth/belongs/{belong_id}")
-    def update_belong(self, belong_id, description) -> Optional[Dict]:  # pylint: disable=unused-argument
+    def update_belong(self, belong_id, description) -> dict | None:  # pylint: disable=unused-argument
         data = {"belong_description": description}
         return self._invoke_request(data=json.dumps(data))
 
     @router.http("GET", "auth/belongs/{belong_id}")
-    def get_belong(self, belong_id) -> Optional[Dict]:  # pylint: disable=unused-argument
+    def get_belong(self, belong_id) -> dict | None:  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("GET", "auth/belongs")
-    def list_belongs(self) -> Optional[Dict]:
+    def list_belongs(self) -> dict | None:
         return self._invoke_request()

@@ -19,25 +19,25 @@
 # pylint: disable=too-many-statements
 # pylint: disable=C0302,C0103,W1514,R1735,R1734,C0206
 
-import os
-from typing import Optional
 import json
+import os
+
 import dgl
+import networkx as nx
 import numpy as np
+import pandas as pd
 import scipy
 import torch
 from dgl.data import (
-    CoraGraphDataset,
     CiteseerGraphDataset,
-    PubmedGraphDataset,
-    LegacyTUDataset,
+    CoraGraphDataset,
     GINDataset,
+    LegacyTUDataset,
+    PubmedGraphDataset,
     get_download_dir,
 )
 from dgl.data.utils import _get_dgl_url, download, load_graphs
-import networkx as nx
 from ogb.linkproppred import DglLinkPropPredDataset
-import pandas as pd
 from pyhugegraph.api.graph import GraphManager
 from pyhugegraph.api.schema import SchemaManager
 from pyhugegraph.client import PyHugeClient
@@ -50,7 +50,7 @@ def clear_all_data(
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
-    graphspace: Optional[str] = None,
+    graphspace: str | None = None,
 ):
     client: PyHugeClient = PyHugeClient(url=url, graph=graph, user=user, pwd=pwd, graphspace=graphspace)
     client.graphs().clear_graph_all_data()
@@ -62,7 +62,7 @@ def import_graph_from_dgl(
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
-    graphspace: Optional[str] = None,
+    graphspace: str | None = None,
 ):
     dataset_name = dataset_name.upper()
     if dataset_name == "CORA":
@@ -117,7 +117,7 @@ def import_graph_from_dgl(
     client_schema.edgeLabel(edge_label).sourceLabel(vertex_label).targetLabel(vertex_label).ifNotExist().create()
     edges_src, edges_dst = graph_dgl.edges()
     edatas = []
-    for src, dst in zip(edges_src.numpy(), edges_dst.numpy()):
+    for src, dst in zip(edges_src.numpy(), edges_dst.numpy(), strict=False):
         edata = [edge_label, idx_to_vertex_id[src], idx_to_vertex_id[dst], vertex_label, vertex_label, {}]
         edatas.append(edata)
         if len(edatas) == MAX_BATCH_NUM:
@@ -133,7 +133,7 @@ def import_graphs_from_dgl(
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
-    graphspace: Optional[str] = None,
+    graphspace: str | None = None,
 ):
     dataset_name = dataset_name.upper()
     # load dgl bultin dataset
@@ -191,7 +191,7 @@ def import_graphs_from_dgl(
         # add edges of graph i for barch
         srcs, dsts = graph_dgl.edges()
         edatas = []
-        for src, dst in zip(srcs.numpy(), dsts.numpy()):
+        for src, dst in zip(srcs.numpy(), dsts.numpy(), strict=False):
             edata = [
                 edge_label,
                 idx_to_vertex_id[src],
@@ -214,7 +214,7 @@ def import_hetero_graph_from_dgl(
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
-    graphspace: Optional[str] = None,
+    graphspace: str | None = None,
 ):
     dataset_name = dataset_name.upper()
     if dataset_name == "ACM":
@@ -275,7 +275,7 @@ def import_hetero_graph_from_dgl(
         ).ifNotExist().create()
         # add edges for batch of canonical_etype
         srcs, dsts = hetero_graph.edges(etype=canonical_etype)
-        for src, dst in zip(srcs.numpy(), dsts.numpy()):
+        for src, dst in zip(srcs.numpy(), dsts.numpy(), strict=False):
             edata = [
                 edge_label,
                 ntype_idx_to_vertex_id[src_type][src],
@@ -298,7 +298,7 @@ def import_hetero_graph_from_dgl_no_feat(
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
-    graphspace: Optional[str] = None,
+    graphspace: str | None = None,
 ):
     # dataset download from:
     # https://s3.us-west-2.amazonaws.com/dgl-data/dataset/recsys/GATNE/amazon.zip
@@ -346,7 +346,7 @@ def import_hetero_graph_from_dgl_no_feat(
         ).ifNotExist().create()
         # add edges for batch of canonical_etype
         srcs, dsts = hetero_graph.edges(etype=canonical_etype)
-        for src, dst in zip(srcs.numpy(), dsts.numpy()):
+        for src, dst in zip(srcs.numpy(), dsts.numpy(), strict=False):
             edata = [
                 edge_label,
                 ntype_idx_to_vertex_id[src_type][src],
@@ -369,7 +369,7 @@ def import_graph_from_nx(
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
-    graphspace: Optional[str] = None,
+    graphspace: str | None = None,
 ):
     dataset_name = dataset_name.upper()
     if dataset_name == "CAVEMAN":
@@ -427,7 +427,7 @@ def import_graph_from_dgl_with_edge_feat(
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
-    graphspace: Optional[str] = None,
+    graphspace: str | None = None,
 ):
     dataset_name = dataset_name.upper()
     if dataset_name == "CORA":
@@ -492,7 +492,7 @@ def import_graph_from_dgl_with_edge_feat(
     ).ifNotExist().create()
     edges_src, edges_dst = graph_dgl.edges()
     edatas = []
-    for src, dst in zip(edges_src.numpy(), edges_dst.numpy()):
+    for src, dst in zip(edges_src.numpy(), edges_dst.numpy(), strict=False):
         properties = {p: (torch.rand(8).tolist()) for p in edge_all_props}
         edata = [
             edge_label,
@@ -516,7 +516,7 @@ def import_graph_from_ogb(
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
-    graphspace: Optional[str] = None,
+    graphspace: str | None = None,
 ):
     if dataset_name == "ogbl-collab":
         dataset_dgl = DglLinkPropPredDataset(name=dataset_name)
@@ -579,7 +579,7 @@ def import_graph_from_ogb(
     ).ifNotExist().create()
     edges_src, edges_dst = graph_dgl.edges()
     edatas = []
-    for src, dst in zip(edges_src.numpy(), edges_dst.numpy()):
+    for src, dst in zip(edges_src.numpy(), edges_dst.numpy(), strict=False):
         if src <= max_nodes and dst <= max_nodes:
             properties = {
                 p: (
@@ -603,7 +603,6 @@ def import_graph_from_ogb(
                 edatas.clear()
     if len(edatas) > 0:
         _add_batch_edges(client_graph, edatas)
-    print("begin edge split")
     import_split_edge_from_ogb(
         dataset_name=dataset_name,
         idx_to_vertex_id=idx_to_vertex_id,
@@ -619,7 +618,7 @@ def import_split_edge_from_ogb(
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
-    graphspace: Optional[str] = None,
+    graphspace: str | None = None,
 ):
     if dataset_name == "ogbl-collab":
         dataset_dgl = DglLinkPropPredDataset(name=dataset_name)
@@ -753,7 +752,7 @@ def import_hetero_graph_from_dgl_bgnn(
     graph: str = "hugegraph",
     user: str = "",
     pwd: str = "",
-    graphspace: Optional[str] = None,
+    graphspace: str | None = None,
 ):
     # dataset download from : https://www.dropbox.com/s/verx1evkykzli88/datasets.zip
     # Extract zip folder in this directory
@@ -824,7 +823,7 @@ def import_hetero_graph_from_dgl_bgnn(
         ).ifNotExist().create()
         # add edges for batch of canonical_etype
         srcs, dsts = hetero_graph.edges(etype=canonical_etype)
-        for src, dst in zip(srcs.numpy(), dsts.numpy()):
+        for src, dst in zip(srcs.numpy(), dsts.numpy(), strict=False):
             edata = [
                 edge_label,
                 ntype_idx_to_vertex_id[src_type][src],
@@ -915,7 +914,6 @@ def load_acm_raw():
     url = "dataset/ACM.mat"
     data_path = get_download_dir() + "/ACM.mat"
     if not os.path.exists(data_path):
-        print(f"File {data_path} not found, downloading...")
         download(_get_dgl_url(url), path=data_path)
 
     data = scipy.io.loadmat(data_path)
@@ -950,7 +948,7 @@ def load_acm_raw():
 
     pc_p, pc_c = p_vs_c.nonzero()
     labels = np.zeros(len(p_selected), dtype=np.int64)
-    for conf_id, label_id in zip(conf_ids, label_ids):
+    for conf_id, label_id in zip(conf_ids, label_ids, strict=False):
         labels[pc_p[pc_c == conf_id]] = label_id
     labels = torch.LongTensor(labels)
 
@@ -1032,18 +1030,17 @@ def load_training_data_gatne():
     # reference: https://github.com/dmlc/dgl/blob/master/examples/pytorch/GATNE-T/src/utils.py
     # reference: https://github.com/dmlc/dgl/blob/master/examples/pytorch/GATNE-T/src/main.py
     f_name = "dataset/amazon/train.txt"
-    print("We are loading data from:", f_name)
-    edge_data_by_type = dict()
-    with open(f_name, "r") as f:
+    edge_data_by_type = {}
+    with open(f_name) as f:
         for line in f:
             words = line[:-1].split(" ")  # line[-1] == '\n'
             if words[0] not in edge_data_by_type:
-                edge_data_by_type[words[0]] = list()
+                edge_data_by_type[words[0]] = []
             x, y = words[1], words[2]
             edge_data_by_type[words[0]].append((x, y))
     nodes, index2word = [], []
     for edge_type in edge_data_by_type:
-        node1, node2 = zip(*edge_data_by_type[edge_type])
+        node1, node2 = zip(*edge_data_by_type[edge_type], strict=False)
         index2word = index2word + list(node1) + list(node2)
     index2word = list(set(index2word))
     vocab = {}
@@ -1052,12 +1049,12 @@ def load_training_data_gatne():
         vocab[word] = i
         i = i + 1
     for edge_type in edge_data_by_type:
-        node1, node2 = zip(*edge_data_by_type[edge_type])
+        node1, node2 = zip(*edge_data_by_type[edge_type], strict=False)
         tmp_nodes = list(set(list(node1) + list(node2)))
         tmp_nodes = [vocab[word] for word in tmp_nodes]
         nodes.append(tmp_nodes)
     node_type = "_N"  # '_N' can be replaced by an arbitrary name
-    data_dict = dict()
+    data_dict = {}
     num_nodes_dict = {node_type: len(vocab)}
     for edge_type in edge_data_by_type:
         tmp_data = edge_data_by_type[edge_type]

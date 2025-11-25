@@ -19,9 +19,9 @@
 class VertexData:
     def __init__(self, dic):
         self.__id = dic["id"]
-        self.__label = dic["label"] if "label" in dic else None
-        self.__type = dic["type"] if "type" in dic else None
-        self.__properties = dic["properties"] if "properties" in dic else None
+        self.__label = dic.get("label", None)
+        self.__type = dic.get("type", None)
+        self.__properties = dic.get("properties", None)
 
     @property
     def id(self):

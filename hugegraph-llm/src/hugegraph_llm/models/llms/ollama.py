@@ -17,7 +17,7 @@
 
 
 import json
-from typing import Any, AsyncGenerator, Generator, List, Optional, Callable, Dict
+from typing import Any, AsyncGenerator, Callable, Dict, Generator, List, Optional
 
 import ollama
 from retry import retry

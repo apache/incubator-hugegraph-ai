@@ -16,8 +16,8 @@
 # under the License.
 
 
-from pyhugegraph.utils import huge_router as router
 from pyhugegraph.api.common import HugeParamsBase
+from pyhugegraph.utils import huge_router as router
 
 
 class RebuildManager(HugeParamsBase):

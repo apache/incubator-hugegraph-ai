@@ -16,14 +16,13 @@
 # under the License.
 
 import json
-from typing import Optional
 from urllib.parse import urljoin
 
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from pyvermeer.utils.exception import JsonDecodeError, ConnectError, TimeOutError, UnknownError
+from pyvermeer.utils.exception import ConnectError, JsonDecodeError, TimeOutError, UnknownError
 from pyvermeer.utils.log import log
 from pyvermeer.utils.vermeer_config import VermeerConfig
 
@@ -37,7 +36,7 @@ class VermeerSession:
         retries: int = 3,
         backoff_factor: int = 0.1,
         status_forcelist=(500, 502, 504),
-        session: Optional[requests.Session] = None,
+        session: requests.Session | None = None,
     ):
         """
         Initialize the Session.

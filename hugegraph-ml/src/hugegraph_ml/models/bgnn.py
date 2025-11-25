@@ -30,24 +30,31 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/bgnn
 import itertools
 import time
 from collections import defaultdict as ddict
+
 import dgl
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn.functional as F
 from catboost import CatBoostClassifier, CatBoostRegressor, Pool, sum_models
-from sklearn import preprocessing
-from sklearn.metrics import r2_score
-from tqdm import tqdm
 from category_encoders import CatBoostEncoder
 from dgl.nn.pytorch import (
     AGNNConv as AGNNConvDGL,
+)
+from dgl.nn.pytorch import (
     APPNPConv,
-    ChebConv as ChebConvDGL,
-    GATConv as GATConvDGL,
     GraphConv,
 )
-from torch.nn import Dropout, ELU, Linear, ReLU, Sequential
+from dgl.nn.pytorch import (
+    ChebConv as ChebConvDGL,
+)
+from dgl.nn.pytorch import (
+    GATConv as GATConvDGL,
+)
+from sklearn import preprocessing
+from sklearn.metrics import r2_score
+from torch.nn import ELU, Dropout, Linear, ReLU, Sequential
+from tqdm import tqdm
 
 
 class BGNNPredictor:
@@ -459,10 +466,8 @@ class BGNNPredictor:
                 break
 
             if np.isclose(gbdt_y_train.sum(), 0.0):
-                print("Node embeddings do not change anymore. Stopping...")
                 break
 
-        print("Best {} at iteration {}: {:.3f}/{:.3f}/{:.3f}".format(metric_name, best_val_epoch, *best_metric))
         return metrics
 
     def predict(self, graph, X, test_mask):
@@ -489,7 +494,7 @@ class BGNNPredictor:
 
         metric_results = metrics[metric_name]
         xs = [list(range(len(metric_results)))] * len(metric_results[0])
-        ys = list(zip(*metric_results))
+        ys = list(zip(*metric_results, strict=False))
 
         fig = go.Figure()
         for i in range(len(ys)):
@@ -507,9 +512,9 @@ class BGNNPredictor:
             title_x=0.5,
             xaxis_title="Epoch",
             yaxis_title=metric_name,
-            font=dict(
-                size=40,
-            ),
+            font={
+                "size": 40,
+            },
             height=600,
         )
 
@@ -533,7 +538,7 @@ class GNNModelDGL(torch.nn.Module):
         use_mlp=False,
         join_with_mlp=False,
     ):
-        super(GNNModelDGL, self).__init__()
+        super().__init__()
         self.name = name
         self.use_mlp = use_mlp
         self.join_with_mlp = join_with_mlp
@@ -584,10 +589,7 @@ class GNNModelDGL(torch.nn.Module):
         h = features
         logits = None
         if self.use_mlp:
-            if self.join_with_mlp:
-                h = torch.cat((h, self.mlp(features)), 1)
-            else:
-                h = self.mlp(features)
+            h = torch.cat((h, self.mlp(features)), 1) if self.join_with_mlp else self.mlp(features)
         if self.name == "gat":
             h = self.l1(graph, h).flatten(1)
             logits = self.l2(graph, h).mean(1)

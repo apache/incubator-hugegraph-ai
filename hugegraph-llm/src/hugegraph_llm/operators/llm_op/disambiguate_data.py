@@ -16,7 +16,7 @@
 # under the License.
 
 
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.llm_op.info_extract import extract_triples_by_regex

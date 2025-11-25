@@ -19,7 +19,7 @@ import re
 import time
 from typing import Any, Dict, Optional
 
-from hugegraph_llm.config import prompt, llm_settings
+from hugegraph_llm.config import llm_settings, prompt
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.document_op.textrank_word_extract import (

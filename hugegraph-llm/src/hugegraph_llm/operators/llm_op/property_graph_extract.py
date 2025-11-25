@@ -19,7 +19,7 @@
 
 import json
 import re
-from typing import List, Any, Dict
+from typing import Any, Dict, List
 
 from hugegraph_llm.config import prompt
 from hugegraph_llm.document.chunk_split import ChunkSplitter

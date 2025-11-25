@@ -17,6 +17,7 @@
 
 
 from decorator import decorator
+
 from pyhugegraph.utils.exceptions import NotAuthorizedError
 
 
@@ -24,7 +25,6 @@ from pyhugegraph.utils.exceptions import NotAuthorizedError
 def decorator_params(func, *args, **kwargs):
     parameter_holder = args[0].get_parameter_holder()
     if parameter_holder is None or "name" not in parameter_holder.get_keys():
-        print("Parameters required, please set necessary parameters.")
         raise Exception("Parameters required, please set necessary parameters.")
     return func(*args, **kwargs)
 

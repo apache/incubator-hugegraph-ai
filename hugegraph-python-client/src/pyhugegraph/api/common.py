@@ -17,11 +17,11 @@
 
 
 import re
-
 from abc import ABC
-from pyhugegraph.utils.log import log
-from pyhugegraph.utils.huge_router import RouterMixin
+
 from pyhugegraph.utils.huge_requests import HGraphSession
+from pyhugegraph.utils.huge_router import RouterMixin
+from pyhugegraph.utils.log import log
 
 
 # todo: rename -> HGraphMetaData or delete

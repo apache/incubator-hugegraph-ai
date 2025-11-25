@@ -108,9 +108,9 @@ class VertexLabel(HugeParamsBase):
     @decorator_params
     def append(self) -> None:
         dic = self._parameter_holder.get_dic()
-        properties = dic["properties"] if "properties" in dic else []
-        nullable_keys = dic["nullable_keys"] if "nullable_keys" in dic else []
-        user_data = dic["user_data"] if "user_data" in dic else {}
+        properties = dic.get("properties", [])
+        nullable_keys = dic.get("nullable_keys", [])
+        user_data = dic.get("user_data", {})
         path = f"schema/vertexlabels/{dic['name']}?action=append"
         data = {
             "name": dic["name"],
@@ -140,7 +140,7 @@ class VertexLabel(HugeParamsBase):
         path = f"schema/vertexlabels/{name}/?action=eliminate"
 
         dic = self._parameter_holder.get_dic()
-        user_data = dic["user_data"] if "user_data" in dic else {}
+        user_data = dic.get("user_data", {})
         data = {
             "name": self._parameter_holder.get_value("name"),
             "user_data": user_data,

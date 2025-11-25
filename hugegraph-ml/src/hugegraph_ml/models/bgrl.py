@@ -28,14 +28,15 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/bgrl
 """
 
 import copy
+
+import dgl
+import numpy as np
 import torch
+from dgl.nn.pytorch.conv import GraphConv
+from dgl.transforms import Compose, DropEdge, FeatMask
 from torch import nn
 from torch.nn import BatchNorm1d
 from torch.nn.functional import cosine_similarity
-import dgl
-from dgl.nn.pytorch.conv import GraphConv
-from dgl.transforms import Compose, DropEdge, FeatMask
-import numpy as np
 
 
 class MLP_Predictor(nn.Module):
@@ -68,10 +69,10 @@ class MLP_Predictor(nn.Module):
 
 class GCN(nn.Module):
     def __init__(self, layer_sizes, batch_norm_mm=0.99):
-        super(GCN, self).__init__()
+        super().__init__()
 
         self.layers = nn.ModuleList()
-        for in_dim, out_dim in zip(layer_sizes[:-1], layer_sizes[1:]):
+        for in_dim, out_dim in zip(layer_sizes[:-1], layer_sizes[1:], strict=False):
             self.layers.append(GraphConv(in_dim, out_dim))
             self.layers.append(BatchNorm1d(out_dim, momentum=batch_norm_mm))
             self.layers.append(nn.PReLU())
@@ -79,10 +80,7 @@ class GCN(nn.Module):
     def forward(self, g, feats):
         x = feats
         for layer in self.layers:
-            if isinstance(layer, GraphConv):
-                x = layer(g, x)
-            else:
-                x = layer(x)
+            x = layer(g, x) if isinstance(layer, GraphConv) else layer(x)
         return x
 
     def reset_parameters(self):
@@ -102,7 +100,7 @@ class BGRL(nn.Module):
     """
 
     def __init__(self, encoder, predictor):
-        super(BGRL, self).__init__()
+        super().__init__()
         # online network
         self.online_encoder = encoder
         self.predictor = predictor
@@ -127,7 +125,7 @@ class BGRL(nn.Module):
         Args:
             mm (float): Momentum used in moving average update.
         """
-        for param_q, param_k in zip(self.online_encoder.parameters(), self.target_encoder.parameters()):
+        for param_q, param_k in zip(self.online_encoder.parameters(), self.target_encoder.parameters(), strict=False):
             param_k.data.mul_(mm).add_(param_q.data, alpha=1.0 - mm)
 
     def forward(self, graph, feat):
@@ -227,7 +225,7 @@ class CosineDecayScheduler:
 
 
 def get_graph_drop_transform(drop_edge_p, feat_mask_p):
-    transforms = list()
+    transforms = []
 
     # make copy of graph
     transforms.append(copy.deepcopy)

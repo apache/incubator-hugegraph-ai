@@ -159,11 +159,17 @@ select = ["E", "F", "W", "I", "C", "N", "UP", "B", "SIM", "T20"]
 # Ignore specific rules
 ignore = [
     "PYI041",  # redundant-numeric-union: 在实际代码中保留明确的 int | float，提高可读性
+    "N812",    # lowercase-imported-as-non-lowercase
+    "N806",    # non-lowercase-variable-in-function  
+    "N803",    # invalid-argument-name
+    "N802",    # invalid-function-name (API compatibility)
+    "C901",    # complexity (non-critical for now)
 ]
 # No need to ignore E501 (line-too-long), `ruff format` will handle it automatically.
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["T20"]
+"hugegraph-python-client/src/pyhugegraph/structure/*.py" = ["N802"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["hugegraph_llm", "hugegraph_python_client", "hugegraph_ml", "vermeer_python_client"]

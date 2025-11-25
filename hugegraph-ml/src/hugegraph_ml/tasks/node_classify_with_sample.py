@@ -19,12 +19,12 @@
 
 from typing import Literal
 
+import dgl
+import numpy as np
 import torch
 from dgl import DGLGraph
 from torch import nn
 from tqdm import trange
-import dgl
-import numpy as np
 
 from hugegraph_ml.utils.early_stopping import EarlyStopping
 

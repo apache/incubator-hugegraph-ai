@@ -18,8 +18,8 @@
 import os
 import sys
 from pathlib import Path
-from typing import List, Optional, Dict
-from urllib.error import URLError, HTTPError
+from typing import Dict, List, Optional
+from urllib.error import HTTPError, URLError
 
 import nltk
 from nltk.corpus import stopwords

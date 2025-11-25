@@ -27,11 +27,10 @@ def main():
         token="",
         log_level="DEBUG",
     )
-    task = client.tasks.get_tasks()
+    client.tasks.get_tasks()
 
-    print(task.to_dict())
 
-    create_response = client.tasks.create_task(
+    client.tasks.create_task(
         create_task=TaskCreateRequest(
             task_type="load",
             graph_name="DEFAULT-example",
@@ -46,7 +45,6 @@ def main():
         )
     )
 
-    print(create_response.to_dict())
 
 
 if __name__ == "__main__":

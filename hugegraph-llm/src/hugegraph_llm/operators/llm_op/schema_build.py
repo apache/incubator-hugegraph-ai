@@ -17,7 +17,7 @@
 
 import json
 import re
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs

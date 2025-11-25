@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Any, Dict, List, Set, Union
 import uuid
+from typing import Any, Dict, List, Set, Union
 
 from qdrant_client import QdrantClient  # pylint: disable=import-error
 from qdrant_client.http import models  # pylint: disable=import-error

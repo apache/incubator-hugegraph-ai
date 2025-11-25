@@ -29,13 +29,13 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/correct_and_s
 
 import dgl.function as fn
 import torch
-from torch import nn
 import torch.nn.functional as F
+from torch import nn
 
 
 class MLPLinear(nn.Module):
     def __init__(self, in_dim, out_dim):
-        super(MLPLinear, self).__init__()
+        super().__init__()
         self.linear = nn.Linear(in_dim, out_dim)
         self.reset_parameters()
         self.criterion = nn.CrossEntropyLoss()
@@ -55,7 +55,7 @@ class MLPLinear(nn.Module):
 
 class MLP(nn.Module):
     def __init__(self, in_dim, hid_dim, out_dim, num_layers, dropout=0.0):
-        super(MLP, self).__init__()
+        super().__init__()
         assert num_layers >= 2
 
         self.linears = nn.ModuleList()
@@ -80,7 +80,7 @@ class MLP(nn.Module):
             layer.reset_parameters()
 
     def forward(self, graph, x):
-        for linear, bn in zip(self.linears[:-1], self.bns):
+        for linear, bn in zip(self.linears[:-1], self.bns, strict=False):
             x = linear(x)
             x = F.relu(x, inplace=True)
             x = bn(x)
@@ -119,7 +119,7 @@ class LabelPropagation(nn.Module):
     """
 
     def __init__(self, num_layers, alpha, adj="DAD"):
-        super(LabelPropagation, self).__init__()
+        super().__init__()
 
         self.num_layers = num_layers
         self.alpha = alpha
@@ -198,7 +198,7 @@ class CorrectAndSmooth(nn.Module):
         autoscale=True,
         scale=1.0,
     ):
-        super(CorrectAndSmooth, self).__init__()
+        super().__init__()
 
         self.autoscale = autoscale
         self.scale = scale

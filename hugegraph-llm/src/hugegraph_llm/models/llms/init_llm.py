@@ -15,11 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from hugegraph_llm.config import LLMConfig
+from hugegraph_llm.config import LLMConfig, llm_settings
+from hugegraph_llm.models.llms.litellm import LiteLLMClient
 from hugegraph_llm.models.llms.ollama import OllamaClient
 from hugegraph_llm.models.llms.openai import OpenAIClient
-from hugegraph_llm.models.llms.litellm import LiteLLMClient
-from hugegraph_llm.config import llm_settings
 
 
 def get_chat_llm(llm_configs: LLMConfig):

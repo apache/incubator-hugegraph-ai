@@ -16,8 +16,6 @@
 # under the License.
 
 import json
-
-from typing import List, Union
 from dataclasses import asdict, dataclass, field
 
 
@@ -28,7 +26,7 @@ class NeighborRankStep:
     """
 
     direction: str = "BOTH"
-    labels: List[str] = field(default_factory=list)
+    labels: list[str] = field(default_factory=list)
     max_degree: int = 10000
     top: int = 100
 
@@ -42,11 +40,11 @@ class NeighborRankParameters:
     BodyParams defines the body parameters for the rank API requests.
     """
 
-    source: Union[str, int]
+    source: str | int
     label: str
     alpha: float = 0.85
     capacity: int = 10000000
-    steps: List[NeighborRankStep] = field(default_factory=list)
+    steps: list[NeighborRankStep] = field(default_factory=list)
 
     def dumps(self):
         return json.dumps(asdict(self))
@@ -82,7 +80,7 @@ class PersonalRankParameters:
                           of a different category (the other end of a bipartite graph), and "BOTH_LABEL" to keep both.
     """
 
-    source: Union[str, int]
+    source: str | int
     label: str
     alpha: float = 0.85
     max_degree: int = 10000

@@ -31,21 +31,19 @@ import multiprocessing as mp
 import random
 from multiprocessing import get_context
 
-import torch
-from torch import nn
-import torch.nn.functional as F
-
+import dgl.function as fn
 import networkx as nx
 import numpy as np
-from tqdm.auto import tqdm
+import torch
+import torch.nn.functional as F
 from sklearn.metrics import roc_auc_score
-
-import dgl.function as fn
+from torch import nn
+from tqdm.auto import tqdm
 
 
 class PGNN_layer(nn.Module):
     def __init__(self, input_dim, output_dim):
-        super(PGNN_layer, self).__init__()
+        super().__init__()
         self.input_dim = input_dim
 
         self.linear_hidden_u = nn.Linear(input_dim, output_dim)
@@ -80,7 +78,7 @@ class PGNN_layer(nn.Module):
 
 class PGNN(nn.Module):
     def __init__(self, input_dim, feature_dim=32, dropout=0.5):
-        super(PGNN, self).__init__()
+        super().__init__()
         self.dropout = nn.Dropout(dropout)
 
         self.linear_pre = nn.Linear(input_dim, feature_dim)
@@ -325,8 +323,8 @@ def get_a_graph(dists_max, dists_argmax):
         real_dst.extend(list(dists_argmax[i, :].numpy()))
         dst.extend(list(tmp_dists_argmax))
         edge_weight.extend(dists_max[i, tmp_dists_argmax_idx].tolist())
-    eid_dict = {(u, v): i for i, (u, v) in enumerate(list(zip(dst, src)))}
-    anchor_eid = [eid_dict.get((u, v)) for u, v in zip(real_dst, real_src)]
+    eid_dict = {(u, v): i for i, (u, v) in enumerate(list(zip(dst, src, strict=False)))}
+    anchor_eid = [eid_dict.get((u, v)) for u, v in zip(real_dst, real_src, strict=False)]
     g = (dst, src)
     return g, anchor_eid, edge_weight
 

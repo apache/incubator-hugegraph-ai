@@ -22,7 +22,7 @@ class NotAuthorizedError(Exception):
     """
 
 
-class InvalidParameter(Exception):
+class InvalidParameterError(Exception):
     """
     Parameter setting error
     """
@@ -58,7 +58,7 @@ class DataFormatError(Exception):
     """
 
 
-class ServiceUnavailableException(Exception):
+class ServiceUnavailableError(Exception):
     """
     The server is too busy to be available
     """

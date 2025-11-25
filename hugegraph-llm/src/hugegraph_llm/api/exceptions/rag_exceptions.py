@@ -16,6 +16,7 @@
 # under the License.
 
 from fastapi import HTTPException
+
 from hugegraph_llm.api.models.rag_response import RAGResponse
 
 

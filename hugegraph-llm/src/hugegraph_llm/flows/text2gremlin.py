@@ -18,13 +18,13 @@ from typing import Any, Dict, List, Optional
 from pycgraph import GPipeline
 
 from hugegraph_llm.flows.common import BaseFlow
-from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
+from hugegraph_llm.nodes.hugegraph_node.gremlin_execute import GremlinExecuteNode
 from hugegraph_llm.nodes.hugegraph_node.schema import SchemaNode
 from hugegraph_llm.nodes.index_node.gremlin_example_index_query import (
     GremlinExampleIndexQueryNode,
 )
 from hugegraph_llm.nodes.llm_node.text2gremlin import Text2GremlinNode
-from hugegraph_llm.nodes.hugegraph_node.gremlin_execute import GremlinExecuteNode
+from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 
 
 # pylint: disable=arguments-differ,keyword-arg-before-vararg

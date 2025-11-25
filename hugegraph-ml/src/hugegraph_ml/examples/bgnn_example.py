@@ -17,14 +17,14 @@
 
 # pylint: disable=C0103
 
+from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 from hugegraph_ml.models.bgnn import (
-    GNNModelDGL,
     BGNNPredictor,
+    GNNModelDGL,
+    convert_data,
     encode_cat_features,
     replace_na,
-    convert_data,
 )
-from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 
 
 def bgnn_example():

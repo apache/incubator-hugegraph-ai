@@ -30,9 +30,6 @@ if __name__ == "__main__":
     schema.vertexLabel("Movie").properties("name").usePrimaryKeyId().primaryKeys("name").ifNotExist().create()
     schema.edgeLabel("ActedIn").sourceLabel("Person").targetLabel("Movie").ifNotExist().create()
 
-    print(schema.getVertexLabels())
-    print(schema.getEdgeLabels())
-    print(schema.getRelations())
 
     """graph"""
     g = client.graph()
@@ -52,17 +49,11 @@ if __name__ == "__main__":
     # update property
     # g.eliminateVertex("vertex_id", {"property_key": "property_value"})
 
-    print(g.getVertexById(p1.id).label)
     # g.removeVertexById("12:Al Pacino")
     g.close()
 
     """gremlin"""
     g = client.gremlin()
-    print("gremlin.exec: ", g.exec("g.V().limit(10)"))
 
     """graphs"""
     g = client.graphs()
-    print("get_graph_info: ", g.get_graph_info())
-    print("get_all_graphs: ", g.get_all_graphs())
-    print("get_version: ", g.get_version())
-    print("get_graph_config: ", g.get_graph_config())

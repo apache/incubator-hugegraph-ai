@@ -18,8 +18,8 @@ import json
 from pycgraph import GPipeline
 
 from hugegraph_llm.flows.common import BaseFlow
-from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 from hugegraph_llm.nodes.llm_node.schema_build import SchemaBuildNode
+from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 from hugegraph_llm.utils.log import log
 
 

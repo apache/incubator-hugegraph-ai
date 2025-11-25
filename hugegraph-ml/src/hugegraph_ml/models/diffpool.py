@@ -48,7 +48,7 @@ class DiffPool(nn.Module):
         pool_ratio=0.1,
         concat=False,
     ):
-        super(DiffPool, self).__init__()
+        super().__init__()
         self.link_pred = True
         self.concat = concat
         self.n_pooling = n_pooling
@@ -163,10 +163,7 @@ class DiffPool(nn.Module):
             if self.num_aggs == 2:
                 readout, _ = torch.max(h, dim=1)
                 out_all.append(readout)
-        if self.concat or self.num_aggs > 1:
-            final_readout = torch.cat(out_all, dim=1)
-        else:
-            final_readout = readout
+        final_readout = torch.cat(out_all, dim=1) if self.concat or self.num_aggs > 1 else readout
         ypred = self.pred_layer(final_readout)
         return ypred
 
@@ -224,7 +221,7 @@ class _DiffPoolAssignment(nn.Module):
 
 class _BatchedDiffPool(nn.Module):
     def __init__(self, n_feat, n_next, n_hid, link_pred=False, entropy=True):
-        super(_BatchedDiffPool, self).__init__()
+        super().__init__()
         self.link_pred = link_pred
         self.link_pred_layer = _LinkPredLoss()
         self.embed = _BatchedGraphSAGE(n_feat, n_hid)
@@ -258,7 +255,7 @@ class _DiffPoolBatchedGraphLayer(nn.Module):
         aggregator_type,
         link_pred,
     ):
-        super(_DiffPoolBatchedGraphLayer, self).__init__()
+        super().__init__()
         self.embedding_dim = input_dim
         self.assign_dim = assign_dim
         self.hidden_dim = output_feat_dim
@@ -334,8 +331,8 @@ def _batch2tensor(batch_adj, batch_feat, node_per_pool_graph):
         end = (i + 1) * node_per_pool_graph
         adj_list.append(batch_adj[start:end, start:end])
         feat_list.append(batch_feat[start:end, :])
-    adj_list = list(map(lambda x: torch.unsqueeze(x, 0), adj_list))
-    feat_list = list(map(lambda x: torch.unsqueeze(x, 0), feat_list))
+    adj_list = [torch.unsqueeze(x, 0) for x in adj_list]
+    feat_list = [torch.unsqueeze(x, 0) for x in feat_list]
     adj = torch.cat(adj_list, dim=0)
     feat = torch.cat(feat_list, dim=0)
 
