@@ -50,7 +50,7 @@ class DetectorCaregnn:
         _, cnt = torch.unique(labels, return_counts=True)
         loss_fn = torch.nn.CrossEntropyLoss(weight=1 / cnt)
         optimizer = torch.optim.Adam(self._model.parameters(), lr=lr, weight_decay=weight_decay)
-        for epoch in range(n_epochs):
+        for _epoch in range(n_epochs):
             self._model.train()
             logits_gnn, logits_sim = self._model(self.graph, feat)
             tr_loss = loss_fn(logits_gnn[train_idx], labels[train_idx]) + 2 * loss_fn(
@@ -74,7 +74,7 @@ class DetectorCaregnn:
             optimizer.zero_grad()
             tr_loss.backward()
             optimizer.step()
-        self._model.RLModule(self.graph, epoch, rl_idx)
+        self._model.RLModule(self.graph, _epoch, rl_idx)
 
     def evaluate(self):
         labels = self.graph.ndata["label"].to(self._device)

@@ -103,7 +103,8 @@ class NodeClassifyWithSample:
                 )
                 # logs
                 epochs.set_description(
-                    f"epoch {epoch} | it {it} | train loss {train_loss.item():.4f} | val loss {valid_metrics['loss']:.4f}"
+                    f"epoch {epoch} | it {it} | train loss {train_loss.item():.4f} "
+                    f"| val loss {valid_metrics['loss']:.4f}"
                 )
                 # early stopping
                 early_stopping(valid_metrics[early_stopping.monitor], self._model)

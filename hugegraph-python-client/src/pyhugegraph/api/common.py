@@ -17,7 +17,6 @@
 
 
 import re
-from abc import ABC
 
 from pyhugegraph.utils.huge_requests import HGraphSession
 from pyhugegraph.utils.huge_router import RouterMixin
@@ -44,7 +43,7 @@ class ParameterHolder:
         return self._dic.keys()
 
 
-class HGraphContext(ABC):
+class HGraphContext:
     def __init__(self, sess: HGraphSession) -> None:
         self._sess = sess
         self._cache = {}  # todo: move parameter_holder to cache

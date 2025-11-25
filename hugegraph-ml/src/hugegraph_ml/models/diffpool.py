@@ -76,12 +76,7 @@ class DiffPool(nn.Module):
         self.gc_before_pool.append(SAGEConv(n_hidden, n_embedding, aggregator_type, feat_drop=dropout, activation=None))
 
         assign_dims = [self.assign_dim]
-        if self.concat:
-            # diffpool layer receive pool_embedding_dim node feature tensor
-            # and return pool_embedding_dim node embedding
-            pool_embedding_dim = n_hidden * (n_layers - 1) + n_embedding
-        else:
-            pool_embedding_dim = n_embedding
+        pool_embedding_dim = n_hidden * (n_layers - 1) + n_embedding if self.concat else n_embedding
 
         self.first_diffpool_layer = _DiffPoolBatchedGraphLayer(
             pool_embedding_dim,
@@ -366,10 +361,7 @@ def _gcn_forward(g, h, gc_layers, cat=False):
         block_readout.append(h)
     h = gc_layers[-1](g, h)
     block_readout.append(h)
-    if cat:
-        block = torch.cat(block_readout, dim=1)  # N x F, F = F1 + F2 + ...
-    else:
-        block = h
+    block = torch.cat(block_readout, dim=1) if cat else h
     return block
 
 
@@ -378,8 +370,5 @@ def _gcn_forward_tensorized(h, adj, gc_layers, cat=False):
     for gc_layer in gc_layers:
         h = gc_layer(h, adj)
         block_readout.append(h)
-    if cat:
-        block = torch.cat(block_readout, dim=2)  # N x F, F = F1 + F2 + ...
-    else:
-        block = h
+    block = torch.cat(block_readout, dim=2) if cat else h
     return block

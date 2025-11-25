@@ -39,7 +39,7 @@ from torch.nn import BatchNorm1d
 from torch.nn.functional import cosine_similarity
 
 
-class MLP_Predictor(nn.Module):
+class MLPPredictor(nn.Module):
     r"""MLP used for predictor. The MLP has one hidden layer.
     Args:
         input_size (int): Size of input features.

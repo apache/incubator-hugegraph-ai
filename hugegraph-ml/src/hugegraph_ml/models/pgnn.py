@@ -41,7 +41,7 @@ from torch import nn
 from tqdm.auto import tqdm
 
 
-class PGNN_layer(nn.Module):
+class PGNNLayer(nn.Module):
     def __init__(self, input_dim, output_dim):
         super().__init__()
         self.input_dim = input_dim
@@ -82,8 +82,8 @@ class PGNN(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
         self.linear_pre = nn.Linear(input_dim, feature_dim)
-        self.conv_first = PGNN_layer(feature_dim, feature_dim)
-        self.conv_out = PGNN_layer(feature_dim, feature_dim)
+        self.conv_first = PGNNLayer(feature_dim, feature_dim)
+        self.conv_out = PGNNLayer(feature_dim, feature_dim)
 
     def forward(self, data):
         x = data["graph"].ndata["feat"]

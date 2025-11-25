@@ -43,9 +43,9 @@ class SAGE(nn.Module):
 
     def forward(self, sg, x):
         h = x
-        for l, layer in enumerate(self.layers):
+        for layer_idx, layer in enumerate(self.layers):
             h = layer(sg, h)
-            if l != len(self.layers) - 1:
+            if layer_idx != len(self.layers) - 1:
                 h = F.relu(h)
                 h = self.dropout(h)
         return h

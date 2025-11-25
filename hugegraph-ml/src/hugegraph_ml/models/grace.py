@@ -68,7 +68,7 @@ class GRACE(nn.Module):
         n_hidden=128,
         n_out_feats=128,
         n_layers=2,
-        act_fn=nn.ReLU(),
+        act_fn=None,
         temp=0.4,
         edges_removing_rate_1=0.2,
         edges_removing_rate_2=0.4,
