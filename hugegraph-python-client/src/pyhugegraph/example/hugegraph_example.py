@@ -30,7 +30,6 @@ if __name__ == "__main__":
     schema.vertexLabel("Movie").properties("name").usePrimaryKeyId().primaryKeys("name").ifNotExist().create()
     schema.edgeLabel("ActedIn").sourceLabel("Person").targetLabel("Movie").ifNotExist().create()
 
-
     """graph"""
     g = client.graph()
     # add Vertex

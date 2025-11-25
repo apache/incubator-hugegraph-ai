@@ -29,7 +29,6 @@ def main():
     )
     client.tasks.get_tasks()
 
-
     client.tasks.create_task(
         create_task=TaskCreateRequest(
             task_type="load",
@@ -44,7 +43,6 @@ def main():
             },
         )
     )
-
 
 
 if __name__ == "__main__":

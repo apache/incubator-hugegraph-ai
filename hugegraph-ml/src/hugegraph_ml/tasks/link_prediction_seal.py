@@ -122,7 +122,6 @@ class LinkPredictionSeal:
                 summary_test.append(test_metric)
         summary_test = np.array(summary_test)
 
-
     @torch.no_grad()
     def evaluate(self, dataloader):
         self._model.eval()
