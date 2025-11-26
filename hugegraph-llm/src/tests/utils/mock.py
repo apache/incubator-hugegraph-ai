@@ -19,6 +19,7 @@
 
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 
+
 class MockEmbedding(BaseEmbedding):
     """Mock embedding class for testing"""
 

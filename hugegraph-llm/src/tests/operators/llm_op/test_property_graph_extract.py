@@ -131,9 +131,7 @@ class TestPropertyGraphExtract(unittest.TestCase):
 
     def test_split_text(self):
         """Test the split_text function."""
-        with patch(
-            "hugegraph_llm.operators.llm_op.property_graph_extract.ChunkSplitter"
-        ) as mock_splitter_class:
+        with patch("hugegraph_llm.operators.llm_op.property_graph_extract.ChunkSplitter") as mock_splitter_class:
             mock_splitter = MagicMock()
             mock_splitter.split.return_value = ["chunk1", "chunk2"]
             mock_splitter_class.return_value = mock_splitter

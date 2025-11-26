@@ -15,9 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import logging
 import os
 import sys
-import logging
+
 import nltk
 
 # Get project root directory
@@ -27,6 +28,8 @@ sys.path.insert(0, project_root)
 # Add src directory to Python path
 src_path = os.path.join(project_root, "src")
 sys.path.insert(0, src_path)
+
+
 # Download NLTK resources
 def download_nltk_resources():
     try:
@@ -34,6 +37,8 @@ def download_nltk_resources():
     except LookupError:
         logging.info("Downloading NLTK stopwords resource...")
         nltk.download("stopwords", quiet=True)
+
+
 # Download NLTK resources before tests start
 download_nltk_resources()
 # Set environment variable to skip external service tests

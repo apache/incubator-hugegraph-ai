@@ -43,11 +43,7 @@ class TestVectorIndexQuery(unittest.TestCase):
         mock_settings.graph_name = "test_graph"
 
         # Create VectorIndexQuery instance
-        query = VectorIndexQuery(
-            vector_index=self.mock_vector_store_class,
-            embedding=self.mock_embedding,
-            topk=3
-        )
+        query = VectorIndexQuery(vector_index=self.mock_vector_store_class, embedding=self.mock_embedding, topk=3)
 
         # Verify initialization
         self.assertEqual(query.embedding, self.mock_embedding)
@@ -55,9 +51,7 @@ class TestVectorIndexQuery(unittest.TestCase):
         self.assertEqual(query.vector_index, self.mock_vector_index)
 
         # Verify vector store was initialized correctly
-        self.mock_vector_store_class.from_name.assert_called_once_with(
-            4, "test_graph", "chunks"
-        )
+        self.mock_vector_store_class.from_name.assert_called_once_with(4, "test_graph", "chunks")
 
     @patch("hugegraph_llm.operators.index_op.vector_index_query.huge_settings")
     def test_run_with_query(self, mock_settings):
@@ -66,11 +60,7 @@ class TestVectorIndexQuery(unittest.TestCase):
         mock_settings.graph_name = "test_graph"
 
         # Create VectorIndexQuery instance
-        query = VectorIndexQuery(
-            vector_index=self.mock_vector_store_class,
-            embedding=self.mock_embedding,
-            topk=2
-        )
+        query = VectorIndexQuery(vector_index=self.mock_vector_store_class, embedding=self.mock_embedding, topk=2)
 
         # Prepare context with query
         context = {"query": "test query"}
@@ -86,9 +76,7 @@ class TestVectorIndexQuery(unittest.TestCase):
         self.mock_embedding.get_texts_embeddings.assert_called_once_with(["test query"])
 
         # Verify vector search was called correctly
-        self.mock_vector_index.search.assert_called_once_with(
-            [1.0, 0.0, 0.0, 0.0], 2, dis_threshold=2
-        )
+        self.mock_vector_index.search.assert_called_once_with([1.0, 0.0, 0.0, 0.0], 2, dis_threshold=2)
 
     @patch("hugegraph_llm.operators.index_op.vector_index_query.huge_settings")
     def test_run_with_none_query(self, mock_settings):
@@ -97,11 +85,7 @@ class TestVectorIndexQuery(unittest.TestCase):
         mock_settings.graph_name = "test_graph"
 
         # Create VectorIndexQuery instance
-        query = VectorIndexQuery(
-            vector_index=self.mock_vector_store_class,
-            embedding=self.mock_embedding,
-            topk=2
-        )
+        query = VectorIndexQuery(vector_index=self.mock_vector_store_class, embedding=self.mock_embedding, topk=2)
 
         # Prepare context without query or with None query
         context = {"query": None}
@@ -123,11 +107,7 @@ class TestVectorIndexQuery(unittest.TestCase):
         mock_settings.graph_name = "test_graph"
 
         # Create VectorIndexQuery instance
-        query = VectorIndexQuery(
-            vector_index=self.mock_vector_store_class,
-            embedding=self.mock_embedding,
-            topk=2
-        )
+        query = VectorIndexQuery(vector_index=self.mock_vector_store_class, embedding=self.mock_embedding, topk=2)
 
         # Prepare empty context
         context = {}
@@ -152,11 +132,7 @@ class TestVectorIndexQuery(unittest.TestCase):
         self.mock_vector_index.search.return_value = ["doc1", "doc2", "doc3", "doc4", "doc5"]
 
         # Create VectorIndexQuery instance with different topk
-        query = VectorIndexQuery(
-            vector_index=self.mock_vector_store_class,
-            embedding=self.mock_embedding,
-            topk=5
-        )
+        query = VectorIndexQuery(vector_index=self.mock_vector_store_class, embedding=self.mock_embedding, topk=5)
 
         # Prepare context
         context = {"query": "test query"}
@@ -168,9 +144,7 @@ class TestVectorIndexQuery(unittest.TestCase):
         self.assertEqual(result_context["vector_result"], ["doc1", "doc2", "doc3", "doc4", "doc5"])
 
         # Verify vector search was called with correct topk
-        self.mock_vector_index.search.assert_called_once_with(
-            [1.0, 0.0, 0.0, 0.0], 5, dis_threshold=2
-        )
+        self.mock_vector_index.search.assert_called_once_with([1.0, 0.0, 0.0, 0.0], 5, dis_threshold=2)
 
     @patch("hugegraph_llm.operators.index_op.vector_index_query.huge_settings")
     def test_run_with_different_embedding_result(self, mock_settings):
@@ -182,11 +156,7 @@ class TestVectorIndexQuery(unittest.TestCase):
         self.mock_embedding.get_texts_embeddings.return_value = [[0.0, 1.0, 0.0, 0.0]]
 
         # Create VectorIndexQuery instance
-        query = VectorIndexQuery(
-            vector_index=self.mock_vector_store_class,
-            embedding=self.mock_embedding,
-            topk=2
-        )
+        query = VectorIndexQuery(vector_index=self.mock_vector_store_class, embedding=self.mock_embedding, topk=2)
 
         # Prepare context
         context = {"query": "another query"}
@@ -195,9 +165,7 @@ class TestVectorIndexQuery(unittest.TestCase):
         _ = query.run(context)
 
         # Verify vector search was called with correct embedding
-        self.mock_vector_index.search.assert_called_once_with(
-            [0.0, 1.0, 0.0, 0.0], 2, dis_threshold=2
-        )
+        self.mock_vector_index.search.assert_called_once_with([0.0, 1.0, 0.0, 0.0], 2, dis_threshold=2)
 
     @patch("hugegraph_llm.operators.index_op.vector_index_query.huge_settings")
     def test_context_preservation(self, mock_settings):
@@ -206,18 +174,10 @@ class TestVectorIndexQuery(unittest.TestCase):
         mock_settings.graph_name = "test_graph"
 
         # Create VectorIndexQuery instance
-        query = VectorIndexQuery(
-            vector_index=self.mock_vector_store_class,
-            embedding=self.mock_embedding,
-            topk=2
-        )
+        query = VectorIndexQuery(vector_index=self.mock_vector_store_class, embedding=self.mock_embedding, topk=2)
 
         # Prepare context with existing data
-        context = {
-            "query": "test query",
-            "existing_key": "existing_value",
-            "another_key": 123
-        }
+        context = {"query": "test query", "existing_key": "existing_value", "another_key": 123}
 
         # Run the query
         result_context = query.run(context)
@@ -239,20 +199,14 @@ class TestVectorIndexQuery(unittest.TestCase):
         custom_embedding.get_embedding_dim.return_value = 256
 
         # Create VectorIndexQuery instance with custom parameters
-        query = VectorIndexQuery(
-            vector_index=self.mock_vector_store_class,
-            embedding=custom_embedding,
-            topk=10
-        )
+        query = VectorIndexQuery(vector_index=self.mock_vector_store_class, embedding=custom_embedding, topk=10)
 
         # Verify initialization with custom parameters
         self.assertEqual(query.topk, 10)
         self.assertEqual(query.embedding, custom_embedding)
 
         # Verify vector store was initialized with custom parameters
-        self.mock_vector_store_class.from_name.assert_called_once_with(
-            256, "custom_graph", "chunks"
-        )
+        self.mock_vector_store_class.from_name.assert_called_once_with(256, "custom_graph", "chunks")
 
 
 if __name__ == "__main__":

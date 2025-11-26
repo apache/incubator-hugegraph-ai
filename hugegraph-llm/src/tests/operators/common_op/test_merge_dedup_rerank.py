@@ -38,8 +38,7 @@ class BaseMergeDedupRerankTest(unittest.TestCase):
         self.vector_results = [
             "Artificial intelligence is a branch of computer science.",
             "AI is the simulation of human intelligence by machines.",
-            "Artificial intelligence involves creating systems that can "
-            "perform tasks requiring human intelligence.",
+            "Artificial intelligence involves creating systems that can perform tasks requiring human intelligence.",
         ]
         self.graph_results = [
             "AI research includes reasoning, knowledge representation, "
@@ -193,9 +192,7 @@ class TestMergeDedupRerankReranker(BaseMergeDedupRerankTest):
         }
 
         # Call the method
-        reranked = merger._rerank_with_vertex_degree(
-            self.query, results, 2, vertex_degree_list, knowledge_with_degree
-        )
+        reranked = merger._rerank_with_vertex_degree(self.query, results, 2, vertex_degree_list, knowledge_with_degree)
 
         # Verify that reranker was called for each vertex degree list
         self.assertEqual(mock_reranker.get_rerank_lists.call_count, 2)
@@ -213,9 +210,7 @@ class TestMergeDedupRerankReranker(BaseMergeDedupRerankTest):
         merger._dedup_and_rerank.return_value = ["result1", "result2"]
 
         # Call the method with empty vertex_degree_list
-        reranked = merger._rerank_with_vertex_degree(
-            self.query, ["result1", "result2"], 2, [], {}
-        )
+        reranked = merger._rerank_with_vertex_degree(self.query, ["result1", "result2"], 2, [], {})
 
         # Verify that _dedup_and_rerank was called
         merger._dedup_and_rerank.assert_called_once()

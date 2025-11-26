@@ -20,9 +20,10 @@
 import shutil
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch, Mock
+from unittest.mock import MagicMock, Mock, patch
 
 import pandas as pd
+
 from hugegraph_llm.operators.index_op.gremlin_example_index_query import GremlinExampleIndexQuery
 
 
@@ -60,11 +61,7 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
         mock_vector_index_class.from_name.return_value = mock_index_instance
 
         # Create a GremlinExampleIndexQuery instance
-        query = GremlinExampleIndexQuery(
-            vector_index=mock_vector_index_class,
-            embedding=mock_embedding,
-            num_examples=2
-        )
+        query = GremlinExampleIndexQuery(vector_index=mock_vector_index_class, embedding=mock_embedding, num_examples=2)
 
         # Verify the instance was initialized correctly
         self.assertEqual(query.embedding, mock_embedding)
@@ -73,9 +70,7 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
 
         # Verify that exist() and from_name() were called
         mock_vector_index_class.exist.assert_called_once_with("gremlin_examples")
-        mock_vector_index_class.from_name.assert_called_once_with(
-            self.embed_dim, "gremlin_examples"
-        )
+        mock_vector_index_class.from_name.assert_called_once_with(self.embed_dim, "gremlin_examples")
 
     @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.resource_path", "/mock/path")
     @patch("pandas.read_csv")
@@ -110,17 +105,11 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
         mock_tqdm.return_value = self.vectors
 
         # Create a GremlinExampleIndexQuery instance
-        query = GremlinExampleIndexQuery(
-            vector_index=mock_vector_index_class,
-            embedding=mock_embedding,
-            num_examples=1
-        )
+        GremlinExampleIndexQuery(vector_index=mock_vector_index_class, embedding=mock_embedding, num_examples=1)
 
         # Verify that the index was built
         mock_vector_index_class.exist.assert_called_once_with("gremlin_examples")
-        mock_vector_index_class.from_name.assert_called_once_with(
-            self.embed_dim, "gremlin_examples"
-        )
+        mock_vector_index_class.from_name.assert_called_once_with(self.embed_dim, "gremlin_examples")
         mock_index_instance.add.assert_called_once_with(self.vectors, self.properties)
         mock_index_instance.save_index_by_name.assert_called_once_with("gremlin_examples")
         mock_log.warning.assert_called_once_with("No gremlin example index found, will generate one.")
@@ -145,11 +134,7 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
         context = {"query": "find all persons"}
 
         # Create a GremlinExampleIndexQuery instance
-        query = GremlinExampleIndexQuery(
-            vector_index=mock_vector_index_class,
-            embedding=mock_embedding,
-            num_examples=1
-        )
+        query = GremlinExampleIndexQuery(vector_index=mock_vector_index_class, embedding=mock_embedding, num_examples=1)
 
         # Run the query
         result_context = query.run(context)
@@ -181,17 +166,10 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
         mock_index_instance.search.return_value = [self.properties[0]]
 
         # Create a context with a pre-computed query embedding
-        context = {
-            "query": "find all persons",
-            "query_embedding": [1.0, 0.0, 0.0, 0.0]
-        }
+        context = {"query": "find all persons", "query_embedding": [1.0, 0.0, 0.0, 0.0]}
 
         # Create a GremlinExampleIndexQuery instance
-        query = GremlinExampleIndexQuery(
-            vector_index=mock_vector_index_class,
-            embedding=mock_embedding,
-            num_examples=1
-        )
+        query = GremlinExampleIndexQuery(vector_index=mock_vector_index_class, embedding=mock_embedding, num_examples=1)
 
         # Run the query
         result_context = query.run(context)
@@ -227,11 +205,7 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
         context = {"query": "find all persons"}
 
         # Create a GremlinExampleIndexQuery instance with num_examples=0
-        query = GremlinExampleIndexQuery(
-            vector_index=mock_vector_index_class,
-            embedding=mock_embedding,
-            num_examples=0
-        )
+        query = GremlinExampleIndexQuery(vector_index=mock_vector_index_class, embedding=mock_embedding, num_examples=0)
 
         # Run the query
         result_context = query.run(context)
@@ -261,11 +235,7 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
         context = {}
 
         # Create a GremlinExampleIndexQuery instance
-        query = GremlinExampleIndexQuery(
-            vector_index=mock_vector_index_class,
-            embedding=mock_embedding,
-            num_examples=1
-        )
+        query = GremlinExampleIndexQuery(vector_index=mock_vector_index_class, embedding=mock_embedding, num_examples=1)
 
         # Run the query and expect a ValueError
         with self.assertRaises(ValueError) as cm:
@@ -289,10 +259,7 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
         mock_embeddings_class.return_value.get_embedding.return_value = mock_embedding_instance
 
         # Create instance without embedding parameter
-        query = GremlinExampleIndexQuery(
-            vector_index=mock_vector_index_class,
-            num_examples=1
-        )
+        query = GremlinExampleIndexQuery(vector_index=mock_vector_index_class, num_examples=1)
 
         # Verify default embedding was used
         self.assertEqual(query.embedding, mock_embedding_instance)
@@ -318,9 +285,7 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
 
         # Create a GremlinExampleIndexQuery instance with negative num_examples
         query = GremlinExampleIndexQuery(
-            vector_index=mock_vector_index_class,
-            embedding=mock_embedding,
-            num_examples=-1
+            vector_index=mock_vector_index_class, embedding=mock_embedding, num_examples=-1
         )
 
         # Run the query
@@ -350,11 +315,7 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
         mock_index_instance.search.return_value = [self.properties[0]]
 
         # Create a GremlinExampleIndexQuery instance
-        query = GremlinExampleIndexQuery(
-            vector_index=mock_vector_index_class,
-            embedding=mock_embedding,
-            num_examples=1
-        )
+        query = GremlinExampleIndexQuery(vector_index=mock_vector_index_class, embedding=mock_embedding, num_examples=1)
 
         # Test with non-list query_embedding (should use embedding service)
         context = {"query": "find all persons", "query_embedding": "not_a_list"}

@@ -31,9 +31,7 @@ class TestSchemaManager(unittest.TestCase):
 
         # Create SchemaManager instance
         self.graph_name = "test_graph"
-        with patch(
-            "hugegraph_llm.operators.hugegraph_op.schema_manager.PyHugeClient"
-        ) as mock_client_class:
+        with patch("hugegraph_llm.operators.hugegraph_op.schema_manager.PyHugeClient") as mock_client_class:
             mock_client_class.return_value = self.mock_client
             self.schema_manager = SchemaManager(self.graph_name)
 
@@ -129,9 +127,7 @@ class TestSchemaManager(unittest.TestCase):
 
     def test_simple_schema_with_partial_schema(self):
         """Test simple_schema method with a partial schema."""
-        partial_schema = {
-            "vertexlabels": [{"id": 1, "name": "person", "properties": ["name", "age"]}]
-        }
+        partial_schema = {"vertexlabels": [{"id": 1, "name": "person", "properties": ["name", "age"]}]}
         simple_schema = self.schema_manager.simple_schema(partial_schema)
         self.assertIn("vertexlabels", simple_schema)
         self.assertNotIn("edgelabels", simple_schema)
@@ -162,9 +158,7 @@ class TestSchemaManager(unittest.TestCase):
             self.schema_manager.run({})
 
         # Verify the exception message
-        self.assertIn(
-            f"Can not get {self.graph_name}'s schema from HugeGraph!", str(cm.exception)
-        )
+        self.assertIn(f"Can not get {self.graph_name}'s schema from HugeGraph!", str(cm.exception))
 
     def test_run_with_existing_context(self):
         """Test run method with an existing context."""

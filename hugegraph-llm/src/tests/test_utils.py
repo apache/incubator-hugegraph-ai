@@ -19,7 +19,9 @@ import os
 from unittest.mock import MagicMock, patch
 
 from hugegraph_llm.document import Document
+
 from .utils.mock import VectorIndex
+
 
 # Check if external service tests should be skipped
 def should_skip_external():

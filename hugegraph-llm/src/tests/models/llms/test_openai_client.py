@@ -27,9 +27,7 @@ class TestOpenAIClient(unittest.TestCase):
         """Set up test fixtures and common mock objects."""
         # Create mock completion response
         self.mock_completion_response = MagicMock()
-        self.mock_completion_response.choices = [
-            MagicMock(message=MagicMock(content="Paris"))
-        ]
+        self.mock_completion_response.choices = [MagicMock(message=MagicMock(content="Paris"))]
         self.mock_completion_response.usage = MagicMock()
         self.mock_completion_response.usage.model_dump_json.return_value = (
             '{"prompt_tokens": 10, "completion_tokens": 5}'
@@ -136,9 +134,11 @@ class TestOpenAIClient(unittest.TestCase):
             collected_tokens.append(chunk)
 
         # Collect all tokens from the generator
-        tokens = list(openai_client.generate_streaming(
-            prompt="What is the capital of France?", on_token_callback=on_token_callback
-        ))
+        tokens = list(
+            openai_client.generate_streaming(
+                prompt="What is the capital of France?", on_token_callback=on_token_callback
+            )
+        )
 
         # Verify the response
         self.assertEqual(tokens, ["Pa", "ris"])
@@ -203,6 +203,7 @@ class TestOpenAIClient(unittest.TestCase):
         """Test generate method with authentication error."""
         # Setup mock client to raise OpenAI 的认证错误
         from openai import AuthenticationError
+
         mock_client = MagicMock()
 
         # Create a properly formatted AuthenticationError
@@ -211,9 +212,7 @@ class TestOpenAIClient(unittest.TestCase):
         mock_response.headers = {}
 
         auth_error = AuthenticationError(
-            message="Invalid API key",
-            response=mock_response,
-            body={"error": {"message": "Invalid API key"}}
+            message="Invalid API key", response=mock_response, body={"error": {"message": "Invalid API key"}}
         )
         mock_client.chat.completions.create.side_effect = auth_error
         mock_openai_class.return_value = mock_client

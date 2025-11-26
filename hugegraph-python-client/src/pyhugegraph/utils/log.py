@@ -13,17 +13,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import atexit
-import logging
-import os
-import sys
-import time
-from collections import Counter
-from functools import cache, lru_cache
-from logging.handlers import RotatingFileHandler
-
-from rich.logging import RichHandler
-
 """
 HugeGraph Logger Util
 ======================
@@ -55,6 +44,18 @@ Example Usage:
     log.debug("Processing data...")
     log.error("Error occurred: %s", error_msg)
 """
+
+import atexit
+import logging
+import os
+import sys
+import time
+from collections import Counter
+from functools import cache, lru_cache
+from logging.handlers import RotatingFileHandler
+
+from rich.logging import RichHandler
+
 __all__ = [
     "init_logger",
     "fetch_log_level",

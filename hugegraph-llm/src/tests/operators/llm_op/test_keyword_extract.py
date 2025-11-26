@@ -34,14 +34,10 @@ class TestKeywordExtract(unittest.TestCase):
         )
 
         # Sample query
-        self.query = (
-            "What are the latest advancements in artificial intelligence and machine learning?"
-        )
+        self.query = "What are the latest advancements in artificial intelligence and machine learning?"
 
         # Create KeywordExtract instance (language is now set from llm_settings)
-        self.extractor = KeywordExtract(
-            text=self.query, llm=self.mock_llm, max_keywords=5
-        )
+        self.extractor = KeywordExtract(text=self.query, llm=self.mock_llm, max_keywords=5)
 
     def test_init_with_parameters(self):
         """Test initialization with provided parameters."""
@@ -146,7 +142,6 @@ class TestKeywordExtract(unittest.TestCase):
         extractor = KeywordExtract(llm=self.mock_llm)
 
         # Create context with no query
-        context = {}
 
         # Call the method and expect an assertion error
         with self.assertRaises(AssertionError) as cm:
@@ -202,12 +197,9 @@ class TestKeywordExtract(unittest.TestCase):
     def test_extract_keywords_from_response_with_start_token(self):
         """Test _extract_keywords_from_response method with start token."""
         response = (
-            "Some text\nKEYWORDS: artificial intelligence:0.9, machine learning:0.8, "
-            "neural networks:0.7\nMore text"
+            "Some text\nKEYWORDS: artificial intelligence:0.9, machine learning:0.8, neural networks:0.7\nMore text"
         )
-        keywords = self.extractor._extract_keywords_from_response(
-            response, lowercase=False, start_token="KEYWORDS:"
-        )
+        keywords = self.extractor._extract_keywords_from_response(response, lowercase=False, start_token="KEYWORDS:")
 
         # Check for keywords - now returns dict with scores
         self.assertIn("artificial intelligence", keywords)
@@ -227,9 +219,7 @@ class TestKeywordExtract(unittest.TestCase):
     def test_extract_keywords_from_response_with_lowercase(self):
         """Test _extract_keywords_from_response method with lowercase=True."""
         response = "KEYWORDS: Artificial Intelligence:0.9, Machine Learning:0.8, Neural Networks:0.7"
-        keywords = self.extractor._extract_keywords_from_response(
-            response, lowercase=True, start_token="KEYWORDS:"
-        )
+        keywords = self.extractor._extract_keywords_from_response(response, lowercase=True, start_token="KEYWORDS:")
 
         # Check for keywords in lowercase - now returns dict with scores
         self.assertIn("artificial intelligence", keywords)
@@ -239,9 +229,7 @@ class TestKeywordExtract(unittest.TestCase):
     def test_extract_keywords_from_response_with_multi_word_tokens(self):
         """Test _extract_keywords_from_response method with multi-word tokens."""
         response = "KEYWORDS: artificial intelligence:0.9, machine learning:0.8"
-        keywords = self.extractor._extract_keywords_from_response(
-            response, start_token="KEYWORDS:"
-        )
+        keywords = self.extractor._extract_keywords_from_response(response, start_token="KEYWORDS:")
 
         # Should include the keywords - returns dict with scores
         self.assertIn("artificial intelligence", keywords)

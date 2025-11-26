@@ -187,10 +187,10 @@ class TestKGConstruction(unittest.TestCase):
         ]
 
         # Mock KG constructor methods
-        with patch.object(
-            self.kg_constructor, "extract_entities", return_value=mock_entities
-        ), patch.object(self.kg_constructor, "extract_relations", return_value=mock_relations):
-
+        with (
+            patch.object(self.kg_constructor, "extract_entities", return_value=mock_entities),
+            patch.object(self.kg_constructor, "extract_relations", return_value=mock_relations),
+        ):
             # Construct knowledge graph - use only one document to avoid duplicate relations from mocking
             kg = self.kg_constructor.construct_from_documents([self.test_docs[0]])
 

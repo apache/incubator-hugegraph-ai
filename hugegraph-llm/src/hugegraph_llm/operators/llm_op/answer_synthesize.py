@@ -15,6 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
+"""
+TODO: It is not clear whether there is any other dependence on the SCHEMA_EXAMPLE_PROMPT variable.
+Because the SCHEMA_EXAMPLE_PROMPT variable will no longer change based on
+prompt.extract_graph_prompt changes after the system loads, this does not seem to meet expectations.
+"""
+
 # pylint: disable=W0621
 
 import asyncio
@@ -25,11 +31,6 @@ from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.utils.log import log
 
-"""
-TODO: It is not clear whether there is any other dependence on the SCHEMA_EXAMPLE_PROMPT variable. 
-Because the SCHEMA_EXAMPLE_PROMPT variable will no longer change based on 
-prompt.extract_graph_prompt changes after the system loads, this does not seem to meet expectations.
-"""
 DEFAULT_ANSWER_TEMPLATE = prompt.answer_prompt
 
 

@@ -17,11 +17,11 @@
 
 # pylint: disable=protected-access,no-member
 import unittest
-
 from unittest.mock import MagicMock, patch
 
-from hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph import Commit2Graph
 from pyhugegraph.utils.exceptions import CreateError, NotFoundError
+
+from hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph import Commit2Graph
 
 
 class TestCommit2Graph(unittest.TestCase):

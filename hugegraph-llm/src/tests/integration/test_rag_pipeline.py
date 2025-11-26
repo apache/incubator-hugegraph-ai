@@ -26,8 +26,8 @@ from src.tests.test_utils import (
     with_mock_openai_client,
     with_mock_openai_embedding,
 )
-
 from tests.utils.mock import VectorIndex
+
 
 # 创建模拟类，替代缺失的模块
 class Document:

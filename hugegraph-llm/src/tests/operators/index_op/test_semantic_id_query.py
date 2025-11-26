@@ -75,14 +75,13 @@ class TestSemanticIdQuery(unittest.TestCase):
         mock_settings.graph_name = "test_graph"
         mock_settings.topk_per_keyword = 5
         mock_settings.vector_dis_threshold = 1.5
-        mock_resource_path = "/mock/path"
 
         with patch("os.path.join", return_value=self.test_dir):
             query = SemanticIdQuery(
                 self.embedding,
                 self.mock_vector_store_class,  # 传递 vector_index 参数
                 by="query",
-                topk_per_query=3
+                topk_per_query=3,
             )
 
             # Verify the instance was initialized correctly
@@ -99,17 +98,11 @@ class TestSemanticIdQuery(unittest.TestCase):
         mock_settings.graph_name = "test_graph"
         mock_settings.topk_per_keyword = 5
         mock_settings.vector_dis_threshold = 1.5
-        mock_resource_path = "/mock/path"
 
         context = {"query": "query1"}
 
         with patch("os.path.join", return_value=self.test_dir):
-            query = SemanticIdQuery(
-                self.embedding,
-                self.mock_vector_store_class,
-                by="query",
-                topk_per_query=2
-            )
+            query = SemanticIdQuery(self.embedding, self.mock_vector_store_class, by="query", topk_per_query=2)
 
             # Mock the search result
             query.vector_index.search.return_value = ["1:vid1", "2:vid2"]
@@ -130,17 +123,11 @@ class TestSemanticIdQuery(unittest.TestCase):
         mock_settings.graph_name = "test_graph"
         mock_settings.topk_per_keyword = 2
         mock_settings.vector_dis_threshold = 1.5
-        mock_resource_path = "/mock/path"
 
         context = {"keywords": ["keyword1", "keyword2"]}
 
         with patch("os.path.join", return_value=self.test_dir):
-            query = SemanticIdQuery(
-                self.embedding,
-                self.mock_vector_store_class,
-                by="keywords",
-                topk_per_keyword=2
-            )
+            query = SemanticIdQuery(self.embedding, self.mock_vector_store_class, by="keywords", topk_per_keyword=2)
 
             result_context = query.run(context)
 
@@ -156,16 +143,11 @@ class TestSemanticIdQuery(unittest.TestCase):
         mock_settings.graph_name = "test_graph"
         mock_settings.topk_per_keyword = 5
         mock_settings.vector_dis_threshold = 1.5
-        mock_resource_path = "/mock/path"
 
         context = {"keywords": []}
 
         with patch("os.path.join", return_value=self.test_dir):
-            query = SemanticIdQuery(
-                self.embedding,
-                self.mock_vector_store_class,
-                by="keywords"
-            )
+            query = SemanticIdQuery(self.embedding, self.mock_vector_store_class, by="keywords")
 
             result_context = query.run(context)
 
