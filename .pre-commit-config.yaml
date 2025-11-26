@@ -30,12 +30,10 @@ repos:
       - id: debug-statements
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.13.1 # 与本地ruff版本保持一致
+    rev: v0.13.1
     hooks:
-      # 运行 ruff 格式化器
       - id: ruff-format
         types_or: [python, pyi]
-      # 运行 ruff linter
       - id: ruff
         types_or: [python, pyi]
         args: [--fix]
