@@ -444,3 +444,24 @@ Your goal is to generate a new, tailored "Graph Extract Prompt Header" based on 
 ## Language Requirement:
 Please generate the prompt in {language} language.
 """
+
+    review_prompt: str = """
+## 评审任务
+请根据以下标准答案对模型的回答进行专业评估：
+
+## 评估要求
+1. 从准确性（与标准答案一致性）、相关性（与问题相关度）、完整性（信息完整度）三个维度进行1-5分评分
+2. 计算综合评分（三个维度平均分，保留1位小数）
+3. 提供简明扼要的改进建议
+4. 使用JSON格式返回以下字段(返回内容一定要被```json ```所包围)：
+   - accuracy_score (int)
+   - relevance_score (int)
+   - completeness_score (int)
+   - overall_score (float)
+   - comment (str)
+
+## 标准答案
+{standard_answer}
+
+## 待评审回答
+"""

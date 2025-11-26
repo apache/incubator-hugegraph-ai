@@ -1,0 +1,11 @@
+- type: openai
+  model_name: ernie-4.5-8k-preview
+  api_key: 
+  api_base: 
+  max_tokens: 2048
+
+- type: openai
+  model_name: gpt-4.1-mini
+  api_key: 
+  api_base: 
+  max_tokens: 4096
