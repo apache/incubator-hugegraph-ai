@@ -4,9 +4,9 @@ This file provides guidance to AI coding tools and developers when working with 
 
 ## Project Overview
 
-HugeGraph-LLM is a comprehensive toolkit that bridges graph databases and large language models, 
-part of the Apache HugeGraph AI ecosystem. It enables seamless integration between HugeGraph and LLMs for building 
-intelligent applications with three main capabilities: Knowledge Graph Construction, Graph-Enhanced RAG, 
+HugeGraph-LLM is a comprehensive toolkit that bridges graph databases and large language models,
+part of the Apache HugeGraph AI ecosystem. It enables seamless integration between HugeGraph and LLMs for building
+intelligent applications with three main capabilities: Knowledge Graph Construction, Graph-Enhanced RAG,
 and Text2Gremlin query generation.
 
 ## Tech Stack

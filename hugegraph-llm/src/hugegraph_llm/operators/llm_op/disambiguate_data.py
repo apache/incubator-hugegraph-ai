@@ -28,10 +28,10 @@ def generate_disambiguate_prompt(triples):
         {triples}
         If the second element of the triples expresses the same meaning but in different ways,
         unify them and keep the most concise expression.
-        
+
         For example, if the input is:
         [("Alice", "friend", "Bob"), ("Simon", "is friends with", "Bob")]
-        
+
         The output should be:
         [("Alice", "friend", "Bob"), ("Simon", "friend", "Bob")]
         """
