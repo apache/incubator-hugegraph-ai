@@ -14,3 +14,20 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
+"""
+Models package for HugeGraph-LLM.
+
+This package contains model implementations for:
+- LLM clients (llms/)
+- Embedding models (embeddings/)
+- Reranking models (rerankers/)
+"""
+
+# This enables import statements like: from hugegraph_llm.models import llms
+# Making subpackages accessible
+from . import llms
+from . import embeddings
+from . import rerankers
+
+__all__ = ["llms", "embeddings", "rerankers"]

@@ -15,17 +15,25 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import os
 import unittest
 
 from hugegraph_llm.models.llms.ollama import OllamaClient
 
 
 class TestOllamaClient(unittest.TestCase):
+    def setUp(self):
+        self.skip_external = os.getenv("SKIP_EXTERNAL_SERVICES", "false").lower() == "true"
+
+    @unittest.skipIf(os.getenv("SKIP_EXTERNAL_SERVICES", "false").lower() == "true",
+                     "Skipping external service tests")
     def test_generate(self):
         ollama_client = OllamaClient(model="llama3:8b-instruct-fp16")
         response = ollama_client.generate(prompt="What is the capital of France?")
         print(response)
 
+    @unittest.skipIf(os.getenv("SKIP_EXTERNAL_SERVICES", "false").lower() == "true",
+                     "Skipping external service tests")
     def test_stream_generate(self):
         ollama_client = OllamaClient(model="llama3:8b-instruct-fp16")
 
