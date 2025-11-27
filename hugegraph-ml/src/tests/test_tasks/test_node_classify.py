@@ -38,7 +38,7 @@ class TestNodeClassify(unittest.TestCase):
                 ),
             )
         except ValueError as e:
-            self.fail(f"_check_graph failed: {str(e)}")
+            self.fail(f"_check_graph failed: {e!s}")
 
     def test_train_and_evaluate(self):
         node_classify_task = NodeClassify(

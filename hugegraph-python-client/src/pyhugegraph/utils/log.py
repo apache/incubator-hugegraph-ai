@@ -57,11 +57,11 @@ from logging.handlers import RotatingFileHandler
 from rich.logging import RichHandler
 
 __all__ = [
-    "init_logger",
     "fetch_log_level",
-    "log_first_n_times",
-    "log_every_n_times",
+    "init_logger",
     "log_every_n_secs",
+    "log_every_n_times",
+    "log_first_n_times",
 ]
 
 LOG_BUFFER_SIZE_ENV: str = "LOG_BUFFER_SIZE"
@@ -202,7 +202,7 @@ def log_first_n_times(level, message, n=1, *, logger_name=None, key="caller"):
     if "caller" in key:
         hash_key = hash_key + caller_key
     if "message" in key:
-        hash_key = hash_key + (message,)
+        hash_key = (*hash_key, message)
 
     LOG_COUNTER[hash_key] += 1
     if LOG_COUNTER[hash_key] <= n:

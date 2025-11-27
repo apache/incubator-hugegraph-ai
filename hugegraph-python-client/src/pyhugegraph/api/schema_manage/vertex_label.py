@@ -101,7 +101,7 @@ class VertexLabel(HugeParamsBase):
         path = "schema/vertexlabels"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "POST", data=json.dumps(data)):
-            return f'create VertexLabel success, Detail: "{str(response)}"'
+            return f'create VertexLabel success, Detail: "{response!s}"'
         log.error("create VertexLabel failed, Detail: %s", str(response))
         return ""
 
@@ -120,7 +120,7 @@ class VertexLabel(HugeParamsBase):
         }
         self.clean_parameter_holder()
         if response := self._sess.request(path, "PUT", data=json.dumps(data)):
-            return f'append VertexLabel success, Detail: "{str(response)}"'
+            return f'append VertexLabel success, Detail: "{response!s}"'
         log.error("append VertexLabel failed, Detail: %s", str(response))
         return ""
 
@@ -130,7 +130,7 @@ class VertexLabel(HugeParamsBase):
         path = f"schema/vertexlabels/{name}"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "DELETE"):
-            return f'remove VertexLabel success, Detail: "{str(response)}"'
+            return f'remove VertexLabel success, Detail: "{response!s}"'
         log.error("remove VertexLabel failed, Detail: %s", str(response))
         return ""
 
@@ -146,6 +146,6 @@ class VertexLabel(HugeParamsBase):
             "user_data": user_data,
         }
         if response := self._sess.request(path, "PUT", data=json.dumps(data)):
-            return f'eliminate VertexLabel success, Detail: "{str(response)}"'
+            return f'eliminate VertexLabel success, Detail: "{response!s}"'
         log.error("eliminate VertexLabel failed, Detail: %s", str(response))
         return ""

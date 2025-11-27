@@ -21,7 +21,7 @@ import re
 import threading
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from pyhugegraph.utils.log import log
 from pyhugegraph.utils.util import ResponseValidation
@@ -31,8 +31,8 @@ if TYPE_CHECKING:
 
 
 class SingletonMeta(type):
-    _instances = {}
-    _lock = threading.Lock()
+    _instances: ClassVar[dict] = {}
+    _lock: ClassVar[threading.Lock] = threading.Lock()
 
     def __call__(cls, *args, **kwargs):
         """
@@ -143,7 +143,7 @@ def http(method: str, path: str) -> Callable:
 
 
 class RouterMixin:
-    def _invoke_request_registered(self, placeholders: dict = None, validator=None, **kwargs: Any):
+    def _invoke_request_registered(self, placeholders: dict | None = None, validator=None, **kwargs: Any):
         """
         Make an HTTP request using the stored partial request function.
         Args:
@@ -184,6 +184,6 @@ class RouterMixin:
         frame = inspect.currentframe().f_back
         fname = frame.f_code.co_name
         log.debug(  # pylint: disable=logging-fstring-interpolation
-            f"Invoke request: {str(self.__class__.__name__)}.{fname}"
+            f"Invoke request: {self.__class__.__name__!s}.{fname}"
         )
         return getattr(self, f"_{fname}_request")(validator=validator, **kwargs)

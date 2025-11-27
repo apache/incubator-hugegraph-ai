@@ -53,6 +53,6 @@ class PyVermeerClient:
             return self._modules[name]
         raise AttributeError(f"Module {name} not found")
 
-    def send_request(self, method: str, endpoint: str, params: dict = None):
+    def send_request(self, method: str, endpoint: str, params: dict | None = None):
         """Unified request method"""
         return self.session.request(method, endpoint, params)

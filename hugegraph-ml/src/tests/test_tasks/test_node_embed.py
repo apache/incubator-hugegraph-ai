@@ -36,7 +36,7 @@ class TestNodeEmbed(unittest.TestCase):
                 model=DGI(n_in_feats=self.graph.ndata["feat"].shape[1], n_hidden=self.embed_size),
             )
         except ValueError as e:
-            self.fail(f"_check_graph failed: {str(e)}")
+            self.fail(f"_check_graph failed: {e!s}")
 
     def test_train_and_embed(self):
         node_embed_task = NodeEmbed(

@@ -88,7 +88,7 @@ class VermeerSession:
         """
         self._session.close()
 
-    def request(self, method: str, path: str, params: dict = None) -> dict:
+    def request(self, method: str, path: str, params: dict | None = None) -> dict:
         """request"""
         try:
             log.debug(f"Request made to {path} with params {json.dumps(params)}")

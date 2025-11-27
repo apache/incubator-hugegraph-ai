@@ -92,8 +92,8 @@ class IndexLabel(HugeParamsBase):
         path = "schema/indexlabels"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "POST", data=json.dumps(data)):
-            return f'create IndexLabel success, Detail: "{str(response)}"'
-        log.error(f'create IndexLabel failed, Detail: "{str(response)}"')
+            return f'create IndexLabel success, Detail: "{response!s}"'
+        log.error(f'create IndexLabel failed, Detail: "{response!s}"')
         return None
 
     @decorator_params
@@ -102,6 +102,6 @@ class IndexLabel(HugeParamsBase):
         path = f"schema/indexlabels/{name}"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "DELETE"):
-            return f'remove IndexLabel success, Detail: "{str(response)}"'
-        log.error(f'remove IndexLabel failed, Detail: "{str(response)}"')
+            return f'remove IndexLabel success, Detail: "{response!s}"'
+        log.error(f'remove IndexLabel failed, Detail: "{response!s}"')
         return None
