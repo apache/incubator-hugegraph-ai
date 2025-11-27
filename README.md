@@ -188,7 +188,9 @@ uv add --group dev pytest-mock  # Add to dev group
   - \`pre-commit run --all-files\`
 - Config: [.pre-commit-config.yaml](.pre-commit-config.yaml). CI enforces these checks.
   **Key Points:**
+- Config: [.pre-commit-config.yaml](.pre-commit-config.yaml). CI enforces these checks.
 
+**Key Points:**
 - Use [GitHub Desktop](https://desktop.github.com/) for easier PR management
 - Check existing issues before reporting bugs
 
