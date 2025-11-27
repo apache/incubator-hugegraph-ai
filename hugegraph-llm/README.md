@@ -28,7 +28,7 @@ For detailed source code doc, visit our [DeepWiki](https://deepwiki.com/apache/i
   - `ruff format .`
   - `ruff check .`
 - Enable Git hooks via pre-commit:
-  - `pre-commit install`
+  - `pre-commit install` (in the root dir)
   - `pre-commit run --all-files`
 - Config: [../.pre-commit-config.yaml](../.pre-commit-config.yaml)
 
