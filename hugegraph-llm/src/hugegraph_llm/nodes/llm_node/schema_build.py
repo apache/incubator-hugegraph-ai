@@ -16,11 +16,12 @@
 import json
 
 from pycgraph import CStatus
-from hugegraph_llm.nodes.base_node import BaseNode
-from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
-from hugegraph_llm.models.llms.init_llm import get_chat_llm
+
 from hugegraph_llm.config import llm_settings
+from hugegraph_llm.models.llms.init_llm import get_chat_llm
+from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.llm_op.schema_build import SchemaBuilder
+from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 from hugegraph_llm.utils.log import log
 
 
@@ -61,16 +62,12 @@ class SchemaBuildNode(BaseNode):
 
         # few_shot_schema: already parsed dict or raw JSON string
         few_shot_schema = {}
-        fss_src = (
-            self.wk_input.few_shot_schema if self.wk_input.few_shot_schema else None
-        )
+        fss_src = self.wk_input.few_shot_schema if self.wk_input.few_shot_schema else None
         if fss_src:
             try:
                 few_shot_schema = json.loads(fss_src)
             except json.JSONDecodeError as e:
-                return CStatus(
-                    -1, f"Few Shot Schema is not in a valid JSON format: {e}"
-                )
+                return CStatus(-1, f"Few Shot Schema is not in a valid JSON format: {e}")
 
         _context_payload = {
             "raw_texts": raw_texts,

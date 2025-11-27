@@ -14,37 +14,38 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from typing import Optional, List, Literal, Union
+from typing import List, Literal, Optional, Union
+
+from pyhugegraph.client import PyHugeClient
 
 from hugegraph_llm.config import huge_settings
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.common_op.check_schema import CheckSchema
+from hugegraph_llm.operators.common_op.merge_dedup_rerank import MergeDedupRerank
 from hugegraph_llm.operators.common_op.print_result import PrintResult
+from hugegraph_llm.operators.document_op.chunk_split import ChunkSplit
+from hugegraph_llm.operators.document_op.word_extract import WordExtract
+from hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph import Commit2Graph
+from hugegraph_llm.operators.hugegraph_op.fetch_graph_data import FetchGraphData
 from hugegraph_llm.operators.hugegraph_op.schema_manager import SchemaManager
 from hugegraph_llm.operators.index_op.build_gremlin_example_index import (
     BuildGremlinExampleIndex,
 )
+from hugegraph_llm.operators.index_op.build_semantic_index import BuildSemanticIndex
+from hugegraph_llm.operators.index_op.build_vector_index import BuildVectorIndex
 from hugegraph_llm.operators.index_op.gremlin_example_index_query import (
     GremlinExampleIndexQuery,
 )
-from hugegraph_llm.operators.llm_op.gremlin_generate import GremlinGenerateSynthesize
-from hugegraph_llm.utils.decorators import log_time, log_operator_time, record_rpm
-from hugegraph_llm.operators.hugegraph_op.fetch_graph_data import FetchGraphData
-from hugegraph_llm.operators.document_op.chunk_split import ChunkSplit
-from hugegraph_llm.operators.llm_op.info_extract import InfoExtract
-from hugegraph_llm.operators.llm_op.property_graph_extract import PropertyGraphExtract
-from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
-from hugegraph_llm.operators.hugegraph_op.commit_to_hugegraph import Commit2Graph
-from hugegraph_llm.operators.index_op.build_semantic_index import BuildSemanticIndex
-from hugegraph_llm.operators.index_op.build_vector_index import BuildVectorIndex
-from hugegraph_llm.operators.document_op.word_extract import WordExtract
-from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
 from hugegraph_llm.operators.index_op.semantic_id_query import SemanticIdQuery
 from hugegraph_llm.operators.index_op.vector_index_query import VectorIndexQuery
-from hugegraph_llm.operators.common_op.merge_dedup_rerank import MergeDedupRerank
 from hugegraph_llm.operators.llm_op.answer_synthesize import AnswerSynthesize
-from pyhugegraph.client import PyHugeClient
+from hugegraph_llm.operators.llm_op.disambiguate_data import DisambiguateData
+from hugegraph_llm.operators.llm_op.gremlin_generate import GremlinGenerateSynthesize
+from hugegraph_llm.operators.llm_op.info_extract import InfoExtract
+from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
+from hugegraph_llm.operators.llm_op.property_graph_extract import PropertyGraphExtract
+from hugegraph_llm.utils.decorators import log_operator_time, log_time, record_rpm
 
 
 class OperatorList:
@@ -68,9 +69,7 @@ class OperatorList:
         self.operators.append(BuildGremlinExampleIndex(self.embedding, examples))
         return self
 
-    def import_schema(
-        self, from_hugegraph=None, from_extraction=None, from_user_defined=None
-    ):
+    def import_schema(self, from_hugegraph=None, from_extraction=None, from_user_defined=None):
         if from_hugegraph:
             self.operators.append(SchemaManager(from_hugegraph))
         elif from_user_defined:
@@ -91,9 +90,7 @@ class OperatorList:
         gremlin_prompt: Optional[str] = None,
         vertices: Optional[List[str]] = None,
     ):
-        self.operators.append(
-            GremlinGenerateSynthesize(self.llm, schema, vertices, gremlin_prompt)
-        )
+        self.operators.append(GremlinGenerateSynthesize(self.llm, schema, vertices, gremlin_prompt))
         return self
 
     def print_result(self):
@@ -125,9 +122,7 @@ class OperatorList:
         elif extract_type == "property_graph":
             self.operators.append(PropertyGraphExtract(self.llm, example_prompt))
         else:
-            raise ValueError(
-                f"invalid extract_type: {extract_type!r}, expected 'triples' or 'property_graph'"
-            )
+            raise ValueError(f"invalid extract_type: {extract_type!r}, expected 'triples' or 'property_graph'")
         return self
 
     def disambiguate_word_sense(self):
@@ -168,9 +163,7 @@ class OperatorList:
         :param extract_template: Template for keyword extraction.
         :return: Self-instance for chaining.
         """
-        self.operators.append(
-            KeywordExtract(text=text, extract_template=extract_template)
-        )
+        self.operators.append(KeywordExtract(text=text, extract_template=extract_template))
         return self
 
     def keywords_to_vid(

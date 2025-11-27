@@ -59,23 +59,21 @@ class ClientUtils:
 
     def init_vertex_label(self):
         schema = self.schema
-        schema.vertexLabel("person").properties("name", "age", "city").primaryKeys(
-            "name"
-        ).nullableKeys("city").ifNotExist().create()
-        schema.vertexLabel("software").properties("name", "lang", "price").primaryKeys(
-            "name"
-        ).nullableKeys("price").ifNotExist().create()
+        schema.vertexLabel("person").properties("name", "age", "city").primaryKeys("name").nullableKeys(
+            "city"
+        ).ifNotExist().create()
+        schema.vertexLabel("software").properties("name", "lang", "price").primaryKeys("name").nullableKeys(
+            "price"
+        ).ifNotExist().create()
         schema.vertexLabel("book").useCustomizeStringId().properties("name", "price").nullableKeys(
             "price"
         ).ifNotExist().create()
 
     def init_edge_label(self):
         schema = self.schema
-        schema.edgeLabel("knows").sourceLabel("person").targetLabel(
-            "person"
-        ).multiTimes().properties("date", "city").sortKeys("date").nullableKeys(
-            "city"
-        ).ifNotExist().create()
+        schema.edgeLabel("knows").sourceLabel("person").targetLabel("person").multiTimes().properties(
+            "date", "city"
+        ).sortKeys("date").nullableKeys("city").ifNotExist().create()
         schema.edgeLabel("created").sourceLabel("person").targetLabel("software").properties(
             "date", "city"
         ).nullableKeys("city").ifNotExist().create()
@@ -84,16 +82,10 @@ class ClientUtils:
         schema = self.schema
         schema.indexLabel("personByCity").onV("person").by("city").secondary().ifNotExist().create()
         schema.indexLabel("personByAge").onV("person").by("age").range().ifNotExist().create()
-        schema.indexLabel("softwareByPrice").onV("software").by(
-            "price"
-        ).range().ifNotExist().create()
-        schema.indexLabel("softwareByLang").onV("software").by(
-            "lang"
-        ).secondary().ifNotExist().create()
+        schema.indexLabel("softwareByPrice").onV("software").by("price").range().ifNotExist().create()
+        schema.indexLabel("softwareByLang").onV("software").by("lang").secondary().ifNotExist().create()
         schema.indexLabel("knowsByDate").onE("knows").by("date").secondary().ifNotExist().create()
-        schema.indexLabel("createdByDate").onE("created").by(
-            "date"
-        ).secondary().ifNotExist().create()
+        schema.indexLabel("createdByDate").onE("created").by("date").secondary().ifNotExist().create()
 
     def init_vertices(self):
         graph = self.graph
@@ -125,7 +117,7 @@ class ClientUtils:
 
     def _get_vertex(self, label, properties):
         lst = self.graph.getVertexByCondition(label=label, limit=1, properties=properties)
-        assert 1 == len(lst), "Can't find vertex."
+        assert len(lst) == 1, "Can't find vertex."
         return lst[0]
 
     def clear_graph_all_data(self):

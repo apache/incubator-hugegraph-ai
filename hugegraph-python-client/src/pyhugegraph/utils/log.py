@@ -13,17 +13,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import atexit
-import logging
-import os
-import sys
-import time
-from collections import Counter
-from functools import lru_cache
-from logging.handlers import RotatingFileHandler
-
-from rich.logging import RichHandler
-
 """
 HugeGraph Logger Util
 ======================
@@ -42,32 +31,44 @@ Best Practices:
 
 Example Usage:
     from pyhugegraph.utils.log import init_logger
-    
+
     # Initialize logger with both console and file output
     log = init_logger(
         log_output="logs/myapp.log",
         log_level=logging.INFO,
         logger_name="myapp"
     )
-    
+
     # Use the log/logger
     log.info("Application started")
     log.debug("Processing data...")
     log.error("Error occurred: %s", error_msg)
 """
+
+import atexit
+import logging
+import os
+import sys
+import time
+from collections import Counter
+from functools import cache, lru_cache
+from logging.handlers import RotatingFileHandler
+
+from rich.logging import RichHandler
+
 __all__ = [
-    "init_logger",
     "fetch_log_level",
-    "log_first_n_times",
-    "log_every_n_times",
+    "init_logger",
     "log_every_n_secs",
+    "log_every_n_times",
+    "log_first_n_times",
 ]
 
 LOG_BUFFER_SIZE_ENV: str = "LOG_BUFFER_SIZE"
 DEFAULT_BUFFER_SIZE: int = 1024 * 1024  # 1MB
 
 
-@lru_cache()  # avoid creating multiple handlers when calling init_logger()
+@lru_cache  # avoid creating multiple handlers when calling init_logger()
 def init_logger(
     log_output=None,
     log_level=logging.INFO,
@@ -134,13 +135,11 @@ def init_logger(
 
 # Cache the opened file object, so that different calls to `initialize_logger`
 # with the same file name can safely write to the same file.
-@lru_cache(maxsize=None)
+@cache
 def _cached_log_file(filename):
     """Cache the opened file object"""
     # Use 1K buffer if writing to cloud storage
-    with open(
-        filename, "a", buffering=_determine_buffer_size(filename), encoding="utf-8"
-    ) as file_io:
+    with open(filename, "a", buffering=_determine_buffer_size(filename), encoding="utf-8") as file_io:
         atexit.register(file_io.close)
         return file_io
 
@@ -203,7 +202,7 @@ def log_first_n_times(level, message, n=1, *, logger_name=None, key="caller"):
     if "caller" in key:
         hash_key = hash_key + caller_key
     if "message" in key:
-        hash_key = hash_key + (message,)
+        hash_key = (*hash_key, message)
 
     LOG_COUNTER[hash_key] += 1
     if LOG_COUNTER[hash_key] <= n:
@@ -219,7 +218,7 @@ def log_every_n_times(level, message, n=1, *, logger_name=None):
 
 def log_every_n_secs(level, message, n=1, *, logger_name=None):
     caller_module, key = _identify_caller()
-    last_logged = LOG_TIMERS.get(key, None)
+    last_logged = LOG_TIMERS.get(key)
     current_time = time.time()
     if last_logged is None or current_time - last_logged >= n:
         logging.getLogger(logger_name or caller_module).log(level, message)

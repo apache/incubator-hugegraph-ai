@@ -15,8 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Optional, Literal, List
 from enum import Enum
+from typing import List, Literal, Optional
+
 from fastapi import Query
 from pydantic import BaseModel, field_validator
 
@@ -36,23 +37,13 @@ class RAGRequest(BaseModel):
     raw_answer: bool = Query(False, description="Use LLM to generate answer directly")
     vector_only: bool = Query(False, description="Use LLM to generate answer with vector")
     graph_only: bool = Query(True, description="Use LLM to generate answer with graph RAG only")
-    graph_vector_answer: bool = Query(
-        False, description="Use LLM to generate answer with vector & GraphRAG"
-    )
+    graph_vector_answer: bool = Query(False, description="Use LLM to generate answer with vector & GraphRAG")
     graph_ratio: float = Query(0.5, description="The ratio of GraphRAG ans & vector ans")
-    rerank_method: Literal["bleu", "reranker"] = Query(
-        "bleu", description="Method to rerank the results."
-    )
-    near_neighbor_first: bool = Query(
-        False, description="Prioritize near neighbors in the search results."
-    )
-    custom_priority_info: str = Query(
-        "", description="Custom information to prioritize certain results."
-    )
+    rerank_method: Literal["bleu", "reranker"] = Query("bleu", description="Method to rerank the results.")
+    near_neighbor_first: bool = Query(False, description="Prioritize near neighbors in the search results.")
+    custom_priority_info: str = Query("", description="Custom information to prioritize certain results.")
     # Graph Configs
-    max_graph_items: int = Query(
-        30, description="Maximum number of items for GQL queries in graph."
-    )
+    max_graph_items: int = Query(30, description="Maximum number of items for GQL queries in graph.")
     topk_return_results: int = Query(20, description="Number of sorted results to return finally.")
     vector_dis_threshold: float = Query(
         0.9,
@@ -64,14 +55,10 @@ class RAGRequest(BaseModel):
         description="TopK results returned for each keyword \
                                    extracted from the query, by default only the most similar one is returned.",
     )
-    client_config: Optional[GraphConfigRequest] = Query(
-        None, description="hugegraph server config."
-    )
+    client_config: Optional[GraphConfigRequest] = Query(None, description="hugegraph server config.")
 
     # Keep prompt params in the end
-    answer_prompt: Optional[str] = Query(
-        prompt.answer_prompt, description="Prompt to guide the answer generation."
-    )
+    answer_prompt: Optional[str] = Query(prompt.answer_prompt, description="Prompt to guide the answer generation.")
     keywords_extract_prompt: Optional[str] = Query(
         prompt.keywords_extract_prompt,
         description="Prompt for extracting keywords from query.",
@@ -87,9 +74,7 @@ class RAGRequest(BaseModel):
 class GraphRAGRequest(BaseModel):
     query: str = Query(..., description="Query you want to ask")
     # Graph Configs
-    max_graph_items: int = Query(
-        30, description="Maximum number of items for GQL queries in graph."
-    )
+    max_graph_items: int = Query(30, description="Maximum number of items for GQL queries in graph.")
     topk_return_results: int = Query(20, description="Number of sorted results to return finally.")
     vector_dis_threshold: float = Query(
         0.9,
@@ -102,24 +87,16 @@ class GraphRAGRequest(BaseModel):
                                     from the query, by default only the most similar one is returned.",
     )
 
-    client_config: Optional[GraphConfigRequest] = Query(
-        None, description="hugegraph server config."
-    )
+    client_config: Optional[GraphConfigRequest] = Query(None, description="hugegraph server config.")
     get_vertex_only: bool = Query(False, description="return only keywords & vertex (early stop).")
 
     gremlin_tmpl_num: int = Query(
         1,
         description="Number of Gremlin templates to use. If num <=0 means template is not provided",
     )
-    rerank_method: Literal["bleu", "reranker"] = Query(
-        "bleu", description="Method to rerank the results."
-    )
-    near_neighbor_first: bool = Query(
-        False, description="Prioritize near neighbors in the search results."
-    )
-    custom_priority_info: str = Query(
-        "", description="Custom information to prioritize certain results."
-    )
+    rerank_method: Literal["bleu", "reranker"] = Query("bleu", description="Method to rerank the results.")
+    near_neighbor_first: bool = Query(False, description="Prioritize near neighbors in the search results.")
+    custom_priority_info: str = Query("", description="Custom information to prioritize certain results.")
     gremlin_prompt: Optional[str] = Query(
         prompt.gremlin_generate_prompt,
         description="Prompt for the Text2Gremlin query.",
@@ -163,16 +140,12 @@ class GremlinOutputType(str, Enum):
 
 class GremlinGenerateRequest(BaseModel):
     query: str
-    example_num: Optional[int] = Query(
-        0, description="Number of Gremlin templates to use.(0 means no templates)"
-    )
+    example_num: Optional[int] = Query(0, description="Number of Gremlin templates to use.(0 means no templates)")
     gremlin_prompt: Optional[str] = Query(
         prompt.gremlin_generate_prompt,
         description="Prompt for the Text2Gremlin query.",
     )
-    client_config: Optional[GraphConfigRequest] = Query(
-        None, description="hugegraph server config."
-    )
+    client_config: Optional[GraphConfigRequest] = Query(None, description="hugegraph server config.")
     output_types: Optional[List[GremlinOutputType]] = Query(
         default=[GremlinOutputType.TEMPLATE_GREMLIN],
         description="""
@@ -189,7 +162,5 @@ class GremlinGenerateRequest(BaseModel):
             required_placeholders = ["{query}", "{schema}", "{example}", "{vertices}"]
             missing = [p for p in required_placeholders if p not in v]
             if missing:
-                raise ValueError(
-                    f"Prompt template is missing required placeholders: {', '.join(missing)}"
-                )
+                raise ValueError(f"Prompt template is missing required placeholders: {', '.join(missing)}")
         return v

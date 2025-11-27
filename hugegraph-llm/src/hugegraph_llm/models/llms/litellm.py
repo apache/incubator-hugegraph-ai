@@ -15,16 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Callable, List, Optional, Dict, Any, AsyncGenerator
+from typing import Any, AsyncGenerator, Callable, Dict, List, Optional
 
 import tiktoken
-from litellm import completion, acompletion
-from litellm.exceptions import RateLimitError, BudgetExceededError, APIError
+from litellm import acompletion, completion
+from litellm.exceptions import APIError, BudgetExceededError, RateLimitError
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
 from hugegraph_llm.models.llms.base import BaseLLM

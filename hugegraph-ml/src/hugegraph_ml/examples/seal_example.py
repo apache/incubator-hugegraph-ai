@@ -15,10 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import torch
+
 from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 from hugegraph_ml.models.seal import DGCNN, data_prepare
 from hugegraph_ml.tasks.link_prediction_seal import LinkPredictionSeal
-import torch
 
 
 def seal_example(n_epochs=200):
@@ -44,6 +45,10 @@ def seal_example(n_epochs=200):
     )
     link_pre_task = LinkPredictionSeal(graph, split_edge, model)
     link_pre_task.train(lr=0.005, n_epochs=n_epochs)
+
+    # 在训练结束后，最后一个epoch的评估结果已经在train方法中计算并存储在summary_test中
+    # 这里我们可以简单地打印一条消息，表示训练已完成
+    print("Training completed. Evaluation metrics were calculated during training.")
 
 
 if __name__ == "__main__":

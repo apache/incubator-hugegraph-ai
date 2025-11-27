@@ -48,7 +48,7 @@ class DiffPool(nn.Module):
         pool_ratio=0.1,
         concat=False,
     ):
-        super(DiffPool, self).__init__()
+        super().__init__()
         self.link_pred = True
         self.concat = concat
         self.n_pooling = n_pooling
@@ -73,17 +73,10 @@ class DiffPool(nn.Module):
             self.gc_before_pool.append(
                 SAGEConv(n_hidden, n_hidden, aggregator_type, feat_drop=dropout, activation=F.relu)
             )
-        self.gc_before_pool.append(
-            SAGEConv(n_hidden, n_embedding, aggregator_type, feat_drop=dropout, activation=None)
-        )
+        self.gc_before_pool.append(SAGEConv(n_hidden, n_embedding, aggregator_type, feat_drop=dropout, activation=None))
 
         assign_dims = [self.assign_dim]
-        if self.concat:
-            # diffpool layer receive pool_embedding_dim node feature tensor
-            # and return pool_embedding_dim node embedding
-            pool_embedding_dim = n_hidden * (n_layers - 1) + n_embedding
-        else:
-            pool_embedding_dim = n_embedding
+        pool_embedding_dim = n_hidden * (n_layers - 1) + n_embedding if self.concat else n_embedding
 
         self.first_diffpool_layer = _DiffPoolBatchedGraphLayer(
             pool_embedding_dim,
@@ -103,9 +96,7 @@ class DiffPool(nn.Module):
         self.assign_dim = int(self.assign_dim * pool_ratio)
         # each pooling module
         for _ in range(n_pooling - 1):
-            self.diffpool_layers.append(
-                _BatchedDiffPool(pool_embedding_dim, self.assign_dim, n_hidden, self.link_pred)
-            )
+            self.diffpool_layers.append(_BatchedDiffPool(pool_embedding_dim, self.assign_dim, n_hidden, self.link_pred))
             gc_after_per_pool = nn.ModuleList()
             for _ in range(n_layers - 1):
                 gc_after_per_pool.append(_BatchedGraphSAGE(n_hidden, n_hidden))
@@ -167,10 +158,7 @@ class DiffPool(nn.Module):
             if self.num_aggs == 2:
                 readout, _ = torch.max(h, dim=1)
                 out_all.append(readout)
-        if self.concat or self.num_aggs > 1:
-            final_readout = torch.cat(out_all, dim=1)
-        else:
-            final_readout = readout
+        final_readout = torch.cat(out_all, dim=1) if self.concat or self.num_aggs > 1 else readout
         ypred = self.pred_layer(final_readout)
         return ypred
 
@@ -228,7 +216,7 @@ class _DiffPoolAssignment(nn.Module):
 
 class _BatchedDiffPool(nn.Module):
     def __init__(self, n_feat, n_next, n_hid, link_pred=False, entropy=True):
-        super(_BatchedDiffPool, self).__init__()
+        super().__init__()
         self.link_pred = link_pred
         self.link_pred_layer = _LinkPredLoss()
         self.embed = _BatchedGraphSAGE(n_feat, n_hid)
@@ -262,7 +250,7 @@ class _DiffPoolBatchedGraphLayer(nn.Module):
         aggregator_type,
         link_pred,
     ):
-        super(_DiffPoolBatchedGraphLayer, self).__init__()
+        super().__init__()
         self.embedding_dim = input_dim
         self.assign_dim = assign_dim
         self.hidden_dim = output_feat_dim
@@ -338,8 +326,8 @@ def _batch2tensor(batch_adj, batch_feat, node_per_pool_graph):
         end = (i + 1) * node_per_pool_graph
         adj_list.append(batch_adj[start:end, start:end])
         feat_list.append(batch_feat[start:end, :])
-    adj_list = list(map(lambda x: torch.unsqueeze(x, 0), adj_list))
-    feat_list = list(map(lambda x: torch.unsqueeze(x, 0), feat_list))
+    adj_list = [torch.unsqueeze(x, 0) for x in adj_list]
+    feat_list = [torch.unsqueeze(x, 0) for x in feat_list]
     adj = torch.cat(adj_list, dim=0)
     feat = torch.cat(feat_list, dim=0)
 
@@ -373,10 +361,7 @@ def _gcn_forward(g, h, gc_layers, cat=False):
         block_readout.append(h)
     h = gc_layers[-1](g, h)
     block_readout.append(h)
-    if cat:
-        block = torch.cat(block_readout, dim=1)  # N x F, F = F1 + F2 + ...
-    else:
-        block = h
+    block = torch.cat(block_readout, dim=1) if cat else h
     return block
 
 
@@ -385,8 +370,5 @@ def _gcn_forward_tensorized(h, adj, gc_layers, cat=False):
     for gc_layer in gc_layers:
         h = gc_layer(h, adj)
         block_readout.append(h)
-    if cat:
-        block = torch.cat(block_readout, dim=2)  # N x F, F = F1 + F2 + ...
-    else:
-        block = h
+    block = torch.cat(block_readout, dim=2) if cat else h
     return block

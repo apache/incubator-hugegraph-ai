@@ -15,20 +15,25 @@
 # specific language governing permissions and limitations
 # under the License.
 
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ["--maxkb=1000"]
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: debug-statements
 
-class VermeerConfig:
-    """The configuration of a Vermeer instance."""
-
-    ip: str
-    port: int
-    token: str
-    factor: str
-    username: str
-    graph_space: str
-
-    def __init__(self, ip: str, port: int, token: str, timeout: tuple[float, float] = (0.5, 15.0)):
-        """Initialize the configuration for a Vermeer instance."""
-        self.ip = ip
-        self.port = port
-        self.token = token
-        self.timeout = timeout
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.13.1
+    hooks:
+      - id: ruff-format
+        types_or: [python, pyi]
+      - id: ruff
+        types_or: [python, pyi]
+        args: [--fix]

@@ -18,9 +18,10 @@
 
 import json
 import os
-from typing import Dict, Any
+from typing import Any, Dict
 
-from hugegraph_llm.config import resource_path, prompt as prompt_tpl
+from hugegraph_llm.config import prompt as prompt_tpl
+from hugegraph_llm.config import resource_path
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.utils.log import log
 

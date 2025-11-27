@@ -28,16 +28,19 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/bgrl
 """
 
 import copy
+import itertools
+
+import dgl
+import numpy as np
 import torch
+from dgl.nn.pytorch.conv import GraphConv
+from dgl.transforms import Compose, DropEdge, FeatMask
 from torch import nn
 from torch.nn import BatchNorm1d
 from torch.nn.functional import cosine_similarity
-import dgl
-from dgl.nn.pytorch.conv import GraphConv
-from dgl.transforms import Compose, DropEdge, FeatMask
-import numpy as np
 
-class MLP_Predictor(nn.Module):
+
+class MLPPredictor(nn.Module):
     r"""MLP used for predictor. The MLP has one hidden layer.
     Args:
         input_size (int): Size of input features.
@@ -67,10 +70,10 @@ class MLP_Predictor(nn.Module):
 
 class GCN(nn.Module):
     def __init__(self, layer_sizes, batch_norm_mm=0.99):
-        super(GCN, self).__init__()
+        super().__init__()
 
         self.layers = nn.ModuleList()
-        for in_dim, out_dim in zip(layer_sizes[:-1], layer_sizes[1:]):
+        for in_dim, out_dim in itertools.pairwise(layer_sizes):
             self.layers.append(GraphConv(in_dim, out_dim))
             self.layers.append(BatchNorm1d(out_dim, momentum=batch_norm_mm))
             self.layers.append(nn.PReLU())
@@ -78,16 +81,14 @@ class GCN(nn.Module):
     def forward(self, g, feats):
         x = feats
         for layer in self.layers:
-            if isinstance(layer, GraphConv):
-                x = layer(g, x)
-            else:
-                x = layer(x)
+            x = layer(g, x) if isinstance(layer, GraphConv) else layer(x)
         return x
 
     def reset_parameters(self):
         for layer in self.layers:
             if hasattr(layer, "reset_parameters"):
                 layer.reset_parameters()
+
 
 class BGRL(nn.Module):
     r"""BGRL architecture for Graph representation learning.
@@ -100,7 +101,7 @@ class BGRL(nn.Module):
     """
 
     def __init__(self, encoder, predictor):
-        super(BGRL, self).__init__()
+        super().__init__()
         # online network
         self.online_encoder = encoder
         self.predictor = predictor
@@ -117,9 +118,7 @@ class BGRL(nn.Module):
 
     def trainable_parameters(self):
         r"""Returns the parameters that will be updated via an optimizer."""
-        return list(self.online_encoder.parameters()) + list(
-            self.predictor.parameters()
-        )
+        return list(self.online_encoder.parameters()) + list(self.predictor.parameters())
 
     @torch.no_grad()
     def update_target_network(self, mm):
@@ -127,18 +126,12 @@ class BGRL(nn.Module):
         Args:
             mm (float): Momentum used in moving average update.
         """
-        for param_q, param_k in zip(
-            self.online_encoder.parameters(), self.target_encoder.parameters()
-        ):
+        for param_q, param_k in zip(self.online_encoder.parameters(), self.target_encoder.parameters(), strict=False):
             param_k.data.mul_(mm).add_(param_q.data, alpha=1.0 - mm)
 
     def forward(self, graph, feat):
-        transform_1 = get_graph_drop_transform(
-        drop_edge_p=0.3, feat_mask_p=0.3
-        )
-        transform_2 = get_graph_drop_transform(
-        drop_edge_p=0.2, feat_mask_p=0.4
-        )
+        transform_1 = get_graph_drop_transform(drop_edge_p=0.3, feat_mask_p=0.3)
+        transform_2 = get_graph_drop_transform(drop_edge_p=0.2, feat_mask_p=0.4)
         online_x = transform_1(graph)
         target_x = transform_2(graph)
         online_x, target_x = dgl.add_self_loop(online_x), dgl.add_self_loop(target_x)
@@ -159,8 +152,8 @@ class BGRL(nn.Module):
             target_y2 = self.target_encoder(online_x, online_feats).detach()
         loss = (
             2
-            - cosine_similarity(online_q1, target_y1.detach(), dim=-1).mean() # pylint: disable=E1102
-            - cosine_similarity(online_q2, target_y2.detach(), dim=-1).mean() # pylint: disable=E1102
+            - cosine_similarity(online_q1, target_y1.detach(), dim=-1).mean()  # pylint: disable=E1102
+            - cosine_similarity(online_q2, target_y2.detach(), dim=-1).mean()  # pylint: disable=E1102
         )
         return loss
 
@@ -182,6 +175,7 @@ class BGRL(nn.Module):
         """
         h = self.target_encoder(graph, feats)  # Encode the node features with GCN
         return h.detach()  # Detach from computation graph for evaluation
+
 
 def compute_representations(net, dataset, device):
     r"""Pre-computes the representations for the entire data.
@@ -211,6 +205,7 @@ def compute_representations(net, dataset, device):
     labels = torch.cat(labels, dim=0)
     return [reps, labels]
 
+
 class CosineDecayScheduler:
     def __init__(self, max_val, warmup_steps, total_steps):
         self.max_val = max_val
@@ -223,23 +218,15 @@ class CosineDecayScheduler:
         elif self.warmup_steps <= step <= self.total_steps:
             return (
                 self.max_val
-                * (
-                    1
-                    + np.cos(
-                        (step - self.warmup_steps)
-                        * np.pi
-                        / (self.total_steps - self.warmup_steps)
-                    )
-                )
+                * (1 + np.cos((step - self.warmup_steps) * np.pi / (self.total_steps - self.warmup_steps)))
                 / 2
             )
         else:
-            raise ValueError(
-                f"Step ({step}) > total number of steps ({self.total_steps})."
-            )
+            raise ValueError(f"Step ({step}) > total number of steps ({self.total_steps}).")
+
 
 def get_graph_drop_transform(drop_edge_p, feat_mask_p):
-    transforms = list()
+    transforms = []
 
     # make copy of graph
     transforms.append(copy.deepcopy)

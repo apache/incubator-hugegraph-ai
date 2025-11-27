@@ -56,9 +56,7 @@ class VectorStoreBase(ABC):
         """
 
     @abstractmethod
-    def search(
-        self, query_vector: List[float], top_k: int, dis_threshold: float = 0.9
-    ) -> List[Any]:
+    def search(self, query_vector: List[float], top_k: int, dis_threshold: float = 0.9) -> List[Any]:
         """
         Search for the top_k most similar vectors to the query vector.
 

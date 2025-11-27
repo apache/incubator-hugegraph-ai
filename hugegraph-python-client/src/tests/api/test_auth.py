@@ -19,6 +19,7 @@
 import unittest
 
 from pyhugegraph.utils.exceptions import NotFoundError
+
 from ..client_utils import ClientUtils
 
 
@@ -138,7 +139,7 @@ class TestAuthManager(unittest.TestCase):
         # Delete the target
         self.auth.delete_target(target["id"])
         # Verify the target was deleted
-        with self.assertRaises(Exception):
+        with self.assertRaises(NotFoundError):
             self.auth.get_target(target["id"])
 
     def test_belong_operations(self):
@@ -170,7 +171,7 @@ class TestAuthManager(unittest.TestCase):
         # Delete the belong
         self.auth.delete_belong(belong["id"])
         # Verify the belong was deleted
-        with self.assertRaises(Exception):
+        with self.assertRaises(NotFoundError):
             self.auth.get_belong(belong["id"])
 
     def test_access_operations(self):
@@ -205,5 +206,5 @@ class TestAuthManager(unittest.TestCase):
         # Delete the permission
         self.auth.revoke_accesses(access["id"])
         # Verify the permission was deleted
-        with self.assertRaises(Exception):
+        with self.assertRaises(NotFoundError):
             self.auth.get_accesses(access["id"])

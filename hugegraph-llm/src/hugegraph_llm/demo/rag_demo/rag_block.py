@@ -19,13 +19,14 @@
 
 import os
 from typing import AsyncGenerator, Literal, Optional, Tuple
-import pandas as pd
+
 import gradio as gr
+import pandas as pd
 from gradio.utils import NamedString
 
+from hugegraph_llm.config import llm_settings, prompt, resource_path
 from hugegraph_llm.flows import FlowName
 from hugegraph_llm.flows.scheduler import SchedulerSingleton
-from hugegraph_llm.config import resource_path, prompt, llm_settings
 from hugegraph_llm.utils.decorators import with_task_id
 from hugegraph_llm.utils.log import log
 
@@ -104,9 +105,7 @@ def rag_answer(
             topk_per_keyword=topk_per_keyword,
         )
         if res.get("switch_to_bleu"):
-            gr.Warning(
-                "Online reranker fails, automatically switches to local bleu rerank."
-            )
+            gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
         return (
             res.get("raw_answer", ""),
             res.get("vector_only_answer", ""),
@@ -218,9 +217,7 @@ async def rag_answer_streaming(
             gremlin_prompt=gremlin_prompt,
         ):
             if res.get("switch_to_bleu"):
-                gr.Warning(
-                    "Online reranker fails, automatically switches to local bleu rerank."
-                )
+                gr.Warning("Online reranker fails, automatically switches to local bleu rerank.")
             yield (
                 res.get("raw_answer", ""),
                 res.get("vector_only_answer", ""),
@@ -289,19 +286,11 @@ def create_rag_block():
 
         with gr.Column(scale=1):
             with gr.Row():
-                raw_radio = gr.Radio(
-                    choices=[True, False], value=False, label="Basic LLM Answer"
-                )
-                vector_only_radio = gr.Radio(
-                    choices=[True, False], value=False, label="Vector-only Answer"
-                )
+                raw_radio = gr.Radio(choices=[True, False], value=False, label="Basic LLM Answer")
+                vector_only_radio = gr.Radio(choices=[True, False], value=False, label="Vector-only Answer")
             with gr.Row():
-                graph_only_radio = gr.Radio(
-                    choices=[True, False], value=True, label="Graph-only Answer"
-                )
-                graph_vector_radio = gr.Radio(
-                    choices=[True, False], value=False, label="Graph-Vector Answer"
-                )
+                graph_only_radio = gr.Radio(choices=[True, False], value=True, label="Graph-only Answer")
+                graph_vector_radio = gr.Radio(choices=[True, False], value=False, label="Graph-Vector Answer")
 
             def toggle_slider(enable):
                 return gr.update(interactive=enable)
@@ -319,13 +308,9 @@ def create_rag_block():
                         label="Template Num (<0 means disable text2gql) ",
                         precision=0,
                     )
-                    graph_ratio = gr.Slider(
-                        0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False
-                    )
+                    graph_ratio = gr.Slider(0, 1, 0.6, label="Graph Ratio", step=0.1, interactive=False)
 
-                graph_vector_radio.change(
-                    toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio
-                )  # pylint: disable=no-member
+                graph_vector_radio.change(toggle_slider, inputs=graph_vector_radio, outputs=graph_ratio)  # pylint: disable=no-member
                 near_neighbor_first = gr.Checkbox(
                     value=False,
                     label="Near neighbor first(Optional)",
@@ -376,9 +361,7 @@ def create_rag_block():
     # FIXME: "demo" might conflict with the graph name, it should be modified.
     answers_path = os.path.join(resource_path, "demo", "questions_answers.xlsx")
     questions_path = os.path.join(resource_path, "demo", "questions.xlsx")
-    questions_template_path = os.path.join(
-        resource_path, "demo", "questions_template.xlsx"
-    )
+    questions_template_path = os.path.join(resource_path, "demo", "questions_template.xlsx")
 
     def read_file_to_excel(file: NamedString, line_count: Optional[int] = None):
         df = None
@@ -454,22 +437,14 @@ def create_rag_block():
 
     with gr.Row():
         with gr.Column():
-            questions_file = gr.File(
-                file_types=[".xlsx", ".csv"], label="Questions File (.xlsx & csv)"
-            )
+            questions_file = gr.File(file_types=[".xlsx", ".csv"], label="Questions File (.xlsx & csv)")
         with gr.Column():
-            test_template_file = os.path.join(
-                resource_path, "demo", "questions_template.xlsx"
-            )
+            test_template_file = os.path.join(resource_path, "demo", "questions_template.xlsx")
             gr.File(value=test_template_file, label="Download Template File")
-            answer_max_line_count = gr.Number(
-                1, label="Max Lines To Show", minimum=1, maximum=40
-            )
+            answer_max_line_count = gr.Number(1, label="Max Lines To Show", minimum=1, maximum=40)
             answers_btn = gr.Button("Generate Answer (Batch)", variant="primary")
     # TODO: Set individual progress bars for dataframe
-    qa_dataframe = gr.DataFrame(
-        label="Questions & Answers (Preview)", headers=tests_df_headers
-    )
+    qa_dataframe = gr.DataFrame(label="Questions & Answers (Preview)", headers=tests_df_headers)
     answers_btn.click(
         several_rag_answer,
         inputs=[
@@ -487,12 +462,8 @@ def create_rag_block():
         ],
         outputs=[qa_dataframe, gr.File(label="Download Answered File", min_width=40)],
     )
-    questions_file.change(
-        read_file_to_excel, questions_file, [qa_dataframe, answer_max_line_count]
-    )
-    answer_max_line_count.change(
-        change_showing_excel, answer_max_line_count, qa_dataframe
-    )
+    questions_file.change(read_file_to_excel, questions_file, [qa_dataframe, answer_max_line_count])
+    answer_max_line_count.change(change_showing_excel, answer_max_line_count, qa_dataframe)
     return (
         inp,
         answer_prompt_input,

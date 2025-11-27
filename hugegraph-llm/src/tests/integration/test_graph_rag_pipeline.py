@@ -20,6 +20,7 @@ import shutil
 import tempfile
 import unittest
 from unittest.mock import MagicMock
+
 from tests.utils.mock import MockEmbedding
 
 
@@ -192,8 +193,7 @@ class TestGraphRAGPipeline(unittest.TestCase):
         self.mock_answer_synthesize = MagicMock()
         self.mock_answer_synthesize.return_value = {
             "answer": (
-                "John Doe is a 30-year-old software engineer. "
-                "The Matrix is a science fiction movie released in 1999."
+                "John Doe is a 30-year-old software engineer. The Matrix is a science fiction movie released in 1999."
             )
         }
 

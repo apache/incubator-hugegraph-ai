@@ -104,14 +104,7 @@ class TestInfoExtract(unittest.TestCase):
             },
         ]
 
-        expected_edges = [
-            {
-                "start": "person-Alice",
-                "end": "person-Bob",
-                "type": "roommate",
-                "properties": {}
-            }
-        ]
+        expected_edges = [{"start": "person-Alice", "end": "person-Bob", "type": "roommate", "properties": {}}]
 
         # Sort vertices and edges for consistent comparison
         actual_vertices = sorted(graph["vertices"], key=lambda x: x["id"])

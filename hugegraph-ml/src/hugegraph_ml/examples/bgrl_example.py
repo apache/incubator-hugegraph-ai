@@ -25,7 +25,7 @@ from hugegraph_ml.tasks.node_embed import NodeEmbed
 def bgrl_example(n_epochs_embed=300, n_epochs_clf=400):
     hg2d = HugeGraph2DGL()
     graph = hg2d.convert_graph(vertex_label="CORA_vertex", edge_label="CORA_edge")
-    encoder = GCN([graph.ndata["feat"].size(1)] + [256, 128])
+    encoder = GCN([graph.ndata["feat"].size(1), 256, 128])
     predictor = MLP_Predictor(
         input_size=128,
         output_size=128,
@@ -39,7 +39,7 @@ def bgrl_example(n_epochs_embed=300, n_epochs_clf=400):
     model = MLPClassifier(
         n_in_feat=embedded_graph.ndata["feat"].shape[1],
         n_out_feat=embedded_graph.ndata["label"].unique().shape[0],
-        n_hidden=128
+        n_hidden=128,
     )
     node_clf_task = NodeClassify(graph=embedded_graph, model=model)
     node_clf_task.train(lr=1e-3, n_epochs=n_epochs_clf, patience=30)

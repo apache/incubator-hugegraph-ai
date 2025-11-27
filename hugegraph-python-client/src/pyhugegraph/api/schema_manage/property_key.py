@@ -126,7 +126,7 @@ class PropertyKey(HugeParamsBase):
         return self
 
     def ifNotExist(self) -> "PropertyKey":
-        path = f'schema/propertykeys/{self._parameter_holder.get_value("name")}'
+        path = f"schema/propertykeys/{self._parameter_holder.get_value('name')}"
         if _ := self._sess.request(path, validator=ResponseValidation(strict=False)):
             self._parameter_holder.set("not_exist", False)
         return self
@@ -142,7 +142,7 @@ class PropertyKey(HugeParamsBase):
         path = "schema/propertykeys"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "POST", data=json.dumps(property_keys)):
-            return f"create PropertyKey success, Detail: {str(response)}"
+            return f"create PropertyKey success, Detail: {response!s}"
         log.error("create PropertyKey failed, Detail: %s", str(response))
         return ""
 
@@ -157,7 +157,7 @@ class PropertyKey(HugeParamsBase):
         path = f"schema/propertykeys/{property_name}/?action=append"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "PUT", data=json.dumps(data)):
-            return f"append PropertyKey success, Detail: {str(response)}"
+            return f"append PropertyKey success, Detail: {response!s}"
         log.error("append PropertyKey failed, Detail: %s", str(response))
         return ""
 
@@ -172,16 +172,16 @@ class PropertyKey(HugeParamsBase):
         path = f"schema/propertykeys/{property_name}/?action=eliminate"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "PUT", data=json.dumps(data)):
-            return f"eliminate PropertyKey success, Detail: {str(response)}"
+            return f"eliminate PropertyKey success, Detail: {response!s}"
         log.error("eliminate PropertyKey failed, Detail: %s", str(response))
         return ""
 
     @decorator_params
     def remove(self):
         dic = self._parameter_holder.get_dic()
-        path = f'schema/propertykeys/{dic["name"]}'
+        path = f"schema/propertykeys/{dic['name']}"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "DELETE"):
-            return f"delete PropertyKey success, Detail: {str(response)}"
+            return f"delete PropertyKey success, Detail: {response!s}"
         log.error("delete PropertyKey failed, Detail: %s", str(response))
         return ""

@@ -15,10 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from torch import nn
+
 from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 from hugegraph_ml.models.arma import ARMA4NC
 from hugegraph_ml.tasks.node_classify import NodeClassify
-from torch import nn
 
 
 def arma_example(n_epochs=200):

@@ -19,12 +19,13 @@ import json
 import os
 import shutil
 from datetime import datetime
+
 import requests
+from pyhugegraph.client import PyHugeClient
 from requests.auth import HTTPBasicAuth
 
 from hugegraph_llm.config import huge_settings, resource_path
 from hugegraph_llm.utils.log import log
-from pyhugegraph.client import PyHugeClient
 
 MAX_BACKUP_DIRS = 7
 MAX_VERTICES = 100000
@@ -53,9 +54,7 @@ def init_hg_test_data():
     schema = client.schema()
     schema.propertyKey("name").asText().ifNotExist().create()
     schema.propertyKey("birthDate").asText().ifNotExist().create()
-    schema.vertexLabel("Person").properties(
-        "name", "birthDate"
-    ).useCustomizeStringId().ifNotExist().create()
+    schema.vertexLabel("Person").properties("name", "birthDate").useCustomizeStringId().ifNotExist().create()
     schema.vertexLabel("Movie").properties("name").useCustomizeStringId().ifNotExist().create()
     schema.edgeLabel("ActedIn").sourceLabel("Person").targetLabel("Movie").ifNotExist().create()
 
@@ -140,10 +139,7 @@ def write_backup_file(client, backup_subdir, filename, query, all_pk_flag):
         elif filename == "vertices.json":
             data_full = client.gremlin().exec(query)["data"][0]["vertices"]
             data = (
-                [
-                    {key: value for key, value in vertex.items() if key != "id"}
-                    for vertex in data_full
-                ]
+                [{key: value for key, value in vertex.items() if key != "id"} for vertex in data_full]
                 if all_pk_flag
                 else data_full
             )
@@ -152,9 +148,7 @@ def write_backup_file(client, backup_subdir, filename, query, all_pk_flag):
             data_full = query
             if isinstance(data_full, dict) and "schema" in data_full:
                 groovy_filename = filename.replace(".json", ".groovy")
-                with open(
-                    os.path.join(backup_subdir, groovy_filename), "w", encoding="utf-8"
-                ) as groovy_file:
+                with open(os.path.join(backup_subdir, groovy_filename), "w", encoding="utf-8") as groovy_file:
                     groovy_file.write(str(data_full["schema"]))
             else:
                 data = data_full
@@ -164,9 +158,7 @@ def write_backup_file(client, backup_subdir, filename, query, all_pk_flag):
 def manage_backup_retention():
     try:
         backup_dirs = [
-            os.path.join(BACKUP_DIR, d)
-            for d in os.listdir(BACKUP_DIR)
-            if os.path.isdir(os.path.join(BACKUP_DIR, d))
+            os.path.join(BACKUP_DIR, d) for d in os.listdir(BACKUP_DIR) if os.path.isdir(os.path.join(BACKUP_DIR, d))
         ]
         backup_dirs.sort(key=os.path.getctime)
         if len(backup_dirs) > MAX_BACKUP_DIRS:

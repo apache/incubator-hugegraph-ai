@@ -26,10 +26,10 @@ Author's code: https://github.com/google-research/google-research/tree/master/cl
 DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/cluster_gcn
 """
 
-from torch import nn
-import torch.nn.functional as F
-
 import dgl.nn as dglnn
+import torch.nn.functional as F
+from torch import nn
+
 
 class SAGE(nn.Module):
     # pylint: disable=E1101
@@ -43,9 +43,9 @@ class SAGE(nn.Module):
 
     def forward(self, sg, x):
         h = x
-        for l, layer in enumerate(self.layers):
+        for layer_idx, layer in enumerate(self.layers):
             h = layer(sg, h)
-            if l != len(self.layers) - 1:
+            if layer_idx != len(self.layers) - 1:
                 h = F.relu(h)
                 h = self.dropout(h)
         return h

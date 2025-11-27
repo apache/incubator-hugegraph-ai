@@ -39,9 +39,7 @@ class TestTextLoader(unittest.TestCase):
         # pylint: disable=consider-using-with
         self.temp_dir = tempfile.TemporaryDirectory()
         self.temp_file_path = os.path.join(self.temp_dir.name, "test_file.txt")
-        self.test_content = (
-            "This is a test file.\nIt has multiple lines.\nThis is for testing the TextLoader."
-        )
+        self.test_content = "This is a test file.\nIt has multiple lines.\nThis is for testing the TextLoader."
 
         # Write test content to the file
         with open(self.temp_file_path, "w", encoding="utf-8") as f:

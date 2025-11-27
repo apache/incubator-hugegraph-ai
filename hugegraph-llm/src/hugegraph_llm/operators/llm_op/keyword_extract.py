@@ -19,7 +19,7 @@ import re
 import time
 from typing import Any, Dict, Optional
 
-from hugegraph_llm.config import prompt, llm_settings
+from hugegraph_llm.config import llm_settings, prompt
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.models.llms.init_llm import LLMs
 from hugegraph_llm.operators.document_op.textrank_word_extract import (
@@ -44,9 +44,7 @@ class KeywordExtract:
         self._max_keywords = max_keywords
         self._extract_template = extract_template or KEYWORDS_EXTRACT_TPL
         self._extract_method = llm_settings.keyword_extract_type.lower()
-        self._textrank_model = MultiLingualTextRank(
-            keyword_num=max_keywords, window_size=llm_settings.window_size
-        )
+        self._textrank_model = MultiLingualTextRank(keyword_num=max_keywords, window_size=llm_settings.window_size)
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         if self._query is None:
@@ -68,11 +66,7 @@ class KeywordExtract:
             max_keyword_num = self._max_keywords
         self._max_keywords = max(1, max_keyword_num)
 
-        method = (
-            (context.get("extract_method", self._extract_method) or "LLM")
-            .strip()
-            .lower()
-        )
+        method = (context.get("extract_method", self._extract_method) or "LLM").strip().lower()
         if method == "llm":
             # LLM method
             ranks = self._extract_with_llm()
@@ -101,9 +95,7 @@ class KeywordExtract:
         response = self._llm.generate(prompt=prompt_run)
         end_time = time.perf_counter()
         log.debug("LLM Keyword extraction time: %.2f seconds", end_time - start_time)
-        keywords = self._extract_keywords_from_response(
-            response=response, lowercase=False, start_token="KEYWORDS:"
-        )
+        keywords = self._extract_keywords_from_response(response=response, lowercase=False, start_token="KEYWORDS:")
         return keywords
 
     def _extract_with_textrank(self) -> Dict[str, float]:
@@ -117,9 +109,7 @@ class KeywordExtract:
         except MemoryError as e:
             log.critical("TextRank memory error (text too large?): %s", e)
         end_time = time.perf_counter()
-        log.debug(
-            "TextRank Keyword extraction time: %.2f seconds", end_time - start_time
-        )
+        log.debug("TextRank Keyword extraction time: %.2f seconds", end_time - start_time)
         return ranks
 
     def _extract_with_hybrid(self) -> Dict[str, float]:
@@ -180,9 +170,7 @@ class KeywordExtract:
                         continue
                     score_val = float(score_raw)
                     if not 0.0 <= score_val <= 1.0:
-                        log.warning(
-                            "Score out of range for %s: %s", word_raw, score_val
-                        )
+                        log.warning("Score out of range for %s: %s", word_raw, score_val)
                         score_val = min(1.0, max(0.0, score_val))
                     word_out = word_raw.lower() if lowercase else word_raw
                     results[word_out] = score_val

@@ -34,7 +34,7 @@ class MLPClassifier(nn.Module):
     """
 
     def __init__(self, n_in_feat, n_out_feat, n_hidden=512):
-        super(MLPClassifier, self).__init__()
+        super().__init__()
         # Define the first fully connected layer for projecting input features to hidden features.
         self.fc1 = nn.Linear(n_in_feat, n_hidden)
         # Define the second fully connected layer to project hidden features to output classes.

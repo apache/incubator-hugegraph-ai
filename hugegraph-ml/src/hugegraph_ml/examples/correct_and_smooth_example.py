@@ -19,6 +19,7 @@ from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 from hugegraph_ml.models.correct_and_smooth import MLP
 from hugegraph_ml.tasks.node_classify import NodeClassify
 
+
 def cs_example(n_epochs=200):
     hg2d = HugeGraph2DGL()
     graph = hg2d.convert_graph(vertex_label="CORA_vertex", edge_label="CORA_edge")

@@ -16,7 +16,6 @@
 # under the License.
 
 import json
-from typing import Optional, List
 
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.structure.edge_data import EdgeData
@@ -26,7 +25,6 @@ from pyhugegraph.utils.exceptions import NotFoundError
 
 
 class GraphManager(HugeParamsBase):
-
     @router.http("POST", "graph/vertices")
     def addVertex(self, label, properties, id=None):
         data = {}
@@ -108,7 +106,7 @@ class GraphManager(HugeParamsBase):
         return self._invoke_request()
 
     @router.http("POST", "graph/edges")
-    def addEdge(self, edge_label, out_id, in_id, properties) -> Optional[EdgeData]:
+    def addEdge(self, edge_label, out_id, in_id, properties) -> EdgeData | None:
         data = {
             "label": edge_label,
             "outV": out_id,
@@ -120,7 +118,7 @@ class GraphManager(HugeParamsBase):
         return None
 
     @router.http("POST", "graph/edges/batch")
-    def addEdges(self, input_data) -> Optional[List[EdgeData]]:
+    def addEdges(self, input_data) -> list[EdgeData] | None:
         data = []
         for item in input_data:
             data.append(
@@ -139,22 +137,26 @@ class GraphManager(HugeParamsBase):
 
     @router.http("PUT", "graph/edges/{edge_id}?action=append")
     def appendEdge(
-        self, edge_id, properties  # pylint: disable=unused-argument
-    ) -> Optional[EdgeData]:
+        self,
+        edge_id,
+        properties,  # pylint: disable=unused-argument
+    ) -> EdgeData | None:
         if response := self._invoke_request(data=json.dumps({"properties": properties})):
             return EdgeData(response)
         return None
 
     @router.http("PUT", "graph/edges/{edge_id}?action=eliminate")
     def eliminateEdge(
-        self, edge_id, properties  # pylint: disable=unused-argument
-    ) -> Optional[EdgeData]:
+        self,
+        edge_id,
+        properties,  # pylint: disable=unused-argument
+    ) -> EdgeData | None:
         if response := self._invoke_request(data=json.dumps({"properties": properties})):
             return EdgeData(response)
         return None
 
     @router.http("GET", "graph/edges/{edge_id}")
-    def getEdgeById(self, edge_id) -> Optional[EdgeData]:  # pylint: disable=unused-argument
+    def getEdgeById(self, edge_id) -> EdgeData | None:  # pylint: disable=unused-argument
         if response := self._invoke_request():
             return EdgeData(response)
         return None
@@ -194,7 +196,7 @@ class GraphManager(HugeParamsBase):
     def removeEdgeById(self, edge_id) -> dict:  # pylint: disable=unused-argument
         return self._invoke_request()
 
-    def getVerticesById(self, vertex_ids) -> Optional[List[VertexData]]:
+    def getVerticesById(self, vertex_ids) -> list[VertexData] | None:
         if not vertex_ids:
             return []
         path = "traversers/vertices?"
@@ -205,7 +207,7 @@ class GraphManager(HugeParamsBase):
             return [VertexData(item) for item in response["vertices"]]
         return None
 
-    def getEdgesById(self, edge_ids) -> Optional[List[EdgeData]]:
+    def getEdgesById(self, edge_ids) -> list[EdgeData] | None:
         if not edge_ids:
             return []
         path = "traversers/edges?"

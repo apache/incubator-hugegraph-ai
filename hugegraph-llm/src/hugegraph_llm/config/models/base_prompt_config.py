@@ -107,7 +107,6 @@ class BasePromptConfig:
             log.info("Prompt file '%s' doesn't exist, create it.", yaml_file_path)
 
     def save_to_yaml(self):
-
         def to_literal(val):
             return LiteralStr(val) if isinstance(val, str) else val
 

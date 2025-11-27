@@ -14,7 +14,7 @@
 #  limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, AsyncGenerator
+from typing import Any, AsyncGenerator, Dict
 
 from hugegraph_llm.state.ai_state import WkFlowInput
 from hugegraph_llm.utils.log import log
@@ -43,9 +43,7 @@ class BaseFlow(ABC):
         Post-processing interface.
         """
 
-    async def post_deal_stream(
-        self, pipeline=None
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+    async def post_deal_stream(self, pipeline=None) -> AsyncGenerator[Dict[str, Any], None]:
         """
         Streaming post-processing interface.
         Subclasses can override this method as needed.

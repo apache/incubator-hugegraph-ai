@@ -183,7 +183,7 @@ Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a
     - Adjust keyword length: If keywords are relatively broad, you can appropriately increase individual keyword length based on context (e.g., "illegal behavior" can be extracted as a single keyword, or as "illegal", but should not be split into "illegal" and "behavior").
 
     Output Format:
-    - Output only one line, prefixed with KEYWORDS:, followed by a comma-separated list of items. Each item should be in the format keyword:importance_score(round to two decimal places). If a keyword has been replaced by a synonym, use the synonym as the keyword in the output. 
+    - Output only one line, prefixed with KEYWORDS:, followed by a comma-separated list of items. Each item should be in the format keyword:importance_score(round to two decimal places). If a keyword has been replaced by a synonym, use the synonym as the keyword in the output.
     - Format example:
     KEYWORDS:keyword1:score1,keyword2:score2,...,keywordN:scoreN
 

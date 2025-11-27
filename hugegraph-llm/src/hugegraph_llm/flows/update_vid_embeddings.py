@@ -18,7 +18,7 @@ from pycgraph import GPipeline
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.nodes.hugegraph_node.fetch_graph_data import FetchGraphDataNode
 from hugegraph_llm.nodes.index_node.build_semantic_index import BuildSemanticIndexNode
-from hugegraph_llm.state.ai_state import WkFlowState, WkFlowInput
+from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 
 
 # pylint: disable=arguments-differ,keyword-arg-before-vararg

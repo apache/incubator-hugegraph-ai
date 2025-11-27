@@ -17,26 +17,22 @@
 
 # pylint: disable=C0103
 
+from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 from hugegraph_ml.models.bgnn import (
-    GNNModelDGL,
     BGNNPredictor,
+    GNNModelDGL,
+    convert_data,
     encode_cat_features,
     replace_na,
-    convert_data,
 )
-from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 
 
 def bgnn_example():
     hg2d = HugeGraph2DGL()
-    g = hg2d.convert_hetero_graph_bgnn(
-        vertex_labels=["AVAZU__N_v"], edge_labels=["AVAZU__E_e"]
-    )
+    g = hg2d.convert_hetero_graph_bgnn(vertex_labels=["AVAZU__N_v"], edge_labels=["AVAZU__E_e"])
     X, y, cat_features, train_mask, val_mask, test_mask = convert_data(g)
     encoded_X = X.copy()
-    encoded_X = encode_cat_features(
-        encoded_X, y, cat_features, train_mask, val_mask, test_mask
-    )
+    encoded_X = encode_cat_features(encoded_X, y, cat_features, train_mask, val_mask, test_mask)
     encoded_X = replace_na(encoded_X, train_mask)
     gnn_model = GNNModelDGL(in_dim=y.shape[1], hidden_dim=128, out_dim=y.shape[1])
     bgnn = BGNNPredictor(
@@ -50,7 +46,7 @@ def bgnn_example():
         gbdt_depth=6,
         gbdt_lr=0.1,
     )
-    _ = bgnn.fit(
+    metrics = bgnn.fit(
         g,
         encoded_X,
         y,
@@ -63,6 +59,7 @@ def bgnn_example():
         patience=10,
         metric_name="loss",
     )
+    print(metrics)
 
 
 if __name__ == "__main__":

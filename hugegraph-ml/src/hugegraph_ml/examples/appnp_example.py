@@ -15,10 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import torch.nn.functional as F
+
 from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 from hugegraph_ml.models.appnp import APPNP
 from hugegraph_ml.tasks.node_classify import NodeClassify
-import torch.nn.functional as F
 
 
 def appnp_example(n_epochs=200):

@@ -26,7 +26,7 @@ graph TD;
     A --> F[Text Segmentation]
     F --> G[LLM extracts graph based on schema \nand segmented text]
     G --> H[Store graph in Graph Database, \nautomatically vectorize vertices \nand store in Vector Database]
-    
+
     I[Retrieve vertices from Graph Database] --> J[Vectorize vertices and store in Vector Database \nNote: Incremental update]
 ```
 
@@ -85,7 +85,7 @@ graph TD;
     F --> G[Match vertices precisely in Graph Database \nusing keywords; perform fuzzy matching in \nVector Database &#40graph vid&#41]
     G --> H[Generate Gremlin query using matched vertices and query with LLM]
     H --> I[Execute Gremlin query; if successful, finish; if failed, fallback to BFS]
-    
+
     B --> J[Sort results]
     I --> J
     J --> K[Generate answer]
@@ -162,7 +162,7 @@ The first part is straightforward, so the focus is on the second part.
 graph TD;
     A[Gremlin Pairs File] --> C[Vectorize query]
     C --> D[Store in Vector Database]
-    
+
     F[Natural Language Query] --> G[Search for the most similar query \nin the Vector Database \n&#40If no Gremlin pairs exist in the Vector Database, \ndefault files will be automatically vectorized&#41 \nand retrieve the corresponding Gremlin]
     G --> H[Add the matched pair to the prompt \nand use LLM to generate the Gremlin \ncorresponding to the Natural Language Query]
 ```

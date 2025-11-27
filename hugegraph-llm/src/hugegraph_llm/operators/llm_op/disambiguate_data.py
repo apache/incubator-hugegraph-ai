@@ -16,7 +16,7 @@
 # under the License.
 
 
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.llm_op.info_extract import extract_triples_by_regex
@@ -28,10 +28,10 @@ def generate_disambiguate_prompt(triples):
         {triples}
         If the second element of the triples expresses the same meaning but in different ways,
         unify them and keep the most concise expression.
-        
+
         For example, if the input is:
         [("Alice", "friend", "Bob"), ("Simon", "is friends with", "Bob")]
-        
+
         The output should be:
         [("Alice", "friend", "Bob"), ("Simon", "friend", "Bob")]
         """
@@ -51,10 +51,7 @@ class DisambiguateData:
             llm_output = self.llm.generate(prompt=prompt)
             data["triples"] = []
             extract_triples_by_regex(llm_output, data)
-            print(
-                f"LLM {self.__class__.__name__} input:{prompt} \n"
-                f" output: {llm_output} \n data: {data}"
-            )
+            print(f"LLM {self.__class__.__name__} input:{prompt} \n output: {llm_output} \n data: {data}")
             data["call_count"] = data.get("call_count", 0) + 1
 
         return data

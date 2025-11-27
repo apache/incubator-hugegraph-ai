@@ -15,14 +15,15 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Dict, Any
+from typing import Any, Dict
+
+from pyhugegraph.client import PyHugeClient
+from pyhugegraph.utils.exceptions import CreateError, NotFoundError
 
 from hugegraph_llm.config import huge_settings
 from hugegraph_llm.enums.property_cardinality import PropertyCardinality
 from hugegraph_llm.enums.property_data_type import PropertyDataType, default_value_map
 from hugegraph_llm.utils.log import log
-from pyhugegraph.client import PyHugeClient
-from pyhugegraph.utils.exceptions import NotFoundError, CreateError
 
 
 class Commit2Graph:
@@ -41,17 +42,13 @@ class Commit2Graph:
         vertices = data.get("vertices", [])
         edges = data.get("edges", [])
         if not vertices and not edges:
-            log.critical(
-                "(Loading) Both vertices and edges are empty. Please check the input data again."
-            )
+            log.critical("(Loading) Both vertices and edges are empty. Please check the input data again.")
             raise ValueError("Both vertices and edges input are empty.")
 
         if not schema:
             # TODO: ensure the function works correctly (update the logic later)
             self.schema_free_mode(data.get("triples", []))
-            log.warning(
-                "Using schema_free mode, could try schema_define mode for better effect!"
-            )
+            log.warning("Using schema_free mode, could try schema_define mode for better effect!")
         else:
             self.init_schema_if_need(schema)
             self.load_into_graph(vertices, edges, schema)
@@ -67,9 +64,7 @@ class Commit2Graph:
             # list or set
             default_value = []
             input_properties[key] = default_value
-        log.warning(
-            "Property '%s' missing in vertex, set to '%s' for now", key, default_value
-        )
+        log.warning("Property '%s' missing in vertex, set to '%s' for now", key, default_value)
 
     def _handle_graph_creation(self, func, *args, **kwargs):
         try:
@@ -83,13 +78,9 @@ class Commit2Graph:
 
     def load_into_graph(self, vertices, edges, schema):  # pylint: disable=too-many-statements
         # pylint: disable=R0912 (too-many-branches)
-        vertex_label_map = {
-            v_label["name"]: v_label for v_label in schema["vertexlabels"]
-        }
+        vertex_label_map = {v_label["name"]: v_label for v_label in schema["vertexlabels"]}
         edge_label_map = {e_label["name"]: e_label for e_label in schema["edgelabels"]}
-        property_label_map = {
-            p_label["name"]: p_label for p_label in schema["propertykeys"]
-        }
+        property_label_map = {p_label["name"]: p_label for p_label in schema["propertykeys"]}
 
         for vertex in vertices:
             input_label = vertex["label"]
@@ -105,9 +96,7 @@ class Commit2Graph:
             vertex_label = vertex_label_map[input_label]
             primary_keys = vertex_label["primary_keys"]
             nullable_keys = vertex_label.get("nullable_keys", [])
-            non_null_keys = [
-                key for key in vertex_label["properties"] if key not in nullable_keys
-            ]
+            non_null_keys = [key for key in vertex_label["properties"] if key not in nullable_keys]
 
             has_problem = False
             # 2. Handle primary-keys mode vertex
@@ -139,9 +128,7 @@ class Commit2Graph:
             # 3. Ensure all non-nullable props are set
             for key in non_null_keys:
                 if key not in input_properties:
-                    self._set_default_property(
-                        key, input_properties, property_label_map
-                    )
+                    self._set_default_property(key, input_properties, property_label_map)
 
             # 4. Check all data type value is right
             for key, value in input_properties.items():
@@ -159,9 +146,7 @@ class Commit2Graph:
                 continue
 
             # TODO: we could try batch add vertices first, setback to single-mode if failed
-            vid = self._handle_graph_creation(
-                self.client.graph().addVertex, input_label, input_properties
-            ).id
+            vid = self._handle_graph_creation(self.client.graph().addVertex, input_label, input_properties).id
             vertex["id"] = vid
 
         for edge in edges:
@@ -178,9 +163,7 @@ class Commit2Graph:
                 continue
 
             # TODO: we could try batch add edges first, setback to single-mode if failed
-            self._handle_graph_creation(
-                self.client.graph().addEdge, label, start, end, properties
-            )
+            self._handle_graph_creation(self.client.graph().addEdge, label, start, end, properties)
 
     def init_schema_if_need(self, schema: dict):
         properties = schema["propertykeys"]
@@ -204,27 +187,19 @@ class Commit2Graph:
             source_vertex_label = edge["source_label"]
             target_vertex_label = edge["target_label"]
             properties = edge["properties"]
-            self.schema.edgeLabel(edge_label).sourceLabel(
-                source_vertex_label
-            ).targetLabel(target_vertex_label).properties(*properties).nullableKeys(
-                *properties
-            ).ifNotExist().create()
+            self.schema.edgeLabel(edge_label).sourceLabel(source_vertex_label).targetLabel(
+                target_vertex_label
+            ).properties(*properties).nullableKeys(*properties).ifNotExist().create()
 
     def schema_free_mode(self, data):
         self.schema.propertyKey("name").asText().ifNotExist().create()
-        self.schema.vertexLabel("vertex").useCustomizeStringId().properties(
+        self.schema.vertexLabel("vertex").useCustomizeStringId().properties("name").ifNotExist().create()
+        self.schema.edgeLabel("edge").sourceLabel("vertex").targetLabel("vertex").properties(
             "name"
         ).ifNotExist().create()
-        self.schema.edgeLabel("edge").sourceLabel("vertex").targetLabel(
-            "vertex"
-        ).properties("name").ifNotExist().create()
 
-        self.schema.indexLabel("vertexByName").onV("vertex").by(
-            "name"
-        ).secondary().ifNotExist().create()
-        self.schema.indexLabel("edgeByName").onE("edge").by(
-            "name"
-        ).secondary().ifNotExist().create()
+        self.schema.indexLabel("vertexByName").onV("vertex").by("name").secondary().ifNotExist().create()
+        self.schema.indexLabel("edgeByName").onE("edge").by("name").secondary().ifNotExist().create()
 
         for item in data:
             s, p, o = (element.strip() for element in item)
@@ -277,9 +252,7 @@ class Commit2Graph:
             log.warning("UUID type is not supported, use text instead")
             property_key.asText()
         else:
-            log.error(
-                "Unknown data type %s for property_key %s", data_type, property_key
-            )
+            log.error("Unknown data type %s for property_key %s", data_type, property_key)
 
     def _set_property_cardinality(self, property_key, cardinality):
         if cardinality == PropertyCardinality.SINGLE:
@@ -289,13 +262,9 @@ class Commit2Graph:
         elif cardinality == PropertyCardinality.SET:
             property_key.valueSet()
         else:
-            log.error(
-                "Unknown cardinality %s for property_key %s", cardinality, property_key
-            )
+            log.error("Unknown cardinality %s for property_key %s", cardinality, property_key)
 
-    def _check_property_data_type(
-        self, data_type: str, cardinality: str, value
-    ) -> bool:
+    def _check_property_data_type(self, data_type: str, cardinality: str, value) -> bool:
         if cardinality in (
             PropertyCardinality.LIST.value,
             PropertyCardinality.SET.value,
@@ -325,9 +294,7 @@ class Commit2Graph:
         if data_type in (PropertyDataType.TEXT.value, PropertyDataType.UUID.value):
             return isinstance(value, str)
         # TODO: check ok below
-        if (
-            data_type == PropertyDataType.DATE.value
-        ):  # the format should be "yyyy-MM-dd"
+        if data_type == PropertyDataType.DATE.value:  # the format should be "yyyy-MM-dd"
             import re
 
             return isinstance(value, str) and re.match(r"^\d{4}-\d{2}-\d{2}$", value)

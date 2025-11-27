@@ -45,7 +45,7 @@ class CAREConv(nn.Module):
         activation=None,
         step_size=0.02,
     ):
-        super(CAREConv, self).__init__()
+        super().__init__()
 
         self.activation = activation
         self.step_size = step_size
@@ -87,9 +87,7 @@ class CAREConv(nn.Module):
             num_neigh = th.ceil(g.in_degrees(node) * p).int().item()
             neigh_dist = dist[edges]
             if neigh_dist.shape[0] > num_neigh:
-                neigh_index = np.argpartition(neigh_dist.cpu().detach(), num_neigh)[
-                    :num_neigh
-                ]
+                neigh_index = np.argpartition(neigh_dist.cpu().detach(), num_neigh)[:num_neigh]
             else:
                 neigh_index = np.arange(num_neigh)
             neigh_list.append(edges[neigh_index])
@@ -137,7 +135,7 @@ class CAREGNN(nn.Module):
         activation=None,
         step_size=0.02,
     ):
-        super(CAREGNN, self).__init__()
+        super().__init__()
         self.in_dim = in_dim
         self.hid_dim = hid_dim
         self.num_classes = num_classes

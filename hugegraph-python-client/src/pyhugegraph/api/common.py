@@ -18,10 +18,9 @@
 
 import re
 
-from abc import ABC
-from pyhugegraph.utils.log import log
-from pyhugegraph.utils.huge_router import RouterMixin
 from pyhugegraph.utils.huge_requests import HGraphSession
+from pyhugegraph.utils.huge_router import RouterMixin
+from pyhugegraph.utils.log import log
 
 
 # todo: rename -> HGraphMetaData or delete
@@ -44,7 +43,7 @@ class ParameterHolder:
         return self._dic.keys()
 
 
-class HGraphContext(ABC):
+class HGraphContext:
     def __init__(self, sess: HGraphSession) -> None:
         self._sess = sess
         self._cache = {}  # todo: move parameter_holder to cache

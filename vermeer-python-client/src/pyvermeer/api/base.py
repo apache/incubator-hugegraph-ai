@@ -30,11 +30,7 @@ class BaseModule:
         """Return the client's session object"""
         return self._client.session
 
-    def _send_request(self, method: str, endpoint: str, params: dict = None):
+    def _send_request(self, method: str, endpoint: str, params: dict | None = None):
         """Unified request entry point"""
         self.log.debug(f"Sending {method} to {endpoint}")
-        return self._client.send_request(
-            method=method,
-            endpoint=endpoint,
-            params=params
-        )
+        return self._client.send_request(method=method, endpoint=endpoint, params=params)

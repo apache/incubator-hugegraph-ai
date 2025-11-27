@@ -15,14 +15,15 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import torch
 import dgl
+import torch
 from torch import nn
+
 from hugegraph_ml.models.pgnn import (
+    eval_model,
     get_dataset,
     preselect_anchor,
     train_model,
-    eval_model,
 )
 
 
@@ -39,9 +40,7 @@ class LinkPredictionPGNN:
         n_epochs: int = 200,
         gpu: int = -1,
     ):
-        self._device = (
-            f"cuda:{gpu}" if gpu != -1 and torch.cuda.is_available() else "cpu"
-        )
+        self._device = f"cuda:{gpu}" if gpu != -1 and torch.cuda.is_available() else "cpu"
         self._model.to(self._device)
         data = get_dataset(self.graph)
         # pre-sample anchor nodes and compute shortest distance values for all epochs
@@ -51,12 +50,9 @@ class LinkPredictionPGNN:
             dist_max_list,
             edge_weight_list,
         ) = preselect_anchor(data)
-        optimizer = torch.optim.Adam(
-            self._model.parameters(), lr=lr, weight_decay=weight_decay
-        )
+        optimizer = torch.optim.Adam(self._model.parameters(), lr=lr, weight_decay=weight_decay)
         loss_func = nn.BCEWithLogitsLoss()
         best_auc_val = -1
-        best_auc_test = -1
         for epoch in range(n_epochs):
             if epoch == 200:
                 for param_group in optimizer.param_groups:
@@ -73,20 +69,9 @@ class LinkPredictionPGNN:
 
             train_model(data, self._model, loss_func, optimizer, self._device, g_data)
 
-            loss_train, auc_train, auc_val, auc_test = eval_model(
-                data, g_data, self._model, loss_func, self._device
-            )
+            _loss_train, _auc_train, auc_val, _auc_test = eval_model(data, g_data, self._model, loss_func, self._device)
             if auc_val > best_auc_val:
                 best_auc_val = auc_val
-                best_auc_test = auc_test
 
             if epoch % 100 == 0:
-                print(
-                    epoch,
-                    f"Loss {loss_train:.4f}",
-                    f"Train AUC: {auc_train:.4f}",
-                    f"Val AUC: {auc_val:.4f}",
-                    f"Test AUC: {auc_test:.4f}",
-                    f"Best Val AUC: {best_auc_val:.4f}",
-                    f"Best Test AUC: {best_auc_test:.4f}",
-                )
+                pass

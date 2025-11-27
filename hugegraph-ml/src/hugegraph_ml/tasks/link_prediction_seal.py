@@ -18,13 +18,16 @@
 # pylint: disable=R1728
 
 import time
-import torch
-from torch.nn import BCEWithLogitsLoss
-from dgl import DGLGraph, NID, EID
-from dgl.dataloading import GraphDataLoader
-from tqdm import tqdm
+
 import numpy as np
+import torch
+from dgl import EID, NID, DGLGraph
+from dgl.dataloading import GraphDataLoader
+from torch.nn import BCEWithLogitsLoss
+from tqdm import tqdm
+
 from hugegraph_ml.models.seal import SEALData, evaluate_hits
+
 
 class LinkPredictionSeal:
     def __init__(self, graph: DGLGraph, split_edge, model):
@@ -88,57 +91,36 @@ class LinkPredictionSeal:
         gpu: int = -1,
     ):
         torch.manual_seed(2021)
-        self._device = (
-            f"cuda:{gpu}" if gpu != -1 and torch.cuda.is_available() else "cpu"
-        )
+        self._device = f"cuda:{gpu}" if gpu != -1 and torch.cuda.is_available() else "cpu"
         self._model.to(self._device)
         self.graph = self.graph.to(self._device)
         parameters = self._model.parameters()
         optimizer = torch.optim.Adam(parameters, lr=lr)
         loss_fn = BCEWithLogitsLoss()
-        print(
-            f"Total parameters: {sum([p.numel() for p in self._model.parameters()])}"
-        )
 
         # train and evaluate loop
         summary_val = []
         summary_test = []
         for epoch in range(n_epochs):
-            start_time = time.time()
-            loss = self._train(
+            time.time()
+            self._train(
                 dataloader=self.train_loader,
                 loss_fn=loss_fn,
                 optimizer=optimizer,
                 num_graphs=32,
                 total_graphs=self.train_graphs,
             )
-            train_time = time.time()
+            time.time()
             if epoch % 5 == 0:
                 val_pos_pred, val_neg_pred = self.evaluate(dataloader=self.val_loader)
-                test_pos_pred, test_neg_pred = self.evaluate(
-                    dataloader=self.test_loader
-                )
+                test_pos_pred, test_neg_pred = self.evaluate(dataloader=self.test_loader)
 
-                val_metric = evaluate_hits(
-                    "ogbl-collab", val_pos_pred, val_neg_pred, 50
-                )
-                test_metric = evaluate_hits(
-                    "ogbl-collab", test_pos_pred, test_neg_pred, 50
-                )
-                evaluate_time = time.time()
-                print(
-                    f"Epoch-{epoch}, train loss: {loss:.4f}, hits@{50}: val-{val_metric:.4f}, \\"
-                    f"test-{test_metric:.4f}, cost time: train-{train_time - start_time:.1f}s, \\"
-                    f"total-{evaluate_time - start_time:.1f}s"
-                )
+                val_metric = evaluate_hits("ogbl-collab", val_pos_pred, val_neg_pred, 50)
+                test_metric = evaluate_hits("ogbl-collab", test_pos_pred, test_neg_pred, 50)
+                time.time()
                 summary_val.append(val_metric)
                 summary_test.append(test_metric)
         summary_test = np.array(summary_test)
-
-        print("Experiment Results:")
-        print(
-            f"Best hits@{50}: {np.max(summary_test):.4f}, epoch: {np.argmax(summary_test)}"
-        )
 
     @torch.no_grad()
     def evaluate(self, dataloader):

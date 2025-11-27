@@ -28,5 +28,5 @@ def parse_vermeer_time(vm_dt: str) -> datetime:
     return dt
 
 
-if __name__ == '__main__':
-    print(parse_vermeer_time('2025-02-17T15:45:05.396311145+08:00').strftime("%Y%m%d"))
+if __name__ == "__main__":
+    pass

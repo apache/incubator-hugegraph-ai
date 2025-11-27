@@ -19,7 +19,7 @@
 
 import torch.nn.functional as F
 from dgl.nn.pytorch.conv import GINConv
-from dgl.nn.pytorch.glob import SumPooling, AvgPooling, MaxPooling, GlobalAttentionPooling, Set2Set
+from dgl.nn.pytorch.glob import AvgPooling, GlobalAttentionPooling, MaxPooling, Set2Set, SumPooling
 from torch import nn
 
 
@@ -32,13 +32,8 @@ class GIN(nn.Module):
         # five-layer GCN with two-layer MLP aggregator and sum-neighbor-pooling scheme
         assert n_layers >= 2, "The number of GIN layers must be at least 2."
         for layer in range(n_layers - 1):
-            if layer == 0:
-                mlp = _MLP(n_in_feats, n_hidden, n_hidden)
-            else:
-                mlp = _MLP(n_hidden, n_hidden, n_hidden)
-            self.gin_layers.append(
-                GINConv(mlp, learn_eps=False)
-            )  # set to True if learning epsilon
+            mlp = _MLP(n_in_feats, n_hidden, n_hidden) if layer == 0 else _MLP(n_hidden, n_hidden, n_hidden)
+            self.gin_layers.append(GINConv(mlp, learn_eps=False))  # set to True if learning epsilon
             self.batch_norms.append(nn.BatchNorm1d(n_hidden))
         # linear functions for graph sum pooling of output of each layer
         self.linear_prediction = nn.ModuleList()

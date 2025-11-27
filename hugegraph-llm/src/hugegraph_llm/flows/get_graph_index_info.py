@@ -20,8 +20,8 @@ from pycgraph import GPipeline
 from hugegraph_llm.config import huge_settings, index_settings
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.models.embeddings.init_embedding import Embeddings
-from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 from hugegraph_llm.nodes.hugegraph_node.fetch_graph_data import FetchGraphDataNode
+from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 
 
 # pylint: disable=arguments-differ,keyword-arg-before-vararg
@@ -44,7 +44,9 @@ class GetGraphIndexInfoFlow(BaseFlow):
 
     def post_deal(self, pipeline=None):
         # Lazy import to avoid circular dependency
-        from hugegraph_llm.utils.vector_index_utils import get_vector_index_class  # pylint: disable=import-outside-toplevel
+        from hugegraph_llm.utils.vector_index_utils import (
+            get_vector_index_class,  # pylint: disable=import-outside-toplevel
+        )
 
         graph_summary_info = pipeline.getGParamWithNoEmpty("wkflow_state").to_json()
 

@@ -18,12 +18,12 @@
 
 class IndexLabelData:
     def __init__(self, dic):
-        self.__id = dic["id"] if "id" in dic else None
-        self.__base_type = dic["base_type"] if "base_type" in dic else None
-        self.__base_value = dic["base_value"] if "base_value" in dic else None
-        self.__name = dic["name"] if "name" in dic else None
-        self.__fields = dic["fields"] if "fields" in dic else None
-        self.__index_type = dic["index_type"] if "index_type" in dic else None
+        self.__id = dic.get("id", None)
+        self.__base_type = dic.get("base_type", None)
+        self.__base_value = dic.get("base_value", None)
+        self.__name = dic.get("name", None)
+        self.__fields = dic.get("fields", None)
+        self.__index_type = dic.get("index_type", None)
 
     @property
     def id(self):

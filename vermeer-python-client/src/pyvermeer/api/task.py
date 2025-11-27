@@ -16,8 +16,7 @@
 # under the License.
 
 from pyvermeer.api.base import BaseModule
-
-from pyvermeer.structure.task_data import TasksResponse, TaskCreateRequest, TaskCreateResponse, TaskResponse
+from pyvermeer.structure.task_data import TaskCreateRequest, TaskCreateResponse, TaskResponse, TasksResponse
 
 
 class TaskModule(BaseModule):
@@ -25,25 +24,15 @@ class TaskModule(BaseModule):
 
     def get_tasks(self) -> TasksResponse:
         """Get task list"""
-        response = self._send_request(
-            "GET",
-            "/tasks"
-        )
+        response = self._send_request("GET", "/tasks")
         return TasksResponse(response)
 
     def get_task(self, task_id: int) -> TaskResponse:
         """Get single task information"""
-        response = self._send_request(
-            "GET",
-            f"/task/{task_id}"
-        )
+        response = self._send_request("GET", f"/task/{task_id}")
         return TaskResponse(response)
 
     def create_task(self, create_task: TaskCreateRequest) -> TaskCreateResponse:
         """Create new task"""
-        response = self._send_request(
-            method="POST",
-            endpoint="/tasks/create",
-            params=create_task.to_dict()
-        )
+        response = self._send_request(method="POST", endpoint="/tasks/create", params=create_task.to_dict())
         return TaskCreateResponse(response)

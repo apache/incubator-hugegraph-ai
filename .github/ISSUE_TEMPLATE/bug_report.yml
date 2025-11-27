@@ -15,7 +15,7 @@ body:
         Issue 标题请保持原有模板分类(例如:`[Bug]`), 长段描述之间可以增加`空行`或使用`序号`标记，保持排版清晰。
         3. Please submit an issue in the corresponding module, lack of valid information / long time (>14 days) unanswered issues may be closed (will be reopened when updated).
         请在对应的模块提交 issue, 缺乏有效信息 / 长时间 (> 14 天) 没有回复的 issue 可能会被 **关闭**(更新时会再开启)。
-  
+
   - type: dropdown
     attributes:
       label: Bug Type (问题类型)
@@ -26,7 +26,7 @@ body:
         - data inconsistency (数据不一致)
         - exception / error (异常报错)
         - others (please comment below)
-  
+
   - type: checkboxes
     attributes:
       label: Before submit
@@ -45,7 +45,7 @@ body:
         - Data Size: xx vertices, xx edges <!-- (like 1000W 点，9000W 边) -->>
     validations:
       required: true
-  
+
   - type: textarea
     attributes:
       label: Expected & Actual behavior (期望与实际表现)
@@ -53,8 +53,8 @@ body:
         we can refer [How to create a minimal reproducible Example](https://stackoverflow.com/help/minimal-reproducible-example), if possible, please provide screenshots or GIF.
         可以参考 [如何提供最简的可复现用例](https://stackoverflow.com/help/minimal-reproducible-example)，请提供清晰的截图，动图录屏更佳。
       placeholder: |
-        type the main problem here 
-        
+        type the main problem here
+
         ```java
         // Detailed exception / error info (尽可能详细的日志 + 完整异常栈)
 

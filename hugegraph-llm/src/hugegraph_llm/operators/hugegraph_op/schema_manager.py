@@ -14,10 +14,11 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
+from pyhugegraph.client import PyHugeClient
 
 from hugegraph_llm.config import huge_settings
-from pyhugegraph.client import PyHugeClient
 
 
 class SchemaManager:
@@ -39,9 +40,7 @@ class SchemaManager:
         if "vertexlabels" in schema:
             mini_schema["vertexlabels"] = []
             for vertex in schema["vertexlabels"]:
-                new_vertex = {
-                    key: vertex[key] for key in ["id", "name", "properties"] if key in vertex
-                }
+                new_vertex = {key: vertex[key] for key in ["id", "name", "properties"] if key in vertex}
                 mini_schema["vertexlabels"].append(new_vertex)
 
         # Add necessary edgelabels items (4)
@@ -49,9 +48,7 @@ class SchemaManager:
             mini_schema["edgelabels"] = []
             for edge in schema["edgelabels"]:
                 new_edge = {
-                    key: edge[key]
-                    for key in ["name", "source_label", "target_label", "properties"]
-                    if key in edge
+                    key: edge[key] for key in ["name", "source_label", "target_label", "properties"] if key in edge
                 }
                 mini_schema["edgelabels"].append(new_edge)
 

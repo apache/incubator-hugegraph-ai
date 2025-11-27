@@ -15,8 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Dict
-from typing import Optional
 
 from pyvermeer.api.base import BaseModule
 from pyvermeer.api.graph import GraphModule
@@ -30,12 +28,12 @@ class PyVermeerClient:
     """Vermeer API Client"""
 
     def __init__(
-            self,
-            ip: str,
-            port: int,
-            token: str,
-            timeout: Optional[tuple[float, float]] = None,
-            log_level: str = "INFO",
+        self,
+        ip: str,
+        port: int,
+        token: str,
+        timeout: tuple[float, float] | None = None,
+        log_level: str = "INFO",
     ):
         """Initialize the client, including configuration and session management
         :param ip:
@@ -46,10 +44,7 @@ class PyVermeerClient:
         """
         self.cfg = VermeerConfig(ip, port, token, timeout)
         self.session = VermeerSession(self.cfg)
-        self._modules: Dict[str, BaseModule] = {
-            "graph": GraphModule(self),
-            "tasks": TaskModule(self)
-        }
+        self._modules: dict[str, BaseModule] = {"graph": GraphModule(self), "tasks": TaskModule(self)}
         log.setLevel(log_level)
 
     def __getattr__(self, name):
@@ -58,6 +53,6 @@ class PyVermeerClient:
             return self._modules[name]
         raise AttributeError(f"Module {name} not found")
 
-    def send_request(self, method: str, endpoint: str, params: dict = None):
+    def send_request(self, method: str, endpoint: str, params: dict | None = None):
         """Unified request method"""
         return self.session.request(method, endpoint, params)

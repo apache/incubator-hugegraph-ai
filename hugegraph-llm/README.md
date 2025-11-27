@@ -22,6 +22,16 @@ For detailed source code doc, visit our [DeepWiki](https://deepwiki.com/apache/i
 > - **HugeGraph Server**: 1.3+ (recommended: 1.5+)
 > - **UV Package Manager**: 0.7+
 
+### Code Quality (ruff + pre-commit)
+
+- Ruff is used for linting and formatting:
+  - `ruff format .`
+  - `ruff check .`
+- Enable Git hooks via pre-commit:
+  - `pre-commit install` (in the root dir)
+  - `pre-commit run --all-files`
+- Config: [../.pre-commit-config.yaml](../.pre-commit-config.yaml)
+
 ## 🚀 Quick Start
 
 Choose your preferred deployment method:
@@ -177,7 +187,7 @@ The system supports both English and Chinese prompts. To switch languages:
 
 If you previously used high-level classes like `RAGPipeline` or `KgBuilder`, the project now exposes stable flows through the `Scheduler` API. Use `SchedulerSingleton.get_instance().schedule_flow(...)` to invoke workflows programmatically. Below are concise, working examples that match the new architecture.
 
-1) RAG (graph-only) query example
+1. RAG (graph-only) query example
 
 ```python
 from hugegraph_llm.flows.scheduler import SchedulerSingleton
@@ -196,7 +206,7 @@ res = scheduler.schedule_flow(
 print(res.get("graph_only_answer"))
 ```
 
-2) RAG (vector-only) query example
+2. RAG (vector-only) query example
 
 ```python
 from hugegraph_llm.flows.scheduler import SchedulerSingleton
@@ -212,7 +222,7 @@ res = scheduler.schedule_flow(
 print(res.get("vector_only_answer"))
 ```
 
-3) Text -> Gremlin (text2gremlin) example
+3. Text -> Gremlin (text2gremlin) example
 
 ```python
 from hugegraph_llm.flows.scheduler import SchedulerSingleton
@@ -230,7 +240,7 @@ response = scheduler.schedule_flow(
 print(response.get("template_gremlin"))
 ```
 
-4) Build example index (used by text2gremlin examples)
+4. Build example index (used by text2gremlin examples)
 
 ```python
 from hugegraph_llm.flows.scheduler import SchedulerSingleton

@@ -37,15 +37,16 @@ class MultiLingualTextRank:
 
         self.pos_filter = {
             'chinese': ('n', 'nr', 'ns', 'nt', 'nrt', 'nz', 'v', 'vd', 'vn', "eng", "j", "l"),
-            'english': ('NN', 'NNS', 'NNP', 'NNPS', 'VB', 'VBG', 'VBN', 'VBZ')
+            'english': ('NN', 'NNS', 'NNP', 'NNPS', 'VB', 'VBG', 'VBN', 'VBZ'),
         }
-        self.rules = [r"https?://\S+|www\.\S+",
-                      r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b",
-                      r"\b\w+(?:[-’\']\w+)+\b",
-                      r"\b\d+[,.]\d+\b"]
+        self.rules = [
+            r"https?://\S+|www\.\S+",
+            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b",
+            r"\b\w+(?:[-’\']\w+)+\b",
+            r"\b\d+[,.]\d+\b",
+        ]
 
     def _word_mask(self, text):
-
         placeholder_id_counter = 0
         placeholder_map = {}
 
@@ -64,11 +65,7 @@ class MultiLingualTextRank:
 
     @staticmethod
     def _get_valid_tokens(masked_text):
-        patterns_to_keep = [
-            r'__shieldword_\d+__',
-            r'\b\w+\b',
-            r'[\u4e00-\u9fff]+'
-        ]
+        patterns_to_keep = [r'__shieldword_\d+__', r'\b\w+\b', r'[\u4e00-\u9fff]+']
         combined_pattern = re.compile('|'.join(patterns_to_keep), re.IGNORECASE)
         tokens = combined_pattern.findall(masked_text)
         text_for_nltk = ' '.join(tokens)
@@ -96,8 +93,7 @@ class MultiLingualTextRank:
                 if re.compile('[\u4e00-\u9fff]').search(word):
                     jieba_tokens = pseg.cut(word)
                     for ch_word, ch_flag in jieba_tokens:
-                        if len(ch_word) >= 1 and ch_flag in self.pos_filter['chinese'] \
-                                and ch_word not in ch_stop_words:
+                        if len(ch_word) >= 1 and ch_flag in self.pos_filter['chinese'] and ch_word not in ch_stop_words:
                             words.append(ch_word)
                 elif len(word) >= 1 and flag in self.pos_filter['english'] and word.lower() not in en_stop_words:
                     words.append(word)
@@ -127,7 +123,7 @@ class MultiLingualTextRank:
 
         pagerank_scores = self.graph.pagerank(directed=False, damping=0.85, weights='weight')
         if max(pagerank_scores) > 0:
-            pagerank_scores = [scores/max(pagerank_scores) for scores in pagerank_scores]
+            pagerank_scores = [scores / max(pagerank_scores) for scores in pagerank_scores]
         node_names = self.graph.vs['name']
         return dict(zip(node_names, pagerank_scores))
 

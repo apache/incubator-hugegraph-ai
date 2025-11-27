@@ -17,12 +17,6 @@
 
 import unittest
 
-from hugegraph_ml.examples.dgi_example import dgi_example
-from hugegraph_ml.examples.diffpool_example import diffpool_example
-from hugegraph_ml.examples.gin_example import gin_example
-from hugegraph_ml.examples.grace_example import grace_example
-from hugegraph_ml.examples.grand_example import grand_example
-from hugegraph_ml.examples.jknet_example import jknet_example
 from hugegraph_ml.examples.agnn_example import agnn_example
 from hugegraph_ml.examples.appnp_example import appnp_example
 from hugegraph_ml.examples.arma_example import arma_example
@@ -32,8 +26,15 @@ from hugegraph_ml.examples.cluster_gcn_example import cluster_gcn_example
 from hugegraph_ml.examples.correct_and_smooth_example import cs_example
 from hugegraph_ml.examples.dagnn_example import dagnn_example
 from hugegraph_ml.examples.deepergcn_example import deepergcn_example
+from hugegraph_ml.examples.dgi_example import dgi_example
+from hugegraph_ml.examples.diffpool_example import diffpool_example
+from hugegraph_ml.examples.gin_example import gin_example
+from hugegraph_ml.examples.grace_example import grace_example
+from hugegraph_ml.examples.grand_example import grand_example
+from hugegraph_ml.examples.jknet_example import jknet_example
 from hugegraph_ml.examples.pgnn_example import pgnn_example
 from hugegraph_ml.examples.seal_example import seal_example
+
 
 class TestHugegraph2DGL(unittest.TestCase):
     def setUp(self):

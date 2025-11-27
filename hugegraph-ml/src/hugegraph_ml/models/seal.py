@@ -28,25 +28,23 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/seal
 """
 
 import argparse
+import logging
 import os
 import os.path as osp
-from copy import deepcopy
-import logging
 import time
-
-import torch
-from torch import nn
-import torch.nn.functional as F
-from torch.utils.data import DataLoader, Dataset
+from copy import deepcopy
 
 import dgl
-from dgl import add_self_loop, NID
+import numpy as np
+import torch
+import torch.nn.functional as F
+from dgl import NID, add_self_loop
 from dgl.dataloading.negative_sampler import Uniform
 from dgl.nn.pytorch import GraphConv, SAGEConv, SortPooling, SumPooling
-
-import numpy as np
 from ogb.linkproppred import DglLinkPropPredDataset, Evaluator
 from scipy.sparse.csgraph import shortest_path
+from torch import nn
+from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
 
@@ -85,13 +83,13 @@ class GCN(nn.Module):
         dropout=0.5,
         max_z=1000,
     ):
-        super(GCN, self).__init__()
+        super().__init__()
         self.num_layers = num_layers
         self.dropout = dropout
         self.pooling_type = pooling_type
-        self.use_attribute = False if node_attributes is None else True
+        self.use_attribute = node_attributes is not None
         self.use_embedding = use_embedding
-        self.use_edge_weight = False if edge_weights is None else True
+        self.use_edge_weight = edge_weights is not None
 
         self.z_embedding = nn.Embedding(max_z, hidden_units)
         if node_attributes is not None:
@@ -114,21 +112,13 @@ class GCN(nn.Module):
 
         self.layers = nn.ModuleList()
         if gcn_type == "gcn":
-            self.layers.append(
-                GraphConv(initial_dim, hidden_units, allow_zero_in_degree=True)
-            )
+            self.layers.append(GraphConv(initial_dim, hidden_units, allow_zero_in_degree=True))
             for _ in range(num_layers - 1):
-                self.layers.append(
-                    GraphConv(hidden_units, hidden_units, allow_zero_in_degree=True)
-                )
+                self.layers.append(GraphConv(hidden_units, hidden_units, allow_zero_in_degree=True))
         elif gcn_type == "sage":
-            self.layers.append(
-                SAGEConv(initial_dim, hidden_units, aggregator_type="gcn")
-            )
+            self.layers.append(SAGEConv(initial_dim, hidden_units, aggregator_type="gcn"))
             for _ in range(num_layers - 1):
-                self.layers.append(
-                    SAGEConv(hidden_units, hidden_units, aggregator_type="gcn")
-                )
+                self.layers.append(SAGEConv(hidden_units, hidden_units, aggregator_type="gcn"))
         else:
             raise ValueError("Gcn type error.")
 
@@ -162,10 +152,7 @@ class GCN(nn.Module):
         else:
             x = z_emb
 
-        if self.use_edge_weight:
-            edge_weight = self.edge_weights_lookup(edge_id)
-        else:
-            edge_weight = None
+        edge_weight = self.edge_weights_lookup(edge_id) if self.use_edge_weight else None
 
         if self.use_embedding:
             n_emb = self.node_embedding(node_id)
@@ -219,12 +206,12 @@ class DGCNN(nn.Module):
         dropout=0.5,
         max_z=1000,
     ):
-        super(DGCNN, self).__init__()
+        super().__init__()
         self.num_layers = num_layers
         self.dropout = dropout
-        self.use_attribute = False if node_attributes is None else True
+        self.use_attribute = node_attributes is not None
         self.use_embedding = use_embedding
-        self.use_edge_weight = False if edge_weights is None else True
+        self.use_edge_weight = edge_weights is not None
 
         self.z_embedding = nn.Embedding(max_z, hidden_units)
 
@@ -248,22 +235,14 @@ class DGCNN(nn.Module):
 
         self.layers = nn.ModuleList()
         if gcn_type == "gcn":
-            self.layers.append(
-                GraphConv(initial_dim, hidden_units, allow_zero_in_degree=True)
-            )
+            self.layers.append(GraphConv(initial_dim, hidden_units, allow_zero_in_degree=True))
             for _ in range(num_layers - 1):
-                self.layers.append(
-                    GraphConv(hidden_units, hidden_units, allow_zero_in_degree=True)
-                )
+                self.layers.append(GraphConv(hidden_units, hidden_units, allow_zero_in_degree=True))
             self.layers.append(GraphConv(hidden_units, 1, allow_zero_in_degree=True))
         elif gcn_type == "sage":
-            self.layers.append(
-                SAGEConv(initial_dim, hidden_units, aggregator_type="gcn")
-            )
+            self.layers.append(SAGEConv(initial_dim, hidden_units, aggregator_type="gcn"))
             for _ in range(num_layers - 1):
-                self.layers.append(
-                    SAGEConv(hidden_units, hidden_units, aggregator_type="gcn")
-                )
+                self.layers.append(SAGEConv(hidden_units, hidden_units, aggregator_type="gcn"))
             self.layers.append(SAGEConv(hidden_units, 1, aggregator_type="gcn"))
         else:
             raise ValueError("Gcn type error.")
@@ -274,9 +253,7 @@ class DGCNN(nn.Module):
         conv1d_kws = [total_latent_dim, 5]
         self.conv_1 = nn.Conv1d(1, conv1d_channels[0], conv1d_kws[0], conv1d_kws[0])
         self.maxpool1d = nn.MaxPool1d(2, 2)
-        self.conv_2 = nn.Conv1d(
-            conv1d_channels[0], conv1d_channels[1], conv1d_kws[1], 1
-        )
+        self.conv_2 = nn.Conv1d(conv1d_channels[0], conv1d_channels[1], conv1d_kws[1], 1)
         dense_dim = int((k - 2) / 2 + 1)
         dense_dim = (dense_dim - conv1d_kws[1] + 1) * conv1d_channels[1]
         self.linear_1 = nn.Linear(dense_dim, 128)
@@ -298,10 +275,7 @@ class DGCNN(nn.Module):
             x = torch.cat([z_emb, x], 1)
         else:
             x = z_emb
-        if self.use_edge_weight:
-            edge_weight = self.edge_weights_lookup(edge_id)
-        else:
-            edge_weight = None
+        edge_weight = self.edge_weights_lookup(edge_id) if self.use_edge_weight else None
 
         if self.use_embedding:
             n_emb = self.node_embedding(node_id)
@@ -405,9 +379,7 @@ def drnl_node_labeling(subgraph, src, dst):
     dist2src = np.insert(dist2src, dst, 0, axis=0)
     dist2src = torch.from_numpy(dist2src)
 
-    dist2dst = shortest_path(
-        adj_wo_src, directed=False, unweighted=True, indices=dst - 1
-    )
+    dist2dst = shortest_path(adj_wo_src, directed=False, unweighted=True, indices=dst - 1)
     dist2dst = np.insert(dist2dst, src, 0, axis=0)
     dist2dst = torch.from_numpy(dist2dst)
 
@@ -465,7 +437,7 @@ class GraphDataSet(Dataset):
         return (self.graph_list[index], self.tensor[index])
 
 
-class PosNegEdgesGenerator(object):
+class PosNegEdgesGenerator:
     """
     Generate positive and negative samples
     Attributes:
@@ -484,10 +456,7 @@ class PosNegEdgesGenerator(object):
         self.shuffle = shuffle
 
     def __call__(self, split_type):
-        if split_type == "train":
-            subsample_ratio = self.subsample_ratio
-        else:
-            subsample_ratio = 1
+        subsample_ratio = self.subsample_ratio if split_type == "train" else 1
 
         pos_edges = self.split_edge[split_type]["edge"]
         if split_type == "train":
@@ -550,7 +519,7 @@ class EdgeDataSet(Dataset):
         return (subgraph, self.labels[index])
 
 
-class SEALSampler(object):
+class SEALSampler:
     """
     Sampler for SEAL in paper(no-block version)
     The  strategy is to sample all the k-hop neighbors around the two target nodes.
@@ -587,12 +556,8 @@ class SEALSampler(object):
         subgraph = dgl.node_subgraph(self.graph, sample_nodes)
 
         # Each node should have unique node id in the new subgraph
-        u_id = int(
-            torch.nonzero(subgraph.ndata[NID] == int(target_nodes[0]), as_tuple=False)
-        )
-        v_id = int(
-            torch.nonzero(subgraph.ndata[NID] == int(target_nodes[1]), as_tuple=False)
-        )
+        u_id = int(torch.nonzero(subgraph.ndata[NID] == int(target_nodes[0]), as_tuple=False))
+        v_id = int(torch.nonzero(subgraph.ndata[NID] == int(target_nodes[1]), as_tuple=False))
 
         # remove link between target nodes in positive subgraphs.
         if subgraph.has_edges_between(u_id, v_id):
@@ -608,7 +573,7 @@ class SEALSampler(object):
         return subgraph
 
     def _collate(self, batch):
-        batch_graphs, batch_labels = map(list, zip(*batch))
+        batch_graphs, batch_labels = map(list, zip(*batch, strict=False))
 
         batch_graphs = dgl.batch(batch_graphs)
         batch_labels = torch.stack(batch_labels)
@@ -637,7 +602,7 @@ class SEALSampler(object):
         return subgraph_list, torch.cat(labels_list)
 
 
-class SEALData(object):
+class SEALData:
     """
     1. Generate positive and negative samples
     2. Subgraph sampling
@@ -682,26 +647,19 @@ class SEALData(object):
         if use_coalesce:
             for k, v in g.edata.items():
                 g.edata[k] = v.float()  # dgl.to_simple() requires data is float
-            self.g = dgl.to_simple(
-                g, copy_ndata=True, copy_edata=True, aggregator="sum"
-            )
+            self.g = dgl.to_simple(g, copy_ndata=True, copy_edata=True, aggregator="sum")
 
-        self.ndata = {k: v for k, v in self.g.ndata.items()}
-        self.edata = {k: v for k, v in self.g.edata.items()}
+        self.ndata = dict(self.g.ndata.items())
+        self.edata = dict(self.g.edata.items())
         self.g.ndata.clear()
         self.g.edata.clear()
         self.print_fn("Save ndata and edata in class.")
         self.print_fn("Clear ndata and edata in graph.")
 
-        self.sampler = SEALSampler(
-            graph=self.g, hop=hop, num_workers=num_workers, print_fn=print_fn
-        )
+        self.sampler = SEALSampler(graph=self.g, hop=hop, num_workers=num_workers, print_fn=print_fn)
 
     def __call__(self, split_type):
-        if split_type == "train":
-            subsample_ratio = self.subsample_ratio
-        else:
-            subsample_ratio = 1
+        subsample_ratio = self.subsample_ratio if split_type == "train" else 1
 
         path = osp.join(
             self.save_dir or "",
@@ -741,7 +699,7 @@ def _transform_log_level(str_level):
         raise KeyError("Log level error")
 
 
-class LightLogging(object):
+class LightLogging:
     def __init__(self, log_path=None, log_name="lightlog", log_level="debug"):
         log_level = _transform_log_level(log_level)
 
@@ -752,19 +710,10 @@ class LightLogging(object):
                 os.mkdir(log_path)
 
             if log_name.endswith("-") or log_name.endswith("_"):
-                log_name = (
-                    log_path
-                    + log_name
-                    + time.strftime("%Y-%m-%d-%H:%M", time.localtime(time.time()))
-                    + ".log"
-                )
+                log_name = log_path + log_name + time.strftime("%Y-%m-%d-%H:%M", time.localtime(time.time())) + ".log"
             else:
                 log_name = (
-                    log_path
-                    + log_name
-                    + "_"
-                    + time.strftime("%Y-%m-%d-%H-%M", time.localtime(time.time()))
-                    + ".log"
+                    log_path + log_name + "_" + time.strftime("%Y-%m-%d-%H-%M", time.localtime(time.time())) + ".log"
                 )
 
             logging.basicConfig(

@@ -14,7 +14,9 @@
 #  limitations under the License.
 
 from typing import Dict, Optional
-from pycgraph import GNode, CStatus
+
+from pycgraph import CStatus, GNode
+
 from hugegraph_llm.nodes.util import init_context
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 from hugegraph_llm.utils.log import log

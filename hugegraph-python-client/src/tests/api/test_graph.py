@@ -18,6 +18,7 @@
 import unittest
 
 from pyhugegraph.utils.exceptions import NotFoundError
+
 from ..client_utils import ClientUtils
 
 

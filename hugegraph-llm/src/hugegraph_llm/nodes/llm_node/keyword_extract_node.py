@@ -13,7 +13,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.llm_op.keyword_extract import KeywordExtract
@@ -31,9 +31,7 @@ class KeywordExtractNode(BaseNode):
         """
         Initialize the keyword extraction operator.
         """
-        max_keywords = (
-            self.wk_input.max_keywords if self.wk_input.max_keywords is not None else 5
-        )
+        max_keywords = self.wk_input.max_keywords if self.wk_input.max_keywords is not None else 5
         extract_template = self.wk_input.keywords_extract_prompt
 
         self.operator = KeywordExtract(

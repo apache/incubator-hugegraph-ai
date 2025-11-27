@@ -16,7 +16,7 @@
 # under the License.
 
 
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import urljoin
 
 import requests
@@ -36,7 +36,7 @@ class HGraphSession:
         retries: int = 3,
         backoff_factor: int = 0.1,
         status_forcelist=(500, 502, 504),
-        session: Optional[requests.Session] = None,
+        session: requests.Session | None = None,
     ):
         """
         Initialize the HGraphSession object.
@@ -136,9 +136,11 @@ class HGraphSession:
         self,
         path: str,
         method: str = "GET",
-        validator=ResponseValidation(),
+        validator=None,
         **kwargs: Any,
     ) -> dict:
+        if validator is None:
+            validator = ResponseValidation()
         url = self.resolve(path)
         response: requests.Response = getattr(self._session, method.lower())(
             url,

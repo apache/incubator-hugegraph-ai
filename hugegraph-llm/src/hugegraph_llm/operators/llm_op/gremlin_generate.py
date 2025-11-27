@@ -18,7 +18,7 @@
 import asyncio
 import json
 import re
-from typing import Optional, List, Dict, Any, Union
+from typing import Any, Dict, List, Optional, Union
 
 from hugegraph_llm.config import prompt
 from hugegraph_llm.models.llms.base import BaseLLM
@@ -53,10 +53,7 @@ class GremlinGenerateSynthesize:
             return None
         example_strings = []
         for example in examples:
-            example_strings.append(
-                f"- query: {example['query']}\n"
-                f"- gremlin:\n```gremlin\n{example['gremlin']}\n```"
-            )
+            example_strings.append(f"- query: {example['query']}\n- gremlin:\n```gremlin\n{example['gremlin']}\n```")
         return "\n\n".join(example_strings)
 
     def _format_vertices(self, vertices: Optional[List[str]]) -> Optional[str]:
@@ -90,9 +87,7 @@ class GremlinGenerateSynthesize:
             vertices=self._format_vertices(vertices=self.vertices),
             properties=self._format_properties(properties=None),
         )
-        async_tasks["initialized_answer"] = asyncio.create_task(
-            self.llm.agenerate(prompt=init_prompt)
-        )
+        async_tasks["initialized_answer"] = asyncio.create_task(self.llm.agenerate(prompt=init_prompt))
 
         raw_response = await async_tasks["raw_answer"]
         initialized_response = await async_tasks["initialized_answer"]

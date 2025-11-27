@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Any, Dict, List, Set, Union
 import uuid
+from typing import Any, Dict, List, Set, Union
 
 from qdrant_client import QdrantClient  # pylint: disable=import-error
 from qdrant_client.http import models  # pylint: disable=import-error
@@ -56,9 +56,7 @@ class QdrantVectorIndex(VectorStoreBase):
         """Create a new collection in Qdrant."""
         self.client.create_collection(
             collection_name=self.name,
-            vectors_config=models.VectorParams(
-                size=self.embed_dim, distance=models.Distance.COSINE
-            ),
+            vectors_config=models.VectorParams(size=self.embed_dim, distance=models.Distance.COSINE),
         )
         log.info("Created Qdrant collection '%s'", self.name)
 
@@ -119,9 +117,7 @@ class QdrantVectorIndex(VectorStoreBase):
         return remove_num
 
     def search(self, query_vector: List[float], top_k: int = 5, dis_threshold: float = 0.9):
-        search_result = self.client.search(
-            collection_name=self.name, query_vector=query_vector, limit=top_k
-        )
+        search_result = self.client.search(collection_name=self.name, query_vector=query_vector, limit=top_k)
 
         result_properties = []
 

@@ -14,20 +14,20 @@
 #  limitations under the License.
 
 
-from typing import Optional, Literal
+from typing import Literal, Optional
 
 from pycgraph import GPipeline
 
-from hugegraph_llm.flows.common import BaseFlow
-from hugegraph_llm.nodes.index_node.vector_query_node import VectorQueryNode
-from hugegraph_llm.nodes.llm_node.keyword_extract_node import KeywordExtractNode
-from hugegraph_llm.nodes.index_node.semantic_id_query_node import SemanticIdQueryNode
-from hugegraph_llm.nodes.hugegraph_node.schema import SchemaNode
-from hugegraph_llm.nodes.hugegraph_node.graph_query_node import GraphQueryNode
-from hugegraph_llm.nodes.common_node.merge_rerank_node import MergeRerankNode
-from hugegraph_llm.nodes.llm_node.answer_synthesize_node import AnswerSynthesizeNode
-from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 from hugegraph_llm.config import huge_settings, prompt
+from hugegraph_llm.flows.common import BaseFlow
+from hugegraph_llm.nodes.common_node.merge_rerank_node import MergeRerankNode
+from hugegraph_llm.nodes.hugegraph_node.graph_query_node import GraphQueryNode
+from hugegraph_llm.nodes.hugegraph_node.schema import SchemaNode
+from hugegraph_llm.nodes.index_node.semantic_id_query_node import SemanticIdQueryNode
+from hugegraph_llm.nodes.index_node.vector_query_node import VectorQueryNode
+from hugegraph_llm.nodes.llm_node.answer_synthesize_node import AnswerSynthesizeNode
+from hugegraph_llm.nodes.llm_node.keyword_extract_node import KeywordExtractNode
+from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 from hugegraph_llm.utils.log import log
 
 
@@ -71,23 +71,13 @@ class RAGGraphVectorFlow(BaseFlow):
         prepared_input.graph_ratio = graph_ratio
         prepared_input.gremlin_tmpl_num = gremlin_tmpl_num
         prepared_input.gremlin_prompt = gremlin_prompt or prompt.gremlin_generate_prompt
-        prepared_input.max_graph_items = (
-            max_graph_items or huge_settings.max_graph_items
-        )
-        prepared_input.topk_return_results = (
-            topk_return_results or huge_settings.topk_return_results
-        )
-        prepared_input.topk_per_keyword = (
-            topk_per_keyword or huge_settings.topk_per_keyword
-        )
-        prepared_input.vector_dis_threshold = (
-            vector_dis_threshold or huge_settings.vector_dis_threshold
-        )
+        prepared_input.max_graph_items = max_graph_items or huge_settings.max_graph_items
+        prepared_input.topk_return_results = topk_return_results or huge_settings.topk_return_results
+        prepared_input.topk_per_keyword = topk_per_keyword or huge_settings.topk_per_keyword
+        prepared_input.vector_dis_threshold = vector_dis_threshold or huge_settings.vector_dis_threshold
         prepared_input.rerank_method = rerank_method
         prepared_input.near_neighbor_first = near_neighbor_first
-        prepared_input.keywords_extract_prompt = (
-            keywords_extract_prompt or prompt.keywords_extract_prompt
-        )
+        prepared_input.keywords_extract_prompt = keywords_extract_prompt or prompt.keywords_extract_prompt
         prepared_input.answer_prompt = answer_prompt or prompt.answer_prompt
         prepared_input.custom_related_information = custom_related_information
         prepared_input.schema = huge_settings.graph_name
@@ -118,19 +108,11 @@ class RAGGraphVectorFlow(BaseFlow):
         # Register nodes and their dependencies
         pipeline.registerGElement(vector_query_node, set(), "vector")
         pipeline.registerGElement(keyword_extract_node, set(), "keyword")
-        pipeline.registerGElement(
-            semantic_id_query_node, {keyword_extract_node}, "semantic"
-        )
+        pipeline.registerGElement(semantic_id_query_node, {keyword_extract_node}, "semantic")
         pipeline.registerGElement(schema_node, set(), "schema")
-        pipeline.registerGElement(
-            graph_query_node, {schema_node, semantic_id_query_node}, "graph"
-        )
-        pipeline.registerGElement(
-            merge_rerank_node, {graph_query_node, vector_query_node}, "merge"
-        )
-        pipeline.registerGElement(
-            answer_synthesize_node, {merge_rerank_node}, "graph_vector"
-        )
+        pipeline.registerGElement(graph_query_node, {schema_node, semantic_id_query_node}, "graph")
+        pipeline.registerGElement(merge_rerank_node, {graph_query_node, vector_query_node}, "merge")
+        pipeline.registerGElement(answer_synthesize_node, {merge_rerank_node}, "graph_vector")
         log.info("RAGGraphVectorFlow pipeline built successfully")
         return pipeline
 

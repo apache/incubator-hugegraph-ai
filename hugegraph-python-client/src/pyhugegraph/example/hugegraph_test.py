@@ -31,17 +31,14 @@ class HugeGraph:
             from pyhugegraph.client import PyHugeClient
         except ImportError:
             raise ValueError(
-                "Please install HugeGraph Python client first: "
-                "`pip3 install hugegraph-python-client`"
+                "Please install HugeGraph Python client first: `pip3 install hugegraph-python-client`"
             ) from ImportError
 
         self.username = username
         self.password = password
         self.url = url
         self.graph = graph
-        self.client = PyHugeClient(
-            url=url, user=username, pwd=password, graph=graph, graphspace=None
-        )
+        self.client = PyHugeClient(url=url, user=username, pwd=password, graph=graph, graphspace=None)
         self.schema = ""
 
     def exec(self, query) -> str:

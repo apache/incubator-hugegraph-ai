@@ -15,7 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from pyvermeer.structure.graph_data import GraphsResponse, GraphResponse
+from pyvermeer.structure.graph_data import GraphResponse, GraphsResponse
+
 from .base import BaseModule
 
 
@@ -24,10 +25,7 @@ class GraphModule(BaseModule):
 
     def get_graph(self, graph_name: str) -> GraphResponse:
         """Get task list"""
-        response = self._send_request(
-            "GET",
-            f"/graphs/{graph_name}"
-        )
+        response = self._send_request("GET", f"/graphs/{graph_name}")
         return GraphResponse(response)
 
     def get_graphs(self) -> GraphsResponse:

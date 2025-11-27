@@ -82,9 +82,7 @@ class TestBuildSemanticIndex(unittest.TestCase):
         self.assertEqual(builder.vid_index, self.mock_vector_store)
 
         # Verify from_name was called with correct parameters
-        self.mock_vector_store_class.from_name.assert_called_once_with(
-            384, "test_graph", "graph_vids"
-        )
+        self.mock_vector_store_class.from_name.assert_called_once_with(384, "test_graph", "graph_vids")
 
     def test_extract_names(self):
         # Create a builder

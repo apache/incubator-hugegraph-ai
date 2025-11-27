@@ -76,7 +76,7 @@ class GRAND(nn.Module):
         temp=0.5,
         lam=1.0,
     ):
-        super(GRAND, self).__init__()
+        super().__init__()
         self.sample = sample  # Number of augmentations
         self.order = order  # Order of propagation steps
 
@@ -249,7 +249,7 @@ class MLP(nn.Module):
     """
 
     def __init__(self, n_in_feats, n_hidden, n_out_feats, p_input_drop, p_hidden_drop, bn):
-        super(MLP, self).__init__()
+        super().__init__()
         self.layer1 = nn.Linear(n_in_feats, n_hidden, bias=True)  # First linear layer
         self.layer2 = nn.Linear(n_hidden, n_out_feats, bias=True)  # Second linear layer
         self.input_drop = nn.Dropout(p_input_drop)  # Dropout for input features

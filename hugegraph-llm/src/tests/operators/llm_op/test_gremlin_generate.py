@@ -52,8 +52,7 @@ class TestGremlinGenerateSynthesize(unittest.TestCase):
         ]
 
         cls.sample_gremlin_response = (
-            "Here is the Gremlin query:\n```gremlin\n"
-            "g.V().has('person', 'name', 'Tom Hanks').out('acted_in')\n```"
+            "Here is the Gremlin query:\n```gremlin\ng.V().has('person', 'name', 'Tom Hanks').out('acted_in')\n```"
         )
 
         cls.sample_gremlin_query = "g.V().has('person', 'name', 'Tom Hanks').out('acted_in')"
@@ -74,10 +73,6 @@ class TestGremlinGenerateSynthesize(unittest.TestCase):
         mock_llm.agenerate = AsyncMock()
         mock_llm.generate.return_value = self.__class__.sample_gremlin_response
         return mock_llm
-
-
-
-
 
     def test_init_with_defaults(self):
         """Test initialization with default values."""
@@ -179,9 +174,7 @@ class TestGremlinGenerateSynthesize(unittest.TestCase):
     def test_async_generate(self):
         """Test the run method with async functionality."""
         # Create generator with schema and vertices
-        generator = GremlinGenerateSynthesize(
-            llm=self.mock_llm, schema=self.schema, vertices=self.vertices
-        )
+        generator = GremlinGenerateSynthesize(llm=self.mock_llm, schema=self.schema, vertices=self.vertices)
 
         # Run the method
         result = generator.run({"query": self.query})

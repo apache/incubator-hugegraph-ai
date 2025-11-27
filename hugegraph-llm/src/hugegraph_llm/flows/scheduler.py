@@ -14,25 +14,27 @@
 #  limitations under the License.
 
 import threading
-from typing import Dict, Any
+from typing import Any, Dict
+
 from pycgraph import GPipeline, GPipelineManager
+
 from hugegraph_llm.flows import FlowName
+from hugegraph_llm.flows.build_example_index import BuildExampleIndexFlow
+from hugegraph_llm.flows.build_schema import BuildSchemaFlow
 from hugegraph_llm.flows.build_vector_index import BuildVectorIndexFlow
 from hugegraph_llm.flows.common import BaseFlow
-from hugegraph_llm.flows.build_example_index import BuildExampleIndexFlow
+from hugegraph_llm.flows.get_graph_index_info import GetGraphIndexInfoFlow
 from hugegraph_llm.flows.graph_extract import GraphExtractFlow
 from hugegraph_llm.flows.import_graph_data import ImportGraphDataFlow
-from hugegraph_llm.flows.update_vid_embeddings import UpdateVidEmbeddingsFlow
-from hugegraph_llm.flows.get_graph_index_info import GetGraphIndexInfoFlow
-from hugegraph_llm.flows.build_schema import BuildSchemaFlow
 from hugegraph_llm.flows.prompt_generate import PromptGenerateFlow
-from hugegraph_llm.flows.rag_flow_raw import RAGRawFlow
-from hugegraph_llm.flows.rag_flow_vector_only import RAGVectorOnlyFlow
 from hugegraph_llm.flows.rag_flow_graph_only import RAGGraphOnlyFlow
 from hugegraph_llm.flows.rag_flow_graph_vector import RAGGraphVectorFlow
+from hugegraph_llm.flows.rag_flow_raw import RAGRawFlow
+from hugegraph_llm.flows.rag_flow_vector_only import RAGVectorOnlyFlow
+from hugegraph_llm.flows.text2gremlin import Text2GremlinFlow
+from hugegraph_llm.flows.update_vid_embeddings import UpdateVidEmbeddingsFlow
 from hugegraph_llm.state.ai_state import WkFlowInput
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.flows.text2gremlin import Text2GremlinFlow
 
 
 class Scheduler:

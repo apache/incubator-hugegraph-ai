@@ -20,8 +20,7 @@ from pycgraph import GPipeline
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.nodes.document_node.chunk_split import ChunkSplitNode
 from hugegraph_llm.nodes.index_node.build_vector_index import BuildVectorIndexNode
-from hugegraph_llm.state.ai_state import WkFlowInput
-from hugegraph_llm.state.ai_state import WkFlowState
+from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 
 
 # pylint: disable=arguments-differ,keyword-arg-before-vararg

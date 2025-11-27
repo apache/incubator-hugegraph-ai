@@ -39,15 +39,11 @@ class NodeClassifyWithEdge:
         required_node_attrs = ["feat", "label", "train_mask", "val_mask", "test_mask"]
         for attr in required_node_attrs:
             if attr not in self.graph.ndata:
-                raise ValueError(
-                    f"Graph is missing required node attribute '{attr}' in ndata."
-                )
+                raise ValueError(f"Graph is missing required node attribute '{attr}' in ndata.")
         required_edge_attrs = ["feat"]
         for attr in required_edge_attrs:
             if attr not in self.graph.edata:
-                raise ValueError(
-                    f"Graph is missing required edge attribute '{attr}' in edata."
-                )
+                raise ValueError(f"Graph is missing required edge attribute '{attr}' in edata.")
 
     def _evaluate(self, edge_feats, node_feats, labels, mask):
         self._model.eval()
@@ -69,12 +65,8 @@ class NodeClassifyWithEdge:
         gpu: int = -1,
     ):
         # Set device for training
-        self._device = (
-            f"cuda:{gpu}" if gpu != -1 and torch.cuda.is_available() else "cpu"
-        )
-        self._early_stopping = EarlyStopping(
-            patience=patience, monitor=early_stopping_monitor
-        )
+        self._device = f"cuda:{gpu}" if gpu != -1 and torch.cuda.is_available() else "cpu"
+        self._early_stopping = EarlyStopping(patience=patience, monitor=early_stopping_monitor)
         self._model.to(self._device)
         self.graph = self.graph.to(self._device)
         # Get node features, labels, masks and move to device
@@ -83,9 +75,7 @@ class NodeClassifyWithEdge:
         labels = self.graph.ndata["label"].to(self._device)
         train_mask = self.graph.ndata["train_mask"].to(self._device)
         val_mask = self.graph.ndata["val_mask"].to(self._device)
-        optimizer = torch.optim.Adam(
-            self._model.parameters(), lr=lr, weight_decay=weight_decay
-        )
+        optimizer = torch.optim.Adam(self._model.parameters(), lr=lr, weight_decay=weight_decay)
         # Training model
         epochs = trange(n_epochs)
         for epoch in epochs:
@@ -105,9 +95,7 @@ class NodeClassifyWithEdge:
                 f"epoch {epoch} | train loss {loss.item():.4f} | val loss {valid_metrics['loss']:.4f}"
             )
             # early stopping
-            self._early_stopping(
-                valid_metrics[self._early_stopping.monitor], self._model
-            )
+            self._early_stopping(valid_metrics[self._early_stopping.monitor], self._model)
             torch.cuda.empty_cache()
             if self._early_stopping.early_stop:
                 break

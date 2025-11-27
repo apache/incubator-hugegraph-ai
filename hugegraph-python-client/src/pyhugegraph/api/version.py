@@ -20,7 +20,6 @@ from pyhugegraph.utils import huge_router as router
 
 
 class VersionManager(HugeParamsBase):
-
     @router.http("GET", "/versions")
     def version(self):
         return self._invoke_request()

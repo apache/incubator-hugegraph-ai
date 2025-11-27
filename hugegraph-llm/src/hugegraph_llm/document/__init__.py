@@ -21,7 +21,7 @@ This module implements classes for representing documents and their associated m
 in the HugeGraph LLM system.
 """
 
-from typing import Dict, Any, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 
 class Metadata:
@@ -59,7 +59,7 @@ class Document:
         Args:
             content: The text content of the document.
             metadata: Metadata associated with the document. Can be a dictionary or Metadata object.
-        
+
         Raises:
             ValueError: If content is None or empty string.
         """

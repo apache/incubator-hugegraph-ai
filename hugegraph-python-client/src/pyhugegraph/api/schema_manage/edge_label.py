@@ -26,7 +26,6 @@ from pyhugegraph.utils.util import ResponseValidation
 
 
 class EdgeLabel(HugeParamsBase):
-
     @decorator_params
     def link(self, source_label, target_label) -> "EdgeLabel":
         self._parameter_holder.set("source_label", source_label)
@@ -82,7 +81,7 @@ class EdgeLabel(HugeParamsBase):
 
     @decorator_params
     def ifNotExist(self) -> "EdgeLabel":
-        path = f'schema/edgelabels/{self._parameter_holder.get_value("name")}'
+        path = f"schema/edgelabels/{self._parameter_holder.get_value('name')}"
         if _ := self._sess.request(path, validator=ResponseValidation(strict=False)):
             self._parameter_holder.set("not_exist", False)
         return self
@@ -117,17 +116,17 @@ class EdgeLabel(HugeParamsBase):
         path = "schema/edgelabels"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "POST", data=json.dumps(data)):
-            return f'create EdgeLabel success, Detail: "{str(response)}"'
-        log.error(f'create EdgeLabel failed, Detail: "{str(response)}"')
+            return f'create EdgeLabel success, Detail: "{response!s}"'
+        log.error(f'create EdgeLabel failed, Detail: "{response!s}"')
         return None
 
     @decorator_params
     def remove(self):
-        path = f'schema/edgelabels/{self._parameter_holder.get_value("name")}'
+        path = f"schema/edgelabels/{self._parameter_holder.get_value('name')}"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "DELETE"):
-            return f'remove EdgeLabel success, Detail: "{str(response)}"'
-        log.error(f'remove EdgeLabel failed, Detail: "{str(response)}"')
+            return f'remove EdgeLabel success, Detail: "{response!s}"'
+        log.error(f'remove EdgeLabel failed, Detail: "{response!s}"')
         return None
 
     @decorator_params
@@ -139,25 +138,23 @@ class EdgeLabel(HugeParamsBase):
             if key in dic:
                 data[key] = dic[key]
 
-        path = f'schema/edgelabels/{data["name"]}?action=append'
+        path = f"schema/edgelabels/{data['name']}?action=append"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "PUT", data=json.dumps(data)):
-            return f'append EdgeLabel success, Detail: "{str(response)}"'
-        log.error(f'append EdgeLabel failed, Detail: "{str(response)}"')
+            return f'append EdgeLabel success, Detail: "{response!s}"'
+        log.error(f'append EdgeLabel failed, Detail: "{response!s}"')
         return None
 
     @decorator_params
     def eliminate(self):
         name = self._parameter_holder.get_value("name")
         user_data = (
-            self._parameter_holder.get_value("user_data")
-            if self._parameter_holder.get_value("user_data")
-            else {}
+            self._parameter_holder.get_value("user_data") if self._parameter_holder.get_value("user_data") else {}
         )
         path = f"schema/edgelabels/{name}?action=eliminate"
         data = {"name": name, "user_data": user_data}
         self.clean_parameter_holder()
         if response := self._sess.request(path, "PUT", data=json.dumps(data)):
-            return f'eliminate EdgeLabel success, Detail: "{str(response)}"'
-        log.error(f'eliminate EdgeLabel failed, Detail: "{str(response)}"')
+            return f'eliminate EdgeLabel success, Detail: "{response!s}"'
+        log.error(f'eliminate EdgeLabel failed, Detail: "{response!s}"')
         return None

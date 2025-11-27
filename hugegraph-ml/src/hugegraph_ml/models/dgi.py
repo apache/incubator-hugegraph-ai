@@ -49,7 +49,7 @@ class DGI(nn.Module):
     """
 
     def __init__(self, n_in_feats, n_hidden=512, n_layers=2, p_drop=0):
-        super(DGI, self).__init__()
+        super().__init__()
         self.encoder = GCNEncoder(n_in_feats, n_hidden, n_layers, p_drop)  # Initialize the GCN-based encoder
         self.discriminator = Discriminator(n_hidden)  # Initialize the discriminator for mutual information maximization
         self.loss = nn.BCEWithLogitsLoss()  # Binary cross-entropy loss with logits for classification
@@ -118,7 +118,7 @@ class GCNEncoder(nn.Module):
     """
 
     def __init__(self, n_in_feats, n_hidden, n_layers, p_drop):
-        super(GCNEncoder, self).__init__()
+        super().__init__()
         assert n_layers >= 2, "The number of GNN layers must be at least 2."
         self.input_layer = GraphConv(
             n_in_feats, n_hidden, activation=nn.PReLU(n_hidden)
@@ -170,7 +170,7 @@ class Discriminator(nn.Module):
     """
 
     def __init__(self, n_hidden):
-        super(Discriminator, self).__init__()
+        super().__init__()
         self.weight = nn.Parameter(torch.Tensor(n_hidden, n_hidden))  # Define weights for bilinear transformation
         self.uniform_weight()  # Initialize the weights uniformly
 

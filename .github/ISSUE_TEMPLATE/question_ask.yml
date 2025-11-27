@@ -27,7 +27,7 @@ body:
         - configs (配置项 / 文档相关)
         - exception / error (异常报错)
         - others (please comment below)
-  
+
   - type: checkboxes
     attributes:
       label: Before submit
@@ -54,8 +54,8 @@ body:
         For issues related to graph usage/configuration, please refer to [REST-API documentation](https://hugegraph.apache.org/docs/clients/restful-api/), and [Server configuration documentation](https://hugegraph.apache.org/docs/config/config-option/) (if possible, please provide screenshots or GIF).
         图使用 / 配置相关问题，请优先参考 [REST-API 文档](https://hugegraph.apache.org/docs/clients/restful-api/), 以及 [Server 配置文档](https://hugegraph.apache.org/docs/config/config-option/) (请提供清晰的截图，动图录屏更佳)
       placeholder: |
-        type the main problem here 
-        
+        type the main problem here
+
         ```java
         // Exception / Error info (尽可能详细的日志 + 完整异常栈)
 

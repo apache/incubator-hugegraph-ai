@@ -14,7 +14,9 @@
 #  limitations under the License.
 
 import json
+
 from pycgraph import GPipeline
+
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.nodes.document_node.chunk_split import ChunkSplitNode
 from hugegraph_llm.nodes.hugegraph_node.schema import SchemaNode
@@ -46,15 +48,11 @@ class GraphExtractFlow(BaseFlow):
         prepared_input.schema = schema
         prepared_input.extract_type = extract_type
 
-    def build_flow(
-        self, schema, texts, example_prompt, extract_type, language="zh", **kwargs
-    ):
+    def build_flow(self, schema, texts, example_prompt, extract_type, language="zh", **kwargs):
         pipeline = GPipeline()
         prepared_input = WkFlowInput()
         # prepare input data
-        self.prepare(
-            prepared_input, schema, texts, example_prompt, extract_type, language
-        )
+        self.prepare(prepared_input, schema, texts, example_prompt, extract_type, language)
 
         pipeline.createGParam(prepared_input, "wkflow_input")
         pipeline.createGParam(WkFlowState(), "wkflow_state")
@@ -64,9 +62,7 @@ class GraphExtractFlow(BaseFlow):
         graph_extract_node = ExtractNode()
         pipeline.registerGElement(schema_node, set(), "schema_node")
         pipeline.registerGElement(chunk_split_node, set(), "chunk_split")
-        pipeline.registerGElement(
-            graph_extract_node, {schema_node, chunk_split_node}, "graph_extract"
-        )
+        pipeline.registerGElement(graph_extract_node, {schema_node, chunk_split_node}, "graph_extract")
 
         return pipeline
 

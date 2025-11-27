@@ -20,7 +20,7 @@ LLM models package for HugeGraph-LLM.
 
 This package contains various LLM client implementations including:
 - OpenAI clients
-- Qianfan clients  
+- Qianfan clients
 - Ollama clients
 - LiteLLM clients
 """

@@ -17,19 +17,19 @@
 
 import json
 import os
-from datetime import datetime
 from dataclasses import dataclass
-from typing import Any, Tuple, Dict, Literal, Optional, List
+from datetime import datetime
+from typing import Any, Dict, List, Literal, Optional, Tuple
 
 import gradio as gr
 import pandas as pd
 
-from hugegraph_llm.config import prompt, resource_path, huge_settings
+from hugegraph_llm.config import huge_settings, prompt, resource_path
 from hugegraph_llm.flows import FlowName
+from hugegraph_llm.flows.scheduler import SchedulerSingleton
 from hugegraph_llm.utils.embedding_utils import get_index_folder_name
 from hugegraph_llm.utils.hugegraph_utils import run_gremlin_query
 from hugegraph_llm.utils.log import log
-from hugegraph_llm.flows.scheduler import SchedulerSingleton
 
 
 @dataclass
@@ -82,9 +82,7 @@ def store_schema(schema, question, gremlin_prompt):
 
 
 def build_example_vector_index(temp_file) -> dict:
-    folder_name = get_index_folder_name(
-        huge_settings.graph_name, huge_settings.graph_space
-    )
+    folder_name = get_index_folder_name(huge_settings.graph_name, huge_settings.graph_space)
     index_path = os.path.join(resource_path, folder_name, "gremlin_examples")
     if not os.path.exists(index_path):
         os.makedirs(index_path)
@@ -96,9 +94,7 @@ def build_example_vector_index(temp_file) -> dict:
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         _, file_name = os.path.split(f"{name}_{timestamp}{ext}")
         log.info("Copying file to: %s", file_name)
-        target_file = os.path.join(
-            resource_path, folder_name, "gremlin_examples", file_name
-        )
+        target_file = os.path.join(resource_path, folder_name, "gremlin_examples", file_name)
         try:
             import shutil
 
@@ -117,9 +113,7 @@ def build_example_vector_index(temp_file) -> dict:
         log.critical("Unsupported file format. Please input a JSON or CSV file.")
         return {"error": "Unsupported file format. Please input a JSON or CSV file."}
 
-    return SchedulerSingleton.get_instance().schedule_flow(
-        FlowName.BUILD_EXAMPLES_INDEX, examples
-    )
+    return SchedulerSingleton.get_instance().schedule_flow(FlowName.BUILD_EXAMPLES_INDEX, examples)
 
 
 def _process_schema(schema, generator, sm):
@@ -188,22 +182,14 @@ def simple_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
     if "vertexlabels" in schema:
         mini_schema["vertexlabels"] = []
         for vertex in schema["vertexlabels"]:
-            new_vertex = {
-                key: vertex[key]
-                for key in ["id", "name", "properties"]
-                if key in vertex
-            }
+            new_vertex = {key: vertex[key] for key in ["id", "name", "properties"] if key in vertex}
             mini_schema["vertexlabels"].append(new_vertex)
 
     # Add necessary edgelabels items (4)
     if "edgelabels" in schema:
         mini_schema["edgelabels"] = []
         for edge in schema["edgelabels"]:
-            new_edge = {
-                key: edge[key]
-                for key in ["name", "source_label", "target_label", "properties"]
-                if key in edge
-            }
+            new_edge = {key: edge[key] for key in ["name", "source_label", "target_label", "properties"] if key in edge}
             mini_schema["edgelabels"].append(new_edge)
 
     return mini_schema
@@ -280,12 +266,8 @@ def create_text2gremlin_block() -> Tuple:
                 language="javascript",
                 elem_classes="code-container-show",
             )
-            initialized_out = gr.Textbox(
-                label="Gremlin With Template", show_copy_button=True
-            )
-            raw_out = gr.Textbox(
-                label="Gremlin Without Template", show_copy_button=True
-            )
+            initialized_out = gr.Textbox(label="Gremlin With Template", show_copy_button=True)
+            raw_out = gr.Textbox(label="Gremlin Without Template", show_copy_button=True)
             tmpl_exec_out = gr.Code(
                 label="Query With Template Output",
                 language="json",
@@ -298,9 +280,7 @@ def create_text2gremlin_block() -> Tuple:
             )
 
         with gr.Column(scale=1):
-            example_num_slider = gr.Slider(
-                minimum=0, maximum=10, step=1, value=2, label="Number of refer examples"
-            )
+            example_num_slider = gr.Slider(minimum=0, maximum=10, step=1, value=2, label="Number of refer examples")
             schema_box = gr.Textbox(
                 value=prompt.text2gql_graph_schema,
                 label="Schema",

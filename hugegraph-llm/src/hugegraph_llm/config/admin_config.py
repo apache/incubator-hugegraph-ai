@@ -16,6 +16,7 @@
 # under the License.
 
 from typing import Optional
+
 from .models import BaseConfig
 
 

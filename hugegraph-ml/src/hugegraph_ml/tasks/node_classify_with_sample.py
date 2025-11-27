@@ -19,12 +19,12 @@
 
 from typing import Literal
 
+import dgl
+import numpy as np
 import torch
 from dgl import DGLGraph
 from torch import nn
 from tqdm import trange
-import dgl
-import numpy as np
 
 from hugegraph_ml.utils.early_stopping import EarlyStopping
 
@@ -60,9 +60,7 @@ class NodeClassifyWithSample:
         required_node_attrs = ["feat", "label", "train_mask", "val_mask", "test_mask"]
         for attr in required_node_attrs:
             if attr not in self.graph.ndata:
-                raise ValueError(
-                    f"Graph is missing required node attribute '{attr}' in ndata."
-                )
+                raise ValueError(f"Graph is missing required node attribute '{attr}' in ndata.")
 
     def train(
         self,
@@ -73,18 +71,14 @@ class NodeClassifyWithSample:
         early_stopping_monitor: Literal["loss", "accuracy"] = "loss",
     ):
         # Set device for training
-        early_stopping = EarlyStopping(
-            patience=patience, monitor=early_stopping_monitor
-        )
+        early_stopping = EarlyStopping(patience=patience, monitor=early_stopping_monitor)
         self._model.to(self._device)
         # Get node features, labels, masks and move to device
         feats = self.graph.ndata["feat"].to(self._device)
         labels = self.graph.ndata["label"].to(self._device)
         train_mask = self.graph.ndata["train_mask"].to(self._device)
         val_mask = self.graph.ndata["val_mask"].to(self._device)
-        optimizer = torch.optim.Adam(
-            self._model.parameters(), lr=lr, weight_decay=weight_decay
-        )
+        optimizer = torch.optim.Adam(self._model.parameters(), lr=lr, weight_decay=weight_decay)
         # Training model
         loss_fn = nn.CrossEntropyLoss()
         epochs = trange(n_epochs)
@@ -109,7 +103,8 @@ class NodeClassifyWithSample:
                 )
                 # logs
                 epochs.set_description(
-                    f"epoch {epoch} | it {it} | train loss {train_loss.item():.4f} | val loss {valid_metrics['loss']:.4f}"
+                    f"epoch {epoch} | it {it} | train loss {train_loss.item():.4f} "
+                    f"| val loss {valid_metrics['loss']:.4f}"
                 )
                 # early stopping
                 early_stopping(valid_metrics[early_stopping.monitor], self._model)
@@ -151,4 +146,3 @@ class NodeClassifyWithSample:
             _, predicted = torch.max(test_logits, dim=1)
             accuracy = (predicted == test_labels[0]).sum().item() / len(test_labels[0])
         return {"accuracy": accuracy, "total_loss": total_loss.item()}
-        

@@ -16,7 +16,6 @@
 # under the License.
 
 
-from typing import Optional, Dict, List
 from pyhugegraph.api.common import HugeParamsBase
 from pyhugegraph.api.schema_manage.edge_label import EdgeLabel
 from pyhugegraph.api.schema_manage.index_label import IndexLabel
@@ -64,53 +63,49 @@ class SchemaManager(HugeParamsBase):
         return index_label
 
     @router.http("GET", "schema?format={_format}")
-    def getSchema(self, _format: str = "json") -> Optional[Dict]:  # pylint: disable=unused-argument
+    def getSchema(self, _format: str = "json") -> dict | None:  # pylint: disable=unused-argument
         return self._invoke_request()
 
     @router.http("GET", "schema/propertykeys/{property_name}")
-    def getPropertyKey(
-        self, property_name
-    ) -> Optional[PropertyKeyData]:  # pylint: disable=unused-argument
+    def getPropertyKey(self, property_name) -> PropertyKeyData | None:  # pylint: disable=unused-argument
         if response := self._invoke_request():
             return PropertyKeyData(response)
         return None
 
     @router.http("GET", "schema/propertykeys")
-    def getPropertyKeys(self) -> Optional[List[PropertyKeyData]]:
+    def getPropertyKeys(self) -> list[PropertyKeyData] | None:
         if response := self._invoke_request():
             return [PropertyKeyData(item) for item in response["propertykeys"]]
         return None
 
     @router.http("GET", "schema/vertexlabels/{name}")
-    def getVertexLabel(self, name) -> Optional[VertexLabelData]:  # pylint: disable=unused-argument
+    def getVertexLabel(self, name) -> VertexLabelData | None:  # pylint: disable=unused-argument
         if response := self._invoke_request():
             return VertexLabelData(response)
         log.error("VertexLabel not found: %s", str(response))
         return None
 
     @router.http("GET", "schema/vertexlabels")
-    def getVertexLabels(self) -> Optional[List[VertexLabelData]]:
+    def getVertexLabels(self) -> list[VertexLabelData] | None:
         if response := self._invoke_request():
             return [VertexLabelData(item) for item in response["vertexlabels"]]
         return None
 
     @router.http("GET", "schema/edgelabels/{label_name}")
-    def getEdgeLabel(
-        self, label_name: str
-    ) -> Optional[EdgeLabelData]:  # pylint: disable=unused-argument
+    def getEdgeLabel(self, label_name: str) -> EdgeLabelData | None:  # pylint: disable=unused-argument
         if response := self._invoke_request():
             return EdgeLabelData(response)
         log.error("EdgeLabel not found: %s", str(response))
         return None
 
     @router.http("GET", "schema/edgelabels")
-    def getEdgeLabels(self) -> Optional[List[EdgeLabelData]]:
+    def getEdgeLabels(self) -> list[EdgeLabelData] | None:
         if response := self._invoke_request():
             return [EdgeLabelData(item) for item in response["edgelabels"]]
         return None
 
     @router.http("GET", "schema/edgelabels")
-    def getRelations(self) -> Optional[List[str]]:
+    def getRelations(self) -> list[str] | None:
         """
         Retrieve all edge_label links/paths from the graph-sever.
 
@@ -124,14 +119,14 @@ class SchemaManager(HugeParamsBase):
         return None
 
     @router.http("GET", "schema/indexlabels/{name}")
-    def getIndexLabel(self, name) -> Optional[IndexLabelData]:  # pylint: disable=unused-argument
+    def getIndexLabel(self, name) -> IndexLabelData | None:  # pylint: disable=unused-argument
         if response := self._invoke_request():
             return IndexLabelData(response)
         log.error("IndexLabel not found: %s", str(response))
         return None
 
     @router.http("GET", "schema/indexlabels")
-    def getIndexLabels(self) -> Optional[List[IndexLabelData]]:
+    def getIndexLabels(self) -> list[IndexLabelData] | None:
         if response := self._invoke_request():
             return [IndexLabelData(item) for item in response["indexlabels"]]
         return None

@@ -15,24 +15,24 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import re
-import inspect
 import functools
+import inspect
+import re
 import threading
-
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, ClassVar
+
 from pyhugegraph.utils.log import log
 from pyhugegraph.utils.util import ResponseValidation
-
 
 if TYPE_CHECKING:
     from pyhugegraph.api.common import HGraphContext
 
 
 class SingletonMeta(type):
-    _instances = {}
-    _lock = threading.Lock()
+    _instances: ClassVar[dict] = {}
+    _lock: ClassVar[threading.Lock] = threading.Lock()
 
     def __call__(cls, *args, **kwargs):
         """
@@ -50,12 +50,12 @@ class SingletonMeta(type):
 class Route:
     method: str
     path: str
-    request_func: Optional[Callable] = None
+    request_func: Callable | None = None
 
 
 class RouterRegistry(metaclass=SingletonMeta):
     def __init__(self):
-        self._routers: Dict[str, Route] = {}
+        self._routers: dict[str, Route] = {}
 
     def register(self, key: str, route: Route):
         self._routers[key] = route
@@ -69,7 +69,6 @@ class RouterRegistry(metaclass=SingletonMeta):
 
 
 def register(method: str, path: str) -> Callable:
-
     def decorator(func: Callable) -> Callable:
         RouterRegistry().register(
             func.__qualname__,
@@ -144,10 +143,7 @@ def http(method: str, path: str) -> Callable:
 
 
 class RouterMixin:
-
-    def _invoke_request_registered(
-        self, placeholders: dict = None, validator=ResponseValidation(), **kwargs: Any
-    ):
+    def _invoke_request_registered(self, placeholders: dict | None = None, validator=None, **kwargs: Any):
         """
         Make an HTTP request using the stored partial request function.
         Args:
@@ -155,6 +151,8 @@ class RouterMixin:
         Returns:
             Any: The response from the HTTP request.
         """
+        if validator is None:
+            validator = ResponseValidation()
         frame = inspect.currentframe().f_back
         fname = frame.f_code.co_name
         route = RouterRegistry().routers.get(f"{self.__class__.__name__}.{fname}")
@@ -171,7 +169,7 @@ class RouterMixin:
         )
         return route.request_func(formatted_path, validator=validator, **kwargs)
 
-    def _invoke_request(self, validator=ResponseValidation(), **kwargs: Any):
+    def _invoke_request(self, validator=None, **kwargs: Any):
         """
         Make an HTTP request using the stored partial request function.
 
@@ -181,9 +179,11 @@ class RouterMixin:
         Returns:
             Any: The response from the HTTP request.
         """
+        if validator is None:
+            validator = ResponseValidation()
         frame = inspect.currentframe().f_back
         fname = frame.f_code.co_name
         log.debug(  # pylint: disable=logging-fstring-interpolation
-            f"Invoke request: {str(self.__class__.__name__)}.{fname}"
+            f"Invoke request: {self.__class__.__name__!s}.{fname}"
         )
         return getattr(self, f"_{fname}_request")(validator=validator, **kwargs)

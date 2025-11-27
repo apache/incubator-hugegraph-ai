@@ -178,8 +178,19 @@ uv add numpy  # Add to base dependencies
 uv add --group dev pytest-mock  # Add to dev group
 ```
 
-**Key Points:**
+### Code Quality (ruff + pre-commit)
 
+- Ruff is used for linting and formatting:
+  - \`ruff format .\`
+  - \`ruff check .\`
+- Enable Git hooks via pre-commit:
+  - \`pre-commit install\`
+  - \`pre-commit run --all-files\`
+- Config: [.pre-commit-config.yaml](.pre-commit-config.yaml). CI enforces these checks.
+  **Key Points:**
+- Config: [.pre-commit-config.yaml](.pre-commit-config.yaml). CI enforces these checks.
+
+**Key Points:**
 - Use [GitHub Desktop](https://desktop.github.com/) for easier PR management
 - Check existing issues before reporting bugs
 

@@ -28,27 +28,26 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/GATNE-T
 """
 
 import math
-import time
 import multiprocessing
+import time
 from functools import partial, reduce
-
-import numpy as np
-
-import torch
-from torch import nn
-import torch.nn.functional as F
-from torch.nn.parameter import Parameter
 
 import dgl
 import dgl.function as fn
+import numpy as np
+import torch
+import torch.nn.functional as F
+from torch import nn
+from torch.nn.parameter import Parameter
 
-class NeighborSampler(object):
+
+class NeighborSampler:
     def __init__(self, g, num_fanouts):
         self.g = g
         self.num_fanouts = num_fanouts
 
     def sample(self, pairs):
-        heads, tails, types = zip(*pairs)
+        heads, tails, types = zip(*pairs, strict=False)
         seeds, head_invmap = torch.unique(torch.LongTensor(heads), return_inverse=True)
         blocks = []
         for fanout in reversed(self.num_fanouts):
@@ -74,7 +73,7 @@ class DGLGATNE(nn.Module):
         edge_type_count,
         dim_a,
     ):
-        super(DGLGATNE, self).__init__()
+        super().__init__()
         self.num_nodes = num_nodes
         self.embedding_size = embedding_size
         self.embedding_u_size = embedding_u_size
@@ -83,15 +82,9 @@ class DGLGATNE(nn.Module):
         self.dim_a = dim_a
 
         self.node_embeddings = Parameter(torch.FloatTensor(num_nodes, embedding_size))
-        self.node_type_embeddings = Parameter(
-            torch.FloatTensor(num_nodes, edge_type_count, embedding_u_size)
-        )
-        self.trans_weights = Parameter(
-            torch.FloatTensor(edge_type_count, embedding_u_size, embedding_size)
-        )
-        self.trans_weights_s1 = Parameter(
-            torch.FloatTensor(edge_type_count, embedding_u_size, dim_a)
-        )
+        self.node_type_embeddings = Parameter(torch.FloatTensor(num_nodes, edge_type_count, embedding_u_size))
+        self.trans_weights = Parameter(torch.FloatTensor(edge_type_count, embedding_u_size, embedding_size))
+        self.trans_weights_s1 = Parameter(torch.FloatTensor(edge_type_count, embedding_u_size, dim_a))
         self.trans_weights_s2 = Parameter(torch.FloatTensor(edge_type_count, dim_a, 1))
 
         self.reset_parameters()
@@ -118,15 +111,13 @@ class DGLGATNE(nn.Module):
                 block.dstdata[edge_type] = self.node_type_embeddings[output_nodes, i]
                 block.update_all(
                     fn.copy_u(edge_type, "m"),
-                    fn.sum("m", edge_type), # pylint: disable=E1101
+                    fn.sum("m", edge_type),  # pylint: disable=E1101
                     etype=edge_type,
                 )
                 node_type_embed.append(block.dstdata[edge_type])
 
             node_type_embed = torch.stack(node_type_embed, 1)
-            tmp_node_type_embed = node_type_embed.unsqueeze(2).view(
-                -1, 1, self.embedding_u_size
-            )
+            tmp_node_type_embed = node_type_embed.unsqueeze(2).view(-1, 1, self.embedding_u_size)
             trans_w = (
                 self.trans_weights.unsqueeze(0)
                 .repeat(batch_size, 1, 1, 1)
@@ -137,11 +128,7 @@ class DGLGATNE(nn.Module):
                 .repeat(batch_size, 1, 1, 1)
                 .view(-1, self.embedding_u_size, self.dim_a)
             )
-            trans_w_s2 = (
-                self.trans_weights_s2.unsqueeze(0)
-                .repeat(batch_size, 1, 1, 1)
-                .view(-1, self.dim_a, 1)
-            )
+            trans_w_s2 = self.trans_weights_s2.unsqueeze(0).repeat(batch_size, 1, 1, 1).view(-1, self.dim_a, 1)
 
             attention = (
                 F.softmax(
@@ -157,14 +144,10 @@ class DGLGATNE(nn.Module):
                 .repeat(1, self.edge_type_count, 1)
             )
 
-            node_type_embed = torch.matmul(attention, node_type_embed).view(
-                -1, 1, self.embedding_u_size
-            )
-            node_embed = node_embed[output_nodes].unsqueeze(1).repeat(
-                1, self.edge_type_count, 1
-            ) + torch.matmul(node_type_embed, trans_w).view(
-                -1, self.edge_type_count, self.embedding_size
-            )
+            node_type_embed = torch.matmul(attention, node_type_embed).view(-1, 1, self.embedding_u_size)
+            node_embed = node_embed[output_nodes].unsqueeze(1).repeat(1, self.edge_type_count, 1) + torch.matmul(
+                node_type_embed, trans_w
+            ).view(-1, self.edge_type_count, self.embedding_size)
             last_node_embed = F.normalize(node_embed, dim=2)
 
             return last_node_embed  # [batch_size, edge_type_count, embedding_size]
@@ -172,19 +155,14 @@ class DGLGATNE(nn.Module):
 
 class NSLoss(nn.Module):
     def __init__(self, num_nodes, num_sampled, embedding_size):
-        super(NSLoss, self).__init__()
+        super().__init__()
         self.num_nodes = num_nodes
         self.num_sampled = num_sampled
         self.embedding_size = embedding_size
         self.weights = Parameter(torch.FloatTensor(num_nodes, embedding_size))
         # [ (log(i+2) - log(i+1)) / log(num_nodes + 1)]
         self.sample_weights = F.normalize(
-            torch.Tensor(
-                [
-                    (math.log(k + 2) - math.log(k + 1)) / math.log(num_nodes + 1)
-                    for k in range(num_nodes)
-                ]
-            ),
+            torch.Tensor([(math.log(k + 2) - math.log(k + 1)) / math.log(num_nodes + 1) for k in range(num_nodes)]),
             dim=0,
         )
 
@@ -195,16 +173,10 @@ class NSLoss(nn.Module):
 
     def forward(self, input, embs, label):
         n = input.shape[0]
-        log_target = torch.log(
-            torch.sigmoid(torch.sum(torch.mul(embs, self.weights[label]), 1))
-        )
-        negs = torch.multinomial(
-            self.sample_weights, self.num_sampled * n, replacement=True
-        ).view(n, self.num_sampled)
+        log_target = torch.log(torch.sigmoid(torch.sum(torch.mul(embs, self.weights[label]), 1)))
+        negs = torch.multinomial(self.sample_weights, self.num_sampled * n, replacement=True).view(n, self.num_sampled)
         noise = torch.neg(self.weights[negs])
-        sum_log_sampled = torch.sum(
-            torch.log(torch.sigmoid(torch.bmm(noise, embs.unsqueeze(2)))), 1
-        ).squeeze()
+        sum_log_sampled = torch.sum(torch.log(torch.sigmoid(torch.bmm(noise, embs.unsqueeze(2)))), 1).squeeze()
 
         loss = log_target + sum_log_sampled
         return -loss.sum() / n
@@ -226,8 +198,7 @@ def generate_pairs_parallel(walks, skip_window=None, layer_id=None):
 def generate_pairs(all_walks, window_size, num_workers):
     # for each node, choose the first neighbor and second neighbor of it to form pairs
     # Get all worker processes
-    start_time = time.time()
-    print(f"We are generating pairs with {num_workers} cores.")
+    time.time()
 
     # Start all worker processes
     pool = multiprocessing.Pool(processes=num_workers)
@@ -236,10 +207,7 @@ def generate_pairs(all_walks, window_size, num_workers):
     for layer_id, walks in enumerate(all_walks):
         block_num = len(walks) // num_workers
         if block_num > 0:
-            walks_list = [
-                walks[i * block_num : min((i + 1) * block_num, len(walks))]
-                for i in range(num_workers)
-            ]
+            walks_list = [walks[i * block_num : min((i + 1) * block_num, len(walks))] for i in range(num_workers)]
         else:
             walks_list = [walks]
         tmp_result = pool.map(
@@ -253,8 +221,7 @@ def generate_pairs(all_walks, window_size, num_workers):
         pairs += reduce(lambda x, y: x + y, tmp_result)
 
     pool.close()
-    end_time = time.time()
-    print(f"Generate pairs end, use {end_time - start_time}s.")
+    time.time()
     return np.array([list(pair) for pair in set(pairs)])
 
 

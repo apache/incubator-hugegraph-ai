@@ -18,8 +18,8 @@
 import os
 import sys
 from pathlib import Path
-from typing import List, Optional, Dict
-from urllib.error import URLError, HTTPError
+from typing import Dict, List, Optional
+from urllib.error import HTTPError, URLError
 
 import nltk
 from nltk.corpus import stopwords
@@ -83,7 +83,7 @@ class NLTKHelper:
             'punkt': 'tokenizers/punkt',
             'punkt_tab': 'tokenizers/punkt_tab',
             'averaged_perceptron_tagger': 'taggers/averaged_perceptron_tagger',
-            "averaged_perceptron_tagger_eng": 'taggers/averaged_perceptron_tagger_eng'
+            "averaged_perceptron_tagger_eng": 'taggers/averaged_perceptron_tagger_eng',
         }
 
         for package, path in required_packages.items():

@@ -23,15 +23,16 @@ auto-regressive moving average (ARMA)
 References
 ----------
 Paper: https://arxiv.org/abs/1901.01343
-Author's code: 
+Author's code:
 DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/arma
 """
 
 import math
+
 import dgl.function as fn
 import torch
-from torch import nn
 import torch.nn.functional as F
+from torch import nn
 
 
 def glorot(tensor):
@@ -56,7 +57,7 @@ class ARMAConv(nn.Module):
         dropout=0.0,
         bias=True,
     ):
-        super(ARMAConv, self).__init__()
+        super().__init__()
 
         self.in_dim = in_dim
         self.out_dim = out_dim
@@ -66,17 +67,11 @@ class ARMAConv(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
         # init weight
-        self.w_0 = nn.ModuleDict(
-            {str(k): nn.Linear(in_dim, out_dim, bias=False) for k in range(self.K)}
-        )
+        self.w_0 = nn.ModuleDict({str(k): nn.Linear(in_dim, out_dim, bias=False) for k in range(self.K)})
         # deeper weight
-        self.w = nn.ModuleDict(
-            {str(k): nn.Linear(out_dim, out_dim, bias=False) for k in range(self.K)}
-        )
+        self.w = nn.ModuleDict({str(k): nn.Linear(out_dim, out_dim, bias=False) for k in range(self.K)})
         # v
-        self.v = nn.ModuleDict(
-            {str(k): nn.Linear(in_dim, out_dim, bias=False) for k in range(self.K)}
-        )
+        self.v = nn.ModuleDict({str(k): nn.Linear(in_dim, out_dim, bias=False) for k in range(self.K)})
         # bias
         if bias:
             self.bias = nn.Parameter(torch.Tensor(self.K, self.T, 1, self.out_dim))
@@ -105,14 +100,11 @@ class ARMAConv(nn.Module):
                 for t in range(self.T):
                     feats = feats * norm
                     g.ndata["h"] = feats
-                    g.update_all(fn.copy_u("h", "m"), fn.sum("m", "h")) # pylint: disable=E1101
+                    g.update_all(fn.copy_u("h", "m"), fn.sum("m", "h"))  # pylint: disable=E1101
                     feats = g.ndata.pop("h")
                     feats = feats * norm
 
-                    if t == 0:
-                        feats = self.w_0[str(k)](feats)
-                    else:
-                        feats = self.w[str(k)](feats)
+                    feats = self.w_0[str(k)](feats) if t == 0 else self.w[str(k)](feats)
 
                     feats += self.dropout(self.v[str(k)](init_feats))
                     feats += self.v[str(k)](self.dropout(init_feats))
@@ -138,7 +130,7 @@ class ARMA4NC(nn.Module):
         activation=None,
         dropout=0.0,
     ):
-        super(ARMA4NC, self).__init__()
+        super().__init__()
 
         self.conv1 = ARMAConv(
             in_dim=in_dim,

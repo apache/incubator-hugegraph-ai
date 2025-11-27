@@ -20,6 +20,7 @@ import unittest
 
 import torch
 from dgl.data import CoraGraphDataset, GINDataset
+
 from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 from hugegraph_ml.utils.dgl2hugegraph_utils import load_acm_raw
 
@@ -86,13 +87,9 @@ class TestHugegraph2dDGL(unittest.TestCase):
             edge_label="MUTAG_edge",
         )
 
-        self.assertEqual(
-            len(dataset_dgl), len(self.mutag_dataset), "Number of graphs does not match."
-        )
+        self.assertEqual(len(dataset_dgl), len(self.mutag_dataset), "Number of graphs does not match.")
 
-        self.assertEqual(
-            dataset_dgl.info["n_graphs"], len(self.mutag_dataset), "Number of graphs does not match."
-        )
+        self.assertEqual(dataset_dgl.info["n_graphs"], len(self.mutag_dataset), "Number of graphs does not match.")
 
         self.assertEqual(
             dataset_dgl.info["n_classes"], self.mutag_dataset.gclasses, "Number of graph classes does not match."
@@ -105,21 +102,19 @@ class TestHugegraph2dDGL(unittest.TestCase):
         hg2d = HugeGraph2DGL()
         hetero_graph = hg2d.convert_hetero_graph(
             vertex_labels=["ACM_paper_v", "ACM_author_v", "ACM_field_v"],
-            edge_labels=["ACM_ap_e", "ACM_fp_e", "ACM_pa_e", "ACM_pf_e"]
+            edge_labels=["ACM_ap_e", "ACM_fp_e", "ACM_pa_e", "ACM_pf_e"],
         )
 
         for ntype in self.acm_data.ntypes:
             self.assertIn(
-                self.ntype_map[ntype],
-                hetero_graph.ntypes,
-                f"Node type {ntype} is missing in converted graph."
+                self.ntype_map[ntype], hetero_graph.ntypes, f"Node type {ntype} is missing in converted graph."
             )
             acm_node_count = self.acm_data.num_nodes(ntype)
             hetero_node_count = hetero_graph.num_nodes(self.ntype_map[ntype])
             self.assertEqual(
                 acm_node_count,
                 hetero_node_count,
-                f"Node count for type {ntype} does not match: {acm_node_count} != {hetero_node_count}"
+                f"Node count for type {ntype} does not match: {acm_node_count} != {hetero_node_count}",
             )
 
         for c_etypes in self.acm_data.canonical_etypes:
@@ -127,12 +122,12 @@ class TestHugegraph2dDGL(unittest.TestCase):
             self.assertIn(
                 mapped_c_etypes,
                 hetero_graph.canonical_etypes,
-                f"Edge type {mapped_c_etypes} is missing in converted graph."
+                f"Edge type {mapped_c_etypes} is missing in converted graph.",
             )
             acm_edge_count = self.acm_data.num_edges(etype=c_etypes)
             hetero_edge_count = hetero_graph.num_edges(etype=mapped_c_etypes)
             self.assertEqual(
                 acm_edge_count,
                 hetero_edge_count,
-                f"Edge count for type {mapped_c_etypes} does not match: {acm_edge_count} != {hetero_edge_count}"
+                f"Edge count for type {mapped_c_etypes} does not match: {acm_edge_count} != {hetero_edge_count}",
             )

@@ -33,7 +33,7 @@
     export SKIP_EXTERNAL_SERVICES=true
     cd hugegraph-llm
     export PYTHONPATH="$(pwd)/src:$PYTHONPATH"
-    
+
     # 跳过有问题的测试
     python -m pytest src/tests/ -v --tb=short \
       --ignore=src/tests/integration/ \
@@ -46,7 +46,7 @@
 - uses: actions/checkout@v4
   with:
     fetch-depth: 0  # 获取完整历史
-    
+
 - name: Sync latest changes
   run: |
     git pull origin main  # 确保获取最新更改

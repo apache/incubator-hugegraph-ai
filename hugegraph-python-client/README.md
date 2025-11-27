@@ -1,6 +1,6 @@
 # hugegraph-python-client
 
-The `hugegraph-python-client` is a Python client/SDK for HugeGraph Database. 
+The `hugegraph-python-client` is a Python client/SDK for HugeGraph Database.
 
 It is used to define graph structures, perform CRUD operations on graph data, manage schemas, and execute Gremlin queries. Both the `hugegraph-llm` and `hugegraph-ml` modules depend on this foundational library.
 
@@ -42,9 +42,9 @@ You can use the `hugegraph-python-client` to define graph structures. Below is a
 from pyhugegraph.client import PyHugeClient
 
 # Initialize the client
-# For HugeGraph API version ≥ v3: (Or enable graphspace function)  
+# For HugeGraph API version ≥ v3: (Or enable graphspace function)
 # - The 'graphspace' parameter becomes relevant if graphspaces are enabled.(default name is 'DEFAULT')
-# - Otherwise, the graphspace parameter is optional and can be ignored. 
+# - Otherwise, the graphspace parameter is optional and can be ignored.
 client = PyHugeClient("127.0.0.1", "8080", user="admin", pwd="admin", graph="hugegraph", graphspace="DEFAULT")
 
 """"

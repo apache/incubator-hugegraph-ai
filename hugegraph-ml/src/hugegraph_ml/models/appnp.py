@@ -25,9 +25,8 @@ Author's code: https://github.com/klicperajo/ppnp
 DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/appnp
 """
 
-from torch import nn
-
 from dgl.nn.pytorch.conv import APPNPConv
+from torch import nn
 
 
 class APPNP(nn.Module):
@@ -42,7 +41,7 @@ class APPNP(nn.Module):
         alpha,
         k,
     ):
-        super(APPNP, self).__init__()
+        super().__init__()
         self.layers = nn.ModuleList()
         # input layer
         self.layers.append(nn.Linear(in_feats, hiddens[0]))

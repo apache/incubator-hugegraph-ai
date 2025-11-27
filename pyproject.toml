@@ -43,6 +43,9 @@ dev = [
     "pytest~=8.0.0",
     "pytest-cov~=5.0.0",
     "pylint~=3.0.0",
+    "ruff>=0.11.0",
+    "mypy>=1.16.1",
+    "pre-commit>=3.5.0",
 ]
 
 nk-llm = ["hugegraph-llm", "hugegraph-python-client", "nuitka"]
@@ -67,7 +70,7 @@ build-backend = "hatchling.build"
 # Alternatively, configure globally: uv config --global index.url https://pypi.tuna.tsinghua.edu.cn/simple
 # To reset to default: uv config --global index.url https://pypi.org/simple
 
-[tool.hatch.metadata] # Keep this if hatch is still used by submodules, otherwise remove
+[tool.hatch.metadata] # Keep this if the hatch is still used by submodules, otherwise remove
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
@@ -140,3 +143,43 @@ constraint-dependencies = [
     # Other dependencies
     "python-dateutil~=2.9.0",
 ]
+
+# for code format
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+# Select a broad set of rules for comprehensive checks.
+# E: pycodestyle Errors, F: Pyflakes, W: pycodestyle Warnings, I: isort
+# C: flake8-comprehensions, N: pep8-naming
+# UP: pyupgrade, B: flake8-bugbear, SIM: flake8-simplify, T20: flake8-print
+select = ["E", "F", "W", "I", "C", "N", "UP", "B", "SIM", "T20", "RUF"]
+
+# Ignore specific rules
+ignore = [
+    "PYI041", # redundant-numeric-union: keep clear 'int | float' for type hinting
+    "N812",    # lowercase-imported-as-non-lowercase
+    "N806",    # non-lowercase-variable-in-function
+    "N803",    # invalid-argument-name
+    "N802",    # invalid-function-name (API compatibility)
+    "C901",    # complexity (non-critical for now)
+    "RUF001", # ambiguous-unicode-character-string
+    "RUF003", # ambiguous-unicode-character-comment
+]
+# No need to ignore E501 (line-too-long), `ruff format` will handle it automatically.
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["T20"]
+"hugegraph-ml/src/hugegraph_ml/examples/**/*.py" = ["T20"]
+"hugegraph-python-client/src/pyhugegraph/structure/*.py" = ["N802"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["hugegraph_llm", "hugegraph_python_client", "hugegraph_ml", "vermeer_python_client"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true

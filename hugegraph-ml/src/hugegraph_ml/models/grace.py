@@ -68,14 +68,14 @@ class GRACE(nn.Module):
         n_hidden=128,
         n_out_feats=128,
         n_layers=2,
-        act_fn=nn.ReLU(),
+        act_fn=None,
         temp=0.4,
         edges_removing_rate_1=0.2,
         edges_removing_rate_2=0.4,
         feats_masking_rate_1=0.3,
         feats_masking_rate_2=0.4,
     ):
-        super(GRACE, self).__init__()
+        super().__init__()
         self.encoder = GCN(n_in_feats, n_hidden, act_fn, n_layers)  # Initialize the GCN encoder
         # Initialize the MLP projector to map the encoded features to the contrastive space
         self.proj = MLP(n_hidden, n_out_feats)
@@ -210,7 +210,7 @@ class GCN(nn.Module):
     """
 
     def __init__(self, n_in_feats, n_out_feats, act_fn, n_layers=2):
-        super(GCN, self).__init__()
+        super().__init__()
         assert n_layers >= 2, "Number of layers should be at least 2."
         self.n_layers = n_layers  # Set the number of layers
         self.n_hidden = n_out_feats * 2  # Set the hidden dimension as twice the output dimension
@@ -255,7 +255,7 @@ class MLP(nn.Module):
     """
 
     def __init__(self, n_in_feats, n_out_feats):
-        super(MLP, self).__init__()
+        super().__init__()
         self.fc1 = nn.Linear(n_in_feats, n_out_feats)  # Define the first fully connected layer
         self.fc2 = nn.Linear(n_out_feats, n_out_feats)  # Define the second fully connected layer
 

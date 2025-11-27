@@ -16,7 +16,7 @@
 # under the License.
 
 
-from typing import Literal, Dict, Any, Optional, Union, List
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
@@ -56,9 +56,7 @@ class ChunkSplit:
                 chunk_size=500, chunk_overlap=30, separators=self.separators
             ).split_text
         if split_type == SPLIT_TYPE_SENTENCE:
-            return RecursiveCharacterTextSplitter(
-                chunk_size=50, chunk_overlap=0, separators=self.separators
-            ).split_text
+            return RecursiveCharacterTextSplitter(chunk_size=50, chunk_overlap=0, separators=self.separators).split_text
         raise ValueError("Type must be paragraph, sentence, html or markdown")
 
     def run(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:

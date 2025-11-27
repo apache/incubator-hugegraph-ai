@@ -13,11 +13,12 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from typing import Dict, Any
+from typing import Any, Dict
+
+from hugegraph_llm.config import huge_settings, llm_settings
+from hugegraph_llm.models.embeddings.init_embedding import get_embedding
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.common_op.merge_dedup_rerank import MergeDedupRerank
-from hugegraph_llm.models.embeddings.init_embedding import get_embedding
-from hugegraph_llm.config import huge_settings, llm_settings
 from hugegraph_llm.utils.log import log
 
 
@@ -39,9 +40,7 @@ class MergeRerankNode(BaseNode):
             rerank_method = self.wk_input.rerank_method or "bleu"
             near_neighbor_first = self.wk_input.near_neighbor_first or False
             custom_related_information = self.wk_input.custom_related_information or ""
-            topk_return_results = (
-                self.wk_input.topk_return_results or huge_settings.topk_return_results
-            )
+            topk_return_results = self.wk_input.topk_return_results or huge_settings.topk_return_results
 
             self.operator = MergeDedupRerank(
                 embedding=embedding,

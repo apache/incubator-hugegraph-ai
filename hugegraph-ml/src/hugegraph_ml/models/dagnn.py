@@ -30,13 +30,13 @@ DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/dagnn
 import dgl.function as fn
 import torch
 from torch import nn
-from torch.nn import functional as F, Parameter
-
+from torch.nn import Parameter
+from torch.nn import functional as F
 
 
 class DAGNNConv(nn.Module):
     def __init__(self, in_dim, k):
-        super(DAGNNConv, self).__init__()
+        super().__init__()
 
         self.s = Parameter(torch.FloatTensor(in_dim, 1))
         self.k = k
@@ -58,7 +58,7 @@ class DAGNNConv(nn.Module):
             for _ in range(self.k):
                 feats = feats * norm
                 graph.ndata["h"] = feats
-                graph.update_all(fn.copy_u("h", "m"), fn.sum("m", "h")) # pylint: disable=E1101
+                graph.update_all(fn.copy_u("h", "m"), fn.sum("m", "h"))  # pylint: disable=E1101
                 feats = graph.ndata["h"]
                 feats = feats * norm
                 results.append(feats)
@@ -73,7 +73,7 @@ class DAGNNConv(nn.Module):
 
 class MLPLayer(nn.Module):
     def __init__(self, in_dim, out_dim, bias=True, activation=None, dropout=0):
-        super(MLPLayer, self).__init__()
+        super().__init__()
 
         self.linear = nn.Linear(in_dim, out_dim, bias=bias)
         self.activation = activation
@@ -108,7 +108,7 @@ class DAGNN(nn.Module):
         activation=F.relu,
         dropout=0,
     ):
-        super(DAGNN, self).__init__()
+        super().__init__()
         self.mlp = nn.ModuleList()
         self.mlp.append(
             MLPLayer(

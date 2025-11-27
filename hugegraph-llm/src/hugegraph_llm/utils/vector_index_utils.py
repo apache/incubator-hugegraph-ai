@@ -47,9 +47,7 @@ def read_documents(input_file, input_text):
                 texts.append(text)
             elif full_path.endswith(".pdf"):
                 # TODO: support PDF file
-                raise gr.Error(
-                    "PDF will be supported later! Try to upload text/docx now"
-                )
+                raise gr.Error("PDF will be supported later! Try to upload text/docx now")
             else:
                 raise gr.Error("Please input txt or docx file.")
     else:

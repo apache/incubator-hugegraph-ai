@@ -21,6 +21,7 @@ import sys
 
 class VermeerLogger:
     """vermeer API log"""
+
     _instance = None
 
     def __new__(cls, name: str = "VermeerClient"):
@@ -38,8 +39,7 @@ class VermeerLogger:
         if not self.logger.handlers:
             # Console output format
             console_format = logging.Formatter(
-                '[%(asctime)s] [%(levelname)s] %(name)s - %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S'
+                "[%(asctime)s] [%(levelname)s] %(name)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
             )
 
             # Console handler

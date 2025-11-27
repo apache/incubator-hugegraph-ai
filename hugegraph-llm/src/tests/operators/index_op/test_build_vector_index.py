@@ -20,8 +20,8 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.indices.vector_index.base import VectorStoreBase
+from hugegraph_llm.models.embeddings.base import BaseEmbedding
 from hugegraph_llm.operators.index_op.build_vector_index import BuildVectorIndex
 
 
@@ -60,9 +60,7 @@ class TestBuildVectorIndex(unittest.TestCase):
         self.assertEqual(builder.vector_index, self.mock_vector_store)
 
         # Check if from_name was called with correct parameters
-        self.mock_vector_store_class.from_name.assert_called_once_with(
-            128, "test_graph", "chunks"
-        )
+        self.mock_vector_store_class.from_name.assert_called_once_with(128, "test_graph", "chunks")
 
     def test_run_with_chunks(self):
         # Mock get_embeddings_parallel to return embeddings
@@ -146,9 +144,7 @@ class TestBuildVectorIndex(unittest.TestCase):
             builder.run(context)
 
             # Check if debug log was called
-            mock_log.debug.assert_called_once_with(
-                "Building vector index for %s chunks...", 1
-            )
+            mock_log.debug.assert_called_once_with("Building vector index for %s chunks...", 1)
 
 
 if __name__ == "__main__":

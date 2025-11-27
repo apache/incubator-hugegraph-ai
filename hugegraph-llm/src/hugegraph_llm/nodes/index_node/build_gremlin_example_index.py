@@ -40,9 +40,7 @@ class BuildGremlinExampleIndexNode(BaseNode):
         vector_index = get_vector_index_class(index_settings.cur_vector_index)
         embedding = Embeddings().get_embedding()
 
-        self.build_gremlin_example_index_op = BuildGremlinExampleIndex(
-            embedding, examples, vector_index
-        )
+        self.build_gremlin_example_index_op = BuildGremlinExampleIndex(embedding, examples, vector_index)
         return super().node_init()
 
     def operator_schedule(self, data_json):

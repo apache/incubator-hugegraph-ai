@@ -128,7 +128,7 @@ class TestFetchGraphData(unittest.TestCase):
                 {"edge_num": 200},
                 {},  # Missing vertices
                 {},  # Missing edges
-                {"note": "Only ≤10000 VIDs and ≤ 200 EIDs for brief overview ."}
+                {"note": "Only ≤10000 VIDs and ≤ 200 EIDs for brief overview ."},
             ]
         }
         self.mock_gremlin.exec.return_value = partial_result

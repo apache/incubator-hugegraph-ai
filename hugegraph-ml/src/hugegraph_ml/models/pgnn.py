@@ -31,20 +31,19 @@ import multiprocessing as mp
 import random
 from multiprocessing import get_context
 
-import torch
-from torch import nn
-import torch.nn.functional as F
-
+import dgl.function as fn
 import networkx as nx
 import numpy as np
-from tqdm.auto import tqdm
+import torch
+import torch.nn.functional as F
 from sklearn.metrics import roc_auc_score
+from torch import nn
+from tqdm.auto import tqdm
 
-import dgl.function as fn
 
-class PGNN_layer(nn.Module):
+class PGNNLayer(nn.Module):
     def __init__(self, input_dim, output_dim):
-        super(PGNN_layer, self).__init__()
+        super().__init__()
         self.input_dim = input_dim
 
         self.linear_hidden_u = nn.Linear(input_dim, output_dim)
@@ -59,17 +58,15 @@ class PGNN_layer(nn.Module):
             graph.srcdata.update({"u_feat": u_feat})
             graph.dstdata.update({"v_feat": v_feat})
 
-            graph.apply_edges(fn.u_mul_e("u_feat", "sp_dist", "u_message")) # pylint: disable=E1101
-            graph.apply_edges(fn.v_add_e("v_feat", "u_message", "message")) # pylint: disable=E1101
+            graph.apply_edges(fn.u_mul_e("u_feat", "sp_dist", "u_message"))  # pylint: disable=E1101
+            graph.apply_edges(fn.v_add_e("v_feat", "u_message", "message"))  # pylint: disable=E1101
 
             messages = torch.index_select(
                 graph.edata["message"],
                 0,
                 torch.LongTensor(anchor_eid).to(feature.device),
             )
-            messages = messages.reshape(
-                dists_max.shape[0], dists_max.shape[1], messages.shape[-1]
-            )
+            messages = messages.reshape(dists_max.shape[0], dists_max.shape[1], messages.shape[-1])
 
             messages = self.act(messages)  # n*m*d
 
@@ -81,12 +78,12 @@ class PGNN_layer(nn.Module):
 
 class PGNN(nn.Module):
     def __init__(self, input_dim, feature_dim=32, dropout=0.5):
-        super(PGNN, self).__init__()
+        super().__init__()
         self.dropout = nn.Dropout(dropout)
 
         self.linear_pre = nn.Linear(input_dim, feature_dim)
-        self.conv_first = PGNN_layer(feature_dim, feature_dim)
-        self.conv_out = PGNN_layer(feature_dim, feature_dim)
+        self.conv_first = PGNNLayer(feature_dim, feature_dim)
+        self.conv_out = PGNNLayer(feature_dim, feature_dim)
 
     def forward(self, data):
         x = data["graph"].ndata["feat"]
@@ -256,9 +253,7 @@ def precompute_dist_data(edge_index, num_nodes, approximate=0):
 
     n = num_nodes
     dists_array = np.zeros((n, n))
-    dists_dict = all_pairs_shortest_path(
-        graph, cutoff=approximate if approximate > 0 else None
-    )
+    dists_dict = all_pairs_shortest_path(graph, cutoff=approximate if approximate > 0 else None)
     node_list = graph.nodes()
     for node_i in node_list:
         shortest_dist = dists_dict[node_i]
@@ -281,9 +276,7 @@ def get_dataset(graph):
         approximate=-1,
     )
     data["dists"] = torch.from_numpy(dists_removed).float()
-    data["edge_index"] = torch.from_numpy(
-        to_bidirected(data["positive_edges_train"])
-    ).long()
+    data["edge_index"] = torch.from_numpy(to_bidirected(data["positive_edges_train"])).long()
 
     return data
 
@@ -330,8 +323,8 @@ def get_a_graph(dists_max, dists_argmax):
         real_dst.extend(list(dists_argmax[i, :].numpy()))
         dst.extend(list(tmp_dists_argmax))
         edge_weight.extend(dists_max[i, tmp_dists_argmax_idx].tolist())
-    eid_dict = {(u, v): i for i, (u, v) in enumerate(list(zip(dst, src)))}
-    anchor_eid = [eid_dict.get((u, v)) for u, v in zip(real_dst, real_src)]
+    eid_dict = {(u, v): i for i, (u, v) in enumerate(list(zip(dst, src, strict=False)))}
+    anchor_eid = [eid_dict.get((u, v)) for u, v in zip(real_dst, real_src, strict=False)]
     g = (dst, src)
     return g, anchor_eid, edge_weight
 
@@ -400,12 +393,8 @@ def get_loss(p, data, out, loss_func, device, get_auc=True):
         axis=-1,
     )
 
-    nodes_first = torch.index_select(
-        out, 0, torch.from_numpy(edge_mask[0, :]).long().to(out.device)
-    )
-    nodes_second = torch.index_select(
-        out, 0, torch.from_numpy(edge_mask[1, :]).long().to(out.device)
-    )
+    nodes_first = torch.index_select(out, 0, torch.from_numpy(edge_mask[0, :]).long().to(out.device))
+    nodes_second = torch.index_select(out, 0, torch.from_numpy(edge_mask[1, :]).long().to(out.device))
 
     pred = torch.sum(nodes_first * nodes_second, dim=-1)
 

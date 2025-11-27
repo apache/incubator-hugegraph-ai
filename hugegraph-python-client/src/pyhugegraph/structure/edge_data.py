@@ -19,13 +19,13 @@
 class EdgeData:
     def __init__(self, dic):
         self.__id = dic["id"]
-        self.__label = dic["label"] if "label" in dic else None
-        self.__type = dic["type"] if "type" in dic else None
-        self.__outV = dic["outV"] if "outV" in dic else None
-        self.__outVLabel = dic["outVLabel"] if "outVLabel" in dic else None
-        self.__inV = dic["inV"] if "inV" in dic else None
-        self.__inVLabel = dic["inVLabel"] if "inVLabel" in dic else None
-        self.__properties = dic["properties"] if "properties" in dic else None
+        self.__label = dic.get("label", None)
+        self.__type = dic.get("type", None)
+        self.__outV = dic.get("outV", None)
+        self.__outVLabel = dic.get("outVLabel", None)
+        self.__inV = dic.get("inV", None)
+        self.__inVLabel = dic.get("inVLabel", None)
+        self.__properties = dic.get("properties", None)
 
     @property
     def id(self):

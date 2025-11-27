@@ -17,6 +17,7 @@
 
 from torch.utils.data import Dataset
 
+
 class HugeGraphDataset(Dataset):
     def __init__(self, graphs, labels, info):
         self.graphs = graphs

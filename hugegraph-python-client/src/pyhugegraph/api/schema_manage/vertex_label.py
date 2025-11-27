@@ -24,7 +24,6 @@ from pyhugegraph.utils.util import ResponseValidation
 
 
 class VertexLabel(HugeParamsBase):
-
     @decorator_params
     def useAutomaticId(self) -> "VertexLabel":
         self._parameter_holder.set("id_strategy", "AUTOMATIC")
@@ -77,7 +76,7 @@ class VertexLabel(HugeParamsBase):
         return self
 
     def ifNotExist(self) -> "VertexLabel":
-        path = f'schema/vertexlabels/{self._parameter_holder.get_value("name")}'
+        path = f"schema/vertexlabels/{self._parameter_holder.get_value('name')}"
         if _ := self._sess.request(path, validator=ResponseValidation(strict=False)):
             self._parameter_holder.set("not_exist", False)
         return self
@@ -102,17 +101,17 @@ class VertexLabel(HugeParamsBase):
         path = "schema/vertexlabels"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "POST", data=json.dumps(data)):
-            return f'create VertexLabel success, Detail: "{str(response)}"'
+            return f'create VertexLabel success, Detail: "{response!s}"'
         log.error("create VertexLabel failed, Detail: %s", str(response))
         return ""
 
     @decorator_params
     def append(self) -> None:
         dic = self._parameter_holder.get_dic()
-        properties = dic["properties"] if "properties" in dic else []
-        nullable_keys = dic["nullable_keys"] if "nullable_keys" in dic else []
-        user_data = dic["user_data"] if "user_data" in dic else {}
-        path = f'schema/vertexlabels/{dic["name"]}?action=append'
+        properties = dic.get("properties", [])
+        nullable_keys = dic.get("nullable_keys", [])
+        user_data = dic.get("user_data", {})
+        path = f"schema/vertexlabels/{dic['name']}?action=append"
         data = {
             "name": dic["name"],
             "properties": properties,
@@ -121,7 +120,7 @@ class VertexLabel(HugeParamsBase):
         }
         self.clean_parameter_holder()
         if response := self._sess.request(path, "PUT", data=json.dumps(data)):
-            return f'append VertexLabel success, Detail: "{str(response)}"'
+            return f'append VertexLabel success, Detail: "{response!s}"'
         log.error("append VertexLabel failed, Detail: %s", str(response))
         return ""
 
@@ -131,7 +130,7 @@ class VertexLabel(HugeParamsBase):
         path = f"schema/vertexlabels/{name}"
         self.clean_parameter_holder()
         if response := self._sess.request(path, "DELETE"):
-            return f'remove VertexLabel success, Detail: "{str(response)}"'
+            return f'remove VertexLabel success, Detail: "{response!s}"'
         log.error("remove VertexLabel failed, Detail: %s", str(response))
         return ""
 
@@ -141,12 +140,12 @@ class VertexLabel(HugeParamsBase):
         path = f"schema/vertexlabels/{name}/?action=eliminate"
 
         dic = self._parameter_holder.get_dic()
-        user_data = dic["user_data"] if "user_data" in dic else {}
+        user_data = dic.get("user_data", {})
         data = {
             "name": self._parameter_holder.get_value("name"),
             "user_data": user_data,
         }
         if response := self._sess.request(path, "PUT", data=json.dumps(data)):
-            return f'eliminate VertexLabel success, Detail: "{str(response)}"'
+            return f'eliminate VertexLabel success, Detail: "{response!s}"'
         log.error("eliminate VertexLabel failed, Detail: %s", str(response))
         return ""

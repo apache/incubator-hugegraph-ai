@@ -51,7 +51,7 @@ class JKNet(nn.Module):
     """
 
     def __init__(self, n_in_feats, n_out_feats, n_hidden=32, n_layers=6, mode="cat", dropout=0.5):
-        super(JKNet, self).__init__()
+        super().__init__()
         self.mode = mode
         self.dropout = nn.Dropout(dropout)  # Dropout layer to prevent overfitting
 

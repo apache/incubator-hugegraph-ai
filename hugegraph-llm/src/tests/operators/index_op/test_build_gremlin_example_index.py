@@ -17,14 +17,13 @@
 
 import unittest
 from unittest.mock import MagicMock, patch
+
 from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.models.embeddings.base import BaseEmbedding
-
 from hugegraph_llm.operators.index_op.build_gremlin_example_index import BuildGremlinExampleIndex
 
 
 class TestBuildGremlinExampleIndex(unittest.TestCase):
-
     def setUp(self):
         # Mock embedding model
         self.mock_embedding = MagicMock(spec=BaseEmbedding)
@@ -44,9 +43,7 @@ class TestBuildGremlinExampleIndex(unittest.TestCase):
 
         # Create instance
         self.index_builder = BuildGremlinExampleIndex(
-            embedding=self.mock_embedding,
-            examples=self.examples,
-            vector_index=self.mock_vector_store_class
+            embedding=self.mock_embedding, examples=self.examples, vector_index=self.mock_vector_store_class
         )
 
     def test_init(self):
@@ -91,9 +88,7 @@ class TestBuildGremlinExampleIndex(unittest.TestCase):
 
         # Create instance with empty examples
         empty_index_builder = BuildGremlinExampleIndex(
-            embedding=self.mock_embedding,
-            examples=[],
-            vector_index=mock_vector_store_class
+            embedding=self.mock_embedding, examples=[], vector_index=mock_vector_store_class
         )
 
         # Setup mocks - empty embeddings
@@ -119,9 +114,7 @@ class TestBuildGremlinExampleIndex(unittest.TestCase):
         # Create instance with single example
         single_example = [{"query": "g.V().count()", "description": "Count all vertices"}]
         single_index_builder = BuildGremlinExampleIndex(
-            embedding=self.mock_embedding,
-            examples=single_example,
-            vector_index=mock_vector_store_class
+            embedding=self.mock_embedding, examples=single_example, vector_index=mock_vector_store_class
         )
 
         # Setup mocks

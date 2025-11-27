@@ -16,7 +16,6 @@
 # under the License.
 
 
-
 """
 DeeperGCN
 
@@ -27,14 +26,14 @@ Author's code: https://github.com/lightaime/deep_gcns_torch
 DGL code: https://github.com/dmlc/dgl/tree/master/examples/pytorch/deepergcn
 """
 
-import torch
-from torch import nn
-import torch.nn.functional as F
-
 import dgl.function as fn
+import torch
+import torch.nn.functional as F
 from dgl.nn.functional import edge_softmax
+from torch import nn
 
 # pylint: disable=E1101,E0401
+
 
 class DeeperGCN(nn.Module):
     r"""
@@ -78,7 +77,7 @@ class DeeperGCN(nn.Module):
         aggr="softmax",
         mlp_layers=1,
     ):
-        super(DeeperGCN, self).__init__()
+        super().__init__()
 
         self.num_layers = num_layers
         self.dropout = dropout
@@ -178,7 +177,7 @@ class GENConv(nn.Module):
         mlp_layers=1,
         eps=1e-7,
     ):
-        super(GENConv, self).__init__()
+        super().__init__()
 
         self.aggr = aggregator
         self.eps = eps
@@ -192,9 +191,7 @@ class GENConv(nn.Module):
         self.msg_norm = MessageNorm(learn_msg_scale) if msg_norm else None
 
         self.beta = (
-            nn.Parameter(torch.Tensor([beta]), requires_grad=True)
-            if learn_beta and self.aggr == "softmax"
-            else beta
+            nn.Parameter(torch.Tensor([beta]), requires_grad=True) if learn_beta and self.aggr == "softmax" else beta
         )
         self.p = nn.Parameter(torch.Tensor([p]), requires_grad=True) if learn_p else p
 
@@ -252,7 +249,7 @@ class MLP(nn.Sequential):
                 layers.append(nn.ReLU())
                 layers.append(nn.Dropout(dropout))
 
-        super(MLP, self).__init__(*layers)
+        super().__init__(*layers)
 
 
 class MessageNorm(nn.Module):
@@ -267,7 +264,7 @@ class MessageNorm(nn.Module):
     """
 
     def __init__(self, learn_scale=False):
-        super(MessageNorm, self).__init__()
+        super().__init__()
         self.scale = nn.Parameter(torch.FloatTensor([1.0]), requires_grad=learn_scale)
 
     def forward(self, feats, msg, p=2):

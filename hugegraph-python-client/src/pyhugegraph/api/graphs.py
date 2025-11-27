@@ -23,7 +23,6 @@ from pyhugegraph.utils.util import ResponseValidation
 
 
 class GraphsManager(HugeParamsBase):
-
     @router.http("GET", "/graphs")
     def get_all_graphs(self) -> dict:
         return self._invoke_request(validator=ResponseValidation("text"))

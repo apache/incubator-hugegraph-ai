@@ -16,7 +16,7 @@
 # under the License.
 
 import re
-from typing import List, Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from hugegraph_llm.document.chunk_split import ChunkSplitter
 from hugegraph_llm.models.llms.base import BaseLLM
@@ -75,10 +75,7 @@ The extracted text is: {text}"""
 
     if schema:
         return schema_real_prompt
-    log.warning(
-        "Recommend to provide a graph schema to improve the extraction accuracy. "
-        "Now using the default schema."
-    )
+    log.warning("Recommend to provide a graph schema to improve the extraction accuracy. Now using the default schema.")
     return text_based_prompt
 
 
@@ -107,9 +104,7 @@ def extract_triples_by_regex_with_schema(schema, text, graph):
         # TODO: use a more efficient way to compare the extract & input property
         p_lower = p.lower()
         for vertex in schema["vertices"]:
-            if vertex["vertex_label"] == label and any(
-                pp.lower() == p_lower for pp in vertex["properties"]
-            ):
+            if vertex["vertex_label"] == label and any(pp.lower() == p_lower for pp in vertex["properties"]):
                 id = f"{label}-{s}"
                 if id not in vertices_dict:
                     vertices_dict[id] = {
@@ -199,7 +194,5 @@ class InfoExtract:
 
     def _filter_long_id(self, graph) -> Dict[str, List[Any]]:
         graph["vertices"] = [vertex for vertex in graph["vertices"] if self.valid(vertex["id"])]
-        graph["edges"] = [
-            edge for edge in graph["edges"] if self.valid(edge["start"]) and self.valid(edge["end"])
-        ]
+        graph["edges"] = [edge for edge in graph["edges"] if self.valid(edge["start"]) and self.valid(edge["end"])]
         return graph

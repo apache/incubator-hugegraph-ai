@@ -17,17 +17,18 @@
 
 
 import traceback
-from typing import Dict, Any, Union, List
+from typing import Any, Dict, List, Union
 
 import gradio as gr
-from hugegraph_llm.flows import FlowName
-from hugegraph_llm.flows.scheduler import SchedulerSingleton
 from pyhugegraph.client import PyHugeClient
 
+from hugegraph_llm.flows import FlowName
+from hugegraph_llm.flows.scheduler import SchedulerSingleton
+
+from ..config import huge_settings
 from .hugegraph_utils import clean_hg_data
 from .log import log
 from .vector_index_utils import read_documents
-from ..config import huge_settings
 
 
 def get_graph_index_info():
@@ -41,8 +42,8 @@ def get_graph_index_info():
 
 def clean_all_graph_index():
     # Lazy import to avoid circular dependency
-    from .vector_index_utils import get_vector_index_class  # pylint: disable=import-outside-toplevel
     from ..config import index_settings  # pylint: disable=import-outside-toplevel
+    from .vector_index_utils import get_vector_index_class  # pylint: disable=import-outside-toplevel
 
     vector_index = get_vector_index_class(index_settings.cur_vector_index)
     vector_index.clean(huge_settings.graph_name, "graph_vids")
@@ -51,9 +52,7 @@ def clean_all_graph_index():
     gr.Info("Clear graph index and text2gql index successfully!")
 
 
-def get_vertex_details(
-    vertex_ids: List[str], context: Dict[str, Any]
-) -> List[Dict[str, Any]]:
+def get_vertex_details(vertex_ids: List[str], context: Dict[str, Any]) -> List[Dict[str, Any]]:
     if isinstance(context.get("graph_client"), PyHugeClient):
         client = context["graph_client"]
     else:
@@ -85,9 +84,7 @@ def extract_graph(input_file, input_text, schema, example_prompt) -> str:
         return "ERROR: please input with correct schema/format."
 
     try:
-        return scheduler.schedule_flow(
-            FlowName.GRAPH_EXTRACT, schema, texts, example_prompt, "property_graph"
-        )
+        return scheduler.schedule_flow(FlowName.GRAPH_EXTRACT, schema, texts, example_prompt, "property_graph")
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error(e)
         raise gr.Error(str(e))
@@ -117,9 +114,7 @@ def import_graph_data(data: str, schema: str) -> Union[str, Dict[str, Any]]:
 def build_schema(input_text, query_example, few_shot):
     scheduler = SchedulerSingleton.get_instance()
     try:
-        return scheduler.schedule_flow(
-            FlowName.BUILD_SCHEMA, input_text, query_example, few_shot
-        )
+        return scheduler.schedule_flow(FlowName.BUILD_SCHEMA, input_text, query_example, few_shot)
     except Exception as e:  # pylint: disable=broad-exception-caught
         log.error("Schema generation failed: %s", e)
         raise gr.Error(f"Schema generation failed: {e}")

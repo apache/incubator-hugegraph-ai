@@ -15,10 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import torch
+
 from hugegraph_ml.data.hugegraph2dgl import HugeGraph2DGL
 from hugegraph_ml.models.care_gnn import CAREGNN
 from hugegraph_ml.tasks.fraud_detector_caregnn import DetectorCaregnn
-import torch
+
 
 def care_gnn_example(n_epochs=200):
     hg2d = HugeGraph2DGL()

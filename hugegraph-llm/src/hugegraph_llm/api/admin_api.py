@@ -17,7 +17,7 @@
 
 import os
 
-from fastapi import status, APIRouter
+from fastapi import APIRouter, status
 from fastapi.responses import StreamingResponse
 
 from hugegraph_llm.api.exceptions.rag_exceptions import generate_response

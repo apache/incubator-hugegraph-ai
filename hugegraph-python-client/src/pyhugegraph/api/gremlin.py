@@ -17,15 +17,14 @@
 
 
 from pyhugegraph.api.common import HugeParamsBase
-from pyhugegraph.utils.exceptions import NotFoundError
 from pyhugegraph.structure.gremlin_data import GremlinData
 from pyhugegraph.structure.response_data import ResponseData
 from pyhugegraph.utils import huge_router as router
+from pyhugegraph.utils.exceptions import NotFoundError
 from pyhugegraph.utils.log import log
 
 
 class GremlinManager(HugeParamsBase):
-
     @router.http("POST", "/gremlin")
     def exec(self, gremlin):
         gremlin_data = GremlinData(gremlin)
