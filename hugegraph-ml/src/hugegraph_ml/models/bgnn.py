@@ -297,7 +297,7 @@ class BGNNPredictor:
         metric_name,
         lower_better=False,
     ):
-        train_metric, val_metric, test_metric = metrics[metric_name][-1]
+        _train_metric, val_metric, _test_metric = metrics[metric_name][-1]
         if (lower_better and val_metric < best_metric[1]) or (not lower_better and val_metric > best_metric[1]):
             best_metric = metrics[metric_name][-1]
             best_val_epoch = epoch

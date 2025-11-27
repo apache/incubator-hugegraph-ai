@@ -69,7 +69,7 @@ class LinkPredictionPGNN:
 
             train_model(data, self._model, loss_func, optimizer, self._device, g_data)
 
-            loss_train, auc_train, auc_val, auc_test = eval_model(data, g_data, self._model, loss_func, self._device)
+            _loss_train, _auc_train, auc_val, _auc_test = eval_model(data, g_data, self._model, loss_func, self._device)
             if auc_val > best_auc_val:
                 best_auc_val = auc_val
 
