@@ -42,7 +42,7 @@ dependencies = [
     "pydantic",
     "tqdm",
     "scipy",
-    "python-igraph",
+    "networkx",
 
     # LLM specific dependencies
     "openai",
