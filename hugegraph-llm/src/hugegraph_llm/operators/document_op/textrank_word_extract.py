@@ -19,8 +19,8 @@ import re
 from collections import defaultdict
 from typing import Dict
 
-import igraph as ig
 import jieba.posseg as pseg
+import networkx as nx
 import nltk
 import regex
 
@@ -101,7 +101,6 @@ class MultiLingualTextRank:
 
     def _build_graph(self, words):
         unique_words = list(set(words))
-        name_to_idx = {word: idx for idx, word in enumerate(unique_words)}
         edge_weights = defaultdict(int)
         for i, word1 in enumerate(words):
             for j in range(i + 1, min(i + self.window + 1, len(words))):
@@ -110,22 +109,25 @@ class MultiLingualTextRank:
                     pair = tuple(sorted((word1, word2)))
                     edge_weights[pair] += 1
 
-        graph = ig.Graph(n=len(unique_words), directed=False)
-        graph.vs['name'] = unique_words
-        edges_idx = [(name_to_idx[a], name_to_idx[b]) for (a, b) in edge_weights.keys()]
-        graph.add_edges(edges_idx)
-        graph.es['weight'] = list(edge_weights.values())
+        graph = nx.Graph()
+        graph.add_nodes_from(unique_words)
+        for (a, b), weight in edge_weights.items():
+            if graph.has_edge(a, b):
+                graph[a][b]['weight'] += weight
+            else:
+                graph.add_edge(a, b, weight=weight)
+
         self.graph = graph
 
     def _rank_nodes(self):
-        if not self.graph or self.graph.vcount() == 0:
+        if not self.graph or self.graph.number_of_nodes() == 0:
             return {}
 
-        pagerank_scores = self.graph.pagerank(directed=False, damping=0.85, weights='weight')
-        if max(pagerank_scores) > 0:
-            pagerank_scores = [scores / max(pagerank_scores) for scores in pagerank_scores]
-        node_names = self.graph.vs['name']
-        return dict(zip(node_names, pagerank_scores))
+        pagerank_scores = nx.pagerank(self.graph, alpha=0.85, weight='weight')
+        max_score = max(pagerank_scores.values()) if pagerank_scores else 0
+        if max_score > 0:
+            pagerank_scores = {node: score / max_score for node, score in pagerank_scores.items()}
+        return pagerank_scores
 
     def extract_keywords(self, text) -> Dict[str, float]:
         if not NLTKHelper().check_nltk_data():
@@ -141,7 +143,7 @@ class MultiLingualTextRank:
         ranks = dict(zip(unique_words, [0] * len(unique_words)))
         if len(unique_words) > 1:
             self._build_graph(words)
-            if not self.graph or self.graph.vcount() == 0:
+            if not self.graph or self.graph.number_of_nodes() == 0:
                 return {}
             ranks = self._rank_nodes()
         return ranks
