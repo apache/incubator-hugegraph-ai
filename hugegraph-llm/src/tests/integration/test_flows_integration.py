@@ -17,8 +17,10 @@
 
 import pytest
 
+from hugegraph_llm.config.prompt_config import PromptConfig
 from hugegraph_llm.demo.rag_demo.rag_block import update_ui_configs
 from hugegraph_llm.demo.rag_demo.text2gremlin_block import build_example_vector_index
+from hugegraph_llm.demo.rag_demo.vector_graph_block import load_query_examples
 from hugegraph_llm.flows import FlowName
 from hugegraph_llm.flows.scheduler import SchedulerSingleton
 from hugegraph_llm.utils.log import log
@@ -108,67 +110,12 @@ class TestFlowsIntegration:
             }
             """
 
-            example_prompt = """
-            ## Main Task
-            Given the following graph schema and a piece of text, your task is to analyze the text and extract information that fits into the schema's structure, formatting the information into vertices and edges as specified.
-
-            ## Basic Rules:
-            ### Schema Format:
-            Graph Schema:
-            - "vertices": [List of vertex labels and their properties]
-            - "edges": [List of edge labels, their source and target vertex labels, and properties]
-
-            ### Content Rule:
-            Please read the provided text carefully and identify any information that corresponds to the vertices and edges defined in the schema.
-            You are not allowed to modify the schema contraints. Your task is to format the provided information into the required schema, without missing any keyword.
-            For each piece of information that matches a vertex or edge, format it strictly according to the following JSON structures:
-
-            #### Vertex Format:
-            {"id":"vertexLabelID:entityName","label":"vertexLabel","type":"vertex","properties":{"propertyName":"propertyValue", ...}}
-
-            where:
-                - "vertexLabelID": int
-                - "vertexLabel": str
-                - "entityName": str
-                - "type": "vertex"
-                - "properties": dict
-
-            #### Edge Format:
-            {"id":"vertexlabelID:pk1!pk2!pk3", label":"edgeLabel","type":"edge","outV":"sourceVertexId","outVLabel":"sourceVertexLabel","inV":"targetVertexId","inVLabel":"targetVertexLabel","properties":{"propertyName":"propertyValue",...}}
-
-            where:
-                - "id": int or str (conditional) (optional)
-                - "edgeLabel": str
-                - "type": "edge"
-                - "outV": str
-                - "outVLabel": str
-                - "inV": str
-                - "inVLabel": str
-                - "properties": dict
-                - "sourceVertexId": "vertexLabelID:entityName"
-                - "targetVertexId": "vertexLabelID:entityName"
-
-            Strictly follow these rules:
-            1. Don't extract property fields or labels that doesn't exist in the given schema. Do not generate new information.
-            2. Ensure the extracted property set in the same type as the given schema (like 'age' should be a number, 'select' should be a boolean).
-            3. If there are multiple primary keys, the strategy for generating VID is: vertexlabelID:pk1!pk2!pk3 (pk means primary key, and '!' is the separator). This id must be generated ONLY if there are multiple primary keys. If there is only one primary key, the strategy for generating VID is: int (sequencially increasing).
-            4. Output in JSON format, only include vertexes and edges & remove empty properties, extracted and formatted based on the text/rules and schema.
-            5. Translate the schema fields into Chinese if the given text input is Chinese (Optional)
-
-            Refer to the following baseline example to understand the output generation requirements:
-            ## Example:
-            ### Input example:
-            #### text:
-            Meet Sarah, a 30-year-old attorney, and her roommate, James, whom she's shared a home with since 2010. James, in his professional life, works as a journalist.
-
-            #### graph schema example:
-            {"vertices":[{"vertex_label":"person","properties":["name","age","occupation"]}], "edges":[{"edge_label":"roommate", "source_vertex_label":"person","target_vertex_label":"person","properties":["date"]]}
-
-            ### Output example:
-            {"vertices":[{"id":"1:Sarah","label":"person","type":"vertex","properties":{"name":"Sarah","age":30,"occupation":"attorney"}},{"id":"1:James","label":"person","type":"vertex","properties":{"name":"James","occupation":"journalist"}}], "edges":[{"id": 1, "label":"roommate","type":"edge","outV":"1:Sarah","outVLabel":"person","inV":"1:James","inVLabel":"person","properties":{"date":"2010"}}]}
-            """
             data = self.scheduler.schedule_flow(
-                FlowName.GRAPH_EXTRACT, schema, [self.index_text], example_prompt, "property_graph"
+                FlowName.GRAPH_EXTRACT,
+                schema,
+                [self.index_text],
+                PromptConfig.extract_graph_prompt_EN,
+                "property_graph",
             )
             assert "vertices" in data, "The result of GRAPH_EXTRACT flow should contain 'vertices' field"
             assert "edges" in data, "The result of GRAPH_EXTRACT flow should contain 'edges' field"
@@ -185,17 +132,7 @@ class TestFlowsIntegration:
 
     def test_schema_generator(self):
         try:
-            query_examples = """
-            [
-            "Property filter: Find all 'person' nodes with age > 30 and return their name and occupation",
-            "Relationship traversal: Find all roommates of the person named Alice, and return their name and age",
-            "Shortest path: Find the shortest path between Bob and Charlie and show the edge labels along the way",
-            "Subgraph match: Find all friend pairs who both follow the same webpage, and return the names and URL",
-            "Aggregation: Count the number of people for each occupation and compute their average age",
-            "Time-based filter: Find all nodes created after 2025-01-01 and return their name and created_at",
-            "Top-N query: List top 10 most visited webpages with their URL and visit_count"
-            ]
-            """
+            query_examples = load_query_examples()
 
             few_shot = """
             {
@@ -262,61 +199,6 @@ class TestFlowsIntegration:
             pytest.fail(f"BUILD_VECTOR_INDEX flow failed: {e}")
 
     def test_rag(self):
-        answer_prompt = """
-        You are an expert in the fields of knowledge graphs and natural language processing.
-
-        Please provide precise and accurate answers based on the following context information, which is sorted in order of importance from high to low, without using any fabricated knowledge.
-
-        Given the context information and without using fictive knowledge,
-        answer the following query in a concise and professional manner.
-        Please write your answer using Markdown with MathJax syntax, where inline math is wrapped with `$...$`
-
-        Context information is below.
-        ---------------------
-        {context_str}
-        ---------------------
-        Query: {query_str}
-        Answer:
-
-        """
-
-        keywords_extract_prompt = """
-        Instructions:
-        Please perform the following tasks on the text below:
-        1. Extract, evaluate, and rank keywords from the text:
-        - Minimum 0, maximum MAX_KEYWORDS keywords.
-        - Keywords should be complete semantic words or phrases, ensuring information completeness, without any changes to the English capitalization.
-        - Assign an importance score to each keyword, as a float between 0.0 and 1.0. A higher score indicates a greater contribution to the core idea of the text.
-        - Keywords may contain spaces, but must not contain commas or colons.
-        - The final list of keywords must be sorted in descending order based on their importance score.
-        2. Identify keywords that need rewriting:
-        - From the extracted keywords, identify those that are ambiguous or lack information in the original context.
-        3. Generate synonyms:
-        - For these keywords that need rewriting, generate synonyms or similar terms in the given context.
-        - Replace the corresponding keywords in the original text with generated synonyms.
-        - If no suitable synonym exists for a keyword, keep the original keyword unchanged.
-
-        Requirements:
-        - Keywords should be meaningful and specific entities; avoid meaningless or overly broad terms, or single-character words (e.g., "items", "actions", "effects", "functions", "the", "he").
-        - Prioritize extracting subjects, verbs, and objects; avoid function words or auxiliary words.
-        - Maintain semantic integrity: Extracted keywords should preserve their semantic and informational completeness in the original context (e.g., "Apple computer" should be extracted as a whole, not split into "Apple" and "computer").
-        - Avoid generalization: Do not expand into unrelated generalized categories.
-
-        Notes:
-        - Only consider context-relevant synonyms: Only consider semantic synonyms and words with similar meanings in the given context.
-        - Adjust keyword length: If keywords are relatively broad, you can appropriately increase individual keyword length based on context (e.g., "illegal behavior" can be extracted as a single keyword, or as "illegal", but should not be split into "illegal" and "behavior").
-
-        Output Format:
-        - Output only one line, prefixed with KEYWORDS:, followed by a comma-separated list of items. Each item should be in the format keyword:importance_score(round to two decimal places). If a keyword has been replaced by a synonym, use the synonym as the keyword in the output.
-        - Format example:
-        KEYWORDS:keyword1:score1,keyword2:score2,...,keywordN:scoreN
-
-        MAX_KEYWORDS: {max_keywords}
-        Text:
-        {question}
-
-        """
-
         query = "梁漱溟和梁济的关系是什么？"
 
         raw_answer = True
@@ -329,12 +211,12 @@ class TestFlowsIntegration:
         custom_related_information = ""
 
         graph_search, gremlin_prompt, vector_search = update_ui_configs(
-            answer_prompt,
+            PromptConfig.answer_prompt_EN,
             custom_related_information,
             graph_only_answer,
             graph_vector_answer,
             None,
-            keywords_extract_prompt,
+            PromptConfig.keywords_extract_prompt_EN,
             query,
             vector_only_answer,
         )
@@ -352,8 +234,8 @@ class TestFlowsIntegration:
             rerank_method=rerank_method,
             near_neighbor_first=near_neighbor_first,
             custom_related_information=custom_related_information,
-            answer_prompt=answer_prompt,
-            keywords_extract_prompt=keywords_extract_prompt,
+            answer_prompt=PromptConfig.answer_prompt_EN,
+            keywords_extract_prompt=PromptConfig.keywords_extract_prompt_EN,
             gremlin_tmpl_num=-1,
             gremlin_prompt=gremlin_prompt,
         )
@@ -376,8 +258,8 @@ class TestFlowsIntegration:
             rerank_method=rerank_method,
             near_neighbor_first=near_neighbor_first,
             custom_related_information=custom_related_information,
-            answer_prompt=answer_prompt,
-            keywords_extract_prompt=keywords_extract_prompt,
+            answer_prompt=PromptConfig.answer_prompt_EN,
+            keywords_extract_prompt=PromptConfig.keywords_extract_prompt_EN,
             gremlin_tmpl_num=-1,
             gremlin_prompt=gremlin_prompt,
         )
@@ -400,8 +282,8 @@ class TestFlowsIntegration:
             rerank_method=rerank_method,
             near_neighbor_first=near_neighbor_first,
             custom_related_information=custom_related_information,
-            answer_prompt=answer_prompt,
-            keywords_extract_prompt=keywords_extract_prompt,
+            answer_prompt=PromptConfig.answer_prompt_EN,
+            keywords_extract_prompt=PromptConfig.keywords_extract_prompt_EN,
             gremlin_tmpl_num=-1,
             gremlin_prompt=gremlin_prompt,
         )
@@ -424,8 +306,8 @@ class TestFlowsIntegration:
             rerank_method=rerank_method,
             near_neighbor_first=near_neighbor_first,
             custom_related_information=custom_related_information,
-            answer_prompt=answer_prompt,
-            keywords_extract_prompt=keywords_extract_prompt,
+            answer_prompt=PromptConfig.answer_prompt_EN,
+            keywords_extract_prompt=PromptConfig.keywords_extract_prompt_EN,
             gremlin_tmpl_num=-1,
             gremlin_prompt=gremlin_prompt,
         )
@@ -439,68 +321,9 @@ class TestFlowsIntegration:
         query = "梁漱溟和梁济的关系是什么？"
         schema = "hugegraph"
         example_num = 2
-        gremlin_prompt_input = """
-
-        You are an expert in graph query language (Gremlin). Your role is to understand the schema of the graph, recognize the intent behind user queries, and generate accurate Gremlin code based on the given instructions.
-
-        ### Tasks
-        ## Complex Query Detection:
-        Assess the user's query to determine its complexity based on the following criteria:
-
-        1. Multiple Reasoning Steps: The query requires several logical steps to arrive at the final result.
-        2. Conditional Logic: The query includes multiple conditions or filters that depend on each other.
-        3. Nested Queries: The query contains sub-queries or nested logical statements.
-        4. High-Level Abstractions: The query requests high-level summaries or insights that require intricate data manipulation.
-
-        # Examples of Complex Queries:
-        “Retrieve all users who have posted more than five articles and have at least two comments with a positive sentiment score.”
-        “Calculate the average response time of servers in each data center and identify which data centers are below the required performance threshold after the latest update.”
-
-        # Rules
-        - **Complex Query Handling**:
-            - **Detection**: If the user's query meets **any** of the complexity criteria listed above, it is considered **complex**.
-            - **Response**: For complex queries, **do not** proceed to Gremlin Query Generation. Instead, directly return the following Gremlin query:
-            ```gremlin
-            g.V().limit(0)
-            ```
-        - **Simple Query Handling**:
-            - If the query does **not** meet any of the complexity criteria, it is considered **simple**.
-            - Proceed to the Gremlin Query Generation task as outlined below.
-
-        ## Gremlin Query Generation (Executed only if the query is not complex):
-        # Rules
-        - You may use the vertex ID directly if it’s provided in the context.
-        - If the provided question contains entity names that are very similar to the Vertices IDs, then in the generated Gremlin statement, replace the approximate entities from the original question.
-        For example, if the question includes the name ABC, and the provided VerticesIDs do not contain ABC but only abC, then use abC instead of ABC from the original question when generating the gremlin.
-        - Similarly, if the user's query refers to specific property names or their values, and these are present or align with the 'Referenced Extracted Properties', actively utilize these properties in your Gremlin query.
-        For instance, you can use them for filtering vertices or edges (e.g., using `has('propertyName', 'propertyValue')`), or for projecting specific values.
-
-        The output format must be as follows:
-        ```gremlin
-        g.V().limit(10)
-        ```
-        Graph Schema:
-        {schema}
-        Refer Gremlin Example Pair:
-        {example}
-
-        Referenced Extracted Vertex IDs Related to the Query:
-        {vertices}
-
-        Referenced Extracted Properties Related to the Query (Format: [('property_name', 'property_value'), ...]):
-        {properties}
-
-        Generate Gremlin from the Following User Query:
-        {query}
-
-        **Important: Do NOT output any analysis, reasoning steps, explanations or any other text. ONLY return the Gremlin query wrapped in a code block with ```gremlin``` fences.**
-
-        The generated Gremlin is:
-
-        """
 
         res = self.scheduler.schedule_flow(
-            FlowName.TEXT2GREMLIN, query, example_num, schema, gremlin_prompt_input, None
+            FlowName.TEXT2GREMLIN, query, example_num, schema, PromptConfig.gremlin_generate_prompt_EN, None
         )
 
         assert res is not None, "The result of TEXT2GREMLIN flow should not be None"
