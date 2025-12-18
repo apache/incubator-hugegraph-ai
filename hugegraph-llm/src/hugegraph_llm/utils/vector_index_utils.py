@@ -22,6 +22,7 @@ import docx
 import gradio as gr
 
 from hugegraph_llm.config import huge_settings, index_settings
+from hugegraph_llm.flows import FlowName
 from hugegraph_llm.flows.scheduler import SchedulerSingleton
 from hugegraph_llm.indices.vector_index.base import VectorStoreBase
 from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
@@ -83,7 +84,7 @@ def build_vector_index(input_file, input_text):
         raise gr.Error("Please only choose one between file and text.")
     texts = read_documents(input_file, input_text)
     scheduler = SchedulerSingleton.get_instance()
-    return scheduler.schedule_flow("build_vector_index", texts)
+    return scheduler.schedule_flow(FlowName.BUILD_VECTOR_INDEX, texts)
 
 
 def get_vector_index_class(vector_index_str: str) -> Type[VectorStoreBase]:
