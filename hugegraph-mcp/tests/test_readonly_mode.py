@@ -67,16 +67,16 @@ def test_readonly_env_parsing(tmp_path):
 
 
 def test_write_tools_available_when_not_readonly(monkeypatch):
-    """Test that all V1 tools are registered when not in readonly mode."""
+    """Test that all legacy tools are registered when not in readonly mode."""
     monkeypatch.setenv("HUGEGRAPH_MCP_READONLY", "false")
-    monkeypatch.setenv("HUGEGRAPH_MCP_TOOLSET", "v1")
+    monkeypatch.setenv("HUGEGRAPH_MCP_TOOLSET", "legacy")
 
     import hugegraph_mcp.server
 
     try:
         importlib.reload(hugegraph_mcp.server)
         tools = get_registered_tools()
-        # V1 stable tools
+        # legacy stable tools
         assert "inspect_graph_tool" in tools
         assert "generate_gremlin_tool" in tools
         assert "execute_gremlin_read_tool" in tools
@@ -98,9 +98,9 @@ def test_write_tools_available_when_not_readonly(monkeypatch):
 
 
 def test_write_tools_disabled_when_readonly(monkeypatch):
-    """Test that all V1 tools remain registered in readonly mode."""
+    """Test that all legacy tools remain registered in readonly mode."""
     monkeypatch.setenv("HUGEGRAPH_MCP_READONLY", "true")
-    monkeypatch.setenv("HUGEGRAPH_MCP_TOOLSET", "v1")
+    monkeypatch.setenv("HUGEGRAPH_MCP_TOOLSET", "legacy")
 
     import hugegraph_mcp.server
 
@@ -128,9 +128,9 @@ def test_write_tools_disabled_when_readonly(monkeypatch):
 
 
 def test_readonly_mode_default(monkeypatch):
-    """Test that default mode is readonly when env is not set (V1 safe default)."""
+    """Test that default mode is readonly when env is not set (legacy safe default)."""
     monkeypatch.delenv("HUGEGRAPH_MCP_READONLY", raising=False)
-    monkeypatch.setenv("HUGEGRAPH_MCP_TOOLSET", "v1")
+    monkeypatch.setenv("HUGEGRAPH_MCP_TOOLSET", "legacy")
 
     import hugegraph_mcp.server
 

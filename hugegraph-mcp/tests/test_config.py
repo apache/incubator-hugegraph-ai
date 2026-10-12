@@ -451,3 +451,11 @@ def test_cached_config_uses_same_environment_snapshot_for_key_and_value(monkeypa
 
     assert environment.readonly_reads == 1
     assert cfg.readonly is False
+
+
+def test_deprecated_ai_graph_url_warns_without_changing_target(caplog):
+    with caplog.at_level(logging.WARNING):
+        cfg = MCPConfig.from_env({"HUGEGRAPH_AI_GRAPH_URL": "http://ignored:8080"})
+    assert cfg.url == "http://127.0.0.1:8080"
+    assert "has no effect" in caplog.text
+    assert "configure GRAPH_URL on the AI service" in caplog.text

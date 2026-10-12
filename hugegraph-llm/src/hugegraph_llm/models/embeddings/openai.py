@@ -47,7 +47,7 @@ class OpenAIEmbedding(BaseEmbedding):
         response = self.client.embeddings.create(input=text, model=self.model)
         return response.data[0].embedding
 
-    def get_texts_embeddings(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
+    def get_texts_embeddings(self, texts: List[str], batch_size: int = 10) -> List[List[float]]:
         """Get embeddings for multiple texts with automatic batch splitting.
 
         This method efficiently processes multiple texts by splitting them into
@@ -58,7 +58,7 @@ class OpenAIEmbedding(BaseEmbedding):
         texts : List[str]
             A list of text strings to be embedded.
         batch_size : int, optional
-            Maximum number of texts to process in a single API call (default: 32).
+            Maximum number of texts to process in a single API call (default: 10).
 
         Returns
         -------
@@ -73,7 +73,7 @@ class OpenAIEmbedding(BaseEmbedding):
             all_embeddings.extend([data.embedding for data in response.data])
         return all_embeddings
 
-    async def async_get_texts_embeddings(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
+    async def async_get_texts_embeddings(self, texts: List[str], batch_size: int = 10) -> List[List[float]]:
         """Get embeddings for multiple texts with automatic batch splitting (async).
 
         This method should efficiently process multiple texts at once by leveraging
@@ -85,7 +85,7 @@ class OpenAIEmbedding(BaseEmbedding):
         texts : List[str]
             A list of text strings to be embedded.
         batch_size : int, optional
-            Maximum number of texts to process in a single API call (default: 32).
+            Maximum number of texts to process in a single API call (default: 10).
 
         Returns
         -------

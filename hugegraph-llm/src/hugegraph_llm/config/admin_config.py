@@ -26,3 +26,7 @@ class AdminConfig(BaseConfig):
     enable_login: Optional[str] = "False"
     user_token: Optional[str] = "4321"
     admin_token: Optional[str] = "xxxx"
+
+    def is_login_enabled(self) -> bool:
+        """Use the same login flag semantics for routing and write protection."""
+        return str(self.enable_login).strip().lower() == "true"

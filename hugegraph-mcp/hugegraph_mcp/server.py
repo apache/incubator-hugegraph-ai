@@ -17,7 +17,6 @@
 server.py 只负责参数校验和 mode 分发，具体业务逻辑委托给 tools/ 下的模块。
 """
 
-import logging
 import os
 import time
 from typing import Any
@@ -39,28 +38,19 @@ from hugegraph_mcp.tools.manage_schema import manage_schema
 from hugegraph_mcp.tools.mutate_graph_properties import mutate_graph_properties
 from hugegraph_mcp.tools.query_graph_data import query_graph_data
 from hugegraph_mcp.tools.refresh_vid_embeddings import refresh_vid_embeddings
+from hugegraph_mcp.toolsets import resolve_toolset
 from hugegraph_mcp.write_contract import resolve_optional_legacy_locator
 from hugegraph_mcp.write_executor import confirm_write, get_write_status
 
 READONLY = MCPConfig.from_env().is_readonly()
 MCP_TOOL_CONTRACT_VERSION = "2.0"
-DEFAULT_TOOLSET = "v2_core"
-VALID_TOOLSETS = frozenset({"v1", DEFAULT_TOOLSET})
-LOGGER = logging.getLogger("hugegraph_mcp.server")
+ACTIVE_TOOLSET = resolve_toolset(os.getenv("HUGEGRAPH_MCP_TOOLSET"))
 
 mcp = FastMCP("HugeGraph MCP")
 
 
-def _active_toolset() -> str:
-    value = os.getenv("HUGEGRAPH_MCP_TOOLSET", DEFAULT_TOOLSET).strip()
-    if value in VALID_TOOLSETS:
-        return value
-    LOGGER.error("Invalid HUGEGRAPH_MCP_TOOLSET value %r; falling back to v1", value)
-    return "v1"
-
-
-def _register_v2_core_tool(func):
-    if _active_toolset() == "v1":
+def _register_core_tool(func):
+    if ACTIVE_TOOLSET == "legacy":
         return func
     return mcp.tool()(func)
 
@@ -166,7 +156,7 @@ def _admin_gate(tool_name: str, *, requires_write: bool = False) -> dict | None:
             source=tool_name,
             details={
                 "tool": tool_name,
-                "toolset": _active_toolset(),
+                "toolset": ACTIVE_TOOLSET,
                 "enable_env": enable_env,
                 "required_env": required_env,
             },
@@ -252,19 +242,19 @@ def inspect_graph_tool(
         inspect_graph,
         include_raw_schema=include_raw_schema,
         include_counts=include_counts,
-        toolset=_active_toolset(),
+        toolset=ACTIVE_TOOLSET,
     )
     if result.get("ok") and isinstance(result.get("data"), dict):
         result["data"]["mcp_tool_contract_version"] = MCP_TOOL_CONTRACT_VERSION
-        result["data"]["toolset"] = _active_toolset()
+        result["data"]["toolset"] = ACTIVE_TOOLSET
     meta = dict(result.get("meta") or {})
     meta["mcp_tool_contract_version"] = MCP_TOOL_CONTRACT_VERSION
-    meta["toolset"] = _active_toolset()
+    meta["toolset"] = ACTIVE_TOOLSET
     result["meta"] = meta
     return result
 
 
-@_register_v2_core_tool
+@_register_core_tool
 def get_write_status_tool(plan_id: str) -> dict:
     """Return the durable plan, operation, and receipt outcome by plan_id."""
     return _call_public_tool(
@@ -274,7 +264,7 @@ def get_write_status_tool(plan_id: str) -> dict:
     )
 
 
-@_register_v2_core_tool
+@_register_core_tool
 def confirm_write_tool(plan_id: str) -> dict:
     """Confirm exactly one immutable server-persisted plan by plan_id only."""
     return _call_public_tool(
@@ -284,7 +274,7 @@ def confirm_write_tool(plan_id: str) -> dict:
     )
 
 
-@_register_v2_core_tool
+@_register_core_tool
 def reconcile_write_tool(plan_id: str) -> dict:
     """Reconcile an UNKNOWN or PARTIAL plan by plan_id using read-only checks."""
     return _call_public_tool(
@@ -294,7 +284,7 @@ def reconcile_write_tool(plan_id: str) -> dict:
     )
 
 
-@_register_v2_core_tool
+@_register_core_tool
 def inspect_schema_tool(
     include_raw_schema: bool = False,
     include_relations: bool = True,
@@ -321,7 +311,7 @@ def inspect_schema_tool(
     )
 
 
-@_register_v2_core_tool
+@_register_core_tool
 def query_graph_data_tool(
     target: str,
     operation: str,
@@ -363,7 +353,7 @@ def query_graph_data_tool(
     )
 
 
-# ========== V1 stable tools ==========
+# ========== Tools shared by core and legacy ==========
 
 
 @mcp.tool()
@@ -424,7 +414,7 @@ def extract_graph_data_tool(
     graph_schema: dict | None = None,
     example_prompt: str | None = None,
 ) -> dict:
-    """V1 稳定工具：自然语言文本 → 候选 graph_data（不写入）。
+    """共享工具：自然语言文本 → 候选 graph_data（不写入）。
 
     返回提取的顶点和边数据，供后续导入使用。
     graph_schema 可传入 HugeGraph schema；为空时从当前 HugeGraph 读取 live schema，
@@ -441,7 +431,7 @@ def extract_graph_data_tool(
 
 @mcp.tool()
 def design_schema_tool(operations: list[dict] | None = None) -> dict:
-    """V1 稳定工具：schema 设计指导。
+    """共享工具：schema 设计指导。
 
     提供 schema 设计建议和最佳实践。
     """
@@ -475,10 +465,10 @@ def apply_schema_tool(
       Rejects create_index_label, schema append/eliminate, remove/drop.
     """
     start = time.perf_counter()
-    if mode == "apply" and _active_toolset() == "v1":
+    if mode == "apply" and ACTIVE_TOOLSET == "legacy":
         return envelope_err(
             ErrorType.FEATURE_DISABLED,
-            "Schema apply is disabled in V1. Use validate or dry_run mode.",
+            "Schema apply is disabled in the legacy toolset. Use validate or dry_run mode.",
             suggestion="Use mode='validate' or mode='dry_run' to preview schema changes.",
             source="apply_schema_tool",
             details={"mode": mode, "tool": "apply_schema_tool"},
@@ -496,7 +486,7 @@ def apply_schema_tool(
     )
 
 
-@_register_v2_core_tool
+@_register_core_tool
 def mutate_graph_properties_tool(
     target: str,
     operation: str,

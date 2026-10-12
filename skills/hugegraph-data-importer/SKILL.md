@@ -44,4 +44,6 @@ inspect_graph_tool(include_raw_schema=true)
 -> get_write_status_tool(plan_id) -> query_graph_data_tool
 ```
 
-Structured query and plan lifecycle tools require the default `v2_core` toolset. For a `v1` deployment, enable `HUGEGRAPH_MCP_TOOLSET=v2_core` and restart before using them.
+Structured query and plan lifecycle tools require the default `core` toolset. For a `legacy` deployment, enable `HUGEGRAPH_MCP_TOOLSET=core` and restart before using them.
+
+These skills describe current source. Published `1.7.1` uses `v2_core` / `v1`; see the [migration guide](../../hugegraph-mcp/README.md#toolset-naming-and-migration).

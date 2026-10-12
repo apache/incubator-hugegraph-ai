@@ -11,11 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for V1 stable tools and admin gate (Milestone 2)."""
+"""Tests for shared tools, toolset selection, and admin gates."""
 
 import asyncio
 import logging
 import warnings
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
@@ -33,7 +34,7 @@ async def _list_mcp_tools():
     return await list_tools()
 
 
-def _assert_v1_envelope_shape(result):
+def _assert_envelope_shape(result):
     assert set(result) == {"ok", "data", "error", "warnings", "next_actions", "meta"}
     assert result["meta"]["request_id"].startswith("req-")
     assert "graph" in result["meta"]
@@ -42,7 +43,7 @@ def _assert_v1_envelope_shape(result):
     assert "duration_ms" in result["meta"]
 
 
-V1_TOOL_NAMES = {
+LEGACY_TOOL_NAMES = {
     "inspect_graph_tool",
     "generate_gremlin_tool",
     "execute_gremlin_read_tool",
@@ -55,7 +56,7 @@ V1_TOOL_NAMES = {
     "execute_gremlin_write_tool",
 }
 
-V2_CORE_TOOL_NAMES = V1_TOOL_NAMES | {
+CORE_TOOL_NAMES = LEGACY_TOOL_NAMES | {
     "confirm_write_tool",
     "get_write_status_tool",
     "inspect_schema_tool",
@@ -65,14 +66,14 @@ V2_CORE_TOOL_NAMES = V1_TOOL_NAMES | {
 }
 
 
-def test_public_tool_contract_lists_v2_core_tools_by_default(monkeypatch):
+def test_public_tool_contract_lists_core_tools_by_default(monkeypatch):
     monkeypatch.delenv("HUGEGRAPH_MCP_TOOLSET", raising=False)
 
     async def _tool_names():
         tools = await _list_mcp_tools()
         return {tool.name for tool in tools}
 
-    assert asyncio.run(_tool_names()) == V2_CORE_TOOL_NAMES
+    assert asyncio.run(_tool_names()) == CORE_TOOL_NAMES
 
 
 def test_import_graph_data_tool_runtime_input_schema():
@@ -101,8 +102,8 @@ def test_import_graph_data_tool_runtime_input_schema():
     assert input_schema["required"] == ["mode"]
 
 
-def test_public_tool_contract_can_reload_as_v1(monkeypatch):
-    monkeypatch.setenv("HUGEGRAPH_MCP_TOOLSET", "v1")
+def test_public_tool_contract_can_reload_as_legacy(monkeypatch):
+    monkeypatch.setenv("HUGEGRAPH_MCP_TOOLSET", "legacy")
     import importlib
 
     import hugegraph_mcp.server as server_module
@@ -117,34 +118,79 @@ def test_public_tool_contract_can_reload_as_v1(monkeypatch):
         return {tool.name for tool in tools}
 
     try:
-        assert asyncio.run(_tool_names()) == V1_TOOL_NAMES
+        assert asyncio.run(_tool_names()) == LEGACY_TOOL_NAMES
     finally:
         monkeypatch.delenv("HUGEGRAPH_MCP_TOOLSET", raising=False)
         importlib.reload(server_module)
 
 
-def test_invalid_and_empty_toolsets_fail_closed_to_v1(monkeypatch, caplog):
+@pytest.mark.parametrize("value", ["typo", "", "  ", "v2", "CORE"])
+def test_invalid_toolsets_prevent_startup(monkeypatch, value):
     import importlib
 
-    import hugegraph_mcp.server as server_module
-
-    async def _tool_names():
-        list_tools = getattr(server_module.mcp, "_mcp_list_tools", None)
-        if list_tools is None:
-            list_tools = server_module.mcp._list_tools
-        tools = await list_tools()
-        return {tool.name for tool in tools}
-
     try:
-        with caplog.at_level(logging.ERROR, logger="hugegraph_mcp.server"):
-            for value in ("typo", ""):
-                monkeypatch.setenv("HUGEGRAPH_MCP_TOOLSET", value)
-                importlib.reload(server_module)
-                assert asyncio.run(_tool_names()) == V1_TOOL_NAMES
-        assert any("Invalid HUGEGRAPH_MCP_TOOLSET" in message for message in caplog.messages)
+        monkeypatch.setenv("HUGEGRAPH_MCP_TOOLSET", value)
+        with pytest.raises(ValueError, match="expected core or legacy"):
+            importlib.reload(server)
     finally:
         monkeypatch.delenv("HUGEGRAPH_MCP_TOOLSET", raising=False)
-        importlib.reload(server_module)
+        importlib.reload(server)
+
+
+@pytest.mark.parametrize(
+    ("value", "canonical", "expected_tools"),
+    [
+        ("core", "core", CORE_TOOL_NAMES),
+        ("legacy", "legacy", LEGACY_TOOL_NAMES),
+        ("v2_core", "core", CORE_TOOL_NAMES),
+        ("v1", "legacy", LEGACY_TOOL_NAMES),
+        (" core ", "core", CORE_TOOL_NAMES),
+    ],
+)
+def test_toolset_selection_metadata_and_startup_snapshot(monkeypatch, caplog, value, canonical, expected_tools):
+    import importlib
+
+    try:
+        monkeypatch.setenv("HUGEGRAPH_MCP_TOOLSET", value)
+        with caplog.at_level(logging.WARNING, logger="hugegraph_mcp.toolsets"):
+            importlib.reload(server)
+        deprecated = [record for record in caplog.records if "is deprecated" in record.message]
+        assert len(deprecated) == int(value in {"v1", "v2_core"})
+        # A later environment edit must not change metadata or behavior without a restart.
+        monkeypatch.setenv("HUGEGRAPH_MCP_TOOLSET", "legacy" if canonical == "core" else "core")
+        monkeypatch.setattr(server, "inspect_graph", lambda **kwargs: envelope_ok({"toolset": kwargs["toolset"]}))
+        calls = []
+        monkeypatch.setattr(server, "manage_schema", lambda **kwargs: calls.append(kwargs) or envelope_ok({}))
+
+        async def check_tools():
+            async with Client(server.mcp) as client:
+                registered = {tool.name for tool in await client.list_tools()}
+                assert registered == expected_tools
+                for filename in ("README.md", "README.zh-CN.md"):
+                    content = (Path(__file__).resolve().parents[1] / filename).read_text(encoding="utf-8")
+                    documented = set()
+                    for line in content.splitlines():
+                        cells = [cell.strip() for cell in line.split("|")]
+                        if len(cells) >= 4 and cells[1].endswith("_tool`") and canonical in cells[2]:
+                            documented.add(cells[1].strip("`"))
+                    assert documented == registered, filename
+                result = await client.call_tool("inspect_graph_tool", {})
+                return result.data
+
+        result = asyncio.run(check_tools())
+        assert result["data"]["toolset"] == canonical
+        assert result["meta"]["toolset"] == canonical
+        assert result["meta"]["mcp_tool_contract_version"] == "2.0"
+        applied = server.apply_schema_tool(mode="apply", operations=[])
+        if canonical == "legacy":
+            assert applied["error"]["type"] == "FEATURE_DISABLED"
+            assert not calls
+        else:
+            assert applied["ok"]
+            assert len(calls) == 1
+    finally:
+        monkeypatch.delenv("HUGEGRAPH_MCP_TOOLSET", raising=False)
+        importlib.reload(server)
 
 
 def test_public_tool_argument_models_do_not_emit_schema_shadow_warning():
@@ -174,7 +220,7 @@ def test_generate_gremlin_tool_execute_fails_closed_even_for_admin(monkeypatch):
         output_types=["vertex"],
     )
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is False
     assert result["error"]["type"] == "FEATURE_DISABLED"
     assert "hard-budget contract is incomplete" in result["error"]["message"]
@@ -189,7 +235,7 @@ def test_generate_gremlin_tool_still_generates_without_execution(monkeypatch):
 
     result = server.generate_gremlin_tool(query="count vertices", execute=False)
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is True
     assert result["data"] == expected["data"]
     mock.assert_called_once_with(
@@ -207,15 +253,15 @@ def test_inspect_graph_tool_adds_contract_fields(monkeypatch):
 
     result = server.inspect_graph_tool()
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["data"]["mcp_tool_contract_version"] == "2.0"
-    assert result["data"]["toolset"] == "v2_core"
+    assert result["data"]["toolset"] == "core"
     assert result["meta"]["mcp_tool_contract_version"] == "2.0"
-    assert result["meta"]["toolset"] == "v2_core"
-    mock.assert_called_once_with(include_raw_schema=False, include_counts=False, toolset="v2_core")
+    assert result["meta"]["toolset"] == "core"
+    mock.assert_called_once_with(include_raw_schema=False, include_counts=False, toolset="core")
 
     server.inspect_graph_tool(include_counts=True)
-    mock.assert_called_with(include_raw_schema=False, include_counts=True, toolset="v2_core")
+    mock.assert_called_with(include_raw_schema=False, include_counts=True, toolset="core")
 
 
 def test_execute_gremlin_read_tool_fails_closed_even_for_admin(monkeypatch):
@@ -225,7 +271,7 @@ def test_execute_gremlin_read_tool_fails_closed_even_for_admin(monkeypatch):
 
     result = server.execute_gremlin_read_tool(gremlin_query="g.V().limit(3)")
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is False
     assert result["error"]["type"] == "FEATURE_DISABLED"
     capabilities = result["error"]["details"]["required_capabilities"]
@@ -246,7 +292,7 @@ def test_extract_graph_data_tool_routes_to_extract_graph_data(monkeypatch):
         example_prompt="extract people",
     )
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is True
     assert result["data"] == expected["data"]
     mock.assert_called_once_with(
@@ -263,7 +309,7 @@ def test_design_schema_tool_routes_to_manage_schema_design(monkeypatch):
 
     result = server.design_schema_tool(operations=[{"op": "add_vertex_label"}])
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is True
     assert result["data"] == expected["data"]
     mock.assert_called_once_with(mode="design", operations=[{"op": "add_vertex_label"}])
@@ -276,7 +322,7 @@ def test_apply_schema_tool_validate_routes_to_manage_schema(monkeypatch):
 
     result = server.apply_schema_tool(mode="validate", operations=[{"op": "add_vertex_label"}])
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is True
     assert result["data"] == expected["data"]
     mock.assert_called_once_with(
@@ -296,7 +342,7 @@ def test_apply_schema_tool_dry_run_routes_to_manage_schema(monkeypatch):
 
     result = server.apply_schema_tool(mode="dry_run", operations=[{"op": "add_vertex_label"}])
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is True
     assert result["data"] == expected["data"]
     mock.assert_called_once_with(
@@ -309,7 +355,7 @@ def test_apply_schema_tool_dry_run_routes_to_manage_schema(monkeypatch):
     )
 
 
-def test_apply_schema_tool_apply_routes_in_v2_core(monkeypatch):
+def test_apply_schema_tool_apply_routes_in_core(monkeypatch):
     expected = envelope_ok({"status": "planned"})
     mock = Mock(return_value=expected)
     monkeypatch.setattr(server, "manage_schema", mock)
@@ -323,7 +369,7 @@ def test_apply_schema_tool_apply_routes_in_v2_core(monkeypatch):
         expires_at=9999999999,
     )
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is True
     assert result["warnings"][0].startswith(LEGACY_DEPRECATION_CODE)
     mock.assert_called_once_with(
@@ -380,7 +426,7 @@ def test_legacy_write_wrappers_reject_partial_locator_before_business_logic(
 
     result = getattr(server, tool_name)(**arguments, plan_hash="hash-only")
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is False
     assert result["error"]["type"] == "VALIDATION_ERROR"
     assert result["error"]["source"] == tool_name
@@ -394,13 +440,13 @@ def test_canonical_confirm_wrapper_passes_only_plan_id(monkeypatch):
 
     result = server.confirm_write_tool(plan_id="wp-1")
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is True
     mock.assert_called_once_with(plan_id="wp-1")
 
 
-def test_apply_schema_tool_apply_returns_feature_disabled_in_v1(monkeypatch):
-    monkeypatch.setenv("HUGEGRAPH_MCP_TOOLSET", "v1")
+def test_apply_schema_tool_apply_returns_feature_disabled_in_legacy(monkeypatch):
+    monkeypatch.setenv("HUGEGRAPH_MCP_TOOLSET", "legacy")
     import importlib
 
     import hugegraph_mcp.server as server_module
@@ -408,7 +454,7 @@ def test_apply_schema_tool_apply_returns_feature_disabled_in_v1(monkeypatch):
     importlib.reload(server_module)
     result = server_module.apply_schema_tool(mode="apply", operations=[{"op": "test"}])
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is False
     assert result["error"]["type"] == "FEATURE_DISABLED"
     assert result["error"]["source"] == "apply_schema_tool"
@@ -433,7 +479,7 @@ def test_delete_graph_data_tool_routes_to_manage_graph_data_delete(monkeypatch):
 
     result = server.delete_graph_data_tool(change_plan=change_plan)
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is True
     assert result["data"] == expected["data"]
     mock.assert_called_once_with(
@@ -467,7 +513,7 @@ def test_generate_gremlin_tool_aligns_error_source(monkeypatch):
 
     result = server.generate_gremlin_tool(query="count vertices")
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is False
     assert result["error"]["source"] == "generate_gremlin_tool"
 
@@ -479,7 +525,7 @@ def test_execute_gremlin_read_tool_reports_hard_budget_gate_source(monkeypatch):
 
     result = server.execute_gremlin_read_tool(gremlin_query="g.addV('person')")
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is False
     assert result["error"]["source"] == "execute_gremlin_read_tool"
     assert result["error"]["type"] == "FEATURE_DISABLED"
@@ -527,7 +573,7 @@ def test_admin_gate_blocks_refresh_embeddings_by_default(monkeypatch):
         result["error"]["suggestion"] == "Set HUGEGRAPH_MCP_ADMIN_MODE=true and HUGEGRAPH_MCP_READONLY=false "
         "to enable refresh_vid_embeddings_tool."
     )
-    assert result["error"]["details"]["toolset"] == "v2_core"
+    assert result["error"]["details"]["toolset"] == "core"
     assert result["error"]["details"]["required_env"] == {
         "HUGEGRAPH_MCP_ADMIN_MODE": "true",
         "HUGEGRAPH_MCP_READONLY": "false",
@@ -545,7 +591,7 @@ def test_raw_write_fails_closed_even_when_admin_and_writes_enabled(monkeypatch):
 
     result = server.execute_gremlin_write_tool(gremlin_query="g.addV('test')")
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is False
     assert result["error"]["type"] == "FEATURE_DISABLED"
     assert "hard-budget contract is incomplete" in result["error"]["message"]
@@ -583,7 +629,7 @@ def test_admin_gate_allows_refresh_embeddings_when_enabled(monkeypatch):
 
     result = server.refresh_vid_embeddings_tool(confirm=True)
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is True
     assert result["data"] == expected["data"]
     mock.assert_called_once_with(confirm=True)
@@ -602,7 +648,7 @@ def test_admin_gate_reads_current_env_after_import(monkeypatch):
 
     result = server.execute_gremlin_write_tool(gremlin_query="g.addV('test')")
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is False
     assert result["error"]["type"] == "FEATURE_DISABLED"
     mock.assert_not_called()
@@ -616,7 +662,7 @@ def test_execute_gremlin_write_tool_does_not_reach_executor(monkeypatch):
 
     result = server.execute_gremlin_write_tool(gremlin_query="g.addV('test')")
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is False
     assert result["error"]["type"] == "FEATURE_DISABLED"
     mock.assert_not_called()
@@ -630,7 +676,7 @@ def test_refresh_vid_embeddings_tool_wraps_unexpected_exceptions(monkeypatch):
 
     result = server.refresh_vid_embeddings_tool(confirm=True)
 
-    _assert_v1_envelope_shape(result)
+    _assert_envelope_shape(result)
     assert result["ok"] is False
     assert result["error"]["type"] == "FLOW_EXECUTION_FAILED"
     assert result["error"]["source"] == "refresh_vid_embeddings_tool"

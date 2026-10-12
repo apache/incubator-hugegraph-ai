@@ -392,7 +392,7 @@ def test_inspect_graph_v1_does_not_recommend_unavailable_tools(monkeypatch):
     from hugegraph_mcp.tools import inspect_graph as inspect_graph_module
 
     monkeypatch.setattr(inspect_graph_module, "get_live_schema", lambda: _schema_result())
-    result = inspect_graph_module.inspect_graph(toolset="v1")
-    assert any("HUGEGRAPH_MCP_TOOLSET=v2_core" in action for action in result["next_actions"])
+    result = inspect_graph_module.inspect_graph(toolset="legacy")
+    assert any("HUGEGRAPH_MCP_TOOLSET=core" in action for action in result["next_actions"])
     assert not any("query_graph_data_tool" in action for action in result["next_actions"])
     assert not any("execute_gremlin_read_tool" in action for action in result["next_actions"])

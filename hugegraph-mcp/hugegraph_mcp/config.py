@@ -119,6 +119,10 @@ class MCPConfig:
             cache_key = None
 
         warnings: list[str] = []
+        if "HUGEGRAPH_AI_GRAPH_URL" in env and env.get("HUGEGRAPH_AI_GRAPH_URL") is not None:
+            warnings.append(
+                "HUGEGRAPH_AI_GRAPH_URL is deprecated and has no effect; configure GRAPH_URL on the AI service."
+            )
 
         path_graphspace, path_graph = _parse_graph_path(env.get("HUGEGRAPH_GRAPH_PATH", "DEFAULT/hugegraph"))
         graphspace = path_graphspace

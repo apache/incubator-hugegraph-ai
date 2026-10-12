@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Schema inspection tool for v2_core."""
+"""Schema inspection tool for core."""
 
 from typing import Any
 

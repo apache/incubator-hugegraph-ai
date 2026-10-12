@@ -13,7 +13,7 @@
 
 """Schema 管理统一入口 — design / validate / dry_run / apply 模式。
 
-v2_core 解锁最窄 schema apply：create_property_key、create_vertex_label、
+core 解锁最窄 schema apply：create_property_key、create_vertex_label、
 create_edge_label。index/rebuild、schema remove/drop、schema append/eliminate
 仍不在 P0a 范围内。
 """

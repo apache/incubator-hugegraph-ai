@@ -1,6 +1,6 @@
 ---
 name: hugegraph-operator
-description: Route HugeGraph MCP operational checks to status, schema, permission, AI availability, and read-only verification tools. Use when the user asks to check the current graph, schema, MCP connection, readonly state, HugeGraph-AI state, counts, indexes, or readiness.
+description: Route HugeGraph MCP operational checks to status, schema, MCP read-only state, AI availability, and read-only verification tools. Use when the user asks to check the current graph, schema, MCP connection, readonly state, HugeGraph-AI state, counts, indexes, or readiness.
 ---
 
 # HugeGraph Operator
@@ -9,7 +9,7 @@ description: Route HugeGraph MCP operational checks to status, schema, permissio
 
 | Goal | Tool |
 | --- | --- |
-| Quick check connection, status, permissions | `inspect_graph_tool(include_raw_schema=false)` |
+| Quick check connection, status, MCP read-only state | `inspect_graph_tool(include_raw_schema=false)` |
 | Fetch vertex/edge counts | `inspect_graph_tool(include_counts=true)` |
 | Inspect full schema, primary keys, indexes, edge endpoints | `inspect_graph_tool(include_raw_schema=true)` |
 | Check readonly, graph, or graphspace | `inspect_graph_tool(include_raw_schema=false)` |
@@ -34,4 +34,6 @@ Data verification: inspect_graph_tool(include_counts=true) -> query_graph_data_t
 
 When AI is disabled by configuration, `hugegraph_ai_status="disabled"` is normal; no AI service check is needed. `unavailable` means an enabled AI service check failed.
 
-Structured query and plan lifecycle tools require the default `v2_core` toolset. For a `v1` deployment, enable `HUGEGRAPH_MCP_TOOLSET=v2_core` and restart before using them.
+Structured query and plan lifecycle tools require the default `core` toolset. For a `legacy` deployment, enable `HUGEGRAPH_MCP_TOOLSET=core` and restart before using them.
+
+These skills describe current source. Published `1.7.1` uses `v2_core` / `v1`; see the [migration guide](../../hugegraph-mcp/README.md#toolset-naming-and-migration).

@@ -112,7 +112,7 @@ Model Context Protocol server for safe, controlled HugeGraph access:
 
 - **Stable Tool Contract**: Typed graph, schema, Gremlin, and extraction tools for MCP clients
 - **Safe Writes**: Read-only defaults plus dry-run, persistent single-use confirmation, and target revalidation
-- **Compatibility**: Default `v2_core` toolset with an opt-in `v1` compatibility mode
+- **Compatibility**: Default `core` toolset with an opt-in `legacy` compatibility mode in this checkout; published `1.7.1` uses `v2_core` / `v1`
 
 ### [hugegraph-ml](./hugegraph-ml)
 
