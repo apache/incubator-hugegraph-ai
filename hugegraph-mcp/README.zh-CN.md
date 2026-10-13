@@ -230,17 +230,23 @@ Schema 和图数据 dry-run 在操作数超过 200 或 payload 超过 1 MiB 时�
 `HUGEGRAPH_AI_TOKEN`。在 AI 服务自身配置 `GRAPH_URL`、`GRAPH_NAME` 和 `GRAPH_SPACE`：地址必须能从
 AI 服务访问，例如 Docker 内的 `http://server:8080`；图名与 graphspace 必须与 MCP 目标一致。
 修改 MCP 的 `HUGEGRAPH_URL` 不会重新配置 AI 服务；`HUGEGRAPH_AI_GRAPH_URL` 不生效，不能用于覆盖 AI 目标。
-使用 MCP 默认目标 `DEFAULT/hugegraph` 时，请明确设置 AI 的 `GRAPH_NAME=hugegraph`、
-`GRAPH_SPACE=DEFAULT`；AI 侧未设置或为 null 的 graphspace 不会通过严格目标校验。
+使用 MCP 默认目标 `DEFAULT/hugegraph` 时，请设置 AI 的 `GRAPH_NAME=hugegraph`。
+目标校验将 AI 侧未设置、null、空字符串或全空白的 graphspace 视为 `GRAPH_SPACE=DEFAULT`；
+该比较不修改保存的配置，也不改变现有向量索引路径约定。
 
 刷新需要 MCP 允许写入、启用管理模式、启用 AI，并在调用时设置 `confirm=true`。当前 AI 源码还要求服务侧
 `ENABLE_LOGIN=true`、`HUGEGRAPH_LLM_ENABLE_THIN_WRITES=true`，配置强 `USER_TOKEN`，并通过 MCP 的
 `HUGEGRAPH_AI_TOKEN` 传入。上述 AI 写入门禁适用于当前实现；旧部署可能没有这些门禁，必须核对实际服务版本，
 不能认为已发布的 MCP `1.7.1` 与所有 AI 部署都具有相同条件。
 
-当前 MCP 刷新路径先检查 `GET /vid-embeddings/refresh-capabilities` 返回的 `protocol_version=1`，再随刷新请求传入预期图名和 graphspace，由 AI 服务对照自身配置校验后执行。
-缺少该协议的旧服务会被拒绝且不执行刷新。此校验只确认图名和 graphspace，不证明 MCP 与 AI 连接的是同一台物理服务器；
-部署者仍需配置并核对两侧地址。
+当前 MCP 刷新路径先检查 `GET /vid-embeddings/refresh-capabilities` 返回的 `protocol_version=1`，
+再向 `POST /v1/vid-embeddings/refresh` 传入两个必填目标字段，在同一配置锁内完成目标校验与刷新。
+滚动升级时，能力探测与 POST 可能落到不同副本，因此安全边界是版本化 POST 路由。
+旧副本缺少该路由时，MCP 会提示升级 AI，绝不回退到 `POST /vid-embeddings/refresh`。
+旧路由为兼容已有调用方，仍允许已认证且开启写入的调用方传入空请求。
+
+此校验只确认图名和 graphspace，不证明 MCP 与 AI 连接的是同一台物理服务器；部署者仍需配置并核对两侧地址。
+刷新读取图 ID/schema 并更新 VID 向量索引，不写入图记录。
 
 ## License
 

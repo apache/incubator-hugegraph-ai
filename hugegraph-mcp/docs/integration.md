@@ -407,6 +407,17 @@ set to `true`. Restart with admin mode on and require `CONFIRM_REQUIRED`. Keep
 `confirm=false` throughout so no refresh is dispatched. Raw Gremlin rejection
 only verifies its disabled boundary; run classifier unit tests separately.
 
+### Verify the refresh target contract
+
+Run the API and MCP regression tests for default GraphSpace equivalence, required
+target fields, authentication/write gates, and configuration locking. The MCP
+mixed-version test routes discovery to a capable replica and the POST to an old
+replica: only `/v1/vid-embeddings/refresh` may be requested, and an unavailable
+route must return an upgrade error without dispatching the legacy refresh.
+These controlled tests do not replace a rolling-deployment integration run.
+For an authorized refresh against disposable fixtures, verify the configured VID
+index and both physical graph addresses; graph records must remain unchanged.
+
 ## Pass Criteria
 
 - Tool contract and count match `core`.

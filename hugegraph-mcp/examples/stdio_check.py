@@ -51,7 +51,17 @@ async def run(requests_path: Path | None, interactive: bool):
                     break
                 if not line.strip():
                     continue
-                request = json.loads(line)
+                try:
+                    request = json.loads(line)
+                    if not isinstance(request, dict):
+                        raise ValueError("Request must be a JSON object")
+                    if not isinstance(request.get("name"), str) or not request["name"].strip():
+                        raise ValueError("Tool name must be a non-empty string")
+                    if not isinstance(request.get("arguments", {}), dict):
+                        raise ValueError("Tool arguments must be a JSON object")
+                except ValueError as exc:
+                    sys.stderr.write(f"Invalid tools/call request: {exc}\n")
+                    continue
             else:
                 break
             result = await session.call_tool(request["name"], request.get("arguments", {}))

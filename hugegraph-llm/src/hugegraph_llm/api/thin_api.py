@@ -25,6 +25,7 @@ from fastapi import APIRouter, status
 from hugegraph_llm.api.models.rag_requests import (
     GraphExtractRequest,
     GraphImportRequest,
+    ValidatedVidEmbeddingsRefreshRequest,
     VidEmbeddingsRefreshRequest,
 )
 from hugegraph_llm.api.models.rag_response import ThinAPIResponse
@@ -150,8 +151,13 @@ def graph_import_api(req: GraphImportRequest):
     return _wrap_flow_call(FlowName.IMPORT_GRAPH_DATA, req.data, req.graph_schema)
 
 
-@thin_router.post("/vid-embeddings/refresh", status_code=status.HTTP_200_OK, response_model=ThinAPIResponse)
-def vid_embeddings_refresh_api(req: VidEmbeddingsRefreshRequest):
+def _effective_graphspace(graphspace: str | None) -> str:
+    # Match the client's default-space identity without changing configuration
+    # or index paths. Non-default names retain their exact routing semantics.
+    return graphspace if graphspace and graphspace.strip() else "DEFAULT"
+
+
+def _refresh_vid_embeddings(req: VidEmbeddingsRefreshRequest):
     if blocked := _thin_write_disabled():
         return blocked
     # Keep target validation and flow execution atomic with respect to runtime
@@ -162,7 +168,7 @@ def vid_embeddings_refresh_api(req: VidEmbeddingsRefreshRequest):
         if supplied_fields and (
             supplied_fields != expected_fields
             or req.expected_graph != huge_settings.graph_name
-            or req.expected_graphspace != huge_settings.graph_space
+            or _effective_graphspace(req.expected_graphspace) != _effective_graphspace(huge_settings.graph_space)
         ):
             return _envelope_err(
                 "VALIDATION_ERROR",
@@ -172,9 +178,21 @@ def vid_embeddings_refresh_api(req: VidEmbeddingsRefreshRequest):
         return _wrap_flow_call(FlowName.UPDATE_VID_EMBEDDINGS)
 
 
+@thin_router.post("/vid-embeddings/refresh", status_code=status.HTTP_200_OK, response_model=ThinAPIResponse)
+def vid_embeddings_refresh_api(req: VidEmbeddingsRefreshRequest):
+    """Keep empty requests compatible with authenticated legacy callers."""
+    return _refresh_vid_embeddings(req)
+
+
+@thin_router.post("/v1/vid-embeddings/refresh", status_code=status.HTTP_200_OK, response_model=ThinAPIResponse)
+def validated_vid_embeddings_refresh_api(req: ValidatedVidEmbeddingsRefreshRequest):
+    """Require target validation on a route that old replicas cannot execute."""
+    return _refresh_vid_embeddings(req)
+
+
 @thin_router.get("/vid-embeddings/refresh-capabilities", status_code=status.HTTP_200_OK, response_model=ThinAPIResponse)
 def vid_embeddings_refresh_capabilities_api():
-    """Advertise server-side target validation before clients send a write."""
+    """Keep discovery compatible; the versioned POST enforces validation."""
     return _envelope_ok({"protocol_version": 1})
 
 

@@ -60,7 +60,10 @@ class GremlinExampleIndexQuery:
         embeddings = []
         for start in range(0, len(properties), 10):
             texts = [row["query"] for row in properties[start : start + 10]]
-            embeddings.extend(self.embedding.get_texts_embeddings(texts))
+            batch_embeddings = self.embedding.get_texts_embeddings(texts)
+            if len(batch_embeddings) != len(texts):
+                raise ValueError(f"Embedding batch returned {len(batch_embeddings)} vectors for {len(texts)} texts.")
+            embeddings.extend(batch_embeddings)
         self.vector_index.add(embeddings, properties)
         self.vector_index.save_index_by_name("gremlin_examples")
 

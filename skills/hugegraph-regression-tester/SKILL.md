@@ -39,5 +39,11 @@ admin-enabled call must return `CONFIRM_REQUIRED`. Keep `confirm=false` in both
 processes to avoid a refresh. Restart between configuration changes. These calls
 do not verify AI-side authentication or target validation. Validate the write
 classifier independently with unit tests; raw Gremlin rejection cannot exercise it.
+For the refresh contract, run the API/MCP regression tests covering default
+GraphSpace equivalence, required fields and write/auth gates on
+`POST /v1/vid-embeddings/refresh`, configuration locking, and mixed-version routing.
+The capability GET is only discovery; MCP must never fall back to the legacy POST
+when the versioned route is unavailable. This does not verify physical-instance
+identity or establish a live rolling-deployment test.
 Generation and extraction require `HUGEGRAPH_MCP_ALLOW_AI=true` and a configured AI service.
 These skills describe current source; published `1.7.1` uses `v2_core` / `v1`.

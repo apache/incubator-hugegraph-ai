@@ -241,9 +241,10 @@ must be reachable from that service (for example, `http://server:8080` inside
 Docker), and its graph/graphspace must match the MCP target. Changing MCP's
 `HUGEGRAPH_URL` does not reconfigure the AI service. `HUGEGRAPH_AI_GRAPH_URL` is
 ignored and is not a way to override the AI target.
-For the default MCP target `DEFAULT/hugegraph`, explicitly set AI
-`GRAPH_NAME=hugegraph` and `GRAPH_SPACE=DEFAULT`; an unset/null AI graphspace
-does not pass the exact target check.
+For the default MCP target `DEFAULT/hugegraph`, set AI `GRAPH_NAME=hugegraph`.
+An unset, null, empty, or whitespace-only AI graphspace is equivalent to
+`GRAPH_SPACE=DEFAULT` for target validation. This comparison does not change
+stored configuration or the existing vector-index path convention.
 
 Refresh requires MCP writes enabled, admin mode, AI enabled, and `confirm=true`.
 For the current AI source, also set `ENABLE_LOGIN=true` and
@@ -253,12 +254,19 @@ apply to this implementation; older deployments may lack them. Verify the actual
 service version rather than assuming the published MCP `1.7.1` requires the same gates.
 
 The current MCP refresh path checks `GET /vid-embeddings/refresh-capabilities` for
-`protocol_version=1`, then sends the expected graph and
-graphspace with the refresh request. The AI service validates those names against
-its configuration before refreshing. An older service without this protocol is
-rejected without refreshing. This checks graph names and graphspace, not whether
-MCP and AI connect to the same physical server; operators must configure and
-verify both addresses.
+`protocol_version=1`, then sends both expected target fields to
+`POST /v1/vid-embeddings/refresh`. This versioned POST requires the fields and
+validates them under the same configuration lock as the refresh. Discovery alone
+cannot guarantee that the POST reaches the same replica during a rolling upgrade;
+the versioned POST is the validation boundary. If an older replica lacks that
+route, MCP reports that an AI upgrade is required and never falls back to
+`POST /vid-embeddings/refresh`. The legacy route still accepts empty requests from
+authenticated callers with writes enabled, for compatibility.
+
+Target validation checks graph names and graphspace, not whether MCP and AI
+connect to the same physical server; operators must configure and verify both
+addresses. Refresh reads graph IDs/schema and updates the VID vector index; it
+does not write graph records.
 
 ## License
 

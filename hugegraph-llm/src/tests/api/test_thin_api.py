@@ -235,6 +235,88 @@ def test_vid_embeddings_refresh_validates_target_before_flow(monkeypatch, graphs
         scheduler.schedule_flow.assert_not_called()
 
 
+@pytest.mark.parametrize("path", ["/vid-embeddings/refresh", "/v1/vid-embeddings/refresh"])
+@pytest.mark.parametrize("configured_space", [None, "", "   ", "DEFAULT"])
+@pytest.mark.parametrize("expected_space", [None, "", "   ", "DEFAULT"])
+def test_refresh_normalizes_default_identity_without_mutating_settings(
+    monkeypatch, path, configured_space, expected_space
+):
+    from hugegraph_llm.api.thin_api import huge_settings
+
+    scheduler = Mock()
+    scheduler.schedule_flow.return_value = "Refreshed."
+    monkeypatch.setattr("hugegraph_llm.api.thin_api.admin_settings.enable_login", "true")
+    monkeypatch.setattr(huge_settings, "graph_name", "target")
+    monkeypatch.setattr(huge_settings, "graph_space", configured_space)
+    monkeypatch.setenv("HUGEGRAPH_LLM_ENABLE_THIN_WRITES", "true")
+    client = _client(monkeypatch, scheduler)
+
+    response = client.post(path, json={"expected_graph": "target", "expected_graphspace": expected_space})
+
+    assert response.status_code == 200
+    _assert_envelope(response.json(), expected_ok=True)
+    scheduler.schedule_flow.assert_called_once_with(FlowName.UPDATE_VID_EMBEDDINGS)
+    assert huge_settings.graph_space == configured_space
+
+
+@pytest.mark.parametrize(
+    ("configured_space", "expected_graph", "expected_space", "expected_ok"),
+    [
+        ("space", "target", "space", True),
+        ("space", "other", "space", False),
+        ("space", "target", "other", False),
+        ("space", "target", None, False),
+        (None, "target", "space", False),
+        ("space", "target", " space ", False),
+    ],
+)
+def test_validated_refresh_checks_target_before_flow(
+    monkeypatch, configured_space, expected_graph, expected_space, expected_ok
+):
+    scheduler = Mock()
+    scheduler.schedule_flow.return_value = "Refreshed."
+    monkeypatch.setattr("hugegraph_llm.api.thin_api.admin_settings.enable_login", "true")
+    monkeypatch.setattr("hugegraph_llm.api.thin_api.huge_settings.graph_name", "target")
+    monkeypatch.setattr("hugegraph_llm.api.thin_api.huge_settings.graph_space", configured_space)
+    monkeypatch.setenv("HUGEGRAPH_LLM_ENABLE_THIN_WRITES", "true")
+    client = _client(monkeypatch, scheduler)
+
+    response = client.post(
+        "/v1/vid-embeddings/refresh",
+        json={"expected_graph": expected_graph, "expected_graphspace": expected_space},
+    )
+
+    assert response.status_code == 200
+    _assert_envelope(response.json(), expected_ok=expected_ok)
+    if expected_ok:
+        scheduler.schedule_flow.assert_called_once_with(FlowName.UPDATE_VID_EMBEDDINGS)
+    else:
+        assert response.json()["error"]["type"] == "VALIDATION_ERROR"
+        scheduler.schedule_flow.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {},
+        {"expected_graph": "target"},
+        {"expected_graphspace": "DEFAULT"},
+        {"expected_graph": None, "expected_graphspace": "DEFAULT"},
+        {"expected_graph": "", "expected_graphspace": "DEFAULT"},
+    ],
+)
+def test_validated_refresh_requires_target_fields(monkeypatch, payload):
+    scheduler = Mock()
+    monkeypatch.setattr("hugegraph_llm.api.thin_api.admin_settings.enable_login", "true")
+    monkeypatch.setenv("HUGEGRAPH_LLM_ENABLE_THIN_WRITES", "true")
+    client = _client(monkeypatch, scheduler)
+
+    response = client.post("/v1/vid-embeddings/refresh", json=payload)
+
+    assert response.status_code == 422
+    scheduler.schedule_flow.assert_not_called()
+
+
 def test_vid_embeddings_refresh_capabilities_has_no_flow_or_write(monkeypatch):
     scheduler = Mock()
     monkeypatch.delenv("HUGEGRAPH_LLM_ENABLE_THIN_WRITES", raising=False)
@@ -248,7 +330,8 @@ def test_vid_embeddings_refresh_capabilities_has_no_flow_or_write(monkeypatch):
     scheduler.schedule_flow.assert_not_called()
 
 
-def test_ui_config_reload_waits_for_refresh_target(monkeypatch, tmp_path):
+@pytest.mark.parametrize("path", ["/vid-embeddings/refresh", "/v1/vid-embeddings/refresh"])
+def test_ui_config_reload_waits_for_refresh_target(monkeypatch, tmp_path, path):
     from hugegraph_llm.api import thin_api
     from hugegraph_llm.config.models import base_config
 
@@ -290,7 +373,7 @@ def test_ui_config_reload_waits_for_refresh_target(monkeypatch, tmp_path):
     headers = {"Authorization": "Bearer internal-token"}
     try:
         with ThreadPoolExecutor(max_workers=2) as workers:
-            refresh = workers.submit(client.post, "/vid-embeddings/refresh", json=payload, headers=headers)
+            refresh = workers.submit(client.post, path, json=payload, headers=headers)
             try:
                 assert flow_entered.wait(5)
                 env_path.write_text(
@@ -309,7 +392,7 @@ def test_ui_config_reload_waits_for_refresh_target(monkeypatch, tmp_path):
             assert reloaded.result(timeout=5)[1] == "graph_b"
         # After the refresh finishes, reload takes effect and old-target requests fail.
         assert settings.graph_name == "graph_b"
-        rejected = client.post("/vid-embeddings/refresh", json=payload, headers=headers)
+        rejected = client.post(path, json=payload, headers=headers)
         assert rejected.json()["error"]["type"] == "VALIDATION_ERROR"
         scheduler.schedule_flow.assert_called_once_with(FlowName.UPDATE_VID_EMBEDDINGS)
     finally:
@@ -338,6 +421,7 @@ def test_production_router_protects_refresh_capabilities(monkeypatch):
         ("/graph-import", {"data": "{}", "schema": None}),
         ("/vid-embeddings/refresh", {}),
         ("/vid-embeddings/refresh", {"expected_graph": "target", "expected_graphspace": None}),
+        ("/v1/vid-embeddings/refresh", {"expected_graph": "target", "expected_graphspace": None}),
     ],
 )
 def test_thin_write_endpoints_are_disabled_by_default(monkeypatch, path, payload):
@@ -394,6 +478,11 @@ def test_thin_writes_remain_disabled_without_write_flag(monkeypatch):
             {},
             FlowName.UPDATE_VID_EMBEDDINGS,
         ),
+        (
+            "/v1/vid-embeddings/refresh",
+            {"expected_graph": "target", "expected_graphspace": "DEFAULT"},
+            FlowName.UPDATE_VID_EMBEDDINGS,
+        ),
     ],
 )
 @pytest.mark.parametrize("login_value", ["true", "TRUE", " true "])
@@ -404,6 +493,8 @@ def test_production_router_requires_bearer_for_enabled_thin_writes(
     scheduler.schedule_flow.return_value = {"status": "ok"}
     monkeypatch.setattr(rag_demo_app.admin_settings, "enable_login", login_value)
     monkeypatch.setattr(rag_demo_app.admin_settings, "user_token", "internal-token")
+    monkeypatch.setattr("hugegraph_llm.api.thin_api.huge_settings.graph_name", "target")
+    monkeypatch.setattr("hugegraph_llm.api.thin_api.huge_settings.graph_space", "DEFAULT")
     monkeypatch.setenv("HUGEGRAPH_LLM_ENABLE_THIN_WRITES", "true")
     client = _production_router_client(monkeypatch, scheduler)
 
@@ -437,7 +528,7 @@ def test_production_router_requires_bearer_for_enabled_thin_writes(
 
 
 @pytest.mark.parametrize("login_value", ["false", " FALSE ", "invalid", "", None])
-@pytest.mark.parametrize("path", ["/graph-import", "/vid-embeddings/refresh"])
+@pytest.mark.parametrize("path", ["/graph-import", "/vid-embeddings/refresh", "/v1/vid-embeddings/refresh"])
 def test_production_router_blocks_thin_writes_when_login_disabled(monkeypatch, login_value, path):
     scheduler = Mock()
     monkeypatch.setattr(rag_demo_app.admin_settings, "enable_login", login_value)
@@ -447,7 +538,12 @@ def test_production_router_blocks_thin_writes_when_login_disabled(monkeypatch, l
     assert auth_enabled is False
     app = FastAPI()
     app.include_router(router)
-    response = TestClient(app).post(path, json={"data": "{}", "schema": None} if path == "/graph-import" else {})
+    payload = (
+        {"data": "{}", "schema": None}
+        if path == "/graph-import"
+        else {"expected_graph": "target", "expected_graphspace": "DEFAULT"}
+    )
+    response = TestClient(app).post(path, json=payload)
     assert response.status_code == 200
     assert response.json()["ok"] is False
     assert response.json()["error"]["type"] == "FEATURE_DISABLED"

@@ -65,6 +65,15 @@ Output item/byte checks run after response materialization. For tools that imple
 output, not server work, network transfer, or parsing memory. Connection, read,
 write, and AI timeouts are configured separately.
 
+VID refresh uses `POST /v1/vid-embeddings/refresh`, whose required target fields
+are checked under the runtime configuration lock before executing the flow.
+The capability GET retains `protocol_version=1` for compatibility, but the POST
+route supplies the validation guarantee even when requests reach different
+replica versions. MCP never falls back to the legacy refresh route. Empty/default
+GraphSpace representations are equivalent only for comparison; configuration and
+index paths are unchanged. Operators must still verify physical-instance identity
+when the MCP graph URL and the AI graph URL differ.
+
 ## Durable Outcomes
 
 | Status | Meaning |
