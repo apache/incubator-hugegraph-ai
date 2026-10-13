@@ -19,9 +19,10 @@
 import re
 from typing import Any
 
+from hugegraph_mcp.config import MCPConfig
 from hugegraph_mcp.envelope import ErrorType, envelope_err, envelope_ok
 from hugegraph_mcp.guard import Capability, guard
-from hugegraph_mcp.hugegraph_ai_client import post
+from hugegraph_mcp.hugegraph_ai_client import get, post
 
 
 def refresh_vid_embeddings(confirm: bool = False) -> dict[str, Any]:
@@ -41,8 +42,58 @@ def refresh_vid_embeddings(confirm: bool = False) -> dict[str, Any]:
             suggestion="Pass confirm=True to refresh VID embeddings.",
         )
 
-    ai_result = post("/vid-embeddings/refresh", json={})
+    cfg = MCPConfig.from_env()
+    capability = get("/vid-embeddings/refresh-capabilities", cfg=cfg)
+    if not capability.get("ok"):
+        error = capability.get("error") or {}
+        # Only an explicitly absent/unsupported endpoint means the protocol is
+        # unavailable. Keep transient and authentication errors retryable as
+        # reported by the client, without ever dispatching the refresh.
+        status_code = (error.get("details") or {}).get("status_code")
+        if error.get("type") in {
+            "AUTHENTICATION_FAILED",
+            "AUTHORIZATION_FAILED",
+            "FEATURE_DISABLED",
+        } or status_code not in {404, 405}:
+            return capability
+        return envelope_err(
+            ErrorType.FEATURE_DISABLED,
+            "AI refresh target-validation endpoint is unavailable; refresh was not sent.",
+            suggestion="Check the AI service URL and routing, or upgrade HugeGraph-AI to support target validation.",
+            details={"status_code": status_code},
+        )
+    support = capability.get("data")
+    if (
+        not isinstance(support, dict)
+        or type(support.get("protocol_version")) is not int
+        or support["protocol_version"] != 1
+    ):
+        return envelope_err(
+            ErrorType.FEATURE_DISABLED,
+            "AI refresh target-validation protocol is unsupported; refresh was not sent.",
+            suggestion="Upgrade HugeGraph-AI to a compatible target-validation version.",
+        )
+    # Discovery and refresh can reach different replica versions. Only this
+    # versioned route binds validation to execution; never fall back to legacy.
+    ai_result = post(
+        "/v1/vid-embeddings/refresh",
+        cfg=cfg,
+        json={"expected_graph": cfg.graph, "expected_graphspace": cfg.graphspace},
+    )
     if not ai_result.get("ok"):
+        error = ai_result.get("error") or {}
+        status_code = (error.get("details") or {}).get("status_code")
+        if status_code in {404, 405} and error.get("type") not in {
+            "AUTHENTICATION_FAILED",
+            "AUTHORIZATION_FAILED",
+            "FEATURE_DISABLED",
+        }:
+            return envelope_err(
+                ErrorType.FEATURE_DISABLED,
+                "AI validated-refresh endpoint is unavailable; legacy refresh was not sent.",
+                suggestion="Check AI routing and upgrade all replicas to support /v1/vid-embeddings/refresh.",
+                details={"status_code": status_code},
+            )
         return ai_result
 
     data = _unwrap_ai_payload(ai_result.get("data"))

@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Controlled vertex/edge property append/eliminate tool for v2_core."""
+"""Controlled vertex/edge property append/eliminate tool for core."""
 
 from typing import Any
 from uuid import uuid4

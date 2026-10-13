@@ -103,7 +103,7 @@ def exercise(process, timeout):
     require("tools" in initialized["capabilities"], "Server does not advertise tools")
     send({"method": "notifications/initialized"})
     tools = {tool["name"] for tool in call(2, "tools/list", {})["tools"]}
-    require(len(tools) == 16, f"Expected 16 v2 tools, received {len(tools)}")
+    require(len(tools) == 16, f"Expected 16 core tools, received {len(tools)}")
     require({"inspect_graph_tool", "query_graph_data_tool"} <= tools, "Missing inspection/query tools")
 
     def tool_call(request_id, name, arguments):
@@ -117,7 +117,7 @@ def exercise(process, timeout):
 
     inspected = tool_call(3, "inspect_graph_tool", {"include_raw_schema": True})
     require(inspected["hugegraph_server_status"] == "available", "HTTP graph fixture is unavailable")
-    require(inspected["toolset"] == "v2_core", "Unexpected toolset")
+    require(inspected["toolset"] == "core", "Unexpected toolset")
     queried = tool_call(
         4, "query_graph_data_tool", {"target": "vertex", "operation": "page", "label": "person", "limit": 5}
     )
@@ -147,7 +147,7 @@ def main():
             HUGEGRAPH_PASSWORD="admin",
             HUGEGRAPH_MCP_READONLY="true",
             HUGEGRAPH_MCP_ALLOW_AI="false",
-            HUGEGRAPH_MCP_TOOLSET="v2_core",
+            HUGEGRAPH_MCP_TOOLSET="core",
             HUGEGRAPH_MCP_STATE_DIR=str(Path(scratch) / "state"),
             NO_PROXY="127.0.0.1,localhost",
             no_proxy="127.0.0.1,localhost",

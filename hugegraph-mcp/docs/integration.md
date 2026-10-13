@@ -18,7 +18,7 @@ export HUGEGRAPH_URL=http://127.0.0.1:18080
 export HUGEGRAPH_GRAPH_PATH=DEFAULT/hugegraph
 export HUGEGRAPH_USER=admin
 export HUGEGRAPH_PASSWORD=admin
-export HUGEGRAPH_MCP_TOOLSET=v2_core
+export HUGEGRAPH_MCP_TOOLSET=core
 export HUGEGRAPH_MCP_READONLY=false
 export HUGEGRAPH_MCP_ALLOW_AI=false
 export HUGEGRAPH_MCP_ADMIN_MODE=false
@@ -29,14 +29,27 @@ export HUGEGRAPH_CONNECT_TIMEOUT_SECONDS=0.5
 export HUGEGRAPH_READ_TIMEOUT_SECONDS=15
 export HUGEGRAPH_WRITE_TIMEOUT_SECONDS=15
 
-.venv-mcp/bin/python -m hugegraph_mcp.server
 ```
 
 The environment installs both packages from this checkout. Keep commands relative
 to the repository root. For Windows setup, see the [README](../README.md#developer-notes);
 the shell and Docker examples in this checklist use POSIX syntax.
 
-Use a second MCP client process for the calls below. Replace `<RUN_ID>` with one unique suffix and preserve exact IDs returned by the server. Each JSON block is the `tools/call` name and arguments payload.
+The server uses STDIO and does not listen on a network address. The MCP client
+must launch the server as its child and hold its stdin/stdout pipes. Run the
+provided client from the repository root using the environment above:
+
+```bash
+.venv-mcp/bin/python hugegraph-mcp/examples/stdio_check.py --interactive
+```
+
+The client launches `sys.executable -m hugegraph_mcp.server` with inherited
+environment, initializes the session, checks real graph availability, and lists
+tools. It then accepts one `tools/call`
+JSON object per input line. Paste each JSON block below as one line. Keep the
+client running while reviewing returned IDs; use another terminal for fixture
+seeding. Replace `<RUN_ID>` with one unique suffix and preserve exact IDs returned
+by the server. Each JSON block is the `tools/call` name and arguments payload.
 
 Clean up after validation:
 
@@ -54,7 +67,7 @@ rm -rf -- /tmp/hg-mcp-plan-store
 }
 ```
 
-Require `ok=true`, `data.readonly=false`, `data.toolset="v2_core"`, and `data.mcp_tool_contract_version="2.0"`. Confirm that the MCP client lists all 16 v2 tools, including `confirm_write_tool`, `get_write_status_tool`, and `reconcile_write_tool`.
+Require `ok=true`, `data.readonly=false`, `data.toolset="core"`, and `data.mcp_tool_contract_version="2.0"`. Confirm that the MCP client lists all 16 core tools, including `confirm_write_tool`, `get_write_status_tool`, and `reconcile_write_tool`.
 
 ## 3. Create Schema One Object Per Plan
 
@@ -371,11 +384,43 @@ Each call below must return `FEATURE_DISABLED`, even if admin mode is enabled:
 {"name":"generate_gremlin_tool","arguments":{"query":"list one vertex","execute":true}}
 ```
 
-`generate_gremlin_tool(execute=false)` and structured query tools must remain available. The item and byte configuration values are post-materialization output guards and do not satisfy the raw-query hard-budget contract.
+With the initial `HUGEGRAPH_MCP_ALLOW_AI=false` configuration,
+`generate_gremlin_tool(execute=false)` must also return `FEATURE_DISABLED`, while
+structured query tools remain available. The item and byte configuration values
+are post-materialization output guards and do not satisfy the raw-query hard-budget contract.
+
+### Separate AI-enabled phase
+
+Configure and start an AI service as described in the [README](../README.md#ai-service-configuration).
+Restart the STDIO client with `HUGEGRAPH_MCP_ALLOW_AI=true`, a reachable
+`HUGEGRAPH_AI_URL`, and the required token. Then require
+`generate_gremlin_tool(execute=false)` to generate Gremlin without executing it.
+`execute=true` must still return `FEATURE_DISABLED`. Record the AI service version
+and settings; success in this phase is separate from the AI-disabled phase.
+
+### Verify admin mode independently
+
+In separate processes with `HUGEGRAPH_MCP_READONLY=false` and one SQLite write
+instance, call `refresh_vid_embeddings_tool(confirm=false)`. With admin mode off,
+require `FEATURE_DISABLED` and `error.details.required_env.HUGEGRAPH_MCP_ADMIN_MODE`
+set to `true`. Restart with admin mode on and require `CONFIRM_REQUIRED`. Keep
+`confirm=false` throughout so no refresh is dispatched. Raw Gremlin rejection
+only verifies its disabled boundary; run classifier unit tests separately.
+
+### Verify the refresh target contract
+
+Run the API and MCP regression tests for default GraphSpace equivalence, required
+target fields, authentication/write gates, and configuration locking. The MCP
+mixed-version test routes discovery to a capable replica and the POST to an old
+replica: only `/v1/vid-embeddings/refresh` may be requested, and an unavailable
+route must return an upgrade error without dispatching the legacy refresh.
+These controlled tests do not replace a rolling-deployment integration run.
+For an authorized refresh against disposable fixtures, verify the configured VID
+index and both physical graph addresses; graph records must remain unchanged.
 
 ## Pass Criteria
 
-- Tool contract and count match `v2_core`.
+- Tool contract and count match `core`.
 - Four single-operation schema plans reach `APPLIED` and schema post-reads match.
 - Vertex/edge import remains preview-only, issues no `plan_id`, returns `FEATURE_DISABLED` on confirmation, and creates no graph elements.
 - Property mutation and isolated vertex deletion remain preview-only and return `FEATURE_DISABLED` on confirmation.

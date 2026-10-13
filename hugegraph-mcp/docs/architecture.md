@@ -44,7 +44,8 @@ check; a process-local lock cannot supply that guarantee.
 
 | Operation | Current behavior | Requirement for broader support |
 |---|---|---|
-| Structured graph/schema reads | Available with bounded inputs and output guards | Backend execution budgets remain separate |
+| Structured graph reads | Available with bounded inputs and item/byte output guards | Backend execution budgets remain separate |
+| Schema inspection | Available; schema responses have no item/byte output guard | Add explicit limits if bounded schema output is required |
 | Schema creation | One property key, vertex label, or edge label per confirmed plan | Additional schema operations need explicit adapters and outcome verification |
 | Exact edge deletion | Confirmable using a persisted edge ID | Other backend profiles require verification |
 | Vertex/edge creation and graph import | Preview-only | Atomic create-if-absent and stable edge identity |
@@ -52,17 +53,26 @@ check; a process-local lock cannot supply that guarantee.
 | Isolated vertex deletion | Preview-only | Atomic enforcement of the no-incident-edge precondition |
 | Raw Gremlin execution | Disabled, including admin mode | Read-only principal, server evaluation timeout and result cap, and streaming response-byte limit |
 
-Capability evidence is specific to server version and storage backend. Unknown
-profiles stay disabled. HugeGraph 1.7.0/RocksDB does not provide verified atomic
+The current write capability profile and its evidence cover HugeGraph
+1.7.0/RocksDB. This supported deployment does not provide verified atomic
 creation or property CAS through the current client. Its isolated-delete
 concurrency probe can remove a concurrently added edge, so a successful ordered
 test is insufficient to enable that operation. See
 [`backend_capabilities.py`](../hugegraph_mcp/backend_capabilities.py) and
 [`test_real_write_path.py`](../tests/integration/test_real_write_path.py).
 
-Output item/byte checks run after response materialization. They bound MCP
+Output item/byte checks run after response materialization. For tools that implement these guards, they bound MCP
 output, not server work, network transfer, or parsing memory. Connection, read,
 write, and AI timeouts are configured separately.
+
+VID refresh uses `POST /v1/vid-embeddings/refresh`, whose required target fields
+are checked under the runtime configuration lock before executing the flow.
+The capability GET retains `protocol_version=1` for compatibility, but the POST
+route supplies the validation guarantee even when requests reach different
+replica versions. MCP never falls back to the legacy refresh route. Empty/default
+GraphSpace representations are equivalent only for comparison; configuration and
+index paths are unchanged. Operators must still verify physical-instance identity
+when the MCP graph URL and the AI graph URL differ.
 
 ## Durable Outcomes
 
@@ -84,10 +94,11 @@ no public resume tool or automatic replay of `PARTIAL`/`UNKNOWN` writes.
 
 ## Next Work
 
-1. **Complete distribution validation.** Publish client and MCP `1.7.1`, verify
-   installation from the public index, and exercise a real HugeGraph service.
-   For the planned release, align package versions to `1.8.0` and raise the MCP
-   client dependency accordingly. Follow the [publishing guide](releasing.md).
+1. **Prepare the next aligned release.** The published pair is `1.7.1`; this
+   checkout currently has client `1.8.0` and MCP `1.7.1`, with MCP requiring
+   `hugegraph-python>=1.7.1,<2`. At release preparation, align both packages to
+   `1.8.0` and raise the client minimum accordingly. Validate distribution, public
+   index installation, and a real service following the [publishing guide](releasing.md).
 2. **Enable additional writes only with backend support.** Add the atomic
    primitives listed above and prove them with two-client concurrency tests for
    each supported backend. Imports must preserve operation dependencies,

@@ -8,7 +8,8 @@ second tag-triggered publisher in this repository.
 
 ## Package Versions
 
-The intermediate client and MCP packages use `1.7.1`. MCP requires
+The published client and MCP packages use `1.7.1`. This checkout is an intermediate
+development state: client `1.8.0`, MCP `1.7.1`. MCP currently requires
 `hugegraph-python>=1.7.1,<2`; the published `1.7.0` client does not include all
 client fixes required by MCP. Publish the client before the MCP package.
 
@@ -35,7 +36,10 @@ validation can therefore run before the PR is merged into ASF `main`.
 The workflow defaults to `publish=false`: it builds, tests, and records artifacts
 without uploading a package. In `both` mode, MCP uses the verified client artifact
 from the same run; this validates the package pair, not registry installation.
-Both packages must have matching source versions and use the same resolved commit.
+For the next joint release, align both source versions to `1.8.0` before using
+`both`, and use the same resolved commit. The current mixed-version checkout is
+not yet that release pair; these instructions do not establish that a remote
+workflow has been run successfully.
 With `publish=true`, `target` selects the `testpypi`
 or `pypi` GitHub environment and its `PYPI_API_TOKEN`. The PyPI token must have
 permission for the selected project; a token scoped only to `hugegraph-python`
@@ -58,10 +62,11 @@ does not establish compatibility with a client published only on public PyPI.
    version from the selected index before publishing MCP. If MCP fails after the
    client is published, fix the cause and use `component=mcp` to retry; do not
    re-upload an existing client version.
-4. Verify installation from outside the checkout:
+4. After `1.8.0` has been published, verify installation from outside the checkout
+   (the following command targets that future release, not the current published `1.7.1`):
 
    ```bash
-   uvx --no-cache hugegraph-mcp@1.7.1
+   uvx --no-cache hugegraph-mcp@1.8.0
    ```
 
 5. Configure the HugeGraph URL and credentials, connect an MCP client, and verify
@@ -71,18 +76,18 @@ does not establish compatibility with a client published only on public PyPI.
 The shared workflow tests wheel/sdist installation and uses
 `tests/distribution_smoke.py` to exercise MCP stdio with a local HTTP fixture.
 The script starts the installed command in a temporary directory, removes source
-import overrides, and verifies initialization, 16 v2 tools, inspection, and a
+import overrides, and verifies initialization, 16 core tools, inspection, and a
 structured query. This checks packaging and protocol wiring; it does not replace
 real-server integration tests.
 
 To repeat the distribution smoke locally, build a wheel and pass its absolute
-path (the client must already be on PyPI):
+path after aligning/building `1.8.0` (client `1.8.0` must already be on PyPI):
 
 ```bash
 uv build --no-sources hugegraph-mcp --out-dir /tmp/mcp-dist
 python hugegraph-mcp/tests/distribution_smoke.py -- \
   uvx --no-config --no-cache --index-url https://pypi.org/simple \
-  --from /tmp/mcp-dist/hugegraph_mcp-1.7.1-py3-none-any.whl hugegraph-mcp
+  --from /tmp/mcp-dist/hugegraph_mcp-1.8.0-py3-none-any.whl hugegraph-mcp
 ```
 
 PR CI separately tests wheels for both packages from the same checkout. That

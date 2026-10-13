@@ -28,7 +28,7 @@ from hugegraph_llm.api.admin_api import admin_http_api
 from hugegraph_llm.api.graph_extract_api import graph_extract_http_api
 from hugegraph_llm.api.rag_api import rag_http_api
 from hugegraph_llm.api.thin_api import thin_router
-from hugegraph_llm.config import admin_settings, huge_settings, prompt
+from hugegraph_llm.config import admin_settings, huge_settings, prompt, runtime_config_lock
 from hugegraph_llm.demo.rag_demo.admin_block import create_admin_block, log_stream
 from hugegraph_llm.demo.rag_demo.configs_block import (
     apply_embedding_config,
@@ -66,7 +66,7 @@ def authenticate(credentials: HTTPAuthorizationCredentials = Depends(sec)):
 
 def create_api_router() -> tuple[APIRouter, bool]:
     """Build the production API router, including its authentication boundary."""
-    auth_enabled = admin_settings.enable_login.lower() == "true"
+    auth_enabled = admin_settings.is_login_enabled()
     log.info("(Status) Authentication is %s now.", "enabled" if auth_enabled else "disabled")
     api_router = APIRouter(dependencies=[Depends(authenticate)] if auth_enabled else [])
     api_router.include_router(thin_router)
@@ -122,27 +122,27 @@ def init_rag_ui() -> gr.Interface:
             create_admin_block()
 
         def refresh_ui_config_prompt() -> tuple:
-            # we can use its __init__() for in-place reload
-            # settings.from_env()
-            huge_settings.__init__()  # type: ignore[misc] # pylint: disable=C2801
-            prompt.ensure_yaml_file_exists()
-            return (
-                huge_settings.graph_url,
-                huge_settings.graph_name,
-                huge_settings.graph_user,
-                huge_settings.graph_pwd,
-                huge_settings.graph_space,
-                prompt.doc_input_text,
-                prompt.graph_schema,
-                prompt.extract_graph_prompt,
-                prompt.default_question,
-                prompt.answer_prompt,
-                prompt.keywords_extract_prompt,
-                prompt.custom_rerank_info,
-                prompt.default_question,
-                huge_settings.graph_name,
-                prompt.gremlin_generate_prompt,
-            )
+            # Reload and read the UI snapshot under the same lock as graph writes.
+            with runtime_config_lock:
+                huge_settings.__init__()  # type: ignore[misc] # pylint: disable=C2801
+                prompt.ensure_yaml_file_exists()
+                return (
+                    huge_settings.graph_url,
+                    huge_settings.graph_name,
+                    huge_settings.graph_user,
+                    huge_settings.graph_pwd,
+                    huge_settings.graph_space,
+                    prompt.doc_input_text,
+                    prompt.graph_schema,
+                    prompt.extract_graph_prompt,
+                    prompt.default_question,
+                    prompt.answer_prompt,
+                    prompt.keywords_extract_prompt,
+                    prompt.custom_rerank_info,
+                    prompt.default_question,
+                    huge_settings.graph_name,
+                    prompt.gremlin_generate_prompt,
+                )
 
         hugegraph_llm_ui.load(  # pylint: disable=E1101
             fn=refresh_ui_config_prompt,

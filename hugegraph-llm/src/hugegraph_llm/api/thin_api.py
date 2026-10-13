@@ -25,10 +25,11 @@ from fastapi import APIRouter, status
 from hugegraph_llm.api.models.rag_requests import (
     GraphExtractRequest,
     GraphImportRequest,
+    ValidatedVidEmbeddingsRefreshRequest,
     VidEmbeddingsRefreshRequest,
 )
 from hugegraph_llm.api.models.rag_response import ThinAPIResponse
-from hugegraph_llm.config import admin_settings, prompt
+from hugegraph_llm.config import admin_settings, huge_settings, prompt, runtime_config_lock
 from hugegraph_llm.flows import FlowName
 from hugegraph_llm.flows.scheduler import SchedulerSingleton
 from hugegraph_llm.utils.log import log
@@ -111,7 +112,7 @@ def _wrap_flow_call(flow_name: FlowName, *args: Any, **kwargs: Any) -> dict[str,
 
 def _thin_write_disabled() -> dict[str, Any] | None:
     """Keep legacy write endpoints fail-closed unless authenticated and enabled."""
-    login_enabled = str(admin_settings.enable_login).strip().lower() == "true"
+    login_enabled = admin_settings.is_login_enabled()
     configured_write_flag = os.getenv("HUGEGRAPH_LLM_ENABLE_THIN_WRITES", "false")
     writes_enabled = str(configured_write_flag).strip().lower() == "true"
     if login_enabled and writes_enabled:
@@ -150,11 +151,49 @@ def graph_import_api(req: GraphImportRequest):
     return _wrap_flow_call(FlowName.IMPORT_GRAPH_DATA, req.data, req.graph_schema)
 
 
-@thin_router.post("/vid-embeddings/refresh", status_code=status.HTTP_200_OK, response_model=ThinAPIResponse)
-def vid_embeddings_refresh_api(_req: VidEmbeddingsRefreshRequest):
+def _effective_graphspace(graphspace: str | None) -> str:
+    # Match the client's default-space identity without changing configuration
+    # or index paths. Non-default names retain their exact routing semantics.
+    return graphspace if graphspace and graphspace.strip() else "DEFAULT"
+
+
+def _refresh_vid_embeddings(req: VidEmbeddingsRefreshRequest):
     if blocked := _thin_write_disabled():
         return blocked
-    return _wrap_flow_call(FlowName.UPDATE_VID_EMBEDDINGS)
+    # Keep target validation and flow execution atomic with respect to runtime
+    # graph configuration updates. The flow reads the same shared settings.
+    with runtime_config_lock:
+        expected_fields = {"expected_graph", "expected_graphspace"}
+        supplied_fields = req.model_fields_set & expected_fields
+        if supplied_fields and (
+            supplied_fields != expected_fields
+            or req.expected_graph != huge_settings.graph_name
+            or _effective_graphspace(req.expected_graphspace) != _effective_graphspace(huge_settings.graph_space)
+        ):
+            return _envelope_err(
+                "VALIDATION_ERROR",
+                "Expected graph and graphspace must match the configured HugeGraph target.",
+                suggestion="Provide both expected_graph and expected_graphspace matching the AI service target.",
+            )
+        return _wrap_flow_call(FlowName.UPDATE_VID_EMBEDDINGS)
+
+
+@thin_router.post("/vid-embeddings/refresh", status_code=status.HTTP_200_OK, response_model=ThinAPIResponse)
+def vid_embeddings_refresh_api(req: VidEmbeddingsRefreshRequest):
+    """Keep empty requests compatible with authenticated legacy callers."""
+    return _refresh_vid_embeddings(req)
+
+
+@thin_router.post("/v1/vid-embeddings/refresh", status_code=status.HTTP_200_OK, response_model=ThinAPIResponse)
+def validated_vid_embeddings_refresh_api(req: ValidatedVidEmbeddingsRefreshRequest):
+    """Require target validation on a route that old replicas cannot execute."""
+    return _refresh_vid_embeddings(req)
+
+
+@thin_router.get("/vid-embeddings/refresh-capabilities", status_code=status.HTTP_200_OK, response_model=ThinAPIResponse)
+def vid_embeddings_refresh_capabilities_api():
+    """Keep discovery compatible; the versioned POST enforces validation."""
+    return _envelope_ok({"protocol_version": 1})
 
 
 @thin_router.get("/graph-index-info", status_code=status.HTTP_200_OK, response_model=ThinAPIResponse)

@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Typed graph data query tool for v2_core."""
+"""Typed graph data query tool for core."""
 
 import json
 from typing import Any

@@ -186,7 +186,16 @@ class GraphImportRequest(BaseModel):
 
 
 class VidEmbeddingsRefreshRequest(BaseModel):
-    pass
+    # Empty bodies remain compatible with authenticated legacy callers. Clients
+    # requesting target validation must explicitly provide both fields. Null or
+    # blank graphspace identifies DEFAULT without changing stored configuration.
+    expected_graph: Optional[str] = Field(default=None, min_length=1)
+    expected_graphspace: Optional[str] = None
+
+
+class ValidatedVidEmbeddingsRefreshRequest(VidEmbeddingsRefreshRequest):
+    expected_graph: str = Field(min_length=1)
+    expected_graphspace: Optional[str] = Field(...)
 
 
 class GraphIndexInfoRequest(BaseModel):

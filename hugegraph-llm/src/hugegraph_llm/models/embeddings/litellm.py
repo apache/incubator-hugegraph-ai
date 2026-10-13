@@ -80,18 +80,28 @@ class LiteLLMEmbedding(BaseEmbedding):
             A list of embedding vectors.
         """
         all_embeddings = []
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i : i + batch_size]
+            all_embeddings.extend(self._get_batch_embeddings(batch))
+        return all_embeddings
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+        retry=retry_if_exception_type((RateLimitError, APIConnectionError, APIError)),
+        reraise=True,
+    )
+    def _get_batch_embeddings(self, texts: List[str]) -> List[List[float]]:
+        """Retry one batch without repeating completed batches."""
         try:
-            for i in range(0, len(texts), batch_size):
-                batch = texts[i : i + batch_size]
-                response = embedding(
-                    model=self.model,
-                    input=batch,
-                    api_key=self.api_key,
-                    api_base=self.api_base,
-                )
-                log.info("Token usage: %s", response.usage)
-                all_embeddings.extend([data["embedding"] for data in response.data])
-            return all_embeddings
+            response = embedding(
+                model=self.model,
+                input=texts,
+                api_key=self.api_key,
+                api_base=self.api_base,
+            )
+            log.info("Token usage: %s", response.usage)
+            return [data["embedding"] for data in response.data]
         except (RateLimitError, APIConnectionError, APIError) as e:
             log.error("Error in LiteLLM batch embedding call: %s", e)
             raise

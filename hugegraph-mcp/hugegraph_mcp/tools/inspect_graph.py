@@ -26,6 +26,7 @@ from hugegraph_mcp.envelope import envelope_ok
 from hugegraph_mcp.gremlin_tools import execute_gremlin_read
 from hugegraph_mcp.hugegraph_ai_client import health_check
 from hugegraph_mcp.schema_tools import get_live_schema
+from hugegraph_mcp.toolsets import DEFAULT_TOOLSET
 
 
 def _extract_count(result: dict[str, Any]) -> int | None:
@@ -113,7 +114,7 @@ def _check_ai_status(cfg: MCPConfig) -> tuple[str, Any, list[str]]:
 def inspect_graph(
     include_raw_schema: bool = False,
     include_counts: bool = False,
-    toolset: str = "v2_core",
+    toolset: str = DEFAULT_TOOLSET,
 ) -> dict[str, Any]:
     """检视 HugeGraph 服务器状态、schema 摘要和 AI 状态。
 
@@ -189,17 +190,17 @@ def _run_count_query(query: str, label: str, warnings: list[str]) -> int | None:
         return None
 
 
-def _next_actions(data: dict[str, Any], *, toolset: str = "v2_core") -> list[str]:
+def _next_actions(data: dict[str, Any], *, toolset: str = DEFAULT_TOOLSET) -> list[str]:
     """根据当前状态给出下一步建议，引导 Agent 使用正确的后续工具。"""
     actions = [
         "Use inspect_graph_tool with include_raw_schema=true for full schema details",
         "Use inspect_graph_tool with include_counts=true to fetch vertex/edge counts",
     ]
     if data.get("hugegraph_server_status") == "available":
-        if toolset == "v2_core":
+        if toolset == "core":
             actions.append("Use query_graph_data_tool for bounded structured graph queries")
         else:
-            actions.append("Set HUGEGRAPH_MCP_TOOLSET=v2_core and restart to enable structured graph queries")
+            actions.append("Set HUGEGRAPH_MCP_TOOLSET=core and restart to enable structured graph queries")
     else:
         actions.append("Check HugeGraph Server URL, graph name, and credentials")
     if data.get("hugegraph_ai_status") == "unavailable":

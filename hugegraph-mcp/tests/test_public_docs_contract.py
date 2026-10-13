@@ -98,8 +98,14 @@ def test_source_launch_contract_binds_both_checkout_packages():
         assert "uv venv --python 3.10 .venv-mcp" in section
         assert "uv --no-config pip install --python .venv-mcp" in section
         assert "-e ./hugegraph-python-client -e ./hugegraph-mcp" in section
-        assert ".venv-mcp/bin/python -m hugegraph_mcp.server" in section
         assert "/Users/" not in section
+
+    for section in (english, chinese):
+        assert ".venv-mcp/bin/python -m hugegraph_mcp.server" in section
+    # Integration calls share the pipes owned by the client, rather than
+    # trying to connect a second client to a detached STDIO server.
+    assert ".venv-mcp/bin/python hugegraph-mcp/examples/stdio_check.py --interactive" in checklist
+    assert "Use a second MCP client process" not in checklist
 
     for path in PUBLIC_DOCS:
         assert "/Users/" not in _text(path)
