@@ -123,7 +123,7 @@ Python client for HugeGraph operations:
 
 - [Project Homepage](https://hugegraph.apache.org/docs/quickstart/hugegraph-ai/)
 - [LLM Quick Start Guide](./hugegraph-llm/quick_start.md)
-- [Experimental Extraction Runtime](./hugegraph-llm/docs/extraction-runtime.md) — replay example, concurrent chunks, and contribution boundaries
+- [Reviewed Property-Graph Extraction](./hugegraph-llm/docs/extraction-runtime.md) — optional API review, bounded repair, concurrent chunks, and per-chunk results
 - [DeepWiki AI Documentation](https://deepwiki.com/apache/hugegraph-ai)
 
 ## 🔗 Related HugeGraph Projects

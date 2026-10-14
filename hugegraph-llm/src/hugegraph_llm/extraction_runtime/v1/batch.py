@@ -11,48 +11,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Concurrent execution of independent chunks using the single-chunk engine."""
+"""Bounded concurrency for independent chunks, retaining input order."""
 
 from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
 
-from hugegraph_llm.extraction_runtime.v1.contracts import NormalizedChunkV1
-from hugegraph_llm.extraction_runtime.v1.engine import (
-    ExtractionBundleV1,
-    ExtractionEngineV1,
-    ExtractionRunResultV1,
-    RunControlV1,
-)
-
-
-@dataclass(frozen=True)
-class ChunkRunResultV1:
-    chunk: NormalizedChunkV1
-    result: ExtractionRunResultV1
+from hugegraph_llm.extraction_runtime.v1.contracts import ChunkInput, ChunkResult, ExtractionOptions
+from hugegraph_llm.extraction_runtime.v1.engine import ExtractionBundle, ExtractionEngineV1
 
 
 def run_chunks_v1(
     *,
-    chunks: Iterable[NormalizedChunkV1],
-    prepare: Callable[[NormalizedChunkV1], tuple[ExtractionBundleV1, RunControlV1]],
-    max_workers: int = 4,
-) -> tuple[ChunkRunResultV1, ...]:
-    """Run a finite batch with at most ``max_workers`` chunks executing at once.
+    chunks: Iterable[ChunkInput],
+    prepare: Callable[[ChunkInput], ExtractionBundle],
+    options: ExtractionOptions,
+) -> tuple[ChunkResult, ...]:
+    """Create a fresh bundle per chunk and collect failures alongside successes.
 
-    ``prepare`` runs in worker threads and must create a separate Bundle and
-    stateful Provider for each chunk. It returns that Bundle and its control.
-    Results follow input order, regardless of completion order or chunk ordinal.
-    Engine failure terminals are collected normally; preparation and input
-    iteration errors propagate to the caller. The pool closes after running
-    tasks finish; preparation errors may cancel tasks that have not started.
-    The full batch is submitted and retained in memory.
+    Preparation runs inside the worker limit. The finite batch is submitted and
+    retained in memory; input iteration failures propagate after workers finish.
     """
 
-    def run_chunk(chunk: NormalizedChunkV1) -> ChunkRunResultV1:
-        bundle, control = prepare(chunk)
-        result = ExtractionEngineV1().run(bundle=bundle, chunk=chunk, control=control)
-        return ChunkRunResultV1(chunk=chunk, result=result)
+    def run_chunk(chunk: ChunkInput) -> ChunkResult:
+        try:
+            bundle = prepare(chunk)
+        except Exception as exc:
+            return ChunkResult(
+                index=chunk.index,
+                status="failed",
+                graph=None,
+                issues=[],
+                reason=f"prepare_failed: {type(exc).__name__}",
+                stage="prepare",
+                reviews_used=0,
+                fixes_used=0,
+                llm_calls=0,
+            )
+        return ExtractionEngineV1().run(bundle=bundle, chunk=chunk, options=options)
 
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+    with ThreadPoolExecutor(max_workers=options.max_workers) as executor:
         return tuple(executor.map(run_chunk, chunks))

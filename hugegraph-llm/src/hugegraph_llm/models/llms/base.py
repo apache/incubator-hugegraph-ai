@@ -19,6 +19,13 @@ from abc import ABC, abstractmethod
 from typing import Any, AsyncGenerator, Callable, Dict, Generator, List, Optional
 
 
+class LLMOutputTruncatedError(RuntimeError):
+    """The provider ended generation before completing the model output."""
+
+    def __init__(self) -> None:
+        super().__init__("LLM output was truncated (finish_reason=length).")
+
+
 class BaseLLM(ABC):
     """LLM wrapper should take in a prompt and return a string."""
 

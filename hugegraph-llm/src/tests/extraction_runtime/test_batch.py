@@ -15,181 +15,109 @@ from threading import Barrier, Event, Lock
 
 import pytest
 
-from hugegraph_llm.extraction_runtime.conformance import InventoryBundleV1, InventoryPolicyV1
-from hugegraph_llm.extraction_runtime.provider import ProviderResponseV1, ReplayEntryV1, ReplayProvider
-from hugegraph_llm.extraction_runtime.v1 import (
-    ExtractionEngineV1,
-    GateDisposition,
-    GraphStateV1,
-    NormalizedChunkV1,
-    RepairReason,
-    RepairRequestV1,
-    ReviewBudgetV1,
-    RunControlV1,
-    TerminalKind,
-    run_chunks_v1,
-)
+from hugegraph_llm.extraction_runtime.v1 import ChunkInput, ExtractionOptions, run_chunks_v1
+from tests.extraction_runtime._bundles import ScriptedBundle
 
-pytestmark = pytest.mark.contract
+pytestmark = pytest.mark.unit
 
 
-def _chunk(ordinal: int) -> NormalizedChunkV1:
-    return NormalizedChunkV1(
-        document_id="inventory", chunk_id=f"chunk-{ordinal}", ordinal=ordinal, text=f"Item {ordinal}"
-    )
-
-
-def _prepare(chunk, bundle_type=InventoryBundleV1, policy=None):
-    template = InventoryBundleV1(ReplayProvider(()), policy)
-    initial = {"items": [{"sku": chunk.chunk_id, "count": 0}]}
-    repaired = {"items": [{"sku": chunk.chunk_id, "count": chunk.ordinal + 1}]}
-    snapshot = GraphStateV1().promote_initial(initial)
-    validation = template.validate_schema(snapshot, chunk)
-    identity = template.identify(snapshot, chunk)
-    review = template.review(snapshot, chunk, validation, identity)
-    repair_request = RepairRequestV1(
-        reason=RepairReason.REVIEW,
-        expected_graph_digest=snapshot.graph_digest,
-        context={"review_disposition": review.disposition.value, "review_findings": list(review.findings)},
-    )
-    entries = tuple(
-        ReplayEntryV1(
-            request.adaptation.requested_digest,
-            request.adaptation.effective_digest,
-            ProviderResponseV1(output={"graph": graph}, model=template.model),
-        )
-        for request, graph in (
-            (template.plan_extract(chunk), initial),
-            (template.plan_repair(snapshot, chunk, repair_request), repaired),
-        )
-    )
-    bundle = bundle_type(ReplayProvider(entries), policy)
-    control = RunControlV1(
-        budget=ReviewBudgetV1(max_reviews=2, max_fixes=1), provider_execution=bundle.provider_execution()
-    )
-    return bundle, control
-
-
-@pytest.mark.parametrize("workers", [1, 2, 3])
-def test_concurrency_limit_and_chunk_state_isolation(workers):
-    barrier = Barrier(workers, timeout=5)
+def test_batch_keeps_input_order_and_limits_whole_chunk_concurrency():
+    barrier = Barrier(2, timeout=5)
     lock = Lock()
-    active = 0
-    peak = 0
-    instances = []
+    active = peak = 0
+    completed = []
+    release_first = Event()
 
-    class ConcurrentInventoryBundle(InventoryBundleV1):
+    class ConcurrentBundle(ScriptedBundle):
         def extract(self, chunk):
-            nonlocal active, peak
+            barrier.wait()
+            return super().extract(chunk)
+
+        def review(self, graph, chunk):
+            nonlocal active
+            if chunk.index == 9:
+                assert release_first.wait(5)
+            result = super().review(graph, chunk)
             with lock:
-                active += 1
-                peak = max(peak, active)
-                instances.append(self)
-            try:
-                barrier.wait()
-                return super().extract(chunk)
-            finally:
-                with lock:
-                    active -= 1
-
-    chunks = tuple(_chunk(i) for i in range(workers * 2))
-    results = run_chunks_v1(
-        chunks=iter(chunks),
-        prepare=lambda chunk: _prepare(chunk, ConcurrentInventoryBundle),
-        max_workers=workers,
-    )
-
-    assert peak == workers
-    assert active == 0
-    assert len({id(bundle) for bundle in instances}) == len(chunks)
-    assert len({id(bundle.provider) for bundle in instances}) == len(chunks)
-    assert all(bundle.provider.remaining == 0 for bundle in instances)
-    assert tuple(item.chunk for item in results) == chunks
-    for item in results:
-        result = item.result
-        assert result.intent.kind is TerminalKind.FINAL
-        assert result.budget.reviews_used == 2
-        assert result.budget.fixes_used == 1
-        assert result.current_graph.revision == 1
-        assert result.artifact.graph == {"items": ({"sku": item.chunk.chunk_id, "count": item.chunk.ordinal + 1},)}
-        assert [event.graph_revision for event in result.trace.events if event.stage == "review"] == [0, 1]
-
-
-def test_results_keep_input_order_when_later_chunk_finishes_first():
-    later_finished = Event()
-    gate_order = []
-    chunks = (_chunk(9), _chunk(2), _chunk(5))
-
-    class OutOfOrderBundle(InventoryBundleV1):
-        def extract(self, chunk):
-            if chunk is chunks[0]:
-                assert later_finished.wait(timeout=5)
-            return super().extract(chunk)
-
-        def final_gate(self, graph, chunk, validation, identity, review):
-            gate = super().final_gate(graph, chunk, validation, identity, review)
-            gate_order.append(chunk.chunk_id)
-            if chunk is chunks[1]:
-                later_finished.set()
-            return gate
-
-    results = run_chunks_v1(chunks=chunks, prepare=lambda chunk: _prepare(chunk, OutOfOrderBundle), max_workers=2)
-    assert gate_order[0] == chunks[1].chunk_id
-    assert tuple(item.chunk for item in results) == chunks
-    assert all(item.result.intent.kind is TerminalKind.FINAL for item in results)
-
-
-def test_batch_collects_all_terminal_kinds_despite_a_failed_chunk():
-    class FailingInventoryBundle(InventoryBundleV1):
-        def extract(self, chunk):
-            if chunk.ordinal == 1:
-                raise RuntimeError("fixture provider failure")
-            return super().extract(chunk)
+                completed.append(chunk.index)
+                active -= 1
+            if chunk.index == 3:
+                release_first.set()
+            return result
 
     def prepare(chunk):
-        disposition = {3: GateDisposition.HOLD, 4: GateDisposition.BLOCK}.get(chunk.ordinal, GateDisposition.PASS)
-        return _prepare(chunk, FailingInventoryBundle, InventoryPolicyV1(gate_disposition=disposition))
+        nonlocal active, peak
+        with lock:
+            active += 1
+            peak = max(peak, active)
+        return ConcurrentBundle()
 
-    results = run_chunks_v1(chunks=(_chunk(i) for i in range(5)), prepare=prepare, max_workers=2)
-    assert [item.result.intent.kind for item in results] == [
-        TerminalKind.FINAL,
-        TerminalKind.FAILED,
-        TerminalKind.FINAL,
-        TerminalKind.CANDIDATE,
-        TerminalKind.BLOCKED,
-    ]
-    assert results[1].result.intent.reason_code == "extract_failed"
-    assert results[1].result.artifact.graph is None
-    assert results[1].result.budget.reviews_used == 0
-
-
-def test_batch_preserves_single_chunk_artifacts():
-    chunks = (_chunk(0), _chunk(1), _chunk(2))
-    expected = []
-    for chunk in chunks:
-        bundle, control = _prepare(chunk)
-        expected.append(ExtractionEngineV1().run(bundle=bundle, chunk=chunk, control=control).artifact)
-    for workers in (1, 3):
-        results = run_chunks_v1(chunks=chunks, prepare=_prepare, max_workers=workers)
-        assert [item.result.artifact for item in results] == expected
+    results = run_chunks_v1(
+        chunks=[ChunkInput(i, "text") for i in (9, 3, 6, 0)], prepare=prepare, options=ExtractionOptions(max_workers=2)
+    )
+    assert [result.index for result in results] == [9, 3, 6, 0]
+    assert completed[0] == 3
+    assert peak == 2 and active == 0
+    assert all(result.status == "final" for result in results)
+    assert [result.graph["chunk"] for result in results] == [9, 3, 6, 0]
 
 
-def test_empty_batch_does_not_prepare_chunks():
-    def unexpected_prepare(chunk):
-        pytest.fail("empty batch must not invoke prepare")
+def test_preparation_and_model_failures_do_not_discard_other_chunks():
+    def prepare(chunk):
+        if chunk.index == 1:
+            raise RuntimeError("cannot construct client")
+        return ScriptedBundle(fail_at="review" if chunk.index == 2 else None)
 
-    assert run_chunks_v1(chunks=(), prepare=unexpected_prepare) == ()
+    results = run_chunks_v1(
+        chunks=[ChunkInput(i, "text") for i in range(4)], prepare=prepare, options=ExtractionOptions(max_workers=2)
+    )
+    assert [result.status for result in results] == ["final", "failed", "failed", "final"]
+    assert results[1].stage == "prepare" and results[1].graph is None
+    assert results[1].llm_calls == results[1].reviews_used == results[1].fixes_used == 0
+    assert results[2].stage == "review" and results[2].llm_calls == 2
 
 
-def test_preparation_errors_propagate():
-    def broken_prepare(chunk):
-        raise ValueError("invalid bundle configuration")
+def test_parallel_repairs_keep_graphs_issues_and_budgets_local():
+    results = run_chunks_v1(
+        chunks=[ChunkInput(i, "text") for i in range(5)],
+        prepare=lambda chunk: ScriptedBundle(
+            initial=chunk.index, repaired=100 + chunk.index, decisions=("fix", "pass")
+        ),
+        options=ExtractionOptions(max_workers=3),
+    )
+    assert [result.graph["value"] for result in results] == list(range(100, 105))
+    assert all((result.reviews_used, result.fixes_used, result.llm_calls) == (2, 1, 4) for result in results)
+    assert all(result.status == "final" and result.issues == [] for result in results)
 
-    with pytest.raises(ValueError, match="invalid bundle configuration"):
-        run_chunks_v1(chunks=(_chunk(0),), prepare=broken_prepare)
+
+def test_serial_batch_and_empty_input():
+    seen = []
+
+    def prepare(chunk):
+        seen.append(chunk.index)
+        return ScriptedBundle()
+
+    options = ExtractionOptions(max_workers=1)
+    assert run_chunks_v1(chunks=[], prepare=prepare, options=options) == ()
+    results = run_chunks_v1(chunks=[ChunkInput(2, "b"), ChunkInput(1, "a")], prepare=prepare, options=options)
+    assert seen == [2, 1] and [result.index for result in results] == [2, 1]
 
 
-@pytest.mark.parametrize("workers", [0, -1])
-def test_invalid_concurrency_is_rejected(workers):
-    with pytest.raises(ValueError):
-        run_chunks_v1(chunks=(), prepare=_prepare, max_workers=workers)
+def test_input_iteration_errors_propagate_after_started_work_finishes():
+    completed = Event()
+
+    class CompletingBundle(ScriptedBundle):
+        def review(self, graph, chunk):
+            result = super().review(graph, chunk)
+            completed.set()
+            return result
+
+    def chunks():
+        yield ChunkInput(0, "text")
+        raise ValueError("broken input iterator")
+
+    with pytest.raises(ValueError, match="broken input iterator"):
+        run_chunks_v1(
+            chunks=chunks(), prepare=lambda chunk: CompletingBundle(), options=ExtractionOptions(max_workers=1)
+        )
+    assert completed.is_set()

@@ -11,176 +11,133 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import annotations
-
-from typing import cast
-from unittest.mock import patch
-
 import pytest
 
-from hugegraph_llm.extraction_runtime.v1 import (
-    DomainSemanticManifestV1,
-    ExtractionEngineV1,
-    GateDisposition,
-    GateOutcomeV1,
-    GraphSnapshotV1,
-    IdentityOutcomeV1,
-    JsonObject,
-    NormalizedChunkV1,
-    RepairOutcomeV1,
-    RepairRequestV1,
-    ReviewBudgetV1,
-    ReviewDisposition,
-    ReviewOutcomeV1,
-    RunControlV1,
-    SemanticResourceV1,
-    TerminalKind,
-    ValidationOutcomeV1,
-)
-from hugegraph_llm.extraction_runtime.v1 import engine as engine_module
+from hugegraph_llm.extraction_runtime.v1 import ChunkInput, ExtractionEngineV1, ExtractionOptions
+from hugegraph_llm.models.llms.base import LLMOutputTruncatedError
+from tests.extraction_runtime._bundles import ScriptedBundle
 
 pytestmark = pytest.mark.unit
 
 
-class ScriptedInventoryBundle:
-    def __init__(self, *, repair: bool = False, stale_repair: bool = False) -> None:
-        self.repair_enabled = repair
-        self.stale_repair = stale_repair
-        self.calls: list[str] = []
-        self.review_count = 0
-
-    def semantic_manifest(self) -> DomainSemanticManifestV1:
-        return DomainSemanticManifestV1(
-            bundle_id="inventory",
-            bundle_version="1",
-            resources=(SemanticResourceV1.from_text("prompt", "extract inventory"),),
-            semantics={"identity": "sku"},
-        )
-
-    def extract(self, chunk: NormalizedChunkV1) -> JsonObject:
-        self.calls.append("extract")
-        return {"items": [{"sku": "A", "count": 2}]}
-
-    def validate_schema(self, graph: GraphSnapshotV1, chunk: NormalizedChunkV1) -> ValidationOutcomeV1:
-        self.calls.append("schema")
-        return ValidationOutcomeV1(valid=True)
-
-    def identify(self, graph: GraphSnapshotV1, chunk: NormalizedChunkV1) -> IdentityOutcomeV1:
-        self.calls.append("identity")
-        item = cast(list[JsonObject], graph.graph["items"])[0]
-        return IdentityOutcomeV1(valid=True, identity={"keys": [item["sku"]]})
-
-    def review(
-        self,
-        graph: GraphSnapshotV1,
-        chunk: NormalizedChunkV1,
-        validation: ValidationOutcomeV1,
-        identity: IdentityOutcomeV1,
-    ) -> ReviewOutcomeV1:
-        self.calls.append("review")
-        self.review_count += 1
-        disposition = (
-            ReviewDisposition.FIX if self.repair_enabled and self.review_count == 1 else ReviewDisposition.PASS
-        )
-        return ReviewOutcomeV1(disposition=disposition, expected_graph_digest=graph.graph_digest)
-
-    def repair(
-        self,
-        graph: GraphSnapshotV1,
-        chunk: NormalizedChunkV1,
-        request: RepairRequestV1,
-    ) -> RepairOutcomeV1:
-        self.calls.append("repair")
-        base = "sha256:stale" if self.stale_repair else graph.graph_digest
-        return RepairOutcomeV1(
-            base_graph_digest=base,
-            candidate_graph={"items": [{"sku": "A", "count": 3}]},
-            patch={"count": 3},
-        )
-
-    def final_gate(
-        self,
-        graph: GraphSnapshotV1,
-        chunk: NormalizedChunkV1,
-        validation: ValidationOutcomeV1,
-        identity: IdentityOutcomeV1,
-        review: ReviewOutcomeV1,
-    ) -> GateOutcomeV1:
-        self.calls.append("gate")
-        return GateOutcomeV1(
-            disposition=GateDisposition.PASS,
-            expected_graph_digest=graph.graph_digest,
-            report={"accepted": True},
-        )
+def run(bundle, **limits):
+    return ExtractionEngineV1().run(bundle=bundle, chunk=ChunkInput(7, "text"), options=ExtractionOptions(**limits))
 
 
-def _chunk() -> NormalizedChunkV1:
-    return NormalizedChunkV1(document_id="inventory", chunk_id="inventory-0", ordinal=0, text="two bolts")
+def test_success_uses_normalized_graph_and_counts_calls():
+    bundle = ScriptedBundle()
+    result = run(bundle)
+    assert result.status == "final"
+    assert result.index == 7
+    assert result.graph == {"value": 1, "chunk": 7, "normalized": True}
+    assert bundle.calls == ["extract", "validate", "review"]
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == (1, 0, 2)
+    assert result.issues == [] and result.stage is None
 
 
-def _control() -> RunControlV1:
-    return RunControlV1(
-        budget=ReviewBudgetV1(max_reviews=2, max_fixes=1),
-        provider_execution={"adapter": "replay/v1", "model": "inventory-script"},
+@pytest.mark.parametrize(
+    ("bundle_kwargs", "limits", "status", "reason", "counts"),
+    [
+        ({}, {"max_reviews": 0}, "candidate", "review_budget_exhausted", (0, 0, 1)),
+        ({"initial": -1}, {"max_fixes": 0}, "blocked", "validation_failed", (0, 0, 1)),
+        ({"initial": -1, "repaired": -2}, {}, "blocked", "validation_failed", (0, 1, 2)),
+        ({"decisions": ("fix",)}, {"max_fixes": 0}, "candidate", "fix_budget_exhausted", (1, 0, 2)),
+        ({"decisions": ("block",)}, {}, "blocked", "review_blocked", (1, 0, 2)),
+        ({"decisions": ("fix", "fix")}, {}, "candidate", "fix_budget_exhausted", (2, 1, 4)),
+    ],
+)
+def test_terminal_and_budget_matrix(bundle_kwargs, limits, status, reason, counts):
+    result = run(ScriptedBundle(**bundle_kwargs), **limits)
+    assert (result.status, result.reason) == (status, reason)
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == counts
+    assert result.llm_calls <= 1 + ExtractionOptions(**limits).max_reviews + ExtractionOptions(**limits).max_fixes
+
+
+def test_validation_issues_reach_repair_then_replacement_is_reviewed():
+    bundle = ScriptedBundle(initial=-1)
+    result = run(bundle)
+    assert result.status == "final" and result.graph["value"] == 2
+    assert bundle.validated == [-1, 2]
+    assert bundle.repair_issues[0][0].message == "must be non-negative"
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == (1, 1, 3)
+
+
+def test_repaired_graph_never_keeps_previous_review_issues():
+    bundle = ScriptedBundle(decisions=("fix",))
+    result = run(bundle, max_reviews=1)
+    assert result.status == "candidate"
+    assert result.reason == "review_budget_exhausted"
+    assert result.graph["value"] == 2
+    assert result.issues == []
+    assert bundle.validated == [1, 2]
+    assert bundle.repair_issues[0][0].message == "old review issue"
+
+
+def test_repair_introducing_invalid_graph_must_be_revalidated():
+    result = run(ScriptedBundle(decisions=("fix",), repaired=-1))
+    assert result.status == "blocked"
+    assert result.graph["value"] == -1
+    assert [issue.message for issue in result.issues] == ["must be non-negative"]
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == (1, 1, 3)
+
+
+def test_review_runs_again_on_repaired_graph():
+    bundle = ScriptedBundle(decisions=("fix", "pass"))
+    result = run(bundle)
+    assert result.status == "final" and result.graph["value"] == 2
+    assert bundle.calls == ["extract", "validate", "review", "repair", "validate", "review"]
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == (2, 1, 4)
+
+
+@pytest.mark.parametrize(
+    ("stage", "counts", "has_graph"),
+    [
+        ("extract", (0, 0, 1), False),
+        ("validate", (0, 0, 1), True),
+        ("review", (1, 0, 2), True),
+        ("repair", (1, 1, 3), True),
+    ],
+)
+def test_failures_count_attempts_and_preserve_previous_graph(stage, counts, has_graph):
+    result = run(ScriptedBundle(decisions=("fix",), fail_at=stage))
+    assert result.status == "failed" and result.stage == stage
+    assert result.reason == f"{stage}_failed: ValueError"
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == counts
+    assert (result.graph is not None) == has_graph
+    if has_graph:
+        assert result.graph["value"] == 1
+    if stage == "repair":
+        assert [issue.message for issue in result.issues] == ["old review issue"]
+
+
+def test_engine_instance_can_run_multiple_chunks_without_state_leaks():
+    engine = ExtractionEngineV1()
+    first = engine.run(
+        bundle=ScriptedBundle(decisions=("fix", "pass")), chunk=ChunkInput(0, "a"), options=ExtractionOptions()
     )
+    second = engine.run(bundle=ScriptedBundle(), chunk=ChunkInput(1, "b"), options=ExtractionOptions())
+    assert (first.graph["value"], first.fixes_used) == (2, 1)
+    assert (second.graph["value"], second.fixes_used, second.llm_calls) == (1, 0, 2)
 
 
-def test_engine_runs_fixed_no_fix_path_and_returns_uncommitted_artifact() -> None:
-    bundle = ScriptedInventoryBundle()
-    result = ExtractionEngineV1().run(bundle=bundle, chunk=_chunk(), control=_control())
+@pytest.mark.parametrize(
+    ("stage", "counts", "has_graph"),
+    [("extract", (0, 0, 1), False), ("review", (1, 0, 2), True), ("repair", (1, 1, 3), True)],
+)
+def test_output_truncation_has_public_reason_and_preserves_graph(stage, counts, has_graph):
+    class TruncatedBundle(ScriptedBundle):
+        def _call(self, called_stage):
+            super()._call(called_stage)
+            if called_stage == stage:
+                raise LLMOutputTruncatedError()
 
-    assert bundle.calls == ["extract", "schema", "identity", "review", "gate"]
-    assert result.intent.kind is TerminalKind.FINAL
-    assert result.current_graph is not None and result.current_graph.revision == 0
-    assert result.artifact.intent == result.intent
-    assert result.artifact.graph == result.current_graph.graph
-    assert result.artifact.trace_head == result.trace.trace_head
-    assert result.artifact.run_fingerprint == result.fingerprints.run_fingerprint
-
-
-def test_promoted_repair_is_used_by_every_later_stage_and_artifact() -> None:
-    bundle = ScriptedInventoryBundle(repair=True)
-    result = ExtractionEngineV1().run(bundle=bundle, chunk=_chunk(), control=_control())
-
-    assert bundle.calls == ["extract", "schema", "identity", "review", "repair", "schema", "identity", "review", "gate"]
-    assert result.intent.kind is TerminalKind.FINAL
-    assert result.current_graph is not None and result.current_graph.revision == 1
-    assert result.intent.graph_digest == result.current_graph.graph_digest
-    assert result.artifact.graph == result.current_graph.graph
-    assert result.budget.reviews_used == 2 and result.budget.fixes_used == 1
-    gate_event = next(event for event in result.trace.events if event.stage == "final_gate")
-    assert gate_event.graph_revision == 1
-    assert gate_event.graph_digest == result.current_graph.graph_digest
-
-
-def test_stale_repair_is_failed_without_replacing_current_graph() -> None:
-    bundle = ScriptedInventoryBundle(repair=True, stale_repair=True)
-    result = ExtractionEngineV1().run(bundle=bundle, chunk=_chunk(), control=_control())
-
-    assert result.intent.kind is TerminalKind.FAILED
-    assert result.intent.reason_code == "repair_failed"
-    assert result.current_graph is not None and result.current_graph.revision == 0
-    assert result.budget.fixes_used == 0
-    assert result.diagnostics[-1].code == "repair_failed"
-
-
-def test_artifact_construction_failure_becomes_a_failed_terminal() -> None:
-    bundle = ScriptedInventoryBundle()
-    real_builder = engine_module.build_terminal_artifact_body
-    calls = 0
-
-    def fail_once(**kwargs):
-        nonlocal calls
-        calls += 1
-        if calls == 1:
-            raise ValueError("malformed artifact")
-        return real_builder(**kwargs)
-
-    with patch.object(engine_module, "build_terminal_artifact_body", side_effect=fail_once):
-        result = ExtractionEngineV1().run(bundle=bundle, chunk=_chunk(), control=_control())
-
-    assert result.intent.kind is TerminalKind.FAILED
-    assert result.intent.reason_code == "artifact_construction_failed"
-    assert result.current_graph is not None and result.current_graph.revision == 0
-    assert result.diagnostics[-1].stage == "artifact"
-    assert result.diagnostics[-1].details["exception_type"] == "ValueError"
+    result = run(TruncatedBundle(decisions=("fix",)))
+    assert result.status == "failed"
+    assert result.stage == stage
+    assert result.reason == f"{stage}_output_truncated: finish_reason=length"
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == counts
+    assert (result.graph is not None) == has_graph
+    if has_graph:
+        assert result.graph["value"] == 1
+    if stage == "repair":
+        assert [issue.message for issue in result.issues] == ["old review issue"]

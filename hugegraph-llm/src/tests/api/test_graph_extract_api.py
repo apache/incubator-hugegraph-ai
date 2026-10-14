@@ -28,8 +28,9 @@ from hugegraph_llm.api.models.graph_extract_requests import GraphExtractClientCo
 from hugegraph_llm.api.models.graph_extract_responses import GraphExtractResponse
 from hugegraph_llm.api.rag_api import rag_http_api
 from hugegraph_llm.config import huge_settings
+from hugegraph_llm.extraction_runtime.v1 import ExtractionOptions
 from hugegraph_llm.flows.graph_extract import GraphExtractFlow
-from hugegraph_llm.state.ai_state import WkFlowInput
+from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 
 INLINE_SCHEMA = {"vertexlabels": [], "edgelabels": []}
 
@@ -394,3 +395,50 @@ def test_existing_routes_still_register():
     assert "/text2gremlin" in paths
     assert "/config/graph" in paths
     assert "/graph/extract" in paths
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        {"max_reviews": -1},
+        {"max_fixes": -1},
+        {"max_workers": 0},
+        {"max_reviews": True},
+        {"max_fixes": 1.5},
+        {"max_workers": "2"},
+    ],
+)
+@patch("hugegraph_llm.api.graph_extract_api.SchedulerSingleton")
+def test_graph_extract_rejects_invalid_review_options(mock_singleton, options):
+    response = _graph_client().post(
+        "/graph/extract", json={"texts": "x", "schema": INLINE_SCHEMA, "review_options": options}
+    )
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    mock_singleton.get_instance.assert_not_called()
+
+
+def test_review_options_object_enables_defaults_but_null_does_not():
+    req = GraphExtractRequest(texts="x", schema=INLINE_SCHEMA, review_options={})
+    assert req.review_options == ExtractionOptions(max_reviews=2, max_fixes=1, max_workers=4)
+    assert GraphExtractRequest(texts="x", schema=INLINE_SCHEMA).review_options is None
+    assert GraphExtractRequest(texts="x", schema=INLINE_SCHEMA, review_options=None).review_options is None
+
+
+def test_flow_prepare_and_state_clear_review_fields_between_requests():
+    flow = GraphExtractFlow()
+    prepared_input = WkFlowInput()
+    flow.prepare(prepared_input, "{}", ["text"], "prompt", "property_graph", review_options={"max_reviews": 0})
+    assert prepared_input.review_options.max_reviews == 0
+    flow.prepare(prepared_input, "{}", ["text"], "prompt", "property_graph")
+    assert prepared_input.review_options is None
+
+    prepared_input.review_options = ExtractionOptions()
+    prepared_input.reset(None)
+    assert prepared_input.review_options is None
+
+    state = WkFlowState()
+    state.assign_from_json({"chunk_results": [{"status": "final"}], "extraction_status": "succeeded"})
+    assert state.to_json()["chunk_results"] == [{"status": "final"}]
+    state.setup()
+    assert "chunk_results" not in state.to_json()
+    assert "extraction_status" not in state.to_json()

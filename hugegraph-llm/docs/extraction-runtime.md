@@ -1,191 +1,181 @@
-# Experimental Extraction Runtime
+# Reviewed Property-Graph Extraction
 
-`hugegraph_llm.extraction_runtime` is a dormant, experimental internal subsystem
-for domain-neutral extraction of already-normalized chunks. Its single-chunk
-engine can also run in concurrent batches with independent per-chunk state.
-It is not a replacement for `GraphExtractFlow`, a public extension API, or a
-production route.
+The first version adds optional model review and repair to the existing
+`POST /graph/extract` path. Requests without `review_options`, or with it set to
+`null`, keep the existing extraction behavior. Sending an object enables review;
+`{}` selects the defaults.
 
-For component responsibilities, the review/repair lifecycle, and extension boundaries,
-see the [architecture explanation (中文)](extraction-runtime-architecture.zh-CN.md).
+The reviewed path uses the existing configured chat model for extraction, review,
+and repair. It validates the graph against the supplied schema and returns a
+result for every chunk. It does not write graphs to HugeGraph.
 
-## Boundary
+For OpenAI and LiteLLM, our client wrappers omit `max_tokens` from the SDK call
+in all three stages. SDK provider adapters and services may still apply default
+output limits or hard output and context limits. Existing requests without review
+and other model uses retain their configured token limit.
 
-The versioned runtime executes this fixed lifecycle:
+## Setup and a runnable example
 
-```text
-extract -> schema -> identity -> bounded review/fix -> final gate
-```
-
-The runtime owns the current immutable graph revision, business review/fix
-budget accounting, trace, diagnostics, terminal resolution, layered
-fingerprints, and an uncommitted terminal artifact body. A statically supplied
-Bundle owns every domain-specific prompt, schema, identity rule, review/fix
-policy, materializer, and final gate.
-
-The provider package defines credential-free neutral and effective request
-contracts, capability adaptation records, and a deterministic ReplayProvider.
-It does not modify or wrap the existing OpenAI, Ollama, or LiteLLM clients.
-
-## Experimental use
-
-Use a checkout containing this module and Python 3.10 or 3.11. From the repository
-root, install the workspace and test dependencies:
+Use Python 3.10 or 3.11 and run from the repository root:
 
 ```bash
 uv sync --python 3.11 --extra llm --extra dev
 ```
 
-The replay example and runtime tests need neither a running HugeGraph Server nor
-model credentials. They verify the execution protocol using fixed responses;
-they do not measure extraction quality from a live model.
+Configure a supported chat model using the existing
+[LLM configuration](../config.md). The example uses the same `get_chat_llm(llm_settings, limit_output=False)`
+client factory as the extraction node, so it requires a reachable configured
+model and any credentials needed by that model. An inline schema avoids a
+HugeGraph Server connection.
 
-Repository-internal experiments may import the versioned surface explicitly:
+Run the [Python example](examples/reviewed_property_graph.py):
 
-```python
-from hugegraph_llm.extraction_runtime.v1 import ExtractionEngineV1
+```bash
+uv run --no-sync python hugegraph-llm/docs/examples/reviewed_property_graph.py
 ```
 
-The Inventory Bundle in `hugegraph_llm.extraction_runtime.conformance` is a
-deterministic inventory fixture that demonstrates the complete lifecycle. It is
-not a stable Bundle API promise or a production domain.
+It runs two text chunks concurrently using the complete inline schema in
+[reviewed-extraction.json](examples/reviewed-extraction.json), creates a separate
+client for each chunk, and prints all chunk results. Inspect their `status`,
+`issues`, and call counts; a successful process exit alone does not mean every
+chunk was accepted. Live model outputs and review decisions can vary.
 
-## Concurrent chunks
+To use the HTTP entry, start the existing service:
 
-`run_chunks_v1(chunks=..., prepare=..., max_workers=4)` runs a finite batch
-through the existing single-chunk engine. `prepare(chunk)` returns a fresh
-Bundle and its `RunControlV1`. It runs in a worker thread, so create a separate
-stateful Provider for each chunk, and synchronize any external mutable state
-shared by the factory itself. In particular, do not share a ReplayProvider's
-transcript cursor between chunks.
-
-The worker limit covers preparation and the entire extract/review/fix lifecycle.
-Budgets apply independently to each chunk. Results are a tuple of
-`ChunkRunResultV1(chunk, result)` in input order, even if execution completes out
-of order. Chunk ordinals do not reorder the results. An empty input returns an
-empty tuple; `max_workers=1` runs serially.
-
-The batch preserves each engine result, including `failed`, `blocked`, and
-`candidate`, so one extraction failure does not discard successful chunks.
-Errors while preparing a Bundle or iterating the input propagate to the caller;
-they do not become extraction artifacts. Running tasks finish and the thread
-pool closes before the call returns or raises. A preparation error may cancel
-tasks that have not started.
-
-This synchronous helper submits and retains the whole batch in memory. It does
-not merge graphs or resolve identities across chunks. Concurrency does not
-change a chunk's semantic fingerprint; deterministic replay produces the same
-artifact when run serially or concurrently.
-
-After the setup above, save this example as `extraction_example.py` in the
-repository root and run `uv run --no-sync python extraction_example.py`.
-It uses two fixed replay outputs:
-
-```python
-from hugegraph_llm.extraction_runtime.conformance import InventoryBundleV1
-from hugegraph_llm.extraction_runtime.provider import (
-    ProviderResponseV1,
-    ReplayEntryV1,
-    ReplayProvider,
-)
-from hugegraph_llm.extraction_runtime.v1 import (
-    NormalizedChunkV1,
-    ReviewBudgetV1,
-    RunControlV1,
-    run_chunks_v1,
-)
-
-
-def prepare(chunk):
-    template = InventoryBundleV1(ReplayProvider(()))
-    request = template.plan_extract(chunk)
-    entry = ReplayEntryV1(
-        requested_request_digest=request.adaptation.requested_digest,
-        effective_request_digest=request.adaptation.effective_digest,
-        response=ProviderResponseV1(
-            output={"graph": {"items": [{"sku": chunk.chunk_id, "count": 2}]}},
-            model=template.model,
-        ),
-    )
-    bundle = InventoryBundleV1(ReplayProvider((entry,)))
-    control = RunControlV1(
-        budget=ReviewBudgetV1(max_reviews=2, max_fixes=1),
-        provider_execution=bundle.provider_execution(),
-    )
-    return bundle, control
-
-
-chunks = [
-    NormalizedChunkV1(document_id="stock", chunk_id="BOLT", ordinal=0, text="Two bolts."),
-    NormalizedChunkV1(document_id="stock", chunk_id="NUT", ordinal=1, text="Two nuts."),
-]
-for item in run_chunks_v1(chunks=chunks, prepare=prepare, max_workers=2):
-    print(item.chunk.chunk_id, item.result.intent.kind.value)
+```bash
+uv run --no-sync python -m hugegraph_llm.demo.rag_demo.app
 ```
 
-Expected output is `BOLT final` followed by `NUT final`. Replace `prepare` with
-your own Bundle and Provider construction to use a different domain or model.
+Then send the same example request from the repository root:
 
-## Reading the result
+```bash
+curl -X POST http://127.0.0.1:8001/graph/extract \
+  -H 'Content-Type: application/json' \
+  --data-binary @hugegraph-llm/docs/examples/reviewed-extraction.json
+```
 
-Each chunk result includes its graph, terminal decision, budget usage, execution
-trace, diagnostics, fingerprints, and an uncommitted artifact body. Check the
-terminal decision before treating a graph as accepted:
+On Windows PowerShell, use `curl.exe` and place the command on one line. The
+request contains `texts`, an inline `schema`, and:
 
-| Terminal | Meaning |
+```json
+"review_options": {"max_reviews": 2, "max_fixes": 1, "max_workers": 2}
+```
+
+The supplied schema defines person and company vertices with `name` primary keys,
+and `works_for` edges from person to company. It does not need to be installed in
+HugeGraph. Existing named-schema requests still use `client_config`.
+
+## Processing and budgets
+
+Each chunk follows:
+
+```text
+extract -> validate -> review
+              ^           |
+              |           +-- pass  -> final
+              |           +-- block -> blocked
+              +-- repair <- fix
+```
+
+Validation checks graph structure, labels, properties, schema-provided types and
+required fields, vertex identity, and relation endpoints. Invalid entries are
+retained so the model can repair them. Review compares the current graph with the
+original text and schema for unsupported facts, wrong properties, relation
+direction, and clear omissions. The existing extraction prompt is reused; review
+and repair prompts live in `PromptConfig` alongside it.
+
+Repair returns a complete replacement graph. The engine discards old issues,
+validates the replacement, and reviews it again when budget remains. Model or
+JSON parsing errors fail that chunk instead of being converted into an empty
+successful graph. An actual empty graph can pass if validation and review accept
+it.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `max_reviews` | 2 | Maximum review attempts per chunk; zero is allowed. |
+| `max_fixes` | 1 | Maximum repair attempts per chunk; zero is allowed. |
+| `max_workers` | 4 | Maximum chunks being prepared or executed concurrently; must be positive. |
+
+All options require integers; booleans, fractional numbers, and numeric strings
+are rejected. Failed review and repair calls still consume an attempt. Validation
+does not consume model budget. The engine makes at most
+`1 + max_reviews + max_fixes` model calls per chunk: four with the defaults. This
+counts calls to the existing client, not its internal transport retries. No
+additional engine retry layer is added.
+
+## Reading responses
+
+The HTTP response retains `status`, `result`, `warnings`, and `meta`. Reviewed
+requests also return `chunk_results`, even when `include_meta` is false. Each
+chunk result contains:
+
+- `index`, `status`, and the latest `graph` (or `null` if extraction failed).
+- Current `issues` with `path`, `message`, and optional source `evidence`.
+- `reason`, and a failure `stage` when applicable.
+- `reviews_used`, `fixes_used`, and `llm_calls`, including failed attempts.
+
+| Chunk status | Meaning |
 | --- | --- |
-| final | The current graph passed validation, identity checks, review, and the final gate. |
-| candidate | The graph passed structural and identity checks, but the quality budget ended or the final gate requested a hold. |
-| blocked | Required graph checks could not be satisfied within the repair budget, or review or the final gate explicitly blocked acceptance. |
-| failed | Execution or result construction failed; a graph may be absent. |
+| `final` | The current graph passed validation and review. |
+| `candidate` | Validation passed, but review could not finish or its requested repair exceeded the budget. |
+| `blocked` | Validation could not pass within the repair budget, or review explicitly blocked acceptance. |
+| `failed` | Preparation, model execution, parsing, or another stage raised an exception. |
 
-None of these states implies a file was saved or a graph was written to HugeGraph.
-The [terminal rules](../src/hugegraph_llm/extraction_runtime/v1/terminal.py) define
-the precise mapping and reason codes.
+Only `final` graphs are concatenated into `result.vertices` and `result.edges`,
+in input order. Other graphs and their issues remain in `chunk_results`. The
+aggregate status is `succeeded` when all chunks are final, `partial` when some
+are final, and `failed` when none are final. A valid reviewed empty graph can be
+final; entity count is not a success test.
 
-## Extending the prototype
+A completed request returns HTTP 200 even with candidate, blocked, or failed
+chunks. Invalid request data returns 422. Request-level schema preparation or
+scheduler errors retain the existing error path. An input producing no chunks
+is an error in the HTTP path. Old requests omit `chunk_results`.
 
-- **Add a domain:** implement the [Bundle contract](../src/hugegraph_llm/extraction_runtime/v1/engine.py),
-  using the [Inventory example](../src/hugegraph_llm/extraction_runtime/conformance/inventory.py)
-  as a reference. Supply the domain's prompts, graph and identity rules, review,
-  repair, and final decision. Declare the resources and rules in the semantic
-  manifest so their changes affect the run fingerprint.
-- **Add a model connection:** implement the transport in the
-  [provider contracts](../src/hugegraph_llm/extraction_runtime/provider/contracts.py)
-  and adapt its output to the domain graph. The existing Inventory model name
-  and output format are replay fixtures, not a ready-to-use live provider setup.
-- **Add application integration:** prepare normalized chunks and own storage,
-  recovery, cross-chunk merging, and publication outside the engine. Batch
-  preparation must keep stateful Bundle and Provider instances independent.
+If an OpenAI or LiteLLM response reports `finish_reason=length`, that chunk fails
+before parsing incomplete output. Its `stage` identifies `extract`, `review`, or
+`repair`, and its `reason` is `<stage>_output_truncated: finish_reason=length`.
+Review and repair failures preserve the most recent graph; extraction failure
+has no graph yet. The failed attempt is counted normally, and truncation does
+not add an automatic retry. This reports truncation even when our wrapper omits
+`max_tokens`; an SDK provider adapter or the service may still apply an output
+limit.
 
-Repairs return a complete replacement graph bound to the previous graph digest;
-review and final decisions must refer to the current graph. Preserve these
-relationships when implementing a domain. The
-[conformance tests](../src/tests/extraction_runtime/test_inventory_conformance.py)
-show a repair cycle, terminal outcomes, and invalid repair cases; use those
-behaviors as a starting point for testing a new integration.
+## Python integration and concurrency
 
-## Local verification
+The concrete domain is `PropertyGraphBundle(llm=..., schema=..., example_prompt=...)`.
+The core surface is exported from `hugegraph_llm.extraction_runtime.v1`:
+`ChunkInput`, `ExtractionOptions`, `Issue`, `ReviewResult`, `ChunkResult`,
+`ExtractionBundle`, `ExtractionEngineV1`, and `run_chunks_v1`.
 
-After setup, run the runtime suite from the repository root:
+`run_chunks_v1(chunks=..., prepare=..., options=...)` accepts a finite iterable.
+Its factory returns a fresh bundle for each chunk and runs inside the worker
+limit. Results are a tuple in input order, regardless of chunk indices or
+completion order. Preparation failure becomes a failed chunk; input iteration
+errors propagate after running workers finish. Empty Python batches return an
+empty tuple. The full batch is retained in memory.
+
+The domain interface has four methods: `extract(chunk)`,
+`validate(graph, chunk)`, `review(graph, chunk)`, and
+`repair(graph, chunk, issues)`. Validation may normalize IDs and endpoints on the
+chunk's own graph, but must keep invalid entries available for repair. Bundle
+state and model clients belong to a single chunk. Workers never mutate shared
+workflow state; the extraction node assembles the results after the batch ends.
+
+## Verification and limits
+
+Run deterministic runtime tests, then the existing API and pipeline regressions:
 
 ```bash
 uv run --no-sync pytest hugegraph-llm/src/tests/extraction_runtime -q
 ```
 
-The suite covers the lifecycle, repaired graph propagation, terminal decisions,
-provider adaptation and replay, concurrent state isolation, and separation from
-production callers. A successful run ends with all selected tests passing.
-These tests belong to the repository's [unit / pure contract layer](../../docs/quality/test-taxonomy.md).
-Passing them verifies the prototype's contracts, not live-model quality or a
-complete application integration.
+The focused tests exercise the actual engine with scripted domains and the
+property-graph parser and validator with fixed model responses. API integration
+tests exercise the request/flow/node return chain. These tests do not establish
+live-model extraction quality; use the configured-model example for a smoke test.
 
-## Compatibility and rollback
-
-The package has no production caller. `GraphExtractFlow`, `/graph/extract`, the
-fixed-flow scheduler, existing provider clients, and existing defaults remain
-unchanged. There is no `/extraction-jobs` route, extraction CLI, durable host
-commit, rollout switch, database migration, or HugeGraph write in this version.
-
-Rollback consists of removing the dormant package and its tests. No artifact,
-database, or HugeGraph migration is required.
+The first version does not include cross-chunk entity disambiguation, semantic
+merge, graph writes, durable jobs, resumable runs, fingerprints, graph version
+chains, a generic provider adaptation layer, or a separate final gate. Results
+are returned in memory for the caller to inspect and use.

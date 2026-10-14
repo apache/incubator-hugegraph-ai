@@ -11,8 +11,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Dormant experimental extraction runtime.
-
-The supported experimental contracts are versioned below this package.  Nothing
-is re-exported here so importing :mod:`hugegraph_llm` cannot activate the runtime.
-"""
+"""Reviewed property-graph extraction using existing model clients."""

@@ -27,7 +27,7 @@ from tenacity import (
     wait_exponential,
 )
 
-from hugegraph_llm.models.llms.base import BaseLLM
+from hugegraph_llm.models.llms.base import BaseLLM, LLMOutputTruncatedError
 from hugegraph_llm.utils.log import log
 
 
@@ -39,7 +39,7 @@ class LiteLLMClient(BaseLLM):
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
         model_name: str = "openai/gpt-4.1-mini",  # Can be any model supported by LiteLLM
-        max_tokens: int = 8192,
+        max_tokens: Optional[int] = 8192,
         temperature: float = 0.01,
     ) -> None:
         self.api_key = api_key
@@ -68,11 +68,13 @@ class LiteLLMClient(BaseLLM):
                 model=self.model,
                 messages=messages,
                 temperature=self.temperature,
-                max_tokens=self.max_tokens,
+                **({"max_tokens": self.max_tokens} if self.max_tokens is not None else {}),
                 api_key=self.api_key,
                 base_url=self.api_base,
             )
             log.info("Token usage: %s", response.usage)
+            if response.choices[0].finish_reason == "length":
+                raise LLMOutputTruncatedError()
             return response.choices[0].message.content
         except (RateLimitError, BudgetExceededError, APIError) as e:
             log.error("Error in LiteLLM call: %s", e)
@@ -98,11 +100,13 @@ class LiteLLMClient(BaseLLM):
                 model=self.model,
                 messages=messages,
                 temperature=self.temperature,
-                max_tokens=self.max_tokens,
+                **({"max_tokens": self.max_tokens} if self.max_tokens is not None else {}),
                 api_key=self.api_key,
                 base_url=self.api_base,
             )
             log.info("Token usage: %s", response.usage)
+            if response.choices[0].finish_reason == "length":
+                raise LLMOutputTruncatedError()
             return response.choices[0].message.content
         except (RateLimitError, BudgetExceededError, APIError) as e:
             log.error("Error in async LiteLLM call: %s", e)
@@ -123,7 +127,7 @@ class LiteLLMClient(BaseLLM):
                 model=self.model,
                 messages=messages,
                 temperature=self.temperature,
-                max_tokens=self.max_tokens,
+                **({"max_tokens": self.max_tokens} if self.max_tokens is not None else {}),
                 api_key=self.api_key,
                 base_url=self.api_base,
                 stream=True,
@@ -133,6 +137,8 @@ class LiteLLMClient(BaseLLM):
                 if not chunk.choices:
                     log.debug("Received empty choices in streaming chunk: %s", chunk)
                     continue
+                if chunk.choices[0].finish_reason == "length":
+                    raise LLMOutputTruncatedError()
                 if chunk.choices[0].delta.content:
                     result += chunk.choices[0].delta.content
                 if on_token_callback:
@@ -157,7 +163,7 @@ class LiteLLMClient(BaseLLM):
                 model=self.model,
                 messages=messages,
                 temperature=self.temperature,
-                max_tokens=self.max_tokens,
+                **({"max_tokens": self.max_tokens} if self.max_tokens is not None else {}),
                 api_key=self.api_key,
                 base_url=self.api_base,
                 stream=True,
@@ -166,6 +172,8 @@ class LiteLLMClient(BaseLLM):
                 if not chunk.choices:
                     log.debug("Received empty choices in streaming chunk: %s", chunk)
                     continue
+                if chunk.choices[0].finish_reason == "length":
+                    raise LLMOutputTruncatedError()
                 if chunk.choices[0].delta.content:
                     if on_token_callback:
                         on_token_callback(chunk)
