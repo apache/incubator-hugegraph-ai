@@ -89,7 +89,7 @@ class ObservedLock:
 def test_snapshot_waits_for_complete_update_or_rollback(settings, monkeypatch, writer):
     lock = ObservedLock()
     for module in (config, configs_block, rag_api):
-        monkeypatch.setattr(module, "llm_config_lock", lock)
+        monkeypatch.setattr(module, "runtime_config_lock", lock)
     first_write = Event()
     continue_write = Event()
     original_setattr = LLMConfig.__setattr__

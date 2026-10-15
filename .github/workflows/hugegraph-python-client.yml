@@ -7,6 +7,10 @@ on:
       - 'release-*'
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
@@ -43,13 +47,21 @@ jobs:
         with:
           path: |
             ~/.cache/uv
-          key: ${{ runner.os }}-uv-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
+          key: ${{ runner.os }}-uv-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml', 'uv.lock') }}
           restore-keys: |
             ${{ runner.os }}-uv-${{ matrix.python-version }}-
 
       - name: Install dependencies with uv sync
         run: |
           uv sync --extra python-client --extra dev
+
+      - name: Verify source archive build and installation
+        run: |
+          archive_dir=$(mktemp -d)
+          git archive HEAD | tar -x -C "$archive_dir"
+          uv build --all-packages "$archive_dir" --out-dir "$archive_dir/dist"
+          uv sync --project "$archive_dir" --all-packages
+          uv pip check --python "$archive_dir/.venv/bin/python"
 
       - name: Run unit and contract tests
         run: |
@@ -68,10 +80,11 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11"]
+        server-version: ["1.7.0", "latest"]
 
     services:
       hugegraph:
-        image: hugegraph/hugegraph:1.7.0
+        image: hugegraph/hugegraph:${{ matrix.server-version }}
         env:
           PASSWORD: admin
         options: --health-cmd="curl -f http://localhost:8080/versions || exit 1" --health-interval=10s --health-timeout=5s --health-retries=8
@@ -82,6 +95,13 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
+
+      - name: Record HugeGraph baseline
+        env:
+          HUGEGRAPH_CONTAINER: ${{ job.services.hugegraph.id }}
+        run: |
+          docker inspect --format='Image: {{.Config.Image}}; ID: {{.Image}}' "$HUGEGRAPH_CONTAINER"
+          curl --fail --silent --show-error http://127.0.0.1:8080/versions | jq -e '.versions | {core, gremlin, api}'
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
@@ -100,7 +120,7 @@ jobs:
         with:
           path: |
             ~/.cache/uv
-          key: ${{ runner.os }}-uv-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
+          key: ${{ runner.os }}-uv-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml', 'uv.lock') }}
           restore-keys: |
             ${{ runner.os }}-uv-${{ matrix.python-version }}-
 
@@ -122,7 +142,7 @@ jobs:
         if: failure()
         run: |
           docker ps -a
-          container_id=$(docker ps -aq --filter ancestor=hugegraph/hugegraph:1.7.0 | head -n 1)
+          container_id="${{ job.services.hugegraph.id }}"
           if [ -n "$container_id" ]; then
             docker logs "$container_id"
           fi

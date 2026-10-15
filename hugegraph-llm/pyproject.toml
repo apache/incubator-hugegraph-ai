@@ -17,7 +17,7 @@
 
 [project]
 name = "hugegraph-llm"
-version = "1.7.0"
+version = "1.8.0"
 description = "A tool for the implementation and research related to large language models."
 authors = [
     { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
@@ -62,7 +62,7 @@ dependencies = [
     "pydantic-settings",
     "apscheduler",
     "litellm",
-    "hugegraph-python-client",
+    "hugegraph-python",
     "pycgraph==3.2.2",
 ]
 
@@ -97,7 +97,7 @@ include = [
 allow-direct-references = true
 
 [tool.uv.sources]
-hugegraph-python-client = { workspace = true }
+hugegraph-python = { workspace = true }
 pycgraph = { git = "https://github.com/ChunelFeng/CGraph.git", subdirectory = "python", tag = "v3.2.2", marker = "platform_machine == 'aarch64'" }
 
 [tool.ruff]
@@ -107,6 +107,8 @@ extend-exclude = []
 
 # TODO: move this config in the root pyproject.toml & add more rules for it
 [tool.ruff.lint]
+# Keep the existing lint baseline explicit across Ruff default-rule changes.
+select = ["E4", "E7", "E9", "F"]
 extend-select = ["I"]
 
 [tool.ruff.format]

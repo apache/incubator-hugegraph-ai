@@ -17,7 +17,7 @@
 
 [project]
 name = "hugegraph-ai"
-version = "1.7.0"
+version = "1.8.0"
 description = "A repository for AI-related projects for Apache HugeGraph."
 authors = [
     { name = "Apache HugeGraph Contributors", email = "dev@hugegraph.apache.org" },
@@ -36,8 +36,7 @@ dependencies = [
 
 [project.optional-dependencies]
 llm = ["hugegraph-llm"]
-ml = ["hugegraph-ml"]
-python-client = ["hugegraph-python-client"]
+python-client = ["hugegraph-python"]
 vermeer = ["vermeer-python-client"]
 dev = [
     "pytest~=8.0.0",
@@ -50,8 +49,8 @@ dev = [
     "pre-commit>=3.5.0",
 ]
 
-nk-llm = ["hugegraph-llm", "hugegraph-python-client", "nuitka"]
-all = ["hugegraph-python-client", "hugegraph-llm", "hugegraph-ml", "vermeer-python-client"]
+nk-llm = ["hugegraph-llm", "hugegraph-python", "nuitka"]
+all = ["hugegraph-python", "hugegraph-llm", "vermeer-python-client"]
 
 [project.urls]
 homepage = "https://hugegraph.apache.org/"
@@ -82,12 +81,11 @@ packages = [
 ]
 
 [tool.hatch.build.targets.sdist]
-include = ["*/src", "README.md", "LICENSE", "NOTICE"]
+include = ["*/src", "*/pyproject.toml", "*/README.md", "*/LICENSE", "*/NOTICE", "README.md", "LICENSE", "NOTICE"]
 
 [tool.uv.sources]
 hugegraph-llm = { workspace = true }
-hugegraph-python-client = { workspace = true }
-hugegraph-ml = { path = "hugegraph-ml", editable = true }
+hugegraph-python = { workspace = true }
 vermeer-python-client = { path = "vermeer-python-client", editable = true }
 
 [tool.uv.workspace]
@@ -153,6 +151,9 @@ markers = [
     "contract: public contract tests; may use mocks but verify stable behavior",
     "integration: tests requiring a real local service such as HugeGraph",
     "hugegraph: tests requiring HugeGraph Server",
+    "live: requires a real HugeGraph Server",
+    "real_hugegraph: requires a real HugeGraph Server",
+    "llm: requires HugeGraph-AI or an external LLM provider",
     "smoke: end-to-end-ish high-value smoke over production pipeline boundaries",
     "external: tests requiring external provider credentials or non-HugeGraph services",
     "slow: long-running tests excluded from default local loops",
@@ -180,6 +181,7 @@ ignore = [
     "N802",    # invalid-function-name (API compatibility)
     "C901",    # complexity (non-critical for now)
     "RUF001", # ambiguous-unicode-character-string
+    "RUF002", # ambiguous-unicode-character-docstring (Chinese prose)
     "RUF003", # ambiguous-unicode-character-comment
 ]
 # No need to ignore E501 (line-too-long), `ruff format` will handle it automatically.
@@ -190,7 +192,7 @@ ignore = [
 "hugegraph-python-client/src/pyhugegraph/structure/*.py" = ["N802"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["hugegraph_llm", "hugegraph_python_client", "hugegraph_ml", "vermeer_python_client"]
+known-first-party = ["hugegraph_llm", "hugegraph_mcp", "hugegraph_python_client", "hugegraph_ml", "vermeer_python_client"]
 
 [tool.ruff.format]
 quote-style = "double"

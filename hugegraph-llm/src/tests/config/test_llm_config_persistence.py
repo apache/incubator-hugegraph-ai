@@ -30,6 +30,7 @@ from fastapi.testclient import TestClient
 
 from hugegraph_llm import config
 from hugegraph_llm.api import rag_api
+from hugegraph_llm.config.hugegraph_config import HugeGraphConfig
 from hugegraph_llm.config.llm_config import LLMConfig
 from hugegraph_llm.config.models import base_config
 from hugegraph_llm.demo.rag_demo import configs_block
@@ -44,9 +45,11 @@ class ObservedLock:
     def __init__(self, competing_progress):
         self.lock = RLock()
         self.competing_progress = competing_progress
+        self.waited = Event()
 
     def __enter__(self):
         if not self.lock.acquire(blocking=False):
+            self.waited.set()
             self.competing_progress.set()
             self.lock.acquire()
         return self
@@ -83,11 +86,12 @@ def isolated_settings(monkeypatch, tmp_path):
     return settings, env_file
 
 
-def seed_file(settings, env_file):
+def seed_file(settings, env_file, *other_settings):
+    values = settings.model_dump()
+    for other in other_settings:
+        values.update(other.model_dump())
     env_file.write_text(
-        "".join(
-            f"{key.upper()}={value if value is not None else ''}\n" for key, value in settings.model_dump().items()
-        ),
+        "".join(f"{key.upper()}={value if value is not None else ''}\n" for key, value in values.items()),
         encoding="utf-8",
     )
 
@@ -131,41 +135,43 @@ def fail_llm(client, entry):
     return "ui-error"
 
 
-def save_other_config(client, kind, entry, competing_progress):
-    try:
-        if kind == "embedding":
-            if entry == "http":
-                result = client.post(
-                    "/config/embedding",
-                    json={
-                        "llm_type": "openai",
-                        "api_key": "synthetic-embedding-key",
-                        "api_base": "http://embedding.invalid/v1",
-                        "language_model": "accepted-embedding",
-                    },
-                ).status_code
-            else:
-                result = configs_block.apply_embedding_config(
-                    "synthetic-embedding-key",
-                    "http://embedding.invalid/v1",
-                    "accepted-embedding",
-                )
-        elif entry == "http":
-            result = client.post(
-                "/config/rerank",
+def configure_other(client, kind, entry):
+    if kind == "embedding":
+        if entry == "http":
+            return client.post(
+                "/config/embedding",
                 json={
-                    "reranker_type": "cohere",
-                    "api_key": "synthetic-reranker-key",
-                    "reranker_model": "accepted-reranker",
-                    "cohere_base_url": "http://reranker.invalid/v1/rerank",
+                    "llm_type": "openai",
+                    "api_key": "synthetic-embedding-key",
+                    "api_base": "http://embedding.invalid/v1",
+                    "language_model": "accepted-embedding",
                 },
             ).status_code
-        else:
-            result = configs_block.apply_reranker_config(
-                "synthetic-reranker-key",
-                "accepted-reranker",
-                "http://reranker.invalid/v1/rerank",
-            )
+        return configs_block.apply_embedding_config(
+            "synthetic-embedding-key",
+            "http://embedding.invalid/v1",
+            "accepted-embedding",
+        )
+    if entry == "http":
+        return client.post(
+            "/config/rerank",
+            json={
+                "reranker_type": "cohere",
+                "api_key": "synthetic-reranker-key",
+                "reranker_model": "accepted-reranker",
+                "cohere_base_url": "http://reranker.invalid/v1/rerank",
+            },
+        ).status_code
+    return configs_block.apply_reranker_config(
+        "synthetic-reranker-key",
+        "accepted-reranker",
+        "http://reranker.invalid/v1/rerank",
+    )
+
+
+def save_other_config(client, kind, entry, competing_progress):
+    try:
+        result = configure_other(client, kind, entry)
         assert result == (201 if entry == "http" else 200)
         return result
     finally:
@@ -177,7 +183,8 @@ def save_other_config(client, kind, entry, competing_progress):
 def install_lock(monkeypatch, competing_progress):
     lock = ObservedLock(competing_progress)
     for module in (config, rag_api, configs_block):
-        monkeypatch.setattr(module, "llm_config_lock", lock)
+        monkeypatch.setattr(module, "runtime_config_lock", lock)
+    return lock
 
 
 def assert_disk_and_memory(settings, env_file, before, kind):
@@ -278,3 +285,114 @@ def test_other_save_waits_through_outer_api_provider_rollback(isolated_settings,
         assert failed.result(timeout=10) == 503
         assert saved.result(timeout=10) == (201 if save_entry == "http" else 200)
     assert_disk_and_memory(settings, env_file, before, kind)
+
+
+@pytest.mark.parametrize("kind", ["embedding", "reranker"])
+@pytest.mark.parametrize("entry", ["http", "ui"])
+@pytest.mark.parametrize("failure", ["status", "exception"])
+def test_other_config_failure_restores_memory_and_real_file(isolated_settings, monkeypatch, kind, entry, failure):
+    settings, env_file = isolated_settings
+    if entry == "http":
+        if kind == "embedding":
+            settings.embedding_type = "ollama/local"
+        else:
+            settings.reranker_type = "siliconflow"
+    seed_file(settings, env_file)
+    before = settings.model_dump()
+    file_before = env_file.read_bytes()
+
+    def probe(url, **_kwargs):
+        assert url.endswith("/embeddings") or url.endswith("/check-api-key")
+        if failure == "exception":
+            raise requests.exceptions.ConnectionError("synthetic rejected connection")
+        return Mock(status_code=503, text="synthetic rejected response")
+
+    monkeypatch.setattr(configs_block.requests, "post", probe)
+    monkeypatch.setattr(configs_block.requests, "get", probe)
+    with make_client() as client:
+        if entry == "http":
+            assert configure_other(client, kind, entry) == (503 if failure == "status" else 400)
+        else:
+            with pytest.raises(configs_block.gr.Error):
+                configure_other(client, kind, entry)
+    assert settings.model_dump() == before
+    assert env_file.read_bytes() == file_before
+
+
+@pytest.mark.parametrize("graph_status", [200, 503])
+@pytest.mark.parametrize("contender", ["llm-update", "review-snapshot"])
+def test_graph_config_transaction_serializes_llm_update_and_review_snapshot(
+    isolated_settings,
+    monkeypatch,
+    graph_status,
+    contender,
+):
+    settings, env_file = isolated_settings
+    graph_settings = HugeGraphConfig.model_construct(
+        graph_url="http://old-graph.invalid",
+        graph_name="old-graph",
+        graph_user="synthetic-user",
+        graph_pwd="synthetic-password",
+        graph_space=None,
+    )
+    monkeypatch.setattr(configs_block, "huge_settings", graph_settings)
+    seed_file(settings, env_file, graph_settings)
+    probe_entered, release_probe, competing_progress = Event(), Event(), Event()
+    lock = install_lock(monkeypatch, competing_progress)
+
+    def graph_probe(url, **_kwargs):
+        assert url == "http://new-graph.invalid/graphs/new-graph/schema"
+        probe_entered.set()
+        assert release_probe.wait(timeout=10)
+        return Mock(status_code=graph_status, text="synthetic graph response")
+
+    def llm_probe(url, **_kwargs):
+        assert url == "http://accepted.invalid/v1/chat/completions"
+        return Mock(status_code=200, text="ok")
+
+    monkeypatch.setattr(configs_block.requests, "get", graph_probe)
+    monkeypatch.setattr(configs_block.requests, "post", llm_probe)
+
+    def compete():
+        try:
+            if contender == "review-snapshot":
+                return config.snapshot_llm_settings()
+            return configs_block.apply_llm_config(
+                "chat",
+                "synthetic-accepted-key",
+                "http://accepted.invalid/v1",
+                "accepted-model",
+                None,
+            )
+        finally:
+            competing_progress.set()
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        graph_update = pool.submit(
+            configs_block.apply_graph_config,
+            "new-graph.invalid",
+            "new-graph",
+            "new-user",
+            "new-password",
+            None,
+            origin_call="http",
+        )
+        try:
+            assert probe_entered.wait(timeout=10)
+            waiting = pool.submit(compete)
+            assert competing_progress.wait(timeout=10)
+            assert lock.waited.is_set(), "LLM update/snapshot bypassed the graph transaction lock"
+        finally:
+            release_probe.set()
+        assert graph_update.result(timeout=10) == graph_status
+        result = waiting.result(timeout=10)
+    if contender == "review-snapshot":
+        assert result is not settings
+        assert result.model_dump() == settings.model_dump()
+    else:
+        assert result == 200
+        assert settings.openai_chat_language_model == "accepted-model"
+        assert dotenv_values(env_file)["OPENAI_CHAT_LANGUAGE_MODEL"] == "accepted-model"
+    expected_graph = "new-graph" if graph_status == 200 else "old-graph"
+    assert graph_settings.graph_name == expected_graph
+    assert dotenv_values(env_file)["GRAPH_NAME"] == expected_graph

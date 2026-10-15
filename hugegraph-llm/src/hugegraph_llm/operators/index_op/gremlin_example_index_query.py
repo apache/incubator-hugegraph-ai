@@ -20,7 +20,6 @@ import os
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
-from tqdm import tqdm
 
 from hugegraph_llm.config import resource_path
 from hugegraph_llm.indices.vector_index.base import VectorStoreBase
@@ -56,16 +55,15 @@ class GremlinExampleIndexQuery:
 
     def _build_default_example_index(self):
         properties = pd.read_csv(os.path.join(resource_path, "demo", "text2gremlin.csv")).to_dict(orient="records")
-        from concurrent.futures import ThreadPoolExecutor
-
-        # TODO: reuse the logic in build_semantic_index.py (consider extract the batch-embedding method)
-        with ThreadPoolExecutor() as executor:
-            embeddings = list(
-                tqdm(
-                    executor.map(self.embedding.get_text_embedding, [row["query"] for row in properties]),
-                    total=len(properties),
-                )
-            )
+        # Some supported services accept at most 10 texts, regardless of the adapter default.
+        # Complete each batch sequentially and only publish the index after all batches succeed.
+        embeddings = []
+        for start in range(0, len(properties), 10):
+            texts = [row["query"] for row in properties[start : start + 10]]
+            batch_embeddings = self.embedding.get_texts_embeddings(texts)
+            if len(batch_embeddings) != len(texts):
+                raise ValueError(f"Embedding batch returned {len(batch_embeddings)} vectors for {len(texts)} texts.")
+            embeddings.extend(batch_embeddings)
         self.vector_index.add(embeddings, properties)
         self.vector_index.save_index_by_name("gremlin_examples")
 

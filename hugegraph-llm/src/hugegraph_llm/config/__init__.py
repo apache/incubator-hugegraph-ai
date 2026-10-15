@@ -22,12 +22,12 @@ __all__ = [
     "llm_settings",
     "resource_path",
     "index_settings",
-    "llm_config_lock",
+    "runtime_config_lock",
     "snapshot_llm_settings",
 ]
 
 import os
-from threading import RLock
+import threading
 
 from .admin_config import AdminConfig
 from .hugegraph_config import HugeGraphConfig
@@ -35,24 +35,23 @@ from .index_config import IndexConfig
 from .llm_config import LLMConfig
 from .prompt_config import PromptConfig
 
-# Coordinate runtime LLM updates and reviewed-extraction snapshots. Reentrant
-# because the HTTP configuration transaction calls the shared UI apply helper.
-llm_config_lock = RLock()
 llm_settings = LLMConfig()
-
-
-def snapshot_llm_settings() -> LLMConfig:
-    """Copy one complete LLM configuration without holding the lock during inference."""
-    with llm_config_lock:
-        return llm_settings.model_copy(deep=True)
-
-
 prompt = PromptConfig(llm_settings)
 prompt.ensure_yaml_file_exists()
 
 huge_settings = HugeGraphConfig()
 admin_settings = AdminConfig()
 index_settings = IndexConfig()
+# Shared by configuration transactions, graph runtime operations, and reviewed
+# extraction snapshots. Model inference in reviewed extraction does not hold it.
+runtime_config_lock = threading.RLock()
+
+
+def snapshot_llm_settings() -> LLMConfig:
+    """Copy one complete LLM configuration under the shared runtime lock."""
+    with runtime_config_lock:
+        return llm_settings.model_copy(deep=True)
+
 
 package_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 resource_path = os.path.join(package_path, "resources")

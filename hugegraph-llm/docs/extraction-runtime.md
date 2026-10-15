@@ -184,7 +184,8 @@ configuration. Every chunk and stage uses that snapshot, so a concurrent UI or
 HTTP configuration update applies to subsequent requests. Snapshot creation and
 LLM configuration updates share a lock; model execution does not hold it. A new
 snapshot waits for an in-progress configuration update, including its connection
-check, to finish.
+check, to finish. The same runtime lock also protects graph configuration and
+validated index refreshes; these operations can delay a new snapshot.
 
 ## Verification and limits
 

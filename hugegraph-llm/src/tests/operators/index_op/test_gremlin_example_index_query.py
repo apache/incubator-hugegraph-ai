@@ -20,10 +20,14 @@
 import shutil
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock, patch
 
 import pandas as pd
+import pytest
 
+from hugegraph_llm.indices.vector_index.faiss_vector_store import FaissVectorIndex
+from hugegraph_llm.models.embeddings.litellm import LiteLLMEmbedding
 from hugegraph_llm.operators.index_op.gremlin_example_index_query import GremlinExampleIndexQuery
 
 
@@ -74,16 +78,14 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
 
     @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.resource_path", "/mock/path")
     @patch("pandas.read_csv")
-    @patch("concurrent.futures.ThreadPoolExecutor")
-    @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.tqdm")
     @patch("hugegraph_llm.operators.index_op.gremlin_example_index_query.log")
     @patch("os.path.join")
-    def test_init_without_existing_index(self, mock_join, mock_log, mock_tqdm, mock_thread_pool, mock_read_csv):
+    def test_init_without_existing_index(self, mock_join, mock_log, mock_read_csv):
         """Test initialization when index doesn't exist and needs to be built"""
         # Create mock embedding
         mock_embedding = Mock()
         mock_embedding.get_embedding_dim.return_value = self.embed_dim
-        mock_embedding.get_text_embedding.side_effect = lambda x: self.vectors[0] if "persons" in x else self.vectors[1]
+        mock_embedding.get_texts_embeddings.return_value = self.vectors
 
         # Create mock vector index class and instance
         mock_vector_index_class = MagicMock()
@@ -98,14 +100,11 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
         mock_df = pd.DataFrame(self.properties)
         mock_read_csv.return_value = mock_df
 
-        # Mock thread pool execution
-        mock_executor = MagicMock()
-        mock_thread_pool.return_value.__enter__.return_value = mock_executor
-        mock_executor.map.return_value = self.vectors
-        mock_tqdm.return_value = self.vectors
-
         # Create a GremlinExampleIndexQuery instance
         GremlinExampleIndexQuery(vector_index=mock_vector_index_class, embedding=mock_embedding, num_examples=1)
+
+        mock_embedding.get_texts_embeddings.assert_called_once_with([row["query"] for row in self.properties])
+        mock_embedding.get_text_embedding.assert_not_called()
 
         # Verify that the index was built
         mock_vector_index_class.exist.assert_called_once_with("gremlin_examples")
@@ -327,3 +326,172 @@ class TestGremlinExampleIndexQuery(unittest.TestCase):
 
         # Verify that get_texts_embeddings was called since query_embedding wasn't a list
         mock_embedding.get_texts_embeddings.assert_called_once_with(["find all persons"])
+
+
+class TestDefaultExampleBatching(unittest.TestCase):
+    def test_litellm_batch_limit_and_order(self):
+        from hugegraph_llm.models.embeddings.litellm import LiteLLMEmbedding
+
+        rows = [{"query": str(i), "gremlin": "g.V()"} for i in range(23)]
+        batches = []
+
+        def respond(**kwargs):
+            texts = kwargs["input"]
+            self.assertLessEqual(len(texts), 10)
+            batches.append(texts)
+            return SimpleNamespace(data=[{"embedding": [float(text)]} for text in texts], usage=None)
+
+        operator = object.__new__(GremlinExampleIndexQuery)
+        operator.embedding = LiteLLMEmbedding(embedding_dimension=1, api_key="test")
+        operator.vector_index = Mock()
+        with (
+            patch("pandas.read_csv", return_value=pd.DataFrame(rows)),
+            patch("hugegraph_llm.models.embeddings.litellm.embedding", side_effect=respond),
+        ):
+            operator._build_default_example_index()
+        self.assertEqual(batches, [[str(i) for i in range(start, min(start + 10, 23))] for start in (0, 10, 20)])
+        operator.vector_index.add.assert_called_once_with([[float(i)] for i in range(23)], rows)
+        operator.vector_index.save_index_by_name.assert_called_once_with("gremlin_examples")
+
+    def test_litellm_recovers_from_later_batch_rate_limit_before_saving_index(self):
+        from litellm import RateLimitError
+
+        from hugegraph_llm.models.embeddings.litellm import LiteLLMEmbedding
+
+        rows = [{"query": str(i), "gremlin": "g.V()"} for i in range(23)]
+        batches = []
+
+        def respond(**kwargs):
+            texts = kwargs["input"]
+            self.assertLessEqual(len(texts), 10)
+            batches.append(texts)
+            if len(batches) == 2:
+                raise RateLimitError(message="temporary 429", llm_provider="hosted_vllm", model="test")
+            return SimpleNamespace(data=[{"embedding": [float(text)]} for text in texts], usage=None)
+
+        operator = object.__new__(GremlinExampleIndexQuery)
+        operator.embedding = LiteLLMEmbedding(embedding_dimension=1, api_key="test")
+        operator.vector_index = Mock()
+        with (
+            patch("pandas.read_csv", return_value=pd.DataFrame(rows)),
+            patch("hugegraph_llm.models.embeddings.litellm.embedding", side_effect=respond),
+            patch("tenacity.nap.time.sleep"),
+        ):
+            operator._build_default_example_index()
+        expected_batches = [[str(i) for i in range(start, min(start + 10, 23))] for start in (0, 10, 10, 20)]
+        self.assertEqual(batches, expected_batches)
+        operator.vector_index.add.assert_called_once_with([[float(i)] for i in range(23)], rows)
+        operator.vector_index.save_index_by_name.assert_called_once_with("gremlin_examples")
+
+    def test_later_litellm_batch_exhausts_retries_without_saving_index(self):
+        from litellm import RateLimitError
+
+        from hugegraph_llm.models.embeddings.litellm import LiteLLMEmbedding
+
+        rows = [{"query": str(i), "gremlin": "g.V()"} for i in range(23)]
+        batches = []
+        error = RateLimitError(message="persistent 429", llm_provider="hosted_vllm", model="test")
+
+        def respond(**kwargs):
+            texts = kwargs["input"]
+            batches.append(texts)
+            if texts[0] == "10":
+                raise error
+            return SimpleNamespace(data=[{"embedding": [float(text)]} for text in texts], usage=None)
+
+        operator = object.__new__(GremlinExampleIndexQuery)
+        operator.embedding = LiteLLMEmbedding(embedding_dimension=1, api_key="test")
+        operator.vector_index = Mock()
+        with (
+            patch("pandas.read_csv", return_value=pd.DataFrame(rows)),
+            patch("hugegraph_llm.models.embeddings.litellm.embedding", side_effect=respond),
+            patch("tenacity.nap.time.sleep"),
+        ):
+            with self.assertRaises(RateLimitError) as raised:
+                operator._build_default_example_index()
+        self.assertIs(raised.exception, error)
+        self.assertEqual(batches, [[str(i) for i in range(10)]] + [[str(i) for i in range(10, 20)]] * 3)
+        operator.vector_index.add.assert_not_called()
+        operator.vector_index.save_index_by_name.assert_not_called()
+
+    def test_batch_limit_and_order(self):
+        from hugegraph_llm.models.embeddings.openai import OpenAIEmbedding
+
+        embedding = OpenAIEmbedding(api_key="test")
+        rows = [{"query": str(i), "gremlin": "g.V()"} for i in range(23)]
+        batches = []
+
+        def respond(**kwargs):
+            texts = kwargs["input"]
+            self.assertLessEqual(len(texts), 10)
+            batches.append(len(texts))
+            return SimpleNamespace(data=[SimpleNamespace(embedding=[float(text)]) for text in texts])
+
+        operator = object.__new__(GremlinExampleIndexQuery)
+        operator.embedding = embedding
+        operator.vector_index = Mock()
+        try:
+            with (
+                patch("pandas.read_csv", return_value=pd.DataFrame(rows)),
+                patch.object(embedding.client.embeddings, "create", side_effect=respond),
+            ):
+                operator._build_default_example_index()
+            self.assertEqual(batches, [10, 10, 3])
+            operator.vector_index.add.assert_called_once_with([[float(i)] for i in range(23)], rows)
+            operator.vector_index.save_index_by_name.assert_called_once_with("gremlin_examples")
+        finally:
+            embedding.client.close()
+
+    def test_embedding_failure_does_not_save_index(self):
+        operator = object.__new__(GremlinExampleIndexQuery)
+        operator.embedding = Mock()
+        operator.embedding.get_texts_embeddings.side_effect = RuntimeError("provider unavailable")
+        operator.vector_index = Mock()
+        with patch("pandas.read_csv", return_value=pd.DataFrame([{"query": "test"}])):
+            with self.assertRaisesRegex(RuntimeError, "provider unavailable"):
+                operator._build_default_example_index()
+        operator.vector_index.add.assert_not_called()
+        operator.vector_index.save_index_by_name.assert_not_called()
+
+
+@pytest.mark.parametrize("failed_batch", [0, 1, 2], ids=["first", "middle", "last"])
+@pytest.mark.parametrize("response_kind", ["short", "empty", "extra"])
+def test_invalid_batch_count_does_not_mutate_or_save_index(tmp_path, failed_batch, response_kind):
+    rows = [{"query": str(i), "gremlin": "g.V()"} for i in range(23)]
+    batches = []
+
+    def respond(**kwargs):
+        texts = kwargs["input"]
+        batches.append(texts)
+        data = [{"embedding": [float(text)]} for text in texts]
+        if len(batches) == failed_batch + 1:
+            if response_kind == "short":
+                data = data[:-1]
+            elif response_kind == "empty":
+                data = []
+            else:
+                data.append({"embedding": [999.0]})
+        return SimpleNamespace(data=data, usage=None)
+
+    operator = object.__new__(GremlinExampleIndexQuery)
+    operator.embedding = LiteLLMEmbedding(embedding_dimension=1, api_key="test")
+    operator.vector_index = FaissVectorIndex(1)
+    with (
+        patch("pandas.read_csv", return_value=pd.DataFrame(rows)),
+        patch("hugegraph_llm.models.embeddings.litellm.embedding", side_effect=respond),
+        patch("hugegraph_llm.indices.vector_index.faiss_vector_store.resource_path", str(tmp_path)),
+        patch.object(operator.vector_index, "add", wraps=operator.vector_index.add) as add,
+        patch.object(
+            operator.vector_index, "save_index_by_name", wraps=operator.vector_index.save_index_by_name
+        ) as save,
+    ):
+        with pytest.raises(ValueError, match="Embedding batch returned"):
+            operator._build_default_example_index()
+
+    expected_batches = [[str(i) for i in range(start, min(start + 10, 23))] for start in (0, 10, 20)]
+    assert batches == expected_batches[: failed_batch + 1]
+    add.assert_not_called()
+    save.assert_not_called()
+    assert operator.vector_index.index.ntotal == 0
+    assert operator.vector_index.properties == []
+    assert not (tmp_path / "gremlin_examples").exists()

@@ -16,7 +16,7 @@
 # under the License.
 
 import json
-from functools import partial
+from functools import partial, wraps
 from typing import Optional
 
 import gradio as gr
@@ -24,13 +24,44 @@ import requests
 from dotenv import dotenv_values
 from requests.auth import HTTPBasicAuth
 
-from hugegraph_llm.config import huge_settings, index_settings, llm_config_lock, llm_settings
+from hugegraph_llm.config import huge_settings, index_settings, llm_settings, runtime_config_lock
 from hugegraph_llm.config.models.base_config import env_path
 from hugegraph_llm.models.embeddings.litellm import LiteLLMEmbedding
 from hugegraph_llm.models.llms.litellm import LiteLLMClient
 from hugegraph_llm.utils.log import log
 
 current_llm = "chat"
+
+
+def _restore_config(settings, values):
+    for field, value in values.items():
+        setattr(settings, field, value)
+
+
+def _transactional_config_update(settings_getter):
+    """Serialize, persist on success, and roll back failed config updates."""
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            settings = settings_getter()
+            with runtime_config_lock:
+                original_values = settings.model_dump()
+                try:
+                    status_code = func(*args, **kwargs)
+                    if not 200 <= status_code < 300:
+                        _restore_config(settings, original_values)
+                        return status_code
+                    settings.update_env()
+                except Exception:
+                    _restore_config(settings, original_values)
+                    raise
+                gr.Info("Configured!")
+                return status_code
+
+        return wrapper
+
+    return decorator
 
 
 def test_litellm_embedding(api_key, api_base, model_name) -> int:
@@ -179,74 +210,69 @@ def apply_vector_engine_backend(  # pylint: disable=too-many-branches
     return status_code
 
 
+@_transactional_config_update(lambda: llm_settings)
 def apply_embedding_config(arg1, arg2, arg3, origin_call=None) -> int:
-    with llm_config_lock:
-        status_code = -1
-        embedding_option = llm_settings.embedding_type
-        if embedding_option == "openai":
-            llm_settings.openai_embedding_api_key = arg1
-            llm_settings.openai_embedding_api_base = arg2
-            llm_settings.openai_embedding_model = arg3
-            test_url = llm_settings.openai_embedding_api_base + "/embeddings"
-            headers = {"Authorization": f"Bearer {arg1}"}
-            data = {"model": arg3, "input": "test"}
-            status_code = test_api_connection(
-                test_url, method="POST", headers=headers, body=data, origin_call=origin_call
-            )
-        elif embedding_option == "ollama/local":
-            llm_settings.ollama_embedding_host = arg1
-            llm_settings.ollama_embedding_port = int(arg2)
-            llm_settings.ollama_embedding_model = arg3
-            status_code = test_api_connection(f"http://{arg1}:{arg2}", origin_call=origin_call)
-        elif embedding_option == "litellm":
-            llm_settings.litellm_embedding_api_key = arg1
-            llm_settings.litellm_embedding_api_base = arg2
-            llm_settings.litellm_embedding_model = arg3
-            status_code = test_litellm_embedding(arg1, arg2, arg3)
-        llm_settings.update_env()
-        gr.Info("Configured!")
-        return status_code
+    status_code = -1
+    embedding_option = llm_settings.embedding_type
+    if embedding_option == "openai":
+        llm_settings.openai_embedding_api_key = arg1
+        llm_settings.openai_embedding_api_base = arg2
+        llm_settings.openai_embedding_model = arg3
+        test_url = llm_settings.openai_embedding_api_base + "/embeddings"
+        headers = {"Authorization": f"Bearer {arg1}"}
+        data = {"model": arg3, "input": "test"}
+        status_code = test_api_connection(test_url, method="POST", headers=headers, body=data, origin_call=origin_call)
+    elif embedding_option == "ollama/local":
+        llm_settings.ollama_embedding_host = arg1
+        llm_settings.ollama_embedding_port = int(arg2)
+        llm_settings.ollama_embedding_model = arg3
+        status_code = test_api_connection(f"http://{arg1}:{arg2}", origin_call=origin_call)
+    elif embedding_option == "litellm":
+        llm_settings.litellm_embedding_api_key = arg1
+        llm_settings.litellm_embedding_api_base = arg2
+        llm_settings.litellm_embedding_model = arg3
+        status_code = test_litellm_embedding(arg1, arg2, arg3)
+    return status_code
 
 
+@_transactional_config_update(lambda: llm_settings)
 def apply_reranker_config(
     reranker_api_key: Optional[str] = None,
     reranker_model: Optional[str] = None,
     cohere_base_url: Optional[str] = None,
     origin_call=None,
 ) -> int:
-    with llm_config_lock:
-        status_code = -1
-        reranker_option = llm_settings.reranker_type
-        if reranker_option == "cohere":
-            llm_settings.reranker_api_key = reranker_api_key
-            llm_settings.reranker_model = reranker_model
-            llm_settings.cohere_base_url = cohere_base_url
-            headers = {"Authorization": f"Bearer {reranker_api_key}"}
-            status_code = test_api_connection(
-                cohere_base_url.rsplit("/", 1)[0] + "/check-api-key",
-                method="POST",
-                headers=headers,
-                origin_call=origin_call,
-            )
-        elif reranker_option == "siliconflow":
-            llm_settings.reranker_api_key = reranker_api_key
-            llm_settings.reranker_model = reranker_model
-            from pyhugegraph.utils.constants import Constants
+    status_code = -1
+    reranker_option = llm_settings.reranker_type
+    if reranker_option == "cohere":
+        llm_settings.reranker_api_key = reranker_api_key
+        llm_settings.reranker_model = reranker_model
+        llm_settings.cohere_base_url = cohere_base_url
+        headers = {"Authorization": f"Bearer {reranker_api_key}"}
+        status_code = test_api_connection(
+            cohere_base_url.rsplit("/", 1)[0] + "/check-api-key",
+            method="POST",
+            headers=headers,
+            origin_call=origin_call,
+        )
+    elif reranker_option == "siliconflow":
+        llm_settings.reranker_api_key = reranker_api_key
+        llm_settings.reranker_model = reranker_model
+        from pyhugegraph.utils.constants import Constants
 
-            headers = {
-                "accept": Constants.HEADER_CONTENT_TYPE,
-                "authorization": f"Bearer {reranker_api_key}",
-            }
-            status_code = test_api_connection(
-                "https://api.siliconflow.cn/v1/user/info",
-                headers=headers,
-                origin_call=origin_call,
-            )
-        llm_settings.update_env()
-        gr.Info("Configured!")
-        return status_code
+        headers = {
+            "accept": Constants.HEADER_CONTENT_TYPE,
+            "authorization": f"Bearer {reranker_api_key}",
+        }
+        status_code = test_api_connection(
+            "https://api.siliconflow.cn/v1/user/info",
+            headers=headers,
+            origin_call=origin_call,
+        )
+    return status_code
 
 
+@_transactional_config_update(lambda: huge_settings)
 def apply_graph_config(url, name, user, pwd, gs, origin_call=None) -> int:
     # Add URL prefix automatically to improve the user experience
     if url and not (url.startswith("http://") or url.startswith("https://")):
@@ -265,10 +291,10 @@ def apply_graph_config(url, name, user, pwd, gs, origin_call=None) -> int:
     auth = HTTPBasicAuth(user, pwd)
     # for http api return status
     response = test_api_connection(test_url, auth=auth, origin_call=origin_call)
-    huge_settings.update_env()
     return response
 
 
+@_transactional_config_update(lambda: llm_settings)
 def apply_llm_config(
     current_llm_config,
     api_key_or_host,
@@ -280,61 +306,42 @@ def apply_llm_config(
     roles = ("chat", "extract", "text2gql") if current_llm_config == "all" else (current_llm_config,)
     if any(role not in ("chat", "extract", "text2gql") for role in roles):
         raise ValueError(f"Unsupported LLM configuration role: {current_llm_config}")
-    with llm_config_lock:
-        # The HTTP endpoint selects one provider for all roles. UI calls update
-        # only their selected role. Failed probes must never persist new values.
-        prefixes = tuple(f"{provider}_{role}_" for provider in ("openai", "ollama", "litellm") for role in roles)
-        original_values = {key: value for key, value in llm_settings.model_dump().items() if key.startswith(prefixes)}
-        applied = False
-        try:
-            llm_option = getattr(llm_settings, f"{roles[0]}_llm_type")
-            if any(getattr(llm_settings, f"{role}_llm_type") != llm_option for role in roles):
-                raise ValueError("All LLM roles must select the same provider for a shared update")
-            if llm_option in ("openai", "litellm"):
-                fields = {"api_key": api_key_or_host, "api_base": api_base_or_port, "language_model": model_name}
-                if max_tokens is not None:
-                    fields["tokens"] = int(max_tokens)
-                prefix = llm_option
-            elif llm_option == "ollama/local":
-                fields = {"host": api_key_or_host, "port": int(api_base_or_port), "language_model": model_name}
-                prefix = "ollama"
-            else:
-                raise ValueError(f"Unsupported LLM provider: {llm_option}")
-            for role in roles:
-                for field, value in fields.items():
-                    setattr(llm_settings, f"{prefix}_{role}_{field}", value)
+    llm_option = getattr(llm_settings, f"{roles[0]}_llm_type")
+    if any(getattr(llm_settings, f"{role}_llm_type") != llm_option for role in roles):
+        raise ValueError("All LLM roles must select the same provider for a shared update")
+    if llm_option in ("openai", "litellm"):
+        fields = {"api_key": api_key_or_host, "api_base": api_base_or_port, "language_model": model_name}
+        if max_tokens is not None:
+            fields["tokens"] = int(max_tokens)
+        prefix = llm_option
+    elif llm_option == "ollama/local":
+        fields = {"host": api_key_or_host, "port": int(api_base_or_port), "language_model": model_name}
+        prefix = "ollama"
+    else:
+        raise ValueError(f"Unsupported LLM provider: {llm_option}")
+    for role in roles:
+        for field, value in fields.items():
+            setattr(llm_settings, f"{prefix}_{role}_{field}", value)
 
-            if llm_option == "openai":
-                data = {
-                    "model": model_name,
-                    "temperature": 0.01,
-                    "messages": [{"role": "user", "content": "test"}],
-                }
-                status_code = test_api_connection(
-                    api_base_or_port + "/chat/completions",
-                    method="POST",
-                    headers={"Authorization": f"Bearer {api_key_or_host}"},
-                    body=data,
-                    origin_call=origin_call,
-                )
-            elif llm_option == "ollama/local":
-                status_code = test_api_connection(
-                    f"http://{api_key_or_host}:{api_base_or_port}", origin_call=origin_call
-                )
-            else:
-                probe_tokens = getattr(llm_settings, f"litellm_{roles[0]}_tokens")
-                status_code = test_litellm_chat(api_key_or_host, api_base_or_port, model_name, probe_tokens)
-
-            if not 200 <= status_code < 300:
-                return status_code
-            llm_settings.update_env()
-            applied = True
-            gr.Info("Configured!")
-            return status_code
-        finally:
-            if not applied:
-                for key, value in original_values.items():
-                    setattr(llm_settings, key, value)
+    if llm_option == "openai":
+        data = {
+            "model": model_name,
+            "temperature": 0.01,
+            "messages": [{"role": "user", "content": "test"}],
+        }
+        status_code = test_api_connection(
+            api_base_or_port + "/chat/completions",
+            method="POST",
+            headers={"Authorization": f"Bearer {api_key_or_host}"},
+            body=data,
+            origin_call=origin_call,
+        )
+    elif llm_option == "ollama/local":
+        status_code = test_api_connection(f"http://{api_key_or_host}:{api_base_or_port}", origin_call=origin_call)
+    else:
+        probe_tokens = getattr(llm_settings, f"litellm_{roles[0]}_tokens")
+        status_code = test_litellm_chat(api_key_or_host, api_base_or_port, model_name, probe_tokens)
+    return status_code
 
 
 # TODO: refactor the function to reduce the number of statements & separate the logic
@@ -390,7 +397,7 @@ def create_configs_block() -> list:
 
             @gr.render(inputs=[chat_llm_dropdown])
             def chat_llm_settings(llm_type):
-                with llm_config_lock:
+                with runtime_config_lock:
                     llm_settings.chat_llm_type = llm_type
                 if llm_type == "openai":
                     llm_config_input = [
@@ -473,7 +480,7 @@ def create_configs_block() -> list:
 
             @gr.render(inputs=[extract_llm_dropdown])
             def extract_llm_settings(llm_type):
-                with llm_config_lock:
+                with runtime_config_lock:
                     llm_settings.extract_llm_type = llm_type
                 if llm_type == "openai":
                     llm_config_input = [
@@ -548,7 +555,7 @@ def create_configs_block() -> list:
 
             @gr.render(inputs=[text2gql_llm_dropdown])
             def text2gql_llm_settings(llm_type):
-                with llm_config_lock:
+                with runtime_config_lock:
                     llm_settings.text2gql_llm_type = llm_type
                 if llm_type == "openai":
                     llm_config_input = [
@@ -622,7 +629,7 @@ def create_configs_block() -> list:
 
         @gr.render(inputs=[embedding_dropdown])
         def embedding_settings(embedding_type):
-            with llm_config_lock:
+            with runtime_config_lock:
                 llm_settings.embedding_type = embedding_type
             if embedding_type == "openai":
                 with gr.Row():
@@ -694,7 +701,7 @@ def create_configs_block() -> list:
 
         @gr.render(inputs=[reranker_dropdown])
         def reranker_settings(reranker_type):
-            with llm_config_lock:
+            with runtime_config_lock:
                 llm_settings.reranker_type = reranker_type if reranker_type != "None" else None
             if reranker_type == "cohere":
                 with gr.Row():

@@ -1,6 +1,6 @@
 # hugegraph-python-client
 
-The `hugegraph-python-client` is a Python client/SDK for HugeGraph Database.
+Python client for Apache HugeGraph, distributed as `hugegraph-python` and imported as `pyhugegraph`.
 
 It is used to define graph structures, perform CRUD operations on graph data, manage schemas, and execute Gremlin queries. Both the `hugegraph-llm` and `hugegraph-ml` modules depend on this foundational library.
 
@@ -8,12 +8,11 @@ It is used to define graph structures, perform CRUD operations on graph data, ma
 
 ### Install the released package (Stable)
 
-To install the `hugegraph-python-client`, you can use uv/pip or source code building:
+To install the released `hugegraph-python` distribution (Python 3.10+):
 
 ```bash
 # uv is optional, you can use pip directly
-uv pip install hugegraph-python # Note: may not the latest version, recommend to install from source
-# WIP: we will use 'hugegraph-python-client' as the package name soon
+uv pip install hugegraph-python
 ```
 
 ### Install from Source (Latest Code)
@@ -22,10 +21,10 @@ To install from the source, clone the repository and install the required depend
 
 ```bash
 git clone https://github.com/apache/hugegraph-ai.git
-cd hugegraph-ai/hugegraph-python-client
+cd hugegraph-ai
 
 # Use uv sync to install dependencies (workspace member)
-uv sync  # Automatically creates .venv and installs dependencies
+uv sync --extra python-client  # Installs hugegraph-python from hugegraph-python-client/
 source .venv/bin/activate  # Activate once - all commands below assume this environment
 ```
 
@@ -81,6 +80,12 @@ print(res)
 g.close()
 ```
 
+### Graph Configuration Export
+
+`client.graphs().get_graph_config()` returns the graph's local source configuration file as text.
+Graphs loaded without a local file origin (for example from metadata) return HTTP 415 with
+`Can't access the api in a node which started with non local file config.`; the client raises `ServerError`.
+
 ### Schema Management
 
 The `hugegraph-python-client` provides comprehensive schema management capabilities.
@@ -89,28 +94,28 @@ The `hugegraph-python-client` provides comprehensive schema management capabilit
 
 ```python
 # Define a property key
-client.schema().propertyKey('name').dataType('STRING').cardinality('SINGLE').create()
+client.schema().propertyKey("name").dataType("STRING").cardinality("SINGLE").create()
 ```
 
 #### Define Vertex Labels
 
 ```python
 # Define a vertex label
-client.schema().vertexLabel('person').properties('name', 'age').primaryKeys('name').create()
+client.schema().vertexLabel("person").properties("name", "age").primaryKeys("name").create()
 ```
 
 #### Define Edge Labels
 
 ```python
 # Define an edge label
-client.schema().edgeLabel('knows').sourceLabel('person').targetLabel('person').properties('since').create()
+client.schema().edgeLabel("knows").sourceLabel("person").targetLabel("person").properties("since").create()
 ```
 
 #### Define Index Labels
 
 ```python
 # Define an index label
-client.schema().indexLabel('personByName').onV('person').by('name').secondary().create()
+client.schema().indexLabel("personByName").onV("person").by("name").secondary().create()
 ```
 
 ### CRUD Operations
@@ -121,11 +126,11 @@ The client allows you to perform CRUD operations on the graph data. Below are ex
 
 ```python
 # Create vertices
-v1 = client.graph().addVertex('person').property('name', 'John').property('age', 29).create()
-v2 = client.graph().addVertex('person').property('name', 'Jane').property('age', 25).create()
+v1 = client.graph().addVertex("person").property("name", "John").property("age", 29).create()
+v2 = client.graph().addVertex("person").property("name", "Jane").property("age", 25).create()
 
 # Create an edge
-client.graph().addEdge(v1, 'knows', v2).property('since', '2020').create()
+client.graph().addEdge(v1, "knows", v2).property("since", "2020").create()
 ```
 
 #### Read Vertices and Edges
@@ -144,10 +149,10 @@ print(edge)
 
 ```python
 # Update a vertex
-client.graph().updateVertex(v1.id).property('age', 30).update()
+client.graph().updateVertex(v1.id).property("age", 30).update()
 
 # Update an edge
-client.graph().updateEdge(edge.id).property('since', '2021').update()
+client.graph().updateEdge(edge.id).property("since", "2021").update()
 ```
 
 #### Delete Vertices and Edges

@@ -22,7 +22,7 @@
 
 - Python 3.10+ (required for hugegraph-llm)
 - [uv](https://docs.astral.sh/uv/) 0.7+ (required for workspace management)
-- HugeGraph Server 1.3+ (1.5+ recommended)
+- HugeGraph Server 1.3+ for the LLM/client modules (1.5+ recommended); `hugegraph-mcp` requires 1.7.0+
 - Docker (optional, for containerized deployment)
 
 ### Option 1: Docker Deployment (Recommended)
@@ -44,6 +44,11 @@ docker compose -f docker-compose-network.yml up -d
 # - RAG Service: http://localhost:8001
 ```
 
+The RAG service is published on the host port by default, and the HTTP API is unauthenticated by default. Before
+using this deployment outside a trusted local environment, either enable the built-in Bearer authentication with
+`ENABLE_LOGIN=true` and a strong, non-default `USER_TOKEN`, or configure reverse proxy authentication. Also restrict
+access with a firewall or trusted network.
+
 ### Option 2: Source Installation
 
 ```bash
@@ -59,6 +64,7 @@ cd hugegraph-ai
 # NOTE: If download is slow, uncomment mirror lines in pyproject.toml or use: uv config --global index.url https://pypi.tuna.tsinghua.edu.cn/simple
 # Or create local uv.toml with mirror settings to avoid git diff (see uv.toml example in root)
 uv sync --extra llm  # Install LLM-specific dependencies
+# For HugeGraph MCP source development, install its standalone package directly.
 # Or install all optional dependencies: uv sync --all-extras
 
 # 4. Activate virtual environment (recommended for easier commands)
@@ -70,6 +76,8 @@ python -m hugegraph_llm.demo.rag_demo.app
 # Visit http://127.0.0.1:8001
 ```
 
+The source launcher binds to `127.0.0.1` by default and warns when a non-loopback `--host` is selected.
+
 ### Basic Usage Examples
 
 > [!NOTE]
@@ -78,9 +86,9 @@ python -m hugegraph_llm.demo.rag_demo.app
 #### Graph Machine Learning
 
 ```bash
-# Install ML dependencies (ml module is not in workspace)
-uv sync --extra ml
-source .venv/bin/activate
+# ML is not part of the uv workspace.
+uv sync --project hugegraph-ml
+source hugegraph-ml/.venv/bin/activate
 
 # Run ML algorithms
 cd hugegraph-ml
@@ -98,6 +106,14 @@ Large language model integration for graph applications:
 - **Natural Language Interface**: Query graphs using natural language
 - **AI Agents**: Intelligent graph analysis and reasoning
 
+### [hugegraph-mcp](./hugegraph-mcp)
+
+Model Context Protocol server for safe, controlled HugeGraph access:
+
+- **Stable Tool Contract**: Typed graph, schema, Gremlin, and extraction tools for MCP clients
+- **Safe Writes**: Read-only defaults plus dry-run, persistent single-use confirmation, and target revalidation
+- **Compatibility**: Default `core` toolset with an opt-in `legacy` compatibility mode in this checkout; published `1.7.1` uses `v2_core` / `v1`
+
 ### [hugegraph-ml](./hugegraph-ml)
 
 Graph machine learning with 20+ implemented algorithms:
@@ -108,11 +124,11 @@ Graph machine learning with 20+ implemented algorithms:
 - **Link Prediction**: SEAL, GATNE, etc.
 
 > [!NOTE]
-> hugegraph-ml is not part of the workspace but linked via path dependency
+> hugegraph-ml is not part of the uv workspace.
 
 ### [hugegraph-python-client](./hugegraph-python-client)
 
-Python client for HugeGraph operations:
+Python client for HugeGraph operations, distributed as `hugegraph-python` (`uv pip install hugegraph-python`) and imported as `pyhugegraph`:
 
 - **Schema Management**: Define vertex/edge labels and properties
 - **CRUD Operations**: Create, read, update, delete graph data
