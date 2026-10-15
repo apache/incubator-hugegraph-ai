@@ -59,8 +59,9 @@ def test_documented_property_graph_example_runs_with_the_real_domain(capsys):
                 }
             )
 
-    def create_client(_settings, *, limit_output):
+    def create_client(_settings, *, limit_output, raise_on_truncation):
         assert limit_output is False
+        assert raise_on_truncation is True
         model = Model()
         clients.append(model)
         return model

@@ -71,7 +71,9 @@ class ExtractNode(BaseNode):
         def prepare(_chunk):
             # Clients and bundles belong to one chunk; workers never mutate workflow state.
             return PropertyGraphBundle(
-                llm=get_chat_llm(llm_settings, limit_output=False), schema=schema, example_prompt=example_prompt
+                llm=get_chat_llm(llm_settings, limit_output=False, raise_on_truncation=True),
+                schema=schema,
+                example_prompt=example_prompt,
             )
 
         results = run_chunks_v1(chunks=chunks, prepare=prepare, options=self.wk_input.review_options)

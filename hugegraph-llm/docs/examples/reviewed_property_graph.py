@@ -26,7 +26,9 @@ def main() -> None:
     request = json.loads(Path(__file__).with_name("reviewed-extraction.json").read_text(encoding="utf-8"))
 
     def prepare(_chunk):
-        return PropertyGraphBundle(llm=get_chat_llm(llm_settings, limit_output=False), schema=request["schema"])
+        return PropertyGraphBundle(
+            llm=get_chat_llm(llm_settings, limit_output=False, raise_on_truncation=True), schema=request["schema"]
+        )
 
     results = run_chunks_v1(
         chunks=[ChunkInput(index, text) for index, text in enumerate(request["texts"])],

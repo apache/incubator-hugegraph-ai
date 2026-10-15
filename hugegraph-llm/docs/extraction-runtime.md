@@ -23,7 +23,8 @@ uv sync --python 3.11 --extra llm --extra dev
 ```
 
 Configure a supported chat model using the existing
-[LLM configuration](../config.md). The example uses the same `get_chat_llm(llm_settings, limit_output=False)`
+[LLM configuration](../config.md). The example uses the same
+`get_chat_llm(llm_settings, limit_output=False, raise_on_truncation=True)`
 client factory as the extraction node, so it requires a reachable configured
 model and any credentials needed by that model. An inline schema avoids a
 HugeGraph Server connection.
@@ -90,18 +91,22 @@ JSON parsing errors fail that chunk instead of being converted into an empty
 successful graph. An actual empty graph can pass if validation and review accept
 it.
 
-| Option | Default | Meaning |
-| --- | --- | --- |
-| `max_reviews` | 2 | Maximum review attempts per chunk; zero is allowed. |
-| `max_fixes` | 1 | Maximum repair attempts per chunk; zero is allowed. |
-| `max_workers` | 4 | Maximum chunks being prepared or executed concurrently; must be positive. |
+| Option | Default | Accepted range | Meaning |
+| --- | --- | --- | --- |
+| `max_reviews` | 2 | 0–5 | Maximum review attempts per chunk. |
+| `max_fixes` | 1 | 0–3 | Maximum repair attempts per chunk. |
+| `max_workers` | 4 | 1–8 | Maximum chunks being prepared or executed concurrently. |
 
 All options require integers; booleans, fractional numbers, and numeric strings
-are rejected. Failed review and repair calls still consume an attempt. Validation
-does not consume model budget. The engine makes at most
-`1 + max_reviews + max_fixes` model calls per chunk: four with the defaults. This
-counts calls to the existing client, not its internal transport retries. No
-additional engine retry layer is added.
+are rejected. Unknown keys, such as `max_review`, and out-of-range values return
+HTTP 422 before extraction starts. Zero reviews or repairs disables that stage;
+an empty object still selects the defaults. Failed review and repair calls still
+consume an attempt. Validation does not consume model budget. The engine makes at most
+`1 + max_reviews + max_fixes` model calls per chunk: four with the defaults and
+nine at the maximum settings. This counts calls to the existing client, not its
+internal transport retries. No additional engine retry layer is added. Worker
+limits apply per request, not across all requests. These limits do not cap output
+tokens or the total number of chunks.
 
 ## Reading responses
 
@@ -139,7 +144,9 @@ Review and repair failures preserve the most recent graph; extraction failure
 has no graph yet. The failed attempt is counted normally, and truncation does
 not add an automatic retry. This reports truncation even when our wrapper omits
 `max_tokens`; an SDK provider adapter or the service may still apply an output
-limit.
+limit. Reviewed extraction explicitly enables `raise_on_truncation`; ordinary
+clients keep the default `False` and preserve their existing truncated-content
+behavior.
 
 ## Python integration and concurrency
 

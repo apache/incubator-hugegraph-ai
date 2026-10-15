@@ -41,6 +41,7 @@ class OpenAIClient(BaseLLM):
         model_name: str = "gpt-4.1-mini",
         max_tokens: Optional[int] = 8092,
         temperature: float = 0.01,
+        raise_on_truncation: bool = False,
     ) -> None:
         api_key = api_key or ""
         self.client = OpenAI(api_key=api_key, base_url=api_base)
@@ -48,6 +49,7 @@ class OpenAIClient(BaseLLM):
         self.model = model_name
         self.max_tokens = max_tokens
         self.temperature = temperature
+        self.raise_on_truncation = raise_on_truncation
 
     @retry(
         stop=stop_after_attempt(3),
@@ -74,7 +76,7 @@ class OpenAIClient(BaseLLM):
                 raise RuntimeError(f"Empty choices in LLM response: {str(completions)[:200]}")
             if completions.usage:
                 log.info("Token usage: %s", completions.usage.model_dump_json())
-            if completions.choices[0].finish_reason == "length":
+            if self.raise_on_truncation and completions.choices[0].finish_reason == "length":
                 raise LLMOutputTruncatedError()
             return completions.choices[0].message.content
         # catch context length / do not retry
@@ -116,7 +118,7 @@ class OpenAIClient(BaseLLM):
                 raise RuntimeError(f"Empty choices in LLM response: {str(completions)[:200]}")
             if completions.usage:
                 log.info("Token usage: %s", completions.usage.model_dump_json())
-            if completions.choices[0].finish_reason == "length":
+            if self.raise_on_truncation and completions.choices[0].finish_reason == "length":
                 raise LLMOutputTruncatedError()
             return completions.choices[0].message.content
         # catch context length / do not retry
@@ -166,7 +168,7 @@ class OpenAIClient(BaseLLM):
                 if not chunk.choices:
                     log.debug("Received empty choices in streaming chunk: %s", chunk)
                     continue
-                if chunk.choices[0].finish_reason == "length":
+                if self.raise_on_truncation and chunk.choices[0].finish_reason == "length":
                     raise LLMOutputTruncatedError()
                 delta = chunk.choices[0].delta
                 if delta.content:
@@ -208,7 +210,7 @@ class OpenAIClient(BaseLLM):
                 if not chunk.choices:
                     log.debug("Received empty choices in streaming chunk: %s", chunk)
                     continue
-                if chunk.choices[0].finish_reason == "length":
+                if self.raise_on_truncation and chunk.choices[0].finish_reason == "length":
                     raise LLMOutputTruncatedError()
                 delta = chunk.choices[0].delta
                 if delta.content:

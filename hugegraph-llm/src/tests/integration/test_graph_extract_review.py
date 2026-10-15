@@ -68,7 +68,8 @@ class ScriptedClients:
         self.active = 0
         self.peak = 0
 
-    def __call__(self, _settings, *, limit_output=True):
+    def __call__(self, _settings, *, limit_output=True, raise_on_truncation=False):
+        assert raise_on_truncation is not limit_output
         owner = self
 
         class Client:
@@ -311,7 +312,10 @@ def install_sdk_responses(monkeypatch, provider, steps):
             choices=[
                 {
                     "index": 0,
-                    "message": {"role": "assistant", "content": json.dumps(content)},
+                    "message": {
+                        "role": "assistant",
+                        "content": content if isinstance(content, str) else json.dumps(content),
+                    },
                     "finish_reason": finish_reason,
                 }
             ],
@@ -386,3 +390,26 @@ def test_sdk_limit_is_preserved_for_legacy_but_omitted_for_reviewed_requests(cli
     assert requests[0]["max_tokens"] == 37
     assert "max_tokens" not in requests[1]
     assert "max_tokens" not in requests[2]
+
+
+@pytest.mark.parametrize("provider", ["openai", "litellm"])
+@pytest.mark.parametrize("options", [{}, {"review_options": None}])
+@pytest.mark.parametrize(
+    ("truncated_content", "expected_names"),
+    [(graph("Second"), ["First", "Second"]), ('{"vertices": [', ["First"])],
+)
+def test_legacy_http_preserves_prior_chunks_when_later_output_is_truncated(
+    client, monkeypatch, provider, options, truncated_content, expected_names
+):
+    requests = install_sdk_responses(monkeypatch, provider, [(graph("First"), "stop"), (truncated_content, "length")])
+
+    response = post(client, ["First chunk.", "Second chunk."], **options)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert set(data) == {"status", "result", "warnings", "meta"}
+    assert data["status"] == "succeeded"
+    assert [vertex["properties"]["name"] for vertex in data["result"]["vertices"]] == expected_names
+    assert data["result"]["edges"] == []
+    assert len(requests) == 2
+    assert all(request["max_tokens"] == 37 for request in requests)

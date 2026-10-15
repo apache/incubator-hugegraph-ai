@@ -21,13 +21,14 @@ from hugegraph_llm.models.llms.ollama import OllamaClient
 from hugegraph_llm.models.llms.openai import OpenAIClient
 
 
-def get_chat_llm(llm_configs: LLMConfig, *, limit_output: bool = True):
+def get_chat_llm(llm_configs: LLMConfig, *, limit_output: bool = True, raise_on_truncation: bool = False):
     if llm_configs.chat_llm_type == "openai":
         return OpenAIClient(
             api_key=llm_configs.openai_chat_api_key,
             api_base=llm_configs.openai_chat_api_base,
             model_name=llm_configs.openai_chat_language_model,
             max_tokens=llm_configs.openai_chat_tokens if limit_output else None,
+            raise_on_truncation=raise_on_truncation,
         )
     if llm_configs.chat_llm_type == "ollama/local":
         return OllamaClient(
@@ -41,6 +42,7 @@ def get_chat_llm(llm_configs: LLMConfig, *, limit_output: bool = True):
             api_base=llm_configs.litellm_chat_api_base,
             model_name=llm_configs.litellm_chat_language_model,
             max_tokens=llm_configs.litellm_chat_tokens if limit_output else None,
+            raise_on_truncation=raise_on_truncation,
         )
     raise Exception("chat llm type is not supported !")
 

@@ -18,7 +18,7 @@ import math
 import re
 from copy import deepcopy
 from dataclasses import asdict
-from datetime import date
+from datetime import datetime
 
 from hugegraph_llm.config import prompt
 from hugegraph_llm.extraction_runtime.v1.contracts import ChunkInput, Issue, ReviewResult
@@ -86,14 +86,23 @@ def _valid_scalar(value, data_type: str) -> bool:
         except OverflowError:
             return False
     if data_type == "DATE":
+        if isinstance(value, int):
+            # HugeGraph accepts Integer/Long epoch milliseconds, but not floats or booleans.
+            return _valid_scalar(value, "LONG")
         if not isinstance(value, str):
             return False
+        match = re.fullmatch(r"(\d{4}-\d{1,2}-\d{1,2})(?:\s(\d{2}:\d{2}:\d{2})(\.\d{1,3})?)?", value, re.ASCII)
+        if match is None:
+            return False
+        # Match HugeGraph DateUtil's date, second and millisecond formats without normalizing the value.
+        date_format = "%Y-%m-%d" + (" %H:%M:%S" if match[2] else "") + (".%f" if match[3] else "")
         try:
-            date.fromisoformat(value)
+            datetime.strptime(value, date_format)
             return True
         except ValueError:
             return False
-    return False
+    # Leave unmodeled types (including OBJECT/BLOB) to HugeGraph instead of inventing restrictions.
+    return value is not None
 
 
 class PropertyGraphBundle:
@@ -221,7 +230,8 @@ class PropertyGraphBundle:
                 values = value
             else:
                 values = value if cardinality is None and isinstance(value, list) else [value]
-                if cardinality == "SINGLE" and isinstance(value, (dict, list)):
+                # Known types check their own shape; OBJECT and BLOB may contain JSON containers.
+                if cardinality == "SINGLE" and not data_type and isinstance(value, (dict, list)):
                     issues.append(Issue(property_path, "Expected a scalar for SINGLE cardinality"))
             if data_type and any(not _valid_scalar(item, data_type) for item in values):
                 issues.append(Issue(property_path, f"Value does not match property data type {data_type}"))

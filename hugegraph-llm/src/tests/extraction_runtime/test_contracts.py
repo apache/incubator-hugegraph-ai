@@ -32,6 +32,24 @@ def test_options_allow_zero_business_budgets_but_require_workers():
         ExtractionOptions(max_workers=0)
 
 
+@pytest.mark.parametrize("field, upper", [("max_reviews", 5), ("max_fixes", 3), ("max_workers", 8)])
+def test_options_accept_upper_boundary_and_reject_excess(field, upper):
+    assert getattr(ExtractionOptions(**{field: upper}), field) == upper
+    with pytest.raises(ValidationError) as exc_info:
+        ExtractionOptions(**{field: upper + 1})
+    error = exc_info.value.errors()[0]
+    assert error["loc"] == (field,)
+    assert error["type"] == "less_than_equal"
+
+
+def test_options_reject_unknown_fields_instead_of_using_defaults():
+    with pytest.raises(ValidationError) as exc_info:
+        ExtractionOptions(max_review=0)
+    error = exc_info.value.errors()[0]
+    assert error["loc"] == ("max_review",)
+    assert error["type"] == "extra_forbidden"
+
+
 def test_result_serializes_issues_and_detaches_payload():
     result = ChunkResult(
         0, "blocked", {"vertices": []}, [Issue("vertices", "missing", "Alice")], "invalid", None, 0, 0, 1

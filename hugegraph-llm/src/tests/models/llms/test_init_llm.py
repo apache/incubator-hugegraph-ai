@@ -40,6 +40,7 @@ def test_chat_factory_omits_limit_only_when_requested(monkeypatch, provider, cla
     )
     init_llm.get_chat_llm(settings)
     assert constructor.call_args.kwargs["max_tokens"] == 37
+    assert constructor.call_args.kwargs["raise_on_truncation"] is False
     init_llm.get_chat_llm(settings, limit_output=True)
     assert constructor.call_args.kwargs["max_tokens"] == 37
     init_llm.get_chat_llm(settings, limit_output=False)
@@ -48,7 +49,12 @@ def test_chat_factory_omits_limit_only_when_requested(monkeypatch, provider, cla
         "api_base": "http://model.invalid/v1",
         "model_name": "test-model",
         "max_tokens": None,
+        "raise_on_truncation": False,
     }
+    for limit_output in (False, True):
+        init_llm.get_chat_llm(settings, limit_output=limit_output, raise_on_truncation=True)
+        assert constructor.call_args.kwargs["max_tokens"] == (37 if limit_output else None)
+        assert constructor.call_args.kwargs["raise_on_truncation"] is True
 
 
 def test_chat_factory_does_not_add_output_options_to_ollama(monkeypatch):
@@ -60,5 +66,5 @@ def test_chat_factory_does_not_add_output_options_to_ollama(monkeypatch):
         ollama_chat_host="localhost",
         ollama_chat_port=11434,
     )
-    init_llm.get_chat_llm(settings, limit_output=False)
+    init_llm.get_chat_llm(settings, limit_output=False, raise_on_truncation=True)
     constructor.assert_called_once_with(model="test-model", host="localhost", port=11434)

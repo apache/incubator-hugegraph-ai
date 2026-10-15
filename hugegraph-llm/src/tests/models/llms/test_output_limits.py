@@ -131,12 +131,13 @@ def test_omitted_constructor_limit_keeps_existing_default(client_factory):
 
 
 @pytest.mark.parametrize("mode", ["generate", "agenerate"])
+@pytest.mark.parametrize("limit", [None, 237])
 @pytest.mark.parametrize(
     "content", [None, "", '{"decision":', '{"decision":"pass","issues":[]}', "private-model-content"]
 )
-def test_length_is_reported_before_content_is_returned_and_never_retried(client_factory, mode, content):
+def test_length_is_reported_before_content_is_returned_and_never_retried(client_factory, mode, limit, content):
     cls, sync_call, async_call = client_factory
-    client = cls(api_key="private-api-key", max_tokens=None)
+    client = cls(api_key="private-api-key", max_tokens=limit, raise_on_truncation=True)
     configure_calls(sync_call, async_call, mode, content=content, finish_reason="length")
 
     with pytest.raises(LLMOutputTruncatedError) as error:
@@ -148,10 +149,13 @@ def test_length_is_reported_before_content_is_returned_and_never_retried(client_
 
 
 @pytest.mark.parametrize("mode", ["generate_streaming", "agenerate_streaming"])
+@pytest.mark.parametrize("limit", [None, 237])
 @pytest.mark.parametrize("terminal_content", [None, "", '{"decision":"pass","issues":[]}'])
-def test_streaming_checks_terminal_reason_before_delivering_terminal_chunk(client_factory, mode, terminal_content):
+def test_streaming_checks_terminal_reason_before_delivering_terminal_chunk(
+    client_factory, mode, limit, terminal_content
+):
     cls, sync_call, async_call = client_factory
-    client = cls(api_key="test-key", max_tokens=None)
+    client = cls(api_key="test-key", max_tokens=limit, raise_on_truncation=True)
     configure_calls(
         sync_call, async_call, mode, content=terminal_content, finish_reason="length", prefix="partial-prefix"
     )
@@ -167,6 +171,22 @@ def test_streaming_checks_terminal_reason_before_delivering_terminal_chunk(clien
     else:
         assert seen[0].choices[0].delta.content == "partial-prefix"
     (async_call if mode.startswith("a") else sync_call).assert_called_once()
+
+
+@pytest.mark.parametrize("mode", ["generate", "agenerate", "generate_streaming", "agenerate_streaming"])
+@pytest.mark.parametrize("limit", [None, 237])
+def test_default_truncation_policy_returns_content_even_without_a_token_cap(client_factory, mode, limit):
+    cls, sync_call, async_call = client_factory
+    client = cls(api_key="test-key", max_tokens=limit)
+    configure_calls(sync_call, async_call, mode, content="partial", finish_reason="length", prefix="prefix-")
+    seen = []
+
+    expected = "prefix-partial" if "streaming" in mode else "partial"
+    assert invoke(client, mode, callback=seen.append) == expected
+    (async_call if mode.startswith("a") else sync_call).assert_called_once()
+    if "streaming" in mode:
+        delivered = seen if cls is openai_module.OpenAIClient else [part.choices[0].delta.content for part in seen]
+        assert delivered == ["prefix-", "partial"]
 
 
 @pytest.mark.parametrize("mode", ["generate_streaming", "agenerate_streaming"])

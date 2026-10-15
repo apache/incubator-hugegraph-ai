@@ -16,13 +16,15 @@
 from dataclasses import asdict, dataclass, field
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ExtractionOptions(BaseModel):
-    max_reviews: int = Field(default=2, ge=0, strict=True)
-    max_fixes: int = Field(default=1, ge=0, strict=True)
-    max_workers: int = Field(default=4, ge=1, strict=True)
+    model_config = ConfigDict(extra="forbid")
+
+    max_reviews: int = Field(default=2, ge=0, le=5, strict=True)
+    max_fixes: int = Field(default=1, ge=0, le=3, strict=True)
+    max_workers: int = Field(default=4, ge=1, le=8, strict=True)
 
 
 @dataclass

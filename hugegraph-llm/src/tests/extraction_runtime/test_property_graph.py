@@ -158,6 +158,136 @@ def test_collection_cardinality_and_element_types(schema, graph, value):
     assert any(issue.path == "vertices[0].properties.tags" for issue in bundle(schema).validate(graph, CHUNK))
 
 
+@pytest.mark.parametrize(
+    "data_type,value",
+    [
+        ("DATE", "2024-02-29"),
+        ("DATE", "2024-2-9"),
+        ("DATE", "2024-02-29 12:34:56"),
+        ("DATE", "2024-2-9 12:34:56.1"),
+        ("DATE", "2024-02-29 12:34:56.12"),
+        ("DATE", "2024-02-29 12:34:56.123"),
+        ("DATE", 1709208000000),
+        ("DATE", 0),
+        ("DATE", -1),
+        ("DATE", -(2**63)),
+        ("DATE", 2**63 - 1),
+        ("OBJECT", {"source": "invoice", "items": [1, 2]}),
+        ("OBJECT", [{"source": "invoice"}]),
+        ("OBJECT", "invoice"),
+        ("BLOB", "AQID"),
+        ("BLOB", "0x010203"),
+        ("BLOB", [1, 2, 3]),
+        ("UNMODELED_TYPE", {"value": 1}),
+    ],
+)
+def test_compatible_property_values_reach_final_without_repair(schema, graph, data_type, value):
+    schema["propertykeys"][1]["data_type"] = data_type
+    graph["vertices"][0]["properties"]["age"] = value
+    domain = bundle(schema, graph, {"decision": "pass", "issues": []})
+
+    assert domain.validate(deepcopy(graph), CHUNK) == []
+    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
+
+    assert result.status == "final" and result.issues == []
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == (1, 0, 2)
+    assert result.graph["vertices"][0]["properties"] == graph["vertices"][0]["properties"]
+    review_context = json.loads(domain.llm.prompts[1].split("\n## Input\n")[1])
+    assert review_context["graph"]["vertices"][0]["properties"]["age"] == value
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "2023-02-29",
+        "2024-02-30 12:34:56",
+        "2024-13-01",
+        "0000-01-01",
+        "2024-02-29 24:00:00",
+        "2024-02-29 12:60:00",
+        "2024-02-29 12:34:60",
+        "2024-02-29 1:34:56",
+        "2024-02-29 12:34:56.1234",
+        "2024-02-29T12:34:56Z",
+        "2024-02-29 12:34:56 trailing",
+        "1709208000000",
+        "not-a-date",
+        True,
+        False,
+        1709208000000.0,
+        2**63,
+        -(2**63) - 1,
+        ["2024-02-29"],
+        {"date": "2024-02-29"},
+    ],
+)
+def test_invalid_dates_are_blocked_before_review_and_preserved(schema, graph, value):
+    schema["propertykeys"][1]["data_type"] = "DATE"
+    graph["vertices"][0]["properties"]["age"] = value
+    result = ExtractionEngineV1().run(bundle=bundle(schema, graph), chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
+    assert result.status == "blocked" and result.reason == "validation_failed"
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == (0, 0, 1)
+    assert any(issue.path == "vertices[0].properties.age" for issue in result.issues)
+    assert result.graph["vertices"][0]["properties"]["age"] == value
+
+
+@pytest.mark.parametrize("data_type,value", [("TEXT", ["x"]), ("BOOLEAN", {}), ("DOUBLE", []), ("UUID", {})])
+def test_modeled_single_properties_still_reject_containers(schema, graph, data_type, value):
+    schema["propertykeys"][1]["data_type"] = data_type
+    graph["vertices"][0]["properties"]["age"] = value
+    assert any(issue.path == "vertices[0].properties.age" for issue in bundle(schema).validate(graph, CHUNK))
+
+
+@pytest.mark.parametrize(
+    "data_type,cardinality,value",
+    [
+        ("DATE", "LIST", ["2024-02-29 12:34:56", 0, "2024-02-29 12:34:56"]),
+        ("DATE", "SET", ["2024-02-29", 0]),
+        ("OBJECT", "LIST", [{"value": 1}, {"value": 1}]),
+        ("OBJECT", "SET", [{"value": 1}, {"value": 2}]),
+        ("BLOB", "LIST", [[1, 2], [1, 2]]),
+        ("BLOB", "SET", [[1, 2], [3, 4]]),
+    ],
+)
+def test_compatible_collection_properties(schema, graph, data_type, cardinality, value):
+    schema["propertykeys"][1].update(data_type=data_type, cardinality=cardinality)
+    graph["vertices"][0]["properties"]["age"] = value
+    assert bundle(schema).validate(graph, CHUNK) == []
+
+
+@pytest.mark.parametrize(
+    "data_type,cardinality,value,message",
+    [
+        ("DATE", "LIST", "2024-02-29", "Expected an array"),
+        ("DATE", "LIST", ["2024-02-30"], "data type DATE"),
+        ("OBJECT", "LIST", {"value": 1}, "Expected an array"),
+        ("OBJECT", "SET", [{"value": 1}, {"value": 1}], "contains duplicates"),
+        ("BLOB", "SET", "AQID", "Expected an array"),
+        ("BLOB", "SET", [[1, 2], [1, 2]], "contains duplicates"),
+        ("OBJECT", "LIST", [None], "data type OBJECT"),
+        ("BLOB", "LIST", [None], "data type BLOB"),
+    ],
+)
+def test_collection_constraints_still_apply(schema, graph, data_type, cardinality, value, message):
+    schema["propertykeys"][1].update(data_type=data_type, cardinality=cardinality)
+    graph["vertices"][0]["properties"]["age"] = value
+    issues = bundle(schema).validate(graph, CHUNK)
+    assert any(issue.path == "vertices[0].properties.age" and message in issue.message for issue in issues)
+    assert graph["vertices"][0]["properties"]["age"] == value
+
+
+@pytest.mark.parametrize("data_type", ["DATE", "OBJECT", "BLOB"])
+@pytest.mark.parametrize("required", [False, True])
+def test_null_properties_remain_invalid_for_all_types(schema, graph, data_type, required):
+    schema["propertykeys"][1]["data_type"] = data_type
+    if required:
+        schema["vertexlabels"][0]["nullable_keys"].remove("age")
+    graph["vertices"][0]["properties"]["age"] = None
+    issues = bundle(schema).validate(graph, CHUNK)
+    expected = "Required property" if required else "Omit absent properties"
+    assert any(issue.path == "vertices[0].properties.age" and expected in issue.message for issue in issues)
+
+
 def test_missing_schema_constraints_are_not_invented(graph):
     schema = {
         "vertexlabels": [{"name": "person"}, {"name": "company"}],

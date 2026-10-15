@@ -41,12 +41,14 @@ class LiteLLMClient(BaseLLM):
         model_name: str = "openai/gpt-4.1-mini",  # Can be any model supported by LiteLLM
         max_tokens: Optional[int] = 8192,
         temperature: float = 0.01,
+        raise_on_truncation: bool = False,
     ) -> None:
         self.api_key = api_key
         self.api_base = api_base
         self.model = model_name
         self.max_tokens = max_tokens
         self.temperature = temperature
+        self.raise_on_truncation = raise_on_truncation
 
     @retry(
         stop=stop_after_attempt(2),
@@ -73,7 +75,7 @@ class LiteLLMClient(BaseLLM):
                 base_url=self.api_base,
             )
             log.info("Token usage: %s", response.usage)
-            if response.choices[0].finish_reason == "length":
+            if self.raise_on_truncation and response.choices[0].finish_reason == "length":
                 raise LLMOutputTruncatedError()
             return response.choices[0].message.content
         except (RateLimitError, BudgetExceededError, APIError) as e:
@@ -105,7 +107,7 @@ class LiteLLMClient(BaseLLM):
                 base_url=self.api_base,
             )
             log.info("Token usage: %s", response.usage)
-            if response.choices[0].finish_reason == "length":
+            if self.raise_on_truncation and response.choices[0].finish_reason == "length":
                 raise LLMOutputTruncatedError()
             return response.choices[0].message.content
         except (RateLimitError, BudgetExceededError, APIError) as e:
@@ -137,7 +139,7 @@ class LiteLLMClient(BaseLLM):
                 if not chunk.choices:
                     log.debug("Received empty choices in streaming chunk: %s", chunk)
                     continue
-                if chunk.choices[0].finish_reason == "length":
+                if self.raise_on_truncation and chunk.choices[0].finish_reason == "length":
                     raise LLMOutputTruncatedError()
                 if chunk.choices[0].delta.content:
                     result += chunk.choices[0].delta.content
@@ -172,7 +174,7 @@ class LiteLLMClient(BaseLLM):
                 if not chunk.choices:
                     log.debug("Received empty choices in streaming chunk: %s", chunk)
                     continue
-                if chunk.choices[0].finish_reason == "length":
+                if self.raise_on_truncation and chunk.choices[0].finish_reason == "length":
                     raise LLMOutputTruncatedError()
                 if chunk.choices[0].delta.content:
                     if on_token_callback:
