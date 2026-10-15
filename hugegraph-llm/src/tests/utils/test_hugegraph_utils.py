@@ -20,7 +20,7 @@ from unittest.mock import Mock
 import pytest
 
 from hugegraph_llm.config import huge_settings
-from hugegraph_llm.utils.hugegraph_utils import get_hg_client
+from hugegraph_llm.utils.hugegraph_utils import get_hg_client, gremlin_str_literal
 
 
 def test_request_connection_passes_canonical_validated_url(monkeypatch):
@@ -61,3 +61,17 @@ def test_request_connection_rejects_invalid_url_before_client_construction(monke
         )
 
     factory.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("1:Tom Hanks", "'1:Tom Hanks'"),
+        ("1:O'Brien", "'1:O\\'Brien'"),
+        ("C:\\path", "'C:\\\\path'"),
+        ("1:$100 bill", "'1:$100 bill'"),
+        (42, "'42'"),
+    ],
+)
+def test_gremlin_str_literal_escapes_quotes_and_backslashes(value, expected):
+    assert gremlin_str_literal(value) == expected
