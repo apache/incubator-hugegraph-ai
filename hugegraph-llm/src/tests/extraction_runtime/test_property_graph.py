@@ -446,3 +446,157 @@ def test_explicit_block_review_keeps_evidence(schema, graph):
     result = ExtractionEngineV1().run(bundle=bundle(schema, graph, review), chunk=CHUNK, options=ExtractionOptions())
     assert result.status == "blocked"
     assert result.issues == [Issue("graph", "Not supported by source", "source")]
+
+
+def _set_uuid_case(schema, graph, target, value):
+    if target == "property":
+        schema["propertykeys"][1]["data_type"] = "UUID"
+        graph["vertices"][0]["properties"]["age"] = value
+        return "vertices[0].properties.age"
+    schema["vertexlabels"][0]["id_strategy"] = "CUSTOMIZE_UUID"
+    del schema["vertexlabels"][0]["primary_keys"]
+    graph["vertices"][0]["id"] = value
+    graph["edges"][0]["outV"] = value
+    return "vertices[0].id"
+
+
+def _uuid_case_value(graph, target):
+    vertex = graph["vertices"][0]
+    return vertex["properties"]["age"] if target == "property" else vertex["id"]
+
+
+@pytest.mark.parametrize("target", ["property", "id"])
+@pytest.mark.parametrize(
+    "value",
+    [
+        "12345678-1234-5678-1234-567812345678",
+        "ABCDEFAB-CDEF-ABCD-EFAB-CDEFABCDEFAB",
+        "12345678123456781234567812345678",
+        "ABCDEFABCDEFABCDEFABCDEFABCDEFAB",
+        "00000000-0000-0000-0000-000000000000",
+        "ffffffffffffffffffffffffffffffff",
+        # StringEncoding.uuid delegates these 36-character forms to Java UUID.fromString.
+        "123456789-123-1234-1234-123456789012",
+        "+1234567-1234-1234-1234-123456789012",
+        "00000000000000001-1-1-1-000000000000",
+        "7fffffffffffffff-1-1-1-0000000000000",
+        "+123456789abcdef+123456789abcdef",
+        "ＡＢＣＤＥＦ12-1234-1234-1234-123456789012",
+        "١٢٣٤٥٦٧٨-1234-1234-1234-123456789012",
+    ],
+)
+def test_hugegraph_compatible_uuids_reach_final_without_normalization(schema, graph, target, value):
+    _set_uuid_case(schema, graph, target, value)
+    domain = bundle(schema, graph, {"decision": "pass", "issues": []})
+    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
+
+    assert result.status == "final" and result.issues == []
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == (1, 0, 2)
+    assert _uuid_case_value(result.graph, target) == value
+    if target == "id":
+        assert result.graph["edges"][0]["outV"] == value
+    review_graph = json.loads(domain.llm.prompts[1].split("\n## Input\n")[1])["graph"]
+    assert _uuid_case_value(review_graph, target) == value
+
+
+@pytest.mark.parametrize("target", ["property", "id"])
+@pytest.mark.parametrize(
+    "value",
+    [
+        "not-a-uuid",
+        "",
+        None,
+        123,
+        True,
+        {},
+        ["12345678-1234-5678-1234-567812345678"],
+        "12345678-1234-5678-1234-56781234567g",
+        "1234567812345678123456781234567g",
+        "1-1-1-1-1",
+        "123456781234567812345678123456789",
+        "12345678123456781234567812345678901",
+        "12345678_1234-5678-1234-567812345678",
+        "12345678--234-5678-1234-567812345678",
+        "12345678-1234-5678-1234-56781234567 ",
+        "1234567_123456781234567812345678",
+        "{12345678-1234-5678-1234-567812345678}",
+        "urn:uuid:12345678-1234-5678-1234-567812345678",
+        # Java's signed Long parser rejects overflow despite the total length being 36.
+        "8000000000000000-1-1-1-0000000000000",
+        # Python accepts these decimal digits, but Java parses UTF-16 chars, not code points.
+        "𝟙2345678-1234-5678-1234-567812345678",
+    ],
+)
+def test_invalid_uuids_are_blocked_before_review_and_preserved(schema, graph, target, value):
+    path = _set_uuid_case(schema, graph, target, value)
+    result = ExtractionEngineV1().run(bundle=bundle(schema, graph), chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
+
+    assert result.status == "blocked" and result.reason == "validation_failed"
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == (0, 0, 1)
+    assert any(issue.path == path for issue in result.issues)
+    assert _uuid_case_value(result.graph, target) == value
+
+
+@pytest.mark.parametrize("cardinality", ["LIST", "SET"])
+@pytest.mark.parametrize("valid", [False, True])
+def test_uuid_collection_elements_are_validated(schema, graph, cardinality, valid):
+    value = ["12345678-1234-5678-1234-567812345678", "ABCDEFABCDEFABCDEFABCDEFABCDEFAB" if valid else "not-a-uuid"]
+    _set_uuid_case(schema, graph, "property", value)
+    schema["propertykeys"][1]["cardinality"] = cardinality
+    issues = bundle(schema).validate(graph, CHUNK)
+    assert (issues == []) is valid
+    if not valid:
+        assert any(issue.path == "vertices[0].properties.age" and "UUID" in issue.message for issue in issues)
+    assert graph["vertices"][0]["properties"]["age"] == value
+
+
+@pytest.mark.parametrize("target", ["property", "id"])
+def test_invalid_uuid_can_be_repaired_then_reviewed(schema, graph, target):
+    valid = "12345678-1234-5678-1234-567812345678"
+    _set_uuid_case(schema, graph, target, valid)
+    wrong = deepcopy(graph)
+    if target == "id":
+        wrong["vertices"][0]["id"] = wrong["edges"][0]["outV"] = "not-a-uuid"
+    else:
+        wrong["vertices"][0]["properties"]["age"] = "not-a-uuid"
+    domain = bundle(schema, wrong, graph, {"decision": "pass", "issues": []})
+    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
+
+    assert result.status == "final" and result.issues == []
+    assert _uuid_case_value(result.graph, target) == valid
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == (1, 1, 3)
+    repair_context = json.loads(domain.llm.prompts[1].split("\n## Input\n")[1])
+    assert _uuid_case_value(repair_context["graph"], target) == "not-a-uuid"
+    assert any("UUID" in issue["message"] for issue in repair_context["issues"])
+
+
+@pytest.mark.parametrize("target", ["property", "id"])
+def test_uuid_repair_is_revalidated_and_retains_latest_invalid_graph(schema, graph, target):
+    _set_uuid_case(schema, graph, target, "not-a-uuid")
+    replacement = deepcopy(graph)
+    if target == "id":
+        replacement["vertices"][0]["id"] = replacement["edges"][0]["outV"] = "still-not-a-uuid"
+    else:
+        replacement["vertices"][0]["properties"]["age"] = "still-not-a-uuid"
+    result = ExtractionEngineV1().run(
+        bundle=bundle(schema, graph, replacement), chunk=CHUNK, options=ExtractionOptions(max_fixes=1)
+    )
+
+    assert result.status == "blocked" and result.reason == "validation_failed"
+    assert _uuid_case_value(result.graph, target) == "still-not-a-uuid"
+    assert any("UUID" in issue.message for issue in result.issues)
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == (0, 1, 2)
+
+
+@pytest.mark.parametrize("target", ["property", "id"])
+def test_failed_uuid_repair_keeps_invalid_value_and_diagnostics(schema, graph, target):
+    path = _set_uuid_case(schema, graph, target, "not-a-uuid")
+    result = ExtractionEngineV1().run(
+        bundle=bundle(schema, graph, "bad JSON"), chunk=CHUNK, options=ExtractionOptions()
+    )
+
+    assert result.status == "failed" and result.stage == "repair"
+    assert result.reason == "repair_failed: JSONDecodeError"
+    assert _uuid_case_value(result.graph, target) == "not-a-uuid"
+    assert any(issue.path == path and "UUID" in issue.message for issue in result.issues)
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == (0, 1, 2)

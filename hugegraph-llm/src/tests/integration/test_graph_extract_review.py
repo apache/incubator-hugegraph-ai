@@ -236,6 +236,11 @@ def test_no_final_chunks_returns_business_failure_with_http_200(client, monkeypa
     assert data["status"] == "failed"
     assert data["result"] == {"vertices": [], "edges": []}
     assert data["chunk_results"][0]["status"] == chunk_status
+    if chunk_status == "candidate":
+        chunk = data["chunk_results"][0]
+        assert chunk["graph"]["vertices"] == [graph("Candidate")["vertices"][0] | {"type": "vertex"}]
+        assert chunk["graph"]["edges"] == []
+        assert (chunk["reviews_used"], chunk["fixes_used"], chunk["llm_calls"]) == (0, 0, 1)
     assert data["warnings"] == []
 
 

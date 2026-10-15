@@ -35,6 +35,7 @@ def get_chat_llm(llm_configs: LLMConfig, *, limit_output: bool = True, raise_on_
             model=llm_configs.ollama_chat_language_model,
             host=llm_configs.ollama_chat_host,
             port=llm_configs.ollama_chat_port,
+            raise_on_truncation=raise_on_truncation,
         )
     if llm_configs.chat_llm_type == "litellm":
         return LiteLLMClient(

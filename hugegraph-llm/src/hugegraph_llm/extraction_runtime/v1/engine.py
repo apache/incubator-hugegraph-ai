@@ -96,9 +96,9 @@ class ExtractionEngineV1:
                 log.debug("Chunk %s: repair %s", chunk.index, fixes_used)
                 current_graph = bundle.repair(current_graph, chunk, issues)
                 issues = []
-        except LLMOutputTruncatedError:
-            log.warning("Chunk %s output truncated during %s (finish_reason=length)", chunk.index, stage)
-            return finish("failed", f"{stage}_output_truncated: finish_reason=length", stage)
+        except LLMOutputTruncatedError as exc:
+            log.warning("Chunk %s output truncated during %s (%s)", chunk.index, stage, exc.reason)
+            return finish("failed", f"{stage}_output_truncated: {exc.reason}", stage)
         except Exception as exc:  # A chunk failure must not discard other chunks' results.
             log.warning("Chunk %s failed during %s (%s)", chunk.index, stage, type(exc).__name__)
             return finish("failed", f"{stage}_failed: {type(exc).__name__}", stage)

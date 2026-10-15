@@ -52,7 +52,9 @@ flowchart TD
 
 选项必须为整数：`max_reviews` 范围为 0–5，`max_fixes` 为 0–3，`max_workers` 为 1–8。布尔值、小数、数字字符串、超出范围的值和未知字段（例如误写为 `max_review`）都会在抽取开始前返回 HTTP 422。空对象仍采用默认值；未提供选项或传入 null 仍使用旧抽取路径。最大设置允许每块最多 9 次执行器层模型调用，每个请求最多同时处理 8 块；它不限制单次输出 token、输入块总数或所有请求的总并发。
 
-审核路径显式启用模型客户端的 `raise_on_truncation=True`，在输出被截断时返回对应阶段的 failed 块。普通客户端默认关闭该选项，保留既有的截断内容返回行为；是否抛出截断异常与是否设置输出 token 上限分别配置。
+`max_reviews=0` 仅跳过模型审阅，仍执行抽取、本地校验，以及 `max_fixes` 预算内必要的修复。没有经过审阅的图不能成为 final：有效图停留在 candidate，顶层状态为 failed，汇总 `result.vertices/edges` 为空，但图仍保留在 `chunk_results` 供检查。它不会切换到旧抽取模式；需要旧行为时应省略 `review_options` 或传入 null。`max_fixes=0` 仅禁用修复。
+
+审核路径显式启用模型客户端的 `raise_on_truncation=True`：OpenAI/LiteLLM 的 `finish_reason=length` 和 Ollama 的 `done_reason=length` 都会在解析前返回对应阶段的 failed 块，并在 reason 中保留对应的截断标记。普通客户端默认关闭该选项，保留既有的截断内容返回行为；是否抛出截断异常与是否设置输出 token 上限分别配置。审核路径还保留 OpenAI 请求错误和认证错误的异常类型，避免把它们误报为 JSON 解析错误；普通客户端保留既有的错误返回行为。
 
 | 终态 | 含义 |
 | --- | --- |
@@ -66,6 +68,8 @@ flowchart TD
 ## 并发与响应
 
 batch 限制同时准备和执行的块数量。每块有独立的领域对象、模型客户端、图、问题与计数器；返回顺序始终等于输入顺序。它一次提交并保留有限批次，不提供流式调度或跨块合并。
+
+ExtractNode 在分发块前深拷贝一份当前 LLM 配置，所有块及各阶段均使用这份快照。UI 或 HTTP 配置更新只影响后续请求；配置快照与 LLM 配置写入共用锁，模型执行不持锁。新快照会等待正在进行的配置更新（包括连通性检查）结束。
 
 ExtractNode 汇总 final 块的 vertices/edges，并保留全部 `chunk_results`。全部块 final 时顶层为 succeeded，部分 final 时为 partial，没有 final 时为 failed。已完成的业务请求仍可返回 HTTP 200，调用方必须检查这些状态。合法空图可为 final，不以实体数量判断成功。
 

@@ -57,7 +57,8 @@ def test_chat_factory_omits_limit_only_when_requested(monkeypatch, provider, cla
         assert constructor.call_args.kwargs["raise_on_truncation"] is True
 
 
-def test_chat_factory_does_not_add_output_options_to_ollama(monkeypatch):
+@pytest.mark.parametrize("raise_on_truncation", [False, True])
+def test_chat_factory_passes_ollama_policy_without_output_options(monkeypatch, raise_on_truncation):
     constructor = Mock()
     monkeypatch.setattr(init_llm, "OllamaClient", constructor)
     settings = SimpleNamespace(
@@ -66,5 +67,7 @@ def test_chat_factory_does_not_add_output_options_to_ollama(monkeypatch):
         ollama_chat_host="localhost",
         ollama_chat_port=11434,
     )
-    init_llm.get_chat_llm(settings, limit_output=False, raise_on_truncation=True)
-    constructor.assert_called_once_with(model="test-model", host="localhost", port=11434)
+    init_llm.get_chat_llm(settings, limit_output=False, raise_on_truncation=raise_on_truncation)
+    constructor.assert_called_once_with(
+        model="test-model", host="localhost", port=11434, raise_on_truncation=raise_on_truncation
+    )

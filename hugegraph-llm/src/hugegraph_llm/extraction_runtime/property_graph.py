@@ -28,6 +28,8 @@ from hugegraph_llm.operators.llm_op.property_graph_extract import (
     generate_extract_property_graph_prompt,
 )
 
+_JAVA_HEX_LETTERS = str.maketrans("ＡＢＣＤＥＦａｂｃｄｅｆ", "ABCDEFabcdef")
+
 
 def _invalid_constant(value: str):
     raise ValueError(f"Invalid JSON constant: {value}")
@@ -70,9 +72,35 @@ def _valid_id(value) -> bool:
     return (isinstance(value, str) and bool(value)) or (isinstance(value, int) and not isinstance(value, bool))
 
 
+def _valid_uuid(value) -> bool:
+    """Match HugeGraph StringEncoding.uuid without rewriting the supplied value."""
+    if not isinstance(value, str):
+        return False
+    if len(value) == 36 and "-" in value:
+        # Java UUID.fromString also accepts nonstandard widths and leading '+'.
+        parts, bits = value.split("-"), 63
+        if len(parts) != 5:
+            return False
+    elif len(value) == 32:
+        parts, bits = [value[:16], value[16:]], 64
+    else:
+        return False
+    for part in parts:
+        # Java Character.digit(char, 16) includes BMP decimal digits and fullwidth
+        # A-F. Python int also accepts underscores and non-BMP digits; exclude them.
+        part = part.translate(_JAVA_HEX_LETTERS)
+        if re.fullmatch(r"\+?[\da-fA-F]+", part) is None or any(ord(char) > 0xFFFF for char in part):
+            return False
+        if int(part, 16) >= 2**bits:
+            return False
+    return True
+
+
 def _valid_scalar(value, data_type: str) -> bool:
-    if data_type in ("TEXT", "UUID"):
+    if data_type == "TEXT":
         return isinstance(value, str)
+    if data_type == "UUID":
+        return _valid_uuid(value)
     if data_type == "BOOLEAN":
         return isinstance(value, bool)
     if data_type in ("BYTE", "INT", "LONG"):
@@ -197,6 +225,8 @@ class PropertyGraphBundle:
                         not isinstance(vertex_id, int) or isinstance(vertex_id, bool)
                     ):
                         issues.append(Issue(path + ".id", "CUSTOMIZE_NUMBER requires an integer vertex id"))
+                    if strategy == "CUSTOMIZE_UUID" and not _valid_uuid(vertex_id):
+                        issues.append(Issue(path + ".id", "CUSTOMIZE_UUID requires a valid UUID string vertex id"))
                 else:
                     issues.extend(self._validate_endpoints(item, definition, vertices_by_id, path))
         return issues

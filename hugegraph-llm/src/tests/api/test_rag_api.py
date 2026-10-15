@@ -118,6 +118,7 @@ def test_llm_config_api_passes_openai_fields_to_apply_llm_conf(monkeypatch):
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == {"message": "Connection successful. Configured finished."}
     callbacks["apply_llm_conf"].assert_called_once_with(
+        "all",
         "sk-test",
         "https://api.example.test",
         "gpt-test",
@@ -189,7 +190,8 @@ def test_llm_config_api_rolls_back_provider_type_on_apply_failure(monkeypatch):
     for field, value in original_values.items():
         monkeypatch.setattr(llm_settings, field, value)
 
-    def failed_apply_llm_conf(api_key, api_base, language_model, max_tokens, **_kwargs):
+    def failed_apply_llm_conf(role, api_key, api_base, language_model, max_tokens, **_kwargs):
+        assert role == "all"
         for config_name in ("chat", "extract", "text2gql"):
             monkeypatch.setattr(llm_settings, f"openai_{config_name}_api_key", api_key)
             monkeypatch.setattr(llm_settings, f"openai_{config_name}_api_base", api_base)

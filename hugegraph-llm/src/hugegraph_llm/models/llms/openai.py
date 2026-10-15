@@ -49,6 +49,7 @@ class OpenAIClient(BaseLLM):
         self.model = model_name
         self.max_tokens = max_tokens
         self.temperature = temperature
+        # Reviewed extraction also needs provider errors instead of legacy error text.
         self.raise_on_truncation = raise_on_truncation
 
     @retry(
@@ -81,10 +82,14 @@ class OpenAIClient(BaseLLM):
             return completions.choices[0].message.content
         # catch context length / do not retry
         except openai.BadRequestError as e:
+            if self.raise_on_truncation:
+                raise
             log.critical("Fatal: %s", e)
             return str(f"Error: {e}")
         # catch authorization errors / do not retry
         except openai.AuthenticationError:
+            if self.raise_on_truncation:
+                raise
             log.critical("The provided OpenAI API key is invalid")
             return "Error: The provided OpenAI API key is invalid"
         except LLMOutputTruncatedError:
@@ -123,10 +128,14 @@ class OpenAIClient(BaseLLM):
             return completions.choices[0].message.content
         # catch context length / do not retry
         except openai.BadRequestError as e:
+            if self.raise_on_truncation:
+                raise
             log.critical("Fatal: %s", e)
             return str(f"Error: {e}")
         # catch authorization errors / do not retry
         except openai.AuthenticationError:
+            if self.raise_on_truncation:
+                raise
             log.critical("The provided OpenAI API key is invalid")
             return "Error: The provided OpenAI API key is invalid"
         except LLMOutputTruncatedError:
@@ -178,9 +187,13 @@ class OpenAIClient(BaseLLM):
                     yield token
 
         except openai.BadRequestError as e:
+            if self.raise_on_truncation:
+                raise
             log.critical("Fatal: %s", e)
             yield str(f"Error: {e}")
         except openai.AuthenticationError:
+            if self.raise_on_truncation:
+                raise
             log.critical("The provided API key is invalid")
             yield "Error: The provided API key is invalid"
         except Exception as e:
@@ -221,10 +234,14 @@ class OpenAIClient(BaseLLM):
             # TODO: log.info("Token usage: %s", completions.usage.model_dump_json())
         # catch context length / do not retry
         except openai.BadRequestError as e:
+            if self.raise_on_truncation:
+                raise
             log.critical("Fatal: %s", e)
             yield str(f"Error: {e}")
         # catch authorization errors / do not retry
         except openai.AuthenticationError:
+            if self.raise_on_truncation:
+                raise
             log.critical("The provided OpenAI API key is invalid")
             yield "Error: The provided OpenAI API key is invalid"
         except LLMOutputTruncatedError:

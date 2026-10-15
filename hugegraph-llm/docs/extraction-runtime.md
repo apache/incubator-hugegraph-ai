@@ -99,8 +99,14 @@ it.
 
 All options require integers; booleans, fractional numbers, and numeric strings
 are rejected. Unknown keys, such as `max_review`, and out-of-range values return
-HTTP 422 before extraction starts. Zero reviews or repairs disables that stage;
-an empty object still selects the defaults. Failed review and repair calls still
+HTTP 422 before extraction starts. An empty object selects the defaults.
+`max_reviews=0` skips model review but still runs extraction, validation, and any
+needed repair within `max_fixes`. No chunk can become `final` without passing
+review: valid graphs remain `candidate`, the aggregate `status` is `failed`, and
+`result.vertices/edges` are empty. Extracted graphs remain available in
+`chunk_results` for inspection. To use legacy extraction without review, omit
+`review_options` or set it to `null`; zero is not a switch to the legacy path.
+`max_fixes=0` disables repair only. Failed review and repair calls still
 consume an attempt. Validation does not consume model budget. The engine makes at most
 `1 + max_reviews + max_fixes` model calls per chunk: four with the defaults and
 nine at the maximum settings. This counts calls to the existing client, not its
@@ -137,15 +143,20 @@ chunks. Invalid request data returns 422. Request-level schema preparation or
 scheduler errors retain the existing error path. An input producing no chunks
 is an error in the HTTP path. Old requests omit `chunk_results`.
 
-If an OpenAI or LiteLLM response reports `finish_reason=length`, that chunk fails
-before parsing incomplete output. Its `stage` identifies `extract`, `review`, or
-`repair`, and its `reason` is `<stage>_output_truncated: finish_reason=length`.
+If an OpenAI or LiteLLM response reports `finish_reason=length`, or an Ollama
+response reports `done_reason=length`, that chunk fails before parsing incomplete
+output. Its `stage` identifies `extract`, `review`, or `repair`, and its `reason`
+is `<stage>_output_truncated: finish_reason=length` or the corresponding
+`done_reason=length` form for Ollama.
 Review and repair failures preserve the most recent graph; extraction failure
 has no graph yet. The failed attempt is counted normally, and truncation does
 not add an automatic retry. This reports truncation even when our wrapper omits
 `max_tokens`; an SDK provider adapter or the service may still apply an output
 limit. Reviewed extraction explicitly enables `raise_on_truncation`; ordinary
 clients keep the default `False` and preserve their existing truncated-content
+behavior. In the reviewed path, OpenAI bad-request and authentication errors
+retain their exception types in the stage failure reason instead of becoming
+JSON parsing errors. Ordinary clients preserve their existing error-return
 behavior.
 
 ## Python integration and concurrency
@@ -168,6 +179,12 @@ The domain interface has four methods: `extract(chunk)`,
 chunk's own graph, but must keep invalid entries available for repair. Bundle
 state and model clients belong to a single chunk. Workers never mutate shared
 workflow state; the extraction node assembles the results after the batch ends.
+Before dispatching chunks, the node takes one deep snapshot of the current chat
+configuration. Every chunk and stage uses that snapshot, so a concurrent UI or
+HTTP configuration update applies to subsequent requests. Snapshot creation and
+LLM configuration updates share a lock; model execution does not hold it. A new
+snapshot waits for an in-progress configuration update, including its connection
+check, to finish.
 
 ## Verification and limits
 
