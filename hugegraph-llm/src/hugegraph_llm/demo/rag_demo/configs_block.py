@@ -15,7 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
 from functools import partial, wraps
 from typing import Optional
 
@@ -97,7 +96,6 @@ def test_litellm_chat(api_key, api_base, model_name, max_tokens: int) -> int:
 
 def test_api_connection(url, method="GET", headers=None, params=None, body=None, auth=None, origin_call=None) -> int:
     # TODO: use fastapi.request / starlette instead?
-    log.debug("Request URL: %s", url)
     try:
         if method.upper() == "GET":
             resp = requests.get(url, headers=headers, params=params, timeout=(1.0, 5.0), auth=auth)
@@ -113,10 +111,11 @@ def test_api_connection(url, method="GET", headers=None, params=None, body=None,
         else:
             raise ValueError("Unsupported HTTP method, please use GET/POST instead")
     except requests.exceptions.RequestException as e:
-        msg = f"Connection failed: {e}"
+        # Request exception messages can include credentials or a sensitive URL.
+        msg = f"Connection failed ({type(e).__name__}). Please check the connection settings."
         log.error(msg)
         if origin_call is None:
-            raise gr.Error(msg)
+            raise gr.Error(msg) from None
         return -1  # Error code
 
     if 200 <= resp.status_code < 300:
@@ -124,14 +123,11 @@ def test_api_connection(url, method="GET", headers=None, params=None, body=None,
         log.info(msg)
         gr.Info(msg)
     else:
-        msg = f"Connection failed with status code: {resp.status_code}, error: {resp.text}"
+        # Servers can echo request credentials in any response-body format.
+        msg = f"Connection failed with status code: {resp.status_code}."
         log.error(msg)
-        # TODO: Only the message returned by rag can be processed, and the other return values can't be processed
         if origin_call is None:
-            try:
-                raise gr.Error(json.loads(resp.text).get("message", msg))
-            except (json.decoder.JSONDecodeError, AttributeError) as e:
-                raise gr.Error(resp.text) from e
+            raise gr.Error(msg)
     return resp.status_code
 
 
