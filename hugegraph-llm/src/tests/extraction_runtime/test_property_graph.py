@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import json
+import math
 from copy import deepcopy
 
 import pytest
@@ -600,3 +601,348 @@ def test_failed_uuid_repair_keeps_invalid_value_and_diagnostics(schema, graph, t
     assert _uuid_case_value(result.graph, target) == "not-a-uuid"
     assert any(issue.path == path and "UUID" in issue.message for issue in result.issues)
     assert (result.reviews_used, result.fixes_used, result.llm_calls) == (0, 1, 2)
+
+
+def _set_numeric_case(schema, graph, target, value, *, cardinality="SINGLE", data_type="FLOAT"):
+    if target == "id":
+        schema["vertexlabels"][0]["id_strategy"] = "CUSTOMIZE_NUMBER"
+        schema["vertexlabels"][0].pop("primary_keys", None)
+        graph["vertices"][0]["id"] = graph["edges"][0]["outV"] = value
+        return "vertices[0].id"
+    schema["propertykeys"][1].update(data_type=data_type, cardinality=cardinality)
+    if target == "edges":
+        schema["edgelabels"][0]["properties"] = ["age"]
+        graph["vertices"][0]["properties"].pop("age", None)
+    graph[target][0]["properties"]["age"] = value
+    return f"{target}[0].properties.age"
+
+
+def _numeric_case_value(graph, target):
+    return graph["vertices"][0]["id"] if target == "id" else graph[target][0]["properties"]["age"]
+
+
+@pytest.mark.parametrize(
+    ("value", "valid"),
+    [
+        (-(2**63), True),
+        (-1, True),
+        (0, True),
+        (2**63 - 1, True),
+        (-(2**63) - 1, False),
+        (2**63, False),
+        (2**64 + 1, False),
+        (True, False),
+        (1.5, False),
+        ("1", False),
+    ],
+)
+def test_custom_number_bounds_preserve_ids_and_endpoints(schema, graph, value, valid):
+    path = _set_numeric_case(schema, graph, "id", value)
+    domain = bundle(schema, graph, {"decision": "pass", "issues": []})
+    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
+
+    assert result.status == ("final" if valid else "blocked")
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == ((1, 0, 2) if valid else (0, 0, 1))
+    assert result.graph["vertices"][0]["id"] == value
+    assert result.graph["edges"][0]["outV"] == value
+    if valid:
+        assert result.issues == []
+        review_graph = json.loads(domain.llm.prompts[1].split("\n## Input\n")[1])["graph"]
+        assert review_graph["vertices"][0]["id"] == review_graph["edges"][0]["outV"] == value
+    else:
+        assert result.reason == "validation_failed"
+        assert any(issue.path == path and "signed 64-bit" in issue.message for issue in result.issues)
+
+
+def test_numeric_bounds_do_not_restrict_ids_without_a_declared_strategy(schema, graph):
+    value = 2**64 + 1
+    _set_numeric_case(schema, graph, "id", value)
+    del schema["vertexlabels"][0]["id_strategy"]
+    result = ExtractionEngineV1().run(
+        bundle=bundle(schema, graph, {"decision": "pass", "issues": []}), chunk=CHUNK, options=ExtractionOptions()
+    )
+    assert result.status == "final" and result.issues == []
+    assert result.graph["vertices"][0]["id"] == result.graph["edges"][0]["outV"] == value
+
+
+# Independent Java Float.valueOf(Number.toString()) boundary observations.
+FLOAT32_MAX = float.fromhex("0x1.fffffep+127")
+FLOAT32_MIDPOINT = 340282356779733661637539395458142568448
+
+
+@pytest.mark.parametrize("target", ["vertices", "edges"])
+@pytest.mark.parametrize(
+    ("value", "valid"),
+    [
+        (1e100, False),
+        (-1e100, False),
+        (1.1, True),
+        (FLOAT32_MAX, True),
+        (math.nextafter(FLOAT32_MAX, math.inf), True),
+        (3.40282347e38, True),
+        (1e-45, True),
+        (-1e-45, True),
+        (1e-50, True),
+        (-1e-50, True),
+        (0.0, True),
+        (-0.0, True),
+        (FLOAT32_MIDPOINT - 1, True),
+        (-(FLOAT32_MIDPOINT - 1), True),
+        (FLOAT32_MIDPOINT, False),
+        (-FLOAT32_MIDPOINT, False),
+        (FLOAT32_MIDPOINT + 1, False),
+        (-(FLOAT32_MIDPOINT + 1), False),
+        (float(FLOAT32_MIDPOINT), True),
+        (-float(FLOAT32_MIDPOINT), True),
+        (math.nextafter(float(FLOAT32_MIDPOINT), -math.inf), True),
+        (math.nextafter(float(FLOAT32_MIDPOINT), math.inf), False),
+        (-math.nextafter(float(FLOAT32_MIDPOINT), -math.inf), True),
+        (-math.nextafter(float(FLOAT32_MIDPOINT), math.inf), False),
+        (True, False),
+        ("1.1", False),
+    ],
+)
+def test_float32_finiteness_preserves_rounding_underflow_and_original_values(schema, graph, target, value, valid):
+    path = _set_numeric_case(schema, graph, target, value)
+    domain = bundle(schema, graph, {"decision": "pass", "issues": []})
+    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
+
+    assert result.status == ("final" if valid else "blocked")
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == ((1, 0, 2) if valid else (0, 0, 1))
+    # JSON comparison also detects signed-zero, int/float, and precision changes.
+    assert json.dumps(_numeric_case_value(result.graph, target)) == json.dumps(value)
+    if valid:
+        assert result.issues == []
+        review_graph = json.loads(domain.llm.prompts[1].split("\n## Input\n")[1])["graph"]
+        assert json.dumps(_numeric_case_value(review_graph, target)) == json.dumps(value)
+    else:
+        assert result.reason == "validation_failed"
+        assert any(issue.path == path and "FLOAT" in issue.message for issue in result.issues)
+
+
+@pytest.mark.parametrize("target", ["vertices", "edges"])
+@pytest.mark.parametrize("cardinality", ["LIST", "SET"])
+@pytest.mark.parametrize("value,valid", [([1.1, 1e-50], True), ([1.1, 1e100], False), ([1.1, -1e100], False)])
+def test_float32_collection_elements_follow_the_same_validation(schema, graph, target, cardinality, value, valid):
+    path = _set_numeric_case(schema, graph, target, value, cardinality=cardinality)
+    result = ExtractionEngineV1().run(
+        bundle=bundle(schema, graph, {"decision": "pass", "issues": []}),
+        chunk=CHUNK,
+        options=ExtractionOptions(max_fixes=0),
+    )
+    assert result.status == ("final" if valid else "blocked")
+    assert (result.reviews_used, result.llm_calls) == ((1, 2) if valid else (0, 1))
+    assert _numeric_case_value(result.graph, target) == value
+    if not valid:
+        assert any(issue.path == path and "FLOAT" in issue.message for issue in result.issues)
+
+
+@pytest.mark.parametrize("value", [1e100, -1e100])
+def test_double_retains_large_finite_values(schema, graph, value):
+    _set_numeric_case(schema, graph, "vertices", value, data_type="DOUBLE")
+    result = ExtractionEngineV1().run(
+        bundle=bundle(schema, graph, {"decision": "pass", "issues": []}), chunk=CHUNK, options=ExtractionOptions()
+    )
+    assert result.status == "final" and result.issues == []
+    assert _numeric_case_value(result.graph, "vertices") == value
+
+
+@pytest.mark.parametrize("target,invalid,valid", [("id", 2**64 + 1, 2**63 - 1), ("vertices", 1e100, 1.1)])
+def test_numeric_overflow_can_be_repaired_then_reviewed(schema, graph, target, invalid, valid):
+    path = _set_numeric_case(schema, graph, target, invalid)
+    repaired = deepcopy(graph)
+    _set_numeric_case(schema, repaired, target, valid)
+    domain = bundle(schema, graph, repaired, {"decision": "pass", "issues": []})
+    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
+
+    assert result.status == "final" and result.issues == []
+    assert _numeric_case_value(result.graph, target) == valid
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == (1, 1, 3)
+    repair_context = json.loads(domain.llm.prompts[1].split("\n## Input\n")[1])
+    assert _numeric_case_value(repair_context["graph"], target) == invalid
+    assert any(issue["path"] == path for issue in repair_context["issues"])
+    if target == "id":
+        assert repair_context["graph"]["edges"][0]["outV"] == invalid
+        assert result.graph["edges"][0]["outV"] == valid
+
+
+@pytest.mark.parametrize("target,invalid,replacement", [("id", 2**64 + 1, -(2**63) - 1), ("vertices", 1e100, -1e100)])
+def test_numeric_repair_is_revalidated_and_keeps_latest_invalid_graph(schema, graph, target, invalid, replacement):
+    path = _set_numeric_case(schema, graph, target, invalid)
+    repaired = deepcopy(graph)
+    _set_numeric_case(schema, repaired, target, replacement)
+    result = ExtractionEngineV1().run(
+        bundle=bundle(schema, graph, repaired), chunk=CHUNK, options=ExtractionOptions(max_fixes=1)
+    )
+    assert result.status == "blocked" and result.reason == "validation_failed"
+    assert _numeric_case_value(result.graph, target) == replacement
+    assert any(issue.path == path for issue in result.issues)
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == (0, 1, 2)
+
+
+@pytest.mark.parametrize("target,invalid", [("id", 2**64 + 1), ("vertices", 1e100)])
+def test_failed_numeric_repair_preserves_invalid_graph_and_issues(schema, graph, target, invalid):
+    path = _set_numeric_case(schema, graph, target, invalid)
+    result = ExtractionEngineV1().run(
+        bundle=bundle(schema, graph, "bad JSON"), chunk=CHUNK, options=ExtractionOptions()
+    )
+    assert result.status == "failed" and result.stage == "repair"
+    assert result.reason == "repair_failed: JSONDecodeError"
+    assert _numeric_case_value(result.graph, target) == invalid
+    assert any(issue.path == path for issue in result.issues)
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == (0, 1, 2)
+
+
+def _identity_pair(schema, graph, data_type, values):
+    first = graph["vertices"][0]
+    second = deepcopy(first)
+    second["id"] = "second"
+    second["properties"]["name"] = "Bob"
+    graph["vertices"].append(second)
+    if data_type == "CUSTOMIZE_UUID":
+        schema["vertexlabels"][0]["id_strategy"] = data_type
+        schema["vertexlabels"][0].pop("primary_keys", None)
+        first["id"], second["id"] = values
+        graph["edges"][0]["outV"] = values[0]
+        return "vertices[2].id"
+    schema["vertexlabels"][0]["primary_keys"] = ["age"]
+    schema["vertexlabels"][0]["nullable_keys"].remove("age")
+    schema["propertykeys"][1]["data_type"] = data_type
+    first["properties"]["age"], second["properties"]["age"] = values
+    return "vertices[2].properties"
+
+
+@pytest.mark.parametrize(
+    "first,alias",
+    [
+        ("a8098c1a-f86e-11da-bd1a-00112444be1e", "A8098C1A-F86E-11DA-BD1A-00112444BE1E"),
+        ("a8098c1a-f86e-11da-bd1a-00112444be1e", "a8098c1af86e11dabd1a00112444be1e"),
+        ("00000001-0001-0001-0001-000000000000", "00000000000000001-1-1-1-000000000000"),
+        ("01234567-1234-1234-1234-123456789012", "+1234567-1234-1234-1234-123456789012"),
+        ("abcdef12-1234-1234-1234-123456789012", "ＡＢＣＤＥＦ12-1234-1234-1234-123456789012"),
+        ("12345678-1234-1234-1234-123456789012", "١٢٣٤٥٦٧٨-1234-1234-1234-123456789012"),
+        ("01234567-89ab-cdef-0123-456789abcdef", "+123456789abcdef+123456789abcdef"),
+    ],
+)
+def test_uuid_alias_identities_are_blocked_without_rewriting_values(schema, graph, first, alias):
+    path = _identity_pair(schema, graph, "CUSTOMIZE_UUID", (first, alias))
+    domain = bundle(schema, graph)
+    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
+
+    assert result.status == "blocked" and result.reason == "validation_failed"
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == (0, 0, 1)
+    assert any(issue.path == path and "Duplicate vertex id" in issue.message for issue in result.issues)
+    assert [result.graph["vertices"][i]["id"] for i in (0, 2)] == [first, alias]
+    assert result.graph["edges"][0]["outV"] == first
+    assert domain.validate(result.graph, CHUNK) == result.issues
+
+
+@pytest.mark.parametrize(
+    "data_type,values",
+    [
+        ("FLOAT", (1, 1.0)),
+        ("FLOAT", (1.0, 1.00000001)),
+        ("FLOAT", (1.0000000596046448, 1.0000001192092896)),
+        ("FLOAT", (0.0, 1e-50)),
+        ("FLOAT", (-0.0, -1e-50)),
+        ("DOUBLE", (1, 1.0)),
+        ("DOUBLE", (9007199254740992, 9007199254740993)),
+        ("UUID", ("a8098c1a-f86e-11da-bd1a-00112444be1e", "A8098C1A-F86E-11DA-BD1A-00112444BE1E")),
+        ("DATE", ("2024-1-1", "2024-01-01 00:00:00")),
+        ("DATE", ("2024-01-01 00:00:00.1", "2024-01-01 00:00:00.100")),
+    ],
+)
+def test_primary_identity_uses_converted_values_without_rewriting_properties(schema, graph, data_type, values):
+    path = _identity_pair(schema, graph, data_type, values)
+    result = ExtractionEngineV1().run(bundle=bundle(schema, graph), chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
+
+    assert result.status == "blocked" and result.reason == "validation_failed"
+    assert result.reviews_used == 0 and result.llm_calls == 1
+    assert any(issue.path == path and "Duplicate vertex primary key" in issue.message for issue in result.issues)
+    assert json.dumps([result.graph["vertices"][i]["properties"]["age"] for i in (0, 2)]) == json.dumps(values)
+
+
+@pytest.mark.parametrize(
+    "data_type,values",
+    [
+        ("CUSTOMIZE_UUID", ("a8098c1a-f86e-11da-bd1a-00112444be1e", "a8098c1a-f86e-11da-bd1a-00112444be1f")),
+        ("FLOAT", (0.0, -0.0)),
+        ("DOUBLE", (0.0, -0.0)),
+        ("FLOAT", (1.0, 1.0000000596046448)),
+        ("DOUBLE", (1.0, 1.00000001)),
+        ("TEXT", ("1", "1.0")),
+        ("OBJECT", ({"value": 1}, {"value": 1.0})),
+        ("DATE", ("2024-01-01 00:00:00.001", "2024-01-01 00:00:00.1")),
+        # The server's timezone is unknown: never guess epoch/text equivalence.
+        ("DATE", (0, "1970-01-01 00:00:00")),
+    ],
+)
+def test_distinct_identity_controls_still_reach_final(schema, graph, data_type, values):
+    _identity_pair(schema, graph, data_type, values)
+    result = ExtractionEngineV1().run(
+        bundle=bundle(schema, graph, {"decision": "pass", "issues": []}), chunk=CHUNK, options=ExtractionOptions()
+    )
+    assert result.status == "final" and result.issues == []
+    assert result.reviews_used == 1 and result.llm_calls == 2
+
+
+@pytest.mark.parametrize(
+    "data_type,values,replacement",
+    [
+        (
+            "CUSTOMIZE_UUID",
+            ("a8098c1a-f86e-11da-bd1a-00112444be1e", "A8098C1A-F86E-11DA-BD1A-00112444BE1E"),
+            "a8098c1a-f86e-11da-bd1a-00112444be1f",
+        ),
+        ("FLOAT", (1, 1.0), 2.0),
+    ],
+)
+def test_semantic_identity_repair_is_revalidated_and_reviewed(schema, graph, data_type, values, replacement):
+    path = _identity_pair(schema, graph, data_type, values)
+    repaired = deepcopy(graph)
+    if data_type == "CUSTOMIZE_UUID":
+        repaired["vertices"][2]["id"] = replacement
+    else:
+        repaired["vertices"][2]["properties"]["age"] = replacement
+    domain = bundle(schema, graph, repaired, {"decision": "pass", "issues": []})
+    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
+    assert result.status == "final" and result.issues == []
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == (1, 1, 3)
+    repair_context = json.loads(domain.llm.prompts[1].split("\n## Input\n")[1])
+    assert any(issue["path"] == path for issue in repair_context["issues"])
+    field = "id" if data_type == "CUSTOMIZE_UUID" else "properties"
+    assert repair_context["graph"]["vertices"][2][field] == graph["vertices"][2][field]
+
+
+def test_repaired_semantic_duplicate_stays_blocked_and_keeps_latest_values(schema, graph):
+    _identity_pair(schema, graph, "FLOAT", (1, 1.0))
+    repaired = deepcopy(graph)
+    repaired["vertices"][2]["properties"]["age"] = 1.00000001
+    result = ExtractionEngineV1().run(
+        bundle=bundle(schema, graph, repaired), chunk=CHUNK, options=ExtractionOptions(max_fixes=1)
+    )
+    assert result.status == "blocked" and result.reason == "validation_failed"
+    assert result.graph["vertices"][2]["properties"]["age"] == 1.00000001
+    assert any("Duplicate vertex primary key" in issue.message for issue in result.issues)
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == (0, 1, 2)
+
+
+@pytest.mark.parametrize("strategy,vertex_id", [("CUSTOMIZE_STRING", "same"), ("CUSTOMIZE_NUMBER", 7)])
+def test_global_raw_id_duplicates_across_labels_remain_invalid(schema, graph, strategy, vertex_id):
+    for definition, vertex in zip(schema["vertexlabels"], graph["vertices"]):
+        definition["id_strategy"] = strategy
+        definition.pop("primary_keys", None)
+        vertex["id"] = vertex_id
+    graph["edges"] = []
+    issues = bundle(schema).validate(graph, CHUNK)
+    assert any(issue.path == "vertices[1].id" and "Duplicate vertex id" in issue.message for issue in issues)
+
+
+def test_uuid_endpoint_still_requires_the_existing_exact_reference(schema, graph):
+    vertex_id = "a8098c1a-f86e-11da-bd1a-00112444be1e"
+    _set_uuid_case(schema, graph, "id", vertex_id)
+    graph["edges"][0]["outV"] = vertex_id.upper()
+    result = ExtractionEngineV1().run(bundle=bundle(schema, graph), chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
+    assert result.status == "blocked" and result.reviews_used == 0
+    assert any(issue.path == "edges[0].outV" for issue in result.issues)
+    assert result.graph["edges"][0]["outV"] == vertex_id.upper()

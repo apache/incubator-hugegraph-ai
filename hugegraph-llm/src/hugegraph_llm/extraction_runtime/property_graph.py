@@ -19,6 +19,7 @@ import re
 from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime
+from decimal import Decimal
 
 from hugegraph_llm.config import prompt
 from hugegraph_llm.extraction_runtime.v1.contracts import ChunkInput, Issue, ReviewResult
@@ -29,6 +30,8 @@ from hugegraph_llm.operators.llm_op.property_graph_extract import (
 )
 
 _JAVA_HEX_LETTERS = str.maketrans("ＡＢＣＤＥＦａｂｃｄｅｆ", "ABCDEFabcdef")
+# The midpoint above the largest finite float32 rounds to infinity, not to FLOAT_MAX.
+_FLOAT32_OVERFLOW_MIDPOINT = Decimal(2**128 - 2**103)
 
 
 def _invalid_constant(value: str):
@@ -96,6 +99,41 @@ def _valid_uuid(value) -> bool:
     return True
 
 
+def _uuid_identity(value: str) -> int:
+    """Compare accepted spellings as StringEncoding.uuid/UUID.fromString does."""
+    if len(value) == 32:
+        return (int(value[:16].translate(_JAVA_HEX_LETTERS), 16) << 64) | int(
+            value[16:].translate(_JAVA_HEX_LETTERS), 16
+        )
+    parts = [int(part.translate(_JAVA_HEX_LETTERS), 16) for part in value.split("-")]
+    identity = 0
+    for part, bits in zip(parts, (32, 16, 16, 16, 48)):
+        identity = (identity << bits) | (part & (2**bits - 1))
+    return identity
+
+
+def _float_identity(value) -> tuple[bool, int]:
+    """Round the decimal Number.toString value directly to IEEE float32, ties to even."""
+    decimal = Decimal(str(value))
+    numerator, denominator = decimal.copy_abs().as_integer_ratio()
+    if not numerator:
+        return decimal.is_signed(), 0
+    exponent = numerator.bit_length() - denominator.bit_length()
+    below_power = (numerator < denominator << exponent) if exponent >= 0 else (numerator << -exponent < denominator)
+    if below_power:
+        exponent -= 1
+    # One integer unit below is the least positive float32 subnormal, 2**-149.
+    shift = max(exponent - 23, -149)
+    if shift >= 0:
+        denominator <<= shift
+    else:
+        numerator <<= -shift
+    rounded, remainder = divmod(numerator, denominator)
+    if 2 * remainder > denominator or (2 * remainder == denominator and rounded % 2):
+        rounded += 1
+    return decimal.is_signed(), rounded << (shift + 149)
+
+
 def _valid_scalar(value, data_type: str) -> bool:
     if data_type == "TEXT":
         return isinstance(value, str)
@@ -110,9 +148,13 @@ def _valid_scalar(value, data_type: str) -> bool:
         if not isinstance(value, (int, float)) or isinstance(value, bool):
             return False
         try:
-            return math.isfinite(value)
+            if not math.isfinite(value):
+                return False
         except OverflowError:
             return False
+        # HugeGraph uses Float.valueOf(Number.toString()). Compare decimal values
+        # to avoid binary64 double rounding; preserve normal rounding and underflow.
+        return data_type == "DOUBLE" or Decimal(str(value)).copy_abs() < _FLOAT32_OVERFLOW_MIDPOINT
     if data_type == "DATE":
         if isinstance(value, int):
             # HugeGraph accepts Integer/Long epoch milliseconds, but not floats or booleans.
@@ -178,11 +220,31 @@ class PropertyGraphBundle:
         context = {"text": chunk.text, "schema": self.schema, "graph": graph, **extra}
         return instructions + "\n## Input\n" + json.dumps(context, ensure_ascii=False, allow_nan=False)
 
+    def _primary_identity(self, key: str, value) -> tuple:
+        data_type = self.property_keys.get(key, {}).get("data_type")
+        if data_type and _valid_scalar(value, data_type):
+            if data_type == "UUID":
+                return data_type, _uuid_identity(value)
+            if data_type == "FLOAT":
+                return data_type, _float_identity(value)
+            if data_type == "DOUBLE":
+                return data_type, float(value).hex()
+            if data_type == "DATE" and isinstance(value, str):
+                # DateUtil uses Joda's fraction-of-second SSS, so .1 means 100ms.
+                date_format = "%Y-%m-%d" + (" %H:%M:%S" if re.search(r"\s", value) else "")
+                date_format += ".%f" if "." in value else ""
+                parsed = datetime.strptime(value, date_format)
+                # SafeDateFormat uses the server's default zone, which this schema
+                # does not expose. Compare wall times; never guess an epoch/text offset.
+                return data_type, "wall", parsed
+        return data_type, json.dumps(value, sort_keys=True)
+
     def validate(self, graph: dict, chunk: ChunkInput) -> list[Issue]:
         """Normalize this chunk's private graph in place and report all remaining problems."""
         del chunk
         issues = self._normalize(graph)
         vertices_by_id = {}
+        uuid_ids_seen = set()
         primary_keys_seen = set()
         for key, kind, labels in (
             ("vertices", "vertex", self.vertex_labels),
@@ -206,25 +268,32 @@ class PropertyGraphBundle:
                     issues.extend(self._validate_properties(properties, definition, path))
                     keys = definition.get("primary_keys", []) if kind == "vertex" else []
                     if keys and all(key in properties and properties[key] not in (None, "") for key in keys):
-                        identity = (label, json.dumps([properties[key] for key in keys], sort_keys=True))
+                        identity = (label, tuple(self._primary_identity(key, properties[key]) for key in keys))
                         if identity in primary_keys_seen:
                             issues.append(Issue(path + ".properties", "Duplicate vertex primary key"))
                         primary_keys_seen.add(identity)
                 if kind == "vertex":
                     vertex_id = item.get("id")
+                    strategy = definition.get("id_strategy") if definition is not None else None
+                    uuid_identity = (
+                        _uuid_identity(vertex_id) if strategy == "CUSTOMIZE_UUID" and _valid_uuid(vertex_id) else None
+                    )
                     if not _valid_id(vertex_id):
                         issues.append(Issue(path + ".id", "Vertex id must be a non-empty string or integer"))
                     elif vertex_id in vertices_by_id:
                         issues.append(Issue(path + ".id", f"Duplicate vertex id: {vertex_id!r}"))
                     else:
                         vertices_by_id[vertex_id] = item
-                    strategy = definition.get("id_strategy") if definition is not None else None
+                        if uuid_identity is not None and uuid_identity in uuid_ids_seen:
+                            issues.append(Issue(path + ".id", f"Duplicate vertex id: {vertex_id!r}"))
+                    if uuid_identity is not None:
+                        uuid_ids_seen.add(uuid_identity)
                     if strategy == "CUSTOMIZE_STRING" and not isinstance(vertex_id, str):
                         issues.append(Issue(path + ".id", "CUSTOMIZE_STRING requires a string vertex id"))
-                    if strategy == "CUSTOMIZE_NUMBER" and (
-                        not isinstance(vertex_id, int) or isinstance(vertex_id, bool)
-                    ):
-                        issues.append(Issue(path + ".id", "CUSTOMIZE_NUMBER requires an integer vertex id"))
+                    if strategy == "CUSTOMIZE_NUMBER" and not _valid_scalar(vertex_id, "LONG"):
+                        issues.append(
+                            Issue(path + ".id", "CUSTOMIZE_NUMBER requires a signed 64-bit integer vertex id")
+                        )
                     if strategy == "CUSTOMIZE_UUID" and not _valid_uuid(vertex_id):
                         issues.append(Issue(path + ".id", "CUSTOMIZE_UUID requires a valid UUID string vertex id"))
                 else:

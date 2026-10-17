@@ -23,6 +23,7 @@ exercise schema preparation without requiring a HugeGraph server.
 
 import json
 import threading
+from copy import deepcopy
 
 import pytest
 from fastapi import APIRouter, FastAPI
@@ -418,3 +419,111 @@ def test_legacy_http_preserves_prior_chunks_when_later_output_is_truncated(
     assert data["result"]["edges"] == []
     assert len(requests) == 2
     assert all(request["max_tokens"] == 37 for request in requests)
+
+
+@pytest.mark.parametrize("kind,invalid", [("id", 2**64 + 1), ("FLOAT", 1e100), ("FLOAT", -1e100)])
+@pytest.mark.parametrize("include_accepted", [False, True])
+def test_numeric_http_excludes_invalid_graphs_and_preserves_chunk_evidence(
+    client, monkeypatch, kind, invalid, include_accepted
+):
+    schema = deepcopy(SCHEMA)
+    accepted, rejected = graph("Accepted"), graph("Rejected")
+    if kind == "id":
+        schema["vertexlabels"][0]["id_strategy"] = "CUSTOMIZE_NUMBER"
+        del schema["vertexlabels"][0]["primary_keys"]
+        accepted["vertices"][0]["id"] = 7
+        rejected["vertices"][0]["id"] = invalid
+        issue_path = "vertices[0].id"
+    else:
+        schema["vertexlabels"][0]["properties"].append("value")
+        schema["propertykeys"].append({"name": "value", "data_type": "FLOAT", "cardinality": "SINGLE"})
+        accepted["vertices"][0]["properties"]["value"] = 1.1
+        rejected["vertices"][0]["properties"]["value"] = invalid
+        issue_path = "vertices[0].properties.value"
+    scripts = {"integration_token_numeric_rejected": [rejected, PASS]}
+    if include_accepted:
+        scripts = {"integration_token_numeric_accepted": [accepted, PASS], **scripts}
+    clients = install_llm(monkeypatch, scripts)
+
+    response = post(client, list(scripts), schema=schema, review_options={"max_fixes": 0})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == ("partial" if include_accepted else "failed")
+    assert data["result"] == {
+        "vertices": [accepted["vertices"][0] | {"type": "vertex"}] if include_accepted else [],
+        "edges": [],
+    }
+    chunk = data["chunk_results"][-1]
+    assert chunk["status"] == "blocked" and chunk["reason"] == "validation_failed"
+    assert chunk["graph"]["vertices"] == [rejected["vertices"][0] | {"type": "vertex"}]
+    assert any(issue["path"] == issue_path for issue in chunk["issues"])
+    assert (chunk["reviews_used"], chunk["fixes_used"], chunk["llm_calls"]) == (0, 0, 1)
+    rejected_client = next(item for item in clients.clients if item.token == "integration_token_numeric_rejected")
+    assert len(rejected_client.prompts) == 1
+
+
+@pytest.mark.parametrize("data_type,value", [("FLOAT", 3.40282347e38), ("FLOAT", -1e-50), ("DOUBLE", 1e100)])
+def test_numeric_http_preserves_accepted_rounding_underflow_and_double_values(client, monkeypatch, data_type, value):
+    schema = deepcopy(SCHEMA)
+    schema["vertexlabels"][0]["properties"].append("value")
+    schema["propertykeys"].append({"name": "value", "data_type": data_type, "cardinality": "SINGLE"})
+    extracted = graph("Accepted")
+    extracted["vertices"][0]["properties"]["value"] = value
+    install_llm(monkeypatch, {"integration_token_numeric_valid": [extracted, PASS]})
+
+    response = post(client, "integration_token_numeric_valid", schema=schema, review_options={})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "succeeded"
+    assert data["chunk_results"][0]["status"] == "final"
+    assert data["result"]["vertices"] == [extracted["vertices"][0] | {"type": "vertex"}]
+    assert data["chunk_results"][0]["graph"]["vertices"] == data["result"]["vertices"]
+
+
+@pytest.mark.parametrize("kind", ["CUSTOMIZE_UUID", "FLOAT"])
+def test_http_excludes_semantic_duplicate_identities_and_keeps_chunk_evidence(client, monkeypatch, kind):
+    schema = deepcopy(SCHEMA)
+    accepted = graph("Accepted")
+    rejected = {"vertices": graph("First")["vertices"] + graph("Second")["vertices"], "edges": []}
+    if kind == "CUSTOMIZE_UUID":
+        schema["vertexlabels"][0]["id_strategy"] = kind
+        schema["vertexlabels"][0].pop("primary_keys")
+        accepted["vertices"][0]["id"] = "a8098c1a-f86e-11da-bd1a-00112444be1f"
+        values = ["a8098c1a-f86e-11da-bd1a-00112444be1e", "A8098C1A-F86E-11DA-BD1A-00112444BE1E"]
+        for vertex, value in zip(rejected["vertices"], values):
+            vertex["id"] = value
+        issue_path = "vertices[1].id"
+    else:
+        schema["vertexlabels"][0]["properties"].append("value")
+        schema["vertexlabels"][0]["primary_keys"] = ["value"]
+        schema["propertykeys"].append({"name": "value", "data_type": "FLOAT", "cardinality": "SINGLE"})
+        accepted["vertices"][0]["properties"]["value"] = 2.0
+        values = [1, 1.0]
+        for vertex, value in zip(rejected["vertices"], values):
+            vertex["properties"]["value"] = value
+        issue_path = "vertices[1].properties"
+    scripts = {
+        "integration_token_identity_accepted": [accepted, PASS],
+        "integration_token_identity_rejected": [rejected],
+    }
+    clients = install_llm(monkeypatch, scripts)
+
+    response = post(client, list(scripts), schema=schema, review_options={"max_fixes": 0})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "partial"
+    assert [vertex["properties"]["name"] for vertex in data["result"]["vertices"]] == ["Accepted"]
+    chunk = data["chunk_results"][1]
+    assert chunk["status"] == "blocked" and chunk["reason"] == "validation_failed"
+    assert (chunk["reviews_used"], chunk["fixes_used"], chunk["llm_calls"]) == (0, 0, 1)
+    assert any(issue["path"] == issue_path for issue in chunk["issues"])
+    actual = [
+        vertex["id"] if kind == "CUSTOMIZE_UUID" else vertex["properties"]["value"]
+        for vertex in chunk["graph"]["vertices"]
+    ]
+    assert json.dumps(actual) == json.dumps(values)
+    rejected_client = next(item for item in clients.clients if item.token == "integration_token_identity_rejected")
+    assert len(rejected_client.prompts) == 1
