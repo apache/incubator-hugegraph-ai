@@ -79,7 +79,7 @@ class LiteLLMClient(BaseLLM):
                 raise LLMOutputTruncatedError()
             return response.choices[0].message.content
         except (RateLimitError, BudgetExceededError, APIError) as e:
-            log.error("Error in LiteLLM call: %s", e)
+            log.error("LiteLLM call failed (%s)", type(e).__name__)
             raise
 
     @retry(
@@ -111,7 +111,7 @@ class LiteLLMClient(BaseLLM):
                 raise LLMOutputTruncatedError()
             return response.choices[0].message.content
         except (RateLimitError, BudgetExceededError, APIError) as e:
-            log.error("Error in async LiteLLM call: %s", e)
+            log.error("Async LiteLLM call failed (%s)", type(e).__name__)
             raise
 
     def generate_streaming(
@@ -137,7 +137,7 @@ class LiteLLMClient(BaseLLM):
             result = ""
             for chunk in response:
                 if not chunk.choices:
-                    log.debug("Received empty choices in streaming chunk: %s", chunk)
+                    log.debug("Received empty choices in streaming chunk")
                     continue
                 if self.raise_on_truncation and chunk.choices[0].finish_reason == "length":
                     raise LLMOutputTruncatedError()
@@ -147,7 +147,7 @@ class LiteLLMClient(BaseLLM):
                     on_token_callback(chunk)
             return result
         except (RateLimitError, BudgetExceededError, APIError) as e:
-            log.error("Error in streaming LiteLLM call: %s", e)
+            log.error("Streaming LiteLLM call failed (%s)", type(e).__name__)
             raise
 
     async def agenerate_streaming(
@@ -172,7 +172,7 @@ class LiteLLMClient(BaseLLM):
             )
             async for chunk in response:
                 if not chunk.choices:
-                    log.debug("Received empty choices in streaming chunk: %s", chunk)
+                    log.debug("Received empty choices in streaming chunk")
                     continue
                 if self.raise_on_truncation and chunk.choices[0].finish_reason == "length":
                     raise LLMOutputTruncatedError()
@@ -181,7 +181,7 @@ class LiteLLMClient(BaseLLM):
                         on_token_callback(chunk)
                     yield chunk.choices[0].delta.content
         except (RateLimitError, BudgetExceededError, APIError) as e:
-            log.error("Error in async streaming LiteLLM call: %s", e)
+            log.error("Async streaming LiteLLM call failed (%s)", type(e).__name__)
             raise
 
     def num_tokens_from_string(self, string: str) -> int:

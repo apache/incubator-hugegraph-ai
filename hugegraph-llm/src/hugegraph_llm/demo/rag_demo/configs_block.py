@@ -89,7 +89,9 @@ def test_litellm_chat(api_key, api_base, model_name, max_tokens: int) -> int:
         response = llm_client.generate(messages=[{"role": "user", "content": "hi"}])
         assert len(response) > 0
     except Exception as e:
-        raise gr.Error(f"Error in litellm chat call: {e}") from e
+        raise gr.Error(
+            f"LiteLLM chat connection failed ({type(e).__name__}). Please check the connection settings."
+        ) from None
     gr.Info("Test connection successful~")
     return 200
 
