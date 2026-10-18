@@ -28,7 +28,7 @@ from hugegraph_llm.api.models.graph_extract_requests import GraphExtractClientCo
 from hugegraph_llm.api.models.graph_extract_responses import GraphExtractResponse
 from hugegraph_llm.api.rag_api import rag_http_api
 from hugegraph_llm.config import huge_settings
-from hugegraph_llm.extraction_runtime.v1 import ExtractionOptions
+from hugegraph_llm.extraction_runtime.review import ExtractionOptions
 from hugegraph_llm.flows.graph_extract import GraphExtractFlow
 from hugegraph_llm.state.ai_state import WkFlowInput, WkFlowState
 

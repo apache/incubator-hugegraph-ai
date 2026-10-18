@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 from fastapi import Query
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from hugegraph_llm.extraction_runtime.v1 import ExtractionOptions
+from hugegraph_llm.extraction_runtime.review import ExtractionOptions
 
 
 class GraphExtractClientConfig(BaseModel):

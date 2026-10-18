@@ -17,7 +17,7 @@ from pycgraph import CStatus
 
 from hugegraph_llm.config import llm_settings, snapshot_llm_settings
 from hugegraph_llm.extraction_runtime.property_graph import PropertyGraphBundle
-from hugegraph_llm.extraction_runtime.v1 import ChunkInput, run_chunks_v1
+from hugegraph_llm.extraction_runtime.review import ChunkInput, run_chunks
 from hugegraph_llm.models.llms.init_llm import get_chat_llm
 from hugegraph_llm.nodes.base_node import BaseNode
 from hugegraph_llm.operators.llm_op.info_extract import InfoExtract
@@ -78,7 +78,7 @@ class ExtractNode(BaseNode):
                 example_prompt=example_prompt,
             )
 
-        results = run_chunks_v1(chunks=chunks, prepare=prepare, options=self.wk_input.review_options)
+        results = run_chunks(chunks=chunks, prepare=prepare, options=self.wk_input.review_options)
         final_results = [result for result in results if result.status == "final"]
         if len(final_results) == len(results):
             extraction_status = "succeeded"

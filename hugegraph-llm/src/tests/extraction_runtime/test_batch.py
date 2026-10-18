@@ -15,7 +15,7 @@ from threading import Barrier, Event, Lock
 
 import pytest
 
-from hugegraph_llm.extraction_runtime.v1 import ChunkInput, ExtractionOptions, run_chunks_v1
+from hugegraph_llm.extraction_runtime.review import ChunkInput, ExtractionOptions, run_chunks
 from tests.extraction_runtime._bundles import ScriptedBundle
 
 pytestmark = pytest.mark.unit
@@ -52,7 +52,7 @@ def test_batch_keeps_input_order_and_limits_whole_chunk_concurrency():
             peak = max(peak, active)
         return ConcurrentBundle()
 
-    results = run_chunks_v1(
+    results = run_chunks(
         chunks=[ChunkInput(i, "text") for i in (9, 3, 6, 0)], prepare=prepare, options=ExtractionOptions(max_workers=2)
     )
     assert [result.index for result in results] == [9, 3, 6, 0]
@@ -68,7 +68,7 @@ def test_preparation_and_model_failures_do_not_discard_other_chunks():
             raise RuntimeError("cannot construct client")
         return ScriptedBundle(fail_at="review" if chunk.index == 2 else None)
 
-    results = run_chunks_v1(
+    results = run_chunks(
         chunks=[ChunkInput(i, "text") for i in range(4)], prepare=prepare, options=ExtractionOptions(max_workers=2)
     )
     assert [result.status for result in results] == ["final", "failed", "failed", "final"]
@@ -78,7 +78,7 @@ def test_preparation_and_model_failures_do_not_discard_other_chunks():
 
 
 def test_parallel_repairs_keep_graphs_issues_and_budgets_local():
-    results = run_chunks_v1(
+    results = run_chunks(
         chunks=[ChunkInput(i, "text") for i in range(5)],
         prepare=lambda chunk: ScriptedBundle(
             initial=chunk.index, repaired=100 + chunk.index, decisions=("fix", "pass")
@@ -98,8 +98,8 @@ def test_serial_batch_and_empty_input():
         return ScriptedBundle()
 
     options = ExtractionOptions(max_workers=1)
-    assert run_chunks_v1(chunks=[], prepare=prepare, options=options) == ()
-    results = run_chunks_v1(chunks=[ChunkInput(2, "b"), ChunkInput(1, "a")], prepare=prepare, options=options)
+    assert run_chunks(chunks=[], prepare=prepare, options=options) == ()
+    results = run_chunks(chunks=[ChunkInput(2, "b"), ChunkInput(1, "a")], prepare=prepare, options=options)
     assert seen == [2, 1] and [result.index for result in results] == [2, 1]
 
 
@@ -117,7 +117,5 @@ def test_input_iteration_errors_propagate_after_started_work_finishes():
         raise ValueError("broken input iterator")
 
     with pytest.raises(ValueError, match="broken input iterator"):
-        run_chunks_v1(
-            chunks=chunks(), prepare=lambda chunk: CompletingBundle(), options=ExtractionOptions(max_workers=1)
-        )
+        run_chunks(chunks=chunks(), prepare=lambda chunk: CompletingBundle(), options=ExtractionOptions(max_workers=1))
     assert completed.is_set()

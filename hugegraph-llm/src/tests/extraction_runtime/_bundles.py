@@ -13,7 +13,7 @@
 
 """Small scripted domains for exercising the real engine and batch."""
 
-from hugegraph_llm.extraction_runtime.v1 import ChunkInput, Issue, ReviewResult
+from hugegraph_llm.extraction_runtime.review import ChunkInput, Issue, ReviewResult
 
 
 class ScriptedBundle:

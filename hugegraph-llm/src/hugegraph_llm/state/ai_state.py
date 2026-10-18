@@ -17,7 +17,7 @@ from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 
 from pycgraph import CStatus, GParam
 
-from hugegraph_llm.extraction_runtime.v1 import ExtractionOptions
+from hugegraph_llm.extraction_runtime.review import ExtractionOptions
 from hugegraph_llm.utils.log import log
 
 

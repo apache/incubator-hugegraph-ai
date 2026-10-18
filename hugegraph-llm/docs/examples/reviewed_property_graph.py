@@ -18,7 +18,7 @@ from pathlib import Path
 
 from hugegraph_llm.config import llm_settings
 from hugegraph_llm.extraction_runtime.property_graph import PropertyGraphBundle
-from hugegraph_llm.extraction_runtime.v1 import ChunkInput, ExtractionOptions, run_chunks_v1
+from hugegraph_llm.extraction_runtime.review import ChunkInput, ExtractionOptions, run_chunks
 from hugegraph_llm.models.llms.init_llm import get_chat_llm
 
 
@@ -30,7 +30,7 @@ def main() -> None:
             llm=get_chat_llm(llm_settings, limit_output=False, raise_on_truncation=True), schema=request["schema"]
         )
 
-    results = run_chunks_v1(
+    results = run_chunks(
         chunks=[ChunkInput(index, text) for index, text in enumerate(request["texts"])],
         prepare=prepare,
         options=ExtractionOptions(**request["review_options"]),

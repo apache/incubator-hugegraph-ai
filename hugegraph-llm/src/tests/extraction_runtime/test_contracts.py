@@ -14,7 +14,7 @@
 import pytest
 from pydantic import ValidationError
 
-from hugegraph_llm.extraction_runtime.v1 import ChunkResult, ExtractionOptions, Issue
+from hugegraph_llm.extraction_runtime.review import ChunkResult, ExtractionOptions, Issue
 
 pytestmark = pytest.mark.unit
 

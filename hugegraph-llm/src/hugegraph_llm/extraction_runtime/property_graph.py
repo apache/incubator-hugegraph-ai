@@ -20,16 +20,16 @@ from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime
 from decimal import Decimal
+from uuid import UUID
 
 from hugegraph_llm.config import prompt
-from hugegraph_llm.extraction_runtime.v1.contracts import ChunkInput, Issue, ReviewResult
+from hugegraph_llm.extraction_runtime.review import ChunkInput, Issue, ReviewResult
 from hugegraph_llm.models.llms.base import BaseLLM
 from hugegraph_llm.operators.llm_op.property_graph_extract import (
     PropertyGraphExtract,
     generate_extract_property_graph_prompt,
 )
 
-_JAVA_HEX_LETTERS = str.maketrans("ＡＢＣＤＥＦａｂｃｄｅｆ", "ABCDEFabcdef")
 # The midpoint above the largest finite float32 rounds to infinity, not to FLOAT_MAX.
 _FLOAT32_OVERFLOW_MIDPOINT = Decimal(2**128 - 2**103)
 
@@ -76,44 +76,17 @@ def _valid_id(value) -> bool:
 
 
 def _valid_uuid(value) -> bool:
-    """Match HugeGraph StringEncoding.uuid without rewriting the supplied value."""
-    if not isinstance(value, str):
-        return False
-    if len(value) == 36 and "-" in value:
-        # Java UUID.fromString also accepts nonstandard widths and leading '+'.
-        parts, bits = value.split("-"), 63
-        if len(parts) != 5:
-            return False
-    elif len(value) == 32:
-        parts, bits = [value[:16], value[16:]], 64
-    else:
-        return False
-    for part in parts:
-        # Java Character.digit(char, 16) includes BMP decimal digits and fullwidth
-        # A-F. Python int also accepts underscores and non-BMP digits; exclude them.
-        part = part.translate(_JAVA_HEX_LETTERS)
-        if re.fullmatch(r"\+?[\da-fA-F]+", part) is None or any(ord(char) > 0xFFFF for char in part):
-            return False
-        if int(part, 16) >= 2**bits:
-            return False
-    return True
-
-
-def _uuid_identity(value: str) -> int:
-    """Compare accepted spellings as StringEncoding.uuid/UUID.fromString does."""
-    if len(value) == 32:
-        return (int(value[:16].translate(_JAVA_HEX_LETTERS), 16) << 64) | int(
-            value[16:].translate(_JAVA_HEX_LETTERS), 16
-        )
-    parts = [int(part.translate(_JAVA_HEX_LETTERS), 16) for part in value.split("-")]
-    identity = 0
-    for part, bits in zip(parts, (32, 16, 16, 16, 48)):
-        identity = (identity << bits) | (part & (2**bits - 1))
-    return identity
+    """Accept standard ASCII UUID spellings; unusual Java forms require repair."""
+    return (
+        isinstance(value, str)
+        and re.fullmatch(r"[0-9a-fA-F]{32}|[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}", value) is not None
+    )
 
 
 def _float_identity(value) -> tuple[bool, int]:
     """Round the decimal Number.toString value directly to IEEE float32, ties to even."""
+    # struct's binary64 -> binary32 rounds 1.0000000596046448 down, whereas
+    # Java Float.valueOf(Number.toString()) rounds its decimal spelling up.
     decimal = Decimal(str(value))
     numerator, denominator = decimal.copy_abs().as_integer_ratio()
     if not numerator:
@@ -224,7 +197,7 @@ class PropertyGraphBundle:
         data_type = self.property_keys.get(key, {}).get("data_type")
         if data_type and _valid_scalar(value, data_type):
             if data_type == "UUID":
-                return data_type, _uuid_identity(value)
+                return data_type, UUID(value).int
             if data_type == "FLOAT":
                 return data_type, _float_identity(value)
             if data_type == "DOUBLE":
@@ -237,15 +210,32 @@ class PropertyGraphBundle:
                 # SafeDateFormat uses the server's default zone, which this schema
                 # does not expose. Compare wall times; never guess an epoch/text offset.
                 return data_type, "wall", parsed
+            if data_type == "DATE":
+                return data_type, "epoch", value
         return data_type, json.dumps(value, sort_keys=True)
+
+    @staticmethod
+    def _vertex_identity(vertex_id, definition: dict | None) -> tuple | None:
+        if not _valid_id(vertex_id):
+            return None
+        strategy = definition.get("id_strategy") if definition is not None else None
+        if strategy == "CUSTOMIZE_UUID":
+            return ("UUID", UUID(vertex_id).int) if _valid_uuid(vertex_id) else None
+        # PRIMARY_KEY normalization and CUSTOMIZE_STRING both produce StringId;
+        # numeric ids have a separate HugeGraph identity even across labels.
+        if strategy in ("CUSTOMIZE_STRING", "PRIMARY_KEY"):
+            return "STRING", vertex_id
+        if strategy == "CUSTOMIZE_NUMBER":
+            return "NUMBER", vertex_id
+        return ("STRING" if isinstance(vertex_id, str) else "NUMBER"), vertex_id
 
     def validate(self, graph: dict, chunk: ChunkInput) -> list[Issue]:
         """Normalize this chunk's private graph in place and report all remaining problems."""
         del chunk
         issues = self._normalize(graph)
         vertices_by_id = {}
-        uuid_ids_seen = set()
         primary_keys_seen = set()
+        date_identities_seen = {}
         for key, kind, labels in (
             ("vertices", "vertex", self.vertex_labels),
             ("edges", "edge", self.edge_labels),
@@ -272,22 +262,44 @@ class PropertyGraphBundle:
                         if identity in primary_keys_seen:
                             issues.append(Issue(path + ".properties", "Duplicate vertex primary key"))
                         primary_keys_seen.add(identity)
+                        date_keys = [key for key in keys if self.property_keys.get(key, {}).get("data_type") == "DATE"]
+                        if date_keys and all(_valid_scalar(properties[key], "DATE") for key in date_keys):
+                            group = (
+                                label,
+                                tuple(
+                                    self._primary_identity(key, properties[key]) for key in keys if key not in date_keys
+                                ),
+                            )
+                            dates = tuple(self._primary_identity(key, properties[key]) for key in date_keys)
+                            previous_dates = date_identities_seen.setdefault(group, [])
+                            for previous in previous_dates:
+                                mixed = [
+                                    key for key, current, old in zip(date_keys, dates, previous) if current[1] != old[1]
+                                ]
+                                # A same-domain inequality proves distinct composite keys.
+                                # Cross-domain dates stay unknown without the server zone,
+                                # including when multiple DATE columns change form together.
+                                if mixed and all(
+                                    current[1] != old[1] or current == old for current, old in zip(dates, previous)
+                                ):
+                                    issues.append(
+                                        Issue(
+                                            f"{path}.properties.{mixed[0]}",
+                                            "Ambiguous DATE primary key: use one representation (epoch or text); server timezone is unknown",
+                                        )
+                                    )
+                                    break
+                            previous_dates.append(dates)
                 if kind == "vertex":
                     vertex_id = item.get("id")
                     strategy = definition.get("id_strategy") if definition is not None else None
-                    uuid_identity = (
-                        _uuid_identity(vertex_id) if strategy == "CUSTOMIZE_UUID" and _valid_uuid(vertex_id) else None
-                    )
+                    identity = self._vertex_identity(vertex_id, definition)
                     if not _valid_id(vertex_id):
                         issues.append(Issue(path + ".id", "Vertex id must be a non-empty string or integer"))
-                    elif vertex_id in vertices_by_id:
+                    elif identity is not None and identity in vertices_by_id:
                         issues.append(Issue(path + ".id", f"Duplicate vertex id: {vertex_id!r}"))
-                    else:
-                        vertices_by_id[vertex_id] = item
-                        if uuid_identity is not None and uuid_identity in uuid_ids_seen:
-                            issues.append(Issue(path + ".id", f"Duplicate vertex id: {vertex_id!r}"))
-                    if uuid_identity is not None:
-                        uuid_ids_seen.add(uuid_identity)
+                    elif identity is not None:
+                        vertices_by_id[identity] = item
                     if strategy == "CUSTOMIZE_STRING" and not isinstance(vertex_id, str):
                         issues.append(Issue(path + ".id", "CUSTOMIZE_STRING requires a string vertex id"))
                     if strategy == "CUSTOMIZE_NUMBER" and not _valid_scalar(vertex_id, "LONG"):
@@ -336,15 +348,16 @@ class PropertyGraphBundle:
                 issues.append(Issue(property_path, f"Value does not match property data type {data_type}"))
         return issues
 
-    @staticmethod
-    def _validate_endpoints(edge: dict, definition: dict | None, vertices: dict, path: str) -> list[Issue]:
+    def _validate_endpoints(self, edge: dict, definition: dict | None, vertices: dict, path: str) -> list[Issue]:
         issues = []
         for endpoint, label_key, schema_key in (
             ("outV", "outVLabel", "source_label"),
             ("inV", "inVLabel", "target_label"),
         ):
             vertex_id = edge.get(endpoint)
-            vertex = vertices.get(vertex_id) if _valid_id(vertex_id) else None
+            label = edge.get(label_key)
+            vertex_definition = self.vertex_labels.get(label) if isinstance(label, str) else None
+            vertex = vertices.get(self._vertex_identity(vertex_id, vertex_definition))
             if vertex is None:
                 issues.append(Issue(f"{path}.{endpoint}", "Endpoint must reference a vertex in this graph"))
             if not isinstance(edge.get(label_key), str) or (

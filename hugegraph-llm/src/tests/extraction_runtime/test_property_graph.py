@@ -19,7 +19,7 @@ import pytest
 
 from hugegraph_llm.config import prompt
 from hugegraph_llm.extraction_runtime.property_graph import PropertyGraphBundle
-from hugegraph_llm.extraction_runtime.v1 import ChunkInput, ExtractionEngineV1, ExtractionOptions, Issue
+from hugegraph_llm.extraction_runtime.review import ChunkInput, ExtractionOptions, Issue, run_chunk
 
 pytestmark = pytest.mark.contract
 CHUNK = ChunkInput(index=0, text="Alice works for Acme. Alice is 30 years old.")
@@ -188,7 +188,7 @@ def test_compatible_property_values_reach_final_without_repair(schema, graph, da
     domain = bundle(schema, graph, {"decision": "pass", "issues": []})
 
     assert domain.validate(deepcopy(graph), CHUNK) == []
-    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
+    result = run_chunk(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
 
     assert result.status == "final" and result.issues == []
     assert (result.reviews_used, result.fixes_used, result.llm_calls) == (1, 0, 2)
@@ -225,7 +225,7 @@ def test_compatible_property_values_reach_final_without_repair(schema, graph, da
 def test_invalid_dates_are_blocked_before_review_and_preserved(schema, graph, value):
     schema["propertykeys"][1]["data_type"] = "DATE"
     graph["vertices"][0]["properties"]["age"] = value
-    result = ExtractionEngineV1().run(bundle=bundle(schema, graph), chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
+    result = run_chunk(bundle=bundle(schema, graph), chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
     assert result.status == "blocked" and result.reason == "validation_failed"
     assert (result.reviews_used, result.fixes_used, result.llm_calls) == (0, 0, 1)
     assert any(issue.path == "vertices[0].properties.age" for issue in result.issues)
@@ -354,14 +354,14 @@ def test_custom_id_strategy_is_preserved_and_checked(schema, graph):
 )
 def test_invalid_graph_response_fails_instead_of_becoming_empty(schema, response):
     domain = bundle(schema, response)
-    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
+    result = run_chunk(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
     assert result.status == "failed" and result.stage == "extract"
     assert result.graph is None and result.llm_calls == 1
 
 
 def test_flat_array_format_and_legitimate_empty_graph(schema):
     domain = bundle(schema, [], {"decision": "pass", "issues": []})
-    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
+    result = run_chunk(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
     assert result.status == "final" and result.graph == {"vertices": [], "edges": []}
     assert result.llm_calls == 2
 
@@ -379,7 +379,7 @@ def test_flat_array_format_and_legitimate_empty_graph(schema):
     ],
 )
 def test_malformed_review_is_a_failed_review(schema, graph, response):
-    result = ExtractionEngineV1().run(bundle=bundle(schema, graph, response), chunk=CHUNK, options=ExtractionOptions())
+    result = run_chunk(bundle=bundle(schema, graph, response), chunk=CHUNK, options=ExtractionOptions())
     assert result.status == "failed" and result.stage == "review"
     assert result.graph is not None and result.llm_calls == 2
 
@@ -394,7 +394,7 @@ def test_review_repair_full_graph_flow_and_prompt_context(schema, graph, monkeyp
         "issues": [{"path": "vertices[0].properties.age", "message": "Age should be 30", "evidence": CHUNK.text}],
     }
     domain = bundle(schema, wrong, review, graph, {"decision": "pass", "issues": []})
-    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
+    result = run_chunk(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
     assert result.status == "final" and result.graph["vertices"][0]["properties"]["age"] == 30
     assert result.issues == [] and (result.reviews_used, result.fixes_used, result.llm_calls) == (2, 1, 4)
     review_context = json.loads(domain.llm.prompts[1].split("\n## Input\n")[1])
@@ -412,7 +412,7 @@ def test_schema_issues_enter_repair_and_repaired_graph_is_revalidated(schema, gr
     also_wrong = deepcopy(graph)
     also_wrong["edges"][0]["inV"] = "missing"
     domain = bundle(schema, wrong, also_wrong)
-    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions(max_fixes=1))
+    result = run_chunk(bundle=domain, chunk=CHUNK, options=ExtractionOptions(max_fixes=1))
     assert result.status == "blocked" and result.reviews_used == 0
     assert any(issue.path == "edges[0].inV" for issue in result.issues)
     assert not any(issue.path == "vertices[0].properties.age" for issue in result.issues)
@@ -425,7 +425,7 @@ def test_failed_repair_preserves_previous_graph(schema, graph):
     domain = bundle(
         schema, graph, {"decision": "fix", "issues": [{"path": "edges", "message": "Wrong relation"}]}, "bad JSON"
     )
-    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
+    result = run_chunk(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
     assert result.status == "failed" and result.stage == "repair"
     assert result.graph["edges"][0]["label"] == "works_for"
     assert result.llm_calls == 3 and result.fixes_used == 1
@@ -444,7 +444,7 @@ def test_explicit_block_review_keeps_evidence(schema, graph):
         "decision": "block",
         "issues": [{"path": "graph", "message": "Not supported by source", "evidence": "source"}],
     }
-    result = ExtractionEngineV1().run(bundle=bundle(schema, graph, review), chunk=CHUNK, options=ExtractionOptions())
+    result = run_chunk(bundle=bundle(schema, graph, review), chunk=CHUNK, options=ExtractionOptions())
     assert result.status == "blocked"
     assert result.issues == [Issue("graph", "Not supported by source", "source")]
 
@@ -476,20 +476,12 @@ def _uuid_case_value(graph, target):
         "ABCDEFABCDEFABCDEFABCDEFABCDEFAB",
         "00000000-0000-0000-0000-000000000000",
         "ffffffffffffffffffffffffffffffff",
-        # StringEncoding.uuid delegates these 36-character forms to Java UUID.fromString.
-        "123456789-123-1234-1234-123456789012",
-        "+1234567-1234-1234-1234-123456789012",
-        "00000000000000001-1-1-1-000000000000",
-        "7fffffffffffffff-1-1-1-0000000000000",
-        "+123456789abcdef+123456789abcdef",
-        "ＡＢＣＤＥＦ12-1234-1234-1234-123456789012",
-        "١٢٣٤٥٦٧٨-1234-1234-1234-123456789012",
     ],
 )
-def test_hugegraph_compatible_uuids_reach_final_without_normalization(schema, graph, target, value):
+def test_standard_ascii_uuids_reach_final_without_normalization(schema, graph, target, value):
     _set_uuid_case(schema, graph, target, value)
     domain = bundle(schema, graph, {"decision": "pass", "issues": []})
-    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
+    result = run_chunk(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
 
     assert result.status == "final" and result.issues == []
     assert (result.reviews_used, result.fixes_used, result.llm_calls) == (1, 0, 2)
@@ -522,15 +514,21 @@ def test_hugegraph_compatible_uuids_reach_final_without_normalization(schema, gr
         "1234567_123456781234567812345678",
         "{12345678-1234-5678-1234-567812345678}",
         "urn:uuid:12345678-1234-5678-1234-567812345678",
-        # Java's signed Long parser rejects overflow despite the total length being 36.
         "8000000000000000-1-1-1-0000000000000",
-        # Python accepts these decimal digits, but Java parses UTF-16 chars, not code points.
         "𝟙2345678-1234-5678-1234-567812345678",
+        # Keep the first validator's UUID contract narrow, even where Java is lenient.
+        "123456789-123-1234-1234-123456789012",
+        "+1234567-1234-1234-1234-123456789012",
+        "00000000000000001-1-1-1-000000000000",
+        "7fffffffffffffff-1-1-1-0000000000000",
+        "+123456789abcdef+123456789abcdef",
+        "ＡＢＣＤＥＦ12-1234-1234-1234-123456789012",
+        "١٢٣٤٥٦٧٨-1234-1234-1234-123456789012",
     ],
 )
 def test_invalid_uuids_are_blocked_before_review_and_preserved(schema, graph, target, value):
     path = _set_uuid_case(schema, graph, target, value)
-    result = ExtractionEngineV1().run(bundle=bundle(schema, graph), chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
+    result = run_chunk(bundle=bundle(schema, graph), chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
 
     assert result.status == "blocked" and result.reason == "validation_failed"
     assert (result.reviews_used, result.fixes_used, result.llm_calls) == (0, 0, 1)
@@ -552,22 +550,23 @@ def test_uuid_collection_elements_are_validated(schema, graph, cardinality, vali
 
 
 @pytest.mark.parametrize("target", ["property", "id"])
-def test_invalid_uuid_can_be_repaired_then_reviewed(schema, graph, target):
+@pytest.mark.parametrize("invalid", ["not-a-uuid", "+1234567-1234-1234-1234-123456789012"])
+def test_invalid_uuid_can_be_repaired_then_reviewed(schema, graph, target, invalid):
     valid = "12345678-1234-5678-1234-567812345678"
     _set_uuid_case(schema, graph, target, valid)
     wrong = deepcopy(graph)
     if target == "id":
-        wrong["vertices"][0]["id"] = wrong["edges"][0]["outV"] = "not-a-uuid"
+        wrong["vertices"][0]["id"] = wrong["edges"][0]["outV"] = invalid
     else:
-        wrong["vertices"][0]["properties"]["age"] = "not-a-uuid"
+        wrong["vertices"][0]["properties"]["age"] = invalid
     domain = bundle(schema, wrong, graph, {"decision": "pass", "issues": []})
-    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
+    result = run_chunk(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
 
     assert result.status == "final" and result.issues == []
     assert _uuid_case_value(result.graph, target) == valid
     assert (result.reviews_used, result.fixes_used, result.llm_calls) == (1, 1, 3)
     repair_context = json.loads(domain.llm.prompts[1].split("\n## Input\n")[1])
-    assert _uuid_case_value(repair_context["graph"], target) == "not-a-uuid"
+    assert _uuid_case_value(repair_context["graph"], target) == invalid
     assert any("UUID" in issue["message"] for issue in repair_context["issues"])
 
 
@@ -579,9 +578,7 @@ def test_uuid_repair_is_revalidated_and_retains_latest_invalid_graph(schema, gra
         replacement["vertices"][0]["id"] = replacement["edges"][0]["outV"] = "still-not-a-uuid"
     else:
         replacement["vertices"][0]["properties"]["age"] = "still-not-a-uuid"
-    result = ExtractionEngineV1().run(
-        bundle=bundle(schema, graph, replacement), chunk=CHUNK, options=ExtractionOptions(max_fixes=1)
-    )
+    result = run_chunk(bundle=bundle(schema, graph, replacement), chunk=CHUNK, options=ExtractionOptions(max_fixes=1))
 
     assert result.status == "blocked" and result.reason == "validation_failed"
     assert _uuid_case_value(result.graph, target) == "still-not-a-uuid"
@@ -592,9 +589,7 @@ def test_uuid_repair_is_revalidated_and_retains_latest_invalid_graph(schema, gra
 @pytest.mark.parametrize("target", ["property", "id"])
 def test_failed_uuid_repair_keeps_invalid_value_and_diagnostics(schema, graph, target):
     path = _set_uuid_case(schema, graph, target, "not-a-uuid")
-    result = ExtractionEngineV1().run(
-        bundle=bundle(schema, graph, "bad JSON"), chunk=CHUNK, options=ExtractionOptions()
-    )
+    result = run_chunk(bundle=bundle(schema, graph, "bad JSON"), chunk=CHUNK, options=ExtractionOptions())
 
     assert result.status == "failed" and result.stage == "repair"
     assert result.reason == "repair_failed: JSONDecodeError"
@@ -639,7 +634,7 @@ def _numeric_case_value(graph, target):
 def test_custom_number_bounds_preserve_ids_and_endpoints(schema, graph, value, valid):
     path = _set_numeric_case(schema, graph, "id", value)
     domain = bundle(schema, graph, {"decision": "pass", "issues": []})
-    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
+    result = run_chunk(bundle=domain, chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
 
     assert result.status == ("final" if valid else "blocked")
     assert (result.reviews_used, result.fixes_used, result.llm_calls) == ((1, 0, 2) if valid else (0, 0, 1))
@@ -658,7 +653,7 @@ def test_numeric_bounds_do_not_restrict_ids_without_a_declared_strategy(schema, 
     value = 2**64 + 1
     _set_numeric_case(schema, graph, "id", value)
     del schema["vertexlabels"][0]["id_strategy"]
-    result = ExtractionEngineV1().run(
+    result = run_chunk(
         bundle=bundle(schema, graph, {"decision": "pass", "issues": []}), chunk=CHUNK, options=ExtractionOptions()
     )
     assert result.status == "final" and result.issues == []
@@ -705,7 +700,7 @@ FLOAT32_MIDPOINT = 340282356779733661637539395458142568448
 def test_float32_finiteness_preserves_rounding_underflow_and_original_values(schema, graph, target, value, valid):
     path = _set_numeric_case(schema, graph, target, value)
     domain = bundle(schema, graph, {"decision": "pass", "issues": []})
-    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
+    result = run_chunk(bundle=domain, chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
 
     assert result.status == ("final" if valid else "blocked")
     assert (result.reviews_used, result.fixes_used, result.llm_calls) == ((1, 0, 2) if valid else (0, 0, 1))
@@ -725,7 +720,7 @@ def test_float32_finiteness_preserves_rounding_underflow_and_original_values(sch
 @pytest.mark.parametrize("value,valid", [([1.1, 1e-50], True), ([1.1, 1e100], False), ([1.1, -1e100], False)])
 def test_float32_collection_elements_follow_the_same_validation(schema, graph, target, cardinality, value, valid):
     path = _set_numeric_case(schema, graph, target, value, cardinality=cardinality)
-    result = ExtractionEngineV1().run(
+    result = run_chunk(
         bundle=bundle(schema, graph, {"decision": "pass", "issues": []}),
         chunk=CHUNK,
         options=ExtractionOptions(max_fixes=0),
@@ -740,7 +735,7 @@ def test_float32_collection_elements_follow_the_same_validation(schema, graph, t
 @pytest.mark.parametrize("value", [1e100, -1e100])
 def test_double_retains_large_finite_values(schema, graph, value):
     _set_numeric_case(schema, graph, "vertices", value, data_type="DOUBLE")
-    result = ExtractionEngineV1().run(
+    result = run_chunk(
         bundle=bundle(schema, graph, {"decision": "pass", "issues": []}), chunk=CHUNK, options=ExtractionOptions()
     )
     assert result.status == "final" and result.issues == []
@@ -753,7 +748,7 @@ def test_numeric_overflow_can_be_repaired_then_reviewed(schema, graph, target, i
     repaired = deepcopy(graph)
     _set_numeric_case(schema, repaired, target, valid)
     domain = bundle(schema, graph, repaired, {"decision": "pass", "issues": []})
-    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
+    result = run_chunk(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
 
     assert result.status == "final" and result.issues == []
     assert _numeric_case_value(result.graph, target) == valid
@@ -771,9 +766,7 @@ def test_numeric_repair_is_revalidated_and_keeps_latest_invalid_graph(schema, gr
     path = _set_numeric_case(schema, graph, target, invalid)
     repaired = deepcopy(graph)
     _set_numeric_case(schema, repaired, target, replacement)
-    result = ExtractionEngineV1().run(
-        bundle=bundle(schema, graph, repaired), chunk=CHUNK, options=ExtractionOptions(max_fixes=1)
-    )
+    result = run_chunk(bundle=bundle(schema, graph, repaired), chunk=CHUNK, options=ExtractionOptions(max_fixes=1))
     assert result.status == "blocked" and result.reason == "validation_failed"
     assert _numeric_case_value(result.graph, target) == replacement
     assert any(issue.path == path for issue in result.issues)
@@ -783,9 +776,7 @@ def test_numeric_repair_is_revalidated_and_keeps_latest_invalid_graph(schema, gr
 @pytest.mark.parametrize("target,invalid", [("id", 2**64 + 1), ("vertices", 1e100)])
 def test_failed_numeric_repair_preserves_invalid_graph_and_issues(schema, graph, target, invalid):
     path = _set_numeric_case(schema, graph, target, invalid)
-    result = ExtractionEngineV1().run(
-        bundle=bundle(schema, graph, "bad JSON"), chunk=CHUNK, options=ExtractionOptions()
-    )
+    result = run_chunk(bundle=bundle(schema, graph, "bad JSON"), chunk=CHUNK, options=ExtractionOptions())
     assert result.status == "failed" and result.stage == "repair"
     assert result.reason == "repair_failed: JSONDecodeError"
     assert _numeric_case_value(result.graph, target) == invalid
@@ -817,17 +808,12 @@ def _identity_pair(schema, graph, data_type, values):
     [
         ("a8098c1a-f86e-11da-bd1a-00112444be1e", "A8098C1A-F86E-11DA-BD1A-00112444BE1E"),
         ("a8098c1a-f86e-11da-bd1a-00112444be1e", "a8098c1af86e11dabd1a00112444be1e"),
-        ("00000001-0001-0001-0001-000000000000", "00000000000000001-1-1-1-000000000000"),
-        ("01234567-1234-1234-1234-123456789012", "+1234567-1234-1234-1234-123456789012"),
-        ("abcdef12-1234-1234-1234-123456789012", "ＡＢＣＤＥＦ12-1234-1234-1234-123456789012"),
-        ("12345678-1234-1234-1234-123456789012", "١٢٣٤٥٦٧٨-1234-1234-1234-123456789012"),
-        ("01234567-89ab-cdef-0123-456789abcdef", "+123456789abcdef+123456789abcdef"),
     ],
 )
 def test_uuid_alias_identities_are_blocked_without_rewriting_values(schema, graph, first, alias):
     path = _identity_pair(schema, graph, "CUSTOMIZE_UUID", (first, alias))
     domain = bundle(schema, graph)
-    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
+    result = run_chunk(bundle=domain, chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
 
     assert result.status == "blocked" and result.reason == "validation_failed"
     assert (result.reviews_used, result.fixes_used, result.llm_calls) == (0, 0, 1)
@@ -850,11 +836,12 @@ def test_uuid_alias_identities_are_blocked_without_rewriting_values(schema, grap
         ("UUID", ("a8098c1a-f86e-11da-bd1a-00112444be1e", "A8098C1A-F86E-11DA-BD1A-00112444BE1E")),
         ("DATE", ("2024-1-1", "2024-01-01 00:00:00")),
         ("DATE", ("2024-01-01 00:00:00.1", "2024-01-01 00:00:00.100")),
+        ("DATE", (0, 0)),
     ],
 )
 def test_primary_identity_uses_converted_values_without_rewriting_properties(schema, graph, data_type, values):
     path = _identity_pair(schema, graph, data_type, values)
-    result = ExtractionEngineV1().run(bundle=bundle(schema, graph), chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
+    result = run_chunk(bundle=bundle(schema, graph), chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
 
     assert result.status == "blocked" and result.reason == "validation_failed"
     assert result.reviews_used == 0 and result.llm_calls == 1
@@ -873,13 +860,12 @@ def test_primary_identity_uses_converted_values_without_rewriting_properties(sch
         ("TEXT", ("1", "1.0")),
         ("OBJECT", ({"value": 1}, {"value": 1.0})),
         ("DATE", ("2024-01-01 00:00:00.001", "2024-01-01 00:00:00.1")),
-        # The server's timezone is unknown: never guess epoch/text equivalence.
-        ("DATE", (0, "1970-01-01 00:00:00")),
+        ("DATE", (0, 1)),
     ],
 )
 def test_distinct_identity_controls_still_reach_final(schema, graph, data_type, values):
     _identity_pair(schema, graph, data_type, values)
-    result = ExtractionEngineV1().run(
+    result = run_chunk(
         bundle=bundle(schema, graph, {"decision": "pass", "issues": []}), chunk=CHUNK, options=ExtractionOptions()
     )
     assert result.status == "final" and result.issues == []
@@ -905,7 +891,7 @@ def test_semantic_identity_repair_is_revalidated_and_reviewed(schema, graph, dat
     else:
         repaired["vertices"][2]["properties"]["age"] = replacement
     domain = bundle(schema, graph, repaired, {"decision": "pass", "issues": []})
-    result = ExtractionEngineV1().run(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
+    result = run_chunk(bundle=domain, chunk=CHUNK, options=ExtractionOptions())
     assert result.status == "final" and result.issues == []
     assert (result.reviews_used, result.fixes_used, result.llm_calls) == (1, 1, 3)
     repair_context = json.loads(domain.llm.prompts[1].split("\n## Input\n")[1])
@@ -918,9 +904,7 @@ def test_repaired_semantic_duplicate_stays_blocked_and_keeps_latest_values(schem
     _identity_pair(schema, graph, "FLOAT", (1, 1.0))
     repaired = deepcopy(graph)
     repaired["vertices"][2]["properties"]["age"] = 1.00000001
-    result = ExtractionEngineV1().run(
-        bundle=bundle(schema, graph, repaired), chunk=CHUNK, options=ExtractionOptions(max_fixes=1)
-    )
+    result = run_chunk(bundle=bundle(schema, graph, repaired), chunk=CHUNK, options=ExtractionOptions(max_fixes=1))
     assert result.status == "blocked" and result.reason == "validation_failed"
     assert result.graph["vertices"][2]["properties"]["age"] == 1.00000001
     assert any("Duplicate vertex primary key" in issue.message for issue in result.issues)
@@ -938,11 +922,126 @@ def test_global_raw_id_duplicates_across_labels_remain_invalid(schema, graph, st
     assert any(issue.path == "vertices[1].id" and "Duplicate vertex id" in issue.message for issue in issues)
 
 
-def test_uuid_endpoint_still_requires_the_existing_exact_reference(schema, graph):
+def test_uuid_endpoint_uses_the_label_id_type_and_keeps_original_spelling(schema, graph):
     vertex_id = "a8098c1a-f86e-11da-bd1a-00112444be1e"
     _set_uuid_case(schema, graph, "id", vertex_id)
     graph["edges"][0]["outV"] = vertex_id.upper()
-    result = ExtractionEngineV1().run(bundle=bundle(schema, graph), chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
-    assert result.status == "blocked" and result.reviews_used == 0
-    assert any(issue.path == "edges[0].outV" for issue in result.issues)
+    result = run_chunk(
+        bundle=bundle(schema, graph, {"decision": "pass", "issues": []}), chunk=CHUNK, options=ExtractionOptions()
+    )
+    assert result.status == "final" and result.issues == []
     assert result.graph["edges"][0]["outV"] == vertex_id.upper()
+
+
+def _mixed_id_types(schema, graph):
+    vertex_id = "a8098c1a-f86e-11da-bd1a-00112444be1e"
+    for definition, strategy, vertex in zip(
+        schema["vertexlabels"], ("CUSTOMIZE_STRING", "CUSTOMIZE_UUID"), graph["vertices"]
+    ):
+        definition["id_strategy"] = strategy
+        definition.pop("primary_keys", None)
+        vertex["id"] = vertex_id
+    graph["edges"][0].update(outV=vertex_id, inV=vertex_id)
+    return vertex_id
+
+
+def test_string_and_uuid_ids_with_the_same_text_reference_distinct_vertices(schema, graph):
+    vertex_id = _mixed_id_types(schema, graph)
+    result = run_chunk(
+        bundle=bundle(schema, graph, {"decision": "pass", "issues": []}), chunk=CHUNK, options=ExtractionOptions()
+    )
+    assert result.status == "final" and result.issues == []
+    assert [vertex["id"] for vertex in result.graph["vertices"]] == [vertex_id, vertex_id]
+    assert result.graph["edges"][0]["outV"] == result.graph["edges"][0]["inV"] == vertex_id
+
+
+def test_endpoint_cannot_resolve_an_equal_text_id_of_another_type(schema, graph):
+    _mixed_id_types(schema, graph)
+    graph["vertices"].pop()
+    result = run_chunk(bundle=bundle(schema, graph), chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
+    assert result.status == "blocked" and result.reviews_used == 0
+    assert any(issue.path == "edges[0].inV" for issue in result.issues)
+
+
+def test_primary_key_and_custom_string_ids_still_share_the_global_string_id_scope(schema, graph):
+    schema["vertexlabels"][1]["id_strategy"] = "CUSTOMIZE_STRING"
+    schema["vertexlabels"][1].pop("primary_keys")
+    graph["vertices"][1]["id"] = "1:Alice"
+    graph["edges"][0]["inV"] = "1:Alice"
+    issues = bundle(schema).validate(graph, CHUNK)
+    assert any(issue.path == "vertices[1].id" and "Duplicate vertex id" in issue.message for issue in issues)
+
+
+@pytest.mark.parametrize("fixed", [False, True])
+def test_uuid_identity_collision_across_labels_is_repaired_and_revalidated(schema, graph, fixed):
+    vertex_id = _mixed_id_types(schema, graph)
+    schema["vertexlabels"][0]["id_strategy"] = "CUSTOMIZE_UUID"
+    graph["vertices"][1]["id"] = vertex_id.upper()
+    graph["edges"][0]["inV"] = vertex_id.upper()
+    repaired = deepcopy(graph)
+    replacement = "a8098c1a-f86e-11da-bd1a-00112444be1f" if fixed else vertex_id.replace("-", "")
+    repaired["vertices"][1]["id"] = repaired["edges"][0]["inV"] = replacement
+    domain = bundle(schema, graph, repaired, {"decision": "pass", "issues": []})
+    result = run_chunk(bundle=domain, chunk=CHUNK, options=ExtractionOptions(max_fixes=1))
+    assert result.status == ("final" if fixed else "blocked")
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == ((1, 1, 3) if fixed else (0, 1, 2))
+    assert result.graph["vertices"][1]["id"] == replacement
+    repair_context = json.loads(domain.llm.prompts[1].split("\n## Input\n")[1])
+    assert repair_context["graph"]["vertices"][1]["id"] == vertex_id.upper()
+    assert any(issue["path"] == "vertices[1].id" for issue in repair_context["issues"])
+    if not fixed:
+        assert any(issue.path == "vertices[1].id" and "Duplicate" in issue.message for issue in result.issues)
+
+
+@pytest.mark.parametrize("date_count", [1, 2])
+@pytest.mark.parametrize("different_other_key", [False, True])
+def test_date_primary_representation_mixing_requires_resolvable_identity(
+    schema, graph, date_count, different_other_key
+):
+    _identity_pair(schema, graph, "DATE", (0, "1970-01-01 00:00:00"))
+    if date_count == 2:
+        schema["vertexlabels"][0]["properties"].append("second_date")
+        schema["vertexlabels"][0]["primary_keys"].append("second_date")
+        schema["propertykeys"].append({"name": "second_date", "data_type": "DATE", "cardinality": "SINGLE"})
+        graph["vertices"][0]["properties"]["second_date"] = 0
+        graph["vertices"][2]["properties"]["second_date"] = "1970-01-01"
+    if different_other_key:
+        schema["vertexlabels"][0]["primary_keys"].insert(0, "name")
+    domain = bundle(schema, graph, {"decision": "pass", "issues": []})
+    result = run_chunk(bundle=domain, chunk=CHUNK, options=ExtractionOptions(max_fixes=0))
+    assert result.status == ("final" if different_other_key else "blocked")
+    assert (result.reviews_used, result.llm_calls) == ((1, 2) if different_other_key else (0, 1))
+    if not different_other_key:
+        assert any(
+            issue.path == "vertices[2].properties.age" and "Ambiguous DATE" in issue.message for issue in result.issues
+        )
+        assert domain.validate(result.graph, CHUNK) == result.issues
+    assert [result.graph["vertices"][i]["properties"]["age"] for i in (0, 2)] == [0, "1970-01-01 00:00:00"]
+
+
+def test_known_unequal_date_column_disambiguates_other_mixed_date_columns(schema, graph):
+    _identity_pair(schema, graph, "DATE", (0, "1970-01-01 00:00:00"))
+    schema["vertexlabels"][0]["properties"].append("second_date")
+    schema["vertexlabels"][0]["primary_keys"].append("second_date")
+    schema["propertykeys"].append({"name": "second_date", "data_type": "DATE", "cardinality": "SINGLE"})
+    graph["vertices"][0]["properties"]["second_date"] = 1
+    graph["vertices"][2]["properties"]["second_date"] = 2
+    result = run_chunk(
+        bundle=bundle(schema, graph, {"decision": "pass", "issues": []}), chunk=CHUNK, options=ExtractionOptions()
+    )
+    assert result.status == "final" and result.issues == []
+
+
+@pytest.mark.parametrize("replacement,final", [(1, True), ("2024-01-01", False)])
+def test_mixed_date_primary_keys_can_be_repaired_and_must_be_revalidated(schema, graph, replacement, final):
+    _identity_pair(schema, graph, "DATE", (0, "1970-01-01"))
+    repaired = deepcopy(graph)
+    repaired["vertices"][2]["properties"]["age"] = replacement
+    domain = bundle(schema, graph, repaired, {"decision": "pass", "issues": []})
+    result = run_chunk(bundle=domain, chunk=CHUNK, options=ExtractionOptions(max_fixes=1))
+    assert result.status == ("final" if final else "blocked")
+    assert (result.reviews_used, result.fixes_used, result.llm_calls) == ((1, 1, 3) if final else (0, 1, 2))
+    assert result.graph["vertices"][2]["properties"]["age"] == replacement
+    repair_context = json.loads(domain.llm.prompts[1].split("\n## Input\n")[1])
+    assert repair_context["graph"]["vertices"][2]["properties"]["age"] == "1970-01-01"
+    assert any("Ambiguous DATE" in issue["message"] for issue in repair_context["issues"])

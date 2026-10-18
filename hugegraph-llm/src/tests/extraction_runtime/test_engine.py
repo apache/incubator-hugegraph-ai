@@ -13,7 +13,7 @@
 
 import pytest
 
-from hugegraph_llm.extraction_runtime.v1 import ChunkInput, ExtractionEngineV1, ExtractionOptions
+from hugegraph_llm.extraction_runtime.review import ChunkInput, ExtractionOptions, run_chunk
 from hugegraph_llm.models.llms.base import LLMOutputTruncatedError
 from tests.extraction_runtime._bundles import ScriptedBundle
 
@@ -21,7 +21,7 @@ pytestmark = pytest.mark.unit
 
 
 def run(bundle, **limits):
-    return ExtractionEngineV1().run(bundle=bundle, chunk=ChunkInput(7, "text"), options=ExtractionOptions(**limits))
+    return run_chunk(bundle=bundle, chunk=ChunkInput(7, "text"), options=ExtractionOptions(**limits))
 
 
 def test_success_uses_normalized_graph_and_counts_calls():
@@ -110,12 +110,11 @@ def test_failures_count_attempts_and_preserve_previous_graph(stage, counts, has_
         assert [issue.message for issue in result.issues] == ["old review issue"]
 
 
-def test_engine_instance_can_run_multiple_chunks_without_state_leaks():
-    engine = ExtractionEngineV1()
-    first = engine.run(
+def test_repeated_chunk_runs_do_not_leak_state():
+    first = run_chunk(
         bundle=ScriptedBundle(decisions=("fix", "pass")), chunk=ChunkInput(0, "a"), options=ExtractionOptions()
     )
-    second = engine.run(bundle=ScriptedBundle(), chunk=ChunkInput(1, "b"), options=ExtractionOptions())
+    second = run_chunk(bundle=ScriptedBundle(), chunk=ChunkInput(1, "b"), options=ExtractionOptions())
     assert (first.graph["value"], first.fixes_used) == (2, 1)
     assert (second.graph["value"], second.fixes_used, second.llm_calls) == (1, 0, 2)
 

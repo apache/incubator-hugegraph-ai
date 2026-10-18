@@ -19,6 +19,7 @@ from unittest.mock import AsyncMock, Mock
 import httpx
 import pytest
 from litellm.exceptions import APIError
+from litellm.utils import get_optional_params
 from openai import APIConnectionError, OpenAI
 from tenacity import wait_none
 
@@ -103,7 +104,7 @@ def invoke(client, mode, callback=None):
 
 @pytest.mark.parametrize("mode", ["generate", "agenerate", "generate_streaming", "agenerate_streaming"])
 @pytest.mark.parametrize("limit", [None, 237])
-def test_request_omits_none_and_preserves_explicit_token_limit(client_factory, mode, limit):
+def test_request_uses_sdk_none_policy_and_preserves_explicit_token_limit(client_factory, mode, limit):
     cls, sync_call, async_call = client_factory
     client = cls(api_key="test-key", max_tokens=limit)
     configure_calls(sync_call, async_call, mode)
@@ -112,13 +113,49 @@ def test_request_omits_none_and_preserves_explicit_token_limit(client_factory, m
 
     sdk_call = async_call if mode.startswith("a") else sync_call
     sdk_call.assert_called_once()
-    if limit is None:
+    if limit is None and cls is openai_module.OpenAIClient:
         assert "max_tokens" not in sdk_call.call_args.kwargs
     else:
         assert sdk_call.call_args.kwargs["max_tokens"] == limit
     assert sdk_call.call_args.kwargs["messages"] == [
         {"role": "user", "content": "user content must not enter truncation errors"}
     ]
+
+
+@pytest.mark.parametrize("provider,model", [("openai", "gpt-4o-mini"), ("hosted_vllm", "unit-model")])
+@pytest.mark.parametrize("mode", ["generate", "agenerate", "generate_streaming", "agenerate_streaming"])
+@pytest.mark.parametrize("limit", [None, 237])
+def test_litellm_provider_payload_omits_none_and_preserves_explicit_limit(monkeypatch, provider, model, mode, limit):
+    sync_call, async_call = Mock(), AsyncMock()
+    monkeypatch.setattr(litellm_module, "completion", sync_call)
+    monkeypatch.setattr(litellm_module, "acompletion", async_call)
+    configure_calls(sync_call, async_call, mode)
+    client = litellm_module.LiteLLMClient(api_key="test-key", model_name=f"{provider}/{model}", max_tokens=limit)
+
+    assert invoke(client, mode) == "complete"
+
+    sdk_call = async_call if mode.startswith("a") else sync_call
+    sdk_call.assert_called_once()
+    passed = sdk_call.call_args.kwargs
+    assert passed["max_tokens"] == limit
+    # Use LiteLLM's real provider conversion, rather than equating SDK kwargs
+    # with the outgoing payload. Its default-None filter owns this omission.
+    optional = get_optional_params(
+        model=model,
+        custom_llm_provider=provider,
+        max_tokens=passed["max_tokens"],
+        temperature=passed["temperature"],
+        stream=passed.get("stream", False),
+    )
+    payload = json.loads(json.dumps({"model": model, "messages": passed["messages"], **optional}))
+    assert payload["model"] == model
+    assert payload["messages"] == passed["messages"]
+    assert payload["stream"] == ("streaming" in mode)
+    assert "max_completion_tokens" not in payload
+    if limit is None:
+        assert "max_tokens" not in payload
+    else:
+        assert payload["max_tokens"] == limit
 
 
 def test_omitted_constructor_limit_keeps_existing_default(client_factory):

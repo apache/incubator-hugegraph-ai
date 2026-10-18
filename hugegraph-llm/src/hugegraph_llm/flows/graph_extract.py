@@ -18,7 +18,7 @@ import json
 from pycgraph import GPipeline
 
 from hugegraph_llm.config import huge_settings
-from hugegraph_llm.extraction_runtime.v1 import ExtractionOptions
+from hugegraph_llm.extraction_runtime.review import ExtractionOptions
 from hugegraph_llm.flows.common import BaseFlow
 from hugegraph_llm.nodes.document_node.chunk_split import ChunkSplitNode
 from hugegraph_llm.nodes.hugegraph_node.schema import SchemaNode

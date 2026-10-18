@@ -377,7 +377,9 @@ def test_sdk_length_reason_reaches_http_with_latest_graph(
     if stage == "repair":
         assert result["issues"][0]["message"] == "Wrong name"
     assert len(requests) == counts[2]  # Truncation must not trigger a retry.
-    assert all("max_tokens" not in request and "max_completion_tokens" not in request for request in requests)
+    assert all(
+        request.get("max_tokens") is None and request.get("max_completion_tokens") is None for request in requests
+    )
 
 
 @pytest.mark.parametrize("provider", ["openai", "litellm"])
@@ -394,8 +396,9 @@ def test_sdk_limit_is_preserved_for_legacy_but_omitted_for_reviewed_requests(cli
     assert legacy.json()["status"] == reviewed.json()["status"] == "succeeded"
     assert "chunk_results" not in legacy.json()
     assert requests[0]["max_tokens"] == 37
-    assert "max_tokens" not in requests[1]
-    assert "max_tokens" not in requests[2]
+    assert all(
+        request.get("max_tokens") is None and request.get("max_completion_tokens") is None for request in requests[1:]
+    )
 
 
 @pytest.mark.parametrize("provider", ["openai", "litellm"])
@@ -482,7 +485,7 @@ def test_numeric_http_preserves_accepted_rounding_underflow_and_double_values(cl
     assert data["chunk_results"][0]["graph"]["vertices"] == data["result"]["vertices"]
 
 
-@pytest.mark.parametrize("kind", ["CUSTOMIZE_UUID", "FLOAT"])
+@pytest.mark.parametrize("kind", ["CUSTOMIZE_UUID", "FLOAT", "DATE"])
 def test_http_excludes_semantic_duplicate_identities_and_keeps_chunk_evidence(client, monkeypatch, kind):
     schema = deepcopy(SCHEMA)
     accepted = graph("Accepted")
@@ -498,12 +501,12 @@ def test_http_excludes_semantic_duplicate_identities_and_keeps_chunk_evidence(cl
     else:
         schema["vertexlabels"][0]["properties"].append("value")
         schema["vertexlabels"][0]["primary_keys"] = ["value"]
-        schema["propertykeys"].append({"name": "value", "data_type": "FLOAT", "cardinality": "SINGLE"})
-        accepted["vertices"][0]["properties"]["value"] = 2.0
-        values = [1, 1.0]
+        schema["propertykeys"].append({"name": "value", "data_type": kind, "cardinality": "SINGLE"})
+        accepted["vertices"][0]["properties"]["value"] = 2.0 if kind == "FLOAT" else 1
+        values = [1, 1.0] if kind == "FLOAT" else [0, "1970-01-01"]
         for vertex, value in zip(rejected["vertices"], values):
             vertex["properties"]["value"] = value
-        issue_path = "vertices[1].properties"
+        issue_path = "vertices[1].properties" + (".value" if kind == "DATE" else "")
     scripts = {
         "integration_token_identity_accepted": [accepted, PASS],
         "integration_token_identity_rejected": [rejected],
@@ -526,4 +529,58 @@ def test_http_excludes_semantic_duplicate_identities_and_keeps_chunk_evidence(cl
     ]
     assert json.dumps(actual) == json.dumps(values)
     rejected_client = next(item for item in clients.clients if item.token == "integration_token_identity_rejected")
+    assert len(rejected_client.prompts) == 1
+
+
+def test_http_preserves_distinct_id_types_and_excludes_same_type_uuid_collisions(client, monkeypatch):
+    schema = deepcopy(SCHEMA)
+    schema["vertexlabels"][0]["id_strategy"] = "CUSTOMIZE_STRING"
+    schema["vertexlabels"][0].pop("primary_keys")
+    schema["vertexlabels"].append(
+        {"name": "company", "id_strategy": "CUSTOMIZE_UUID", "properties": ["name"], "nullable_keys": []}
+    )
+    schema["edgelabels"].append(
+        {"name": "works_for", "source_label": "person", "target_label": "company", "properties": []}
+    )
+    vertex_id = "a8098c1a-f86e-11da-bd1a-00112444be1e"
+    accepted = {
+        "vertices": [
+            {"id": vertex_id, "label": "person", "properties": {"name": "String ID"}},
+            {"id": vertex_id, "label": "company", "properties": {"name": "UUID ID"}},
+        ],
+        "edges": [
+            {
+                "label": "works_for",
+                "outV": vertex_id,
+                "outVLabel": "person",
+                "inV": vertex_id,
+                "inVLabel": "company",
+                "properties": {},
+            }
+        ],
+    }
+    rejected = deepcopy(accepted)
+    rejected["vertices"].append({"id": vertex_id.upper(), "label": "company", "properties": {"name": "Duplicate UUID"}})
+    scripts = {
+        "integration_token_typed_ids_accepted": [accepted, PASS],
+        "integration_token_typed_ids_rejected": [rejected],
+    }
+    clients = install_llm(monkeypatch, scripts)
+
+    response = post(client, list(scripts), schema=schema, review_options={"max_fixes": 0})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "partial"
+    assert data["result"] == {
+        "vertices": [vertex | {"type": "vertex"} for vertex in accepted["vertices"]],
+        "edges": [accepted["edges"][0] | {"type": "edge"}],
+    }
+    chunk = data["chunk_results"][1]
+    assert chunk["status"] == "blocked" and chunk["reviews_used"] == 0 and chunk["llm_calls"] == 1
+    assert chunk["graph"]["vertices"][2]["id"] == vertex_id.upper()
+    assert any(
+        issue["path"] == "vertices[2].id" and "Duplicate vertex id" in issue["message"] for issue in chunk["issues"]
+    )
+    rejected_client = next(item for item in clients.clients if item.token == "integration_token_typed_ids_rejected")
     assert len(rejected_client.prompts) == 1

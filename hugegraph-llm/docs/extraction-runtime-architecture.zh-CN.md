@@ -7,15 +7,13 @@
 ```text
 HTTP → GraphExtractService → Scheduler → GraphExtractFlow
     → SchemaNode / ChunkSplitNode → ExtractNode
-    → batch → 每块 engine + PropertyGraphBundle + 现有模型客户端
+    → run_chunks → 每块 run_chunk + PropertyGraphBundle + 现有模型客户端
     → 主线程汇总 → Flow.post_deal → HTTP 响应
 ```
 
 | 模块 | 职责 |
 | --- | --- |
-| `v1/contracts.py` | 块输入、预算选项、问题、审阅与块结果 |
-| `v1/engine.py` | 单块循环、调用次数、当前图与终态 |
-| `v1/batch.py` | 有限并发、独立领域对象、输入顺序与失败隔离 |
+| `review.py` | 块输入与结果、预算选项、单块审阅修复循环、有限并发与结果排序 |
 | `property_graph.py` | 调用现有模型，解析、规范化、校验、审阅和完整图修复 |
 | `ExtractNode` | 为每块创建模型客户端，收集结果后一次写回工作流状态 |
 
@@ -26,6 +24,8 @@ HTTP → GraphExtractService → Scheduler → GraphExtractFlow
 抽取后先做结构、属性、主键和关系端点检查。校验可以对当前块图进行确定性的 ID 与端点规范化，但不会提前丢弃无效条目。缺失或不满足 schema 的部分进入问题列表，供修复使用。
 
 结构有效时才调用模型审阅。审阅以原文、schema 与当前图为输入，检查事实支持、属性错误、关系方向和明确遗漏，输出 `pass / fix / block` 与问题列表。
+
+声明的字符串、UUID 与数值顶点 ID 使用不同的身份命名空间。审核校验器只接收标准 ASCII 36 位带连字符或 32 位十六进制 UUID，按 UUID 值比较大小写及格式别名；这是抽取侧的受限合同，不表示 HugeGraph 本身拒绝其他拼法。主键比较同时考虑数值转换与 UUID 别名。同 label 的两套主键中，若 DATE 混用 epoch 和文本表示且其余主键不能证明两者不等，由于 schema 未提供服务端时区，会作为歧义进入修复。另一非 DATE 键或同表示的 DATE 键若已能证明不等，则允许通过。未解决的歧义使块为 blocked，不猜测时区。
 
 ```mermaid
 flowchart TD
@@ -67,7 +67,7 @@ flowchart TD
 
 ## 并发与响应
 
-batch 限制同时准备和执行的块数量。每块有独立的领域对象、模型客户端、图、问题与计数器；返回顺序始终等于输入顺序。它一次提交并保留有限批次，不提供流式调度或跨块合并。
+`run_chunks` 限制同时准备和执行的块数量。每块由无状态 `run_chunk` 函数处理，并有独立的领域对象、模型客户端、图、问题与计数器；返回顺序始终等于输入顺序。它一次提交并保留有限批次，不提供流式调度或跨块合并。
 
 ExtractNode 在分发块前深拷贝一份当前 LLM 配置，所有块及各阶段均使用这份快照。UI 或 HTTP 配置更新只影响后续请求；配置快照与 LLM 配置写入共用锁，模型执行不持锁。新快照会等待正在进行的配置更新（包括连通性检查）结束。同一运行时锁还保护图配置和受保护的索引刷新，因此这些操作也可能延迟新快照的建立。
 
@@ -77,6 +77,6 @@ ExtractNode 汇总 final 块的 vertices/edges，并保留全部 `chunk_results`
 
 ## 验证与边界
 
-确定性测试使用脚本化模型输出，执行实际 parser、validator、engine、batch，并覆盖 HTTP 到 Scheduler/pycgraph/Node 的返回链。真实模型烟测通过指南中的例子运行；自动化通过不能代替模型质量验证。
+确定性测试使用脚本化模型输出，执行实际 parser、validator、`run_chunk` 和 `run_chunks`，并覆盖 HTTP 到 Scheduler/pycgraph/Node 的返回链。真实模型烟测通过指南中的例子运行；自动化通过不能代替模型质量验证。
 
 第一版不包含多层指纹、语义 manifest、不可变图版本、通用 Provider 适配、哈希链轨迹、独立 final gate、持久化任务、图写入或跨块实体消歧。合并只按输入顺序拼接 final 图，不解决跨块重复与冲突。

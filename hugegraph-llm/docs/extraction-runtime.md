@@ -9,10 +9,12 @@ The reviewed path uses the existing configured chat model for extraction, review
 and repair. It validates the graph against the supplied schema and returns a
 result for every chunk. It does not write graphs to HugeGraph.
 
-For OpenAI and LiteLLM, our client wrappers omit `max_tokens` from the SDK call
-in all three stages. SDK provider adapters and services may still apply default
-output limits or hard output and context limits. Existing requests without review
-and other model uses retain their configured token limit.
+In all three reviewed stages, the OpenAI wrapper omits `max_tokens` from the SDK
+call. The LiteLLM wrapper passes `max_tokens=None`, which its provider adapter
+omits from the upstream request. Neither path explicitly caps upstream output;
+SDK adapters and services may still apply default or hard output and context
+limits. Existing requests without review and other model uses retain their
+configured token limit.
 
 ## Setup and a runnable example
 
@@ -84,6 +86,18 @@ retained so the model can repair them. Review compares the current graph with th
 original text and schema for unsupported facts, wrong properties, relation
 direction, and clear omissions. The existing extraction prompt is reused; review
 and repair prompts live in `PromptConfig` alongside it.
+
+Declared string, UUID, and numeric vertex IDs use separate identity namespaces.
+The reviewed validator accepts UUIDs in the standard ASCII 36-character hyphenated
+or 32-character hexadecimal forms and compares case and format aliases by UUID
+value. This is a narrower extraction contract than all the spellings HugeGraph
+itself may accept. Typed primary-key comparisons account for numeric conversion
+and UUID aliases. Within one label, DATE epoch/text mixtures are ambiguous when
+the remaining primary-key fields cannot establish that two vertices differ,
+because the schema does not supply the server timezone. A distinct non-DATE
+field or distinct DATE values in the same representation can establish that
+the keys differ. An unresolved ambiguity must be repaired or the chunk becomes
+`blocked`; the validator does not guess a timezone.
 
 Repair returns a complete replacement graph. The engine discards old issues,
 validates the replacement, and reviews it again when budget remains. Model or
@@ -162,11 +176,13 @@ behavior.
 ## Python integration and concurrency
 
 The concrete domain is `PropertyGraphBundle(llm=..., schema=..., example_prompt=...)`.
-The core surface is exported from `hugegraph_llm.extraction_runtime.v1`:
+The `hugegraph_llm.extraction_runtime.review` module provides
 `ChunkInput`, `ExtractionOptions`, `Issue`, `ReviewResult`, `ChunkResult`,
-`ExtractionBundle`, `ExtractionEngineV1`, and `run_chunks_v1`.
+`run_chunk`, and `run_chunks`.
 
-`run_chunks_v1(chunks=..., prepare=..., options=...)` accepts a finite iterable.
+`run_chunk(bundle=..., chunk=..., options=...)` runs the review loop with local
+graph state and counters. `run_chunks(chunks=..., prepare=..., options=...)`
+accepts a finite iterable.
 Its factory returns a fresh bundle for each chunk and runs inside the worker
 limit. Results are a tuple in input order, regardless of chunk indices or
 completion order. Preparation failure becomes a failed chunk; input iteration
