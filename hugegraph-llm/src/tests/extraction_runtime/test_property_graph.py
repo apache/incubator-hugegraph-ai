@@ -168,6 +168,9 @@ def test_collection_cardinality_and_element_types(schema, graph, value):
         ("DATE", "2024-2-9 12:34:56.1"),
         ("DATE", "2024-02-29 12:34:56.12"),
         ("DATE", "2024-02-29 12:34:56.123"),
+        ("DATE", "0001-01-01"),
+        ("DATE", "9999-12-31 23:59:59.999"),
+        ("DATE", "1969-12-31 23:59:59.999"),
         ("DATE", 1709208000000),
         ("DATE", 0),
         ("DATE", -1),
@@ -211,6 +214,13 @@ def test_compatible_property_values_reach_final_without_repair(schema, graph, da
         "2024-02-29 12:34:56.1234",
         "2024-02-29T12:34:56Z",
         "2024-02-29 12:34:56 trailing",
+        "2024-02-29\t12:34:56",
+        "2024-02-29\n12:34:56",
+        "2024-02-29\r12:34:56",
+        "2024-02-29\v12:34:56",
+        "2024-02-29\f12:34:56",
+        "2024-02-29\u00a012:34:56",
+        "2024-02-29  12:34:56",
         "1709208000000",
         "not-a-date",
         True,
@@ -861,6 +871,12 @@ def test_primary_identity_uses_converted_values_without_rewriting_properties(sch
         ("OBJECT", ({"value": 1}, {"value": 1.0})),
         ("DATE", ("2024-01-01 00:00:00.001", "2024-01-01 00:00:00.1")),
         ("DATE", (0, 1)),
+        ("DATE", (0, "2024-01-01")),
+        ("DATE", (0, "1970-01-02")),
+        ("DATE", ("1969-12-31", 0)),
+        ("DATE", (-1, "1970-01-01 23:59:59.999")),
+        ("DATE", (-(2**63), "0001-01-01")),
+        ("DATE", (2**63 - 1, "9999-12-31 23:59:59.999")),
     ],
 )
 def test_distinct_identity_controls_still_reach_final(schema, graph, data_type, values):
@@ -993,12 +1009,24 @@ def test_uuid_identity_collision_across_labels_is_repaired_and_revalidated(schem
         assert any(issue.path == "vertices[1].id" and "Duplicate" in issue.message for issue in result.issues)
 
 
-@pytest.mark.parametrize("date_count", [1, 2])
-@pytest.mark.parametrize("different_other_key", [False, True])
+@pytest.mark.parametrize(
+    "date_count,different_other_key,values",
+    [
+        (1, False, (0, "1970-01-01 00:00:00")),
+        (2, False, (0, "1970-01-01 00:00:00")),
+        (1, True, (0, "1970-01-01 00:00:00")),
+        (2, True, (0, "1970-01-01 00:00:00")),
+        (1, False, (0, "1970-01-01 23:59:59.999")),
+        (1, False, (0, "1969-12-31 00:00:00.001")),
+        (1, False, (-1, "1969-12-31 23:59:59.999")),
+        (1, False, (-62135596800000, "0001-01-01")),
+        (1, False, (253402300799999, "9999-12-31 23:59:59.999")),
+    ],
+)
 def test_date_primary_representation_mixing_requires_resolvable_identity(
-    schema, graph, date_count, different_other_key
+    schema, graph, date_count, different_other_key, values
 ):
-    _identity_pair(schema, graph, "DATE", (0, "1970-01-01 00:00:00"))
+    _identity_pair(schema, graph, "DATE", values)
     if date_count == 2:
         schema["vertexlabels"][0]["properties"].append("second_date")
         schema["vertexlabels"][0]["primary_keys"].append("second_date")
@@ -1016,23 +1044,24 @@ def test_date_primary_representation_mixing_requires_resolvable_identity(
             issue.path == "vertices[2].properties.age" and "Ambiguous DATE" in issue.message for issue in result.issues
         )
         assert domain.validate(result.graph, CHUNK) == result.issues
-    assert [result.graph["vertices"][i]["properties"]["age"] for i in (0, 2)] == [0, "1970-01-01 00:00:00"]
+    assert [result.graph["vertices"][i]["properties"]["age"] for i in (0, 2)] == list(values)
 
 
-def test_known_unequal_date_column_disambiguates_other_mixed_date_columns(schema, graph):
+@pytest.mark.parametrize("other_values", [(1, 2), (0, "1970-01-02")])
+def test_known_unequal_date_column_disambiguates_other_mixed_date_columns(schema, graph, other_values):
     _identity_pair(schema, graph, "DATE", (0, "1970-01-01 00:00:00"))
     schema["vertexlabels"][0]["properties"].append("second_date")
     schema["vertexlabels"][0]["primary_keys"].append("second_date")
     schema["propertykeys"].append({"name": "second_date", "data_type": "DATE", "cardinality": "SINGLE"})
-    graph["vertices"][0]["properties"]["second_date"] = 1
-    graph["vertices"][2]["properties"]["second_date"] = 2
+    graph["vertices"][0]["properties"]["second_date"] = other_values[0]
+    graph["vertices"][2]["properties"]["second_date"] = other_values[1]
     result = run_chunk(
         bundle=bundle(schema, graph, {"decision": "pass", "issues": []}), chunk=CHUNK, options=ExtractionOptions()
     )
     assert result.status == "final" and result.issues == []
 
 
-@pytest.mark.parametrize("replacement,final", [(1, True), ("2024-01-01", False)])
+@pytest.mark.parametrize("replacement,final", [(1, True), ("1970-01-01 05:00:00", False), ("2024-01-01", True)])
 def test_mixed_date_primary_keys_can_be_repaired_and_must_be_revalidated(schema, graph, replacement, final):
     _identity_pair(schema, graph, "DATE", (0, "1970-01-01"))
     repaired = deepcopy(graph)

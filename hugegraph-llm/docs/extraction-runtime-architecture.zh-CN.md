@@ -25,7 +25,11 @@ HTTP → GraphExtractService → Scheduler → GraphExtractFlow
 
 结构有效时才调用模型审阅。审阅以原文、schema 与当前图为输入，检查事实支持、属性错误、关系方向和明确遗漏，输出 `pass / fix / block` 与问题列表。
 
-声明的字符串、UUID 与数值顶点 ID 使用不同的身份命名空间。审核校验器只接收标准 ASCII 36 位带连字符或 32 位十六进制 UUID，按 UUID 值比较大小写及格式别名；这是抽取侧的受限合同，不表示 HugeGraph 本身拒绝其他拼法。主键比较同时考虑数值转换与 UUID 别名。同 label 的两套主键中，若 DATE 混用 epoch 和文本表示且其余主键不能证明两者不等，由于 schema 未提供服务端时区，会作为歧义进入修复。另一非 DATE 键或同表示的 DATE 键若已能证明不等，则允许通过。未解决的歧义使块为 blocked，不猜测时区。
+声明的字符串、UUID 与数值顶点 ID 使用不同的身份命名空间。审核校验器只接收标准 ASCII 36 位带连字符或 32 位十六进制 UUID，按 UUID 值比较大小写及格式别名；这是抽取侧的受限合同，不表示 HugeGraph 本身拒绝其他拼法。主键比较同时考虑数值转换与 UUID 别名。
+
+主键约束只适用于 `PRIMARY_KEY` 或未声明 ID 策略的 schema。自定义策略按显式 ID 判断身份，普通属性遵循 nullable 约束；复合主键 ID 采用与 HugeGraph 一致的两层分隔符转义。
+
+DATE 文本支持 `yyyy-MM-dd`、`yyyy-MM-dd HH:mm:ss`、`yyyy-MM-dd HH:mm:ss.SSS`，日期与时间之间只允许一个字面 ASCII 空格，不接收制表符、换行或其他空白字符。同 label 的两套主键中，将文本按 UTC 参考读法与 epoch 毫秒比较，差值大于等于 24 小时（`86400000` 毫秒）即可证明两者不等，允许保留原表示。差值小于 24 小时，且其余主键不能证明不同时，由于 schema 未提供服务端时区，会作为歧义进入修复。另一非 DATE 键、同表示但不等的 DATE 键，或另一相距至少 24 小时的 DATE 键，均可证明组合主键不同。未解决的近距离歧义使块为 blocked；UTC 参考比较不会转换原值，也不假定服务端时区，远距离的合法日期无需修复。
 
 ```mermaid
 flowchart TD

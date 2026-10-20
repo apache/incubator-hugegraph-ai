@@ -257,6 +257,157 @@ def test_valid_empty_graph_can_pass_review(client, monkeypatch):
     assert data["warnings"] == []
 
 
+@pytest.mark.parametrize("include_accepted", [False, True])
+@pytest.mark.parametrize(
+    ("stage", "script", "counts", "retained_name"),
+    [
+        pytest.param(
+            "extract",
+            [
+                '{"vertices":[{"id":"1:Discarded","label":"person","properties":{"name":"Discarded"}}],'
+                '"vertices":[],"edges":[]}',
+                PASS,
+            ],
+            (0, 0, 1),
+            None,
+            id="extract_vertices",
+        ),
+        pytest.param(
+            "review",
+            [
+                graph("Original"),
+                '{"decision":"block","issues":[{"path":"vertices","message":"Unsupported"}],'
+                '"decision":"pass","issues":[]}',
+            ],
+            (1, 0, 2),
+            "Original",
+            id="review_decision_and_issues",
+        ),
+        pytest.param(
+            "review",
+            [
+                graph("Original"),
+                '{"decision":"pass","issues":[{"path":"vertices","message":"Unsupported"}],"issues":[]}',
+            ],
+            (1, 0, 2),
+            "Original",
+            id="review_issues",
+        ),
+        pytest.param(
+            "repair",
+            [
+                graph("Original"),
+                FIX,
+                '{"vertices":[{"id":"1:Discarded","label":"person","properties":{"name":"Discarded"}}],'
+                '"vertices":[],"edges":[]}',
+                PASS,
+            ],
+            (1, 1, 3),
+            "Original",
+            id="repair_vertices",
+        ),
+        pytest.param(
+            "repair",
+            [
+                graph("Original"),
+                FIX,
+                '{"vertices":[{"id":"1:Latest","label":"person",'
+                '"properties":{"name":"Discarded","name":"Latest"}}],"edges":[]}',
+                PASS,
+            ],
+            (1, 1, 3),
+            "Original",
+            id="repair_nested_property",
+        ),
+        pytest.param(
+            "repair",
+            [
+                graph("Original"),
+                FIX,
+                '{"vertices":[{"id":"1:Latest","label":"person",'
+                r'"properties":{"na\u006de":"Discarded","name":"Latest"}}],"edges":[]}',
+                PASS,
+            ],
+            (1, 1, 3),
+            "Original",
+            id="repair_escaped_property",
+        ),
+        pytest.param(
+            "review",
+            [graph("Original"), FIX, graph("Latest"), '{"decision":"block","decision":"pass","issues":[]}'],
+            (2, 1, 4),
+            "Latest",
+            id="review_after_complete_repair",
+        ),
+    ],
+)
+def test_duplicate_json_keys_fail_the_stage_without_merging_the_chunk(
+    client, monkeypatch, include_accepted, stage, script, counts, retained_name
+):
+    # Keep the raw response: decoding fixtures first would erase the duplicate keys.
+    scripts = {"integration_token_duplicate_rejected": script}
+    if include_accepted:
+        scripts = {"integration_token_duplicate_accepted": [graph("Accepted"), PASS], **scripts}
+    clients = install_llm(monkeypatch, scripts)
+
+    response = post(client, list(scripts), review_options={})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == ("partial" if include_accepted else "failed")
+    assert data["result"] == {
+        "vertices": [graph("Accepted")["vertices"][0] | {"type": "vertex"}] if include_accepted else [],
+        "edges": [],
+    }
+    chunk = data["chunk_results"][-1]
+    assert chunk["status"] == "failed"
+    assert chunk["stage"] == stage
+    assert chunk["reason"] == f"{stage}_failed: ValueError"
+    assert (chunk["reviews_used"], chunk["fixes_used"], chunk["llm_calls"]) == counts
+    assert chunk["graph"] == (
+        {"vertices": [graph(retained_name)["vertices"][0] | {"type": "vertex"}], "edges": []}
+        if retained_name is not None
+        else None
+    )
+    assert [(issue["path"], issue["message"]) for issue in chunk["issues"]] == (
+        [(issue["path"], issue["message"]) for issue in FIX["issues"]] if stage == "repair" else []
+    )
+    rejected = next(item for item in clients.clients if item.token == "integration_token_duplicate_rejected")
+    assert len(rejected.prompts) == counts[2]
+
+
+@pytest.mark.parametrize("graph_format", ["object", "fenced", "flat"])
+def test_json_keys_can_repeat_in_separate_graph_and_issue_objects(client, monkeypatch, graph_format):
+    original = {"vertices": graph("First")["vertices"] + graph("Second")["vertices"], "edges": []}
+    repaired = {"vertices": graph("LatestFirst")["vertices"] + graph("LatestSecond")["vertices"], "edges": []}
+    responses = []
+    for value in (original, repaired):
+        payload = [vertex | {"type": "vertex"} for vertex in value["vertices"]] if graph_format == "flat" else value
+        encoded = json.dumps(payload)
+        responses.append(f"```json\n{encoded}\n```" if graph_format == "fenced" else encoded)
+    review = {
+        "decision": "fix",
+        "issues": [{"path": f"vertices[{index}].properties.name", "message": "Wrong name"} for index in range(2)],
+    }
+    clients = install_llm(
+        monkeypatch, {"integration_token_distinct_objects": [responses[0], review, responses[1], PASS]}
+    )
+
+    response = post(client, "integration_token_distinct_objects", review_options={})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "succeeded"
+    assert data["result"] == {
+        "vertices": [vertex | {"type": "vertex"} for vertex in repaired["vertices"]],
+        "edges": [],
+    }
+    chunk = data["chunk_results"][0]
+    assert chunk["status"] == "final" and chunk["issues"] == []
+    assert (chunk["reviews_used"], chunk["fixes_used"], chunk["llm_calls"]) == (2, 1, 4)
+    assert len(clients.clients[0].prompts) == 4
+
+
 def test_pooled_pipeline_alternates_review_and_legacy_without_state_leaks(client, monkeypatch):
     clients = install_llm(
         monkeypatch,

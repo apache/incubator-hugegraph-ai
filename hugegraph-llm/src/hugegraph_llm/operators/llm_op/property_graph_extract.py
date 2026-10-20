@@ -129,8 +129,9 @@ class PropertyGraphExtract:
             value = properties.get(key)
             if value is None or value == "":
                 return None
-            values.append(str(value))
-        return f"{vertex_label['id']}:{'!'.join(values)}"
+            values.append(str(value).replace("!", "`!"))
+        # Match HugeGraph's concatValues(), followed by splicing().
+        return ":".join(part.replace(":", "`:") for part in (str(vertex_label["id"]), "!".join(values)))
 
     def _normalize_vertices(self, vertices, vertex_label_map):
         vertex_id_map = {}

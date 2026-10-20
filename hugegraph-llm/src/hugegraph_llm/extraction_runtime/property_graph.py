@@ -32,6 +32,7 @@ from hugegraph_llm.operators.llm_op.property_graph_extract import (
 
 # The midpoint above the largest finite float32 rounds to infinity, not to FLOAT_MAX.
 _FLOAT32_OVERFLOW_MIDPOINT = Decimal(2**128 - 2**103)
+_MILLISECONDS_PER_DAY = 86_400_000
 
 
 def _invalid_constant(value: str):
@@ -45,12 +46,23 @@ def _parse_float(value: str) -> float:
     return number
 
 
+def _unique_object(pairs: list[tuple[str, object]]) -> dict:
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("Duplicate JSON object key")
+        result[key] = value
+    return result
+
+
 def _parse_json(response: str):
     text = response.strip()
     fenced = re.fullmatch(r"```(?:json)?\s*\n?(.*?)\s*```", text, re.DOTALL | re.IGNORECASE)
     if fenced:
         text = fenced.group(1)
-    return json.loads(text, parse_constant=_invalid_constant, parse_float=_parse_float)
+    return json.loads(
+        text, parse_constant=_invalid_constant, parse_float=_parse_float, object_pairs_hook=_unique_object
+    )
 
 
 def _parse_graph(response: str) -> dict:
@@ -83,6 +95,11 @@ def _valid_uuid(value) -> bool:
     )
 
 
+def _primary_keys(definition: dict) -> list:
+    strategy = definition.get("id_strategy")
+    return definition.get("primary_keys", []) if not strategy or str(strategy).upper() == "PRIMARY_KEY" else []
+
+
 def _float_identity(value) -> tuple[bool, int]:
     """Round the decimal Number.toString value directly to IEEE float32, ties to even."""
     # struct's binary64 -> binary32 rounds 1.0000000596046448 down, whereas
@@ -107,6 +124,26 @@ def _float_identity(value) -> tuple[bool, int]:
     return decimal.is_signed(), rounded << (shift + 149)
 
 
+def _date_identity(value) -> tuple[str, int] | None:
+    if isinstance(value, int):
+        return ("epoch", value) if _valid_scalar(value, "LONG") else None
+    if not isinstance(value, str):
+        return None
+    match = re.fullmatch(r"(\d{4}-\d{1,2}-\d{1,2})(?: (\d{2}:\d{2}:\d{2})(\.\d{1,3})?)?", value, re.ASCII)
+    if match is None:
+        return None
+    date_format = "%Y-%m-%d" + (" %H:%M:%S" if match[2] else "") + (".%f" if match[3] else "")
+    try:
+        parsed = datetime.strptime(value, date_format)
+    except ValueError:
+        return None
+    # Joda's SSS is fractional seconds (.1 = 100ms). Integer date arithmetic
+    # supplies a UTC reference reading, not a guess at the server's timezone.
+    delta = parsed - datetime(1970, 1, 1)
+    milliseconds = delta.days * _MILLISECONDS_PER_DAY + delta.seconds * 1000 + delta.microseconds // 1000
+    return "wall", milliseconds
+
+
 def _valid_scalar(value, data_type: str) -> bool:
     if data_type == "TEXT":
         return isinstance(value, str)
@@ -129,21 +166,7 @@ def _valid_scalar(value, data_type: str) -> bool:
         # to avoid binary64 double rounding; preserve normal rounding and underflow.
         return data_type == "DOUBLE" or Decimal(str(value)).copy_abs() < _FLOAT32_OVERFLOW_MIDPOINT
     if data_type == "DATE":
-        if isinstance(value, int):
-            # HugeGraph accepts Integer/Long epoch milliseconds, but not floats or booleans.
-            return _valid_scalar(value, "LONG")
-        if not isinstance(value, str):
-            return False
-        match = re.fullmatch(r"(\d{4}-\d{1,2}-\d{1,2})(?:\s(\d{2}:\d{2}:\d{2})(\.\d{1,3})?)?", value, re.ASCII)
-        if match is None:
-            return False
-        # Match HugeGraph DateUtil's date, second and millisecond formats without normalizing the value.
-        date_format = "%Y-%m-%d" + (" %H:%M:%S" if match[2] else "") + (".%f" if match[3] else "")
-        try:
-            datetime.strptime(value, date_format)
-            return True
-        except ValueError:
-            return False
+        return _date_identity(value) is not None
     # Leave unmodeled types (including OBJECT/BLOB) to HugeGraph instead of inventing restrictions.
     return value is not None
 
@@ -195,23 +218,17 @@ class PropertyGraphBundle:
 
     def _primary_identity(self, key: str, value) -> tuple:
         data_type = self.property_keys.get(key, {}).get("data_type")
-        if data_type and _valid_scalar(value, data_type):
+        if data_type == "DATE":
+            date_identity = _date_identity(value)
+            if date_identity is not None:
+                return data_type, *date_identity
+        elif data_type and _valid_scalar(value, data_type):
             if data_type == "UUID":
                 return data_type, UUID(value).int
             if data_type == "FLOAT":
                 return data_type, _float_identity(value)
             if data_type == "DOUBLE":
                 return data_type, float(value).hex()
-            if data_type == "DATE" and isinstance(value, str):
-                # DateUtil uses Joda's fraction-of-second SSS, so .1 means 100ms.
-                date_format = "%Y-%m-%d" + (" %H:%M:%S" if re.search(r"\s", value) else "")
-                date_format += ".%f" if "." in value else ""
-                parsed = datetime.strptime(value, date_format)
-                # SafeDateFormat uses the server's default zone, which this schema
-                # does not expose. Compare wall times; never guess an epoch/text offset.
-                return data_type, "wall", parsed
-            if data_type == "DATE":
-                return data_type, "epoch", value
         return data_type, json.dumps(value, sort_keys=True)
 
     @staticmethod
@@ -256,31 +273,33 @@ class PropertyGraphBundle:
                     issues.append(Issue(path + ".properties", "Properties must be an object"))
                 elif definition is not None:
                     issues.extend(self._validate_properties(properties, definition, path))
-                    keys = definition.get("primary_keys", []) if kind == "vertex" else []
+                    keys = _primary_keys(definition) if kind == "vertex" else []
                     if keys and all(key in properties and properties[key] not in (None, "") for key in keys):
-                        identity = (label, tuple(self._primary_identity(key, properties[key]) for key in keys))
+                        key_identities = {key: self._primary_identity(key, properties[key]) for key in keys}
+                        identity = (label, tuple(key_identities[key] for key in keys))
                         if identity in primary_keys_seen:
                             issues.append(Issue(path + ".properties", "Duplicate vertex primary key"))
                         primary_keys_seen.add(identity)
                         date_keys = [key for key in keys if self.property_keys.get(key, {}).get("data_type") == "DATE"]
-                        if date_keys and all(_valid_scalar(properties[key], "DATE") for key in date_keys):
+                        if date_keys and all(key_identities[key][1] in ("epoch", "wall") for key in date_keys):
                             group = (
                                 label,
-                                tuple(
-                                    self._primary_identity(key, properties[key]) for key in keys if key not in date_keys
-                                ),
+                                tuple(key_identities[key] for key in keys if key not in date_keys),
                             )
-                            dates = tuple(self._primary_identity(key, properties[key]) for key in date_keys)
+                            dates = tuple(key_identities[key] for key in date_keys)
                             previous_dates = date_identities_seen.setdefault(group, [])
                             for previous in previous_dates:
                                 mixed = [
                                     key for key, current, old in zip(date_keys, dates, previous) if current[1] != old[1]
                                 ]
-                                # A same-domain inequality proves distinct composite keys.
-                                # Cross-domain dates stay unknown without the server zone,
-                                # including when multiple DATE columns change form together.
+                                # Same-domain inequality or UTC reference readings at
+                                # least 24 hours apart prove different composite keys.
+                                # A smaller cross-domain gap needs the server timezone.
                                 if mixed and all(
-                                    current[1] != old[1] or current == old for current, old in zip(dates, previous)
+                                    current == old
+                                    if current[1] == old[1]
+                                    else abs(current[2] - old[2]) < _MILLISECONDS_PER_DAY
+                                    for current, old in zip(dates, previous)
                                 ):
                                     issues.append(
                                         Issue(
@@ -315,7 +334,7 @@ class PropertyGraphBundle:
     def _validate_properties(self, properties: dict, definition: dict, path: str) -> list[Issue]:
         issues = []
         allowed = definition.get("properties")
-        required = set(definition.get("primary_keys", []))
+        required = set(_primary_keys(definition)) | set(definition.get("sort_keys", []))
         if allowed is not None and "nullable_keys" in definition:
             required.update(set(allowed) - set(definition["nullable_keys"]))
         for key in sorted(required):

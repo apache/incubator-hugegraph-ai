@@ -88,16 +88,25 @@ direction, and clear omissions. The existing extraction prompt is reused; review
 and repair prompts live in `PromptConfig` alongside it.
 
 Declared string, UUID, and numeric vertex IDs use separate identity namespaces.
+Primary-key constraints apply to `PRIMARY_KEY` and schemas without an ID strategy.
+Custom strategies use their explicit IDs; ordinary properties follow nullable
+constraints. Canonical composite IDs use HugeGraph's two-stage delimiter escaping.
 The reviewed validator accepts UUIDs in the standard ASCII 36-character hyphenated
 or 32-character hexadecimal forms and compares case and format aliases by UUID
 value. This is a narrower extraction contract than all the spellings HugeGraph
 itself may accept. Typed primary-key comparisons account for numeric conversion
-and UUID aliases. Within one label, DATE epoch/text mixtures are ambiguous when
-the remaining primary-key fields cannot establish that two vertices differ,
-because the schema does not supply the server timezone. A distinct non-DATE
-field or distinct DATE values in the same representation can establish that
-the keys differ. An unresolved ambiguity must be repaired or the chunk becomes
-`blocked`; the validator does not guess a timezone.
+and UUID aliases. DATE strings use `yyyy-MM-dd`, `yyyy-MM-dd HH:mm:ss`, or
+`yyyy-MM-dd HH:mm:ss.SSS`; the date/time separator is one literal ASCII space,
+not a tab, newline, or other whitespace. Within one label, a DATE epoch/text
+pair can establish different primary keys when the text's UTC reference
+reading differs from the epoch value by at least 24 hours (`86400000` ms).
+A smaller gap remains ambiguous if no other primary-key field proves a
+difference, because the schema does not supply the server timezone. A distinct
+non-DATE field, distinct DATE values in the same representation, or another
+DATE field with a gap of at least 24 hours can establish that the keys differ.
+An unresolved close ambiguity must be repaired or the chunk becomes `blocked`.
+The UTC reference comparison does not convert the supplied values or assume
+the server's timezone; supported far-apart dates remain valid as supplied.
 
 Repair returns a complete replacement graph. The engine discards old issues,
 validates the replacement, and reviews it again when budget remains. Model or

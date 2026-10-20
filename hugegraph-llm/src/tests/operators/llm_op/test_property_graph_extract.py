@@ -1123,5 +1123,24 @@ Hope this helps."""
         self.assertEqual(result["edges"][0]["properties"]["role"], "Jack Dawson")
 
 
+@pytest.mark.parametrize(
+    ("properties", "forward", "reverse"),
+    [
+        ({"a": "foo", "b": "bar"}, "1:foo!bar", "1:bar!foo"),
+        ({"a": "foo!bar", "b": "baz"}, "1:foo`!bar!baz", "1:baz!foo`!bar"),
+        ({"a": "foo", "b": "bar!baz"}, "1:foo!bar`!baz", "1:bar`!baz!foo"),
+        ({"a": "foo:bar", "b": "baz"}, "1:foo`:bar!baz", "1:baz!foo`:bar"),
+        ({"a": "foo`!bar", "b": "baz`:qux"}, "1:foo``!bar!baz``:qux", "1:baz``:qux!foo``!bar"),
+    ],
+)
+def test_primary_key_id_uses_server_separator_encoding_in_schema_order(properties, forward, reverse):
+    label = {"id": 1, "id_strategy": "PRIMARY_KEY", "primary_keys": ["a", "b"]}
+    # Property insertion order must not alter the schema's key order.
+    reordered = {"b": properties["b"], "a": properties["a"]}
+    assert PropertyGraphExtract._primary_key_id(label, reordered) == forward
+    label["primary_keys"] = ["b", "a"]
+    assert PropertyGraphExtract._primary_key_id(label, reordered) == reverse
+
+
 if __name__ == "__main__":
     unittest.main()
