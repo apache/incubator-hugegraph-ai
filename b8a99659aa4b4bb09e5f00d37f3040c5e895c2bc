@@ -1,0 +1,671 @@
+ontogeny/domains/product-manufacturing/objects/quality-inspection.yaml
+  6876a09d6670275e 1-45
+ontogeny/server/ontogeny/demo/__init__.py
+  6876a09d6670275e 1-33
+ontogeny/server/ontogeny/evolve/models.py
+  6876a09d6670275e 1-68
+ontogeny/web/.gitignore
+  6876a09d6670275e 1-25
+ontogeny/domains/product-manufacturing/layout.yaml
+  6876a09d6670275e 1-67
+ontogeny/web/src/api/auth.tsx
+  6876a09d6670275e 1-113
+ontogeny/web/src/components/ontologyModel.ts
+  6876a09d6670275e 1-91
+ontogeny/server/ontogeny/auth/roles.py
+  6876a09d6670275e 1-198
+ontogeny/web/src/App.tsx
+  6876a09d6670275e 1-148
+ontogeny/server/ontogeny/stores/__init__.py
+  6876a09d6670275e 1-20
+ontogeny/domains/product-manufacturing/policies/default.cedar
+  6876a09d6670275e 1-3
+ontogeny/server/ontogeny/agent/broker.py
+  6876a09d6670275e 1-727
+ontogeny/server/ontogeny/core/models.py
+  6876a09d6670275e 1-635
+ontogeny/domains/product-manufacturing/actions/add-bom-line.yaml
+  6876a09d6670275e 1-41
+ontogeny/web/src/components/ApiErrorCodeHint.tsx
+  6876a09d6670275e 1-28
+ontogeny/domains/product-manufacturing/objects/material.yaml
+  6876a09d6670275e 1-50
+ontogeny/tests/test_mcp.py
+  6876a09d6670275e 1-338
+ontogeny/web/src/i18n/index.tsx
+  6876a09d6670275e 1-112
+ontogeny/web/src/pages/Extensions.test.tsx
+  6876a09d6670275e 1-141
+ontogeny/web/src/pages/Login.tsx
+  6876a09d6670275e 1-137
+ontogeny/web/src/components/FilterBuilder.tsx
+  6876a09d6670275e 1-110
+ontogeny/web/src/components/NodeInfoDrawer.test.tsx
+  6876a09d6670275e 1-107
+ontogeny/domains/product-manufacturing/links/bom-product.yaml
+  6876a09d6670275e 1-14
+ontogeny/server/ontogeny/api/schemas.py
+  6876a09d6670275e 1-274
+ontogeny/domains/product-manufacturing/evolution.yaml
+  6876a09d6670275e 1-52
+ontogeny/server/ontogeny/demo/bootstrap.py
+  6876a09d6670275e 1-245
+ontogeny/web/src/components/nodeKinds.ts
+  6876a09d6670275e 1-117
+ontogeny/web/src/pages/ActionRunner.tsx
+  6876a09d6670275e 1-208
+ontogeny/web/src/pages/agent/panels.test.tsx
+  6876a09d6670275e 1-49
+NOTICE
+  6876a09d6670275e 6-8
+ontogeny/tests/test_llm.py
+  6876a09d6670275e 1-225
+ontogeny/web/src/pages/EvolveConsole.tsx
+  6876a09d6670275e 1-326
+ontogeny/server/ontogeny/action/__init__.py
+  6876a09d6670275e 1-26
+ontogeny/web/src/pages/Action.tsx
+  6876a09d6670275e 1-160
+ontogeny/extensions/llm-ollama/ontogeny_ext_ollama/__init__.py
+  6876a09d6670275e 1-56
+ontogeny/server/ontogeny/api/routes_objects.py
+  6876a09d6670275e 1-305
+ontogeny/web/src/pages/ActionRunner.test.tsx
+  6876a09d6670275e 1-90
+ontogeny/server/ontogeny/functions/sandbox.py
+  6876a09d6670275e 1-320
+ontogeny/tests/test_projection_hugegraph.py
+  6876a09d6670275e 1-702
+ontogeny/domains/product-manufacturing/agents/quality-copilot.yaml
+  6876a09d6670275e 1-30
+.gitignore
+  6876a09d6670275e 222-237
+ontogeny/server/ontogeny/core/validator.py
+  6876a09d6670275e 1-637
+ontogeny/server/ontogeny/telemetry/__init__.py
+  6876a09d6670275e 1-18
+ontogeny/web/src/assets/robot.svg
+  6876a09d6670275e 1
+ontogeny/domains/product-manufacturing/functions/capacity.py
+  6876a09d6670275e 1-59
+ontogeny/server/ontogeny/functions/child.py
+  6876a09d6670275e 1-117
+ontogeny/web/src/pages/agent/NewPluginDialog.test.tsx
+  6876a09d6670275e 1-119
+ontogeny/server/ontogeny/registry/__init__.py
+  6876a09d6670275e 1-19
+ontogeny/web/src/pages/ProjectionView.test.tsx
+  6876a09d6670275e 1-109
+ontogeny/web/src/api/client.test.ts
+  6876a09d6670275e 1-79
+ontogeny/server/ontogeny/demo/mounting.py
+  6876a09d6670275e 1-157
+ontogeny/web/src/components/icons.tsx
+  6876a09d6670275e 1-210
+ontogeny/web/src/components/ui/index.tsx
+  6876a09d6670275e 1-838
+ontogeny/web/src/components/Timeline.tsx
+  6876a09d6670275e 1-80
+ontogeny/web/src/pages/FunctionTester.tsx
+  6876a09d6670275e 1-92
+ontogeny/web/src/pages/GraphExplorer.test.tsx
+  6876a09d6670275e 1-113
+.github/workflows/ontogeny-ci.yml
+  6876a09d6670275e 1-103
+ontogeny/web/src/api/types.ts
+  6876a09d6670275e 1-413
+ontogeny/domains/product-manufacturing/actions/create-production-order.yaml
+  6876a09d6670275e 1-41
+ontogeny/tests/test_agent.py
+  6876a09d6670275e 1-280
+ontogeny/tests/test_structural_fixes.py
+  6876a09d6670275e 1-190
+ontogeny/tools/shot.py
+  6876a09d6670275e 1-146
+ontogeny/web/tsconfig.app.json
+  6876a09d6670275e 1-26
+ontogeny/server/ontogeny/core/linter.py
+  6876a09d6670275e 1-91
+ontogeny/web/src/components/DataTable.tsx
+  6876a09d6670275e 1-215
+ontogeny/web/src/api/modelIssues.ts
+  6876a09d6670275e 1-137
+ontogeny/web/src/components/CardNode.ts
+  6876a09d6670275e 1-280
+ontogeny/web/src/components/DataOverviewDialog.tsx
+  6876a09d6670275e 1-86
+ontogeny/server/ontogeny/config.py
+  6876a09d6670275e 1-111
+ontogeny/tests/test_graph_explore.py
+  6876a09d6670275e 1-186
+ontogeny/web/src/pages/ObjectDetail.tsx
+  6876a09d6670275e 1-289
+ontogeny/server/ontogeny/evolve/ops.py
+  6876a09d6670275e 1-162
+ontogeny/server/ontogeny/evolve/promoter.py
+  6876a09d6670275e 1-414
+ontogeny/domains/product-manufacturing/projections/production-graph.yaml
+  6876a09d6670275e 1-62
+ontogeny/tests/test_expr.py
+  6876a09d6670275e 1-141
+ontogeny/server/ontogeny/evolve/diagnoser.py
+  6876a09d6670275e 1-170
+ontogeny/server/ontogeny/stores/migrate.py
+  6876a09d6670275e 1-177
+ontogeny/web/src/a11y.test.ts
+  6876a09d6670275e 1-109
+ontogeny/web/src/components/ResourceWorkbench.tsx
+  6876a09d6670275e 1-318
+ontogeny/domains/product-manufacturing/links/bom-material.yaml
+  6876a09d6670275e 1-14
+ontogeny/server/ontogeny/api/routes_evolve.py
+  6876a09d6670275e 1-231
+ontogeny/web/src/pages/ProposalDetail.test.tsx
+  6876a09d6670275e 1-116
+ontogeny/server/ontogeny/layout.py
+  6876a09d6670275e 1-80
+ontogeny/domains/product-manufacturing/objects/product.yaml
+  6876a09d6670275e 1-47
+ontogeny/server/ontogeny/telemetry/service.py
+  6876a09d6670275e 1-307
+ontogeny/web/src/components/MutationDiff.tsx
+  6876a09d6670275e 1-56
+ontogeny/domains/product-manufacturing/objects/operation.yaml
+  6876a09d6670275e 1-52
+ontogeny/web/src/pages/dashboard/ArchBoard.tsx
+  6876a09d6670275e 1-404
+ontogeny/tests/test_declarative_functions.py
+  6876a09d6670275e 1-711
+ontogeny/domains/product-manufacturing/actions/receive-material.yaml
+  6876a09d6670275e 1-29
+ontogeny/domains/product-manufacturing/functions/yield.py
+  6876a09d6670275e 1-48
+ontogeny/extensions/graph-hugegraph/ontogeny_ext_hugegraph/adapter.py
+  6876a09d6670275e 1-604
+ontogeny/server/ontogeny/errors.py
+  6876a09d6670275e 1-142
+ontogeny/web/src/pages/evolve/LoopStrip.tsx
+  6876a09d6670275e 1-45
+ontogeny/web/tests-integration/api.e2e.test.ts
+  6876a09d6670275e 1-221
+ontogeny/README.md
+  6876a09d6670275e 1-138
+ontogeny/tools/headless_check.py
+  6876a09d6670275e 1-434
+ontogeny/tests/test_registry.py
+  6876a09d6670275e 1-281
+ontogeny/server/ontogeny/builder_ops.py
+  6876a09d6670275e 1-235
+ontogeny/tests/test_agent_engine.py
+  6876a09d6670275e 1-374
+ontogeny/web/src/components/MutationDiff.test.tsx
+  6876a09d6670275e 1-41
+ontogeny/domains/product-manufacturing/agents/planning-copilot.yaml
+  6876a09d6670275e 1-40
+ontogeny/domains/product-manufacturing/actions/retract-inspection.yaml
+  6876a09d6670275e 1-21
+ontogeny/server/ontogeny/cli.py
+  6876a09d6670275e 1-343
+ontogeny/server/ontogeny/runtime_config.py
+  6876a09d6670275e 1-77
+ontogeny/tests/test_cli.py
+  6876a09d6670275e 1-61
+ontogeny/tests/test_deploy.py
+  6876a09d6670275e 1-168
+ontogeny/server/ontogeny/api_factory.py
+  6876a09d6670275e 1-122
+ontogeny/server/ontogeny/stores/sync.py
+  6876a09d6670275e 1-236
+ontogeny/web/src/pages/TypeDetail.tsx
+  6876a09d6670275e 1-158
+ontogeny/server/ontogeny/metrics.py
+  6876a09d6670275e 1-75
+ontogeny/domains/product-manufacturing/policies/production.yaml
+  6876a09d6670275e 1-10
+ontogeny/web/src/components/ObjectsDialog.tsx
+  6876a09d6670275e 1-95
+ontogeny/server/ontogeny/api/routes_admin.py
+  6876a09d6670275e 1-375
+ontogeny/tests/test_agent_approval.py
+  6876a09d6670275e 1-305
+ontogeny/server/ontogeny/__init__.py
+  6876a09d6670275e 1-24
+ontogeny/web/src/main.tsx
+  6876a09d6670275e 1-25
+ontogeny/web/src/pages/Extensions.tsx
+  6876a09d6670275e 1-207
+ontogeny/web/src/pages/ontology/SampleRows.tsx
+  6876a09d6670275e 1-99
+ontogeny/server/ontogeny/api/routes_agent.py
+  6876a09d6670275e 1-236
+ontogeny/server/ontogeny/evolve/proposer.py
+  6876a09d6670275e 1-307
+ontogeny/server/ontogeny/stores/sources.py
+  6876a09d6670275e 1-159
+ontogeny/extensions/graph-hugegraph/extension.yaml
+  6876a09d6670275e 1-14
+ontogeny/web/src/components/FilterBuilder.test.tsx
+  6876a09d6670275e 1-93
+ontogeny/server/ontogeny/agent/catalog.py
+  6876a09d6670275e 1-166
+ontogeny/tests/test_builder.py
+  6876a09d6670275e 1-344
+ontogeny/tests/conftest.py
+  6876a09d6670275e 1-120
+ontogeny/web/src/components/EntityCardNode.test.ts
+  6876a09d6670275e 1-142
+ontogeny/web/src/pages/ObjectsBrowser.tsx
+  6876a09d6670275e 1-187
+ontogeny/server/ontogeny/engine/__init__.py
+  6876a09d6670275e 1-18
+ontogeny/domains/product-manufacturing/policies/production.cedar
+  6876a09d6670275e 1-58
+ontogeny/web/src/App.test.tsx
+  6876a09d6670275e 1-278
+ontogeny/tests/test_product_manufacturing.py
+  6876a09d6670275e 1-237
+ontogeny/domains/product-manufacturing/actions/register-work-center.yaml
+  6876a09d6670275e 1-45
+ontogeny/web/src/index.css
+  6876a09d6670275e 1-720
+ontogeny/tests/test_optimizations.py
+  6876a09d6670275e 1-267
+ontogeny/server/ontogeny/policy/engine.py
+  6876a09d6670275e 1-167
+ontogeny/web/src/components/ErrorBanner.tsx
+  6876a09d6670275e 1-54
+ontogeny/web/src/assets/vite.svg
+  6876a09d6670275e 1
+ontogeny/web/src/theme.ts
+  6876a09d6670275e 1-68
+ontogeny/web/src/components/ExploreGraph.tsx
+  6876a09d6670275e 1-107
+ontogeny/web/src/api/resources.ts
+  6876a09d6670275e 1-111
+ontogeny/extensions/agent-builtin-llm/ontogeny_ext_agent_llm/engine.py
+  6876a09d6670275e 1-369
+ontogeny/web/src/components/AppShell.tsx
+  6876a09d6670275e 1-792
+ontogeny/tests/test_demo.py
+  6876a09d6670275e 1-314
+ontogeny/domains/product-manufacturing/seed/01_source.sql
+  6876a09d6670275e 1-94
+ontogeny/domains/product-manufacturing/seed/demo-story.yaml
+  6876a09d6670275e 1-130
+ontogeny/web/vite.config.ts
+  6876a09d6670275e 1-51
+ontogeny/tests/test_system_example.py
+  6876a09d6670275e 1-378
+ontogeny/web/index.html
+  6876a09d6670275e 1-30
+ontogeny/web/src/components/FlowGraph.test.tsx
+  6876a09d6670275e 1-217
+ontogeny/web/src/components/JsonView.tsx
+  6876a09d6670275e 1-20
+ontogeny/web/src/pages/Admin.test.tsx
+  6876a09d6670275e 1-126
+ontogeny/web/src/pages/Admin.tsx
+  6876a09d6670275e 1-300
+ontogeny/web/src/api/modelIssues.test.ts
+  6876a09d6670275e 1-80
+ontogeny/server/ontogeny/functions/__init__.py
+  6876a09d6670275e 1-82
+ontogeny/web/src/test/render.tsx
+  6876a09d6670275e 1-47
+ontogeny/tools/button_audit.py
+  6876a09d6670275e 1-248
+ontogeny/tests/test_agent_eval.py
+  6876a09d6670275e 1-128
+ontogeny/server/ontogeny/auth/models.py
+  6876a09d6670275e 1-85
+ontogeny/web/package.json
+  6876a09d6670275e 1-43
+ontogeny/web/.oxlintrc.json
+  6876a09d6670275e 1-8
+ontogeny/web/src/pages/OntologyExplorer.test.tsx
+  6876a09d6670275e 1-515
+ontogeny/tests/test_engine_functions.py
+  6876a09d6670275e 1-329
+ontogeny/server/ontogeny/functions/declarative.py
+  6876a09d6670275e 1-345
+ontogeny/web/src/api/yaml.ts
+  6876a09d6670275e 1-96
+ontogeny/domains/product-manufacturing/actions/cancel-production-order.yaml
+  6876a09d6670275e 1-32
+ontogeny/web/src/pages/ontology/FunctionEditor.test.tsx
+  6876a09d6670275e 1-141
+ontogeny/web/src/components/EvalReport.tsx
+  6876a09d6670275e 1-149
+ontogeny/web/src/pages/ObjectsOverview.tsx
+  6876a09d6670275e 1-269
+ontogeny/web/src/pages/OntologyExplorer.tsx
+  6876a09d6670275e 1-913
+ontogeny/extensions/llm-ollama/extension.yaml
+  6876a09d6670275e 1-17
+ontogeny/server/ontogeny/agent/__init__.py
+  6876a09d6670275e 1-21
+ontogeny/web/src/components/DataTable.test.tsx
+  6876a09d6670275e 1-179
+ontogeny/tests/test_evolve.py
+  6876a09d6670275e 1-961
+ontogeny/server/ontogeny/engine/service.py
+  6876a09d6670275e 1-348
+ontogeny/extensions/graph-hugegraph/ontogeny_ext_hugegraph/__init__.py
+  6876a09d6670275e 1-35
+ontogeny/server/ontogeny/api/routes_accounts.py
+  6876a09d6670275e 1-120
+ontogeny/web/src/pages/Access.test.tsx
+  6876a09d6670275e 1-349
+ontogeny/web/src/i18n/en.ts
+  6876a09d6670275e 1-1226
+ontogeny/web/src/pages/GraphExplorer.tsx
+  6876a09d6670275e 1-506
+ontogeny/web/src/assets/fonts/OFL.txt
+  6876a09d6670275e 1-93
+ontogeny/server/ontogeny/stores/repo.py
+  6876a09d6670275e 1-432
+ontogeny/web/src/pages/ontology/draft.tsx
+  6876a09d6670275e 1-452
+ontogeny/server/ontogeny/api/__init__.py
+  6876a09d6670275e 1-18
+ontogeny/server/ontogeny/action/outbox.py
+  6876a09d6670275e 1-212
+ontogeny/web/src/pages/Access.tsx
+  6876a09d6670275e 1-928
+ontogeny/web/src/pages/ProjectionView.tsx
+  6876a09d6670275e 1-308
+ontogeny/web/src/components/graphAdapters.ts
+  6876a09d6670275e 1-585
+ontogeny/compose.yaml
+  6876a09d6670275e 1-62
+ontogeny/web/src/components/DataMountDialog.tsx
+  6876a09d6670275e 1-341
+ontogeny/domains/product-manufacturing/links/production-order-operations.yaml
+  6876a09d6670275e 1-14
+ontogeny/web/src/components/RobotArmMark.tsx
+  6876a09d6670275e 1-39
+ontogeny/extensions/agent-builtin-llm/ontogeny_ext_agent_llm/__init__.py
+  6876a09d6670275e 1-31
+ontogeny/web/src/api/client.ts
+  6876a09d6670275e 1-609
+ontogeny/server/ontogeny/projection/__init__.py
+  6876a09d6670275e 1-25
+ontogeny/server/ontogeny/service.py
+  6876a09d6670275e 1-1626
+ontogeny/web/src/components/NodeInfoDrawer.tsx
+  6876a09d6670275e 1-122
+ontogeny/server/ontogeny/api/app.py
+  6876a09d6670275e 1-147
+ontogeny/tests/test_action.py
+  6876a09d6670275e 1-574
+ontogeny/web/src/components/ResourceDialog.tsx
+  6876a09d6670275e 1-114
+ontogeny/server/ontogeny/action/runtime.py
+  6876a09d6670275e 1-444
+ontogeny/domains/product-manufacturing/links/production-order-product.yaml
+  6876a09d6670275e 1-14
+ontogeny/server/ontogeny/registry/store.py
+  6876a09d6670275e 1-279
+ontogeny/web/src/components/CardNode.test.ts
+  6876a09d6670275e 1-154
+ontogeny/web/src/components/Markdown.tsx
+  6876a09d6670275e 1-40
+ontogeny/web/src/components/DomainImportDialog.test.tsx
+  6876a09d6670275e 1-131
+ontogeny/server/ontogeny/registry/compiled.py
+  6876a09d6670275e 1-308
+ontogeny/web/src/pages/agent/tone.ts
+  6876a09d6670275e 1-35
+ontogeny/web/src/test/setup.ts
+  6876a09d6670275e 1-290
+ontogeny/server/ontogeny/auth/__init__.py
+  6876a09d6670275e 1-34
+ontogeny/web/src/components/EntityCardNode.ts
+  6876a09d6670275e 1-176
+ontogeny/web/src/components/RuntimeConfigCard.tsx
+  6876a09d6670275e 1-463
+ontogeny/domains/product-manufacturing/ontology.yaml
+  6876a09d6670275e 1-12
+ontogeny/web/src/pages/Knowledge.test.tsx
+  6876a09d6670275e 1-250
+pyproject.toml
+  6876a09d6670275e 166-168,198
+ontogeny/web/src/pages/ProposalDetail.tsx
+  6876a09d6670275e 1-157
+ontogeny/domains/product-manufacturing/objects/bom.yaml
+  6876a09d6670275e 1-43
+ontogeny/domains/product-manufacturing/actions/complete-operation.yaml
+  6876a09d6670275e 1-25
+ontogeny/server/ontogeny/projection/worker.py
+  6876a09d6670275e 1-191
+ontogeny/domains/product-manufacturing/functions/availability.py
+  6876a09d6670275e 1-57
+ontogeny/web/src/components/GraphLegend.tsx
+  6876a09d6670275e 1-55
+ontogeny/server/ontogeny/core/__init__.py
+  6876a09d6670275e 1-35
+ontogeny/web/src/pages/AgentManagement.tsx
+  6876a09d6670275e 1-135
+ontogeny/server/ontogeny/db.py
+  6876a09d6670275e 1-132
+ontogeny/.dockerignore
+  6876a09d6670275e 1-19
+ontogeny/web/src/api/queries.ts
+  6876a09d6670275e 1-137
+ontogeny/tests/test_auth_identity.py
+  6876a09d6670275e 1-198
+ontogeny/web/src/i18n/dict.test.ts
+  6876a09d6670275e 1-85
+ontogeny/server/ontogeny/projection/compiler.py
+  6876a09d6670275e 1-80
+ontogeny/tests/test_projection.py
+  6876a09d6670275e 1-308
+ontogeny/web/src/components/ParamForm.tsx
+  6876a09d6670275e 1-119
+ontogeny/server/ontogeny/api/routes_data.py
+  6876a09d6670275e 1-100
+ontogeny/web/src/pages/agent/CreateSessionDialog.tsx
+  6876a09d6670275e 1-178
+ontogeny/tests/e2e_server.py
+  6876a09d6670275e 1-65
+ontogeny/tests/test_function_ecosystem.py
+  6876a09d6670275e 1-345
+ontogeny/web/vitest.integration.config.ts
+  6876a09d6670275e 1-29
+ontogeny/web/src/components/tone-theming.test.tsx
+  6876a09d6670275e 1-99
+ontogeny/server/ontogeny/api/deps.py
+  6876a09d6670275e 1-128
+ontogeny/tests/test_domain_import.py
+  6876a09d6670275e 1-198
+ontogeny/server/ontogeny/mcp_server.py
+  6876a09d6670275e 1-486
+ontogeny/web/README.md
+  6876a09d6670275e 1-32
+ontogeny/web/src/components/NeighbourhoodDialog.tsx
+  6876a09d6670275e 1-147
+ontogeny/server/ontogeny/ext_host.py
+  6876a09d6670275e 1-243
+ontogeny/web/src/pages/agent/NewPluginDialog.tsx
+  6876a09d6670275e 1-544
+ontogeny/web/src/pages/evolve/ProposalModal.tsx
+  6876a09d6670275e 1-230
+ontogeny/web/src/components/AgentDock.tsx
+  6876a09d6670275e 1-203
+ontogeny/domains/product-manufacturing/links/production-order-inspections.yaml
+  6876a09d6670275e 1-14
+ontogeny/tests/test_agent_governance.py
+  6876a09d6670275e 1-377
+ontogeny/web/src/components/DataMountDialog.test.tsx
+  6876a09d6670275e 1-152
+ontogeny/domains/product-manufacturing/actions/introduce-product.yaml
+  6876a09d6670275e 1-33
+ontogeny/domains/product-manufacturing/agents/shopfloor-copilot.yaml
+  6876a09d6670275e 1-30
+ontogeny/server/ontogeny/agent/models.py
+  6876a09d6670275e 1-126
+ontogeny/domains/product-manufacturing/actions/release-production-order.yaml
+  6876a09d6670275e 1-24
+ontogeny/domains/product-manufacturing/policies/default.yaml
+  6876a09d6670275e 1-10
+ontogeny/extensions/llm-ollama/ontogeny_ext_ollama/adapter.py
+  6876a09d6670275e 1-153
+ontogeny/tests/test_hardening.py
+  6876a09d6670275e 1-125
+ontogeny/web/public/icons.svg
+  6876a09d6670275e 1-24
+ontogeny/tests/test_restart.py
+  6876a09d6670275e 1-180
+ontogeny/server/ontogeny/core/types.py
+  6876a09d6670275e 1-175
+ontogeny/domains/product-manufacturing/objects/production-order.yaml
+  6876a09d6670275e 1-56
+ontogeny/tests/test_api.py
+  6876a09d6670275e 1-450
+ontogeny/tests/test_stores.py
+  6876a09d6670275e 1-359
+ontogeny/tests/test_schema_evolution.py
+  6876a09d6670275e 1-253
+ontogeny/web/src/components/textMetrics.ts
+  6876a09d6670275e 1-151
+ontogeny/tools/bench_query.py
+  6876a09d6670275e 1-124
+ontogeny/web/src/pages/Dashboard.tsx
+  6876a09d6670275e 1-485
+ontogeny/server/ontogeny/core/loader.py
+  6876a09d6670275e 1-176
+ontogeny/web/src/pages/ObjectsBrowser.test.tsx
+  6876a09d6670275e 1-74
+ontogeny/server/ontogeny/auth/service.py
+  6876a09d6670275e 1-270
+ontogeny/web/src/pages/AgentConsole.tsx
+  6876a09d6670275e 1-585
+ontogeny/web/src/pages/ObjectsOverview.test.tsx
+  6876a09d6670275e 1-111
+ontogeny/web/src/components/CodeEditor.test.tsx
+  6876a09d6670275e 1-105
+ontogeny/domains/product-manufacturing/stores/mes.yaml
+  6876a09d6670275e 1-10
+ontogeny/server/ontogeny/stores/ddl.py
+  6876a09d6670275e 1-195
+ontogeny/deploy/Dockerfile
+  6876a09d6670275e 1-52
+ontogeny/web/src/i18n/zh.ts
+  6876a09d6670275e 1-1225
+ontogeny/domains/product-manufacturing/functions/capacity-check.yaml
+  6876a09d6670275e 1-26
+ontogeny/domains/product-manufacturing/actions/record-inspection.yaml
+  6876a09d6670275e 1-52
+ontogeny/web/src/pages/EvolveDemo.test.tsx
+  6876a09d6670275e 1-136
+ontogeny/web/src/pages/agent/panels.tsx
+  6876a09d6670275e 1-870
+ontogeny/tests/test_core.py
+  6876a09d6670275e 1-208
+ontogeny/web/src/components/FlowGraph.tsx
+  6876a09d6670275e 1-909
+ontogeny/server/ontogeny/core/expr.py
+  6876a09d6670275e 1-550
+ontogeny/domains/product-manufacturing/README.md
+  6876a09d6670275e 1-48
+ontogeny/pyproject.toml
+  6876a09d6670275e 1-51
+ontogeny/web/src/pages/ontology/editors.tsx
+  6876a09d6670275e 1-1543
+ontogeny/web/tsconfig.json
+  6876a09d6670275e 1-7
+ontogeny/extensions/agent-builtin-llm/extension.yaml
+  6876a09d6670275e 1-14
+ontogeny/server/ontogeny/action/models.py
+  6876a09d6670275e 1-95
+ontogeny/tests/test_auth_rbac.py
+  6876a09d6670275e 1-260
+ontogeny/web/src/components/DomainSwitcher.tsx
+  6876a09d6670275e 1-536
+ontogeny/server/ontogeny/llm/__init__.py
+  6876a09d6670275e 1-80
+ontogeny/web/tests-integration/globalSetup.ts
+  6876a09d6670275e 1-74
+ontogeny/domains/product-manufacturing/evals/production-flow-suite.yaml
+  6876a09d6670275e 1-63
+ontogeny/web/src/components/ObjectDetailDialog.tsx
+  6876a09d6670275e 1-118
+ontogeny/tests/test_ext_host.py
+  6876a09d6670275e 1-238
+ontogeny/web/src/components/ParamForm.test.tsx
+  6876a09d6670275e 1-59
+ontogeny/tests/test_governance_fixes.py
+  6876a09d6670275e 1-367
+ontogeny/web/src/pages/evolve/EvolveDemo.tsx
+  6876a09d6670275e 1-326
+ontogeny/daemon.sh
+  6876a09d6670275e 1-172
+ontogeny/domains/product-manufacturing/functions/material-availability.yaml
+  6876a09d6670275e 1-27
+ontogeny/web/src/pages/evolve/DiagnoseModal.tsx
+  6876a09d6670275e 1-338
+ontogeny/web/tsconfig.node.json
+  6876a09d6670275e 1-23
+ontogeny/server/ontogeny/auth/passwords.py
+  6876a09d6670275e 1-78
+ontogeny/domains/product-manufacturing/links/operation-work-center.yaml
+  6876a09d6670275e 1-14
+ontogeny/web/src/components/CodeEditor.tsx
+  6876a09d6670275e 1-160
+ontogeny/domains/product-manufacturing/actions/assign-operation.yaml
+  6876a09d6670275e 1-31
+ontogeny/web/src/api/queries.test.ts
+  6876a09d6670275e 1-96
+ontogeny/domains/product-manufacturing/functions/order-yield.yaml
+  6876a09d6670275e 1-22
+ontogeny/domains/product-manufacturing/objects/work-center.yaml
+  6876a09d6670275e 1-54
+ontogeny/web/src/pages/AgentConsole.test.tsx
+  6876a09d6670275e 1-403
+ontogeny/web/src/pages/Audit.tsx
+  6876a09d6670275e 1-126
+ontogeny/server/ontogeny/evolve/__init__.py
+  6876a09d6670275e 1-23
+ontogeny/server/ontogeny/policy/__init__.py
+  6876a09d6670275e 1-22
+ontogeny/server/ontogeny/evolve/evalrunner.py
+  6876a09d6670275e 1-240
+ontogeny/server/ontogeny/functions/derivation.py
+  6876a09d6670275e 1-159
+ontogeny/web/src/pages/Knowledge.tsx
+  6876a09d6670275e 1-213
+ontogeny/tests/test_domains.py
+  6876a09d6670275e 1-128
+ontogeny/web/src/contrast.test.ts
+  6876a09d6670275e 1-170
+README.md
+  6876a09d6670275e 228-241
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.8.1",
+  "base_commit_sha": "b8a99659aa4b4bb09e5f00d37f3040c5e895c2bc",
+  "prompts": {
+    "6876a09d6670275e": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_8092bf17-7261-4a61-bfc1-3d7295682636",
+        "model": "GLM-5.3"
+      },
+      "human_author": "simon824 <simon824@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 127300,
+      "total_deletions": 12,
+      "accepted_lines": 63709,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/3c494166d551bd7db8e7456bf5d505f4ead394022fc86f97afcea3acbecc71e9",
+      "token_usage": {
+        "input_tokens": 196316195,
+        "output_tokens": 345606,
+        "cache_read_tokens": 190454464,
+        "cache_creation_tokens": 0,
+        "total_cost": 0.0
+      }
+    }
+  }
+}
