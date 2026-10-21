@@ -225,3 +225,17 @@ hugegraph-ai is licensed under [Apache 2.0 License](./LICENSE).
 - **WeChat**: Follow "Apache HugeGraph" official account
 
 <img src="https://raw.githubusercontent.com/apache/hugegraph-doc/master/assets/images/wechat.png" alt="Apache HugeGraph WeChat QR Code" width="200"/>
+
+## Ontogeny (module)
+
+[`ontogeny/`](./ontogeny) is a **self-improving operational ontology platform** built on HugeGraph:
+it models an enterprise's business semantics (objects, properties, links) and business actions
+(actions, functions, policies) as declarative, Git-native YAML, compiles them into strongly-typed
+object tables plus an optional HugeGraph graph projection, and serves everything to applications,
+analytics and AI agents through one governed API. A five-stage Action runtime (params → rules →
+Cedar policy → effects → immutable audit), an MCP tool surface with budgets and approval gates,
+and an RSI evolution loop (usage signals → LLM-proposed DSL diffs → deterministic eval → tiered
+promotion) sit on top. It is integrated in stages; until stage 2 lands, the module deliberately
+does not import `hugegraph-llm`/`hugegraph-ml` (enforced by the zero-coupling gate in its CI).
+
+See [ontogeny/README.md](./ontogeny/README.md) for the quick start (`cd ontogeny && ...`).
