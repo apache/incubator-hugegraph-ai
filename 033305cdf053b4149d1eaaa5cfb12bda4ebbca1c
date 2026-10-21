@@ -1,0 +1,35 @@
+ontogeny/deploy/Dockerfile
+  2eeb05009226aefb 1-14
+ontogeny/.dockerignore
+  2eeb05009226aefb 1-9
+README.md
+  2eeb05009226aefb 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.8.1",
+  "base_commit_sha": "033305cdf053b4149d1eaaa5cfb12bda4ebbca1c",
+  "prompts": {
+    "2eeb05009226aefb": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_9044ad90-2d7f-456e-b540-db2c67cc9795",
+        "model": "GLM-5.3-Flash"
+      },
+      "human_author": "simon824 <simon824@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 24,
+      "total_deletions": 15,
+      "accepted_lines": 28,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/aaddc56169f1f125f1646bcfd408dda1f56e1ad4b3441980494a9e4c49e4b475",
+      "token_usage": {
+        "input_tokens": 446682569,
+        "output_tokens": 503905,
+        "cache_read_tokens": 435051776,
+        "cache_creation_tokens": 0,
+        "total_cost": 0.0
+      }
+    }
+  }
+}
