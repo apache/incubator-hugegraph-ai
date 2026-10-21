@@ -1,0 +1,85 @@
+ontogeny/docs/zh/README.md
+  6876a09d6670275e 1-55
+ontogeny/docs/en/architecture/02-ontology-model-and-dsl.md
+  6876a09d6670275e 1-66
+ontogeny/docs/en/architecture/04-actions-and-functions.md
+  6876a09d6670275e 1-66
+ontogeny/docs/en/README.md
+  6876a09d6670275e 1-54
+ontogeny/docs/en/architecture/06-rsi-self-evolution.md
+  6876a09d6670275e 1-131
+ontogeny/docs/en/architecture/03-data-and-derivation.md
+  6876a09d6670275e 1-51
+ontogeny/docs/en/usage/08-quickstart.md
+  6876a09d6670275e 1-25
+ontogeny/docs/zh/usage/10-function-editor.md
+  6876a09d6670275e 1-26
+ontogeny/docs/zh/architecture/01-overall-architecture.md
+  6876a09d6670275e 1-196
+ontogeny/docs/en/architecture/07-boundaries-and-quality.md
+  6876a09d6670275e 1-29
+ontogeny/docs/zh/usage/09-ui-tour.md
+  6876a09d6670275e 1-44
+ontogeny/docs/zh/usage/12-reference.md
+  6876a09d6670275e 1-83
+ontogeny/docs/zh/usage/08-quickstart.md
+  6876a09d6670275e 1-26
+ontogeny/docs/en/usage/09-ui-tour.md
+  6876a09d6670275e 1-43
+ontogeny/docs/hugegraph-ai-merge-plan.md
+  6876a09d6670275e 1-321
+ontogeny/docs/zh/architecture/02-ontology-model-and-dsl.md
+  6876a09d6670275e 1-67
+ontogeny/docs/en/architecture/01-overall-architecture.md
+  6876a09d6670275e 1-196
+ontogeny/docs/en/usage/11-manufacturing-case.md
+  6876a09d6670275e 1-39
+ontogeny/docs/zh/architecture/03-data-and-derivation.md
+  6876a09d6670275e 1-52
+ontogeny/docs/zh/architecture/06-rsi-self-evolution.md
+  6876a09d6670275e 1-132
+docs/pr380-reply-matrix.md
+  6876a09d6670275e 1-48
+ontogeny/docs/en/architecture/05-agent-governance.md
+  6876a09d6670275e 1-131
+ontogeny/docs/zh/usage/11-manufacturing-case.md
+  6876a09d6670275e 1-40
+ontogeny/docs/zh/architecture/04-actions-and-functions.md
+  6876a09d6670275e 1-66
+ontogeny/docs/en/usage/12-reference.md
+  6876a09d6670275e 1-82
+ontogeny/docs/zh/architecture/05-agent-governance.md
+  6876a09d6670275e 1-136
+ontogeny/docs/zh/architecture/07-boundaries-and-quality.md
+  6876a09d6670275e 1-30
+ontogeny/docs/en/usage/10-function-editor.md
+  6876a09d6670275e 1-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.8.1",
+  "base_commit_sha": "5f55c3b1601f91c3028429240174377c134cb317",
+  "prompts": {
+    "6876a09d6670275e": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_8092bf17-7261-4a61-bfc1-3d7295682636",
+        "model": "GLM-5.3-Flash"
+      },
+      "human_author": "simon824 <simon824@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 31766,
+      "total_deletions": 2134,
+      "accepted_lines": 30876,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/b8f550975af3d787bfe392e61d4705ab748059bcbbc9d6b204bc810ec2089144",
+      "token_usage": {
+        "input_tokens": 322076385,
+        "output_tokens": 441208,
+        "cache_read_tokens": 312676352,
+        "cache_creation_tokens": 0,
+        "total_cost": 0.0
+      }
+    }
+  }
+}
