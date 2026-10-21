@@ -1,0 +1,75 @@
+ontogeny/docs/hugegraph-ai-merge-plan.md
+  6876a09d6670275e 1-321
+ontogeny/docs/zh/architecture/03-data-and-derivation.md
+  6876a09d6670275e 1-52
+ontogeny/docs/en/usage/10-function-editor.md
+  6876a09d6670275e 1-25
+ontogeny/docs/en/architecture/01-overall-architecture.md
+  6876a09d6670275e 1-196
+ontogeny/docs/zh/usage/08-quickstart.md
+  6876a09d6670275e 1-26
+ontogeny/docs/zh/usage/10-function-editor.md
+  6876a09d6670275e 1-26
+ontogeny/docs/zh/architecture/01-overall-architecture.md
+  6876a09d6670275e 1-196
+ontogeny/docs/en/usage/11-manufacturing-case.md
+  6876a09d6670275e 1-39
+ontogeny/docs/en/usage/12-reference.md
+  6876a09d6670275e 1-82
+ontogeny/docs/en/README.md
+  6876a09d6670275e 1-54
+ontogeny/docs/en/usage/08-quickstart.md
+  6876a09d6670275e 1-25
+ontogeny/docs/en/architecture/04-actions-and-functions.md
+  6876a09d6670275e 1-66
+ontogeny/docs/zh/usage/12-reference.md
+  6876a09d6670275e 1-83
+ontogeny/docs/en/architecture/02-ontology-model-and-dsl.md
+  6876a09d6670275e 1-66
+ontogeny/docs/zh/architecture/07-boundaries-and-quality.md
+  6876a09d6670275e 1-30
+ontogeny/docs/zh/architecture/06-rsi-self-evolution.md
+  6876a09d6670275e 1-132
+ontogeny/docs/zh/usage/09-ui-tour.md
+  6876a09d6670275e 1-44
+ontogeny/docs/en/usage/09-ui-tour.md
+  6876a09d6670275e 1-43
+ontogeny/docs/zh/architecture/02-ontology-model-and-dsl.md
+  6876a09d6670275e 1-67
+ontogeny/docs/en/architecture/07-boundaries-and-quality.md
+  6876a09d6670275e 1-29
+ontogeny/docs/en/architecture/03-data-and-derivation.md
+  6876a09d6670275e 1-51
+ontogeny/docs/zh/usage/11-manufacturing-case.md
+  6876a09d6670275e 1-40
+ontogeny/docs/zh/README.md
+  6876a09d6670275e 1-55
+ontogeny/docs/zh/architecture/04-actions-and-functions.md
+  6876a09d6670275e 1-66
+ontogeny/docs/en/architecture/06-rsi-self-evolution.md
+  6876a09d6670275e 1-131
+ontogeny/docs/en/architecture/05-agent-governance.md
+  6876a09d6670275e 1-131
+ontogeny/docs/zh/architecture/05-agent-governance.md
+  6876a09d6670275e 1-136
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.8.1",
+  "base_commit_sha": "fb2309689891684d3af73105aa48dae8555d5195",
+  "prompts": {
+    "6876a09d6670275e": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_8092bf17-7261-4a61-bfc1-3d7295682636",
+        "model": "GLM-5.3-Flash"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 48,
+      "accepted_lines": 2212,
+      "overriden_lines": 0
+    }
+  }
+}
