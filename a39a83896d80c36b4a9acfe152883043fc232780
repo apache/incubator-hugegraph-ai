@@ -1,0 +1,37 @@
+ontogeny/server/ontogeny/stores/ddl.py
+  6876a09d6670275e 199
+ontogeny/server/ontogeny/auth/service.py
+  6876a09d6670275e 288-290
+ontogeny/server/ontogeny/api/routes_objects.py
+  6876a09d6670275e 28
+ontogeny/server/ontogeny/mcp_server.py
+  6876a09d6670275e 451-458
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.8.1",
+  "base_commit_sha": "a39a83896d80c36b4a9acfe152883043fc232780",
+  "prompts": {
+    "6876a09d6670275e": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_8092bf17-7261-4a61-bfc1-3d7295682636",
+        "model": "GLM-5.3"
+      },
+      "human_author": "simon824 <simon824@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 17,
+      "total_deletions": 8,
+      "accepted_lines": 13,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/537a2404c56c761e98252f3c8a6e07b6f99ec217a8ab575c7053e0d812317ebf",
+      "token_usage": {
+        "input_tokens": 348074755,
+        "output_tokens": 451934,
+        "cache_read_tokens": 337948416,
+        "cache_creation_tokens": 0,
+        "total_cost": 0.0
+      }
+    }
+  }
+}
