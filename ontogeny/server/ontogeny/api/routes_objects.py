@@ -25,7 +25,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from ..errors import OOError
 from ..service import ServiceContext
-from .deps import get_principal, get_sc, require_admin, require_authenticated
+from .deps import get_principal, get_sc, require_admin
 from .schemas import (
     ActionBody,
     AggregateBody,

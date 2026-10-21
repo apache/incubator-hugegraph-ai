@@ -285,7 +285,9 @@ class AuthService:
 
             password = "og-" + secrets.token_urlsafe(16)
             log.warning("ONTOGENY_ADMIN_PASSWORD not set; generated a random bootstrap password (shown once)")
-            print(f"  bootstrap admin password: {password}", flush=True)
+            import sys
+
+            print(f"  bootstrap admin password: {password}", file=sys.stderr, flush=True)  # noqa: T201
         # self-heal instead of crashing: the bootstrap account may already
         # exist as non-admin or disabled (demoted by a buggy older path), and
         # create_user would raise "username exists" on the next restart
