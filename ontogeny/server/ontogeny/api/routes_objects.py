@@ -259,6 +259,24 @@ def register(r: APIRouter, sc: ServiceContext) -> None:
         fn = sc.compiled.functions.get(name)
         if fn is None:
             raise HTTPException(404, f"unknown function {name!r}")
+        # functions execute packaged code: require an authenticated caller,
+        # then honor an optional Cedar permit on Action::"invoke-<fn>" (an
+        # author may lock a function down; without such a policy the auth
+        # gate alone applies)
+        from ..errors import AuthenticationError
+
+        if not principal.get("authenticated") and principal.get("via") != "dev-header":
+            raise AuthenticationError("function invoke requires an authenticated principal")
+        invoke_action = f"invoke-{name}"
+        if any(r.action == invoke_action for _, r in sc.policy.rules_for(invoke_action)):
+            decision = sc.policy.decide(principal, invoke_action, {"function": name})
+            if not decision.allow:
+                from ..errors import PolicyDeniedError
+
+                raise PolicyDeniedError(
+                    f"policy denied invoke of {name!r}: {decision.reason}",
+                    details={"function": name},
+                )
         if body.version is not None:
             current = sc.compiled.function_versions.get(name)
             if current is not None and body.version != current:
