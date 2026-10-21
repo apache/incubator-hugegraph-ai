@@ -1,0 +1,31 @@
+ontogeny/tests/test_evolve.py
+  2eeb05009226aefb 315-320,323-328,900-902,1196-1201,1265-1270,1368-1373
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.8.1",
+  "base_commit_sha": "2d26c2c92677d681f57bd95da3c2b68e436b5e16",
+  "prompts": {
+    "2eeb05009226aefb": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_9044ad90-2d7f-456e-b540-db2c67cc9795",
+        "model": "GLM-5.3-Flash"
+      },
+      "human_author": "simon824 <simon824@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 45,
+      "total_deletions": 21,
+      "accepted_lines": 34,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/7020a7e9451138586e062f7ac649bb9b1aa58499ecf7e7fd6b69f6f29112cb84",
+      "token_usage": {
+        "input_tokens": 424389073,
+        "output_tokens": 495624,
+        "cache_read_tokens": 413523264,
+        "cache_creation_tokens": 0,
+        "total_cost": 0.0
+      }
+    }
+  }
+}
