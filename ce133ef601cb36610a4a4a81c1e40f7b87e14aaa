@@ -1,0 +1,29 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.8.1",
+  "base_commit_sha": "ce133ef601cb36610a4a4a81c1e40f7b87e14aaa",
+  "prompts": {
+    "6876a09d6670275e": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_8092bf17-7261-4a61-bfc1-3d7295682636",
+        "model": "GLM-5.3"
+      },
+      "human_author": "simon824 <simon824@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/b3c37c3c8fe1a1a60ff45efdd6c511cf6a79c35028ec230abdb1a5a8e0aaa3d3",
+      "token_usage": {
+        "input_tokens": 334117827,
+        "output_tokens": 446284,
+        "cache_read_tokens": 324002304,
+        "cache_creation_tokens": 0,
+        "total_cost": 0.0
+      }
+    }
+  }
+}
