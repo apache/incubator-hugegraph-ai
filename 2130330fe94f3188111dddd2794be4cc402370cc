@@ -1,0 +1,31 @@
+ontogeny/README.md
+  2eeb05009226aefb 9,15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.8.1",
+  "base_commit_sha": "2130330fe94f3188111dddd2794be4cc402370cc",
+  "prompts": {
+    "2eeb05009226aefb": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_9044ad90-2d7f-456e-b540-db2c67cc9795",
+        "model": "GLM-5.3"
+      },
+      "human_author": "simon824 <simon824@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 24,
+      "accepted_lines": 6,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/899de8d4f7d1123a51b46d8a964f5e16c6671b0ef2eb879adb8efafddaef8fdc",
+      "token_usage": {
+        "input_tokens": 470355583,
+        "output_tokens": 519291,
+        "cache_read_tokens": 457915520,
+        "cache_creation_tokens": 0,
+        "total_cost": 0.0
+      }
+    }
+  }
+}
