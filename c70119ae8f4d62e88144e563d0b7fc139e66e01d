@@ -1,0 +1,33 @@
+ontogeny/web/src/pages/ActionRunner.tsx
+  6876a09d6670275e 34,69-74,80-86,92,150,153
+ontogeny/web/src/App.tsx
+  6876a09d6670275e 34-36,119-122,150-158
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.8.1",
+  "base_commit_sha": "c70119ae8f4d62e88144e563d0b7fc139e66e01d",
+  "prompts": {
+    "6876a09d6670275e": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_8092bf17-7261-4a61-bfc1-3d7295682636",
+        "model": "GLM-5.3"
+      },
+      "human_author": "simon824 <simon824@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 38,
+      "total_deletions": 14,
+      "accepted_lines": 34,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/f2829fd40a3588a47a87d1025fb672d39d25b04aae532b59015d9357f21abcd9",
+      "token_usage": {
+        "input_tokens": 234785397,
+        "output_tokens": 375319,
+        "cache_read_tokens": 227720064,
+        "cache_creation_tokens": 0,
+        "total_cost": 0.0
+      }
+    }
+  }
+}
