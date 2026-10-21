@@ -1,0 +1,41 @@
+ontogeny/server/ontogeny/core/validator.py
+  6876a09d6670275e 189,192-207,262-275
+ontogeny/server/ontogeny/api/routes_agent.py
+  6876a09d6670275e 86
+ontogeny/tests/test_pr380_security.py
+  6876a09d6670275e 1-153
+ontogeny/server/ontogeny/policy/engine.py
+  6876a09d6670275e 29-30,45-52,90-105,112,115,150-170,177-191
+ontogeny/server/ontogeny/policy/__init__.py
+  6876a09d6670275e 18,20-21,24,26
+ontogeny/server/ontogeny/agent/broker.py
+  6876a09d6670275e 36,221,225-230,236-251
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.8.1",
+  "base_commit_sha": "203f2715ae89e43d41edf5cdc6bab1486148c1b4",
+  "prompts": {
+    "6876a09d6670275e": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_8092bf17-7261-4a61-bfc1-3d7295682636",
+        "model": "GLM-5.3"
+      },
+      "human_author": "simon824 <simon824@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 302,
+      "total_deletions": 44,
+      "accepted_lines": 279,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/835548ec55b3f898851059b8d18342319b4afb0e8c6d6526e0e22aff4018263a",
+      "token_usage": {
+        "input_tokens": 211789911,
+        "output_tokens": 359536,
+        "cache_read_tokens": 205908480,
+        "cache_creation_tokens": 0,
+        "total_cost": 0.0
+      }
+    }
+  }
+}
