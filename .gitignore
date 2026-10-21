@@ -235,3 +235,4 @@ web/.e2e-port
 *.log
 *.pid
 .DS_Store
+docs/pr380-reply-matrix.md
