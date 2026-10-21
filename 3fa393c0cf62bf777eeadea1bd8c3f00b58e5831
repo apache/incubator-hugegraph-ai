@@ -1,0 +1,52 @@
+README.md
+  006e7bdc6db23fb3 1,5-6,8,10,12,14,16,18,20-25,27,29,31,33,37,39-41,44,46,48,51,53-60,63-64,66,68,70-72,74,76,78,80,82,84,86,88,90,92-98,103,138,142-145,147-149,152,158-159,161-162,166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.8.1",
+  "base_commit_sha": "3fa393c0cf62bf777eeadea1bd8c3f00b58e5831",
+  "prompts": {
+    "006e7bdc6db23fb3": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_2497bae4-2e89-4bb5-a845-5503fcce8025",
+        "model": "GLM-5.3"
+      },
+      "human_author": "simon824 <simon824@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 75,
+      "total_deletions": 133,
+      "accepted_lines": 75,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/83c53c0ff478527c11546dd4c2a098c23b78d8859d0e1c3e16589b59a2574bc4",
+      "token_usage": {
+        "input_tokens": 212648447,
+        "output_tokens": 357948,
+        "cache_read_tokens": 206196480,
+        "cache_creation_tokens": 0,
+        "total_cost": 0.0
+      }
+    },
+    "6876a09d6670275e": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_8092bf17-7261-4a61-bfc1-3d7295682636",
+        "model": "GLM-5.3"
+      },
+      "human_author": "simon824 <simon824@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 48,
+      "total_deletions": 0,
+      "accepted_lines": 48,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/4b3a7156ad5be0ec71caaecd61dffaf44bbf518e2a9059bc990e85be994b6715",
+      "token_usage": {
+        "input_tokens": 306091666,
+        "output_tokens": 414691,
+        "cache_read_tokens": 297356160,
+        "cache_creation_tokens": 0,
+        "total_cost": 0.0
+      }
+    }
+  }
+}
