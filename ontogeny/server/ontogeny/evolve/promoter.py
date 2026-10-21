@@ -115,6 +115,10 @@ class Promoter:
         eval_report: dict | None = None,
         force_tier: str | None = None,
     ) -> dict[str, Any]:
+        if proposal.status not in ("proposed", "evaluated"):
+            raise DSLValidationError(
+                f"proposal {proposal.id} is {proposal.status!r}; only proposed/evaluated proposals can promote",
+            )
         pkg = load_package(pkg_root)
         evo = pkg.evolution_policy()
         tier = force_tier or self.classify(proposal.diff, evo)

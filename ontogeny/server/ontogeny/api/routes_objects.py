@@ -25,7 +25,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from ..errors import OOError
 from ..service import ServiceContext
-from .deps import get_principal, get_sc, require_admin
+from .deps import get_principal, get_sc, require_admin, require_authenticated
 from .schemas import (
     ActionBody,
     AggregateBody,
@@ -222,11 +222,14 @@ def register(r: APIRouter, sc: ServiceContext) -> None:
                     duration_ms=(time.perf_counter() - started) * 1000,
                 )
                 await s.commit()
+                # mask the returned after-state: it is the raw stored row, and
+                # marked properties must not leak through the execute response
+                after = sc.policy.mask(rev.object_type, rev.after or {}, principal) if rev.after else rev.after
                 return {
                     "revision_id": rev.id,
                     "outcome": rev.outcome,
                     "object_id": rev.object_id,
-                    "after": rev.after,
+                    "after": after,
                     "message": rev.message,
                 }
             except RuleRejectedError:
