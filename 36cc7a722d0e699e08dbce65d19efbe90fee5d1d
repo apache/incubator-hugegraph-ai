@@ -1,0 +1,71 @@
+ontogeny/tests/test_ext_host.py
+  6876a09d6670275e 97,113,130,141,156
+ontogeny/tests/test_governance_fixes.py
+  6876a09d6670275e 374
+ontogeny/server/ontogeny/core/loader.py
+  6876a09d6670275e 152-163,172
+ontogeny/tests/test_domain_import.py
+  6876a09d6670275e 93,116,158,171
+ontogeny/server/ontogeny/core/validator.py
+  6876a09d6670275e 95-98
+ontogeny/server/ontogeny/service.py
+  6876a09d6670275e 65-72,86,714,901,979
+ontogeny/server/ontogeny/api/routes_admin.py
+  6876a09d6670275e 112
+ontogeny/tests/test_api.py
+  6876a09d6670275e 45,65,406,471,507
+ontogeny/tests/test_restart.py
+  6876a09d6670275e 168
+ontogeny/tests/test_pr380_data.py
+  6876a09d6670275e 138,145,151
+ontogeny/tests/test_stores.py
+  6876a09d6670275e 249
+ontogeny/tests/test_structural_fixes.py
+  6876a09d6670275e 53,84,89
+ontogeny/server/ontogeny/stores/repo.py
+  6876a09d6670275e 468
+ontogeny/tests/test_domains.py
+  6876a09d6670275e 49,116
+ontogeny/pyproject.toml
+  6876a09d6670275e 35
+ontogeny/tests/test_pr380_security.py
+  6876a09d6670275e 141,147,157
+ontogeny/tests/test_agent_approval.py
+  6876a09d6670275e 160
+ontogeny/tests/test_system_example.py
+  6876a09d6670275e 194
+ontogeny/server/ontogeny/telemetry/service.py
+  6876a09d6670275e 268
+ontogeny/tests/test_builder.py
+  6876a09d6670275e 125,163,180,196,274,315,345,356,367,375
+ontogeny/tests/test_projection_hugegraph.py
+  6876a09d6670275e 246
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.8.1",
+  "base_commit_sha": "36cc7a722d0e699e08dbce65d19efbe90fee5d1d",
+  "prompts": {
+    "6876a09d6670275e": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_8092bf17-7261-4a61-bfc1-3d7295682636",
+        "model": "GLM-5.3"
+      },
+      "human_author": "simon824 <simon824@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 83,
+      "total_deletions": 62,
+      "accepted_lines": 75,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/c9ea49012e46e5552f30fa13919944223132283ccce53f29493a7066a6724670",
+      "token_usage": {
+        "input_tokens": 420182815,
+        "output_tokens": 488400,
+        "cache_read_tokens": 406657472,
+        "cache_creation_tokens": 0,
+        "total_cost": 0.0
+      }
+    }
+  }
+}
