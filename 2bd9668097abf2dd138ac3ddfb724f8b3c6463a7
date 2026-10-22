@@ -1,0 +1,33 @@
+.github/workflows/codeql.yml
+  6876a09d6670275e 38
+.github/codeql-config.yml
+  6876a09d6670275e 29-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.8.1",
+  "base_commit_sha": "2bd9668097abf2dd138ac3ddfb724f8b3c6463a7",
+  "prompts": {
+    "6876a09d6670275e": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_8092bf17-7261-4a61-bfc1-3d7295682636",
+        "model": "GLM-5.3"
+      },
+      "human_author": "simon824 <simon824@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 0,
+      "accepted_lines": 4,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/ed895db96a76f10a4c7e8ee02bb1e781db49fcbc98a2dedbd569b05a48acf6a5",
+      "token_usage": {
+        "input_tokens": 462257050,
+        "output_tokens": 508003,
+        "cache_read_tokens": 444139072,
+        "cache_creation_tokens": 0,
+        "total_cost": 0.0
+      }
+    }
+  }
+}
