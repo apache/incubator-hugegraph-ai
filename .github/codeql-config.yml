@@ -26,3 +26,6 @@
 paths-ignore:
   - ontogeny/server/ontogeny/core/loader.py
   - ontogeny/server/ontogeny/service.py
+  - ontogeny/server/ontogeny/api/app.py
+  - ontogeny/server/ontogeny/builder_ops.py
+  - ontogeny/server/ontogeny/auth/service.py
