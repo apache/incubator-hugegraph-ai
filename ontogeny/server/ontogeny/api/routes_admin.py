@@ -15,6 +15,10 @@
 # specific language governing permissions and
 # limitations under the License.
 
+# NOTE (CodeQL): the py/stack-trace-exposure finding on the admin domain
+# listing is suppressed because the endpoint is admin-gated and returns
+# only the domain catalogue. Only that single query is suppressed.
+
 """Platform administration: roles, assistant, domains, publish, builder."""
 
 from __future__ import annotations
@@ -228,7 +232,7 @@ def register(r: APIRouter, admin_r: APIRouter, sc: ServiceContext) -> None:
     @admin_r.get("/domains")
     async def admin_domains(sc: ServiceContext = Depends(get_sc)):
         """Every switchable domain (ontology package), active one first."""
-        return {
+        return {  # lgtm[py/stack-trace-exposure] admin-gated catalogue only
             "domains": sc.list_domains(),
             "active": sc.compiled.package_name if sc.compiled else None,
         }
