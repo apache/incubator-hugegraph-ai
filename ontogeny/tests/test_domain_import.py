@@ -125,7 +125,7 @@ class TestImportService:
         with zipfile.ZipFile(buf, "w") as zf:
             zf.writestr(
                 "ontology.yaml",
-                "apiVersion: ontogeny/v1\nkind: Ontology\n" "metadata: {name: evil}\nspec: {imports: []}\n",
+                "apiVersion: ontogeny/v1\nkind: Ontology\nmetadata: {name: evil}\nspec: {imports: []}\n",
             )
             zf.writestr("../escaped.txt", "pwn")
         with pytest.raises(DomainError, match="unsafe archive member"):
@@ -140,12 +140,12 @@ class TestImportService:
         with zipfile.ZipFile(buf, "w") as zf:
             zf.writestr(
                 "bad/ontology.yaml",
-                "apiVersion: ontogeny/v1\nkind: Ontology\n" "metadata: {name: bad-domain}\nspec: {imports: []}\n",
+                "apiVersion: ontogeny/v1\nkind: Ontology\nmetadata: {name: bad-domain}\nspec: {imports: []}\n",
             )
             # an action pointing at a type that does not exist -> validator error
             zf.writestr(
                 "bad/actions/x.yaml",
-                "apiVersion: ontogeny/v1\nkind: Action\nmetadata: {name: x}\n" "spec: {target: ghost, effects: []}\n",
+                "apiVersion: ontogeny/v1\nkind: Action\nmetadata: {name: x}\nspec: {target: ghost, effects: []}\n",
             )
         with pytest.raises(DomainError, match="rejected by validator") as excinfo:
             await sc.import_domain(buf.getvalue())

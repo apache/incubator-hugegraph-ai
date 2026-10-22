@@ -408,7 +408,7 @@ class TestEndToEnd:
         src = tmp_path / "extra.db"
         con = sqlite3.connect(str(src))
         con.execute(
-            "CREATE TABLE materials_extra (material_id TEXT PRIMARY KEY, name TEXT, " "unit_cost TEXT, stock_qty TEXT)"
+            "CREATE TABLE materials_extra (material_id TEXT PRIMARY KEY, name TEXT, unit_cost TEXT, stock_qty TEXT)"
         )
         con.execute("INSERT INTO materials_extra VALUES ('MX-1','Gasket','3.5','80')")
         con.commit()

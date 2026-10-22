@@ -299,9 +299,9 @@ class TestValidatorHardening:
 
     def test_linter_clean_on_golden(self, golden_pkg):
         rep = lint(golden_pkg)
-        assert not any(
-            i.code == "OO-004" for i in rep.issues
-        ), "the golden package must not false-positive on chain depth"
+        assert not any(i.code == "OO-004" for i in rep.issues), (
+            "the golden package must not false-positive on chain depth"
+        )
 
 
 # ---------------------------------------------------------------------------

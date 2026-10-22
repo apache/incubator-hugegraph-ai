@@ -225,8 +225,8 @@ async def api(golden_pkg_path, tmp_path):
     shutil.copytree(golden_pkg_path, pkg_root)
     settings = Settings(
         dev_auth=True,
-        db_dsn=f"sqlite+aiosqlite:///{tmp_path/'main.db'}",
-        env={"ERP_DSN": f"sqlite+aiosqlite:///{tmp_path/'erp.db'}"},
+        db_dsn=f"sqlite+aiosqlite:///{tmp_path / 'main.db'}",
+        env={"ERP_DSN": f"sqlite+aiosqlite:///{tmp_path / 'erp.db'}"},
     )
     sc = ServiceContext(settings, str(pkg_root))
     await sc.initialize()

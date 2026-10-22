@@ -92,11 +92,11 @@ async def client(golden_pkg_path, tmp_path):
 
     settings = Settings(
         dev_auth=True,
-        db_dsn=f"sqlite+aiosqlite:///{tmp_path/'main.db'}",
+        db_dsn=f"sqlite+aiosqlite:///{tmp_path / 'main.db'}",
         env={
             "ERP_DSN": f"sqlite+aiosqlite:///{src}",
             "WMS_WEBHOOK": "https://wms.example.test/hook",
-            "SCENARIO_DSN": f"sqlite+aiosqlite:///{tmp_path/'scenario.db'}",
+            "SCENARIO_DSN": f"sqlite+aiosqlite:///{tmp_path / 'scenario.db'}",
         },
     )
     sc = ServiceContext(settings, str(pkg_root))

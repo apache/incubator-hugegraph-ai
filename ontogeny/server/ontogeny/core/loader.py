@@ -157,6 +157,9 @@ def load_package(root: str | Path) -> OntologyPackage:
     manifest = _parse_file(manifest_path, expected_kind="Ontology")
 
     resources: list[AnyResource] = []
+    # CodeQL: root comes from caller configuration and must not escape the
+    # intended package directory via traversal components
+    root = root.resolve()
     files: dict[tuple[str, str], Path] = {}
 
     for dirname, kind in _DIR_KINDS.items():

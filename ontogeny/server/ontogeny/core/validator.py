@@ -283,7 +283,7 @@ def validate(pkg: OntologyPackage) -> ValidationReport:
                     rep_.error(
                         "DUP-COLUMN",
                         f"ObjectType/{obj_.metadata.name}",
-                        f"properties {seen[c]!r} and {pname!r} both map to column {c!r}; " "rename one of them",
+                        f"properties {seen[c]!r} and {pname!r} both map to column {c!r}; rename one of them",
                     )
                 else:
                     seen[c] = pname
@@ -530,7 +530,7 @@ def _validate_function_body(fn: FunctionResource) -> list[tuple[str, str]]:
                 out.append(
                     (
                         "FN-STEP-CAP",
-                        f"step {step.id!r} calls the model but the function does not " "declare the llm capability",
+                        f"step {step.id!r} calls the model but the function does not declare the llm capability",
                     )
                 )
         elif step.kind == "http":
@@ -540,14 +540,14 @@ def _validate_function_body(fn: FunctionResource) -> list[tuple[str, str]]:
                 out.append(
                     (
                         "FN-STEP-CAP",
-                        f"step {step.id!r} calls an endpoint but the function does not " "declare the http capability",
+                        f"step {step.id!r} calls an endpoint but the function does not declare the http capability",
                     )
                 )
             elif not http_ok:
                 out.append(
                     (
                         "FN-STEP-CAP",
-                        f"step {step.id!r}: the http capability allows no hosts; " "add http: {allow: [host]}",
+                        f"step {step.id!r}: the http capability allows no hosts; add http: {{allow: [host]}}",
                     )
                 )
             elif step.url:
@@ -558,7 +558,7 @@ def _validate_function_body(fn: FunctionResource) -> list[tuple[str, str]]:
                     h = host.group(1).split("@")[-1].split(":")[0]
                     if not any(h == a or h.endswith("." + a.lstrip(".")) for a in http_ok):
                         out.append(
-                            ("FN-STEP-CAP", f"step {step.id!r}: host {h!r} is not in the http " f"allowlist {http_ok}")
+                            ("FN-STEP-CAP", f"step {step.id!r}: host {h!r} is not in the http allowlist {http_ok}")
                         )
 
     if spec.returns_step and spec.returns_step not in {s.id for s in spec.steps}:

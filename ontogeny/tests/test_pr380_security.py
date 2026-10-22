@@ -71,9 +71,9 @@ class TestForbidSemantics:
             'forbid(principal, action == Action::"release-production-order", resource) when {{ broken'
         )
         rep = validate(pkg)
-        assert any(
-            i.code == "POLICY-FORBID" for i in rep.issues
-        ), "an unparseable forbid must fail publish, not ride silently"
+        assert any(i.code == "POLICY-FORBID" for i in rep.issues), (
+            "an unparseable forbid must fail publish, not ride silently"
+        )
 
     def test_grant_parsing_ignores_forbid(self):
         # parse_policy_set stays permits-only: a forbid must never appear as a grant

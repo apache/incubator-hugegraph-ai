@@ -194,7 +194,7 @@ class TestSandboxStdoutIsolation:
         pkg = tmp_path / "pkg"
         shutil.copytree(golden_pkg_path, pkg)
         (pkg / "functions" / "chatty.py").write_text(
-            "def say(what):\n" "    print('user-side noise:', what)\n" "    return {'said': what}\n",
+            "def say(what):\n    print('user-side noise:', what)\n    return {'said': what}\n",
             encoding="utf-8",
         )
         import yaml as _yaml

@@ -75,7 +75,8 @@ def _read_manifest(path: Path) -> dict[str, Any]:
     try:
         import yaml
 
-        doc = yaml.safe_load((Path(path) / "ontology.yaml").read_text(encoding="utf-8"))
+        candidate = Path(path).resolve() / "ontology.yaml"
+        doc = yaml.safe_load(candidate.read_text(encoding="utf-8"))
         return doc if isinstance(doc, dict) else {}
     except Exception:
         return {}
@@ -124,7 +125,7 @@ _PROJECTION_BLOCK_REASONS = {
     "provider-sqlite": "storage provider is {provider}, not 'hugegraph', so nothing is projected",
     "endpoint-unresolved": "the projection endpoint ${HUGEGRAPH_URL} cannot be resolved "
     "(set the HugeGraph address in the storage configuration)",
-    "extension-missing": "the graph-hugegraph extension is not loaded, so there is no " "graph client to wire",
+    "extension-missing": "the graph-hugegraph extension is not loaded, so there is no graph client to wire",
 }
 
 
@@ -607,7 +608,7 @@ class ServiceContext:
             except KeyError as exc:
                 self.projection_blocked_by = "endpoint-unresolved"
                 log.warning(
-                    "projection %s declared but endpoint unresolved (%s); " "running SQL-only, graph APIs disabled",
+                    "projection %s declared but endpoint unresolved (%s); running SQL-only, graph APIs disabled",
                     first.metadata.name,
                     exc,
                 )
@@ -1098,7 +1099,7 @@ class ServiceContext:
             raise NotFoundError(f"unknown function {name!r}")
         if fn.spec.runtime != "python":
             raise DSLValidationError(
-                f"function {name!r} is runtime={fn.spec.runtime}: its body IS the DSL, " "edit the steps instead"
+                f"function {name!r} is runtime={fn.spec.runtime}: its body IS the DSL, edit the steps instead"
             )
         # Same entry guard as the test path: a malformed entry is authoring
         # input, which deserves a 400, not the SandboxError (a 500) that
@@ -1198,7 +1199,7 @@ class ServiceContext:
             raise NotFoundError(f"unknown function {name!r}")
         if fn.spec.runtime != "python":
             raise DSLValidationError(
-                f"function {name!r} is runtime={fn.spec.runtime}: its body IS the DSL, " "edit the steps instead"
+                f"function {name!r} is runtime={fn.spec.runtime}: its body IS the DSL, edit the steps instead"
             )
         # A malformed entry would only explode later, inside the sandbox spawn
         # (``entry.split(":")``), surfacing as an opaque 500. Validate it here
@@ -1427,7 +1428,7 @@ class ServiceContext:
             "metadata": {
                 "name": name,
                 "display": "全量图谱投影",
-                "description": "由运维台自动生成：包含本体全部对象类型与联系，" "支撑多跳追溯与图算法",
+                "description": "由运维台自动生成：包含本体全部对象类型与联系，支撑多跳追溯与图算法",
             },
             "spec": {
                 "engine": engine,

@@ -76,9 +76,9 @@ class TestReadOnlyConvergence:
         assert out["outcome"] == "ok"
         async with sc.sessionmaker() as s:
             rows = (await s.execute(select(TelemetryQueryRow))).scalars().all()
-        assert any(
-            r.object_type == "work-center" for r in rows
-        ), "sessionless MCP search used to be invisible to the evolution loop"
+        assert any(r.object_type == "work-center" for r in rows), (
+            "sessionless MCP search used to be invisible to the evolution loop"
+        )
 
     async def test_sessionless_write_still_refused(self, client):
         c, sc = client
