@@ -1,0 +1,137 @@
+ontogeny/docs/zh/architecture/05-agent-governance.md
+  6876a09d6670275e 131,133-134,136-137
+ontogeny/tests/test_action.py
+  6876a09d6670275e 95,256
+ontogeny/tests/test_domain_import.py
+  6876a09d6670275e 128,143,148
+ontogeny/server/ontogeny/core/__init__.py
+  6876a09d6670275e 44,47,49-53
+ontogeny/server/ontogeny/functions/__init__.py
+  6876a09d6670275e 91
+ontogeny/server/ontogeny/evolve/__init__.py
+  6876a09d6670275e 25,27,29
+ontogeny/tests/test_projection_hugegraph.py
+  6876a09d6670275e 630
+ontogeny/tests/test_pr380_security.py
+  6876a09d6670275e 74-76
+ontogeny/tests/test_agent.py
+  6876a09d6670275e 175
+ontogeny/tests/test_structural_fixes.py
+  6876a09d6670275e 79-81
+ontogeny/tests/test_ext_host.py
+  6876a09d6670275e 228-229
+ontogeny/extensions/graph-hugegraph/ontogeny_ext_hugegraph/adapter.py
+  6876a09d6670275e 447,491
+ontogeny/server/ontogeny/projection/__init__.py
+  6876a09d6670275e 30
+ontogeny/tests/test_builder.py
+  6876a09d6670275e 95,99
+ontogeny/tests/test_function_ecosystem.py
+  6876a09d6670275e 214,240-241,273,288-289,330-331
+ontogeny/tools/bench_query.py
+  6876a09d6670275e 76,96-98,117
+ontogeny/server/ontogeny/registry/__init__.py
+  6876a09d6670275e 23
+ontogeny/server/ontogeny/ext_host.py
+  6876a09d6670275e 138,237
+ontogeny/server/ontogeny/core/validator.py
+  6876a09d6670275e 286,533,543,550,561
+ontogeny/tests/test_mcp.py
+  6876a09d6670275e 67
+ontogeny/tests/test_projection.py
+  6876a09d6670275e 325
+ontogeny/tools/button_audit.py
+  6876a09d6670275e 271
+ontogeny/tools/headless_check.py
+  6876a09d6670275e 439
+ontogeny/tests/test_agent_approval.py
+  6876a09d6670275e 77
+.licenserc.yaml
+  6876a09d6670275e 87-91
+ontogeny/server/ontogeny/demo/__init__.py
+  6876a09d6670275e 37,39
+ontogeny/docs/en/architecture/05-agent-governance.md
+  6876a09d6670275e 126,128-129,131-132
+ontogeny/server/ontogeny/stores/__init__.py
+  6876a09d6670275e 23
+ontogeny/tests/test_agent_eval.py
+  6876a09d6670275e 87
+ontogeny/server/ontogeny/api/routes_agent.py
+  6876a09d6670275e 46,149
+ontogeny/server/ontogeny/cli.py
+  6876a09d6670275e 133
+ontogeny/tests/test_auth_identity.py
+  6876a09d6670275e 66-68,170,172
+ontogeny/tests/conftest.py
+  6876a09d6670275e 109
+ontogeny/tests/test_engine_functions.py
+  6876a09d6670275e 83
+ontogeny/tests/test_agent_engine.py
+  6876a09d6670275e 78
+ontogeny/server/ontogeny/action/outbox.py
+  6876a09d6670275e 132
+ontogeny/server/ontogeny/auth/__init__.py
+  6876a09d6670275e 41,43-44,47,49-50,52
+ontogeny/server/ontogeny/builder_ops.py
+  6876a09d6670275e 93,139
+ontogeny/tests/test_agent_governance.py
+  6876a09d6670275e 72
+ontogeny/tests/test_pr380_data.py
+  6876a09d6670275e 197
+ontogeny/server/ontogeny/action/__init__.py
+  6876a09d6670275e 30,32-33,35
+ontogeny/extensions/agent-builtin-llm/ontogeny_ext_agent_llm/engine.py
+  6876a09d6670275e 368
+ontogeny/tests/test_auth_rbac.py
+  6876a09d6670275e 55-57
+ontogeny/server/ontogeny/evolve/diagnoser.py
+  6876a09d6670275e 74
+ontogeny/tests/test_api.py
+  6876a09d6670275e 411
+ontogeny/tests/test_demo.py
+  6876a09d6670275e 277-278
+ontogeny/server/ontogeny/core/loader.py
+  6876a09d6670275e 160-162
+ontogeny/server/ontogeny/service.py
+  6876a09d6670275e 78-79,128,611,1102,1202,1431
+ontogeny/tests/test_governance_fixes.py
+  6876a09d6670275e 302-304
+ontogeny/server/ontogeny/mcp_server.py
+  6876a09d6670275e 359
+ontogeny/server/ontogeny/policy/__init__.py
+  6876a09d6670275e 26
+ontogeny/tests/test_system_example.py
+  6876a09d6670275e 110-112,133-135
+ontogeny/tests/test_optimizations.py
+  6876a09d6670275e 65
+ontogeny/tests/test_llm.py
+  6876a09d6670275e 197,241
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.8.1",
+  "base_commit_sha": "d8c21c22fb5846ad2219bc23440f1e1c883427ea",
+  "prompts": {
+    "6876a09d6670275e": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_8092bf17-7261-4a61-bfc1-3d7295682636",
+        "model": "GLM-5.3"
+      },
+      "human_author": "simon824 <simon824@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 135,
+      "total_deletions": 121,
+      "accepted_lines": 135,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/de7a6d5834548ca429c68974d3cfa55c3201cba7306aa69509d9fadf965b932a",
+      "token_usage": {
+        "input_tokens": 388868609,
+        "output_tokens": 472310,
+        "cache_read_tokens": 376464384,
+        "cache_creation_tokens": 0,
+        "total_cost": 0.0
+      }
+    }
+  }
+}
