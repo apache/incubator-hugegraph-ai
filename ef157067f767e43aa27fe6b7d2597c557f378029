@@ -1,0 +1,69 @@
+ontogeny/server/ontogeny/api/deps.py
+  6876a09d6670275e 107
+ontogeny/server/ontogeny/auth/service.py
+  6876a09d6670275e 290-291
+ontogeny/server/ontogeny/functions/sandbox.py
+  6876a09d6670275e 51-52
+ontogeny/server/ontogeny/api/routes_admin.py
+  6876a09d6670275e 18-21,235
+ontogeny/server/ontogeny/evolve/proposer.py
+  6876a09d6670275e 253,255-256
+ontogeny/extensions/graph-hugegraph/ontogeny_ext_hugegraph/adapter.py
+  6876a09d6670275e 291
+ontogeny/tools/headless_check.py
+  6876a09d6670275e 195-196,391-392,396,426
+ontogeny/tools/shot.py
+  6876a09d6670275e 91-92
+ontogeny/server/ontogeny/service.py
+  6876a09d6670275e 18-23,76,93,497-498,509,702-703,831,834,848,856,923,929-930,990,1024-1025,1037
+ontogeny/server/ontogeny/builder_ops.py
+  6876a09d6670275e 18-22,149,185-186,190-191
+ontogeny/tests/test_ext_host.py
+  6876a09d6670275e 82
+ontogeny/server/ontogeny/core/loader.py
+  6876a09d6670275e 18-24,139,168,174,184,186,192
+ontogeny/tests/test_llm.py
+  6876a09d6670275e 85,189
+ontogeny/tests/test_optimizations.py
+  6876a09d6670275e 102,116,148
+ontogeny/tests/test_mcp.py
+  6876a09d6670275e 231,261
+ontogeny/tests/test_agent_approval.py
+  6876a09d6670275e 243
+.github/workflows/ontogeny-ci.yml
+  6876a09d6670275e 50-60
+ontogeny/server/ontogeny/api/app.py
+  6876a09d6670275e 18-22,136,139,141,157-159,161-162
+ontogeny/web/tests-integration/api.e2e.test.ts
+  6876a09d6670275e 232-237,240-243
+ontogeny/server/ontogeny/agent/broker.py
+  6876a09d6670275e 462
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.8.1",
+  "base_commit_sha": "ef157067f767e43aa27fe6b7d2597c557f378029",
+  "prompts": {
+    "6876a09d6670275e": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_8092bf17-7261-4a61-bfc1-3d7295682636",
+        "model": "GLM-5.3"
+      },
+      "human_author": "simon824 <simon824@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 136,
+      "total_deletions": 134,
+      "accepted_lines": 116,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/ca78450d7b74e7cdacb73f56716b12b566222dceabf4b9865cc2893b63d18633",
+      "token_usage": {
+        "input_tokens": 574116997,
+        "output_tokens": 571729,
+        "cache_read_tokens": 550869312,
+        "cache_creation_tokens": 0,
+        "total_cost": 0.0
+      }
+    }
+  }
+}
