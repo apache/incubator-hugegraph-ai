@@ -50,7 +50,7 @@ class TestSandboxEnv:
     async def test_functions_still_run_with_the_allowlist(self, client):
         """The golden package's sandboxed functions must keep working under the
         narrowed environment (they need nothing beyond PATH/PYTHONPATH)."""
-        c, sc = client
+        c, _sc = client
         await c.post("/api/v1/admin/sync/work-center")
         await c.post("/api/v1/admin/sync/production-order")
         r = await c.post(
@@ -81,12 +81,12 @@ class TestReadOnlyConvergence:
         )
 
     async def test_sessionless_write_still_refused(self, client):
-        c, sc = client
+        _c, sc = client
         out = await sc.agents.read_only_tool("act_release_production_order", None, {})
         assert out["outcome"] == "WRITE_REQUIRES_SESSION"
 
     async def test_missing_required_argument_is_structured(self, client):
-        c, sc = client
+        _c, sc = client
         out = await sc.agents.read_only_tool("traverse_graph", None, {})
         assert out["outcome"] != "ok" and "start_type" in out.get("error", "")
 

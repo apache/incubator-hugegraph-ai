@@ -371,7 +371,7 @@ class TestSyncFailureAudit:
     async def test_failed_sync_records_an_error_run(self, client):
         import pathlib
 
-        c, sc = client
+        _c, sc = client
         # break the source: the production-order source table disappears
         dsn = sc.settings.env["ERP_DSN"]
         db_path = pathlib.Path(dsn.removeprefix("sqlite+aiosqlite:///"))

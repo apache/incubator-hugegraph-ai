@@ -243,7 +243,7 @@ class TestDialectV17:
 
         http = httpx.AsyncClient(transport=httpx.MockTransport(handler))
         client = HugeGraphClient("http://hg.test", GRAPH, http=http)
-        with pytest.raises(StoreError, match="graphs.yaml"):
+        with pytest.raises(StoreError, match=r"graphs\.yaml"):
             await client.ensure_graph()
         await http.aclose()
 

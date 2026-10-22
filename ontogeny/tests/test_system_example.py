@@ -191,7 +191,7 @@ class TestSyncCoverage:
     async def test_every_object_type_syncs(self, sc):
         async with sc.sessionmaker() as s:
             for name in sc.compiled.objects:
-                rows, total = await sc.repo.query(s, name, limit=1)
+                _rows, total = await sc.repo.query(s, name, limit=1)
                 assert total > 0, f"{name} synced no rows"
 
     async def test_derived_properties_compute(self, sc):

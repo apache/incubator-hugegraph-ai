@@ -92,8 +92,10 @@ def effective_owner(obj: ObjectTypeResource, prop: str) -> str:
     else ontology (safe default: sync never overwrites, actions may write).
     """
     pdef = obj.spec.properties.get(prop)
-    if pdef is None or pdef.owner:
-        return pdef.owner if pdef and pdef.owner else ("ontology" if pdef else "ontology")
+    if pdef is None:
+        return "ontology"
+    if pdef.owner:
+        return pdef.owner
     if pdef.derived:
         return "ontology"
     backing = obj.spec.backing

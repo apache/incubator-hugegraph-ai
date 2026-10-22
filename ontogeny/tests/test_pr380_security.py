@@ -138,13 +138,13 @@ class TestSessionDeletionGuards:
     async def test_foreign_driver_cannot_delete(self, client):
         from ontogeny.errors import PolicyDeniedError
 
-        c, sc = client
+        _c, sc = client
         sid = await self._seed(sc, driver_id="alice")
         with pytest.raises(PolicyDeniedError):
             await sc.agents.delete_session(sid, principal={"id": "mallory"})
 
     async def test_own_driver_and_admin_can_delete(self, client):
-        c, sc = client
+        _c, sc = client
         sid = await self._seed(sc, driver_id="alice")
         assert (await sc.agents.delete_session(sid, principal={"id": "alice"}))["deleted"] == sid
         sid2 = await self._seed(sc, driver_id="bob")
@@ -154,7 +154,7 @@ class TestSessionDeletionGuards:
         from ontogeny.agent.models import AgentApprovalRow
         from ontogeny.errors import ConflictError
 
-        c, sc = client
+        _c, sc = client
         sid = await self._seed(sc, driver_id="alice")
         async with sc.sessionmaker() as s:
             s.add(
