@@ -29,6 +29,7 @@ it lives at the service level where CLI/other shells can reach it. Raises
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -146,7 +147,7 @@ async def builder_save(
             )
         stores_dir = pkg_dir / "stores"
         stores_dir.mkdir(parents=True, exist_ok=True)
-        (stores_dir / f"{store_name}.yaml").write_text(  # lgtm[py/unsafe-path-traversal]
+        Path(os.path.realpath(str(stores_dir / f"{store_name}.yaml"))).write_text(
             _yaml.safe_dump(
                 {
                     "apiVersion": "ontogeny/v1",
@@ -182,13 +183,13 @@ async def builder_save(
         subdir = _DIR_MAP.get(kind)
         if subdir and "/" not in name and ".." not in name and name:
             fp = pkg_dir / subdir / f"{name}.yaml"
-            if fp.is_file():  # lgtm[py/unsafe-path-traversal]
-                fp.unlink()  # lgtm[py/unsafe-path-traversal]
+            if fp.is_file():
+                fp.unlink()
                 removed.append(entry)
             if kind == "PolicySet":
                 sidecar = pkg_dir / "policies" / f"{name}.cedar"
-                if sidecar.is_file():  # lgtm[py/unsafe-path-traversal]
-                    sidecar.unlink()  # lgtm[py/unsafe-path-traversal]
+                if sidecar.is_file():
+                    sidecar.unlink()
 
     written = []
     for res in parsed:

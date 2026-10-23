@@ -136,7 +136,7 @@ class OntologyPackage:
 
 def _parse_file(path: Path, expected_kind: str | None = None) -> AnyResource:
     try:
-        raw = yaml.safe_load(path.read_text(encoding="utf-8"))  # lgtm[py/unsafe-path-traversal]
+        raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     except yaml.YAMLError as exc:
         raise DSLValidationError(f"YAML parse error in {path.name}: {exc}", details={"file": str(path)}) from exc
     if not isinstance(raw, dict):
@@ -165,13 +165,13 @@ def _safe_path(path: str | Path) -> Path:
     p = Path(path)
     if ".." in p.parts:
         raise DSLValidationError(f"path {str(path)!r} contains '..' components; traversal is not allowed")
-    return p.resolve()  # lgtm[py/unsafe-path-traversal]
+    return p.resolve()
 
 
 def load_package(root: str | Path) -> OntologyPackage:
     root = Path(root)
     manifest_path = root / "ontology.yaml"
-    if not manifest_path.is_file():  # lgtm[py/unsafe-path-traversal]
+    if not manifest_path.is_file():
         raise DSLValidationError(f"no ontology.yaml under {root}", details={"root": str(root)})
     manifest = _parse_file(manifest_path, expected_kind="Ontology")
 
@@ -181,15 +181,15 @@ def load_package(root: str | Path) -> OntologyPackage:
 
     for dirname, kind in _DIR_KINDS.items():
         d = root / dirname
-        if not d.is_dir():  # lgtm[py/unsafe-path-traversal]
+        if not d.is_dir():
             continue
-        for f in sorted(d.glob("*.yaml")):  # lgtm[py/unsafe-path-traversal]
+        for f in sorted(d.glob("*.yaml")):
             res = _parse_file(f, expected_kind=kind)
             resources.append(res)
             files[(res.kind, res.metadata.name)] = f
 
     evo_path = root / "evolution.yaml"
-    if evo_path.is_file():  # lgtm[py/unsafe-path-traversal]
+    if evo_path.is_file():
         res = _parse_file(evo_path, expected_kind="EvolutionPolicy")
         resources.append(res)
         files[(res.kind, res.metadata.name)] = evo_path

@@ -36,7 +36,9 @@ governed surfaces can never be shadowed by the UI.
 
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
@@ -133,12 +135,12 @@ def build_app(sc: ServiceContext) -> FastAPI:
 
         @app.get("/assets/{path:path}", include_in_schema=False)
         async def _assets(path: str):
-            target = (assets / path).resolve()  # lgtm[py/unsafe-path-traversal]
+            target = Path(os.path.realpath(str(assets / path)))
             if assets.resolve() not in target.parents and target != assets.resolve():
                 return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "bad asset path"})
-            if not target.is_file():  # lgtm[py/unsafe-path-traversal]
+            if not target.is_file():
                 return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "asset not found"})
-            return FileResponse(target)  # lgtm[py/unsafe-path-traversal]
+            return FileResponse(target)
 
         @app.get("/{full_path:path}", include_in_schema=False)
         async def _spa(full_path: str):
@@ -154,12 +156,12 @@ def build_app(sc: ServiceContext) -> FastAPI:
                 return JSONResponse(
                     status_code=404, content={"code": "NOT_FOUND", "message": f"no route for /{full_path}"}
                 )
-            candidate = (ui_dir / full_path).resolve()  # lgtm[py/unsafe-path-traversal]
-            inside = ui_dir.resolve() in candidate.parents  # lgtm[py/unsafe-path-traversal]
+            candidate = Path(os.path.realpath(str(ui_dir / full_path)))
+            inside = ui_dir.resolve() in candidate.parents
             if full_path and inside and candidate.is_file():
                 if candidate.suffix.lower() in (".html", ".htm"):
-                    return FileResponse(candidate, headers=NO_CACHE)  # lgtm[py/unsafe-path-traversal]
-                return FileResponse(candidate)  # lgtm[py/unsafe-path-traversal]
+                    return FileResponse(candidate, headers=NO_CACHE)
+                return FileResponse(candidate)
             return FileResponse(ui_dir / "index.html", headers=NO_CACHE)
 
     return app

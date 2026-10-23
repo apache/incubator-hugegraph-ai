@@ -232,7 +232,7 @@ def register(r: APIRouter, admin_r: APIRouter, sc: ServiceContext) -> None:
     @admin_r.get("/domains")
     async def admin_domains(sc: ServiceContext = Depends(get_sc)):
         """Every switchable domain (ontology package), active one first."""
-        return {  # lgtm[py/stack-trace-exposure] admin-gated catalogue only
+        return {
             "domains": sc.list_domains(),
             "active": sc.compiled.package_name if sc.compiled else None,
         }
