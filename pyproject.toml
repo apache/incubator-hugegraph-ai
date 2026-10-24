@@ -163,6 +163,9 @@ addopts = "--strict-markers --strict-config"
 # for code format
 [tool.ruff]
 line-length = 120
+# domain packages ship user function code as data (sandboxed at runtime);
+# they are payloads, not platform source
+extend-exclude = ["ontogeny/domains"]
 target-version = "py310"
 
 [tool.ruff.lint]
@@ -188,11 +191,19 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["T20"]
+# ontogeny: console utilities print by design; tests mirror the repo rule;
+# the FastAPI shell is idiomatic B008 (Depends/Field defaults)
+"ontogeny/tests/**/*.py" = ["T20"]
+"ontogeny/tools/**/*.py" = ["T20"]
+"ontogeny/server/ontogeny/api/**" = ["B008"]
+# DSL wire fields are camelCase pydantic attrs matching the YAML keys
+"ontogeny/server/ontogeny/core/models.py" = ["N815"]
+"ontogeny/tests/conftest.py" = ["E402"]  # sys.path setup precedes the imports it enables
 "hugegraph-ml/src/hugegraph_ml/examples/**/*.py" = ["T20"]
 "hugegraph-python-client/src/pyhugegraph/structure/*.py" = ["N802"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["hugegraph_llm", "hugegraph_mcp", "hugegraph_python_client", "hugegraph_ml", "vermeer_python_client"]
+known-first-party = ["hugegraph_llm", "hugegraph_mcp", "hugegraph_python_client", "hugegraph_ml", "vermeer_python_client", "ontogeny"]
 
 [tool.ruff.format]
 quote-style = "double"
