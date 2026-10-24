@@ -15,11 +15,6 @@
 # specific language governing permissions and
 # limitations under the License.
 
-# NOTE (CodeQL): the py/unsafe-path-traversal findings below are suppressed
-# line by line. The served tree is a build artifact under ui_dir and every
-# resolved target is checked against ui_dir before FileResponse. Only that
-# single query is suppressed; all other queries still scan this file.
-
 """HTTP shell: FastAPI app over ServiceContext. One governance path.
 
 This module only ASSEMBLES the app: identity deps, request schemas and the
@@ -36,7 +31,9 @@ governed surfaces can never be shadowed by the UI.
 
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
@@ -125,7 +122,11 @@ def build_app(sc: ServiceContext) -> FastAPI:
 
     ui_dir = resolve_ui_dir(getattr(sc, "ui_dir", None))
     if ui_dir is not None:
-        assets = ui_dir / "assets"
+        # the served tree is a build artifact; request URLs may only address
+        # files INSIDE it: normalize each URL (realpath resolves symlinks and
+        # "..") and keep it only when it stays under the resolved root
+        ui_r = os.path.realpath(str(ui_dir))
+        assets_r = os.path.realpath(str(ui_dir / "assets"))
         # HTML must always revalidate: a stale cached shell/docs page survives
         # rebuilds and users keep seeing old content. Assets under /assets are
         # content-hashed filenames, so they may cache hard.
@@ -133,10 +134,10 @@ def build_app(sc: ServiceContext) -> FastAPI:
 
         @app.get("/assets/{path:path}", include_in_schema=False)
         async def _assets(path: str):
-            target = (assets / path).resolve()
-            if assets.resolve() not in target.parents and target != assets.resolve():
+            target = os.path.realpath(os.path.join(assets_r, path))
+            if not target.startswith(assets_r + os.sep):
                 return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "bad asset path"})
-            if not target.is_file():
+            if not Path(target).is_file():
                 return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "asset not found"})
             return FileResponse(target)
 
@@ -154,10 +155,15 @@ def build_app(sc: ServiceContext) -> FastAPI:
                 return JSONResponse(
                     status_code=404, content={"code": "NOT_FOUND", "message": f"no route for /{full_path}"}
                 )
-            candidate = (ui_dir / full_path).resolve()
-            inside = ui_dir.resolve() in candidate.parents
-            if full_path and inside and candidate.is_file():
-                if candidate.suffix.lower() in (".html", ".htm"):
+            if not full_path:
+                return FileResponse(ui_dir / "index.html", headers=NO_CACHE)
+            candidate = os.path.realpath(os.path.join(ui_r, full_path))
+            if not candidate.startswith(ui_r + os.sep):
+                return JSONResponse(
+                    status_code=404, content={"code": "NOT_FOUND", "message": f"no route for /{full_path}"}
+                )
+            if Path(candidate).is_file():
+                if Path(candidate).suffix.lower() in (".html", ".htm"):
                     return FileResponse(candidate, headers=NO_CACHE)
                 return FileResponse(candidate)
             return FileResponse(ui_dir / "index.html", headers=NO_CACHE)
