@@ -29,7 +29,6 @@ it lives at the service level where CLI/other shells can reach it. Raises
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Any
 
@@ -147,7 +146,9 @@ async def builder_save(
             )
         stores_dir = pkg_dir / "stores"
         stores_dir.mkdir(parents=True, exist_ok=True)
-        Path(os.path.realpath(str(stores_dir / f"{store_name}.yaml"))).write_text(
+        from .core.loader import _safe_path
+
+        _safe_path(stores_dir / f"{store_name}.yaml").write_text(
             _yaml.safe_dump(
                 {
                     "apiVersion": "ontogeny/v1",

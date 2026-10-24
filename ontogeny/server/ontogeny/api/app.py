@@ -36,9 +36,7 @@ governed surfaces can never be shadowed by the UI.
 
 from __future__ import annotations
 
-import os
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
@@ -135,7 +133,7 @@ def build_app(sc: ServiceContext) -> FastAPI:
 
         @app.get("/assets/{path:path}", include_in_schema=False)
         async def _assets(path: str):
-            target = Path(os.path.realpath(str(assets / path)))
+            target = (assets / path).resolve()
             if assets.resolve() not in target.parents and target != assets.resolve():
                 return JSONResponse(status_code=404, content={"code": "NOT_FOUND", "message": "bad asset path"})
             if not target.is_file():
@@ -156,7 +154,7 @@ def build_app(sc: ServiceContext) -> FastAPI:
                 return JSONResponse(
                     status_code=404, content={"code": "NOT_FOUND", "message": f"no route for /{full_path}"}
                 )
-            candidate = Path(os.path.realpath(str(ui_dir / full_path)))
+            candidate = (ui_dir / full_path).resolve()
             inside = ui_dir.resolve() in candidate.parents
             if full_path and inside and candidate.is_file():
                 if candidate.suffix.lower() in (".html", ".htm"):
