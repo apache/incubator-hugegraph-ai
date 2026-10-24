@@ -1,0 +1,49 @@
+ontogeny/tests/test_auth_identity.py
+  6876a09d6670275e 39,214-253
+ontogeny/server/ontogeny/core/loader.py
+  6876a09d6670275e 28,154,156-159,161,163,167
+ontogeny/server/ontogeny/auth/service.py
+  6876a09d6670275e 48-52,287-289
+ontogeny/tests/test_pr380_security.py
+  6876a09d6670275e 23,174-233
+ontogeny/server/ontogeny/service.py
+  6876a09d6670275e 66,68-70,72-74,119-125,833-839,926,933-936,938,1002-1008
+ontogeny/server/ontogeny/builder_ops.py
+  6876a09d6670275e 27,61-63,146-150,153-159,185-188,197-200,205-208,219-225
+ontogeny/server/ontogeny/api/routes_admin.py
+  6876a09d6670275e 278-286
+ontogeny/web/src/api/client.ts
+  6876a09d6670275e 449-450,453,456
+ontogeny/README.md
+  6876a09d6670275e 43
+ontogeny/server/ontogeny/api/app.py
+  6876a09d6670275e 34,36,125-129,137-138,140,158-166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.8.1",
+  "base_commit_sha": "e4680d49d9d6146e028daac8dda7592e00ddb2fd",
+  "prompts": {
+    "6876a09d6670275e": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_8092bf17-7261-4a61-bfc1-3d7295682636",
+        "model": "GLM-5.3"
+      },
+      "human_author": "simon824 <simon824@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 418,
+      "total_deletions": 286,
+      "accepted_lines": 225,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/d6492f74bffc13fed44e1b3f5741cc5ed790d7463682ae4dacafa3e712bc9460",
+      "token_usage": {
+        "input_tokens": 690156696,
+        "output_tokens": 700341,
+        "cache_read_tokens": 659306496,
+        "cache_creation_tokens": 0,
+        "total_cost": 0.0
+      }
+    }
+  }
+}
